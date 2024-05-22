@@ -27,10 +27,20 @@ from ELEP.elep.ensemble_statistics import ensemble_statistics
 from ELEP.elep.ensemble_coherence import ensemble_semblance 
 from ELEP.elep.trigger_func import picks_summary_simple
 
-# Write your function that you want to run in parallel: I recommend you design this to essentially perform your entire workflow on one station for one day, and write a csv file for that station, much the way you already have it.
-# This is what will run in parallel!
-# So, the only inputs are the station name, the start and end times you want to detect for, the path of the folder you want to write the results to, and the parameters you already specified. Here is where you could also feed in the preloaded models if that becomes important.
+""" 
+module containing functions needed in parallel_pick.py
+""" 
 
+device = torch.device("cpu")
+
+# Define clients
+client_inventory = Client('IRIS')
+client_waveform = WaveformClient()
+client_ncedc = Client('NCEDC')
+
+twin = 6000     # length of time window
+step = 3000     # step length
+l_blnd, r_blnd = 500, 500
 
 def stacking(data, npts, l_blnd, r_blnd, nseg):
     _data = data.copy()
@@ -45,16 +55,7 @@ def stacking(data, npts, l_blnd, r_blnd, nseg):
 
 def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     
-    device = torch.device("cpu")
-
-    # Define clients
-    client_inventory = Client('IRIS')
-    client_waveform = WaveformClient()
-    client_ncedc = Client('NCEDC')
     
-    twin = 6000     # length of time window
-    step = 3000     # step length
-    l_blnd, r_blnd = 500, 500
 
     # Define tstring
     tstring = t1.strftime('%Y%m%d')

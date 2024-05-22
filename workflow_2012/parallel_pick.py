@@ -37,7 +37,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year1 = 2012
-filepath = "../data/catalog_picks/"
+filepath = "~/hbito/cascadia_obs_ensemble/data/catalog_picks/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -49,7 +49,7 @@ t1 = datetime.datetime(year=year1,month=1,day=1)
 t2 = datetime.datetime(year=year1+1,month=1,day=1)
 time_bins = pd.to_datetime(np.arange(t1,t2,pd.Timedelta(1,'days')))
 
-inventory = client.inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=t1.strftime('%Y%m%d'),endtime=t2.strftime('%Y%m%d'))
+inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=t1.strftime('%Y%m%d'),endtime=t2.strftime('%Y%m%d'))
 
 
 

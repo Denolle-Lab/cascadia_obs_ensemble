@@ -60,8 +60,10 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # Define tstring
     tstring = t1.strftime('%Y%m%d')
 
-    if os.path.exists(filepath+station+'_'+tstring+'.csv'):
-        return 
+#     if os.path.exists(filepath+station+'_'+tstring+'.csv'):
+#         return
+    # print the file path 
+    print(filepath+station+'_'+tstring+'.csv')
 	# Load data
 	# Reshape data
 	# Predict on base models
@@ -331,3 +333,5 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     ##################################################
     # Write to file using that name
     df.to_csv(file_name)
+    print(file_name)
+    print(len(glob.glob('~/hbito/cascadia_obs_ensemble/data/*')))

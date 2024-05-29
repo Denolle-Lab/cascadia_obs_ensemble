@@ -341,5 +341,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     file_name = filepath+station+'_'+tstring+'.csv'
     ##################################################
     # Write to file using that name
+    print('test8')
     df.to_csv(file_name)
+    print('test9')
 #     print(len(glob.glob('~/cascadia_obs_ensemble/data/*')))

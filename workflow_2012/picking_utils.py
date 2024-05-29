@@ -176,7 +176,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     windows_max[:, :, :6] *= tap; windows_max[:, :, -6:] *= tap[::-1];
     del windows
 
-#     print(f"Window data shape: {windows_std.shape}")
+    print(f"Window data shape: {windows_std.shape}")
     
     # Predict on base models
     
@@ -185,6 +185,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # dim 0: 0 = P, 1 = S
     batch_pred = np.zeros([2, len(pretrain_list), nseg, twin], dtype = np.float32) 
     for ipre, pretrain in enumerate(pretrain_list):
+        print('test10')
         t0 = time.time()
         eqt = sbm.EQTransformer.from_pretrained(pretrain)
         eqt.to(device);

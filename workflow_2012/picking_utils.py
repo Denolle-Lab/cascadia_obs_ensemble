@@ -60,9 +60,11 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # Define tstring
     tstring = t1.strftime('%Y%m%d')
 
-#     if os.path.exists(filepath+station+'_'+tstring+'.csv'):
-#         return
+    if os.path.exists(filepath+station+'_'+tstring+'.csv'):
+        print('File '+filepath+station+'_'+tstring+'.csv already exists')
+        return
     # print the file path 
+    print('test1')
     print(filepath+station+'_'+tstring+'.csv')
 	# Load data
 	# Reshape data
@@ -250,6 +252,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     s_index = picks_summary_simple(smb_s, s_thrd)
     print(f"{len(p_index)} P picks\n{len(s_index)} S picks")
     
+    print('test2')
     # Create lists and a data frame
     event_id = []
     source_type = []
@@ -270,7 +273,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     trace_snr_db = []
     trace_p_arrival = []
     trace_s_arrival = []
-
+    
+    print("This is the cwd:"+str(os.getcwd()))
+    print('test3')
     for i, idx in enumerate(p_index):
         event_id.append(' ')
         source_type.append(' ')
@@ -291,7 +296,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         trace_snr_db.append(' ')
         trace_s_arrival.append(np.nan)
         trace_p_arrival.append(str(starttime  + idx * delta))
-
+    print('test4')
     for i, idx in enumerate(s_index):
         event_id.append(' ')
         source_type.append(' ')
@@ -312,7 +317,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         trace_snr_db.append(' ')
         trace_s_arrival.append(str(starttime  + idx * delta))
         trace_p_arrival.append(np.nan)
-
+    print('test5')
     # dictionary of lists
     dict = {'event_id':event_id,'source_type':source_type,'station_network_code':station_network_code,\
             'station_channel_code':station_channel_code,'station_code':station_code,'station_location_code':station_location_code,\
@@ -323,15 +328,18 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
             'trace_snr_db':trace_snr_db, 'trace_s_arrival':trace_s_arrival, 'trace_p_arrival':trace_p_arrival}
 
     df = pd.DataFrame(dict)
-
+    
+    print('test6')
     # Make the specific day into a string:
     tstring = t1.strftime('%Y%m%d')
     # Build the full file name:
     ##################################################
 #     file_name = file_path+station+'_'+tstring+'.csv'
+    print("test7")
+    print("This is the cwd:"+str(os.getcwd()))
+    print('This is the filepath:'+str(filepath))
     file_name = filepath+station+'_'+tstring+'.csv'
     ##################################################
     # Write to file using that name
     df.to_csv(file_name)
-    print(file_name)
-    print(len(glob.glob('~/hbito/cascadia_obs_ensemble/data/*')))
+#     print(len(glob.glob('~/cascadia_obs_ensemble/data/*')))

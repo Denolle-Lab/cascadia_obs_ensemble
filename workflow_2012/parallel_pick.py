@@ -37,7 +37,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year1 = 2012
-filepath = "~/hbito/cascadia_obs_ensemble/data/catalog_picks/"
+filepath = "home/hbito/cascadia_obs_ensemble/data/picks/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window

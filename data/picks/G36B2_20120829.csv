@@ -1,0 +1,6 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,G36B2,,42.5994,-126.903801,-2423.0, ,50.0,2012-08-29T00:00:00.199998Z, , , , , ,,2012-08-29T18:58:35.739998Z
+1, , ,7D, ,G36B2,,42.5994,-126.903801,-2423.0, ,50.0,2012-08-29T00:00:00.199998Z, , , , , ,2012-08-29T18:58:48.079998Z,
+2, , ,7D, ,G36B2,,42.5994,-126.903801,-2423.0, ,50.0,2012-08-29T00:00:00.199998Z, , , , , ,2012-08-29T19:08:46.099998Z,
+3, , ,7D, ,G36B2,,42.5994,-126.903801,-2423.0, ,50.0,2012-08-29T00:00:00.199998Z, , , , , ,2012-08-29T20:09:38.939998Z,
+4, , ,7D, ,G36B2,,42.5994,-126.903801,-2423.0, ,50.0,2012-08-29T00:00:00.199998Z, , , , , ,2012-08-29T22:11:47.159998Z,

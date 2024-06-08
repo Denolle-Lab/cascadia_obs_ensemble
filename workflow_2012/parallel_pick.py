@@ -37,7 +37,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year1 = 2012
-filepath = "home/hbito/cascadia_obs_ensemble/data/picks/"
+filepath = "/home/hbito/cascadia_obs_ensemble/data/picks/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -55,11 +55,18 @@ inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA
 
 # Make a list of networks and stations
 networks_stas = []
+lat =[]
+lon =[]
+elev =[]
+
 for i in range(len(inventory)):
     network = inventory[i].code
     
     for j in range(len(inventory[i])):
-        networks_stas.append([network,inventory[i].stations[j].code])
+        networks_stas.append([network,inventory[i].stations[j].code,
+                              inventory[i].stations[j].latitude,
+                              inventory[i].stations[j].longitude,inventory[i].stations[j].elevation])
+    
 
 networks_stas =np.array(networks_stas)
     
@@ -77,7 +84,7 @@ pn_geofon_model = sbm.EQTransformer.from_pretrained("geofon")
 task_list = []
 for i in range(len(networks_stas)):
 	for t in time_bins:
-		task_list.append([networks_stas[i][0], networks_stas[i][1],t])
+		task_list.append([networks_stas[i][0], networks_stas[i][1],networks_stas[i][2],networks_stas[i][3],networks_stas[i][4],t])
         
 # Now we start setting up a parallel operation using a package called Dask.
 
@@ -85,16 +92,19 @@ for i in range(len(networks_stas)):
 def loop_days(task,filepath,twin,step,l_blnd,r_blnd):
 
     # Define the parameters that are specific to each task
-    t1 = obspy.UTCDateTime(task[2])
+    t1 = obspy.UTCDateTime(task[5])
     t2 = obspy.UTCDateTime(t1 + pd.Timedelta(1,'days'))
     network = task[0]
     station = task[1]
+    lat =task[2]
+    lon= task[3]
+    elev=task[4]                    
 
     #print network and station
     print([network,station,t1])
     # Call to the function that will perform the operation and write the results to file
     try: 
-        run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd)
+        run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon,elev)
     except:
         return
 

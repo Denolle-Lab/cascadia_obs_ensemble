@@ -53,10 +53,7 @@ def stacking(data, npts, l_blnd, r_blnd, nseg):
                 np.nanmax([stack[idx:idx + twin], _data[iseg+1, :]], axis = 0)
     return stack
 
-def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
-    
-    
-
+def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon,elev):
     # Define tstring
     tstring = t1.strftime('%Y%m%d')
 
@@ -276,27 +273,37 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     trace_s_arrival = []
     
     print("This is the cwd:"+str(os.getcwd()))
-    print('test3')
-    for i, idx in enumerate(p_index):
-        event_id.append(' ')
-        source_type.append(' ')
-        station_network_code.append(network)   # Change to otehr networks
-        station_channel_code.append(' ')
-        station_code.append(station)
-        station_location_code.append(sdata[0].stats.location)   
-        station_latitude_deg.append(inventory[0][0].latitude)
-        station_longitude_deg.append(inventory[0][0].longitude)   
-        station_elevation_m.append(inventory[0][0].elevation)
-        trace_name.append(' ')
-        trace_sampling_rate_hz.append(sdata[0].stats.sampling_rate)
-        trace_start_time.append(sdata[0].stats.starttime)
-        trace_S_arrival_sample.append(' ')
-        trace_P_arrival_sample.append(' ')
-        trace_S_onset.append(' ')
-        trace_P_onset.append(' ')
-        trace_snr_db.append(' ')
-        trace_s_arrival.append(np.nan)
-        trace_p_arrival.append(str(starttime  + idx * delta))
+    print('test3',len(p_index),len(s_index))
+#     for i, idx in enumerate(p_index):
+    i=0
+    idx=p_index[i]
+    event_id.append(' ')
+    source_type.append(' ')
+    station_network_code.append(network)   # Change to otehr networks
+    station_channel_code.append(' ')
+    station_code.append(station)
+    station_location_code.append(sdata[0].stats.location) 
+    print('test3-1')
+    station_latitude_deg.append(lat)
+    print('test3-2')
+    station_longitude_deg.append(lon) 
+    print('test3-3')
+    station_elevation_m.append(elev)
+    print('test3-4')
+    trace_name.append(' ')
+    trace_sampling_rate_hz.append(sdata[0].stats.sampling_rate)
+    print('test3-5')
+    trace_start_time.append(sdata[0].stats.starttime)
+    trace_S_arrival_sample.append(' ')
+    trace_P_arrival_sample.append(' ')
+    trace_S_onset.append(' ')
+    trace_P_onset.append(' ')
+    trace_snr_db.append(' ')
+    trace_s_arrival.append(np.nan)
+    print('test3-6')
+    trace_p_arrival.append(str(starttime  + idx * delta))
+    print(trace_p_arrival)
+
     print('test4')
     for i, idx in enumerate(s_index):
         event_id.append(' ')
@@ -305,9 +312,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         station_channel_code.append(' ')
         station_code.append(station)
         station_location_code.append(sdata[0].stats.location)   
-        station_latitude_deg.append(inventory[0][0].latitude)
-        station_longitude_deg.append(inventory[0][0].longitude)   
-        station_elevation_m.append(inventory[0][0].elevation)
+        station_latitude_deg.append(lat)
+        station_longitude_deg.append(lon)   
+        station_elevation_m.append(elev)
         trace_name.append(' ')
         trace_sampling_rate_hz.append(sdata[0].stats.sampling_rate)
         trace_start_time.append(sdata[0].stats.starttime)
@@ -342,7 +349,8 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     file_name = filepath+station+'_'+tstring+'.csv'
     ##################################################
     # Write to file using that name
-    print('test8')
+    print(file_name,'this is before test9')
+    print(df)
     df.to_csv(file_name)
     print('test9')
 #     print(len(glob.glob('~/cascadia_obs_ensemble/data/*')))

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 from obspy.clients.fdsn import Client
 import numpy as np
@@ -9,9 +10,9 @@ import datetime
 from datetime import timedelta
 import pandas as pd
 import dask
+from dask import delayed, compute
 from dask.diagnostics import ProgressBar
 
-from obspy.clients.fdsn.client import Client
 from obspy.core.utcdatetime import UTCDateTime
 from obspy import Stream
 
@@ -45,11 +46,11 @@ step = 3000     # step length
 l_blnd, r_blnd = 500, 500
 
 # Now create your list of days to loop over!
-t1 = datetime.datetime(year=year1,month=1,day=1)
-t2 = datetime.datetime(year=year1+1,month=1,day=1)
-time_bins = pd.to_datetime(np.arange(t1,t2,pd.Timedelta(1,'days')))
+time1 = datetime.datetime(year=year1,month=1,day=1)
+time2 = datetime.datetime(year=year1+1,month=1,day=1)
+time_bins = pd.to_datetime(np.arange(time1,time2,pd.Timedelta(1,'days')))
 
-inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=t1.strftime('%Y%m%d'),endtime=t2.strftime('%Y%m%d'))
+inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
 
 
 
@@ -89,37 +90,40 @@ for i in range(len(networks_stas)):
 # Now we start setting up a parallel operation using a package called Dask.
 
 @dask.delayed
-def loop_days(task,filepath,twin,step,l_blnd,r_blnd):
-
+def loop_days(task, filepath, twin, step, l_blnd, r_blnd):
     # Define the parameters that are specific to each task
-    t1 = obspy.UTCDateTime(task[5])
-    t2 = obspy.UTCDateTime(t1 + pd.Timedelta(1,'days'))
+    t1 = obspy.UTCDateTime(time1)
+    t2 = obspy.UTCDateTime(time2)
     network = task[0]
     station = task[1]
-    lat =task[2]
-    lon= task[3]
-    elev=task[4]                    
+    lat = task[2]
+    lon = task[3]
+    elev = task[4]
 
-    #print network and station
-    print([network,station,t1])
+    # Print network and station
+    print([network, station, t1])
     # Call to the function that will perform the operation and write the results to file
-    try: 
-        run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon,elev)
-    except:
+    try:
+        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd, lat, lon, elev)
+    except Exception as e:
+        print(f"Error: {e}")
         return
 
+if __name__ == "__main__":
+    # Define your task_list, filepath, twin, step, l_blnd, r_blnd here or import them from another module
+    task_list = task_list # Replace with your actual task list
+    filepath = filepath  # Replace with your actual file path
+    twin = twin
+    step = step
+    l_blnd = l_blnd
+    r_blnd = r_blnd
 
-# Now we set up the parallel operation
-# The below builds a framework for the computer to run in parallel. This doesn't actually execute anything.
-lazy_results = [loop_days(task,filepath,twin,step,l_blnd,r_blnd) for task in task_list]
-    
+    # Wrap loop_days with dask.delayed
+    lazy_results = [dask.delayed(loop_days)(task, filepath, twin, step, l_blnd, r_blnd) for task in task_list]
 
-# The below actually executes the parallel operation!
-# It's nice to do it with the ProgressBar so you can see how long things are taking.
-# Each operation should also write a file so that is another way to check on progress.
-with ProgressBar():
-    #################################
-    # Add scheduler = 'single-threaded'
-	dask.compute(lazy_results, scheduler='single-threaded') 
+    # Use ProgressBar to track the progress
+    with ProgressBar():
+        # Using the processes scheduler with num_workers specified
+        compute(lazy_results, scheduler='processes', num_workers=4)
     
 

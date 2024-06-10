@@ -1,0 +1,4 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,J35A,,45.498901,-126.2668,-2662.0, ,50.0,2012-06-05T00:00:00.006800Z, , , , , ,,2012-06-05T00:57:01.286800Z
+1, , ,7D, ,J35A,,45.498901,-126.2668,-2662.0, ,50.0,2012-06-05T00:00:00.006800Z, , , , , ,2012-06-05T05:53:23.386800Z,
+2, , ,7D, ,J35A,,45.498901,-126.2668,-2662.0, ,50.0,2012-06-05T00:00:00.006800Z, , , , , ,2012-06-05T20:17:01.726800Z,

@@ -1,0 +1,6 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,UO, ,DBO,,43.118721,-123.244423,957.0, ,40.0,2012-07-13T00:00:00.015000Z, , , , , ,,2012-07-13T00:26:50.840000Z
+1, , ,UO, ,DBO,,43.118721,-123.244423,957.0, ,40.0,2012-07-13T00:00:00.015000Z, , , , , ,2012-07-13T02:46:20.215000Z,
+2, , ,UO, ,DBO,,43.118721,-123.244423,957.0, ,40.0,2012-07-13T00:00:00.015000Z, , , , , ,2012-07-13T09:58:08.340000Z,
+3, , ,UO, ,DBO,,43.118721,-123.244423,957.0, ,40.0,2012-07-13T00:00:00.015000Z, , , , , ,2012-07-13T15:01:21.715000Z,
+4, , ,UO, ,DBO,,43.118721,-123.244423,957.0, ,40.0,2012-07-13T00:00:00.015000Z, , , , , ,2012-07-13T23:39:27.440000Z,

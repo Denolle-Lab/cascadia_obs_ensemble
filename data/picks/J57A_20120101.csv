@@ -1,0 +1,6 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,J57A,,47.080101,-124.4505,-55.8, ,50.0,2012-01-01T00:00:00.009500Z, , , , , ,,2012-01-01T00:33:03.249500Z
+1, , ,7D, ,J57A,,47.080101,-124.4505,-55.8, ,50.0,2012-01-01T00:00:00.009500Z, , , , , ,2012-01-01T08:55:53.649500Z,
+2, , ,7D, ,J57A,,47.080101,-124.4505,-55.8, ,50.0,2012-01-01T00:00:00.009500Z, , , , , ,2012-01-01T09:49:32.609500Z,
+3, , ,7D, ,J57A,,47.080101,-124.4505,-55.8, ,50.0,2012-01-01T00:00:00.009500Z, , , , , ,2012-01-01T12:40:53.289500Z,
+4, , ,7D, ,J57A,,47.080101,-124.4505,-55.8, ,50.0,2012-01-01T00:00:00.009500Z, , , , , ,2012-01-01T20:18:27.309500Z,

@@ -124,6 +124,6 @@ if __name__ == "__main__":
     # Use ProgressBar to track the progress
     with ProgressBar():
         # Using the processes scheduler with num_workers specified
-        compute(lazy_results, scheduler='processes', num_workers=9)
+        compute(lazy_results, scheduler='processes', num_workers=4)
     
 

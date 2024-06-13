@@ -1,0 +1,8 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T21:11:06.150000Z
+1, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T21:14:28.325000Z
+2, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T21:37:29.675000Z
+3, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T21:43:06.700000Z
+4, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T21:55:21.300000Z
+5, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,,2012-04-01T22:57:01.450000Z
+6, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2012-04-01T20:51:07.525000Z, , , , , ,2012-04-01T21:55:21.875000Z,

@@ -1,0 +1,7 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,,2012-12-17T11:47:00.970515Z
+1, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,,2012-12-17T15:16:41.930515Z
+2, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,2012-12-17T11:17:32.290515Z,
+3, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,2012-12-17T11:47:01.610515Z,
+4, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,2012-12-17T17:55:39.190515Z,
+5, , ,7D, ,J18B,,44.008301,-125.466003,-3047.0, ,50.0,2012-12-17T00:00:00.010515Z, , , , , ,2012-12-17T21:15:01.650515Z,

@@ -1,0 +1,6 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,TA, ,F04D,,46.082901,-123.010803,236.0, ,40.0,2011-10-15T00:00:00.024998Z, , , , , ,,2011-10-15T01:45:50.249998Z
+1, , ,TA, ,F04D,,46.082901,-123.010803,236.0, ,40.0,2011-10-15T00:00:00.024998Z, , , , , ,,2011-10-15T05:27:27.374998Z
+2, , ,TA, ,F04D,,46.082901,-123.010803,236.0, ,40.0,2011-10-15T00:00:00.024998Z, , , , , ,,2011-10-15T09:02:15.449998Z
+3, , ,TA, ,F04D,,46.082901,-123.010803,236.0, ,40.0,2011-10-15T00:00:00.024998Z, , , , , ,,2011-10-15T10:39:34.174998Z
+4, , ,TA, ,F04D,,46.082901,-123.010803,236.0, ,40.0,2011-10-15T00:00:00.024998Z, , , , , ,2011-10-15T17:32:41.224998Z,

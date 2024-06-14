@@ -1,0 +1,7 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T03:39:20.560000Z
+1, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T17:46:57.235000Z
+2, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T18:20:58.210000Z
+3, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T19:17:02.385000Z
+4, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T19:19:48.885000Z
+5, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-08-19T00:00:00.010000Z, , , , , ,,2011-08-19T20:17:55.985000Z

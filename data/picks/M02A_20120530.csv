@@ -1,0 +1,6 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,M02A,,48.306999,-125.600403,-139.0, ,50.0,2012-05-30T00:00:00.016500Z, , , , , ,,2012-05-30T09:27:53.676500Z
+1, , ,7D, ,M02A,,48.306999,-125.600403,-139.0, ,50.0,2012-05-30T00:00:00.016500Z, , , , , ,,2012-05-30T11:50:49.216500Z
+2, , ,7D, ,M02A,,48.306999,-125.600403,-139.0, ,50.0,2012-05-30T00:00:00.016500Z, , , , , ,,2012-05-30T19:52:06.956500Z
+3, , ,7D, ,M02A,,48.306999,-125.600403,-139.0, ,50.0,2012-05-30T00:00:00.016500Z, , , , , ,2012-05-30T01:43:35.996500Z,
+4, , ,7D, ,M02A,,48.306999,-125.600403,-139.0, ,50.0,2012-05-30T00:00:00.016500Z, , , , , ,2012-05-30T05:20:44.616500Z,

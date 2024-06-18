@@ -1,0 +1,8 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,,2011-12-14T01:01:46.225000Z
+1, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,,2011-12-14T14:41:08.875000Z
+2, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,,2011-12-14T18:33:17.050000Z
+3, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,2011-12-14T01:02:07.850000Z,
+4, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,2011-12-14T15:01:29.125000Z,
+5, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,2011-12-14T21:30:03.625000Z,
+6, , ,CN, ,SHB,,49.5985,-123.8771,1129.0, ,40.0,2011-12-14T00:00:00.000000Z, , , , , ,2011-12-14T22:09:23.975000Z,

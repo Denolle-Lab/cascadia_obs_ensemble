@@ -1,0 +1,8 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,,2011-11-25T02:13:24.024998Z
+1, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,,2011-11-25T03:17:06.924998Z
+2, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,,2011-11-25T06:28:25.499998Z
+3, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,2011-11-25T10:55:16.099998Z,
+4, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,2011-11-25T14:36:47.774998Z,
+5, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,2011-11-25T15:40:40.899998Z,
+6, , ,TA, ,J01D,,43.1614,-123.931396,131.0, ,40.0,2011-11-25T00:00:00.024998Z, , , , , ,2011-11-25T17:45:04.849998Z,

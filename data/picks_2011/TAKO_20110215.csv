@@ -1,0 +1,8 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,,2011-02-15T01:02:58.926000Z
+1, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,,2011-02-15T01:20:14.006000Z
+2, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,,2011-02-15T18:21:07.926000Z
+3, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,,2011-02-15T23:05:09.566000Z
+4, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,2011-02-15T01:20:27.806000Z,
+5, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,2011-02-15T23:05:12.786000Z,
+6, , ,UW, ,TAKO,,43.74313,-124.08337,12.0, ,50.0,2011-02-15T00:00:00.006000Z, , , , , ,2011-02-15T23:21:27.026000Z,

@@ -1,0 +1,7 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,,2011-03-16T10:37:45.075000Z
+1, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,,2011-03-16T16:51:00.150000Z
+2, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,,2011-03-16T17:31:09.100000Z
+3, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,2011-03-16T10:38:00.750000Z,
+4, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,2011-03-16T14:57:13.625000Z,
+5, , ,UW, ,FISH,,45.9306,-123.5591,327.0, ,40.0,2011-03-16T00:00:00.000000Z, , , , , ,2011-03-16T21:56:06.175000Z,

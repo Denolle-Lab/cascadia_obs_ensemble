@@ -1,0 +1,2 @@
+,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
+0, , ,7D, ,FN08A,,46.888802,-124.8769,-177.0, ,125.0,2011-10-18T00:00:00.002000Z, , , , , ,,2011-10-18T12:25:03.090000Z

@@ -33,9 +33,11 @@ year = 'all_regions'
 
 # Load all event data into a list of DataFrames
 new_events = pd.read_csv(f'../data/datasets_{year}/new_events.csv')
+new_events = new_events.sort_values(by='time').reset_index(drop=True)
+
 
 # Pick only the events less than 5 km deep
-new_events = new_events[new_events['depth'] < 5]
+new_events = new_events.loc[(new_events['depth'] >= 5)&(new_events['depth'] < 10)]
 
 # Load all pick_assignments data into a list of DataFrames
 pick_assignment_files = [
@@ -63,8 +65,8 @@ networks = pd.read_csv('../data/networks.csv')
 # Define the channels to show in the plot
 channel = '?H?'
 
-fig_title = 'New Event (<5 km) from any region'
+fig_title = 'New Event (5-10 km deep) from any region'
 
-path = f'/home/hbito/cascadia_obs_ensemble/data/datasets_{year}/plots_new_events_0-5km/'
+path = f'/home/hbito/cascadia_obs_ensemble/data/datasets_{year}/plots_new_events_5-10km/'
 
 subplots_cluster_scale(new_events, mycatalog_picks_merged, networks, channel, fig_title,path)

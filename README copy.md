@@ -1,6 +1,7 @@
 # Ensemble Deep Learning to further mine Cascadia offshore data
 
 
+<<<<<<< HEAD
 This project uses an ensemble deep learning algorith, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using teh 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
 
 The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (), and HypoDD for relocation.
@@ -13,6 +14,18 @@ Project "CoolTeam" at UW:
 - Qibin Shi: qibins@uw.edu
 - Yiyu Ni: niyiyu@uw.edu
 - Marine Denolle: mdenolle@uw.edu
+=======
+This project uses an ensemble deep learning algorith, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia. It also uses PyOcto (Munchmeyer 2024) to associate/crudely locate events.
+
+The repository also provides scripts to compare the new catalog with established catalog in the region (USGS ComCat, Stone et al 2018; Morton et al, 2023).
+
+Project "CoolTeam" at UW:
+- Hiroto Bito 
+- Zoe Krauss
+- Qibin Shi
+- Yiyu Ni
+- Marine Denolle
+>>>>>>> main
 
 ## Repository Structure
 ```
@@ -21,16 +34,21 @@ Project "CoolTeam" at UW:
 📜LICENSE
 📜.gitignore
 📜environment.yml
+<<<<<<< HEAD
 📦0_availability
 📦1_picking
 📦2_associate
 📦workflow_simplified
+=======
+📦workflow
+>>>>>>> main
  ┣ 📜0_data_availability_7D.ipynb
  ┣ 📜1_parallel_detect_picks_elep.ipynb
  ┣ 📜2_format_pick2associate.ipynb
  ┣ 📜3_associate.ipynb
  ┗ 📜4_quality_control.ipynb
 📦data
+<<<<<<< HEAD
  ┣ 📜vel_*.csv # velocity profiles
  ┣ 📜stations_*.csv # station locations in regions
  ┣ 📜nodes_*.csv # regions for velocity profiles
@@ -118,3 +136,13 @@ After running ELEP, the picks are now available on Gdrive (private access until 
 * [Picks 2013](https://drive.google.com/file/d/1M8UNhKxewNG48Rsjnk_DbWl2NpsgXXp8/view?usp=drive_link)
 * [Picks 2014](https://drive.google.com/file/d/1sV7yTBDfVhBUixA0NvCmZKyf1L1SJh-C/view?usp=drive_link)
 * [Picks 2015](https://drive.google.com/file/d/15Ok11F3r2Ia-5KanmlMGCDOhL0Usckpr/view?usp=drive_link)
+=======
+ ┣ 📜all_pick_assignments.csv
+ ┣ 📜cat_elep.csv
+ ┣ 📜ds01.csv
+ ┣ 📜ds03.xlsx
+ ┣ 📜jgrb52524-sup-0002-2017jb014966-ds01.csv
+ ┗ 📜jgrb52524-sup-0003-2017jb014966-ds02.csv
+📦plots
+```
+>>>>>>> main

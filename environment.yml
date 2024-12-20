@@ -1,4 +1,4 @@
-name: myseismo
+name: seismo
 dependencies:
   - python=3.10
   - pip

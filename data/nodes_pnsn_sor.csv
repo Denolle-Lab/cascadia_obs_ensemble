@@ -1,0 +1,3 @@
+,node,latitude_deg,latitude_min,longitude_deg,longitude_min,radius,buffer_zone,velocity_model_id,latitude,longitude
+0,nod,42,55.0,123,40.0,54,12,4,42.916666666666664,-123.66666666666667
+1,nod,42,20.0,123,35.0,54,12,4,42.333333333333336,-123.58333333333333

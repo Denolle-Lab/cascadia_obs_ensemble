@@ -1,6 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,MEGW,,46.26609,-123.87709,351.0, ,50.0,2011-12-22T00:00:00.004000Z, , , , , ,,2011-12-22T18:09:36.844000Z
-1, , ,UW, ,MEGW,,46.26609,-123.87709,351.0, ,50.0,2011-12-22T00:00:00.004000Z, , , , , ,,2011-12-22T20:41:02.304000Z
-2, , ,UW, ,MEGW,,46.26609,-123.87709,351.0, ,50.0,2011-12-22T00:00:00.004000Z, , , , , ,2011-12-22T18:37:11.344000Z,
-3, , ,UW, ,MEGW,,46.26609,-123.87709,351.0, ,50.0,2011-12-22T00:00:00.004000Z, , , , , ,2011-12-22T21:37:21.584000Z,
-4, , ,UW, ,MEGW,,46.26609,-123.87709,351.0, ,50.0,2011-12-22T00:00:00.004000Z, , , , , ,2011-12-22T23:00:11.644000Z,

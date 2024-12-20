@@ -1,8 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,,2012-10-05T20:32:37.015000Z
-1, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,,2012-10-05T20:52:25.390000Z
-2, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,,2012-10-05T22:40:48.840000Z
-3, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,2012-10-05T16:30:54.940000Z,
-4, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,2012-10-05T18:43:03.240000Z,
-5, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,2012-10-05T20:32:57.915000Z,
-6, , ,UW, ,RADR,,46.42181,-123.79897,591.4, ,40.0,2012-10-05T00:00:00.015000Z, , , , , ,2012-10-05T21:03:57.190000Z,

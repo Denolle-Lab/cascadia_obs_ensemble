@@ -1,8 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T01:07:08.890000Z
-1, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T05:00:42.015000Z
-2, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T05:46:01.640000Z
-3, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T12:06:00.165000Z
-4, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T21:16:00.115000Z
-5, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,,2012-10-31T22:00:30.140000Z
-6, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2012-10-31T00:00:00.015000Z, , , , , ,2012-10-31T00:37:19.365000Z,

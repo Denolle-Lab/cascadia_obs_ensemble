@@ -1,8 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T01:36:02.840000Z
-1, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T02:16:02.665000Z
-2, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T18:49:08.515000Z
-3, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T19:39:56.240000Z
-4, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T22:01:24.640000Z
-5, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T23:03:43.090000Z
-6, , ,UW, ,LRIV,,48.0575,-123.504,293.8, ,40.0,2012-01-24T00:00:00.015000Z, , , , , ,,2012-01-24T23:42:46.990000Z

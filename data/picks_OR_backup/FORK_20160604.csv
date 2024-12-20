@@ -1,7 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,,2016-06-04T00:32:26.240000Z
-1, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,2016-06-04T01:57:54.715000Z,
-2, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,2016-06-04T08:06:18.140000Z,
-3, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,2016-06-04T16:47:52.540000Z,
-4, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,2016-06-04T19:30:32.940000Z,
-5, , ,UW, ,FORK,,47.9475,-124.5662,44.9, ,40.0,2016-06-04T00:00:00.015000Z, , , , , ,2016-06-04T23:45:58.790000Z,

@@ -1,6 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,CN, ,NLLB,,49.2271,-123.9882,199.0, ,40.0,2012-06-10T00:00:00.000000Z, , , , , ,,2012-06-10T00:03:47.575000Z
-1, , ,CN, ,NLLB,,49.2271,-123.9882,199.0, ,40.0,2012-06-10T00:00:00.000000Z, , , , , ,2012-06-10T01:19:23.575000Z,
-2, , ,CN, ,NLLB,,49.2271,-123.9882,199.0, ,40.0,2012-06-10T00:00:00.000000Z, , , , , ,2012-06-10T13:10:36.375000Z,
-3, , ,CN, ,NLLB,,49.2271,-123.9882,199.0, ,40.0,2012-06-10T00:00:00.000000Z, , , , , ,2012-06-10T14:13:17.650000Z,
-4, , ,CN, ,NLLB,,49.2271,-123.9882,199.0, ,40.0,2012-06-10T00:00:00.000000Z, , , , , ,2012-06-10T20:21:23.400000Z,

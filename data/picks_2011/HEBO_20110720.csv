@@ -1,4 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-07-20T00:00:00.010000Z, , , , , ,,2011-07-20T17:47:16.660000Z
-1, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-07-20T00:00:00.010000Z, , , , , ,,2011-07-20T17:49:15.960000Z
-2, , ,UW, ,HEBO,,45.213501,-123.755386,875.0, ,40.0,2011-07-20T00:00:00.010000Z, , , , , ,,2011-07-20T20:33:10.835000Z

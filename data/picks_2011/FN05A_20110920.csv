@@ -1,6 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,7D, ,FN05A,,46.8578,-124.655296,-124.0, ,125.0,2011-09-20T00:00:00.008000Z, , , , , ,,2011-09-20T10:23:58.216000Z
-1, , ,7D, ,FN05A,,46.8578,-124.655296,-124.0, ,125.0,2011-09-20T00:00:00.008000Z, , , , , ,,2011-09-20T10:24:05.976000Z
-2, , ,7D, ,FN05A,,46.8578,-124.655296,-124.0, ,125.0,2011-09-20T00:00:00.008000Z, , , , , ,,2011-09-20T10:24:51.048000Z
-3, , ,7D, ,FN05A,,46.8578,-124.655296,-124.0, ,125.0,2011-09-20T00:00:00.008000Z, , , , , ,2011-09-20T10:24:19.008000Z,
-4, , ,7D, ,FN05A,,46.8578,-124.655296,-124.0, ,125.0,2011-09-20T00:00:00.008000Z, , , , , ,2011-09-20T10:25:38.240000Z,

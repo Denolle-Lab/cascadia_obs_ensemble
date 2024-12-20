@@ -1,8 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,,2012-01-01T04:40:46.165000Z
-1, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T05:38:57.515000Z,
-2, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T13:00:22.440000Z,
-3, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T15:02:21.415000Z,
-4, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T17:59:11.040000Z,
-5, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T19:02:52.690000Z,
-6, , ,UW, ,JEDS,,43.75157,-124.04905,159.5, ,40.0,2012-01-01T00:00:00.015000Z, , , , , ,2012-01-01T23:42:32.740000Z,

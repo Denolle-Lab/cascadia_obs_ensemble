@@ -1,7 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,,2011-12-24T10:00:18.750000Z
-1, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,,2011-12-24T17:45:52.650000Z
-2, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,2011-12-24T01:43:17.650000Z,
-3, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,2011-12-24T10:00:31.225000Z,
-4, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,2011-12-24T19:16:00.525000Z,
-5, , ,TA, ,K02D,,42.695499,-123.665398,989.0, ,40.0,2011-12-24T00:00:00.025000Z, , , , , ,2011-12-24T23:36:43.825000Z,

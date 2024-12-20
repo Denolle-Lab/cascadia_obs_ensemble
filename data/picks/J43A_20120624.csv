@@ -1,6 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,7D, ,J43A,,46.137798,-126.172096,-2654.4, ,50.0,2012-06-24T00:00:00.008000Z, , , , , ,,2012-06-24T13:16:57.448000Z
-1, , ,7D, ,J43A,,46.137798,-126.172096,-2654.4, ,50.0,2012-06-24T00:00:00.008000Z, , , , , ,,2012-06-24T14:49:48.308000Z
-2, , ,7D, ,J43A,,46.137798,-126.172096,-2654.4, ,50.0,2012-06-24T00:00:00.008000Z, , , , , ,,2012-06-24T16:22:44.328000Z
-3, , ,7D, ,J43A,,46.137798,-126.172096,-2654.4, ,50.0,2012-06-24T00:00:00.008000Z, , , , , ,,2012-06-24T16:50:46.568000Z
-4, , ,7D, ,J43A,,46.137798,-126.172096,-2654.4, ,50.0,2012-06-24T00:00:00.008000Z, , , , , ,,2012-06-24T18:15:06.008000Z

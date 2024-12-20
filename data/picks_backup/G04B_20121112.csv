@@ -1,7 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,,2012-11-12T02:46:48.033098Z
-1, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,2012-11-12T04:20:14.053098Z,
-2, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,2012-11-12T05:32:23.953098Z,
-3, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,2012-11-12T07:46:26.033098Z,
-4, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,2012-11-12T10:13:22.793098Z,
-5, , ,7D, ,G04B,,40.058498,-126.928497,-4368.0, ,50.0,2012-11-12T00:00:00.013098Z, , , , , ,2012-11-12T11:39:07.493098Z,

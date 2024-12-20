@@ -1,2 +1,0 @@
-,event_id,source_type,station_network_code,station_channel_code,station_code,station_location_code,station_latitude_deg,station_longitude_deg,station_elevation_m,trace_name,trace_sampling_rate_hz,trace_start_time,trace_S_arrival_sample,trace_P_arrival_sample,trace_S_onset,trace_P_onset,trace_snr_db,trace_s_arrival,trace_p_arrival
-0, , ,OO, ,HYSB1,,44.509791,-125.405258,-2908.0, ,200.0,2016-06-04T00:15:00.000000Z, , , , , ,,2016-06-04T00:35:44.675000Z

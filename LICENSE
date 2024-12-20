@@ -19,3 +19,41 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+# Data License
+
+This dataset includes files produced by two different publications. The use of this dataset is subject to the following terms and conditions:
+
+## Attribution
+
+When using this dataset, you must give appropriate credit to the original authors of the publications, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the authors endorse you or your use.
+
+### Publication 1
+- **Title**:  Catalog of offshore seismicity in Cascadia: Insights into the regional distribution of microseismicity and its relation to subduction processes. Journal of Geophysical Research:
+- **Authors**: Stone I, Vidale JE, Han S, Roland E. 
+- **DOI**:  https://doi.org/10.1002/2017JB014966
+- **files**: ``./data/ds01.csv``, ``./data/ds03.xlsx``
+
+### Publication 2
+- **Title**: Cascadia subduction zone fault heterogeneities from newly detected small magnitude earthquakes.
+- **Authors**: Morton EA, Bilek SL, Rowe CA. 
+- **DOI**: (https://doi.org/10.1029/2023JB026607)
+- **files**: ``./data/jgrb52524*1``
+
+## License
+
+The dataset is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license. You are free to:
+
+- **Share**: copy and redistribute the material in any medium or format
+- **Adapt**: remix, transform, and build upon the material for any purpose, even commercially.
+
+Under the following terms:
+
+- **Attribution**: You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+For more details, see the full license at [https://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/).
+
+## Disclaimer
+
+THE DATASET IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATASET OR THE USE OR OTHER DEALINGS IN THE DATASET.

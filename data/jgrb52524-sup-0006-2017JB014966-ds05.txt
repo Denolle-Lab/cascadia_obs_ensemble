@@ -1,0 +1,132 @@
+* SOUTHERN CASCADIA INITIATIVE VELOCITY PROFILE LOCATIONS
+* sets up multiple crustal models using individual delay files.
+* execute these commands after the sta command to get delays properly.
+*
+* Format: [nod 'lat degrees' 'lat minute' 'lon degrees' 'lon minute' 'radius of model (km)'
+*       ...'radius of buffer (km)' 'model number']
+*
+* default:
+* Oregon Shelf
+crh 1 'models/ciact/MO.crh'
+mul t 1
+*
+*
+* PNSN JdF
+crh 3 'models/J1.crh'
+nod 40 30.0 126 50.0 151  24  3
+nod 41 42.0 127 15.0 151  24  3
+nod 43  0.0 127 20.0 157  14  3
+nod 44 18.0 127 27.0 154  14  3
+nod 45 36.0 127 33.0 150  14  3
+nod 47  0.0 128  0.0 147  14  3
+nod 47 35.0 128 40.0 147  14  3
+nod 48 54.0 130  0.0 140  14  3
+*
+* PNSN SOregon
+crh 4 'models/K3.crh'
+del 4 'models/K3.del'
+nod 42 55.0 123 40.0  54  12  4
+nod 42 20.0 123 35.0  54  12  4
+*
+* PNSN Washington
+crh 2 'models/P4.crh'
+del 2 'models/P4.del'
+nod 41 30.0 122 20.0 136  9   2
+nod 40 45.0 122 20.0 126  19   2
+*
+* PNSN NOregon
+crh 5 'models/O0.crh'
+nod 44 45.0 122 10.0 136  9   5
+nod 44  5.0 122 20.0 136  9   5
+nod 43 30.0 122 25.0 136  9   5
+*
+* SWashington Shore
+crh 6 'models/ciact/NWS.crh'
+nod 46 12.0 124 15.0 15  15   6
+nod 46 21.0 124 15.0 15  15   6
+nod 46 30.0 124 20.0 15  15   6
+nod 46 39.0 124 20.0 15  15   6
+nod 46 48.0 124 20.0 15  15   6
+nod 46 57.0 124 20.0 15  15   6
+nod 47  6.0 124 25.0 15  15   6
+*
+* SWashington Shelf
+crh 7 'models/ciact/MWS.crh'
+nod 46 12.0 124 45.0 15  15   7
+nod 46 21.0 124 45.0 15  15   7
+nod 46 30.0 124 50.0 15  15   7
+nod 46 39.0 124 50.0 15  15   7
+nod 46 48.0 124 50.0 15  15   7
+nod 46 57.0 124 50.0 15  15   7
+nod 47  6.0 124 55.0 15  15   7
+*
+* SWashington Trench
+crh 8 'models/ciact/FWS.crh'
+nod 46 12.0 125 20.0 15  15   8
+nod 46 21.0 125 20.0 15  15   8
+nod 46 30.0 125 25.0 15  25   8
+nod 46 39.0 125 25.0 15  25   8
+nod 46 48.0 125 25.0 15  25   8
+nod 46 57.0 125 25.0 15  25   8
+nod 47  6.0 125 30.0 15  20   8
+*
+*
+* Oregon Shore
+crh 11 'models/ciact/NO.crh'
+nod 45 54.0 124 15.0 15  15   11
+nod 45 45.0 124 15.0 15  15   11
+nod 45 36.0 124 10.0 15  15   11
+nod 45 27.0 124 10.0 15  15   11
+nod 45 18.0 124 10.0 15  15   11
+nod 45  9.0 124 10.0 15  15   11
+nod 45  0.0 124 15.0 15  15   11
+nod 44 51.0 124 15.0 15  15   11
+nod 44 42.0 124 15.0 15  15   11
+nod 44 33.0 124 15.0 15  15   11
+nod 44 24.0 124 20.0 15  15   11
+nod 44 15.0 124 20.0 15  15   11
+nod 44  6.0 124 20.0 15  15   11
+nod 43 57.0 124 20.0 15  15   11
+nod 43 48.0 124 25.0 15  15   11
+nod 43 39.0 124 25.0 15  15   11
+nod 43 30.0 124 25.0 15  15   11
+*
+* Oregon Trench
+crh 12 'models/ciact/FO.crh'
+nod 45 54.0 125 20.0 15  15   12
+nod 45 45.0 125 20.0 15  15   12
+nod 45 36.0 125 20.0 15  15   12
+nod 45 27.0 125 20.0 15  15   12
+nod 45 18.0 125 20.0 15  15   12
+nod 45  9.0 125 20.0 15  15   12
+nod 45  0.0 125 20.0 15  15   12
+nod 44 51.0 125 20.0 15  15   12
+nod 44 42.0 125 15.0 15  15   12
+nod 44 33.0 125 15.0 15  15   12
+nod 44 24.0 125 15.0 15  15   12
+nod 44 15.0 125 15.0 15  15   12
+nod 44  6.0 125 15.0 15  15   12
+nod 43 57.0 125 15.0 15  15   12
+nod 43 48.0 125 15.0 15  15   12
+nod 43 39.0 125 15.0 15  15   12
+nod 43 30.0 125 10.0 15  15   12
+nod 43 21.0 125 10.0 15  15   12
+nod 43 12.0 125 10.0 15  15   12
+nod 43  3.0 125 10.0 15  15   12
+nod 42 54.0 125 10.0 15  15   12
+nod 42 36.0 125 10.0 15  15   12
+nod 42 27.0 125 10.0 15  15   12
+nod 42 18.0 125 10.0 15  15   12
+nod 42  9.0 125 10.0 15  15   12
+nod 42  0.0 125  5.0 15  15   12
+nod 41 51.0 125  5.0 15  15   12
+nod 41 42.0 125  0.0 15  15   12
+nod 41 33.0 125  0.0 15  15   12
+nod 41 24.0 124 55.0 15  15   12
+nod 41 16.0 124 55.0 15  15   12
+nod 41  6.0 124 50.0 15  15   12
+nod 40 57.0 124 50.0 15  15   12
+nod 40 48.0 124 45.0 15  15   12
+nod 40 39.0 124 45.0 15  15   12
+nod 40 30.0 124 45.0 15  15   12
+*

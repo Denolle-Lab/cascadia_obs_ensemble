@@ -70,7 +70,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon
 	# Stack
 	# Create and write csv file. Define file name using the station code and the input filepath
     network = network
-    channels = '?H?'
+    channels = '*'
     
    
     
@@ -93,17 +93,34 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon
 # Check for HH and BH channels presence
     has_HH = bool(_sdata.select(channel="HH?"))
     has_BH = bool(_sdata.select(channel="BH?"))
+    has_EH = bool(_sdata.select(channel="EH?"))
+#     has_EN = bool(_sdata.select(channel="EN?"))
 
-    # Apply selection logic based on channel presence
-    if has_HH and has_BH:
-        # If both HH and BH channels are present, select only HH
+
+#     # Apply selection logic based on channel presence
+#     if has_HH and has_BH and has_EH and has_EN:
+#         # If all HH, BH, EH, and EN channels are present, select only HH
+#         sdata += _sdata.select(channel="HH?")
+#     elif has_BH and has_EH and has_EN:
+#         # If BH, EH, and EN channels are present, select only BH
+#         sdata += _sdata.select(channel="BH?")
+#     elif has_EH and has_EN:
+#         # If only EH and EN channels are present, select only EH
+#         sdata += _sdata.select(channel="EH?")
+#     elif has_EN:
+#         # If only EN channels are present
+#         sdata += _sdata.select(channel="EN?")
+
+   # Apply selection logic based on channel presence
+    if has_HH and has_BH and has_EH:
+        # If all HH, BH, EH, and EN channels are present, select only HH
         sdata += _sdata.select(channel="HH?")
-    elif has_HH:
-        # If only HH channels are present
-        sdata += _sdata.select(channel="HH?")
-    elif has_BH:
-        # If only BH channels are present
+    elif has_BH and has_EH:
+        # If BH, EH, and EN channels are present, select only BH
         sdata += _sdata.select(channel="BH?")
+    elif has_EH:
+        # If only EH and EN channels are present, select only EH
+        sdata += _sdata.select(channel="EH?")
 
     ###############################
     # If no data returned, skipping
@@ -111,7 +128,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon
         logging.warning("No stream returned. Skipping.")
         return
     ###############################
-    
+    sdata.resample(100)
     sdata.filter(type='bandpass',freqmin=4,freqmax=15)
     
     ###############################
@@ -331,3 +348,4 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,lat,lon
     print(f"P and S summary:\n{len(p_index)} P picks\n{len(s_index)} S picks")
     df.to_csv(file_name)
     print('test9')
+    

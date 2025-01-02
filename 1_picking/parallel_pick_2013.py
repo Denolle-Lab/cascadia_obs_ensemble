@@ -104,7 +104,7 @@ def loop_days(task, filepath, twin, step, l_blnd, r_blnd):
     print([network, station, t1])
     # Call to the function that will perform the operation and write the results to file
     try:
-        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd, lat, lon, elev)
+        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd)
     except Exception as e:
         print(f"Error: {e}")
         return

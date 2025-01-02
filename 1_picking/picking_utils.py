@@ -140,7 +140,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     tstring2 = t2.strftime('%Y%m%d')
     save_file_name = filepath+network+'_'+station+'_'+tstring+'_'+tstring2+'.csv'
     # Safety catch against overwriting previous analyses
-    if os.path.exists():
+    if os.path.exists(save_file_name):
         print(f'File {save_file_name} already exists')
         return
     # print the file path 

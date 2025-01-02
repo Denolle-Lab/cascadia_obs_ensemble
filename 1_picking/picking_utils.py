@@ -219,7 +219,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     if len(sdata) == 0:
         Logger.warning("No stream returned. Skipping.")
         return
-
+    if np.abs(np.mean(sdata[0].data[1:] - sdata[0].data[0:-1])) <= 1e-8:
+        Logger.warning("constant/no data in the stream. Skipping.")
+        return
     ###############################
     # NTS: Filter and then resample
     # Filter

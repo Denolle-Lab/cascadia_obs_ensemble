@@ -27,7 +27,12 @@ import seisbench.models as sbm
 from ELEP.elep.ensemble_statistics import ensemble_statistics
 from ELEP.elep.ensemble_coherence import ensemble_semblance 
 from ELEP.elep.trigger_func import picks_summary_simple
-from picking_utils_2013 import *
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+    
+from picking_utils import *
 
 device = torch.device("cpu")
 print('test')

@@ -80,11 +80,11 @@ def pred_trigger_pick(pred, source_trace, label, thrd=0.1, **kwargs):
         tp = t0 + (s0 + np.argmax(pred[s0:s1+1]))/sr
         tf = t0 + s1/sr
         pv = np.max(pred[s0:s1+1])
-        line = id[:-1].split('.') + [t0, to, tp, tf, pv, thrd]
+        line = id[:-1].split('.') + [label, t0, to, tp, tf, pv, thrd]
         # pick = Pick(trace_id = id, start_time=to, end_time=tf, peak_time=tp, peak_value=pv, phase=phz_name)
         picks.append(line)
     
-    picks = pd.DataFrame(data=picks,columns=['network','station','location','band_inst','trace_starttime',
+    picks = pd.DataFrame(data=picks,columns=['network','station','location','band_inst','label','trace_starttime',
                                              'trigger_onset','pick_time','trigger_offset','max_prob','thresh_prob'])
     return picks
 

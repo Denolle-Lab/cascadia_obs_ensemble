@@ -104,7 +104,6 @@ def read_stevens_pick_file(file):
     df = pd.read_csv(file, index_col=[0], parse_dates=['trace_starttime','trigger_onset', 'pick_time','trigger_offset'])
     # Run custom formatting script on location codes
     df.location = format_location(df.location)
-
     # Return
     return df
 
@@ -156,6 +155,17 @@ def stevens2yuan(df, client):
 
     :returns: **df_out** (*pandas.DataFrame*) -- Yuan pick formatted dataframe
     """
+    yuan_columns=['event_id','source_type',
+                  'station_network_code','station_channel_code',
+                  'station_code','station_location_code',
+                  'station_latitude_deg','station_longitude_deg',
+                  'station_elevation_m','trace_name',
+                  'trace_sampling_rate_hz','trace_start_time',
+                  'trace_S_arrival_sample','trace_P_arrival_sample',
+                  'trace_S_onset','trace_P_onset','trace_snr_db',
+                  'trace_s_arrival','trace_p_arrival']
+
+
     # Get unique channel codes
     chan_codes = df.groupby(['network','station','location','band_inst']).size().index.values
     # Get starttime and endtime approximation for query
@@ -190,16 +200,31 @@ def stevens2yuan(df, client):
                 sta[0].sample_rate, row.trace_starttime]
         dt_max_sec = (row.pick_time - row.trace_starttime).total_seconds()
         dt_on_sec = (row.trigger_onset - row.trace_starttime).total_seconds()
+        ## PHASE SPECIFIC FORMATTING
+        # trace_S_arrival_sample, trace_P_arrival_sample,
+        # trace_S_onset, trace_P_onset,
+        # trace_snr_db,
+        # trace_s_arrival, trace_p_arrival
+
         # Specific formatting for P-picks
         if row.label == 'P':
-            line += ['',dt_max_sec*sta[0].sample_rate,'',dt_on_sec*sta[0].sample_rate,'','',row.pick_time]
+            line += [np.nan, dt_max_sec*sta[0].sample_rate,
+                     np.nan, dt_on_sec*sta[0].sample_rate,
+                     np.nan,
+                     pd.NaT, row.pick_time]
         # Specific formatting for S-picks
         elif row.label == 'S':
-            line += [dt_max_sec*sta[0].sample_rate,'',dt_on_sec*sta[0].sample_rate,'','',row.pick_time,'']
+            line += [dt_max_sec*sta[0].sample_rate, np.nan,
+                     dt_on_sec*sta[0].sample_rate, np.nan,
+                     np.nan,
+                     row.pick_time, pd.NaT]
         else:
             raise ValueError(f'label "{row.label}" not supported - must be "P" or "S".')
         # Append line to output holder
         output.append(line)  
+    df_out = pd.DataFrame(output, columns=yuan_columns)
+
+    return df_out
 
 ### WRITING METHODS ###
 def write_to_stevens_format(df, savename, **kwargs):
@@ -210,12 +235,15 @@ def write_to_stevens_format(df, savename, **kwargs):
         _ = kwargs.pop('header')
 
     if 'band_inst' in df.columns:
-        df.to_csv(savename, index=True, header=True, **kwargs)
+        pass
     elif 'station_channel_code' in df.columns:
         df = yuan2stevens(df)
-        df.to_csv(savename, index=True, header=True, **kwargs)
     else:
         raise AttributeError('df does not appear to be in Stevens or Yuan format')
+
+    df.index = list(range(len(df)))
+    df.to_csv(savename, index=True, header=True, **kwargs)
+
     return df
 
 def write_to_yuan_format(df, savename, **kwargs):
@@ -235,12 +263,15 @@ def write_to_yuan_format(df, savename, **kwargs):
         _ = kwargs.pop('header')
 
     if 'station_channel_code' in df.columns:
-        df.to_csv(savename, index=True, header=True, **kwargs)
+        pass
     elif 'band_inst' in df.columns:
         df = stevens2yuan(df,client)
-        df.to_csv(savename, index=True, header=True, **kwargs)
     else:
         raise AttributeError('df does not appear to be in Stevens or Yuan format')
+    
+    df.index = list(range(len(df)))
+    df.to_csv(savename, index=True, header=True, **kwargs)
+
     return df
 
 
@@ -312,7 +343,6 @@ def main(args):
                 used_fields.append(sf)
 
     df_full = pd.DataFrame()
-
     for _f in flist:
         Logger.info(f'processing {_f}')
         # Determine format from naming convention
@@ -326,7 +356,7 @@ def main(args):
             Logger.warning(f'file {_f} did not appear to have Stevens or Yuan naming conventions')
             continue
         # Convert dataframe format if needed to meet output format specifications
-        if fmt != args.format:
+        if fmt not in args.format:
             if fmt == 'stevens':
                 df = stevens2yuan(df, client)
             else:
@@ -337,27 +367,25 @@ def main(args):
             df_full = pd.concat([df_full, df], axis=0, ignore_index=True)
         except:
             breakpoint()
-
     # Get file naming formats and sort chronologically
-    if args.format == 'stevens':
+    if 'stevens' in args.format:
         fname = '{network}_{station}_{startdate}_{enddate}.csv'
         df_full = df_full.sort_values(['trace_starttime','pick_time'])
-    elif args.format == 'yuan':
+    elif 'yuan' in args.format:
         fname = '{station}_{startdate}.csv'
         df_full = df_full.sort_values(['trace_start_time','trace_p_arrival','trace_s_arrival'])
 
     
     df = df_full
-    breakpoint()
     # If not using a programmatically structured output path
     if not fstr_out:
         df_out_tuples = [(df_full, args.output)]
 
     else:
         if any(_e in used_fields for _e in ['{year}','{month}','{day}']):
-            if args.format == 'yuan':
+            if 'yuan' in args.format:
                 times = df.trace_start_time
-            elif args.format == 'stevens':
+            elif 'stevens' in args.format:
                 times = df.trace_starttime
         else:
             Logger.critical('format string entries besides {year} {month} and {date} are not supported for --output')
@@ -366,7 +394,6 @@ def main(args):
 
         # Get initial time to start time-chunking      
         t0 = pd.Timestamp(f'{times.min().year}-{times.min().month:02d}-{times.min().day:02d}', tz='UTC')
-
 
         if '{year}' in used_fields:
             iterlevel = 'year'
@@ -385,26 +412,67 @@ def main(args):
                     t1 = t0 + pd.Timedelta(1, unit='day', tz='UTC')
                     iterlevel = 'day'
 
-        if args.format == 'stevens':
+        # Get last timestamp in this file
+        if 'stevens' in args.format:
             tf = df.trigger_offset.max()
         else:
-            tf = df[['trace_p_arrival','trace_s_arrival']].max(axis=0).max(axis=1)
-            breakpoint()
-        while t0 < tf:
-            if args.format == 'yuan':
-                _odf = df[(df.trace_start_time >= t0) & (df.trace_start_time < t1)]
-            else:
-                _odf = df[(df.trace_starttime >= t0) & (df.trace_starttime < t1)]
+            tfp = df[df.trace_p_arrival.notna()].trace_p_arrival.max()
+            tfs = df[df.trace_s_arrival.notna()].trace_s_arrival.max()
+            tf = max([tfp, tfs])
 
-            if len(_odf) > 0:
-                _ofmt = args.output.format(year=t0.year, month=t0.month, day=t0.day)
-                if not os.path.exists(_ofmt):
-                    Logger.warning(f'Making new output directory {_ofmt}')
-                                        
-                df_out_tuples.append((_odf, _ofmt))
+        # Iterate across time span of ingested files
+        while t0 < tf:
+            # Subset dataframe into time-chunk
+            if 'yuan' in args.format:
+                odf = df[(df.trace_start_time >= t0) & (df.trace_start_time < t1)]
+            else:
+                odf = df[(df.trace_starttime >= t0) & (df.trace_starttime < t1)]
+
+            # If there are picks
+            if len(odf) > 0:
+                ofmt = args.output.format(year=f'{t0.year:4d}', month=f'{t0.month:02d}', day=f'{t0.day:02d}')
+                # Make directories if they don't exist
+                if not os.path.exists(ofmt):
+                    Logger.warning(f'Making new output directory {ofmt}')
+                    os.makedirs(ofmt)
+                # Ensure file formatting is as specified
+                    
+                
+
+                Logger.info(f'Slice of inputs for {t0} -- {t1} has {len(odf)} entries')
+
+                # If running Yuan formatting, split by station code only
+                if 'yuan' in args.format:
+                    # Iterate cross stations in _odf
+                    for sta in odf.station_code:
+                        _odf = odf[odf.station_code == sta]
+                        if len(_odf) > 0:
+                            starttime = _odf.trace_start_time.min()
+                            startdate = f'{starttime.year:04d}{starttime.month:02d}{starttime.day:02d}'
+                            savename = os.path.join(ofmt, fname.format(station=sta, startdate=startdate))
+                            write_to_yuan_format(_odf, savename, client=client)
+                        else:
+                            Logger.warning(f'Encountered empty pick subset for {sta} using Yuan output format - skipping')
+                            continue
+                
+                elif 'stevens' in args.format:
+                    for net, sta in odf.groupby(['network','station']).size().index.values:
+                        _odf = odf[(odf.network==net) & odf.station==sta]
+                        if len(_odf) > 0:
+                            starttime = _odf.trace_starttime.min()
+                            startdate = f'{starttime.year:04d}{starttime.month:02d}{starttime.day:02d}'
+                            endtime = _odf.pick_time.max()
+                            enddate = f'{endtime.year:04d}{endtime.month:02d}{endtime.day:02d}'
+                            savename = os.path.join(ofmt, fname.format(network=net, station=sta, startdate=startdate, enddate=enddate))
+                            write_to_stevens_format(_odf, savename)
+                        else:
+                            Logger.warning(f'Encountered empty pick subset for {net}.{sta} using Stevens output format - skipping')
+
+            # If there are no timestamps in this window
             else:
                 Logger.warning(f'Slice of inputs for {t0} -- {t1} was empty -- skipping')
-                continue
+
+
             # Increment up
             t0 = t1
             if iterlevel == 'year':
@@ -417,36 +485,7 @@ def main(args):
             elif iterlevel == 'day':
                 t1 = t0 + pd.Timedelta(1, unit='day')
     
-    breakpoint()
-    # Iterate across time-sliced dictionaries with formatted paths
-    for odf, ofmt in df_out_tuples:
-        if args.format == 'yuan':
-            for sta in odf.station_code:
-                _odf = odf[odf.station_code == sta]
-                if len(_odf) > 0:
-                    starttime = _odf.trace_start_time.min()
-                    startdate = f'{starttime.year:04d}{starttime.month:02d}{starttime.day:02d}'
-                    savename = os.path.join(ofmt, fname.format(station=sta, startdate=startdate))
-                    write_to_yuan_format(_odf, savename, client=client)
-                else:
-                    Logger.warning(f'Encountered empty pick subset for {sta} using Yuan output format - skipping')
-                    continue
-        
-        elif args.format == 'stevens':
-            for net, sta in odf.groupby(['network','station']).size().index.values:
-                _odf = odf[(odf.network==net) & odf.station==sta]
-                if len(_odf) > 0:
-                    starttime = _odf.trace_starttime.min()
-                    startdate = f'{starttime.year:04d}{starttime.month:02d}{starttime.day:02d}'
-                    endtime = _odf.pick_time.max()
-                    enddate = f'{endtime.year:04d}{endtime.month:02d}{endtime.day:02d}'
-                    savename = os.path.join(ofmt, fname.format(network=net, station=sta, startdate=startdate, enddate=enddate))
-                    write_to_stevens_format(_odf, savename)
-                else:
-                    Logger.warning(f'Encountered empty pick subset for {net}.{sta} using Stevens output format - skipping')
-        
 
-    
 
 ### COMMAND LINE INTERFACE
 if __name__ == '__main__':

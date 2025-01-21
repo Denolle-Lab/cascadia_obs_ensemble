@@ -1,11 +1,11 @@
 # Ensemble Deep Learning to further mine Cascadia offshore data
 
 
-This project uses an ensemble deep learning algorith, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using teh 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
+This project uses an ensemble deep learning algorithm, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using teh 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
 
-The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (), and HypoDD for relocation.
+The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (Klein 2002), and HypoDD (Waldhauser and Ellsworth 2000) for relocation.
 
-The repository also provides scripts to compare the new catalog with established catalog in the region (USGS ComCat, [Stone et al 2018](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2017JB014966); [Morton et al, 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JB026607)).
+The repository also provides scripts to compare the new catalog with established catalog in the region ([USGS ComCat](https://earthquake.usgs.gov/earthquakes/search/) and [Morton et al, 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JB026607)).
 
 Project "CoolTeam" at UW:
 - Hiroto Bito: hbito@uw.edu 

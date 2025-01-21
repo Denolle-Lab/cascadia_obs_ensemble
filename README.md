@@ -5,7 +5,7 @@ This project uses an ensemble deep learning algorithm, ELEP (Yuan et al, 2023) t
 
 The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (Klein 2002), and HypoDD (Waldhauser and Ellsworth 2000) for relocation.
 
-The repository also provides scripts to compare the new catalog with established catalog in the region ([USGS ComCat] (https://earthquake.usgs.gov/earthquakes/search/) and [Morton et al, 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JB026607)).
+The repository also provides scripts to compare the new catalog with established catalog in the region ([USGS ComCat](https://earthquake.usgs.gov/earthquakes/search/) and [Morton et al, 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JB026607)).
 
 Project "CoolTeam" at UW:
 - Hiroto Bito: hbito@uw.edu 

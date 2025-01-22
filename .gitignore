@@ -1,2 +1,5 @@
 *.DS_Store
 data/nate_tmp/2011
+.ipynb_checkpoints
+__pycache__
+

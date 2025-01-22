@@ -138,9 +138,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # Define tstring
     tstring = t1.strftime('%Y%m%d')
     tstring2 = t2.strftime('%Y%m%d')
-    save_file_name = filepath+station+'_'+tstring+'_'+tstring2+'.csv'
+    save_file_name = filepath+network+'_'+station+'_'+tstring+'_'+tstring2+'.csv'
     # Safety catch against overwriting previous analyses
-    if os.path.exists():
+    if os.path.exists(save_file_name):
         print(f'File {save_file_name} already exists')
         return
     # print the file path 
@@ -219,7 +219,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     if len(sdata) == 0:
         Logger.warning("No stream returned. Skipping.")
         return
-
+    if np.abs(np.mean(sdata[0].data[1:] - sdata[0].data[0:-1])) <= 1e-8:
+        Logger.warning("constant/no data in the stream. Skipping.")
+        return
     ###############################
     # NTS: Filter and then resample
     # Filter

@@ -44,7 +44,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year1 = 2010
-filepath = "/home/hbito/cascadia_obs_ensemble/data/picks_2010/"
+filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_122-129/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -109,7 +109,7 @@ def loop_days(task, filepath, twin, step, l_blnd, r_blnd):
     print([network, station, t1])
     # Call to the function that will perform the operation and write the results to file
     try:
-        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd, lat, lon, elev)
+        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd)
     except Exception as e:
         print(f"Error: {e}")
         return

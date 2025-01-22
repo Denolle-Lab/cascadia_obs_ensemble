@@ -44,7 +44,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year = 2015
-filepath = f"/home/hbito/cascadia_obs_ensemble/data/picks_{year}/"
+filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year}_122-129/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -56,7 +56,7 @@ time1 = datetime.datetime(year=year,month=1,day=1)
 time2 = datetime.datetime(year=year+1,month=1,day=1)
 time_bins = pd.to_datetime(np.arange(time1,time2,pd.Timedelta(1,'days')))
 
-inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
+inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-129,maxlatitude=50,maxlongitude=-122, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
 
 
 
@@ -109,7 +109,7 @@ def loop_days(task, filepath, twin, step, l_blnd, r_blnd):
     print([network, station, t1])
     # Call to the function that will perform the operation and write the results to file
     try:
-        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd, lat, lon, elev)
+        run_detection(network, station, t1, t2, filepath, twin, step, l_blnd, r_blnd)
     except Exception as e:
         print(f"Error: {e}")
         return

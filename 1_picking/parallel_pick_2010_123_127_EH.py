@@ -28,11 +28,11 @@ from ELEP.elep.ensemble_statistics import ensemble_statistics
 from ELEP.elep.ensemble_coherence import ensemble_semblance 
 from ELEP.elep.trigger_func import picks_summary_simple
 
-# parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# if parent_dir not in sys.path:
-#     sys.path.append(parent_dir)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
     
-from picking_utils_prio import *
+from picking_utils_prio_EH import *
 
 device = torch.device("cpu")
 print('test')
@@ -44,7 +44,7 @@ client_ncedc = Client('NCEDC')
 
 # Parameters
 year1 = 2010
-filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_127-129_46-50/"
+filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_123-127_EH/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -56,7 +56,7 @@ time1 = datetime.datetime(year=year1,month=1,day=1)
 time2 = datetime.datetime(year=year1+1,month=1,day=1)
 time_bins = pd.to_datetime(np.arange(time1,time2,pd.Timedelta(1,'days')))
 
-inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=45.8,minlongitude=-129.2,maxlatitude=50.2,maxlongitude=-126.8, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
+inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=40,minlongitude=-127,maxlatitude=50,maxlongitude=-123, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
 
 
 
@@ -129,6 +129,6 @@ if __name__ == "__main__":
     # Use ProgressBar to track the progress
     with ProgressBar():
         # Using the processes scheduler with num_workers specified
-        compute(lazy_results, scheduler='processes', num_workers=3)
+        compute(lazy_results, scheduler='processes', num_workers=2)
     
 

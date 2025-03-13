@@ -209,10 +209,10 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         Logger.warning('No Vertical Component Data Present. Skipping')
         return
    # Apply selection logic based on channel presence
-    if has_HH and has_BH and has_EH:
+    if has_HH:
         # If all HH, BH, EH, and EN channels are present, select only HH
         sdata += _sdata.select(channel="HH?")
-    elif has_BH and has_EH:
+    elif has_BH:
         # If BH, EH, and EN channels are present, select only BH
         sdata += _sdata.select(channel="BH?")
     elif has_EH:
@@ -221,6 +221,8 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         # NTS: This may also be tricky for pulling full day-volumes because the sampling rate shifts for
         #      analog stations due to the remote digitization scheme used with analog stations
         sdata += _sdata.select(channel="EH?")
+    else:
+        return
 
     ###############################
     # If no data returned, skipping
@@ -260,7 +262,7 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # NTS: Make sure traces are in Z[1E][2N] order
     _s2d = Stream()
     _s2x = Stream()
-    for _c in ['Z','[1E]','[2N]']:
+    for _c in ['[3Z]','[1E]','[2N]']:
         _s = sdata.select(channel=f'??{_c}')
         # Prioritize only the first if more than one is present
         for _e, _tr in enumerate(_s):

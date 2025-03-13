@@ -139,6 +139,14 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     tstring = t1.strftime('%Y%m%d')
     tstring2 = t2.strftime('%Y%m%d')
     save_file_name = filepath+network+'_'+station+'_'+tstring+'_'+tstring2+'.csv'
+    
+    check_filepath = filepath.replace("_122-123_46-50/", "_122-129/")
+    #################################
+    check_file_name = check_filepath+network+'_'+station+'_'+tstring+'_'+tstring2+'.csv'
+    if os.path.exists(check_file_name):
+        print(f'File {check_file_name} already exists')
+        return
+    #################################
     # Safety catch against overwriting previous analyses
     if os.path.exists(save_file_name):
         print(f'File {save_file_name} already exists')
@@ -176,7 +184,10 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # Create a new stream
     sdata = Stream()
     # Check if loaded data have a vertical component (minimum requirement)
-    has_Z = bool(_sdata.select(channel='??Z'))
+    has_Z = bool(_sdata.select(channel='??[3Z]'))
+    has_N = bool(_sdata.select(channel='??[2N]'))
+    has_E = bool(_sdata.select(channel='??[1E]'))
+
     # Check for HH and BH channels presence
     has_HH = bool(_sdata.select(channel="HH?"))
     has_BH = bool(_sdata.select(channel="BH?"))
@@ -201,21 +212,28 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
         Logger.warning('No Vertical Component Data Present. Skipping')
         return
    # Apply selection logic based on channel presence
-    if has_HH:
+#     if has_HH:
+#         # If all HH, BH, EH, and EN channels are present, select only HH
+#         sdata += _sdata.select(channel="HH?")
+#     elif has_BH:
+#         # If BH, EH, and EN channels are present, select only BH
+#         sdata += _sdata.select(channel="BH?")
+#     elif has_EH:
+#         # If only EH and EN channels are present, select only EH
+#         # NTS: This may result in getting only vertical component data - EH? is used for PNSN analog stations
+#         # NTS: This may also be tricky for pulling full day-volumes because the sampling rate shifts for
+#         #      analog stations due to the remote digitization scheme used with analog stations
+#         sdata += _sdata.select(channel="EH?")
+#     else:
+#         return
+    
+    if has_EH:
         # If all HH, BH, EH, and EN channels are present, select only HH
-        sdata += _sdata.select(channel="HH?")
-    elif has_BH:
-        # If BH, EH, and EN channels are present, select only BH
-        sdata += _sdata.select(channel="BH?")
-    elif has_EH:
-        # If only EH and EN channels are present, select only EH
-        # NTS: This may result in getting only vertical component data - EH? is used for PNSN analog stations
-        # NTS: This may also be tricky for pulling full day-volumes because the sampling rate shifts for
-        #      analog stations due to the remote digitization scheme used with analog stations
         sdata += _sdata.select(channel="EH?")
     else:
         return
-
+    
+    
     ###############################
     # If no data returned, skipping
     if len(sdata) == 0:
@@ -235,7 +253,14 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # NTS: This may produce unintended swathes of filled gaps - advise revising this
     sdata.merge(fill_value='interpolate') # fill gaps if there are any.
     ###############################
-
+    
+    # If only Z component is present, triplicate the Z component trace
+    if has_Z and not (has_N and has_E):
+        z_trace = sdata.select(channel="??Z")[0]
+        sdata += z_trace.copy()
+        sdata += z_trace.copy()
+#     print(sdata)
+    
     # Get the necassary information about the station
     delta = sdata[0].stats.delta
     starttime = sdata[0].stats.starttime
@@ -254,21 +279,25 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # NTS: Make sure traces are in Z[1E][2N] order
     _s2d = Stream()
     _s2x = Stream()
-    for _c in ['Z','[1E]','[2N]']:
-        _s = sdata.select(channel=f'??{_c}')
-        # Prioritize only the first if more than one is present
-        for _e, _tr in enumerate(_s):
-            if _e == 0:
-                _s2d += _tr
-            else:
-                _s2x += _tr
-    # Tack the extra traces back onto the leading 3 ordered traces
-    _s2d += _s2x
-    # Overwrite sdata with re-ordered traces
-    sdata = _s2d
+    if has_Z and has_N and has_E:
+        for _c in ['[3Z]','[1E]','[2N]']:
+            _s = sdata.select(channel=f'??{_c}')
+            # Prioritize only the first if more than one is present
+            for _e, _tr in enumerate(_s):
+                if _e == 0:
+                    _s2d += _tr
+                else:
+                    _s2x += _tr
+        # Tack the extra traces back onto the leading 3 ordered traces
+        _s2d += _s2x
+        # Overwrite sdata with re-ordered traces
+        sdata = _s2d
 
     # Reshaping data
     arr_sdata = np.array(sdata)
+    if len(sdata) == 2:
+        print("there is a stream with only 2 traces.")
+        print("Here is the stream:", sdata)
     npts = arr_sdata.shape[1]
     ############################### avoiding errors at the end of a stream
    #nseg = int(np.ceil((npts - twin) / step)) + 1

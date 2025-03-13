@@ -28,9 +28,9 @@ from ELEP.elep.ensemble_statistics import ensemble_statistics
 from ELEP.elep.ensemble_coherence import ensemble_semblance 
 from ELEP.elep.trigger_func import picks_summary_simple
 
-# parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# if parent_dir not in sys.path:
-#     sys.path.append(parent_dir)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
     
 from picking_utils_prio import *
 
@@ -43,7 +43,7 @@ client_waveform = WaveformClient()
 client_ncedc = Client('NCEDC')
 
 # Parameters
-year1 = 2010
+year1 = 2015
 filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_127-129_46-50/"
 os.makedirs(filepath,exist_ok=True)
 
@@ -129,6 +129,6 @@ if __name__ == "__main__":
     # Use ProgressBar to track the progress
     with ProgressBar():
         # Using the processes scheduler with num_workers specified
-        compute(lazy_results, scheduler='processes', num_workers=3)
+        compute(lazy_results, scheduler='processes', num_workers=4)
     
 

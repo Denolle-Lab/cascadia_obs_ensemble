@@ -13,6 +13,13 @@ from tqdm import tqdm
 from itertools import islice
 import random
 
+"""
+auth: Hiroto Bito 
+org: University of Washington
+email: hbito@uw.edu
+purpose: This notebook will collect waveform data and format them into a seisbench compatible hdf5 format in order to disseminate the data sets.  Constructed through a prompt to ChatGPT and in reference to https://github.com/niyiyu/PNW-ML/blob/main/scripts/mpi_extract_comcat_acceleration.py.
+
+"""
 
 # Placeholder for client instances
 client_iris = Client("IRIS")

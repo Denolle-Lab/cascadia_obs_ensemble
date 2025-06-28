@@ -231,10 +231,10 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
     ##################################################
     
 # Dump the waveform data into pkl files for backup    
-with open('waveform_buckets_HH_BH.pkl', 'wb') as f:
+with open('/wd1/hbito_data/data/datasets_all_regions/waveform_buckets_HH_BH.pkl', 'wb') as f:
     pickle.dump(waveform_buckets_HH_BH, f)
     
-with open('waveform_buckets_EH.pkl', 'wb') as f:
+with open('/wd1/hbito_data/data/datasets_all_regions/waveform_buckets_EH.pkl', 'wb') as f:
     pickle.dump(waveform_buckets_EH, f)
 
 # Create the seisbench metadata dataframe

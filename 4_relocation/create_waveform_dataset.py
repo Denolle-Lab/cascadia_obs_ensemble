@@ -1,3 +1,5 @@
+# create_waveform_dataset.py (adjusted to fix EH waveform shape issues)
+
 import os
 import logging
 from obspy.clients.fdsn import Client
@@ -11,38 +13,26 @@ from datetime import timedelta
 import pandas as pd
 import h5py
 from tqdm import tqdm
-from itertools import islice
 import random
 
-
-# Placeholder for client instances
 client_iris = Client("IRIS")
 client_ncedc = Client("NCEDC")
-client_waveform = client_iris  # replace with actual waveform client if different
+client_waveform = client_iris
 
-# Load the assignment data frames of picks
 assoc_df = pd.read_csv('/wd1/hbito_data/data/datasets_all_regions/arrival_assoc_origin_2010_2015_reloc_cog_ver3.csv', index_col=0)
-print("assoc_df.head()", assoc_df.head())
 
-# Start making the datasets
-# Initiate module logger
 Logger = logging.getLogger(__name__)
 
-# Define the output file names for the waveform data and metadata
 output_waveform_file_HH_BH = "/wd1/hbito_data/data/datasets_all_regions/waveforms_HH_BH.h5"
 output_metadata_file_HH_BH = "/wd1/hbito_data/data/datasets_all_regions/metadata_HH_BH.csv"
-
 output_waveform_file_EH = "/wd1/hbito_data/data/datasets_all_regions/waveforms_EH.h5"
 output_metadata_file_EH = "/wd1/hbito_data/data/datasets_all_regions/metadata_EH.csv"
 
-# Constants
-sampling_rate = 100  # Hz
+sampling_rate = 100
 pre_arrival_time = 50
 window_length = 150
 
 
-# Replace with your actual DataFrame
-# df = pd.read_csv(...) or load your 'close_to_midnight'
 df = assoc_df.copy()
 df[['network', 'station']] = df['sta'].str.split('.', expand=True)
 df['event_id'] = 'ev' + df['otime'].astype(str).str.replace('.', '_')
@@ -55,7 +45,7 @@ def get_waveform_across_midnight(client, network, station, location, channel, st
     stream = Stream()
     current = starttime
     while current < endtime:
-        next_day = current.date + timedelta(days=1)  # Correct way to get the next day
+        next_day = current.date + timedelta(days=1)
         chunk_end = min(obspy.UTCDateTime(next_day), endtime)
         try:
             st_chunk = client.get_waveforms(
@@ -69,20 +59,11 @@ def get_waveform_across_midnight(client, network, station, location, channel, st
         current = chunk_end
     return stream
 
-
-count = 0
-group_iter = df.groupby(['event_id', 'network', 'station'])
-for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network', 'station']),total=len(df.groupby(['event_id', 'network', 'station'])), desc="Processing events"):
-    print("-" * 50)
-    print("network:", network)
-    print("station:", station)
-    # print("count:", count)
-    count += 1
-
+for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network', 'station']), total=len(df.groupby(['event_id', 'network', 'station'])), desc="Processing events"):
     p_arrival = group[group['iphase'] == 'P']
     s_arrival = group[group['iphase'] == 'S']
     if s_arrival.empty:
-        print(f"No S arrival for event {event_id} at station {station}")
+        continue
 
     first_arrival = group['otime'].min()
     trace_start = first_arrival - pre_arrival_time
@@ -92,13 +73,9 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
     trace_start1 = obspy.UTCDateTime(trace_start)
     trace_end1 = obspy.UTCDateTime(trace_end)
 
-    print(f"Trace start: {trace_start1}, Trace end: {trace_end1}")
-
     try:
-        sta = client_iris.get_stations(network=network, station=station, location="*", channel="*",
-                                       starttime=trace_start1, endtime=trace_end1)
-    except Exception as e:
-        print("Error during download or processing station info:", e)
+        sta = client_iris.get_stations(network=network, station=station, location="*", channel="*", starttime=trace_start1, endtime=trace_end1)
+    except Exception:
         continue
 
     try:
@@ -113,12 +90,9 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
         _waveform.trim(trace_start1, trace_end1, pad=True, fill_value=0.0)
         _waveform.detrend()
         _waveform.resample(sampling_rate)
-
-    except Exception as e:
-        print("Error during waveform processing:", e)
+    except Exception:
         continue
-    
-    # print(_waveform)
+
     olat = group['lat'].iloc[0]
     olon = group['lon'].iloc[0]
     odepth = group['depth'].iloc[0] * 1000
@@ -133,7 +107,6 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
     has_EH = bool(_waveform.select(channel="EH?"))
 
     if not has_Z:
-        Logger.warning('No Vertical Component Data Present. Skipping')
         continue
 
     if has_HH:
@@ -141,40 +114,29 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
     elif has_BH:
         waveform += _waveform.select(channel="BH?")
     elif has_EH:
-        waveform += _waveform.select(channel="EHZ")
+        waveform += _waveform.select(channel="EH?")
     else:
         continue
 
     waveform = sorted(waveform, key=lambda tr: tr.stats.channel)
 
-    for i, tr in enumerate(waveform):
-        print(f"Trace {i}: id={tr.id}, channel={tr.stats.channel}, shape={tr.data.shape}")
+    expected_len = window_length * sampling_rate
+    clean_traces = []
+    for tr in waveform:
+        trace_data = tr.data[:expected_len]
+        if len(trace_data) < expected_len:
+            trace_data = np.pad(trace_data, (0, expected_len - len(trace_data)), mode="constant")
+        elif len(trace_data) > expected_len:
+            trace_data = trace_data[:expected_len]
+        clean_traces.append(trace_data)
 
-    station_channel_code = waveform[0].stats.channel[:-1]
-    data = np.stack([tr.data[:window_length * sampling_rate - 2] for tr in waveform], axis=0)
+    data = np.stack(clean_traces, axis=0)
     num_trs, num_tps = data.shape
 
     p_sample = int((p_arrival['pick_time'].iloc[0] - trace_start) * sampling_rate) if not p_arrival.empty else None
     s_sample = int((s_arrival['pick_time'].iloc[0] - trace_start) * sampling_rate) if not s_arrival.empty else None
 
-    # Create row
-    if has_HH or has_BH: # If the waveforms are from HH or BH channels
-        bucket_HH_BH = str(random.randint(0, 10))
-        index_HH_BH = len(waveform_buckets_HH_BH[bucket_HH_BH])
-        trace_name = f"{bucket_HH_BH}${index_HH_BH},:{num_trs},:{num_tps}"
-        waveform_buckets_HH_BH[bucket_HH_BH].append(data)
-
-    elif has_EH: # IF the waveforms are from EH channels
-        bucket_EH = str(random.randint(0, 10))
-        print(f"EH bucket: {bucket_EH}")
-        index_EH = len(waveform_buckets_EH[bucket_EH])
-        trace_name = f"{bucket_EH}${index_EH},:{num_trs},:{num_tps}"
-        waveform_buckets_EH[bucket_EH].append(data)
-
-    else:
-        print(f"No valid channel data for event {event_id} at station {station}")
-        continue
-
+    trace_name = ""
     row = {
         'event_id': event_id,
         'source_origin_time': otime,
@@ -188,7 +150,7 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
         'source_depth_uncertainty_km': None,
         'source_horizontal_uncertainty_km': None,
         'station_network_code': network,
-        'station_channel_code': station_channel_code,
+        'station_channel_code': waveform[0].stats.channel[:-1],
         'station_code': station,
         'station_location_code': "",
         'station_latitude_deg': slat,
@@ -214,73 +176,37 @@ for (event_id, network, station), group in tqdm(df.groupby(['event_id', 'network
         'trace_missing_channel': "",
         'trace_has_offset': None
     }
-        ##################################################
 
-
-    # Create row
-    if has_HH or has_BH: # If the waveforms are from HH or BH channels
+    if has_HH or has_BH:
+        bucket = str(random.randint(0, 10))
+        index = len(waveform_buckets_HH_BH[bucket])
+        row['trace_name'] = f"{bucket}${index},:{num_trs},:{num_tps}"
+        waveform_buckets_HH_BH[bucket].append(data)
         rows_HH_BH.append(row)
-
-    elif has_EH: # IF the waveforms are from EH channels
+    elif has_EH:
+        bucket = str(random.randint(0, 10))
+        index = len(waveform_buckets_EH[bucket])
+        row['trace_name'] = f"{bucket}${index},:{num_trs},:{num_tps}"
+        waveform_buckets_EH[bucket].append(data)
         rows_EH.append(row)
 
-    else:
-        print(f"No valid channel data for event {event_id} at station {station}")
-        continue
-        
-    ##################################################
-    
-# Dump the waveform data into pkl files for backup    
 with open('/wd1/hbito_data/data/datasets_all_regions/waveform_buckets_HH_BH.pkl', 'wb') as f:
     pickle.dump(waveform_buckets_HH_BH, f)
-    
+
 with open('/wd1/hbito_data/data/datasets_all_regions/waveform_buckets_EH.pkl', 'wb') as f:
     pickle.dump(waveform_buckets_EH, f)
 
-# Create the seisbench metadata dataframe
-seisbench_df_HH_BH = pd.DataFrame(rows_HH_BH)
-seisbench_df_EH = pd.DataFrame(rows_EH)
+pd.DataFrame(rows_HH_BH).to_csv(output_metadata_file_HH_BH, index=False)
+pd.DataFrame(rows_EH).to_csv(output_metadata_file_EH, index=False)
 
-# === WRITE METADATA ===
-print(f"Saving metadata to {output_metadata_file_HH_BH}...")
-seisbench_df_HH_BH.to_csv(output_metadata_file_HH_BH, index=False)   
-
-print(f"Saving metadata to {output_metadata_file_EH}...")
-seisbench_df_EH.to_csv(output_metadata_file_EH, index=False)   
-
-
-# Display the first few rows
-print(f"Created {len(seisbench_df_HH_BH)} metadata entries for HH/BH channels")
-print(f"Created {len(seisbench_df_EH)} metadata entries for EH channels")
-
-# === WRITE TO HDF5 ===
-print(f"Saving waveform data to {output_waveform_file_HH_BH}...")
 with h5py.File(output_waveform_file_HH_BH, "w") as f:
     for bucket, traces in waveform_buckets_HH_BH.items():
-        print(f"HH/BH bucket: {bucket}, number of traces: {len(traces)}")
-        if not traces:
-            continue
-        for tr in traces:
-            print("HH/BH trace shape:", tr.shape)
-            print("HH/BH trace:", tr)
-        arr = np.stack(traces, axis=0)  # (N, 3, T)
-        print("HH/BH arr shape:", arr.shape)
-        f.create_dataset(f"/data/{bucket}", data=arr, dtype="float32")
+        if traces:
+            f.create_dataset(f"/data/{bucket}", data=np.stack(traces, axis=0), dtype="float32")
 
-print(f"Saving waveform data to {output_waveform_file_EH}...")
 with h5py.File(output_waveform_file_EH, "w") as f:
     for bucket, traces in waveform_buckets_EH.items():
-        print(f"EH bucket: {bucket}, number of traces: {len(traces)}")
-        if not traces:
-            continue
-        for tr in traces:
-            print("EH trace shape:", tr.shape)
-            print("EH trace:", tr)
-
-        arr = np.stack(traces, axis=0)  # (N, 3, T)
-        print("EH arr shape:", arr.shape)
-        f.create_dataset(f"/data/{bucket}", data=arr, dtype="float32")
-
+        if traces:
+            f.create_dataset(f"/data/{bucket}", data=np.stack(traces, axis=0), dtype="float32")
 
 print("Done.")
-

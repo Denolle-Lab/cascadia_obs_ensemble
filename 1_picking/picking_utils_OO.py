@@ -1,6 +1,7 @@
 import logging
 import os
 
+import time
 from obspy.clients.fdsn import Client
 import numpy as np
 import obspy
@@ -165,11 +166,15 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
             # Query waveforms
             _sdata = client_ncedc.get_waveforms(network=network, station=station, location="*", channel=channels,
                                                starttime=UTCDateTime(t1), endtime=UTCDateTime(t2))
+            time.sleep(0.01)
+            
         else:
             # Shouldn't this have an explicit starttime + endtime inputs?
             _sdata = client_waveform.get_waveforms(network=network, station=station, channel=channels, 
                                               year=t1.strftime('%Y'), month=t1.strftime('%m'), 
                                               day=t1.strftime('%d'))
+            time.sleep(0.01)
+            
     except obspy.clients.fdsn.header.FDSNNoDataException:
         Logger.warning(f"WARNING: No data for {network}.{station}.{channels} on {t1} - {t2}.")
         return

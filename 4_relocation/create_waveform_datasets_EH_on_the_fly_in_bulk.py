@@ -27,10 +27,10 @@ pre_arrival_time = 50
 window_length = 300
 
 # Load the arrival table and define the output file names
-assoc_df = pd.read_csv('/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/arrival_assoc_origin_2010_2015_reloc_cog_ver3.csv', index_col=0)
-output_waveform_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/waveforms_EH_on_the_fly_bulk.h5"
-output_metadata_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/metadata_EH_on_the_fly_bulk.csv"
-error_log_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/save_errors_EH_on_the_fly_bulk.csv"
+assoc_df = pd.read_csv('/wd1/hbito_data/data/datasets_all_regions/arrival_assoc_origin_2010_2015_reloc_cog_ver3.csv', index_col=0)
+output_waveform_file = "/wd1/hbito_data/data/datasets_all_regions/waveforms_EH_on_the_fly_bulk.h5"
+output_metadata_file = "/wd1/hbito_data/data/datasets_all_regions/metadata_EH_on_the_fly_bulk.csv"
+error_log_file = "/wd1/hbito_data/data/datasets_all_regions/save_errors_EH_on_the_fly_bulk.csv"
 
 # Preprocess dataframe
 assoc_df[['network', 'station']] = assoc_df['sta'].str.split('.', expand=True)
@@ -117,7 +117,7 @@ batches_bulk_waveforms = []
 num_batches = 100
 len_batches = len(unique_n_s_otime) // num_batches
 
-count_EH_pairs = 0
+count_HH_BH_pairs = 0
 
 for i in tqdm(range(0, num_batches+1)):
     bulk_waveforms_chunks = []
@@ -150,21 +150,14 @@ for i in tqdm(range(0, num_batches+1)):
             # print("count_EH_pairs", count_EH_pairs)
             continue
 
-        if has_HH:
-            if n in ['NC', 'BK']:
-                bulk_waveforms_chunks_ncedc = append_bulk_lists_chunks(bulk_waveforms_chunks_ncedc, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
-            else:
-                bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
-            
-            bulk_waveforms = append_bulk_lists(bulk_waveforms, n, s, 'EH?', trace_start, trace_end)
-
+     
+      
+        if n in ['NC', 'BK']:
+            bulk_waveforms_chunks_ncedc = append_bulk_lists_chunks(bulk_waveforms_chunks_ncedc, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
         else:
-            if n in ['NC', 'BK']:
-                bulk_waveforms_chunks_ncedc = append_bulk_lists_chunks(bulk_waveforms_chunks_ncedc, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
-            else:
-                bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
-            
-            bulk_waveforms = append_bulk_lists(bulk_waveforms, n, s, 'EH?', trace_start, trace_end)
+            bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'EH?', trace_start, trace_end, day_end, next_day_start)
+
+        bulk_waveforms = append_bulk_lists(bulk_waveforms, n, s, 'EH?', trace_start, trace_end)
 
     batches_bulk_waveforms_chunks.append(bulk_waveforms_chunks)
     batches_bulk_waveforms_chunks_ncedc.append(bulk_waveforms_chunks_ncedc)

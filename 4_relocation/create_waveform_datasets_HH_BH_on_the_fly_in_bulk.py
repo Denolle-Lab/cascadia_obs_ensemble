@@ -36,6 +36,7 @@ error_log_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_reg
 assoc_df[['network', 'station']] = assoc_df['sta'].str.split('.', expand=True)
 assoc_df['event_id'] = 'ev' + assoc_df['otime'].astype(str).str.replace('.', '_')
 
+
 # Define the function to reorder the traces in a stream
 def order_traces(stream: Stream, expected_len: int) -> np.ndarray:
     """
@@ -109,15 +110,24 @@ def append_bulk_lists(bulk_waveforms, n, s, bi, trace_start, trace_end):
 
     return bulk_waveforms
 
-# Make a list for the bulk request of waveforms
-batches_bulk_waveforms_chunks =[] # List of requests. Contains two request for a stream that runs over the midnight.
-batches_bulk_waveforms = [] # List of requests
-num_batches = 10 # Define the number of batches to split the requests into
+# compose 
+batches_bulk_waveforms_chunks =[]
+batches_bulk_waveforms_chunks_ncedc =[]
+
+batches_bulk_waveforms = []
+num_batches = 10
 len_batches = len(unique_n_s_otime) // num_batches
 
-print("Creating waveform request lists")
+count_EH_pairs = 0
+
+# Constants
+sampling_rate = 100  # Hz
+pre_arrival_time = 50
+window_length = 150
+
 for i in tqdm(range(0, num_batches+1)):
     bulk_waveforms_chunks = []
+    bulk_waveforms_chunks_ncedc = []
     bulk_waveforms = []
     time.sleep(0.2)
 
@@ -141,17 +151,28 @@ for i in tqdm(range(0, num_batches+1)):
         has_BH = bool(sta.select(channel='BH?'))
 
         if not has_Z or not (has_HH or has_BH):
+            count_EH_pairs += 1
+            # print("count_EH_pairs", count_EH_pairs)
             continue
         
         if has_HH:
-            bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'HH?', trace_start, trace_end, day_end, next_day_start)
+            if n in ['NC', 'BK']:
+                bulk_waveforms_chunks_ncedc = append_bulk_lists_chunks(bulk_waveforms_chunks_ncedc, n, s, 'HH?', trace_start, trace_end, day_end, next_day_start)
+            else:
+                bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'HH?', trace_start, trace_end, day_end, next_day_start)
+            
             bulk_waveforms = append_bulk_lists(bulk_waveforms, n, s, 'HH?', trace_start, trace_end)
 
         else:
-            bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'BH?', trace_start, trace_end, day_end, next_day_start)
+            if n in ['NC', 'BK']:
+                bulk_waveforms_chunks_ncedc = append_bulk_lists_chunks(bulk_waveforms_chunks_ncedc, n, s, 'BH?', trace_start, trace_end, day_end, next_day_start)
+            else:
+                bulk_waveforms_chunks = append_bulk_lists_chunks(bulk_waveforms_chunks, n, s, 'BH?', trace_start, trace_end, day_end, next_day_start)
+            
             bulk_waveforms = append_bulk_lists(bulk_waveforms, n, s, 'BH?', trace_start, trace_end)
 
     batches_bulk_waveforms_chunks.append(bulk_waveforms_chunks)
+    batches_bulk_waveforms_chunks_ncedc.append(bulk_waveforms_chunks_ncedc)
     batches_bulk_waveforms.append(bulk_waveforms)
 
 #--------------Create Waveform Datasets in batches----------------#
@@ -183,22 +204,55 @@ meta_writer = csv.DictWriter(meta_out, fieldnames=fieldnames)
 if write_header:
     meta_writer.writeheader()
 
-# Define constants for waveform processing
 sampling_rate = 100  # Hz
 window_length = 150  # seconds
 expected_len = int(sampling_rate * window_length)
 
 i_iter = 0
 
-# Iterate through the batches of waveform requests
 for i in range(len(batches_bulk_waveforms)):
-    print('Batch', i)
+# for i in range(1):
+    print("Batch",i)
     batch_chunk = batches_bulk_waveforms_chunks[i]
+    batch_chunk_ncedc = batches_bulk_waveforms_chunks_ncedc[i]
     batch = batches_bulk_waveforms[i]
 
     save_errors = []
 
-    st = client_waveform.get_waveforms_bulk(batch_chunk)
+    st = Stream()
+    if len(batch_chunk)>0:
+        for j in range(len(batch_chunk)):
+            n, s, loc, bi, trace_start_time, trace_end_time = batch_chunk[j]
+            try: 
+                st1 = client_waveform.get_waveforms(network=n, station=s, location=loc, channel=bi,
+                                                    starttime=trace_start_time, endtime=trace_end_time)
+                st1.detrend()
+                st1.resample(sampling_rate)
+                
+                st.extend(st1)
+            except Exception as e:
+                print(f"Error fetching waveforms for {n}.{s} {bi} from {trace_start_time} to {trace_end_time}: {e}")
+                # Write error immediately
+                continue
+        print('Finished downloading from WaveformClient')
+    
+    if len(batch_chunk_ncedc)>0:
+        for j in range(len(batch_chunk_ncedc)):
+            n, s, loc, bi, trace_start_time, trace_end_time = batch_chunk_ncedc[j]
+            try: 
+                st2 = client_ncedc.get_waveforms(network=n, station=s, location=loc, channel=bi,
+                                                     starttime=trace_start_time, endtime=trace_end_time)
+                st2.detrend()
+                st2.resample(sampling_rate)
+                
+                time.sleep(0.2)
+                st.extend(st2)
+            except Exception as e:
+                print(f"Error fetching waveforms for {n}.{s} {bi} from {trace_start_time} to {trace_end_time}: {e}")
+                # Write error immediately
+                continue
+        print('Finished downloading from NCEDC')    
+
     time.sleep(0.2) # Stop the execution to avoid making too many requests to the server
 
     for n_s_time in tqdm(batch):
@@ -214,20 +268,24 @@ for i in range(len(batches_bulk_waveforms)):
         key = (str(trace_start_time), network, station)
         if key in processed_keys:
             print(f"Skipping already processed entry: {key}")
+            # time.sleep(0.2)
             continue
 
-        inv_n_s_time = inv.select(network=network, station=station, location=location, channel='*',
-                                   starttime=trace_start_time, endtime=trace_end_time)
+        # inv_n_s_time = inv.select(network=network, station=station, location=location, channel='*',
+        #                            starttime=trace_start_time, endtime=trace_end_time)
 
-        st_n_s = st.select(inventory=inv_n_s_time)
+        # inv_n_s_time = inv.select(network=network, station=station, location=location, channel='*')
+        # print('inv_n_s_time', inv_n_s_time)
+        st_n_s = st.select(id=f"{network}.{station}.*.{channel}",)
+        # print('st_n_s', st_n_s)
 
         st_n_s_time = Stream([tr for tr in st_n_s if tr.stats.starttime > (trace_start_time-1) and tr.stats.endtime < (trace_end_time+1)]) # Tolerate the error of 1 second when selecting the traces in the stream for the specific time window
         st_n_s_time.merge(method=0, fill_value='interpolate')
-        st_n_s_time.detrend()
-        st_n_s_time.resample(sampling_rate)
+#         st_n_s_time.detrend()
+#         st_n_s_time.resample(sampling_rate)
 
         cleaned_stream = Stream()
-
+        # print('st_n_s_time', st_n_s_time)
         for tr in st_n_s_time:
             trace_data = tr.data[:expected_len]
             if len(trace_data) < expected_len:
@@ -235,11 +293,13 @@ for i in range(len(batches_bulk_waveforms)):
             tr.data = trace_data
             cleaned_stream.append(tr)
 
+        # print('cleaned_stream', cleaned_stream)
+
         _cleaned_stream = order_traces(cleaned_stream, expected_len)
 
         try:
             data = np.stack(_cleaned_stream, axis=0)
-
+    #         data = np.stack([tr.data[:window_length * sampling_rate - 2] for tr in waveform], axis=0)
         except Exception as e:
             # Write error immediately
             file_exists = os.path.exists(error_log_file)
@@ -250,8 +310,8 @@ for i in range(len(batches_bulk_waveforms)):
                 writer.writerow({'i_iter': i_iter, 'network': network, 'station': station, 'starttime': trace_start_time, 'endtime': trace_end_time, 'stage': 'metadata_write', 'error': str(e)})
             continue
 
-        # Define the bucket number
         bucket = str(random.randint(0, 10))
+        
         
         try:
             dset_path = f"/data/{bucket}"
@@ -274,8 +334,18 @@ for i in range(len(batches_bulk_waveforms)):
                 writer.writerow({'i_iter': i_iter, 'network': network, 'station': station, 'starttime': trace_start_time, 'endtime': trace_end_time, 'stage': 'metadata_write', 'error': str(e)})
             continue
 
-        # Define the trace name
         trace_name = f"{bucket}${dataset_index},:{data.shape[0]},:{data.shape[1]}"
+
+        # print(network, station, location, channel, trace_start_time, trace_end_time)
+        # print(rows_sta)
+        # print(rows_sta['lat'].iloc[0])
+        # print(rows_sta['lat'].iloc[0])
+        # print(rows_sta['lon'].iloc[0])
+        # print(rows_sta['depth'].iloc[0])
+        # print(s_arrival['pick_time'].iloc[0] if not s_arrival.empty else None)
+        # print(inv_n_s_time[0][0].latitude)
+        # print(cleaned_stream[0].stats.channel[:-1])
+
 
         try:
             row = {
@@ -294,9 +364,9 @@ for i in range(len(batches_bulk_waveforms)):
                 'station_channel_code': cleaned_stream[0].stats.channel[:-1],
                 'station_code': station,
                 'station_location_code': "",
-                'station_latitude_deg': inv_n_s_time[0][0].latitude,
-                'station_longitude_deg': inv_n_s_time[0][0].longitude,
-                'station_elevation_m': inv_n_s_time[0][0].elevation,
+                'station_latitude_deg': None,
+                'station_longitude_deg': None,
+                'station_elevation_m': None,
                 'trace_name': trace_name,
                 'trace_sampling_rate_hz': sampling_rate,
                 'trace_start_time': trace_start_time,
@@ -328,8 +398,7 @@ for i in range(len(batches_bulk_waveforms)):
                 if not file_exists:
                     writer.writeheader()
                 writer.writerow({'i_iter': i_iter, 'network': network, 'station': station, 'starttime': trace_start_time, 'endtime': trace_end_time, 'stage': 'metadata_write', 'error': str(e)})
-            continue
-            
+            continue      
 
 h5f.close()
 meta_out.close()

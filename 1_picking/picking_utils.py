@@ -41,6 +41,7 @@ client_inventory = Client('IRIS')
 client_waveform = WaveformClient()
 client_ncedc = Client('NCEDC')
 
+# Define parameters for ELEP
 twin = 6000     # length of time window
 step = 3000     # step length
 l_blnd, r_blnd = 500, 500

@@ -28,9 +28,9 @@ window_length = 300
 
 # Load the arrival table and define the output file names
 assoc_df = pd.read_csv('/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/arrival_assoc_origin_2010_2015_reloc_cog_ver3.csv', index_col=0)
-output_waveform_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/waveforms_HH_BH_on_the_fly_bulk.h5"
-output_metadata_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/metadata_HH_BH_on_the_fly_bulk.csv"
-error_log_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/save_errors_on_the_fly_bulk.csv"
+output_waveform_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/waveforms_HH_BH_on_the_fly_bulk2.h5"
+output_metadata_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/metadata_HH_BH_on_the_fly_bulk2.csv"
+error_log_file = "/home/hbito/cascadia_obs_ensemble_backup/data/datasets_all_regions/save_errors_on_the_fly_bulk2.csv"
 
 # Preprocess dataframe
 assoc_df[['network', 'station']] = assoc_df['sta'].str.split('.', expand=True)
@@ -50,7 +50,7 @@ def order_traces(stream: Stream, expected_len: int) -> np.ndarray:
     - data_array: np.ndarray of shape (3, expected_len)
     """
     # Fixed component order: Z → 0, E → 1, N → 2
-    comp_to_index = {"Z": 0, "E": 1, "N": 2}
+    comp_to_index = {"Z": 0, "E": 1, "N": 2, '1': 1, '2': 2}
     data_list = [np.zeros(expected_len) for _ in range(3)]  # Default to zeros
 
     for tr in stream:

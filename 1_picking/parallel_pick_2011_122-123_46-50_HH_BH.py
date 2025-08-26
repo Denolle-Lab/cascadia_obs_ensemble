@@ -28,11 +28,11 @@ from ELEP.elep.ensemble_statistics import ensemble_statistics
 from ELEP.elep.ensemble_coherence import ensemble_semblance 
 from ELEP.elep.trigger_func import picks_summary_simple
 
-# parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# if parent_dir not in sys.path:
-#     sys.path.append(parent_dir)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
     
-from picking_utils_prio import *
+from picking_utils_prio_HH_BH import *
 
 device = torch.device("cpu")
 print('test')
@@ -43,8 +43,8 @@ client_waveform = WaveformClient()
 client_ncedc = Client('NCEDC')
 
 # Parameters
-year1 = 2010
-filepath = f"/wd1/hbito_data/data/picks_{year1}_122-123_40-46/"
+year1 = 2011
+filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_122-123_46-50_HH_BH/"
 os.makedirs(filepath,exist_ok=True)
 
 twin = 6000     # length of time window
@@ -56,7 +56,7 @@ time1 = datetime.datetime(year=year1,month=1,day=1)
 time2 = datetime.datetime(year=year1+1,month=1,day=1)
 time_bins = pd.to_datetime(np.arange(time1,time2,pd.Timedelta(1,'days')))
 
-inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=39.8,minlongitude=-123.2,maxlatitude=46.2,maxlongitude=-121.8, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
+inventory = client_inventory.get_stations(network="C8,7D,7A,CN,NV,UW,UO,NC,BK,TA,OO,PB,X6,Z5,X9", station="*", minlatitude=45.8,minlongitude=-123.2,maxlatitude=50.2,maxlongitude=-121.8, starttime=time1.strftime('%Y%m%d'),endtime=time2.strftime('%Y%m%d'))
 
 
 

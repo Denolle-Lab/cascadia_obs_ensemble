@@ -1,7 +1,7 @@
 # Ensemble Deep Learning to further mine Cascadia offshore data
 
 
-This project uses an ensemble deep learning algorithm, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using teh 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
+This project uses an ensemble deep learning algorithm, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using the 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
 
 The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (Klein 2002), and HypoDD (Waldhauser and Ellsworth 2000) for relocation.
 

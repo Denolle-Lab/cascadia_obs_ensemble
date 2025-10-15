@@ -43,7 +43,7 @@ client_waveform = WaveformClient()
 client_ncedc = Client('NCEDC')
 
 # Parameters
-year1 = 2010
+year1 = 2014
 filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_122-123_40-46/"
 os.makedirs(filepath,exist_ok=True)
 
@@ -129,6 +129,6 @@ if __name__ == "__main__":
     # Use ProgressBar to track the progress
     with ProgressBar():
         # Using the processes scheduler with num_workers specified
-        compute(lazy_results, scheduler='processes', num_workers=4)
+        compute(lazy_results, scheduler='processes', num_workers=2)
     
 

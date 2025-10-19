@@ -43,7 +43,7 @@ client_waveform = WaveformClient()
 client_ncedc = Client('NCEDC')
 
 # Parameters
-year1 = 2010
+year1 = 2012
 filepath = f"/home/hbito/cascadia_obs_ensemble_backup/data/picks_{year1}_122-123_40-46/"
 os.makedirs(filepath,exist_ok=True)
 

@@ -112,7 +112,8 @@ Before you begin, ensure you have the following installed on your machine:
 ## Pick data
 
 After running ELEP, the picks are now available on Gdrive (private access until we upload to zenodo)
-*[Picks](https://drive.google.com/drive/folders/1ACsaRj3GY-kBwPoXGb-RCDAlEiM3ArJP)
+
+* [Picks](https://drive.google.com/drive/folders/1ACsaRj3GY-kBwPoXGb-RCDAlEiM3ArJP)
 
 
 <!-- * [Picks 2011](https://drive.google.com/file/d/1D2hXbtvMPTiktmcg_ugrvIz8W_82x5Ht/view?usp=drive_link)

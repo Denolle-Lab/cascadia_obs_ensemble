@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2023 Denolle Research Lab at UW
+Copyright (c) 2025 Denolle Research Lab at UW
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+# Third-Party Software Acknowledgments
+
+This project includes or depends upon the following third-party software:
+
+## ELEP
+- Source: https://github.com/congcy/ELEP
+- License: BSD-3-Clause
+- Copyright (c) 2023, ELEP Contributors
+
+## PyOcto
+- Source: https://github.com/yetinam/pyocto
+- License: MIT
+- Copyright (c) PyOcto Contributors
+
+## ObsPy
+- Source: https://github.com/obspy/obspy
+- License: LGPL-3.0
+- Copyright (c) ObsPy Development Team
+
+Each of these software packages has its own license terms. Please see their respective repositories for full license texts.
 
 # Data License
 

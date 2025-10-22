@@ -13,6 +13,10 @@ Project "CoolTeam" at UW:
 - Qibin Shi: qibins@uw.edu
 - Yiyu Ni: niyiyu@uw.edu
 - Marine Denolle: mdenolle@uw.edu
+- Nate Stevents: ntstevens@uw.edu
+
+Project team at Stanford:
+- Ian MacBreatry
 
 ## Repository Structure
 ```
@@ -104,10 +108,10 @@ Before you begin, ensure you have the following installed on your machine:
 2. **Open the notebooks:**
 
     In the Jupyter Notebook interface, navigate to the following notebooks and open them:
-    ```
+    <!-- ```
     - ./workflow_simplified/3_associate.ipynb
     - ./workflow_simplified/4_quality_control.ipynb
-    ```
+    ``` -->
 
 ## Pick data
 

@@ -116,10 +116,10 @@ def process_event(
                 network=network,
                 station=station,
                 location="*",
-                channel="*H*",
+                channel="?H?,?N?",
                 starttime=origin_time - window_before,
                 endtime=origin_time + window_after,
-                attach_response=False,
+                attach_response=True,
             )
         except Exception as e:
             logging.warning("Failed to download waveforms for %s.%s: %s", network, station, e)
@@ -136,7 +136,7 @@ def process_event(
                 
                 # Remove instrument response to displacement if response available
                 try:
-                    tr_wa.remove_response(output="DISP")
+                    tr_wa.remove_response()
                 except Exception as e:
                     logging.debug("Could not remove response for %s.%s: %s", network, station, e)
                     # If no response, at least detrend and taper

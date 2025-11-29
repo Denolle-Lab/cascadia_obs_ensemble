@@ -25,6 +25,7 @@ import argparse
 import logging
 import os
 import sys
+from datetime import datetime
 from typing import Dict, Tuple, Optional
 
 import numpy as np
@@ -207,6 +208,44 @@ def process_event(
     return None, measurements, origin_time
 
 
+def save_intermediate_results(picks_df: pd.DataFrame, out_path: str, event_count: int, 
+                            is_final: bool = False) -> bool:
+    """Safely save intermediate results with backup mechanism.
+    
+    Args:
+        picks_df: DataFrame to save
+        out_path: Main output path
+        event_count: Number of events processed so far
+        is_final: Whether this is the final save
+        
+    Returns:
+        bool: True if save was successful, False otherwise
+    """
+    try:
+        if is_final:
+            # Final save - just update the main file
+            logging.info("Writing final output picks with amplitudes to %s", out_path)
+            picks_df.to_csv(out_path, index=False)
+        else:
+            # Intermediate save - create numbered backup and update main file
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            intermediate_path = out_path.replace('.csv', f'_intermediate_{event_count:06d}_{timestamp}.csv')
+            
+            # Save intermediate backup
+            logging.info("Saving intermediate results after %d events to %s", event_count, intermediate_path)
+            picks_df.to_csv(intermediate_path, index=False)
+            
+            # Also update main output file
+            logging.info("Updating main output file %s", out_path)
+            picks_df.to_csv(out_path, index=False)
+            
+        return True
+        
+    except Exception as e:
+        logging.error("Failed to save results: %s", e)
+        return False
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Process event waveforms and compute amplitudes")
     parser.add_argument("--events", required=True, help="Path to events CSV")
@@ -218,6 +257,8 @@ def main(argv=None):
     parser.add_argument("--window-after", type=int, default=120, help="Seconds after origin to request")
     parser.add_argument("--fdsn", default="IRIS", help="FDSN client name (default IRIS)")
     parser.add_argument("--event-id", help="Optional: only process this event id (exact match)")
+    parser.add_argument("--save-frequency", type=int, default=1000, 
+                       help="Save intermediate results every N events (default: 1000)")
     parser.add_argument("--verbose", action="store_true")
 
     args = parser.parse_args(argv)
@@ -237,6 +278,9 @@ def main(argv=None):
     if out_path is None:
         out_dir = os.path.dirname(events_path)
         out_path = os.path.join(out_dir, os.path.basename(picks_path).replace('.csv', '_with_amplitudes.csv'))
+    
+    logging.info("Output will be saved to: %s", out_path)
+    logging.info("Intermediate saves will be created in same directory with timestamp suffixes")
 
     client = Client(args.fdsn)
 
@@ -250,7 +294,8 @@ def main(argv=None):
     else:
         event_ids = events_df[event_col].dropna().unique().tolist()
 
-    logging.info("Will process %d event(s)", len(event_ids))
+    logging.info("Will process %d event(s) with intermediate saves every %d events", 
+                 len(event_ids), args.save_frequency)
 
     # Ensure amplitude column exists (preserve spaces if present in original picks)
     amplitude_col = None
@@ -264,7 +309,8 @@ def main(argv=None):
         picks_df[amplitude_col] = np.nan
 
     for i, eid in enumerate(event_ids, start=1):
-        logging.info("[%d/%d] Processing event %s", i, len(event_ids), eid)
+        progress_pct = (i / len(event_ids)) * 100
+        logging.info("[%d/%d] (%.1f%%) Processing event %s", i, len(event_ids), progress_pct, eid)
         _, measurements, origin = process_event(
             eid,
             events_df,
@@ -328,15 +374,20 @@ def main(argv=None):
                 logging.info("\n%s", picks_df.loc[sample_mask, cols_to_show].head())
         # print the last few rows for verification
         print(picks_df.loc[mask].tail())
-        # optional: flush to disk every N events to avoid data loss (here N=10)
-        if i % 10 == 0:
-            logging.info("Flushing intermediate output to %s", out_path)
-            picks_df.to_csv(out_path, index=False)
+        
+        # Save intermediate products every N earthquakes to avoid data loss
+        if i % args.save_frequency == 0:
+            success = save_intermediate_results(picks_df, out_path, i, is_final=False)
+            if not success:
+                logging.warning("Failed to save intermediate results at event %d - continuing processing", i)
 
-    # final write
-    logging.info("Writing output picks with amplitudes to %s", out_path)
-    picks_df.to_csv(out_path, index=False)
-    logging.info("Done")
+    # Final write with error handling
+    success = save_intermediate_results(picks_df, out_path, len(event_ids), is_final=True)
+    if success:
+        logging.info("Done - successfully processed %d events", len(event_ids))
+    else:
+        logging.error("Processing completed but final save failed!")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

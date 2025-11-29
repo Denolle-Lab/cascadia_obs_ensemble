@@ -3,3 +3,9 @@ data/nate_tmp/2011
 .ipynb_checkpoints
 __pycache__
 
+
+# Large CSV files - originals backed up, use split versions
+data/originals/*
+data/Cascadia_relocated_catalog_picks_ver_3.csv
+data/Cascadia_relocated_catalog_picks_with_amplitudes_ver_3.csv
+data/Cascadia_relocated_catalog_picks_ver_3_with_amplitudes.csv

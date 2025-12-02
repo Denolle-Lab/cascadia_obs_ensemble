@@ -17,6 +17,7 @@ Project "CoolTeam" at UW:
 
 Project team at Stanford:
 - Ian MacBreatry
+- Yifan Yu
 
 ## Repository Structure
 ```

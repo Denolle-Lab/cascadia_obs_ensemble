@@ -29,6 +29,8 @@ Project team at Stanford:
 📦0_availability
 📦1_picking
 📦2_associate
+📦3_location
+📦4_relocation
 📦workflow_simplified
  ┣ 📜0_data_availability_7D.ipynb
  ┣ 📜1_parallel_detect_picks_elep.ipynb
@@ -42,7 +44,9 @@ Project team at Stanford:
  ┣ 📜ds03.xlsx
  ┣ 📜jgrb52524-sup-0002-2017jb014966-ds01.csv # Morton et al, 2023 data
  ┗ 📜jgrb52524-sup-0003-2017jb014966-ds02.csv # Morton et al, 2023 data
-📦plots
+📦figures
+📦old
+📦utils
 ```
 
 # Installation Guide

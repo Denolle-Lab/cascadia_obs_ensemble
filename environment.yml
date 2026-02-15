@@ -1,6 +1,58 @@
-name: seismo
+name: seismo_cobs
+channels:
+  - conda-forge
+  - defaults
 dependencies:
+  # Python version
   - python=3.10
+  
+  # Core scientific computing
+  - numpy>=1.22
+  - pandas>=1.5
+  - scipy>=1.9
+  - matplotlib>=3.5
+  
+  # Seismology
+  - obspy
+  
+  # Visualization
+  - basemap>=1.3.6
+  
+  # Data I/O
+  - h5py>=3.7
+  
+  # Parallel computing (install via pip for better control)
+  
+  # jupyter and notebook support
+  - jupyter
+  - notebook
+  - ipykernel
+
+  # Utilities
   - pip
+  
+  # Install remaining packages via pip
   - pip:
-    - -r requirements.txt
+      # Seismology - deep learning
+      - seisbench>=0.4.0
+      
+      # Machine learning
+      - torch>=1.13.0
+      
+      # Parallel computing
+      - "dask[complete]>=2022.10.0"
+      
+      # Utilities
+      - tqdm>=4.64
+      - openpyxl>=3.0
+      - adjustText>=0.8
+      
+      # Special packages from GitHub
+      # ELEP: Ensemble Learning for Earthquake Picking
+      - git+https://github.com/congcy/ELEP.git
+      
+      # pnwstore: Pacific Northwest Seismic Network data store
+      - git+https://github.com/niyiyu/pnwstore.git
+      
+      # Optional: pyocto for phase association (uncomment if needed)
+      # - git+https://github.com/seisbench/pyocto.git

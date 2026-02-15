@@ -32,6 +32,7 @@ import numpy as np
 import pandas as pd
 from obspy import UTCDateTime
 from obspy.clients.fdsn import Client
+from pnwstore.mseed import WaveformClient
 
 
 def find_column(df: pd.DataFrame, keywords: Tuple[str, ...]) -> Optional[str]:
@@ -53,7 +54,7 @@ def process_event(
     picks_df: pd.DataFrame,
     client: Client,
     sample_rate: int = 100,
-    highpass_freq: float = 4.0,
+    highpass_freq: float = 2.0,
     window_before: int = 300,
     window_after: int = 3000,
 ) -> Tuple[Optional[object], pd.DataFrame, Optional[UTCDateTime]]:
@@ -74,12 +75,17 @@ def process_event(
 
     Returns (st, station_amplitudes, origin_time). st may be None if no data.
     """
+    client_waveform = WaveformClient()
+
     # Detect column names robustly
     event_col = find_column(events_df, ("event id", "event_id", "event"))
     origin_col = find_column(events_df, ("origin", "time", "origin time", "datetime"))
     if event_col is None or origin_col is None:
         logging.error("Could not find event id or origin time columns in events CSV")
         return None, {}, None
+
+    phase_col = find_column(picks_df, ("phase", "type", "phase_hint"))
+    pick_time_col = find_column(picks_df, ("pick_time", "arrival_time", "time", "datetime"))
 
     pick_event_col = find_column(picks_df, ("event id", "event_id", "event"))
     station_col = find_column(picks_df, ("station name", "station", "sta"))
@@ -98,29 +104,72 @@ def process_event(
     # picks associated
     event_picks = picks_df[picks_df[pick_event_col] == event_id]
 
-    # Dictionary to store measurements per station and component
-    measurements = {}
-    
+    # Group picks by station
+    station_picks_map = {}
     for _, pick in event_picks.iterrows():
         raw_station = str(pick[station_col]).strip()
         if raw_station in ("nan", "None", ""):
             continue
-        # Expect format STA.NET or NET.STA; try to parse STA.NET -> station,network
         parts = raw_station.split(".")
         if len(parts) != 2:
             logging.warning("Unexpected station name format '%s' for event %s", raw_station, event_id)
             continue
         station, network = parts[0].strip(), parts[1].strip()
+        key = (network, station)
+        if key not in station_picks_map:
+            station_picks_map[key] = []
+        station_picks_map[key].append(pick)
+
+    # Dictionary to store measurements per station and component
+    measurements = {}
+    
+    for (network, station), picks in station_picks_map.items():
+        # Determine P and S times
+        p_time = None
+        s_time = None
+        
+        for p in picks:
+            t_val = None
+            if pick_time_col:
+                try: 
+                    t_val = UTCDateTime(p[pick_time_col])
+                except Exception: 
+                    pass
+            
+            if t_val:
+                phase = str(p[phase_col]).upper() if phase_col else 'P'
+                if 'P' in phase:
+                    if p_time is None or t_val < p_time: p_time = t_val
+                if 'S' in phase:
+                    if s_time is None or t_val < s_time: s_time = t_val
+
+        # Determine trim window
+        trim_start = origin_time
+        trim_end = origin_time + 120
+        
+        if p_time:
+            trim_start = p_time - 1.0
+            if s_time:
+                trim_end = s_time + 2.0
+            else:
+                trim_end = p_time + 2.0
+        elif s_time:
+             trim_end = s_time + 2.0
 
         try:
-            st_temp = client.get_waveforms(
+            # WaveformClient fetches full day of data using year/month/day
+            st_temp = client_waveform.get_waveforms(
                 network=network,
                 station=station,
-                location="*",
                 channel="?H?,?N?",
+                year=origin_time.strftime('%Y'),
+                month=origin_time.strftime('%m'),
+                day=origin_time.strftime('%d'),
+            )
+            # Trim to the desired time window around the event
+            st_temp.trim(
                 starttime=origin_time - window_before,
                 endtime=origin_time + window_after,
-                attach_response=True,
             )
         except Exception as e:
             logging.warning("Failed to download waveforms for %s.%s: %s", network, station, e)
@@ -157,8 +206,8 @@ def process_event(
                 # Apply highpass to remove long-period noise
                 tr_wa.filter('highpass', freq=highpass_freq)
 
-                # trim to window around origin
-                tr_wa.trim(starttime=origin_time, endtime=origin_time + 120)
+                # trim to window around origin or picks
+                tr_wa.trim(starttime=trim_start, endtime=trim_end)
                 
                         
                 # Initialize measurements for this station
@@ -178,6 +227,11 @@ def process_event(
                 
                 # Convert to millimeters and compute measurements
                 data_mm = tr_wa.data * 1000
+
+                if len(data_mm) == 0:
+                     logging.debug("Empty trace after trim for %s", station_key)
+                     continue
+
                 max_amp = float(np.max(data_mm))
                 min_amp = float(np.min(data_mm))
                 

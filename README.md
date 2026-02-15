@@ -46,56 +46,34 @@ Project team at Stanford:
 
 # Installation Guide
 
-## Prerequisites
+Complete installation instructions can be found in [INSTALL.md](INSTALL.md).
 
-Before you begin, ensure you have the following installed on your machine:
+## Quick Start
 
-- [Python 3.8+](https://www.python.org/downloads/)
-- [pip](https://pip.pypa.io/en/stable/installation/)
+```bash
+# Clone the repository
+git clone https://github.com/Denolle-lab/cascadia_obs_ensemble.git
+cd cascadia_obs_ensemble
 
-## Setting Up the Environment
+# Create conda environment
+conda env create -f environment.yml
 
-1. **Clone the repository:**
+# Activate environment
+conda activate seismo_cobs
 
-    ```sh
-    git clone https://github.com/Denolle-lab/cascadia_obs_ensemble.git
-    cd cascadia_obs_ensemble
-    ```
+# Verify installation
+python verify_environment.py
+```
 
-2. **Create a virtual environment:**
+## Requirements
 
-    ```sh
-    conda env create -f environment.yml
-    ```
+- Python 3.10
+- Core: numpy, pandas, scipy, matplotlib, obspy, seisbench
+- Machine Learning: torch (PyTorch)
+- Parallel: dask
+- Special: ELEP (GitHub), pnwstore (GitHub)
 
-3. **Activate the virtual environment:**
-
-    - On macOS and Linux:
-
-        ```sh
-        conda activate seismo_cobs
-        ```
-
-    - On Windows:
-
-        ```sh
-        .\venv\Scripts\activate
-        ```
-
-4. **Install the required packages:**
-
-    If you have a [requirements.txt](http://_vscodecontentref_/0) file:
-
-    ```sh
-    pip install -r requirements.txt
-    ```
-
-    If you have an [environment.yml](http://_vscodecontentref_/1) file (for Conda environments):
-
-    ```sh
-    conda env create -f environment.yml
-    conda activate your-environment-name
-    ```
+See [INSTALL.md](INSTALL.md) for detailed installation options, GPU support, troubleshooting, and alternative installation methods.
 
 ## Running the Notebooks
 

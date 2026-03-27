@@ -3,17 +3,17 @@
 
 This project uses an ensemble deep learning algorithm, ELEP (Yuan et al, 2023) to detect and pick P and S waves from continuous data in coastal and offshore Cascadia using the 2011-2015 Cascadia Initiative Experiment Ocean Bottom Seismometers.
 
-The workflow also includes association, location, and relocation using : PyOcto (Munchmeyer 2024), HypoInverse (Klein 2002), and HypoDD (Waldhauser and Ellsworth 2000) for relocation.
+The workflow included 1) ELEP detection, 2) testing PyOcto as asssociation, 3) testing GENIE for association, testing HypoDD and GraphDD for relocation.
 
 The repository also provides scripts to compare the new catalog with established catalog in the region ([USGS ComCat](https://earthquake.usgs.gov/earthquakes/search/) and [Morton et al, 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JB026607)).
 
-Project "CoolTeam" at UW:
+Project rteam:
 - Hiroto Bito: hbito@uw.edu 
 - Zoe Krauss: zkrauss@uw.edu
 - Qibin Shi: qibins@uw.edu
 - Yiyu Ni: niyiyu@uw.edu
 - Marine Denolle: mdenolle@uw.edu
-- Nate Stevents: ntstevens@uw.edu
+- Nate Stevens: ntstevens@uw.edu
 
 Project team at Stanford:
 - Ian MacBreatry
@@ -21,86 +21,88 @@ Project team at Stanford:
 
 ## Repository Structure
 ```
-
 📜README.md
+📜INSTALL.md
 📜LICENSE
-📜.gitignore
-📜environment.yml
-📦0_availability
+📜CITATIONS.cff
+📜pixi.toml          # primary environment (pixi)
+📜environment.yml    # conda fallback
+📜requirements.txt   # pip fallback
+📦0_data_availability
+ ┗ 📜0_data_availability_2011.ipynb
 📦1_picking
-📦2_associate
-📦3_location
-📦4_relocation
-📦workflow_simplified
- ┣ 📜0_data_availability_7D.ipynb
- ┣ 📜1_parallel_detect_picks_elep.ipynb
- ┣ 📜2_format_pick2associate.ipynb
- ┣ 📜3_associate.ipynb
- ┗ 📜4_quality_control.ipynb
+ ┣ 📜parallel_pick_20{10-15}.py          # main entry points per year
+ ┣ 📜parallel_pick_20{10-15}_*.py        # region/channel variants
+ ┣ 📜picking_utils.py                    # core ELEP picking logic
+ ┣ 📜picking_utils_prio.py               # HH/BH priority variant
+ ┣ 📜picking_utils_prio_EH.py            # EH channel variant
+ ┣ 📜picking_utils_123_127_HH_BH.py      # lon-band variant
+ ┗ 📜tutorial_picking_workflow.ipynb
+📦2_association                          # (empty — see PyOcto docs)
+📦3_post_processing
+ ┣ 📜event_waveform_processing.py        # batch amplitude computation
+ ┣ 📜event_waveform_processing.ipynb
+ ┣ 📜get_waveform_amplitude.py
+ ┣ 📜concat_anss_catalogs_2010_2015.ipynb
+ ┣ 📜merge_events_reloc_cog_ver3_cc.ipynb
+ ┣ 📜qc_metrics_all_regions_reloc_cog_ver3_cc.ipynb
+ ┣ 📦cross_correlation
+ ┗ 📦quality_control
 📦data
- ┣ 📜vel_*.csv # velocity profiles
- ┣ 📜stations_*.csv # station locations in regions
- ┣ 📜nodes_*.csv # regions for velocity profiles
- ┣ 📜ds03.xlsx
- ┣ 📜jgrb52524-sup-0002-2017jb014966-ds01.csv # Morton et al, 2023 data
- ┗ 📜jgrb52524-sup-0003-2017jb014966-ds02.csv # Morton et al, 2023 data
-📦figures
-📦old
+ ┣ 📜Cascadia_relocated_catalog_ver_3.csv
+ ┣ 📜Cascadia_relocated_catalog_picks_ver_3.csv
+ ┣ 📜Cascadia_relocated_catalog_picks_ver_3_with_amplitudes.csv
+ ┣ 📜vel_*.csv        # velocity profiles
+ ┣ 📜nodes_*.csv      # region boundaries
+ ┗ 📜jgrb52524-*.csv  # Morton et al, 2023 comparison data
 📦utils
+ ┣ 📜data_client.py   # waveform backend abstraction (FDSN / pnwstore)
+ ┣ 📜plot_utils.py
+ ┣ 📜qc_utils.py
+ ┗ 📜split_large_csvs.py
+📦figures
 ```
 
 # Installation Guide
 
-## Prerequisites
+**Recommended: [pixi](https://pixi.sh)** — single command, reproducible, no Conda setup required.
 
-Before you begin, ensure you have the following installed on your machine:
+## Quick start (pixi)
 
-- [Python 3.8+](https://www.python.org/downloads/)
-- [pip](https://pip.pypa.io/en/stable/installation/)
+```sh
+# 1. Install pixi (once)
+curl -fsSL https://pixi.sh/install.sh | bash
 
-## Setting Up the Environment
+# 2. Clone the repository
+git clone https://github.com/Denolle-lab/cascadia_obs_ensemble.git
+cd cascadia_obs_ensemble
 
-1. **Clone the repository:**
+# 3a. Public / EarthScope FDSN (default — works anywhere)
+pixi install
 
-    ```sh
-    git clone https://github.com/Denolle-lab/cascadia_obs_ensemble.git
-    cd cascadia_obs_ensemble
-    ```
+# 3b. UW internal — also installs pnwstore waveform archive access
+pixi install --environment internal
 
-2. **Create a virtual environment:**
+# 4. Launch a notebook or run a script
+pixi run notebook
+pixi run verify
+```
 
-    ```sh
-    conda env create -f environment.yml
-    ```
+## Conda fallback
 
-3. **Activate the virtual environment:**
+```sh
+conda env create -f environment.yml
+conda activate seismo_cobs
+```
 
-    - On macOS and Linux:
+## pip fallback (no Conda)
 
-        ```sh
-        conda activate seismo_cobs
-        ```
+> Note: `basemap` and `obspy` are easiest via conda-forge. pip-only installs
+> may require manual steps for those packages.
 
-    - On Windows:
-
-        ```sh
-        .\venv\Scripts\activate
-        ```
-
-4. **Install the required packages:**
-
-    If you have a [requirements.txt](http://_vscodecontentref_/0) file:
-
-    ```sh
-    pip install -r requirements.txt
-    ```
-
-    If you have an [environment.yml](http://_vscodecontentref_/1) file (for Conda environments):
-
-    ```sh
-    conda env create -f environment.yml
-    conda activate your-environment-name
-    ```
+```sh
+pip install -r requirements.txt
+```
 
 ## Running the Notebooks
 

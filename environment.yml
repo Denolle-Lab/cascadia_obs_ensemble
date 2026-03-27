@@ -1,6 +1,29 @@
-name: seismo
+# Conda fallback environment (see pixi.toml for the primary install method)
+name: seismo_cobs
+channels:
+  - conda-forge
+  - defaults
 dependencies:
   - python=3.10
+  - setuptools>=65     # provides pkg_resources required by obspy
+  - numpy>=1.22,<2
+  - pandas>=1.5
+  - scipy>=1.9
+  - matplotlib>=3.5
+  - obspy>=1.4
+  - h5py>=3.7
+  - basemap>=1.3.6    # conda-forge only; used in utils/plot_utils.py
+  - jupyter>=1.0
+  - ipykernel>=6.0
+  - ipython>=8.0
   - pip
   - pip:
-    - -r requirements.txt
+    - seisbench>=0.4.0
+    - torch>=1.13.0
+    - dask[complete]>=2022.10
+    - tqdm>=4.64
+    - openpyxl>=3.0
+    - adjustText>=0.8
+    - git+https://github.com/congcy/ELEP.git
+    # UW internal only — comment out for public use:
+    # - git+https://github.com/niyiyu/pnwstore.git

@@ -16,7 +16,14 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy import Stream, Trace
 from obspy.signal.trigger import trigger_onset
 
-from pnwstore.mseed import WaveformClient
+# pnwstore is only available in the UW internal environment; guard import
+try:
+    from pnwstore.mseed import WaveformClient  # noqa: F401 (used via data_client)
+except ImportError:
+    pass
+import sys, os as _os
+sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), ".."))
+from utils.data_client import get_waveforms as _get_waveforms
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -36,10 +43,8 @@ Logger = logging.getLogger(__name__)
 
 device = torch.device("cpu")
 
-# Define clients
+# Inventory client (response download)
 client_inventory = Client('IRIS')
-client_waveform = WaveformClient()
-client_ncedc = Client('NCEDC')
 
 twin = 6000     # length of time window
 step = 3000     # step length
@@ -99,7 +104,7 @@ def stacking(data, npts, l_blnd, r_blnd, nseg):
                 np.nanmax([stack[idx:idx + twin], _data[iseg+1, :]], axis = 0)
     return stack
 
-def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
+def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd,source='pnwstore'):
     """Run an ensemble machine learning model semblance detection workflow on a
     specified job
 
@@ -168,15 +173,9 @@ def run_detection(network,station,t1,t2,filepath,twin,step,l_blnd,r_blnd):
     # Get waveforms and filter
     # NTS: This sampling scheme leans heavily on prior data QC going into PNW store
     try:
-        if network in ['NC', 'BK']:
-            # Query waveforms
-            _sdata = client_ncedc.get_waveforms(network=network, station=station, location="*", channel=channels,
-                                               starttime=UTCDateTime(t1), endtime=UTCDateTime(t2))
-        else:
-            # Shouldn't this have an explicit starttime + endtime inputs?
-            _sdata = client_waveform.get_waveforms(network=network, station=station, channel=channels, 
-                                              year=t1.strftime('%Y'), month=t1.strftime('%m'), 
-                                              day=t1.strftime('%d'))
+        _sdata = _get_waveforms(network=network, station=station, channel=channels,
+                                starttime=UTCDateTime(t1), endtime=UTCDateTime(t2),
+                                source=source)
     except obspy.clients.fdsn.header.FDSNNoDataException:
         Logger.warning(f"WARNING: No data for {network}.{station}.{channels} on {t1} - {t2}.")
         return

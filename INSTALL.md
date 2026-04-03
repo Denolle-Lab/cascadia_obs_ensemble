@@ -77,7 +77,9 @@ To also install pnwstore (UW internal):
 
 ```sh
 conda activate seismo_cobs
-pip install git+https://github.com/niyiyu/pnwstore.git
+git clone https://github.com/niyiyu/pnwstore.git
+cd pnwstore
+pip install .
 ```
 
 ---

@@ -16,5 +16,5 @@ openpyxl>=3.0
 adjustText>=0.8
 setuptools>=65
 git+https://github.com/congcy/ELEP.git
-# UW internal only — uncomment for pnwstore access:
-# git+https://github.com/niyiyu/pnwstore.git
+# UW internal only — pnwstore (clone and install from source):
+# git clone https://github.com/niyiyu/pnwstore.git && cd pnwstore && pip install .

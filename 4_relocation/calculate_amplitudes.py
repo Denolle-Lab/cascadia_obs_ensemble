@@ -52,9 +52,11 @@ source = 'pnwstore'
 freq_highpass = 2 # in Hz
 new_sampling_rate = 100 # in Hz
 
+print('len(assigned_picks_df): ', len(assigned_picks_df))
+
 
 # Start the loop
-for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df)):
+for idx, row in tqdm(assigned_picks_df_out.iterrows(), total=len(assigned_picks_df_out)):
     # Skip if the amplitude value is already present (not NaN and not empty)
     if 'Amplitude' in row and pd.notna(row['Amplitude']) and row['Amplitude'] != '':
         continue

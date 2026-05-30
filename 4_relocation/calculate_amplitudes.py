@@ -52,9 +52,6 @@ source = 'pnwstore'
 freq_highpass = 2 # in Hz
 new_sampling_rate = 100 # in Hz
 
-print('len(assigned_picks_df): ', len(assigned_picks_df))
-
-
 # Start the loop
 for idx, row in tqdm(assigned_picks_df_out.iterrows(), total=len(assigned_picks_df_out)):
     # Skip if the amplitude value is already present (not NaN and not empty)
@@ -192,9 +189,8 @@ for idx, row in tqdm(assigned_picks_df_out.iterrows(), total=len(assigned_picks_
         
     # Apply highpass filter
     sdata.detrend(type='demean')
-    sdata.taper(max_percentage=0.5)
+    sdata.taper(max_percentage=0.05)
     sdata.filter(type='highpass', freq=freq_highpass)
-    # tr.filter(type='bandpass', freqmin=freqmin, freqmax=freqmax)
 
     max_amp = 0
     for tr in sdata:

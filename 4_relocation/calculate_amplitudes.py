@@ -61,10 +61,13 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     starttime = origin_time - window_before 
     endtime = origin_time + window_after
 
-    time_pick = row['time_pick']        
+    time_pick = row['time_pick']    
+
+    # Print the number of items in amplitudes
+    print('len(amplitudes)',len(amplitudes))    
 
     # Request a waveform
-    time.sleep(0.5)
+    time.sleep(0.1)
 
     try:
         st = get_waveforms(network=network, station=station, channel=channel,
@@ -97,7 +100,7 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
         continue
         
 
-    time.sleep(0.5)
+    # time.sleep(0.1)
 
 
     # Create a new stream

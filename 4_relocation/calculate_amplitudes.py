@@ -29,13 +29,12 @@ datasets_dir =  '/wd1/hbito_data/data/datasets_all_regions'
 path_assigned_picks_df = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3.csv'
 
 # Prepare output CSV path 
-output_csv_path = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv'
+output_csv_path = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3_w_amp_test.csv'
 
 # File to save skipped picks
-skipped_csv_path = f'{datasets_dir}/calculate_amplitudes_skipped_picks.csv'
+skipped_csv_path = f'{datasets_dir}/calculate_amplitudes_skipped_picks_test.csv'
 
 assigned_picks_df = pd.read_csv(path_assigned_picks_df, index_col=False).copy()
-
 
 # Define the arguments
 window_before = 0.5 # in sec
@@ -43,7 +42,7 @@ window_after = 2 # in sec
 source = 'pnwstore'
 
 freq_highpass = 2 # in Hz
-new_sampling_rate = 100 # in Hz
+new_sampling_rate = 100 # in Hzz
 
 # Run the loop
 amplitudes = []
@@ -55,13 +54,15 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     datetime_str = date+'T'+_time
     origin_time = UTCDateTime(datetime_str)  # Accept ISO string directly
 
+    time_pick_str = row['time_pick'] 
+    time_pick = UTCDateTime(time_pick_str)  # Accept ISO string directly
+
     network = row['station'].split('.')[0].strip()
     station = row['station'].split('.')[1].strip()
     channel = '*H*'
-    starttime = origin_time - window_before 
-    endtime = origin_time + window_after
-
-    time_pick = row['time_pick']    
+    starttime = time_pick - window_before 
+    endtime = time_pick + window_after
+   
 
     # Print the number of items in amplitudes
     print('len(amplitudes)',len(amplitudes))    
@@ -108,16 +109,16 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     
     # Check if loaded data have a vertical component (minimum requirement)
     has_Z = bool(st.select(id=f'{network}.{station}..??Z'))
-    # Check for HH and BH channels presence
+    # Check for the presence of HH, BH, and EH channels
     has_HH = bool(st.select(id=f'{network}.{station}..HH?'))
     has_BH = bool(st.select(id=f'{network}.{station}..BH?'))
     has_EH = bool(st.select(id=f'{network}.{station}..EH?'))
 
     if not has_Z:
-        e = f'No Vertical Component Data Present at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick}. Skipping'
+        e = f'No Vertical Component Data Present at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick_str}. Skipping'
         print(e)
 
-        # Save amplitude to the output DataFrame and CSV on the fly
+        # Save amplitude in the list
         amp = np.nan
         amplitudes.append(amp)
 
@@ -154,7 +155,7 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
         #      analog stations due to the remote digitization scheme used with analog stations
         sdata += st.select(id=f'{network}.{station}..EH*')
     else:
-        e = f'No data available at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick}. Skipping.'
+        e = f'No data available at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick_str}. Skipping.'
         print(e)
 
         # Save amplitude to the output DataFrame and CSV on the fly

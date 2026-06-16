@@ -42,7 +42,7 @@ window_after = 2 # in sec
 source = 'pnwstore'
 
 freq_highpass = 2 # in Hz
-new_sampling_rate = 100 # in Hzz
+new_sampling_rate = 100 # in Hz
 
 # Run the loop
 amplitudes = []

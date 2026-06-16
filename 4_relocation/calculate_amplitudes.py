@@ -29,16 +29,20 @@ datasets_dir =  '/wd1/hbito_data/data/datasets_all_regions'
 path_assigned_picks_df = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3.csv'
 
 # Prepare output CSV path 
-output_csv_path = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3_w_amp_test.csv'
+output_csv_path = f'{datasets_dir}/Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv'
 
 # File to save skipped picks
-skipped_csv_path = f'{datasets_dir}/calculate_amplitudes_skipped_picks_test.csv'
+skipped_csv_path = f'{datasets_dir}/calculate_amplitudes_skipped_picks.csv'
 
 assigned_picks_df = pd.read_csv(path_assigned_picks_df, index_col=False).copy()
 
 # Define the arguments
-window_before = 0.5 # in sec
-window_after = 2 # in sec
+window_before = 30 # in sec
+window_after = 150 # in sec
+
+window_before_calc_amplitude = 0.5 # in sec
+window_after_calc_amplitude = 2 # in sec
+
 source = 'pnwstore'
 
 freq_highpass = 2 # in Hz
@@ -60,11 +64,14 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     network = row['station'].split('.')[0].strip()
     station = row['station'].split('.')[1].strip()
     channel = '*H*'
+
     starttime = time_pick - window_before 
     endtime = time_pick + window_after
-   
 
-    # Print the number of items in amplitudes
+    starttime_trim = time_pick - window_before_calc_amplitude 
+    endtime_trim = time_pick + window_after_calc_amplitude
+
+    # Print the number of items in amplitudes for validation
     print('len(amplitudes)',len(amplitudes))    
 
     # Request a waveform
@@ -188,8 +195,10 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     sdata.taper(max_percentage=0.05)
     sdata.filter(type='highpass', freq=freq_highpass)
 
+    trimmed_data = sdata.copy().trim(starttime=starttime_trim, endtime=endtime_trim)
+
     max_amp = 0
-    for tr in sdata:
+    for tr in trimmed_data:
         max_amp = max(max_amp, abs(tr.data).max())
 
     amplitudes.append(max_amp)

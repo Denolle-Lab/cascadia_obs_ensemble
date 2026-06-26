@@ -55,7 +55,7 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
 
     # Define the arguments 
     arid = row['arid']
-    orid = row['orid']
+    orid = row['idx']
     date, _time = row['time'].split(' ')
     datetime_str = date+'T'+_time
     origin_time = UTCDateTime(datetime_str)  # Accept ISO string directly

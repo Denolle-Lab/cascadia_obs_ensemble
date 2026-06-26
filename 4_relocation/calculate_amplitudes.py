@@ -54,6 +54,8 @@ amplitudes = []
 for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df)):
 
     # Define the arguments 
+    arid = row['arid']
+    orid = row['orid']
     date, _time = row['time'].split(' ')
     datetime_str = date+'T'+_time
     origin_time = UTCDateTime(datetime_str)  # Accept ISO string directly
@@ -90,6 +92,8 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
 
         # Save skipped info to CSV
         skipped_info = {
+            'arid': arid,
+            'orid': orid,
             'network': network,
             'station': station,
             'channel': channel,
@@ -115,11 +119,11 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     sdata = Stream()
     
     # Check if loaded data have a vertical component (minimum requirement)
-    has_Z = bool(st.select(id=f'{network}.{station}..??Z'))
+    has_Z = bool(st.select(channel='??Z'))
     # Check for the presence of HH, BH, and EH channels
-    has_HH = bool(st.select(id=f'{network}.{station}..HH?'))
-    has_BH = bool(st.select(id=f'{network}.{station}..BH?'))
-    has_EH = bool(st.select(id=f'{network}.{station}..EH?'))
+    has_HH = bool(st.select(channel='HH?'))
+    has_BH = bool(st.select(channel='BH?'))
+    has_EH = bool(st.select(channel='EH?'))
 
     if not has_Z:
         e = f'No Vertical Component Data Present at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick_str}. Skipping'
@@ -131,6 +135,8 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
 
         # Save skipped info to CSV
         skipped_info = {
+            'arid': arid,
+            'orid': orid,
             'network': network,
             'station': station,
             'channel': channel,
@@ -151,16 +157,16 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
     # Apply selection logic based on channel presence
     if has_HH:
         # If all HH, BH, and EH, channels are present, select only HH
-        sdata += st.select(id=f'{network}.{station}..HH*')
+        sdata += st.select(channel='HH*')
     elif has_BH:
         # If BH and EH channels are present, select only BH
-        sdata += st.select(id=f'{network}.{station}..BH*')
+        sdata += st.select(channel='BH*')
     elif has_EH:
         # If only EH channels are present, select only EH
         # NTS: This may result in getting only vertical component data - EH? is used for PNSN analog stations
         # NTS: This may also be tricky for pulling full day-volumes because the sampling rate shifts for
         #      analog stations due to the remote digitization scheme used with analog stations
-        sdata += st.select(id=f'{network}.{station}..EH*')
+        sdata += st.select(channel='EH*')
     else:
         e = f'No data available at {network}.{station} with HHZ, BHZ or EHZ channels at {time_pick_str}. Skipping.'
         print(e)
@@ -171,6 +177,8 @@ for idx, row in tqdm(assigned_picks_df.iterrows(), total=len(assigned_picks_df))
 
         # Save skipped info to CSV
         skipped_info = {
+            'arid': arid,
+            'orid': orid,
             'network': network,
             'station': station,
             'channel': channel,

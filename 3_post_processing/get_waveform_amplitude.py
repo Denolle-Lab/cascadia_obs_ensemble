@@ -373,7 +373,10 @@ def main(argv=None):
                                   for m in ['max_amp', 'min_amp', 'duration']])
                 logging.info("\n%s", picks_df.loc[sample_mask, cols_to_show].head())
         # print the last few rows for verification
-        print(picks_df.loc[mask].tail())
+        # `mask` is only defined when this event produced measurements; guard so
+        # the first event with no data does not raise NameError.
+        if measurements:
+            print(picks_df.loc[mask].tail())
         
         # Save intermediate products every N earthquakes to avoid data loss
         if i % args.save_frequency == 0:

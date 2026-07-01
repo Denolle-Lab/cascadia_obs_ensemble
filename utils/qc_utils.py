@@ -503,7 +503,7 @@ def calc_snr(all_picks,all_pick_assignments):
                 noise_abs = np.percentile(abs(noise[0].data),percentile)
                 signal_abs = np.percentile(abs(signal[0].data),percentile)
 
-                snr = 20 * np.log10((signal_abs/noise_abs))
+                snr = 20 * np.log10(signal_abs / noise_abs) if (noise_abs > 0 and signal_abs > 0) else np.nan
 
                 snr_list.append(snr)
 #                 sta_list.append(i[1])
@@ -691,7 +691,7 @@ def calc_snr(all_picks,all_pick_assignments):
                 noise_abs = np.percentile(abs(noise[0].data),percentile)
                 signal_abs = np.percentile(abs(signal[0].data),percentile)
 
-                snr = 20 * np.log10((signal_abs/noise_abs))
+                snr = 20 * np.log10(signal_abs / noise_abs) if (noise_abs > 0 and signal_abs > 0) else np.nan
 
                 snr_list.append(snr)
 #                 sta_list.append(i[1])
@@ -876,7 +876,7 @@ def calc_snr(all_picks,all_pick_assignments):
                 noise_abs = np.percentile(abs(noise[0].data),percentile)
                 signal_abs = np.percentile(abs(signal[0].data),percentile)
 
-                snr = 20 * np.log10((signal_abs/noise_abs))
+                snr = 20 * np.log10(signal_abs / noise_abs) if (noise_abs > 0 and signal_abs > 0) else np.nan
 
                 snr_list.append(snr)
 #                 sta_list.append(i[1])

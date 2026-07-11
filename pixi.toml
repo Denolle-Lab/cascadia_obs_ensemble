@@ -19,6 +19,7 @@ basemap = ">=1.3.6"        # conda-forge only; used in utils/plot_utils.py
 jupyter = ">=1.0"
 ipykernel = ">=6.0"
 ipython = ">=8.0"
+pygmt = ">=0.13.0,<0.14"
 
 # ── PyPI dependencies (public / default environment) ──────────────────────────
 [pypi-dependencies]

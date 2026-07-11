@@ -90,6 +90,7 @@ def main(argv=None):
     p.add_argument("--minmag", type=float, default=1.5, help="ComCat minmagnitude to fetch")
     p.add_argument("--dt-s", type=float, default=15.0, help="match: max origin-time diff (s)")
     p.add_argument("--dist-km", type=float, default=50.0, help="match: max epicentral dist (km)")
+    p.add_argument("--suffix", default="", help="suffix for output filenames, e.g. _kpos")
     args = p.parse_args(argv)
 
     outdir = os.path.expanduser(args.outdir)
@@ -157,9 +158,9 @@ def main(argv=None):
                 "M_rel", "n_obs", "n_P", "n_S", "M_sta_std"]
     out_cols = [c for c in out_cols if c in ev.columns]
     final = ev[out_cols].sort_values("otime")
-    fout = os.path.join(outdir, "cascadia_catalog_ML.csv")
+    fout = os.path.join(outdir, f"cascadia_catalog_ML{args.suffix}.csv")
     final.to_csv(fout, index=False)
-    anchors.to_csv(os.path.join(outdir, "route_b_ml_anchors.csv"), index=False)
+    anchors.to_csv(os.path.join(outdir, f"route_b_ml_anchors{args.suffix}.csv"), index=False)
     print(f"final ML: n={len(final):,}  range {final.ML.min():.2f}..{final.ML.max():.2f}  "
           f"median {final.ML.median():.2f}")
     print(f"wrote {fout}")
@@ -178,7 +179,7 @@ def main(argv=None):
         ax[1].set_title(f"ML = {a:.2f}*M_rel + {b:.2f}")
         ax[2].hist(final.ML, bins=80); ax[2].set_title("final ML (all events)"); ax[2].set_xlabel("ML")
         fig.suptitle("Route B -> absolute ML calibration"); fig.tight_layout()
-        png = os.path.join(outdir, "route_b_ml_calibration.png"); fig.savefig(png, dpi=130)
+        png = os.path.join(outdir, f"route_b_ml_calibration{args.suffix}.png"); fig.savefig(png, dpi=130)
         print(f"wrote {png}")
     except Exception as e:
         print("plot skipped:", e)

@@ -44,7 +44,7 @@ amplitudes for **absolute ML**.
 | Item | Location | Notes |
 |---|---|---|
 | Relocated events | `data/Cascadia_relocated_catalog_ver_3.csv` | lat/lon/depth/origin/RMS/gap/Num P/Num S/**Event ID**; no magnitude. |
-| Amplitudes **A** — peak *counts*, per pick, phase-specific | `4_relocation/calculate_amplitudes.py` → `…_w_amp.csv` (remote `/wd1`) | max\|data\| in `[t_pick−0.5, t_pick+2]`, HP 2 Hz, 100 Hz, max over available comps. Used for **Route B** only. |
+| Amplitudes **A** — peak *counts*, per pick, phase-specific | `4_relocation/calculate_amplitudes.py` → `…_w_amp.csv` (remote `/wd1`) | max\|data\| in `[t_pick-0.5, t_pick+2]`, HP 2 Hz, 100 Hz, max over available comps. Used for **Route B** only. |
 | Amplitudes **B** — Wood-Anderson *displacement mm*, per station | `3_post_processing/event_waveform_processing.py`, `get_waveform_amplitude.py` → `data/split_files/…_with_amplitudes_part*.csv` | remove_response→WA simulate, `[origin, origin+120]`, Z/N/E max/min/duration. **Route A input — must be QC'd** (older run gave nonphysical ~1e9; split-file run ~0.2 mm). |
 | Calibration mags | ANSS/ComCat via `concat_anss_catalogs_2010_2015.ipynb`; Morton 2023 `data/ds01.csv` (Md, reference only) | Anchor with **ComCat ML** where available. |
 | Catalog matching | `utils/qc_utils.py` `match_events` / `filter_and_match_events` | repair Morton matcher (no acceptance threshold — see audit). |
@@ -58,26 +58,29 @@ TA 35k, BK 22k, X9 7.7k, UO 2.7k, C8, NV, OO, 7A. 441 stations. Phase Type: 0 = 
 
 ### Route A (primary) — response-removed Wood-Anderson ML
 
-For event *i*, station *j* (phase-specific where used):
+Each (event *i*, station *j*) pair gives one observation equation; the **per-event** magnitude
+`ML_i` is the unknown solved for. `ML_ij` denotes the per-station estimate (the same equation
+evaluated at a single station); `ML_i` is their robust aggregate over stations.
 
 ```
-ML_ij = log10(A_WA,ij) + D(r_ij) + S_j + C
+log10(A_WA,ij) = ML_i - D(r_ij) + S_j + eps_ij   # observation equation, one per (i, j)
+ML_ij          = log10(A_WA,ij) + D(r_ij) - S_j   # per-station estimate of ML_i
 ```
 
 - `A_WA` — Wood-Anderson displacement (mm) after **response removal + WA simulation**.
-- `D(r)` — distance/attenuation correction (Hutton–Boore form
-  `D(r) = n·log10(r/r_ref) + k·(r − r_ref) + const`), adopted from a PNW prior then re-fit.
-- `S_j` — station **site/path** correction, solved in the inversion (Σ S_j = 0 gauge).
-- `C` — constant fixed by **ComCat ML** calibration events.
-- Solve `{ML_i, S_j, n, k, C}` jointly by robust (IRLS/Huber) weighted least squares;
-  bootstrap for per-event and per-station uncertainties.
+- `D(r)` — distance/attenuation correction (Hutton-Boore form
+  `D(r) = n*log10(r/r_ref) + k*(r - r_ref)`), adopted from a PNW prior then re-fit.
+- `S_j` — station **site/path** correction, solved in the inversion; gauge `sum_j S_j = 0`,
+  absolute level fixed by **ComCat ML** calibration events.
+- `ML_i` — per-event magnitude (the unknown). Solve `{ML_i, S_j, n, k}` jointly by robust
+  (IRLS/Huber) weighted least squares; bootstrap per-event and per-station uncertainties.
 - Standard ML convention: horizontal components. Handle **Z-only EH** stations separately.
 
 ### Route B (complement, response-free) — relative-cluster counts, anchored
 
 - Define spatial clusters (reuse GraphDD / cross-correlation cluster structure).
-- Within a cluster, for events a,b at station j: `ΔML_ab = Δlog10(A_counts) − ΔD(r)` ≈
-  `Δlog10(A_counts)` for small clusters (path/site/response cancel). Solve **relative** event
+- Within a cluster, for events a,b at station j: `dML_ab = dlog10(A_counts) - dD(r)`, which is
+  approximately `dlog10(A_counts)` for small clusters (path/site/response cancel). Solve **relative** event
   magnitudes per cluster from count amplitudes across shared stations.
 - **Anchor** each cluster's absolute level with co-located **ComCat ML** events; stitch clusters
   via stations shared across clusters.
@@ -97,8 +100,8 @@ the data require it (the reviewer's nonlinear-site point).
       networks from FDSN/pnwstore (`get_stations(level="response")`).
 - [ ] **Validate responses**, especially OBS (7D/X9/Z5/OO): which stations have a usable response
       for Route A vs must fall back to Route B. Re-QC product B (fix the ~1e9 run).
-- [ ] **SNR gate**: noise amplitude in a pre-P window (`[P−10, P−1] s`) with the *same* band as the
-      amplitude; require `A_signal/A_noise ≥ ~3–5` to enter the fit; below → drop / upper bound.
+- [ ] **SNR gate**: noise amplitude in a pre-P window (`[P-10, P-1] s`) with the *same* band as the
+      amplitude; require `A_signal/A_noise >= ~3-5` to enter the fit; below -> drop / upper bound.
 - [ ] **Response-stability / redeployment**: key station terms by **(station, deployment epoch)**
       for CI OBS; per-station for stable land nets.
 - [ ] Quantify missing amplitudes (15.5%) and **clipping/saturation** at near-source stations.

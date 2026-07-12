@@ -18,8 +18,9 @@ import pygmt
 
 
 def ml_to_size_cm(ml):
-    """Marker diameter (cm) growing with magnitude; tiny for small events."""
-    return np.clip(0.015 * 2.0 ** ml, 0.01, 0.6)
+    """Marker diameter (cm) growing strongly with magnitude (exaggerated so large
+    events stand out); tiny for small events."""
+    return np.clip(0.018 * 3.0 ** (ml - 1.0), 0.006, 1.6)
 
 
 def main(argv=None):
@@ -34,15 +35,16 @@ def main(argv=None):
 
     fig = pygmt.Figure()
     proj = "M16c"
-    try:                                            # shaded relief background
+    try:                                            # gray, semi-transparent shaded relief
         grid = pygmt.datasets.load_earth_relief(resolution="02m", region=region)
-        pygmt.makecpt(cmap="geo", series=[-5000, 3000])
-        fig.grdimage(grid, region=region, projection=proj, shading=True, cmap=True)
-        fig.coast(region=region, projection=proj, shorelines="0.4p,black")
+        pygmt.makecpt(cmap="gray", series=[-6000, 4000])
+        fig.grdimage(grid, region=region, projection=proj, cmap=True,
+                     shading="+a315+nt1.2", transparency=45)
+        fig.coast(region=region, projection=proj, shorelines="0.3p,gray40")
     except Exception as e:
         print("relief unavailable, plain basemap:", e)
-        fig.coast(region=region, projection=proj, land="gray90", water="lightblue",
-                  shorelines="0.4p,black")
+        fig.coast(region=region, projection=proj, land="gray95", water="white",
+                  shorelines="0.3p,gray40")
     fig.basemap(region=region, projection=proj,
                 frame=["af", "WSne+tCascadia catalog: marker size ~ ML, color = depth"])
 

@@ -39,8 +39,16 @@ def gutenberg_richter(mags, dm=DM):
     b = np.log10(np.e) / (mean_m - (mc - dm / 2))      # Aki-Utsu MLE
     sigma_b = 2.30 * b**2 * np.sqrt(((sel - mean_m)**2).sum() / (n * (n - 1)))
     a = np.log10(n) + b * mc
+    # least-squares line on the cumulative FMD over the well-populated range
+    # [Mc, M_hi] (drop the sparse tail so the line tracks the actual decay)
+    fit_mask = (centers >= mc) & (cum >= 50)
+    if fit_mask.sum() >= 2:
+        slope, a_ls = np.polyfit(centers[fit_mask], np.log10(cum[fit_mask]), 1)
+        b_ls, m_hi = -slope, centers[fit_mask].max()
+    else:
+        b_ls, a_ls, m_hi = b, a, centers.max()
     return dict(centers=centers, inc=inc, cum=cum, mc=mc, b=b, sigma_b=sigma_b,
-                a=a, n_above_mc=n, mean_m=mean_m)
+                a=a, n_above_mc=n, mean_m=mean_m, b_ls=b_ls, a_ls=a_ls, m_hi=m_hi)
 
 
 def main(argv=None):
@@ -61,6 +69,7 @@ def main(argv=None):
     print(f"ML range / median : {np.nanmin(ML):.2f} .. {np.nanmax(ML):.2f} / {np.nanmedian(ML):.2f}")
     print(f"Mc (max curvature): {gr['mc']:.2f}   (events >= Mc: {gr['n_above_mc']:,})")
     print(f"b-value (MLE)     : {gr['b']:.3f} +/- {gr['sigma_b']:.3f}")
+    print(f"b-value (LS fit)  : {gr['b_ls']:.3f}   over Mc..{gr['m_hi']:.2f}")
     print(f"a-value           : {gr['a']:.2f}")
     if "ML_unc" in df:
         print(f"median ML_unc     : {df['ML_unc'].median():.2f}")
@@ -74,10 +83,13 @@ def main(argv=None):
     ax.semilogy(gr["centers"], gr["cum"], "s", ms=4, color="tab:blue", label="cumulative N(>=M)")
     ax.semilogy(gr["centers"], np.where(gr["inc"] > 0, gr["inc"], np.nan), "o", ms=3,
                 color="tab:gray", alpha=0.6, label="incremental")
+    mfit = np.array([gr["mc"], gr["m_hi"]])
+    ax.semilogy(mfit, 10 ** (gr["a_ls"] - gr["b_ls"] * mfit), "r-", lw=2.2,
+                label=f"LS fit (Mc..{gr['m_hi']:.1f}): b={gr['b_ls']:.2f}")
     mline = np.array([gr["mc"], np.nanmax(ML)])
-    ax.semilogy(mline, 10 ** (gr["a"] - gr["b"] * mline), "r-",
-                label=f"GR fit: b={gr['b']:.2f}±{gr['sigma_b']:.2f}")
-    ax.axvline(gr["mc"], color="k", ls="--", lw=1, label=f"Mc={gr['mc']:.2f}")
+    ax.semilogy(mline, 10 ** (gr["a"] - gr["b"] * mline), color="darkred", ls="--", lw=1,
+                alpha=0.7, label=f"MLE: b={gr['b']:.2f}±{gr['sigma_b']:.2f}")
+    ax.axvline(gr["mc"], color="k", ls=":", lw=1, label=f"Mc={gr['mc']:.2f}")
     ax.set_xlabel("ML"); ax.set_ylabel("number of events"); ax.set_title(f"Gutenberg-Richter ({args.tag})")
     ax.legend(); ax.grid(True, which="both", alpha=0.3)
     fig.tight_layout(); f1 = os.path.join(outdir, f"{args.tag}_gutenberg_richter.png")

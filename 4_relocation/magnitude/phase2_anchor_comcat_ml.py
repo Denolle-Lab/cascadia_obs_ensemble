@@ -49,9 +49,14 @@ def fetch_comcat_ml(box, t0, t1, minmag, cache):
     client = Client("USGS")
     minlat, maxlat, minlon, maxlon = box
     rows = []
-    # fetch year-by-year to stay under the 20k/query cap (inclusive of final partial year)
+    # fetch year-by-year to stay under the 20k/query cap, clamped to [t0, t1] so the
+    # first/last (partial) years do not pull extra events outside the catalog window
+    t0u, t1u = UTCDateTime(t0.isoformat()), UTCDateTime(t1.isoformat())
     for yr in range(t0.year, t1.year + 1):
-        s, e = UTCDateTime(f"{yr}-01-01"), UTCDateTime(f"{yr+1}-01-01")
+        s = max(UTCDateTime(f"{yr}-01-01"), t0u)
+        e = min(UTCDateTime(f"{yr+1}-01-01"), t1u)
+        if e <= s:
+            continue
         try:
             cat = client.get_events(starttime=s, endtime=e, minmagnitude=minmag,
                                     minlatitude=minlat, maxlatitude=maxlat,
@@ -153,7 +158,8 @@ def main(argv=None):
 
     # ---- apply to ALL events ----
     ev["ML"] = a * ev["M_rel"] + b
-    ev["ML_unc"] = np.hypot(a * ev.get("M_rel_sem", 0.0).fillna(0.0), rmad)
+    sem = ev["M_rel_sem"] if "M_rel_sem" in ev.columns else pd.Series(0.0, index=ev.index)
+    ev["ML_unc"] = np.hypot(a * sem.fillna(0.0), rmad)
     out_cols = ["event_id", "otime", "evla", "evlo", "evdp", "ML", "ML_unc",
                 "M_rel", "n_obs", "n_P", "n_S", "M_sta_std"]
     out_cols = [c for c in out_cols if c in ev.columns]

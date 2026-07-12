@@ -63,7 +63,7 @@ def solve(df, damp, gauge_w, fix_n=None):
     sp_phase = np.array([k.split("|")[1] for k in sp_ids])
 
     is_s = (df["phase"].to_numpy() == "S")
-    r = df["dist_hypo_km"].to_numpy()
+    r = np.maximum(df["dist_hypo_km"].to_numpy(), 1e-3)   # floor at 1 m to avoid log10(0)
     L = np.log10(r / R_REF_KM)
     b = df["log10A"].to_numpy()
     n_obs = len(df)
@@ -160,11 +160,13 @@ def main(argv=None):
     # ---------------- solve (+1 robust pass) ----------------
     out = solve(df, args.damp, args.gauge_w, args.fix_n)
     mad = 1.4826 * np.median(np.abs(out["resid"] - np.median(out["resid"])))
-    keep = np.abs(out["resid"]) <= args.reject_mad * mad
-    n_rej = int((~keep).sum())
-    if n_rej:
-        df = df[keep].reset_index(drop=True)
-        out = solve(df, args.damp, args.gauge_w, args.fix_n)
+    n_rej = 0
+    if np.isfinite(mad) and mad > 0:                     # skip rejection if MAD degenerate
+        keep = np.abs(out["resid"]) <= args.reject_mad * mad
+        n_rej = int((~keep).sum())
+        if n_rej:
+            df = df[keep].reset_index(drop=True)
+            out = solve(df, args.damp, args.gauge_w, args.fix_n)
 
     # ---------------- per-event magnitudes + station-magnitude scatter ----------------
     df["resid"] = out["resid"]

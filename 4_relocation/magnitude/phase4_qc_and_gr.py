@@ -28,6 +28,8 @@ DM = 0.1  # magnitude bin width
 def gutenberg_richter(mags, dm=DM):
     """Max-curvature Mc + Aki-Utsu MLE b-value (Shi & Bolt sigma)."""
     m = np.sort(mags[np.isfinite(mags)])
+    if len(m) < 2:
+        raise ValueError("gutenberg_richter: need at least 2 finite magnitudes")
     edges = np.arange(np.floor(m.min() / dm) * dm, m.max() + dm, dm)
     centers = edges[:-1] + dm / 2
     inc, _ = np.histogram(m, bins=edges)
@@ -35,6 +37,8 @@ def gutenberg_richter(mags, dm=DM):
     mc = centers[np.argmax(inc)]                       # maximum curvature
     sel = m[m >= mc - 1e-9]
     n = len(sel)
+    if n < 2:
+        raise ValueError(f"gutenberg_richter: fewer than 2 events above Mc={mc:.2f}")
     mean_m = sel.mean()
     b = np.log10(np.e) / (mean_m - (mc - dm / 2))      # Aki-Utsu MLE
     sigma_b = 2.30 * b**2 * np.sqrt(((sel - mean_m)**2).sum() / (n * (n - 1)))

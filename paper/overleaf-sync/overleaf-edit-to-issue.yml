@@ -1,0 +1,116 @@
+name: overleaf-edit-to-issue
+
+# Detects when a human pushes changes to this repo that did NOT come from
+# codameter's forward sync -- which, in practice, means Overleaf's GitHub
+# Sync just pushed a direct edit a collaborator made in the Overleaf editor
+# (codameter's sync-paper-to-overleaf.yml is the only other writer) -- and
+# files a GitHub issue on Denolle-Lab/cascadia_obs_ensemble with a plain diff, so that
+# edit becomes a triaged task to port into paper/main.qmd
+# instead of being silently overwritten by the next forward sync.
+#
+# Deliberately does NOT try to auto-regenerate the .qmd from the .tex diff --
+# LaTeX -> this project's specific Quarto Markdown (with its custom macros
+# and raw-LaTeX blocks) does not round-trip reliably. This workflow
+# automates detection and notification only; porting the change into the
+# .qmd is still a human (or agent) decision, now surfaced as an issue
+# instead of requiring anyone to remember to check.
+#
+# Note: Overleaf *comments* and track-changes never reach this workflow --
+# they are Overleaf-side metadata and do not travel through git at all.
+# Only actual text edits, once pushed to this repo, trigger it.
+#
+# One-time setup:
+#   1. Create a fine-grained personal access token at
+#      https://github.com/settings/personal-access-tokens/new
+#        - Repository access: only Denolle-Lab/cascadia_obs_ensemble
+#        - Permissions: Issues -> Read and write (Metadata -> Read is implied)
+#      (This cannot be created via API/CLI -- GitHub requires the web UI for
+#      new token issuance, by design.)
+#   2. Store it as a secret named CASCADIA_ISSUES_TOKEN on THIS repo
+#      (Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog), not on cascadia_obs_ensemble:
+#        gh secret set CASCADIA_ISSUES_TOKEN --repo Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog
+#   3. Make sure the "overleaf-sync" label exists on Denolle-Lab/cascadia_obs_ensemble
+#      (gh label create overleaf-sync --repo Denolle-Lab/cascadia_obs_ensemble ...).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: overleaf-edit-to-issue
+  cancel-in-progress: false # never skip a real edit because another push raced it
+
+jobs:
+  detect-and-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Diff since the last forward sync and file/update an issue if changed
+        env:
+          # NOTE: github.token is deliberately NOT used as a fallback here --
+          # it's scoped to this repo (Offshore-Cascadia-Ensemble-Catalog) and cannot file issues
+          # on a different repo (Denolle-Lab/cascadia_obs_ensemble). A cross-repo PAT is
+          # required; see the one-time setup note above.
+          GH_TOKEN: ${{ secrets.CASCADIA_ISSUES_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::CASCADIA_ISSUES_TOKEN secret is not set on this repo (Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog)." \
+                 "See the one-time setup note at the top of this workflow file."
+            exit 1
+          fi
+          gh auth status
+
+          author="$(git log -1 --format='%an')"
+          echo "pushing commit author: $author"
+          if [ "$author" = "cascadia-sync[bot]" ]; then
+            echo "This push is codameter's own forward sync; nothing to report."
+            exit 0
+          fi
+
+          base="$(git log --author='cascadia-sync\[bot\]' -1 --format=%H || true)"
+          if [ -z "$base" ]; then
+            echo "No prior forward-sync commit found; nothing to diff against yet."
+            exit 0
+          fi
+          echo "diffing against last forward-synced commit: $base"
+
+          git diff "$base" HEAD -- main.tex > /tmp/overleaf.diff
+          if [ ! -s /tmp/overleaf.diff ]; then
+            echo "No changes to main.tex since the last forward sync."
+            exit 0
+          fi
+
+          {
+            echo "Overleaf pushed changes to \`main.tex\` that did not come"
+            echo "from this repo's forward sync -- someone edited the manuscript"
+            echo "directly in Overleaf (comments alone do not trigger this)."
+            echo
+            echo "Commit: https://github.com/Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog/commit/${GITHUB_SHA}"
+            echo
+            echo '```diff'
+            cat /tmp/overleaf.diff
+            echo '```'
+            echo
+            echo "**Action needed:** review this diff and port whatever is substantive"
+            echo "into \`paper/main.qmd\`, then rebuild"
+            echo "(\`make paper\`) so the next forward sync doesn't"
+            echo "silently overwrite this edit."
+          } > /tmp/issue_body.md
+
+          existing="$(gh issue list --repo Denolle-Lab/cascadia_obs_ensemble --label overleaf-sync --state open --json number --jq '.[0].number' || true)"
+          if [ -n "$existing" ]; then
+            echo "appending to existing open issue #$existing"
+            gh issue comment "$existing" --repo Denolle-Lab/cascadia_obs_ensemble --body-file /tmp/issue_body.md
+          else
+            echo "filing a new issue"
+            gh issue create --repo Denolle-Lab/cascadia_obs_ensemble \
+              --title "Overleaf edit received: $(date -u +%Y-%m-%d)" \
+              --label overleaf-sync \
+              --body-file /tmp/issue_body.md
+          fi

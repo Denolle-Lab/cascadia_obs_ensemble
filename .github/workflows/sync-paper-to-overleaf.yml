@@ -1,0 +1,84 @@
+name: sync-paper-to-overleaf
+
+# Mirrors the locally-built manuscript (paper/main.tex, mybibfile.bib, the vendored
+# Seismica class/style files it needs, and the figures it references) into
+# Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog, the repo Overleaf's GitHub Sync
+# pulls from. Overleaf then picks up the change (automatically if GitHub Sync is on,
+# else via "Menu -> GitHub -> Pull").
+#
+# Deliberately does NOT re-render in CI: the manuscript is built and verified
+# locally (`make paper`, which needs Quarto + tectonic). This workflow only syncs
+# the already-committed, already-verified main.tex + assets. main.pdf is NOT synced
+# (Overleaf compiles its own).
+#
+# One-time setup (not done by this workflow):
+#   1. ssh-keygen -t ed25519 -C "cascadia-paper-sync" -f ~/.ssh/cascadia-paper-deploy -N ""
+#   2. gh repo deploy-key add ~/.ssh/cascadia-paper-deploy.pub \
+#        --repo Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog --title "cascadia-sync" --allow-write
+#   3. gh secret set CASCADIA_PAPER_DEPLOY_KEY \
+#        --repo Denolle-Lab/cascadia_obs_ensemble < ~/.ssh/cascadia-paper-deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "paper/main.tex"
+      - "paper/mybibfile.bib"
+      - "paper/seismica.cls"
+      - "paper/abbrvnat_seismica_upcasetitle.bst"
+      - "paper/supplementary_section.tex"
+      - "paper/banner.png"
+      - "paper/empty.png"
+      - "paper/figures/**"
+      - ".github/workflows/sync-paper-to-overleaf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-paper-to-overleaf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout cascadia_obs_ensemble (paper source)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: paper
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout the Overleaf-linked paper repo
+        uses: actions/checkout@v4
+        with:
+          repository: Denolle-Lab/Offshore-Cascadia-Ensemble-Catalog
+          ssh-key: ${{ secrets.CASCADIA_PAPER_DEPLOY_KEY }}
+          path: paper-repo
+
+      - name: Sync manuscript, bibliography, class files, and figures
+        run: |
+          cp paper/main.tex paper-repo/
+          cp paper/mybibfile.bib paper-repo/
+          cp paper/seismica.cls paper-repo/
+          cp paper/abbrvnat_seismica_upcasetitle.bst paper-repo/
+          cp paper/supplementary_section.tex paper-repo/
+          cp paper/banner.png paper-repo/
+          cp paper/empty.png paper-repo/
+          mkdir -p paper-repo/figures
+          rsync -a --delete paper/figures/ paper-repo/figures/
+
+      - name: Commit and push if changed
+        working-directory: paper-repo
+        run: |
+          git config user.name "cascadia-sync[bot]"
+          git config user.email "actions@github.com"
+          git add main.tex mybibfile.bib seismica.cls abbrvnat_seismica_upcasetitle.bst \
+            supplementary_section.tex banner.png empty.png figures/
+          if git diff --cached --quiet; then
+            echo "No changes to sync."
+            exit 0
+          fi
+          git commit -m "Sync from Denolle-Lab/cascadia_obs_ensemble@${GITHUB_SHA::7}"
+          git push

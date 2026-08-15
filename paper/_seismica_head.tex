@@ -1,0 +1,80 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Seismica preamble + title block for the Cascadia catalog paper.
+%
+% This is the STABLE "shell head". It is prepended to the Quarto-rendered body
+% (paper/main.qmd -> body) by paper/build.py to assemble the full paper/main.tex.
+% Edit AUTHORS / AFFILIATIONS / CREDIT here (they change rarely); the TITLE,
+% SHORTTITLE, REPORTTYPE and ABSTRACT come from main.qmd's front matter (the
+% %%...%% placeholders below are substituted by build.py). Edit the PAPER BODY
+% in paper/main.qmd.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Options: anonymous | breakmath | languages | preprint | report | review
+\documentclass[review]{seismica}
+% NOTE: the original Overleaf preamble loaded BOTH subfig and subcaption, which
+% are mutually incompatible; keep only subcaption (compatible with the class's
+% caption package) for any multi-panel figures.
+\usepackage{subcaption}
+
+\title{%%TITLE%%}
+\shorttitle{%%SHORTTITLE%%}
+\reporttype{%%REPORTTYPE%%}
+
+\author[1]{Marine~Denolle
+\orcid{0000-0002-1610-2250}
+\thanks{Corresponding author: mdenolle@uw.edu}
+}
+\author[1]{Hiroto Bito
+\orcid{0009-0001-4138-0287}
+}
+\author[1]{Qibin~Shi
+\orcid{2222-2222-2222-2222}
+}
+\author[1]{Yiyu~Ni
+\orcid{3333-3333-3333-3333}
+}
+\author[2]{Ian W. McBrearty
+\orcid{3333-3333-3333-3333}
+}
+\author[3]{Zoe~Krauss
+\orcid{3333-3333-3333-3333}
+}
+\author[4]{Nathan T. Stevens
+\orcid{0000-0001-5648-2254}
+}
+\author[2]{Yifan Yu
+\orcid{0000-0001-5986-9702}
+}
+\author[2]{Gregory C.~Beroza
+\orcid{3333-3333-3333-3333}
+}
+
+\affil[1]{Department of Earth and Space Sciences, University of Washington, Seattle, USA}
+\affil[2]{Department of Geophysics, Stanford University, USA}
+\affil[3]{School of Oceanography, University of Washington, Seattle, USA}
+\affil[4]{Pacific Northwest Seismic Network, University of Washington, Seattle, USA}
+
+% --- pandoc/Quarto body helper macros -------------------------------------
+% The body is produced by pandoc (via quarto) and may use these helpers, which
+% normally live in Quarto's own preamble (replaced here by this Seismica head).
+% Defined defensively so the assembled main.tex compiles standalone.
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\passthrough}[1]{#1}
+\providecommand{\pandocbounded}[1]{#1}
+\graphicspath{{figures/}{./}}
+% Network DOIs in the .bib contain underscores (e.g. 10.7914/SN/7D_2011); outside
+% math an underscore triggers "Missing $". Typeset \doi arguments detokenized.
+\AtBeginDocument{\renewcommand{\doi}[1]{doi:\detokenize{#1}}}
+
+%% Author CRediT roles (https://casrai.org/credit)
+\credit{Conceptualization}{Name Firstauthor, Name Thirdauthor}
+\credit{Formal Analysis}{Name Firstauthor, Name Secondauthor}
+\credit{Writing - Original draft}{Name Firstauthor}
+
+\begin{document}
+
+\makeseistitle{
+    \begin{summary}{Abstract}
+%%ABSTRACT%%
+    \end{summary}
+}

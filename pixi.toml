@@ -37,12 +37,23 @@ ELEP = {git = "https://github.com/congcy/ELEP.git"}
 [feature.internal.pypi-dependencies]
 pnwstore = {git = "https://github.com/niyiyu/pnwstore.git"}
 
+# ── Paper feature: Quarto + LaTeX to render the manuscript locally ────────────
+# Lean, self-contained env (no heavy ML deps). Install with:
+#   pixi install --environment paper   ;   pixi run -e paper make paper
+[feature.paper.dependencies]
+python = "3.10.*"
+pyyaml = ">=6"
+quarto = ">=1.4"
+tectonic = "*"             # self-contained LaTeX engine (auto-fetches CTAN packages)
+
 # ── Environment definitions ────────────────────────────────────────────────────
 [environments]
 # default: public / EarthScope FDSN only — works anywhere
 default = {solve-group = "default"}
 # internal: adds pnwstore for UW waveform archive access
 internal = {features = ["internal"], solve-group = "default"}
+# paper: Quarto + LaTeX manuscript build (no default ML stack)
+paper = {features = ["paper"], no-default-feature = true}
 
 # ── Convenience tasks ─────────────────────────────────────────────────────────
 [tasks]

@@ -1,0 +1,174 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Seismica Submission Template
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Options available: 
+%%					anonymous
+%%					breakmath
+%%					languages
+%%					preprint
+%%					report
+
+%% anonymous: produces an anonymous PDF for double-blind review. Will NOT print authors information and acknowledgements, but WILL PRINT data availibility section, so be careful!
+%% breakmath: for manuscripts with many long formulas, you can specify the breakmath option (loads the package breqn and uses the dmath environment)
+%% languages: see below, use to add abstract(s) in additional languages
+%% preprint: removes line numbers, switch to two-columns
+%% report: if this is a report
+
+%\documentclass[breakmath,report]{seismica}
+\documentclass[]{seismica}
+\usepackage{subfig}
+\usepackage{subcaption}
+
+\title{Supplementary Materials} % used for header, not mandatory
+% other titles From Picks to Catalog: Ensemble Deep Learning and Graph Networks Map Cascadia’s Quiet Megathrust
+
+
+%% If this is a REPORT, select a report type within: 
+%\reporttype{Null Results Report} % (null-results/failed experiments)
+%\reporttype{Software Report}
+%\reporttype{Data Report} %  (e.g., Large Community dataset initiatives, Instrument Deployments, and Field Campaigns)
+\reporttype{Fast Report}
+
+%% Will not be printed if anonymous option ON
+
+
+
+\author[1]{Marine~Denolle
+\orcid{0000-0002-1610-2250}
+\thanks{Corresponding author: mdenolle@uw.edu}
+}
+
+
+\author[1]{Hiroto Bito
+\orcid{0009-0001-4138-0287}
+}
+\author[1]{Qibin~Shi
+\orcid{2222-2222-2222-2222}
+}
+\author[1]{Yiyu~Ni
+\orcid{3333-3333-3333-3333}
+}
+
+\author[2]{Ian W. McBrearty
+\orcid{3333-3333-3333-3333}
+}
+
+\author[3]{Zoe~Krauss
+\orcid{3333-3333-3333-3333}
+}
+\author[4]{Nathan T. Stevens
+\orcid{0000-0001-5648-2254}
+}
+
+\author[2]{Yifan Yu
+\orcid{0000-0001-5986-9702}
+}
+
+\author[2]{Gregory C.~Beroza
+\orcid{3333-3333-3333-3333}
+}
+
+
+
+\affil[1]{Department of Earth and Space Sciences, University of Washington, Seattle, USA}
+\affil[2]{Department of Geophysics, Stanford University, USA}
+\affil[3]{School of Oceanography, University of Washington, Seattle, USA}
+\affil[4]{Pacific Northwest Seismic Network, University of Washington, Seattle, USA }
+
+%% Author CRediT roles 
+%% Please use the CRediT roles as defined at https://casrai.org/credit
+%% Use as many roles as necessary; there is no requirement to use all 14 roles
+\credit{Conceptualization}{Name Firstauthor, Name Thirdauthor}
+%\credit{Methodology}{people}
+%\credit{Software}{people}
+%\credit{Validation}{people}
+\credit{Formal Analysis}{Name Firstauthor, Name Secondauthor}
+%\credit{Investigation}{people}
+%\credit{Resources}{people}
+\credit{Writing - Original draft}{Name Firstauthor}
+%\credit{Writing - Review \& Editing}{people}
+%\credit{Visualization}{people}
+%\credit{Supervision}{people}
+%\credit{Project administration}{people}
+%\credit{Funding acquisition}{people}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Abstracts in other languages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% If your article includes abstracts in other languages, uncomment the lines below and fill in
+%%      the appropriate sections. You will need to use the [languages] option at the top,
+%%      and will need to use lualatex instead of pdflatex to compile the document.
+%% We will use luatex, polyglossia and fontspec for the compilation of the accepted version. 
+%% Feel free to use any polyglossia command.
+%\setotherlanguages{french,thai}  % replace with your language(s), per polyglossia
+%% if an additional font is needed for the abstract, load it with:
+%\newfontfamily\thaifont[Script=Thai]{Noto Serif Thai}
+
+%% If you are using Arabic, do not include it in \setotherlanguages{} as it is not supported 
+%% by polyglossia. Instead, with the [languages] option at the top, you can use these commands
+%% within the text:
+%%\begin{Arabic} and \end{Arabic} around paragraphs in Arabic
+%%\n{} to wrap any digits within Arabic text that should read left-to-right
+%%\textarabic{} for Arabic text embedded in a left-to-right paragraph
+
+%% also see https://www.overleaf.com/latex/examples/how-to-write-multilingual-text-with-different-scripts-in-latex/wfdxqhcyyjxz for reference
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Several abstracts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% the command \makeseistitle does not allow page breaks in preprint mode. If you have
+%%		many abstracts, you can use the command \addsummaries. It will induce a pagebreak.
+
+\begin{document}
+
+%% Your article can include up to 3 abstracts. The first is the English language abstract.
+%% For other languages in the second and third optional abstracts, you might have to define 
+%%      additional font(s) in preamble above
+%% You can also include a non-technical summary in addition to the abstract(s)
+\makeseistitle{
+    \begin{summary}{Abstract}
+blablba
+           \end{summary}
+}  %% don't forget this one!
+
+
+\section{Alternative Workflow}
+
+
+The geographic region of the subject is the following: the latitude ranges from  40°–50° N and longitude ranges from 122°–129° W. The P and S phases from the region were picked with the Ensemble Learning Earthquake Prediction (ELEP) framework \citep{Yuan23}. 
+All the stations in the following networks are attempted to be used to pick the phases: C8, 7D, 7A, CN, NV, UW, UO, NC, BK, TA, OO, PB, X6, Z5, and X9. The picks were obtain from 2010 to 2015.
+
+\subsection{Phase Picking}
+
+The semblance-based ensemble method was used \citep{Yuan23}. There are two formats of the pick data frames. The first format resembles the Seisbench format (cite). The second format was developed in the project. The picks are saved in a file for a single station and date. The pick files are then merged into a single file. The merged file contains 39597551 picks. A data frame with station metadata were compiled using the merged file. The data frame of station metadata contains information of 453 stations. 
+
+\subsection{Phase Association}
+Association was conducted in 10 different subregions across the CSZ. The 10 subregions were defined by the 10 different sets of nodes that are prepared base on the node information provided by \citet{Stone18}. Each set of nodes has a velocity model assigned to it \citep{Yuan23}.
+
+Each node has an inner circle and an outer circle (REF3). The information of a node includes the latitude and longitude of the center of the node, the radial distance from the center to the inner circle and the radial distance from the inner circle to the outer circle (Klein, 2019; Stone et al., 2018). 
+Oregon: Shelf and Trench uses the depths and the velocity profile of the P phase from Oregon: Shelf (Stone et al., 2018). Similarly, Southern Washington: Shelf and Trench uses the depths and the velocity profile of the P phase from Southern Washington: Shelf (Stone et al., 2018). Lastly, Northern Washington: Shelf and Trench uses the depths and the velocity profile of the P phase from Northern Washington: Shelf (Stone et al., 2018). 
+
+The station ID and location information of the stations that fall within the outer circle of each subregion was saved in a data frame specific to the subregion (Klein, 2019; Stone et al., 2018). Each subregion has picks from stations that are located in the subregion. Those picks were obtained from the merged pick file using the station ID’s in the above-mentioned station data frame (Klein, 2019; Stone et al., 2018). 
+For each subregion, the pick data frame and the station data frame were inputted to the associator to produce the event and assignment tables (REF4). The event table was populated with the the pick information by merging with the assignment table (REF4).
+
+\subsection{Location}
+
+The merged assignment tables of the 10 subregions were merged together to make a single assignment table. 
+
+\subsection{Results}
+
+\subsection{Discussion}
+
+
+
+
+\section*{Competing interests}
+The authors declare no competing interests.
+
+\bibliography{mybibfile}
+    
+\end{document}
+

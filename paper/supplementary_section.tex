@@ -17,8 +17,11 @@
 
 %\documentclass[breakmath,report]{seismica}
 \documentclass[]{seismica}
-\usepackage{subfig}
+% subfig and subcaption are mutually incompatible; keep only subcaption.
 \usepackage{subcaption}
+% Network DOIs contain underscores; detokenize the printed DOI (hyperref handles
+% the underscore in the URL) so \doi{...} in the bibliography does not error.
+\AtBeginDocument{\renewcommand{\doi}[1]{\href{https://doi.org/#1}{doi:\detokenize{#1}}}}
 
 \title{Supplementary Materials} % used for header, not mandatory
 % other titles From Picks to Catalog: Ensemble Deep Learning and Graph Networks Map Cascadia’s Quiet Megathrust

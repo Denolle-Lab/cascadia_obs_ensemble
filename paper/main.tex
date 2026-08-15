@@ -63,8 +63,9 @@
 \providecommand{\pandocbounded}[1]{#1}
 \graphicspath{{figures/}{./}}
 % Network DOIs in the .bib contain underscores (e.g. 10.7914/SN/7D_2011); outside
-% math an underscore triggers "Missing $". Typeset \doi arguments detokenized.
-\AtBeginDocument{\renewcommand{\doi}[1]{doi:\detokenize{#1}}}
+% math an underscore triggers "Missing $". Detokenize the printed DOI (hyperref
+% handles the underscore in the URL argument), keeping the reference hyperlinked.
+\AtBeginDocument{\renewcommand{\doi}[1]{\href{https://doi.org/#1}{doi:\detokenize{#1}}}}
 
 %% Author CRediT roles (https://casrai.org/credit)
 \credit{Conceptualization}{Name Firstauthor, Name Thirdauthor}

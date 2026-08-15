@@ -12,8 +12,10 @@ preamble), we do NOT let Quarto own the whole document. Instead:
      + title block, with title/shorttitle/reporttype/abstract substituted from the
      qmd front matter) + the rendered body + ``_seismica_tail.tex``
      (``\bibliography`` + ``\end{document}``);
-  3. it compiles ``main.tex`` -> ``main.pdf`` with ``latexmk -pdf`` (pdflatex;
-     natbib bibtex run included).
+  3. it compiles ``main.tex`` -> ``main.pdf`` with ``tectonic`` (XeTeX engine +
+     bibtex; the Seismica class needs XeTeX for its ORCID ``\XeTeXLinkBox`` macro).
+     If tectonic is absent it falls back to ``latexmk -xelatex`` (NOT ``-pdf``,
+     which would fail on the XeTeX-only ORCID macro).
 
 So you edit Markdown (main.qmd) for the body and _seismica_head.tex for
 authors/affiliations; you get submission-ready main.tex + main.pdf. main.tex is
@@ -81,7 +83,8 @@ def main() -> int:
     if shutil.which("tectonic"):
         run(["tectonic", "--keep-intermediates", "--keep-logs", OUT.name], HERE)
     elif shutil.which("latexmk"):
-        run(["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", OUT.name], HERE)
+        # -xelatex (not -pdf): the Seismica class uses XeTeX-only macros (ORCID).
+        run(["latexmk", "-xelatex", "-interaction=nonstopmode", "-halt-on-error", OUT.name], HERE)
     else:
         print("warning: no LaTeX engine (tectonic/latexmk) found; wrote main.tex only.")
 

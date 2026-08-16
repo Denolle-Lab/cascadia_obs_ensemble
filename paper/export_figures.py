@@ -26,8 +26,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 
-# Default directory the figure notebooks save into (override with --src-dir).
-DEFAULT_SRC_DIR = "/wd1/hbito_data/data/datasets_all_regions"
+# Default directory the (repointed) figure notebooks save into, relative to the
+# repo root (they now read/write ../data/ instead of /wd1). Override with --src-dir.
+DEFAULT_SRC_DIR = str(ROOT / "data" / "datasets_all_regions")
 
 # (paper/figures/<dest>, generating notebook, <src>.png the notebook writes in src_dir)
 FIGURES = [

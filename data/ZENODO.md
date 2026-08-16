@@ -33,6 +33,23 @@ cascadia-obs-ensemble-catalog-v3/
 **Exclude** the superseded `*_old` amplitude files (unreferenced provenance only) and
 the duplicated monolith-plus-chunk copies.
 
+### Keep-set vs staging (already applied)
+
+`utils/organize_review_data.py` encodes the **keep-set** (the 13 files above + the ANSS
+comparison catalog = the proposed Zenodo package) and, on `--apply`, moves *everything
+else* out of `data/datasets_all_regions/` into `data/_review/<category>/` (git-ignored,
+reversible), writing `data/_review/MANIFEST.csv` — one row per file with its lineage
+`category` (`junk` / `superseded` / `intermediate` / `alternative`), a `junk` flag,
+size, creation date, `note`, and original path. As applied here: 13 kept in place
+(8.7 GB), 195 staged (junk 10 GB, intermediate 13 GB, superseded 0.7 GB, alternative
+2.8 GB). Map overlays (`PB2002_boundaries.dig`, `Cascadia_momenttensors_M5_9.xml`,
+`pnsn_tremor.json`) are figure inputs, not data products — they stay but are not
+archived. Re-run the download to fetch the `.dig`/`.xml` overlays (the filter now
+includes them).
+
+To build the actual Zenodo upload, copy the keep-set (+ reconstructed repo monoliths)
+into a `data/zenodo/` tree matching the layout above.
+
 ## Provenance / naming
 
 `reloc` = GraphDD-relocated · `cog` = center-of-gravity cluster step · `cc` =

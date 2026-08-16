@@ -40,8 +40,11 @@ echo
 FILTERS=(--include='*/' --exclude='*_temp*' --exclude='*_test*')
 [[ $WITH_PICKS -eq 0 ]] && FILTERS+=(--exclude='arrival_*' --exclude='assoc_*')
 [[ $RAW_PICKS  -eq 0 ]] && FILTERS+=(--exclude='all_picks_*')
-FILTERS+=(--include='*.csv' --include='*.txt' --include='*.geojson'
-          --include='*.json' --include='*.npy' --include='*.npz' --exclude='*')
+FILTERS+=(--include='*.csv' --include='*.txt' --include='*.geojson' --include='*.json'
+          --include='*.npy' --include='*.npz'                       # tables / arrays
+          --include='*.dig' --include='*.xml'                       # map overlays (boundaries, moment tensors)
+          --include='*.shp' --include='*.dbf' --include='*.shx' --include='*.prj'  # shapefiles
+          --exclude='*')
 
 for sub in datasets_all_regions datasets_anss; do
   echo "==> $sub"

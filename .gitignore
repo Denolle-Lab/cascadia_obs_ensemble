@@ -32,3 +32,5 @@ paper/*.out
 paper/*.fls
 paper/*.fdb_latexmk
 paper/main.synctex.gz
+# Staged non-paper data (moved by utils/organize_review_data.py; local review only)
+data/_review/

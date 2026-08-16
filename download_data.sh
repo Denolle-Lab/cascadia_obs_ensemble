@@ -16,10 +16,12 @@
 #   ./download_data.sh mdenolle@psound.ess.washington.edu
 #   ./download_data.sh <user@host> --with-picks          # also arrival/assoc (large; fig3)
 #   REMOTE_BASE=/some/other/path ./download_data.sh <user@host>
+#   PORT=27531 ./download_data.sh <user@host>             # non-default SSH port
 set -euo pipefail
 
 REMOTE="${1:-mdenolle@psound.ess.washington.edu}"
 REMOTE_BASE="${REMOTE_BASE:-/wd1/hbito_data/data}"
+PORT="${PORT:-27531}"                                       # SSH port (override: PORT=2222 ...)
 WITH_PICKS=0
 [[ "${2:-}" == "--with-picks" || "${1:-}" == "--with-picks" ]] && WITH_PICKS=1
 [[ "${1:-}" == "--with-picks" ]] && REMOTE="mdenolle@psound.ess.washington.edu"
@@ -39,7 +41,7 @@ FILTERS+=(--include='*.csv' --include='*.txt' --include='*.geojson'
 for sub in datasets_all_regions datasets_anss; do
   echo "==> $sub"
   mkdir -p "${DEST}/${sub}"
-  rsync -avh --progress "${FILTERS[@]}" \
+  rsync -avh --progress -e "ssh -p ${PORT}" "${FILTERS[@]}" \
     "${REMOTE}:${REMOTE_BASE}/${sub}/" "${DEST}/${sub}/"
 done
 

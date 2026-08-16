@@ -32,17 +32,20 @@ DEFAULT_SRC_DIR = str(ROOT / "data" / "datasets_all_regions")
 
 # (paper/figures/<dest>, generating notebook, <src>.png the notebook writes in src_dir)
 FIGURES = [
-    ("fig1.png", "figures/fig1_map_stas.ipynb", "fig1.png"),
+    # dest (manuscript name)   ,   generating notebook   ,   src PNG the notebook writes
+    ("fig1.png", "figures/fig1_map_stas.ipynb", "fig1b.png"),
     ("fig4_cc_no_relief_tremor_contours.png", "figures/fig4_match_events.ipynb",
      "filtered_events_2010_2015_ver3_cc_nass_no_relief_tremor_contours.png"),
+    # fig5 notebook resolves year=all_regions, method=reloc, version=ver3 -> "_cc_" in the
+    # written name; the manuscript keeps the pre-cc filename, so src != dest here.
     ("fig5_histograms/hist_rms_reloc_cog_ver3_p_4_s_4_rms_2_5.png",
-     "figures/fig5_histograms_cc.ipynb", "hist_rms_reloc_cog_ver3_p_4_s_4_rms_2_5.png"),
+     "figures/fig5_histograms_cc.ipynb", "hist_rms_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.png"),
     ("fig5_histograms/hist_p_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png",
-     "figures/fig5_histograms_cc.ipynb", "hist_p_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png"),
+     "figures/fig5_histograms_cc.ipynb", "hist_p_picks_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.png"),
     ("fig5_histograms/hist_s_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png",
-     "figures/fig5_histograms_cc.ipynb", "hist_s_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png"),
+     "figures/fig5_histograms_cc.ipynb", "hist_s_picks_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.png"),
     ("fig5_histograms/hist_gaps_reloc_cog_ver3_p_4_s_4_rms_2_5.png",
-     "figures/fig5_histograms_cc.ipynb", "hist_gaps_reloc_cog_ver3_p_4_s_4_rms_2_5.png"),
+     "figures/fig5_histograms_cc.ipynb", "hist_gaps_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.png"),
     # fig6 = "Earthquake Catalog in the Endeavor" -> the axial/endeavor subregion map
     ("fig6.png", "figures/fig6_subregions_cc.ipynb",
      "axial_endeavor_events_2010_2015_ver3_cc_nass.png"),

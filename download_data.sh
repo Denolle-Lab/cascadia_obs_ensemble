@@ -15,6 +15,7 @@
 #   ./download_data.sh                                   # default host, small data
 #   ./download_data.sh mdenolle@psound.ess.washington.edu
 #   ./download_data.sh <user@host> --with-picks          # also arrival/assoc (large; fig3)
+#   ./download_data.sh <user@host> --raw-picks           # also all_picks_* (raw ELEP, multi-GB)
 #   REMOTE_BASE=/some/other/path ./download_data.sh <user@host>
 #   PORT=27531 ./download_data.sh <user@host>             # non-default SSH port
 set -euo pipefail
@@ -22,19 +23,23 @@ set -euo pipefail
 REMOTE="${1:-mdenolle@psound.ess.washington.edu}"
 REMOTE_BASE="${REMOTE_BASE:-/wd1/hbito_data/data}"
 PORT="${PORT:-27531}"                                       # SSH port (override: PORT=2222 ...)
-WITH_PICKS=0
-[[ "${2:-}" == "--with-picks" || "${1:-}" == "--with-picks" ]] && WITH_PICKS=1
-[[ "${1:-}" == "--with-picks" ]] && REMOTE="mdenolle@psound.ess.washington.edu"
+WITH_PICKS=0; RAW_PICKS=0
+for a in "$@"; do
+  [[ "$a" == "--with-picks" ]] && WITH_PICKS=1     # + arrival_*/assoc_* (fig3)
+  [[ "$a" == "--raw-picks"  ]] && RAW_PICKS=1      # + all_picks_* (raw ELEP, multi-GB, dataset a)
+done
 
 DEST="$(cd "$(dirname "$0")" && pwd)/data"
 echo "Source : ${REMOTE}:${REMOTE_BASE}"
 echo "Dest   : ${DEST}/{datasets_all_regions,datasets_anss}"
-echo "Picks  : $([[ $WITH_PICKS -eq 1 ]] && echo 'included (arrival/assoc, large)' || echo 'skipped (use --with-picks for fig3)')"
+echo "Picks  : arrival/assoc $([[ $WITH_PICKS -eq 1 ]] && echo included || echo skipped) · raw ELEP $([[ $RAW_PICKS -eq 1 ]] && echo included || echo skipped)"
 echo
 
-# rsync filter: keep small data files, drop images; drop the big pick tables unless asked.
-FILTERS=(--include='*/')
+# rsync filter: keep small data files; drop images and scratch (*_temp/*_test);
+# the big pick tables are opt-in. First-matching rule wins, so excludes precede includes.
+FILTERS=(--include='*/' --exclude='*_temp*' --exclude='*_test*')
 [[ $WITH_PICKS -eq 0 ]] && FILTERS+=(--exclude='arrival_*' --exclude='assoc_*')
+[[ $RAW_PICKS  -eq 0 ]] && FILTERS+=(--exclude='all_picks_*')
 FILTERS+=(--include='*.csv' --include='*.txt' --include='*.geojson'
           --include='*.json' --include='*.npy' --include='*.npz' --exclude='*')
 

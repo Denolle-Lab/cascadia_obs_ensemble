@@ -92,6 +92,11 @@ conda-forge / a system GMT; `obspy` is easiest via conda-forge).
 
 ## Data
 
+The pipeline produces three **nested** datasets (each a smaller, higher-quality subset:
+~39.6 M ELEP picks → 1.09 M associated picks / 116,591 events → 1.00 M relocated picks /
+63,887 events → 31,020 events after QC). See [`data/LINEAGE.md`](data/LINEAGE.md) for the
+full creation-time lineage, row counts, and which files are final vs alternative.
+
 Three distinct data products span the pipeline; they are **not** the same artifact:
 
 1. **Raw ELEP picks** (per-station P/S picks, 2010–2015) — the picker output, *upstream*

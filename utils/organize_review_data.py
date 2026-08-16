@@ -48,6 +48,15 @@ KEEP = {
     # comparison catalogs
     "origin_2010_2015_reloc_cog_morton_ver3.csv",
     "anss_2010-15.csv",
+    # fig4/fig6 comparison overlays (QC-filtered matched/missing/new-event sets vs
+    # ANSS and Morton) -- read by the figure notebooks, so they must stay in place.
+    "matched_events_with_anss_mycatalog_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "matched_events_with_morton_mycatalog_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "matched_events_with_mycatalog_anss_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "matched_events_with_mycatalog_morton_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "missing_events_from_mycatalog_anss_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "missing_events_from_mycatalog_morton_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    "new_events_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
 }
 
 

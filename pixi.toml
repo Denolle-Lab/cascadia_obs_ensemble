@@ -20,6 +20,9 @@ jupyter = ">=1.0"
 ipykernel = ">=6.0"
 ipython = ">=8.0"
 pygmt = ">=0.13.0,<0.14"
+# NOTE: figure-notebook geometry/PDF deps (shapely, pymupdf, geopandas) are installed
+# via pip below, NOT conda: their conda builds drag in geos/glib/GDAL that conflict with
+# the gmt 6.6 + basemap 2 stack on osx-arm64. The pip wheels are self-contained.
 
 # ── PyPI dependencies (public / default environment) ──────────────────────────
 [pypi-dependencies]
@@ -29,6 +32,10 @@ dask = {version = ">=2022.10", extras = ["complete"]}
 tqdm = ">=4.64"
 openpyxl = ">=3.0"
 adjustText = ">=0.8"
+# figure-notebook deps as self-contained wheels (see note in [dependencies])
+shapely = ">=2.0"          # figures/fig1 geometry
+pymupdf = ">=1.22"         # provides `fitz`; figures assemble PDF panels
+geopandas = ">=0.14"       # figures/fig1 GeoDataFrame (pyogrio wheel bundles GDAL)
 # ELEP: ML picker ensemble library (GitHub-only)
 ELEP = {git = "https://github.com/congcy/ELEP.git"}
 

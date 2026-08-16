@@ -34,3 +34,6 @@ paper/*.fdb_latexmk
 paper/main.synctex.gz
 # Staged non-paper data (moved by utils/organize_review_data.py; local review only)
 data/_review/
+
+# Assembled Zenodo submission package (built by utils/assemble_zenodo.py; local)
+data/zenodo/

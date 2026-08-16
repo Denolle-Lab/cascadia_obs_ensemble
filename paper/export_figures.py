@@ -58,6 +58,9 @@ def main() -> int:
                     help="directory the figure notebooks write PNGs into")
     ap.add_argument("--execute", action="store_true",
                     help="run each generating notebook first (needs data + env)")
+    ap.add_argument("--kernel", default="python3",
+                    help="Jupyter kernel to run notebooks with (they are saved with a "
+                         "'seismo' kernel that isn't registered here; python3 = this env)")
     args = ap.parse_args()
     src_dir = Path(args.src_dir)
     figdir = HERE / "figures"
@@ -65,8 +68,13 @@ def main() -> int:
     if args.execute:
         for nb in sorted({nb for _, nb, _ in FIGURES}):
             print(f"executing {nb} ...")
-            subprocess.run(["jupyter", "nbconvert", "--to", "notebook",
-                            "--execute", "--inplace", str(ROOT / nb)], check=True)
+            r = subprocess.run(["jupyter", "nbconvert", "--to", "notebook",
+                                "--execute", "--inplace",
+                                f"--ExecutePreprocessor.kernel_name={args.kernel}",
+                                str(ROOT / nb)])
+            if r.returncode:
+                print(f"  WARN {nb} failed to execute (exit {r.returncode}); "
+                      "continuing with any PNGs it did write")
 
     ok = miss = 0
     for dest, _nb, src in FIGURES:

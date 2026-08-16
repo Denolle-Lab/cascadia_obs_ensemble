@@ -26,7 +26,7 @@ cascadia-obs-ensemble-catalog-v3/
   raw_picks/
     elep_picks_2010.csv ... 2015   # <- the Google Drive "Picks" folder (raw per-station ELEP picks)
   comparison/
-    anss_2010-2015.csv             # <- anss_2010-15.csv
+    anss_2010-2015.csv             # <- anss_2010-15.csv (regenerable: utils/fetch_anss_catalog.py)
     morton2023_reloc.csv           # <- origin_2010_2015_reloc_cog_morton_ver3.csv
 ```
 

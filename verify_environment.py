@@ -38,7 +38,7 @@ ML = [
     ("adjustText", "adjustText", False),
 ]
 OPTIONAL = [
-    ("elep", "ELEP (picking; try 'ELEP' too)", False),
+    ("ELEP", "ELEP (picking)", False),
     ("pnwstore", "pnwstore (internal env only)", False),
 ]
 
@@ -66,13 +66,6 @@ def main() -> int:
     failures += check("notebook", NOTEBOOK)
     check("plotting (optional)", PLOTTING)
     check("ML / pipeline (optional)", ML)
-    # ELEP ships as 'ELEP' or 'elep' depending on install; try both, non-fatal.
-    for alt in ("elep", "ELEP"):
-        try:
-            importlib.import_module(alt)
-            break
-        except Exception:  # noqa: BLE001
-            continue
     check("optional (may be absent)", OPTIONAL)
 
     print()

@@ -12,7 +12,13 @@ from obspy.clients.fdsn import Client as FDSNClient
 from mpl_toolkits.basemap import Basemap
 
 
-from pnwstore.mseed import WaveformClient
+try:
+    from pnwstore.mseed import WaveformClient
+except ImportError:
+    # pnwstore is a server-only waveform client; not needed to import this module
+    # (only the WaveformClient()-using functions require it). Guard so the figure
+    # notebooks, which use the inventory/plotting helpers, import without it.
+    WaveformClient = None
 import datetime as datetime1
 from datetime import datetime
 

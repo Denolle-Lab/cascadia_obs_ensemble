@@ -33,7 +33,9 @@ DEFAULT_SRC_DIR = str(ROOT / "data" / "datasets_all_regions")
 # (paper/figures/<dest>, generating notebook, <src>.png the notebook writes in src_dir)
 FIGURES = [
     # dest (manuscript name)   ,   generating notebook   ,   src PNG the notebook writes
-    ("fig1.png", "figures/fig1_map_stas.ipynb", "fig1b.png"),
+    # fig1 assembles fig1b.pdf + stas_wo_boundaries.pdf into fig1.pdf (fitz), then
+    # rasterizes -> fig1.png (the composite station map the manuscript uses).
+    ("fig1.png", "figures/fig1_map_stas.ipynb", "fig1.png"),
     ("fig4_cc_no_relief_tremor_contours.png", "figures/fig4_match_events.ipynb",
      "filtered_events_2010_2015_ver3_cc_nass_no_relief_tremor_contours.png"),
     # fig5 notebook resolves year=all_regions, method=reloc, version=ver3 -> "_cc_" in the

@@ -37,7 +37,10 @@ echo
 
 # rsync filter: keep small data files; drop images and scratch (*_temp/*_test);
 # the big pick tables are opt-in. First-matching rule wins, so excludes precede includes.
-FILTERS=(--include='*/' --exclude='*_temp*' --exclude='*_test*')
+# NOTE: no `--include='*/'` -> rsync does NOT descend into sub-directories. The data
+# files are all top-level, and recursing would try (and fail, Permission denied) to read
+# a nested, unreadable datasets_all_regions/datasets_all_regions/ dir owned by another user.
+FILTERS=(--exclude='*_temp*' --exclude='*_test*')
 [[ $WITH_PICKS -eq 0 ]] && FILTERS+=(--exclude='arrival_*' --exclude='assoc_*')
 [[ $RAW_PICKS  -eq 0 ]] && FILTERS+=(--exclude='all_picks_*')
 FILTERS+=(--include='*.csv' --include='*.txt' --include='*.geojson' --include='*.json'

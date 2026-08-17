@@ -32,9 +32,10 @@ def ml_to_size_cm(ml):
     return np.clip(0.018 * 3.0 ** (ml - 1.0), 0.006, 1.6)
 
 
-def picks_to_transparency(n, t_opaque=6.0, t_faint=82.0):
+def picks_to_transparency(n, t_opaque=2.0, t_faint=92.0):
     """Map pick count -> GMT transparency (%). Many picks -> near-opaque (confident);
-    few picks -> faint. Log scale because nass is heavily right-skewed."""
+    few picks -> nearly invisible. Log scale (nass is heavily right-skewed); the wide
+    2..92% range gives strong confidence contrast."""
     lp = np.log10(np.maximum(np.asarray(n, float), 1.0))
     span = lp.max() - lp.min()
     norm = (lp - lp.min()) / span if span > 0 else np.ones_like(lp)
@@ -81,11 +82,8 @@ def main(argv=None):
                   shorelines="0.3p,gray40")
 
     size = ml_to_size_cm(df["ML"].to_numpy())
-    if args.mode == "depth":
-        title = "Cascadia catalog: marker size ~ ML, color = depth"
-    else:
-        title = "Cascadia catalog: size ~ ML, opacity ~ no. picks"
-    fig.basemap(region=region, projection=proj, frame=["af", f"WSne+t{title}"])
+    # no in-figure title: the caption lives in the manuscript
+    fig.basemap(region=region, projection=proj, frame=["af", "WSne"])
 
     if args.mode == "depth":
         depth = df["evdp"].clip(0, 80)
@@ -113,7 +111,7 @@ def main(argv=None):
         ox, oy0 = -127.9, 51.05
         fig.text(x=ox, y=oy0 + 0.4, text="no. picks", justify="LM",
                  font="10p,Helvetica-Bold,black")
-        for i, (lab, t) in enumerate([("few", 78.0), ("many", 8.0)]):
+        for i, (lab, t) in enumerate([("few", 88.0), ("many", 4.0)]):
             y = oy0 - i * 0.42
             fig.plot(x=[ox], y=[y], size=[0.32], style="cc", fill=args.color,
                      pen="0.3p,gray20", transparency=t)

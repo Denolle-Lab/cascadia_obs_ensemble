@@ -551,6 +551,30 @@ conservative, a generous estimate).
 Describe how many we matched with other catalogs. where do we match best. Some
 possible differences are in the velocity models.
 
+The final quality-controlled catalog is shown in Figure
+[\[fig:fig7\]](#fig:fig7){reference-type="ref" reference="fig:fig7"}. Rather than
+focusing on a high-precision subregion, the map emphasizes the self-consistency
+and scalability of the workflow across the entire margin: a single automated
+pipeline resolves the offshore ridge--transform lineaments (Blanco and
+Gorda/Mendocino), the Cascadia forearc, and the onshore Washington and Oregon
+seismicity from one homogeneous set of picks, associations, and relocations.
+
+```{=latex}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig7_catalog_ml_confidence.png}
+    \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
+    (2010--2015).} The 31{,}014 quality-controlled events (${\ge}4$ P and
+    ${\ge}4$ S picks, RMS ${<}2.5$~s), over gray shaded relief. Marker area
+    scales with local magnitude $M_L$ (legend, top left) and marker opacity with
+    the number of associated phase picks (well-constrained events appear solid,
+    weakly constrained ones fade), so detection confidence is legible directly
+    from the map. The catalog is produced by a single, self-consistent pipeline
+    applied uniformly across the margin.}
+    \label{fig:fig7}
+\end{figure}
+```
+
 ```{=latex}
 \begin{figure}
     \centering

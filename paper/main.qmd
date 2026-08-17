@@ -584,24 +584,39 @@ allow direct comparison with the recent, region-focused studies of each area.
 \begin{figure}
     \centering
     \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/endeavour.png}
+        \caption{Endeavour / Nootka}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/wa_margin.png}
+        \caption{Offshore Washington}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/or_margin.png}
+        \caption{Offshore Oregon}
+    \end{subfigure}
+
+    \vspace{0.4em}
+    \begin{subfigure}{0.32\textwidth}
         \includegraphics[width=\linewidth]{figures/fig_regions/blanco.png}
-        \caption{Blanco transform / Gorda ridge}
+        \caption{Blanco transform}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/gorda.png}
+        \caption{Gorda deformation zone}
     \end{subfigure}\hfill
     \begin{subfigure}{0.32\textwidth}
         \includegraphics[width=\linewidth]{figures/fig_regions/mendocino.png}
         \caption{Mendocino triple junction}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/endeavour.png}
-        \caption{Endeavour / Nootka}
     \end{subfigure}
     \caption{{\bf Regional zoom-ins of the ensemble catalog}, same encoding as
-    Figure~\ref{fig:fig4} (size~$\sim M_L$, opacity~$\sim$ pick count), on a common
-    confidence scale. (a) The Blanco transform and Gorda ridge seismicity trace the
-    ridge--transform system; (b) the Mendocino triple junction hosts the densest and
-    largest offshore seismicity in the catalog; (c) the Endeavour segment and Nootka
-    fault zone. These panels enable side-by-side comparison with recent
-    region-specific relocations.}
+    Figure~\ref{fig:fig4} (size~$\sim M_L$, opacity~$\sim$ pick count) on a common
+    confidence scale, over gray shaded relief. Top row, the northern/forearc domains:
+    (a) the Endeavour segment and Nootka fault zone; (b) offshore Washington and (c)
+    offshore Oregon forearc. Bottom row, the southern ridge--transform system: (d) the
+    Blanco transform, (e) the Gorda deformation zone, and (f) the Mendocino triple
+    junction, which hosts the densest and largest offshore seismicity in the catalog.
+    The panels enable side-by-side comparison with recent region-specific relocations.}
     \label{fig:regions}
 \end{figure}
 ```

@@ -68,6 +68,17 @@ SCRIPT_FIGURES = [
      "cascadia_ML_map_mendocino.png", _MAG),
     ("fig_regions/endeavour.png", _PHASE5, ["--region", "endeavour"],
      "cascadia_ML_map_endeavour.png", _MAG),
+    ("fig_regions/gorda.png", _PHASE5, ["--region", "gorda"],
+     "cascadia_ML_map_gorda.png", _MAG),
+    ("fig_regions/wa_margin.png", _PHASE5, ["--region", "wa_margin"],
+     "cascadia_ML_map_wa_margin.png", _MAG),
+    ("fig_regions/or_margin.png", _PHASE5, ["--region", "or_margin"],
+     "cascadia_ML_map_or_margin.png", _MAG),
+    # supplementary analysis figures
+    ("supp_depth_analysis.png", "4_relocation/magnitude/phase7_depth_analysis.py", [],
+     "depth_analysis.png", _MAG),
+    ("supp_temporal_context.png", "4_relocation/magnitude/phase8_temporal.py", [],
+     "temporal_context.png", _MAG),
 ]
 
 

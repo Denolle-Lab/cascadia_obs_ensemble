@@ -533,6 +533,74 @@ We required a minimum number of 5 P and 5 S picks to associate the events.
 ```
 
 
+## Magnitude estimation
+
+We estimate a local magnitude $M_L$ for every relocated event and
+report a per-event uncertainty. The procedure has three stages:
+amplitude measurement, a joint amplitude--distance inversion for a
+relative magnitude, and an absolute calibration.
+
+*Amplitude measurement.* For each associated pick we measure a peak
+amplitude on the recording station within a phase-timed window (P and
+S, all components with a vertical-component fallback), out to a
+maximum hypocentral distance. The amplitudes used here are peak
+values of the recorded traces. A response-removed re-measurement,
+which deconvolves the instrument response and synthesizes a
+Wood--Anderson seismogram before measuring the amplitude, is described
+at the end of this section and is the recommended basis for the final
+catalog.
+
+*Relative magnitude.* The log amplitudes are inverted jointly for a
+per-event relative magnitude $M_i$ and per-station correction terms
+$C_j$ (which absorb static site and instrument-response effects),
+against a distance-attenuation term with geometric spreading $n$ and a
+non-negative anelastic coefficient $k$:
+
+```{=latex}
+\begin{equation}
+\log_{10} A_{ij} = M_i + C_j - \big[\,n\log_{10}(r_{ij}/r_\mathrm{ref})
++ k\,r_{ij}\,\big] + \varepsilon_{ij},\qquad k \ge 0 .
+\end{equation}
+```
+
+We fix the geometric spreading at $n=1$ and solve robustly for $k$ and
+the station terms.
+
+*Absolute calibration and uncertainty.* The relative magnitudes are
+anchored to an absolute $M_L$ scale using co-located ComCat and
+@Morton23 events. The per-event uncertainty is the standard deviation
+of the single-station magnitudes (median station scatter about 0.3
+magnitude units, with a median of eleven amplitude observations per
+event), giving a median $M_L$ uncertainty near 0.2 units. Both $M_L$
+and its uncertainty are carried in the released catalog, and the same
+station-scatter propagation will provide uncertainties for the
+response-removed magnitudes.
+
+*From $M_L$ to $M_w$.* Local magnitude saturates for large events
+because the Wood--Anderson passband (near 1~Hz) does not capture the
+long-period energy of large ruptures, and ocean-bottom instruments
+cannot recover the low frequencies needed for a direct moment estimate
+of the largest events. Comparing our $M_L$ to co-located ANSS moment
+magnitudes ($N=188$ pairs) yields an approximate conversion
+$M_w \approx 1.7 + 0.8\,M_L$ with a large scatter (RMS about 0.7
+magnitude units), reflecting both the intrinsic saturation and the
+noise of the present peak-amplitude measurement. Removing the
+instrument response is expected to reduce both the compression and the
+scatter and thus tighten this relation; a genuine moment magnitude
+requires fitting the low-frequency displacement spectral level, which
+the response-removed displacement waveforms make possible up to the
+magnitude at which the corner frequency falls below the usable band.
+We therefore report $M_L$ as the primary magnitude and provide the
+$M_L \to M_w$ conversion, with its uncertainty, only as an approximate
+guide.
+
+*Catalog product.* Rather than release only the quality-controlled
+subset, we release **all relocated events** together with their
+per-event quality metrics (numbers of P and S picks, RMS residual,
+azimuthal gap, and associated-phase count), the magnitude and its
+uncertainty, and a Boolean quality-control flag, so that users can
+apply their own selection criteria.
+
 ## Strategy to match with other catalogs
 
 After the location, the events from all regions were merged into a single
@@ -544,12 +612,31 @@ was used for relocation (REF).
 
 # Results {#sec:results}
 
-Overall new statistics of the new catalog. How many picks, how many associated,
-and a set of new events based on a few criteria (a conservative, a medium
-conservative, a generous estimate).
+## From picks to catalog: data selection along the pipeline
 
-Describe how many we matched with other catalogs. where do we match best. Some
-possible differences are in the velocity models.
+The pipeline reduces continuous waveforms to a catalog through a
+sequence of selection stages, each trading completeness for
+confidence. The counts and criteria at each stage are:
+
+- **Ensemble phase picking (ELEP).** The deep-learning picker ensemble
+  produces $3.96\times10^{7}$ raw P and S picks across all regions.
+- **Association (GENIE).** Graph-neural-network association assigns
+  $1.09\times10^{6}$ picks to $1.17\times10^{5}$ candidate events.
+- **Relocation.** Double-difference relocation refined with
+  waveform cross-correlation differential times yields $6.39\times10^{4}$
+  origins with a stable location (55\% of associated events; the
+  remainder do not converge to a well-constrained hypocenter).
+- **Quality control.** Requiring at least four P and four S picks and
+  an RMS residual below 2.5~s selects $3.10\times10^{4}$
+  high-confidence events (49\% of the relocated set). Events shallower
+  than 5~km were additionally checked by waveform inspection.
+
+The final quality-controlled catalog is therefore about 27\% of the
+associated events: the reduction is dominated by the relocation and
+quality-control gates, not by detection. Because that selection is a
+matter of preference, we release the full relocated catalog with the
+per-event quality metrics and flag (see Magnitude estimation), and use
+the quality-controlled subset only for the figures below.
 
 The final quality-controlled catalog is shown in Figure
 [\[fig:fig4\]](#fig:fig4){reference-type="ref" reference="fig:fig4"}. Rather than
@@ -564,13 +651,14 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     \centering
     \includegraphics[width=\linewidth]{figures/fig4_catalog_map.png}
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
-    (2010--2015).} The 31{,}014 quality-controlled events (${\ge}4$ P and
-    ${\ge}4$ S picks, RMS ${<}2.5$~s), over gray shaded relief. Marker area
-    scales with local magnitude $M_L$ (legend, top left) and marker opacity with
-    the number of associated phase picks (well-constrained events appear solid,
-    weakly constrained ones fade), so detection confidence is legible directly
-    from the map. The catalog is produced by a single, self-consistent pipeline
-    applied uniformly across the margin.}
+    (2010--2015).} All 63{,}798 relocated events, over gray shaded relief; the
+    quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
+    $N=31{,}020$) is flagged in the released catalog for users who prefer it.
+    Marker area scales with local magnitude $M_L$ (legend, top left) and marker
+    opacity with the number of associated phase picks (well-constrained events
+    appear solid, weakly constrained ones fade), so detection confidence is
+    legible directly from the map. The catalog is produced by a single,
+    self-consistent pipeline applied uniformly across the margin.}
     \label{fig:fig4}
 \end{figure}
 ```
@@ -579,10 +667,11 @@ At the scale of the whole margin the workflow reproduces the first-order tectoni
 domains; the regional zoom-ins in Figure
 [\[fig:regions\]](#fig:regions){reference-type="ref" reference="fig:regions"}
 allow direct comparison with the recent, region-focused studies of each area. The
-ocean-bottom network lowers the magnitude of completeness offshore by one to three units
-relative to the land-based ANSS catalog (e.g. $M_c\approx2.3$ vs $4.2$ at the Blanco
-transform and $2.2$ vs $5.0$ at the Endeavour segment; Supplement), while remaining
-comparable onshore -- quantifying the offshore detection gain of the workflow.
+ocean-bottom network lowers the magnitude of completeness offshore by one to two units
+relative to the land-based ANSS catalog (comparing local magnitudes only, e.g.
+$M_c\approx1.7$ vs $3.2$ at the Blanco transform and $1.8$ vs $3.2$ at the Endeavour
+segment; Supplement), while remaining comparable onshore -- quantifying the offshore
+detection gain of the workflow.
 
 ```{=latex}
 \begin{figure}

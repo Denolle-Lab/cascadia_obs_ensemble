@@ -44,6 +44,22 @@ ELEP = {git = "https://github.com/congcy/ELEP.git"}
 [feature.internal.pypi-dependencies]
 pnwstore = {git = "https://github.com/niyiyu/pnwstore.git"}
 
+# ── Amplitude feature: LEAN env for the Route A Wood-Anderson amplitude rerun ──
+# Only obspy + numpy/pandas/scipy + pnwstore (NCEDC via obspy FDSN) -- no torch/
+# seisbench/pygmt/basemap. Use on space-constrained hosts (e.g. psound):
+#   pixi install --environment amplitude
+#   pixi run -e amplitude python route_a_wa_amplitudes.py ...
+[feature.amplitude.dependencies]
+python = "3.10.*"
+setuptools = ">=65"        # pkg_resources for obspy
+numpy = ">=1.22,<2"
+pandas = ">=1.5"
+scipy = ">=1.9"
+obspy = ">=1.4"
+
+[feature.amplitude.pypi-dependencies]
+pnwstore = {git = "https://github.com/niyiyu/pnwstore.git"}
+
 # ── Paper feature: Quarto + LaTeX to render the manuscript locally ────────────
 # Lean, self-contained env (no heavy ML deps). Install with:
 #   pixi install --environment paper   ;   pixi run -e paper make paper
@@ -59,6 +75,8 @@ tectonic = "*"             # self-contained LaTeX engine (auto-fetches CTAN pack
 default = {solve-group = "default"}
 # internal: adds pnwstore for UW waveform archive access
 internal = {features = ["internal"], solve-group = "default"}
+# amplitude: lean env for the Route A amplitude rerun (obspy + pnwstore only)
+amplitude = {features = ["amplitude"], no-default-feature = true}
 # paper: Quarto + LaTeX manuscript build (no default ML stack)
 paper = {features = ["paper"], no-default-feature = true}
 

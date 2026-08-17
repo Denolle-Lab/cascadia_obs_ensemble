@@ -27,7 +27,11 @@ import pandas as pd
 from scipy.interpolate import griddata
 
 D = "../../data/datasets_all_regions"
-QC = f"{D}/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
+# ALL relocated events (not just the QC subset); qc_pass flags membership in the
+# published quality-controlled catalog (>=4 P & >=4 S picks, RMS < 2.5 s, plus the
+# shallow-event manual review) so users can filter to their taste.
+QC = f"{D}/origin_2010_2015_reloc_cog_ver3_cc.csv"
+QC_PASS = f"{D}/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 REL = f"{D}/Cascadia_relocated_catalog_ver_3.csv"
 ML = "../../data/magnitude/cascadia_catalog_ML_kpos.csv"
 VOLC = f"{D}/GVP_Volcano_List_Holocene_202504292212.csv"
@@ -55,10 +59,14 @@ def main():
 
     qc = pd.read_csv(os.path.expanduser(QC))
     qc["t"] = pd.to_datetime(qc["time"], unit="s")
+    # qc_pass = membership in the published QC catalog (consistent with the paper)
+    qc_orids = set(pd.read_csv(os.path.expanduser(QC_PASS))["orid"])
+    qc["qc_pass"] = qc.orid.isin(qc_orids)
 
     # ML by orid==event_id
     ml = pd.read_csv(os.path.expanduser(ML))
-    qc = qc.merge(ml[["event_id", "ML"]], left_on="orid", right_on="event_id", how="left")
+    mlcols = ["event_id", "ML"] + [c for c in ("ML_unc",) if c in ml.columns]
+    qc = qc.merge(ml[mlcols], left_on="orid", right_on="event_id", how="left")
 
     # horizontal location uncertainty from the relocated catalog (join by origin time)
     rel = pd.read_csv(os.path.expanduser(REL))
@@ -103,10 +111,13 @@ def main():
     cls[qc.vol_dist_km < args.vol_radius] = "volcanic"
     qc["event_class"] = cls
 
-    out = qc[["orid", "t", "lat", "lon", "depth", "ML", "h_unc_km", "nass",
-              "gap", "rms", "z_slab", "z_unc", "dz", "vol_dist_km",
-              "nearest_volcano", "event_class"]]
+    out_cols = ["orid", "t", "lat", "lon", "depth", "ML", "ML_unc", "h_unc_km",
+                "nass", "p_picks", "s_picks", "gap", "rms", "qc_pass", "z_slab",
+                "z_unc", "dz", "vol_dist_km", "nearest_volcano", "event_class"]
+    out = qc[[c for c in out_cols if c in qc.columns]]
     out.to_csv(os.path.expanduser(OUT_CSV), index=False)
+    print(f"qc_pass: {int(qc.qc_pass.sum()):,} of {len(qc):,} "
+          f"({100*qc.qc_pass.mean():.0f}%) pass QC")
     print(f"wrote {OUT_CSV}")
     print("class counts:\n" + qc.event_class.value_counts().to_string())
     print(f"\nmedian horizontal uncertainty: {qc.h_unc_km.median():.1f} km "

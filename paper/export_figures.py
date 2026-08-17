@@ -92,6 +92,9 @@ SCRIPT_FIGURES = [
     ("supp_tremor_crustal.png",
      "4_relocation/magnitude/phase11_tremor_crustal.py", [],
      "tremor_crustal.png", _MAG),
+    ("supp_slab_roughness.png",
+     "4_relocation/magnitude/phase12_slab_roughness.py", [],
+     "slab_roughness.png", _MAG),
 ]
 
 

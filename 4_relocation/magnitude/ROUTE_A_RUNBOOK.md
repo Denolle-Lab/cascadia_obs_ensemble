@@ -46,8 +46,12 @@ python route_a_wa_amplitudes.py --picks <picks.csv> --inventory station_inventor
 python route_a_wa_amplitudes.py --picks <picks.csv> --inventory station_inventory.xml \
     --out raw_wa_amplitudes.csv --source pnwstore
 ```
-Output: one row per pick with `wa_amp_mm`, `snr`, `n_comp`, `epoch`, `dist_hypo_km`,
-event/station coordinates, and a `reason` field.
+Output: one row per pick with **`wa_amp_mm`** (Wood-Anderson -> ML) and
+**`disp_amp_um`** (broadband displacement in the `--disp-lo`/`--disp-hi` band, default
+0.05--2 Hz -> a moment-scale amplitude to calibrate toward Mw), plus `snr`, `n_comp`,
+`epoch`, `dist_hypo_km`, event/station coordinates, and a `reason` field. Feed
+`wa_amp_mm` to the ML inversion; use `disp_amp_um` for the Mw work (a full Mw still
+needs a spectral Omega-0 fit -- this is the shared response-removed first step).
 
 **For the full ELEP detection set (~40M picks)** a single CSV is multi-GB — pass
 `--chunk-rows` to rotate the output into numbered parts (`raw_wa_amplitudes_partNNN.csv`,

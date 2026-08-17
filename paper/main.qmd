@@ -651,13 +651,14 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     \centering
     \includegraphics[width=\linewidth]{figures/fig4_catalog_map.png}
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
-    (2010--2015).} The 31{,}014 quality-controlled events (${\ge}4$ P and
-    ${\ge}4$ S picks, RMS ${<}2.5$~s), over gray shaded relief. Marker area
-    scales with local magnitude $M_L$ (legend, top left) and marker opacity with
-    the number of associated phase picks (well-constrained events appear solid,
-    weakly constrained ones fade), so detection confidence is legible directly
-    from the map. The catalog is produced by a single, self-consistent pipeline
-    applied uniformly across the margin.}
+    (2010--2015).} All 63{,}798 relocated events, over gray shaded relief; the
+    quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
+    $N=31{,}020$) is flagged in the released catalog for users who prefer it.
+    Marker area scales with local magnitude $M_L$ (legend, top left) and marker
+    opacity with the number of associated phase picks (well-constrained events
+    appear solid, weakly constrained ones fade), so detection confidence is
+    legible directly from the map. The catalog is produced by a single,
+    self-consistent pipeline applied uniformly across the margin.}
     \label{fig:fig4}
 \end{figure}
 ```
@@ -666,10 +667,11 @@ At the scale of the whole margin the workflow reproduces the first-order tectoni
 domains; the regional zoom-ins in Figure
 [\[fig:regions\]](#fig:regions){reference-type="ref" reference="fig:regions"}
 allow direct comparison with the recent, region-focused studies of each area. The
-ocean-bottom network lowers the magnitude of completeness offshore by one to three units
-relative to the land-based ANSS catalog (e.g. $M_c\approx2.3$ vs $4.2$ at the Blanco
-transform and $2.2$ vs $5.0$ at the Endeavour segment; Supplement), while remaining
-comparable onshore -- quantifying the offshore detection gain of the workflow.
+ocean-bottom network lowers the magnitude of completeness offshore by one to two units
+relative to the land-based ANSS catalog (comparing local magnitudes only, e.g.
+$M_c\approx1.7$ vs $3.2$ at the Blanco transform and $1.8$ vs $3.2$ at the Endeavour
+segment; Supplement), while remaining comparable onshore -- quantifying the offshore
+detection gain of the workflow.
 
 ```{=latex}
 \begin{figure}

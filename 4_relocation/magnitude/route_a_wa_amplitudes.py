@@ -3,9 +3,17 @@
 Route A, step 1: Wood-Anderson amplitudes for each P and S pick.
 
 For every pick this script fetches the waveform (NC/BK -> NCEDC via
-utils/data_client.py), removes the instrument response, simulates a Wood-Anderson
-seismograph, and measures the peak WA displacement in a *distance-scaled* window,
-taken as the maximum over all available components (vertical used as a fallback).
+utils/data_client.py), removes the instrument response, and measures TWO amplitudes
+per pick in a *distance-scaled* window, taken as the max over all components
+(vertical fallback):
+  - wa_amp_mm : peak Wood-Anderson displacement (near 1 Hz) -> local magnitude ML,
+    comparable to other ML catalogs.
+  - disp_amp_um : peak broadband displacement in a low band (--disp-lo/--disp-hi,
+    default 0.05-2 Hz) -> a moment-scale amplitude for Mw. Wood-Anderson deliberately
+    narrowbands and saturates for large events, so the low-frequency displacement is
+    the amplitude to calibrate toward Mw (up to the magnitude where the corner drops
+    below the usable OBS band). A proper Mw still needs a spectral Omega-0 fit; this
+    displacement amplitude is the first step and shares the same response removal.
 It also records a pre-signal signal-to-noise ratio and the response *epoch* the
 pick falls in (so redeployed OBS get an epoch-specific station term downstream).
 
@@ -51,8 +59,8 @@ PAZ_WA = {"poles": [-5.49779 - 5.60886j, -5.49779 + 5.60886j],
           "zeros": [0j], "gain": 1.0, "sensitivity": 2080.0}
 
 OUT_COLS = ["arid", "event_id", "network", "station", "phase", "evla", "evlo", "evdp",
-            "stla", "stlo", "stel_m", "dist_hypo_km", "wa_amp_mm", "snr", "n_comp",
-            "epoch", "reason"]
+            "stla", "stlo", "stel_m", "dist_hypo_km", "wa_amp_mm", "disp_amp_um",
+            "snr", "n_comp", "epoch", "reason"]
 
 
 def haversine_km(la1, lo1, la2, lo2):
@@ -97,6 +105,10 @@ def main(argv=None):
     ap.add_argument("--source", default="pnwstore")
     ap.add_argument("--sample-rate", type=int, default=100)
     ap.add_argument("--highpass", type=float, default=1.0, help="post-WA high-pass (Hz)")
+    ap.add_argument("--disp-lo", type=float, default=0.05,
+                    help="low corner (Hz) for the displacement (Mw) band")
+    ap.add_argument("--disp-hi", type=float, default=2.0,
+                    help="high corner (Hz) for the displacement (Mw) band")
     ap.add_argument("--noise-win", type=float, default=10.0, help="pre-signal noise window (s)")
     ap.add_argument("--start-index", type=int, default=0, help="resume / shard start row")
     ap.add_argument("--limit", type=int, default=None, help="process at most N picks (testing)")
@@ -168,9 +180,14 @@ def main(argv=None):
             st.merge(method=1, fill_value="interpolate")
             st.resample(args.sample_rate)
             st.detrend("demean"); st.taper(0.05)
+            st_disp = st.copy()                       # broadband displacement for Mw
             st.remove_response(inventory=inv, output="VEL", water_level=60)
             st.simulate(paz_simulate=PAZ_WA)          # ground velocity -> WA displacement (m)
             st.filter("highpass", freq=args.highpass)
+            # displacement path: response -> DISP, low band for the moment-scale amplitude
+            st_disp.remove_response(inventory=inv, output="DISP", water_level=60)
+            st_disp.filter("bandpass", freqmin=args.disp_lo, freqmax=args.disp_hi,
+                           zerophase=True)
         except Exception as e:
             rec["reason"] = f"resp:{str(e)[:80]}"; w.writerow(rec); continue
 
@@ -188,7 +205,14 @@ def main(argv=None):
         if ncomp == 0:
             rec["reason"] = "no_window_data"; w.writerow(rec); continue
 
-        rec.update(wa_amp_mm=amp * 1000.0,                     # m -> mm
+        disp = 0.0                                    # peak displacement (m) in the low band
+        for tr in st_disp:
+            dd = tr.slice(sig_lo, sig_hi).data
+            if len(dd):
+                disp = max(disp, float(np.max(np.abs(dd))))
+
+        rec.update(wa_amp_mm=amp * 1000.0,                     # m -> mm  (for ML)
+                   disp_amp_um=disp * 1e6,                     # m -> um  (for Mw)
                    snr=(amp / noise) if noise > 0 else np.nan,
                    n_comp=ncomp, reason="ok")
         w.writerow(rec); fh.flush()

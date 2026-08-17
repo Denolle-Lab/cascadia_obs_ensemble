@@ -77,8 +77,9 @@ def main(argv=None):
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--catalog", default="../../data/magnitude/cascadia_catalog_ML_kpos.csv")
     p.add_argument("--qc-catalog",
-                   default="../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
-                   help="QC origin table joined on orid==event_id to attach nass")
+                   default="../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc.csv",
+                   help="origin table joined on orid==event_id to attach nass "
+                        "(default: ALL relocated events, not just the QC subset)")
     p.add_argument("--mode", choices=["confidence", "depth"], default="confidence")
     p.add_argument("--color", default="firebrick", help="single fill (confidence mode)")
     p.add_argument("--region", default="full", choices=list(REGIONS),

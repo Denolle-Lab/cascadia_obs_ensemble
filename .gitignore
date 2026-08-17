@@ -40,3 +40,6 @@ data/zenodo/
 
 # Slab2 reference grid (fetched from ScienceBase; reproducible, not committed)
 data/slab2/
+
+# Tomography model (fetched from IRIS EMC; reproducible)
+data/tomography/

@@ -95,6 +95,9 @@ SCRIPT_FIGURES = [
     ("supp_slab_roughness.png",
      "4_relocation/magnitude/phase12_slab_roughness.py", [],
      "slab_roughness.png", _MAG),
+    ("supp_tomography.png",
+     "4_relocation/magnitude/phase13_tomography.py", [],
+     "tomography_relation.png", _MAG),
 ]
 
 

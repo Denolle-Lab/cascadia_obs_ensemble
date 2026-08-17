@@ -578,7 +578,11 @@ seismicity from one homogeneous set of picks, associations, and relocations.
 At the scale of the whole margin the workflow reproduces the first-order tectonic
 domains; the regional zoom-ins in Figure
 [\[fig:regions\]](#fig:regions){reference-type="ref" reference="fig:regions"}
-allow direct comparison with the recent, region-focused studies of each area.
+allow direct comparison with the recent, region-focused studies of each area. The
+ocean-bottom network lowers the magnitude of completeness offshore by one to three units
+relative to the land-based ANSS catalog (e.g. $M_c\approx2.3$ vs $4.2$ at the Blanco
+transform and $2.2$ vs $5.0$ at the Endeavour segment; Supplement), while remaining
+comparable onshore -- quantifying the offshore detection gain of the workflow.
 
 ```{=latex}
 \begin{figure}

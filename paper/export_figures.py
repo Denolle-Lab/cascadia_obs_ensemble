@@ -98,6 +98,9 @@ SCRIPT_FIGURES = [
     ("supp_tomography.png",
      "4_relocation/magnitude/phase13_tomography.py", [],
      "tomography_relation.png", _MAG),
+    ("supp_completeness.png",
+     "4_relocation/magnitude/phase14_completeness.py", [],
+     "completeness_by_region.png", _MAG),
 ]
 
 

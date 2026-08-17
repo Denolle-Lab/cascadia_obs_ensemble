@@ -12,7 +12,13 @@ from obspy.clients.fdsn import Client as FDSNClient
 from mpl_toolkits.basemap import Basemap
 
 
-from pnwstore.mseed import WaveformClient
+try:
+    from pnwstore.mseed import WaveformClient
+except ImportError:
+    # pnwstore is a server-only waveform client; not needed to import this module
+    # (only the WaveformClient()-using functions require it). Guard so the figure
+    # notebooks, which use the inventory/plotting helpers, import without it.
+    WaveformClient = None
 import datetime as datetime1
 from datetime import datetime
 
@@ -234,6 +240,9 @@ def calc_snr(all_picks,all_pick_assignments):
     
     
     # Define the clients 
+    if WaveformClient is None:
+        raise RuntimeError("pnwstore is required for this function "
+                           "(from pnwstore.mseed import WaveformClient); it is not installed.")
     client_waveform = WaveformClient()
     client2 = Client("IRIS")
     client_ncedc = Client('NCEDC')

@@ -13,6 +13,7 @@ dependencies:
   - obspy>=1.4
   - h5py>=3.7
   - basemap>=1.3.6    # conda-forge only; used in utils/plot_utils.py
+  - pygmt>=0.13,<0.14 # conda-forge only; used in 4_relocation/magnitude figures
   - jupyter>=1.0
   - ipykernel>=6.0
   - ipython>=8.0

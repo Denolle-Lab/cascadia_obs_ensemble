@@ -2,9 +2,10 @@
 """Verify the cascadia_obs_ensemble environment: import the key dependencies and
 report their versions. Run via `pixi run verify` (default env) after install.
 
-Exits non-zero if any *core* dependency is missing, so it doubles as a CI/install
-smoke test. Optional deps (heavy ML stack, internal pnwstore, paper toolchain) are
-reported but do not fail the check.
+Exits non-zero if any *required* dependency is missing, so it doubles as a CI/install
+smoke test. Required = the CORE scientific stack plus the notebook kernel (IPython,
+ipykernel). Optional deps (heavy ML stack, internal pnwstore, plotting/paper
+toolchains, jupyter notebook itself) are reported but do not fail the check.
 """
 from __future__ import annotations
 

@@ -50,6 +50,9 @@ def main():
 
     d = xr.open_dataset(os.path.expanduser(args.model))
     vname = args.vs_var or next((v for v in d.data_vars if "vs" in v.lower()), None)
+    if vname is None:
+        raise SystemExit(f"no Vs variable found in {args.model}; data_vars="
+                         f"{list(d.data_vars)}. Pass --vs-var explicitly.")
     vs = d[vname]                                    # (depth, lat, lon), km/s
     cdep, clat, clon = coord(d, "depth"), coord(d, "lat"), coord(d, "lon")
     dep, lat, lon = d[cdep].values, d[clat].values, d[clon].values

@@ -240,6 +240,9 @@ def calc_snr(all_picks,all_pick_assignments):
     
     
     # Define the clients 
+    if WaveformClient is None:
+        raise RuntimeError("pnwstore is required for this function "
+                           "(from pnwstore.mseed import WaveformClient); it is not installed.")
     client_waveform = WaveformClient()
     client2 = Client("IRIS")
     client_ncedc = Client('NCEDC')

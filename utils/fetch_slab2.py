@@ -34,8 +34,12 @@ def main() -> int:
         urllib.request.urlretrieve(URL, tmp.name)
         with tarfile.open(tmp.name) as tar:
             for out, member in MEMBERS.items():
-                (OUTDIR / out).write_bytes(tar.extractfile(member).read())
-                n = sum(1 for _ in open(OUTDIR / out))
+                f = tar.extractfile(member)
+                if f is None:
+                    raise RuntimeError(f"member not found in Slab2 tarball: {member}")
+                (OUTDIR / out).write_bytes(f.read())
+                with open(OUTDIR / out) as fh:
+                    n = sum(1 for _ in fh)
                 print(f"wrote data/slab2/{out}  ({n:,} rows: lon,lat,value)")
     os.unlink(tmp.name)
     return 0

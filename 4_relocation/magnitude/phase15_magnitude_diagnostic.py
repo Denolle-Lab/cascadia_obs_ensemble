@@ -43,6 +43,9 @@ def main():
             r = n.iloc[n.ML.argmax()]
             rows.append((e.mag, r.ML, r.M_rel))
     m = pd.DataFrame(rows, columns=["Mw", "ML", "M_rel"])
+    if len(m) < 5:
+        raise SystemExit(f"only {len(m)} ANSS<->catalog matches within the thresholds; "
+                         "cannot fit. Check the catalog/ANSS inputs and time window.")
     sML = np.polyfit(m.Mw, m.ML, 1)
     sMr = np.polyfit(m.Mw, m.M_rel, 1)
 

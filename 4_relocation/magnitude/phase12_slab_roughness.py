@@ -62,10 +62,11 @@ def main():
     off["rough"] = sample(lons, lats, rough, off.lon.values, off.lat.values)
     off = off.dropna(subset=["rough"])
 
-    # random ocean baseline (same count, uniform over the wet grid)
+    # random ocean baseline (same count, drawn uniformly at random over the wet grid)
     wet = np.argwhere(~np.isnan(rough))
-    rng = wet[np.linspace(0, len(wet) - 1, len(off)).astype(int)]
-    base = rough[rng[:, 0], rng[:, 1]]
+    gen = np.random.default_rng(0)                   # seeded for reproducibility
+    pick = wet[gen.integers(0, len(wet), size=len(off))]
+    base = rough[pick[:, 0], pick[:, 1]]
 
     ks = ks_2samp(off.rough, base)
     med_e, med_b = np.nanmedian(off.rough), np.nanmedian(base)

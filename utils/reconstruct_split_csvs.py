@@ -19,7 +19,6 @@ import argparse
 import re
 from pathlib import Path
 
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 SPLIT = ROOT / "data" / "split_files"
@@ -58,10 +57,20 @@ def main() -> int:
             mb = sum(p.stat().st_size for p in parts) / 1e6
             print(f"  {base}.csv  <- {len(parts)} parts (~{mb:.0f} MB)")
             continue
-        df = pd.concat([pd.read_csv(p) for p in parts], ignore_index=True)
+        # stream the parts (each a CSV with a header) into one file rather than
+        # loading multi-GB reconstructions fully into memory via pd.concat.
         dest = out / f"{base}.csv"
-        df.to_csv(dest, index=False)
-        print(f"  ok  {dest.name:56s} {len(df):>10,} rows  <- {len(parts)} parts")
+        rows = 0
+        with open(dest, "w") as w:
+            for i, p in enumerate(parts):
+                with open(p) as r:
+                    header = r.readline()
+                    if i == 0:
+                        w.write(header)
+                    for line in r:
+                        w.write(line)
+                        rows += 1
+        print(f"  ok  {dest.name:56s} {rows:>10,} rows  <- {len(parts)} parts")
     return 0
 
 

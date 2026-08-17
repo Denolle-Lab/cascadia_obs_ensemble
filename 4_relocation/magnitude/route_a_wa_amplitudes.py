@@ -100,6 +100,10 @@ def main(argv=None):
     ap.add_argument("--noise-win", type=float, default=10.0, help="pre-signal noise window (s)")
     ap.add_argument("--start-index", type=int, default=0, help="resume / shard start row")
     ap.add_argument("--limit", type=int, default=None, help="process at most N picks (testing)")
+    ap.add_argument("--chunk-rows", type=int, default=0,
+                    help="rotate output into <out>_partNNN.csv every N rows (0 = single "
+                         "file). Use for the full ~40M-pick set; parts are numbered by "
+                         "absolute row index so shards/resumes don't collide.")
     args = ap.parse_args(argv)
 
     inv = read_inventory(args.inventory)
@@ -108,13 +112,34 @@ def main(argv=None):
     ev_col = "idx" if "idx" in picks.columns else "event_id"
 
     sl = slice(args.start_index, args.start_index + args.limit if args.limit else None)
-    write_header = (args.start_index == 0) or (not os.path.exists(args.out))
-    fh = open(args.out, "w" if write_header else "a", newline="")
-    w = csv.DictWriter(fh, fieldnames=OUT_COLS)
-    if write_header:
-        w.writeheader()
 
-    for _, row in picks.iloc[sl].iterrows():
+    # Rotating writer: with --chunk-rows>0, output goes to <out>_partNNN.csv, the part
+    # index derived from the ABSOLUTE row index so resumes/shards land in stable parts.
+    stem, ext = os.path.splitext(args.out)
+
+    def part_path(abs_idx):
+        if not args.chunk_rows:
+            return args.out
+        return f"{stem}_part{abs_idx // args.chunk_rows:04d}{ext}"
+
+    state = {"path": None, "fh": None, "w": None}
+
+    def writer_for(abs_idx):
+        p = part_path(abs_idx)
+        if p != state["path"]:
+            if state["fh"]:
+                state["fh"].close()
+            new = not os.path.exists(p)          # header only when the part is created
+            state["fh"] = open(p, "a", newline="")
+            state["w"] = csv.DictWriter(state["fh"], fieldnames=OUT_COLS)
+            if new:
+                state["w"].writeheader()
+            state["path"] = p
+        return state["w"], state["fh"]
+
+    for local_i, (_, row) in enumerate(picks.iloc[sl].iterrows()):
+        abs_idx = args.start_index + local_i
+        w, fh = writer_for(abs_idx)
         net, sta = str(row["station"]).split(".")[0].strip(), str(row["station"]).split(".")[1].strip()
         phase = _phase(row["phase"])
         rec = {k: "" for k in OUT_COLS}
@@ -169,8 +194,10 @@ def main(argv=None):
         w.writerow(rec); fh.flush()
         time.sleep(0.05)
 
-    fh.close()
-    print(f"done -> {args.out}")
+    if state["fh"]:
+        state["fh"].close()
+    where = f"{stem}_part*.csv" if args.chunk_rows else args.out
+    print(f"done -> {where}")
 
 
 if __name__ == "__main__":

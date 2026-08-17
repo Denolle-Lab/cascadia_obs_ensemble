@@ -46,12 +46,24 @@ python route_a_wa_amplitudes.py --picks <picks.csv> --inventory station_inventor
 python route_a_wa_amplitudes.py --picks <picks.csv> --inventory station_inventory.xml \
     --out raw_wa_amplitudes.csv --source pnwstore
 ```
-Output `raw_wa_amplitudes.csv`: one row per pick with `wa_amp_mm`, `snr`, `n_comp`,
-`epoch`, `dist_hypo_km`, event/station coordinates, and a `reason` field.
+Output: one row per pick with `wa_amp_mm`, `snr`, `n_comp`, `epoch`, `dist_hypo_km`,
+event/station coordinates, and a `reason` field.
+
+**For the full ELEP detection set (~40M picks)** a single CSV is multi-GB — pass
+`--chunk-rows` to rotate the output into numbered parts (`raw_wa_amplitudes_partNNN.csv`,
+~a few 100k–1M rows each). Parts are numbered by absolute row index, so `--start-index`
+shards/resumes land in stable, non-colliding parts, and step 2 reads them via a glob:
+```
+python route_a_wa_amplitudes.py --picks <picks.csv> --inventory station_inventory.xml \
+    --out raw_wa_amplitudes.csv --source pnwstore --chunk-rows 1000000
+```
 
 **2. Build the analysis dataset** (SNR gate + epoch-keyed station ids; any machine):
 ```
 python route_a_build_dataset.py --raw raw_wa_amplitudes.csv \
+    --out ../../data/magnitude/amp_distance_dataset_routeA.csv --min-snr 3 --epoch-station
+# chunked run: pass a glob (quote it) — parts are filtered individually then combined
+python route_a_build_dataset.py --raw 'raw_wa_amplitudes_part*.csv' \
     --out ../../data/magnitude/amp_distance_dataset_routeA.csv --min-snr 3 --epoch-station
 ```
 

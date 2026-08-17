@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import glob
 import os
 
 import numpy as np
@@ -23,23 +24,36 @@ import pandas as pd
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--raw", required=True, help="raw_wa_amplitudes.csv")
+    ap.add_argument("--raw", required=True,
+                    help="raw amplitudes CSV, or a glob for chunked parts "
+                         "(e.g. 'raw_wa_amplitudes_part*.csv')")
     ap.add_argument("--out", default="../../data/magnitude/amp_distance_dataset_routeA.csv")
     ap.add_argument("--min-snr", type=float, default=3.0)
     ap.add_argument("--epoch-station", action="store_true",
                     help="append @epoch to the station id (per-deployment station terms)")
     args = ap.parse_args(argv)
 
-    df = pd.read_csv(os.path.expanduser(args.raw))
-    n0 = len(df)
-    if "reason" in df.columns:
-        df = df[df["reason"] == "ok"]
-    amp = pd.to_numeric(df["wa_amp_mm"], errors="coerce")
-    snr = pd.to_numeric(df.get("snr"), errors="coerce")
-    keep = amp.notna() & (amp > 0) & ((snr >= args.min_snr) | snr.isna())
-    n_lowsnr = int(((snr < args.min_snr)).sum())
-    df = df[keep].copy()
-    df["amp"] = amp[keep].to_numpy()
+    # accept a single file or a glob of chunked parts; filter each part before
+    # concatenating so the full (~40M-row) raw set never has to fit in memory at once.
+    files = sorted(glob.glob(os.path.expanduser(args.raw))) or [os.path.expanduser(args.raw)]
+
+    def load_filter(path):
+        d = pd.read_csv(path)
+        n_raw = len(d)
+        if "reason" in d.columns:
+            d = d[d["reason"] == "ok"]
+        a = pd.to_numeric(d["wa_amp_mm"], errors="coerce")
+        s = pd.to_numeric(d.get("snr"), errors="coerce")
+        keep = a.notna() & (a > 0) & ((s >= args.min_snr) | s.isna())
+        d = d[keep].copy()
+        d["amp"] = a[keep].to_numpy()
+        return d, n_raw, int((s < args.min_snr).sum())
+
+    frames, n0, n_lowsnr = [], 0, 0
+    for f in files:
+        d, nr, nl = load_filter(f)
+        frames.append(d); n0 += nr; n_lowsnr += nl
+    df = pd.concat(frames, ignore_index=True)
     df["log10A"] = np.log10(df["amp"])
 
     if args.epoch_station:                      # per-deployment station terms

@@ -43,3 +43,6 @@ data/slab2/
 
 # Tomography model (fetched from IRIS EMC; reproducible)
 data/tomography/
+
+# Cached GMRT topography grids (fetched by phase5 --gmrt)
+data/gmrt/

@@ -21,11 +21,31 @@ from __future__ import annotations
 import argparse
 import os
 
+import urllib.parse
+import urllib.request
+
 import numpy as np
 import pandas as pd
 import pygmt
 
 SLAB = "../../data/slab2/cas_slab2_dep.xyz"
+GMRT_DIR = "../../data/gmrt"     # cached GMRT grids (git-ignored)
+
+
+def fetch_gmrt(region, res):
+    """Download (and cache) a GMRT multi-resolution topography grid for `region`.
+    res in {med, high, max} -> ~240 m / ~120 m / ~100 m per node, far finer than the
+    global SRTM15/GEBCO grids, especially offshore (multibeam bathymetry)."""
+    xmin, xmax, ymin, ymax = region
+    d = os.path.expanduser(GMRT_DIR)
+    os.makedirs(d, exist_ok=True)
+    fn = f"gmrt_{xmin}_{xmax}_{ymin}_{ymax}_{res}.nc".replace(" ", "")
+    p = os.path.join(d, fn)
+    if not os.path.exists(p):
+        q = urllib.parse.urlencode(dict(west=xmin, east=xmax, south=ymin, north=ymax,
+                                        format="coards", resolution=res, layer="topo"))
+        urllib.request.urlretrieve(f"https://www.gmrt.org/services/GridServer?{q}", p)
+    return p
 
 
 def ml_to_size_cm(ml, scale=1.0):
@@ -86,6 +106,9 @@ def main(argv=None):
                    help="map extent preset (full margin or a regional zoom)")
     p.add_argument("--relief-res", default="auto",
                    help="earth-relief resolution ('auto' = 15s for zooms, 02m full)")
+    p.add_argument("--gmrt", default="off", choices=["off", "med", "high", "max"],
+                   help="use GMRT multi-resolution topography for the relief (much finer "
+                        "offshore than SRTM15/GEBCO); med~240 m, high~120 m, max~100 m")
     p.add_argument("--slab-contours", action="store_true",
                    help="overlay Slab2 interface depth contours (10 km interval)")
     p.add_argument("--size-scale", type=float, default=None,
@@ -124,12 +147,20 @@ def main(argv=None):
     proj = "M16c"
     # finer relief for the regional zooms (15s ~ 450 m), 02m for the full margin;
     # load_relief degrades 15s -> 30s -> 02m rather than falling back to a blank map.
-    prefer = args.relief_res
-    if prefer == "auto":
-        # 15s where the tiles load reliably here (near-margin, west edge >= -127);
-        # the far-offshore SRTM15 ocean tiles fail to download, so stay 02m there.
-        prefer = "15s" if (span <= 5 and xmin >= -127) else "02m"
-    grid, res = load_relief(region, prefer)
+    grid = None
+    if args.gmrt != "off":                           # GMRT multibeam topography
+        try:
+            grid = fetch_gmrt(region, args.gmrt)     # cached netCDF path
+            print(f"GMRT relief ({args.gmrt})")
+        except Exception as e:
+            print(f"GMRT failed ({str(e)[:60]}); falling back to SRTM")
+    if grid is None:
+        prefer = args.relief_res
+        if prefer == "auto":
+            # 15s where the tiles load reliably here (near-margin, west edge >= -127);
+            # the far-offshore SRTM15 ocean tiles fail to download, so stay 02m there.
+            prefer = "15s" if (span <= 5 and xmin >= -127) else "02m"
+        grid, _res = load_relief(region, prefer)
     if grid is not None:
         pygmt.makecpt(cmap="gray", series=[-6000, 4000])
         fig.grdimage(grid, region=region, projection=proj, cmap=True,

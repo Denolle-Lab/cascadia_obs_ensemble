@@ -82,6 +82,12 @@ SCRIPT_FIGURES = [
     ("supp_megathrust_bucket.png",
      "4_relocation/magnitude/phase9_megathrust_bucket.py", [],
      "megathrust_bucket.png", _MAG),
+    ("supp_event_classification.png",
+     "4_relocation/magnitude/phase10_event_classification.py", [],
+     "event_classification.png", _MAG),
+    ("supp_tremor_crustal.png",
+     "4_relocation/magnitude/phase11_tremor_crustal.py", [],
+     "tremor_crustal.png", _MAG),
 ]
 
 

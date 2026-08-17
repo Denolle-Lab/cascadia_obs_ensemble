@@ -57,6 +57,8 @@ KEEP = {
     "missing_events_from_mycatalog_anss_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
     "missing_events_from_mycatalog_morton_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
     "new_events_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv",
+    # volcano overlay used by the event-classification analysis (phase10)
+    "GVP_Volcano_List_Holocene_202504292212.csv",
 }
 
 

@@ -28,10 +28,22 @@ import pygmt
 SLAB = "../../data/slab2/cas_slab2_dep.xyz"
 
 
-def ml_to_size_cm(ml):
+def ml_to_size_cm(ml, scale=1.0):
     """Marker diameter (cm) growing strongly with magnitude (exaggerated so large
-    events stand out); tiny for small events."""
-    return np.clip(0.018 * 3.0 ** (ml - 1.0), 0.006, 1.6)
+    events stand out); tiny for small events. `scale` enlarges markers on zooms."""
+    return np.clip(scale * 0.018 * 3.0 ** (ml - 1.0), 0.006 * scale, 1.8)
+
+
+def load_relief(region, prefer):
+    """Load gray shaded relief, degrading to 02m rather than a blank basemap. The finest
+    (15s) tiles can fail to download for the larger offshore boxes, so we only prefer
+    15s for tight zooms and always fall back to the reliable 02m grid."""
+    for res in dict.fromkeys([prefer, "02m"]):      # single attempt each, 02m last
+        try:
+            return pygmt.datasets.load_earth_relief(resolution=res, region=region), res
+        except Exception:
+            continue
+    return None, None
 
 
 def picks_to_transparency(n, ref, t_opaque=2.0, t_faint=92.0):
@@ -75,6 +87,8 @@ def main(argv=None):
                    help="earth-relief resolution ('auto' = 15s for zooms, 02m full)")
     p.add_argument("--slab-contours", action="store_true",
                    help="overlay Slab2 interface depth contours (10 km interval)")
+    p.add_argument("--size-scale", type=float, default=None,
+                   help="marker size multiplier (default: auto, larger on zooms)")
     p.add_argument("--legend", dest="legend", action="store_true", default=None,
                    help="draw the size/opacity legends (default: only on the full map)")
     p.add_argument("--no-legend", dest="legend", action="store_false")
@@ -101,24 +115,29 @@ def main(argv=None):
     n_in = int(((df.evlo.between(xmin, xmax)) & (df.evla.between(ymin, ymax))).sum())
     picks = df["nass"].to_numpy() if args.mode == "confidence" else None
 
+    span = xmax - xmin
+    # markers scale up on zooms so events read at the tighter extent
+    sscale = args.size_scale if args.size_scale else float(np.clip(8.0 / span, 1.0, 3.0))
+
     fig = pygmt.Figure()
     proj = "M16c"
-    # finer relief for the regional zooms (15s ~ 450 m), 02m for the full margin
-    res = args.relief_res
-    if res == "auto":
-        res = "15s" if (xmax - xmin) <= 5 else "02m"
-    try:                                             # gray, semi-transparent shaded relief
-        grid = pygmt.datasets.load_earth_relief(resolution=res, region=region)
+    # finer relief for the regional zooms (15s ~ 450 m), 02m for the full margin;
+    # load_relief degrades 15s -> 30s -> 02m rather than falling back to a blank map.
+    prefer = args.relief_res
+    if prefer == "auto":                             # 15s only for tight zooms
+        prefer = "15s" if span <= 3 else "02m"
+    grid, res = load_relief(region, prefer)
+    if grid is not None:
         pygmt.makecpt(cmap="gray", series=[-6000, 4000])
         fig.grdimage(grid, region=region, projection=proj, cmap=True,
                      shading="+a315+nt1.2", transparency=45)
         fig.coast(region=region, projection=proj, shorelines="0.3p,gray40")
-    except Exception as e:
-        print("relief unavailable, plain basemap:", e)
+    else:
+        print("relief unavailable, plain basemap")
         fig.coast(region=region, projection=proj, land="gray95", water="white",
                   shorelines="0.3p,gray40")
 
-    size = ml_to_size_cm(df["ML"].to_numpy())
+    size = ml_to_size_cm(df["ML"].to_numpy(), sscale)
     # no in-figure title: the caption lives in the manuscript
     fig.basemap(region=region, projection=proj, frame=["af", "WSne"])
 
@@ -149,7 +168,7 @@ def main(argv=None):
                  font="10p,Helvetica-Bold,black")
         for i, m in enumerate([1, 2, 3, 4]):
             y = ly0 - i * step
-            fig.plot(x=[lx], y=[y], size=[ml_to_size_cm(m)], style="cc",
+            fig.plot(x=[lx], y=[y], size=[ml_to_size_cm(m, sscale)], style="cc",
                      fill="white", pen="0.5p,black")
             fig.text(x=lx + 0.05 * sx, y=y, text=f"ML {m}", justify="LM", font="9p,black")
         if args.mode == "confidence":

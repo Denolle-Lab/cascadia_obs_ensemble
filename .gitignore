@@ -37,3 +37,6 @@ data/_review/
 
 # Assembled Zenodo submission package (built by utils/assemble_zenodo.py; local)
 data/zenodo/
+
+# Slab2 reference grid (fetched from ScienceBase; reproducible, not committed)
+data/slab2/

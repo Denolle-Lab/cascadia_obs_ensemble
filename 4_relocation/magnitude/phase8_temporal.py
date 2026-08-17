@@ -21,8 +21,21 @@ import pandas as pd
 
 QC = "../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 TREMOR = "../../data/datasets_all_regions/pnsn_tremor.json"
+ASSOC = "../../data/datasets_all_regions/assoc_2010_2015_reloc_cog_ver3.csv"
+ORIGIN = "../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3.csv"
 OUT = "../../data/magnitude/temporal_context.png"
 AXIAL_ERUPTION = pd.Timestamp("2015-04-24")
+
+
+def active_stations_per_month():
+    """Unique stations contributing associated picks each month (network-size proxy);
+    the station list has no deployment dates, so we count from the associations."""
+    assoc = pd.read_csv(os.path.expanduser(ASSOC), usecols=["orid", "sta"])
+    orig = pd.read_csv(os.path.expanduser(ORIGIN), usecols=["orid", "time"])
+    m = assoc.merge(orig, on="orid", how="inner")
+    m["t"] = pd.to_datetime(m["time"], unit="s")
+    s = m.set_index("t").groupby(pd.Grouper(freq="MS"))["sta"].nunique()
+    return s
 
 
 def load_tremor(path):
@@ -40,11 +53,12 @@ def main():
     win = (slice("2010-01-01", "2015-07-01"))
     eq_m = qc.set_index("t").resample("MS").size().loc[win]
     tr_m = tr.set_index("t").resample("MS").size().loc[win]
+    sta_m = active_stations_per_month().loc[win]
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 
-    # (A) monthly earthquake rate vs tremor rate
-    ax1.bar(eq_m.index, eq_m.values, width=25, color="firebrick", alpha=0.8,
+    # (A) monthly earthquake rate vs tremor rate vs active-station count
+    ax1.bar(eq_m.index, eq_m.values, width=25, color="firebrick", alpha=0.75,
             label="earthquakes / month")
     ax1.set_ylabel("earthquakes / month", color="firebrick")
     ax1.tick_params(axis="y", labelcolor="firebrick")
@@ -53,10 +67,18 @@ def main():
              label="tremor detections / month")
     axt.set_ylabel("tremor detections / month", color="navy")
     axt.tick_params(axis="y", labelcolor="navy")
+    ax3 = ax1.twinx()                                   # active stations, offset axis
+    ax3.spines["right"].set_position(("outward", 52))
+    ax3.plot(sta_m.index, sta_m.values, "-", color="teal", lw=2.2,
+             label="active stations")
+    ax3.set_ylabel("active stations / month", color="teal")
+    ax3.tick_params(axis="y", labelcolor="teal")
+    ax3.set_ylim(0, 260)
     ax1.axvline(AXIAL_ERUPTION, color="green", ls="--", lw=1.5)
     ax1.text(AXIAL_ERUPTION, ax1.get_ylim()[1]*0.92, " Axial eruption\n Apr 2015",
              color="green", fontsize=8, va="top")
-    ax1.set_title("(A) Monthly earthquake rate vs tectonic tremor (ETS proxy)")
+    ax1.set_title("(A) Monthly earthquake rate, tectonic tremor (ETS proxy), "
+                  "and active-station count")
 
     # (B) offshore latitude vs time -> the central-ridge / Axial gap
     off = qc[qc.lon < -126.5]

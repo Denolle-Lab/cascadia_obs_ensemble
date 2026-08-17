@@ -51,6 +51,10 @@ def fmd(mags, dm=0.1):
 def main():
     cls = pd.read_csv(os.path.expanduser(CLS))
     anss = pd.read_csv(os.path.expanduser(ANSS), index_col=0)
+    # ML-only comparison: both catalogs are local magnitude, so filter ANSS to its
+    # ml-typed events (drops Mw/Md) for a like-for-like completeness benchmark.
+    if "magType" in anss.columns:
+        anss = anss[anss.magType.str.lower() == "ml"]
 
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     print(f"{'region':13s} {'our N':>6} {'Mc':>5} {'b':>5} | {'ANSS N':>6} {'Mc':>5} "
@@ -79,8 +83,8 @@ def main():
               f"{fa['mc'] if fa else np.nan:5.1f} {fa['b'] if fa else np.nan:5.2f}")
 
     axes.ravel()[-1].axis("off")
-    fig.suptitle("Frequency-magnitude distributions by region: ensemble ML vs ANSS",
-                 fontsize=13)
+    fig.suptitle("Frequency-magnitude distributions by region: ensemble ML vs ANSS "
+                 "(ML-typed events only)", fontsize=13)
     fig.tight_layout()
     fig.savefig(os.path.expanduser(OUT), dpi=200, bbox_inches="tight")
     print(f"\nwrote {OUT}")

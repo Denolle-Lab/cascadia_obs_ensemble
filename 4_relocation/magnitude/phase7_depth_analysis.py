@@ -63,7 +63,23 @@ def main():
     # median depth vs longitude
     lons = np.arange(-127, -121, 0.5)
     med = [fa.loc[fa.lon.between(l, l+0.5), "depth"].median() for l in lons]
-    ax2.plot(lons+0.25, med, "k-o", lw=2, ms=4, label="median depth")
+    ax2.plot(lons+0.25, med, "k-o", lw=2, ms=4, label="median event depth")
+
+    # Slab2 megathrust interface (deepens landward), if the grid has been fetched
+    slab = os.path.expanduser("../../data/slab2/cas_slab2_dep.xyz")
+    if os.path.exists(slab):
+        s = pd.read_csv(slab, names=["lon", "lat", "dep"])
+        s["lon"] = np.where(s.lon > 180, s.lon - 360, s.lon)
+        s = s.dropna()
+        sfa = s[s.lat.between(44, 49)]
+        xs = np.arange(-127, -121, 0.25)
+        idep = [abs(sfa.loc[sfa.lon.between(x, x+0.25), "dep"].median()) for x in xs]
+        ax2.plot(xs+0.125, idep, color="darkblue", lw=2.5, ls="--",
+                 label="Slab2 megathrust interface")
+        ax2.text(-122.6, 47, "megathrust\ninterface", color="darkblue", fontsize=8,
+                 ha="center")
+        ax2.text(-123.8, 8, "crustal upper-plate\nseismicity (above interface)",
+                 color="0.25", fontsize=8, ha="center")
     ax2.set_ylim(55, 0)
     ax2.set_xlim(-127, -121)
     ax2.set_xlabel("longitude (deg)  ~  distance landward from trench")

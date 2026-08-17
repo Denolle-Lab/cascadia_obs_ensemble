@@ -74,6 +74,10 @@ SCRIPT_FIGURES = [
      "cascadia_ML_map_wa_margin.png", _MAG),
     ("fig_regions/or_margin.png", _PHASE5, ["--region", "or_margin"],
      "cascadia_ML_map_or_margin.png", _MAG),
+    # Puget Sound with Slab2 interface depth contours (slab-following seismicity)
+    ("fig_slab_puget.png", _PHASE5,
+     ["--region", "puget", "--slab-contours", "--legend"],
+     "cascadia_ML_map_puget.png", _MAG),
     # supplementary analysis figures
     ("supp_depth_analysis.png", "4_relocation/magnitude/phase7_depth_analysis.py", [],
      "depth_analysis.png", _MAG),

@@ -642,6 +642,25 @@ observation for the shallow, near-trench portion of the interface [@BurgmannChad
 itself resolve interface slip, but it maps where upper-plate and intraslab seismicity
 concentrate relative to the locked zone.
 
+Beneath Puget Sound the deeper seismicity broadly tracks the down-dip geometry of the
+subducting plate: events concentrate between the 40 and 60~km Slab2 depth contours and
+trend north--south, parallel to the contours, following the along-strike curvature of
+the slab (Figure [\[fig:puget\]](#fig:puget){reference-type="ref" reference="fig:puget"}).
+
+```{=latex}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/fig_slab_puget.png}
+    \caption{{\bf Slab-following seismicity beneath Puget Sound.} Catalog events
+    (size~$\sim M_L$, opacity~$\sim$ pick count) over high-resolution relief, with
+    Slab2 interface depth contours (blue, 10~km interval). The deeper seismicity
+    concentrates between the 40 and 60~km contours and trends parallel to them,
+    consistent with intraslab/near-interface faulting that follows the along-strike
+    curvature of the subducting plate.}
+    \label{fig:puget}
+\end{figure}
+```
+
 ## Endeavour and Nootka Region
 
 ```{=latex}

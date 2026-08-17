@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 import pygmt
 
+SLAB = "../../data/slab2/cas_slab2_dep.xyz"
+
 
 def ml_to_size_cm(ml):
     """Marker diameter (cm) growing strongly with magnitude (exaggerated so large
@@ -54,6 +56,7 @@ REGIONS = {
     "endeavour": [-130.4, -127.2, 47.4, 49.8],   # Endeavour/JdF ridge + Nootka fault
     "wa_margin": [-127.6, -123.2, 46.2, 49.2],   # offshore Washington forearc
     "or_margin": [-126.8, -123.2, 42.8, 46.4],   # offshore Oregon forearc
+    "puget":     [-123.6, -121.4, 46.6, 48.6],   # Puget Sound (deep slab-arch seismicity)
 }
 
 
@@ -68,8 +71,10 @@ def main(argv=None):
     p.add_argument("--color", default="firebrick", help="single fill (confidence mode)")
     p.add_argument("--region", default="full", choices=list(REGIONS),
                    help="map extent preset (full margin or a regional zoom)")
-    p.add_argument("--relief-res", default="02m",
-                   help="earth-relief resolution (02m is cached; 15s/30s need download)")
+    p.add_argument("--relief-res", default="auto",
+                   help="earth-relief resolution ('auto' = 15s for zooms, 02m full)")
+    p.add_argument("--slab-contours", action="store_true",
+                   help="overlay Slab2 interface depth contours (10 km interval)")
     p.add_argument("--legend", dest="legend", action="store_true", default=None,
                    help="draw the size/opacity legends (default: only on the full map)")
     p.add_argument("--no-legend", dest="legend", action="store_false")
@@ -98,9 +103,10 @@ def main(argv=None):
 
     fig = pygmt.Figure()
     proj = "M16c"
-    # 02m relief covers the whole margin and is the one cached locally; finer grids
-    # (15s/30s) need a per-tile download and are used only if --relief-res is passed.
+    # finer relief for the regional zooms (15s ~ 450 m), 02m for the full margin
     res = args.relief_res
+    if res == "auto":
+        res = "15s" if (xmax - xmin) <= 5 else "02m"
     try:                                             # gray, semi-transparent shaded relief
         grid = pygmt.datasets.load_earth_relief(resolution=res, region=region)
         pygmt.makecpt(cmap="gray", series=[-6000, 4000])
@@ -126,6 +132,15 @@ def main(argv=None):
         transp = picks_to_transparency(picks, picks_ref)
         fig.plot(x=df["evlo"], y=df["evla"], size=size, fill=args.color,
                  style="cc", pen="0.2p,gray20", transparency=transp)
+
+    if args.slab_contours and os.path.exists(os.path.expanduser(SLAB)):
+        s = pd.read_csv(os.path.expanduser(SLAB), names=["lon", "lat", "v"])
+        s["lon"] = np.where(s.lon > 180, s.lon - 360, s.lon)
+        s = s.dropna()
+        s = s[(s.lon.between(xmin, xmax)) & (s.lat.between(ymin, ymax))]
+        # Slab2 interface depth contours (km) reveal the slab curvature/strike
+        fig.contour(x=s.lon, y=s.lat, z=np.abs(s.v), region=region, projection=proj,
+                    levels=10, annotation="20+f7p", pen="0.6p,dodgerblue3")
 
     if draw_legend:
         sx, sy = xmax - xmin, ymax - ymin

@@ -105,6 +105,7 @@ def get_waveforms(
                 channel=channel,
                 starttime=t0,
                 endtime=t1,
+                attach_response=True,   # so NC/BK carry responses like the fdsn path
             )
 
         # Convert UTCDateTime to datetime for pnwstore year/month/day API

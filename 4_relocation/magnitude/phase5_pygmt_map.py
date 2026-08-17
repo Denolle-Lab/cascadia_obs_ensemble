@@ -124,8 +124,10 @@ def main(argv=None):
     # finer relief for the regional zooms (15s ~ 450 m), 02m for the full margin;
     # load_relief degrades 15s -> 30s -> 02m rather than falling back to a blank map.
     prefer = args.relief_res
-    if prefer == "auto":                             # 15s only for tight zooms
-        prefer = "15s" if span <= 3 else "02m"
+    if prefer == "auto":
+        # 15s where the tiles load reliably here (near-margin, west edge >= -127);
+        # the far-offshore SRTM15 ocean tiles fail to download, so stay 02m there.
+        prefer = "15s" if (span <= 5 and xmin >= -127) else "02m"
     grid, res = load_relief(region, prefer)
     if grid is not None:
         pygmt.makecpt(cmap="gray", series=[-6000, 4000])

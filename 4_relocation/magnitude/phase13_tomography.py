@@ -15,6 +15,7 @@ Fetch the model first:  python utils/fetch_tomography.py
 """
 from __future__ import annotations
 
+import argparse
 import os
 
 import matplotlib.pyplot as plt
@@ -31,13 +32,33 @@ CLASS_COLORS = {"volcanic": "#ee7733", "megathrust?": "#cc3311",
                 "crustal-fault": "#888888", "intraslab": "#4477aa"}
 
 
+def coord(d, *names):
+    for n in names:
+        for c in list(d.coords) + list(d.dims):
+            if n in c.lower():
+                return c
+    raise KeyError(names)
+
+
 def main():
-    d = xr.open_dataset(os.path.expanduser(MODEL))
-    vs = d["vs"]                                      # (depth, lat, lon), km/s
-    dep = d["depth"].values
-    lat = d["latitude"].values
-    lon = d["longitude"].values
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--model", default=MODEL,
+                    help="tomography netCDF (default Delph2018; e.g. CRESCENT CVM-Gen0)")
+    ap.add_argument("--vs-var", default=None, help="Vs variable name (auto-detect if unset)")
+    ap.add_argument("--out", default=OUT)
+    args = ap.parse_args()
+
+    d = xr.open_dataset(os.path.expanduser(args.model))
+    vname = args.vs_var or next((v for v in d.data_vars if "vs" in v.lower()), None)
+    vs = d[vname]                                    # (depth, lat, lon), km/s
+    cdep, clat, clon = coord(d, "depth"), coord(d, "lat"), coord(d, "lon")
+    dep, lat, lon = d[cdep].values, d[clat].values, d[clon].values
+    vs = vs.transpose(cdep, clat, clon)
     V = vs.values
+    if lon.max() > 180:
+        lon = np.where(lon > 180, lon - 360, lon)
+    print(f"model {os.path.basename(args.model)}: Vs '{vname}', "
+          f"depth {dep.min():.0f}..{dep.max():.0f} km, lon {lon.min():.1f}..{lon.max():.1f}")
 
     # perturbation from the depth-mean (lateral anomaly), percent
     depth_mean = np.nanmean(V, axis=(1, 2))
@@ -93,8 +114,8 @@ def main():
     fig.colorbar(im, ax=axc, label="dlnVs (%)")
 
     fig.tight_layout()
-    fig.savefig(os.path.expanduser(OUT), dpi=200, bbox_inches="tight")
-    print(f"\nwrote {OUT}")
+    fig.savefig(os.path.expanduser(args.out), dpi=200, bbox_inches="tight")
+    print(f"\nwrote {args.out}")
 
 
 if __name__ == "__main__":

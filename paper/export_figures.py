@@ -79,6 +79,9 @@ SCRIPT_FIGURES = [
      "depth_analysis.png", _MAG),
     ("supp_temporal_context.png", "4_relocation/magnitude/phase8_temporal.py", [],
      "temporal_context.png", _MAG),
+    ("supp_megathrust_bucket.png",
+     "4_relocation/magnitude/phase9_megathrust_bucket.py", [],
+     "megathrust_bucket.png", _MAG),
 ]
 
 

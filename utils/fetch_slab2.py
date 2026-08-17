@@ -19,21 +19,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 URL = ("https://www.sciencebase.gov/catalog/file/get/5aa1b00ee4b0b1c392e86467"
        "?name=Slab2Distribute_Mar2018.tar.gz")
-MEMBER = "Slab2Distribute_Mar2018/Slab2_TXT/cas_slab2_dep_02.24.18.xyz"
-OUT = ROOT / "data" / "slab2" / "cas_slab2_dep.xyz"
+# depth model + its vertical uncertainty grid (both used by the megathrust bucket)
+MEMBERS = {
+    "cas_slab2_dep.xyz": "Slab2Distribute_Mar2018/Slab2_TXT/cas_slab2_dep_02.24.18.xyz",
+    "cas_slab2_unc.xyz": "Slab2Distribute_Mar2018/Slab2_TXT/cas_slab2_unc_02.24.18.xyz",
+}
+OUTDIR = ROOT / "data" / "slab2"
 
 
 def main() -> int:
-    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUTDIR.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp:
-        print(f"downloading Slab2 (~140 MB) ...")
+        print("downloading Slab2 (~140 MB) ...")
         urllib.request.urlretrieve(URL, tmp.name)
         with tarfile.open(tmp.name) as tar:
-            f = tar.extractfile(MEMBER)
-            OUT.write_bytes(f.read())
+            for out, member in MEMBERS.items():
+                (OUTDIR / out).write_bytes(tar.extractfile(member).read())
+                n = sum(1 for _ in open(OUTDIR / out))
+                print(f"wrote data/slab2/{out}  ({n:,} rows: lon,lat,value)")
     os.unlink(tmp.name)
-    n = sum(1 for _ in open(OUT))
-    print(f"wrote {OUT.relative_to(ROOT)}  ({n:,} rows: lon,lat,depth)")
     return 0
 
 

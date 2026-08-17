@@ -626,6 +626,22 @@ allow direct comparison with the recent, region-focused studies of each area.
 We now analyze the novel seismicity and possible implications for characterizing
 the tectonic processes across the multiple plate boundaries.
 
+## Depth partitioning and the megathrust
+
+With the depths resolved here (Supplement) we can place the seismicity relative to
+the plate interface. The abundant forearc seismicity sits predominantly above the
+Slab2 interface [@Hayes18] and is therefore crustal upper-plate faulting; a generous
+upper bound of $\sim$44\% of events is nonetheless compatible with a megathrust source
+once the interface and depth uncertainties are accounted for. This scarcity of
+resolvable interface seismicity is consistent with the geodetically inferred locking
+of the Cascadia megathrust: central-Cascadia creep and along-strike variations in the
+slip-rate deficit ("coupling") from onshore GNSS [@Schmalzle14], and the recognized
+sparsity of offshore constraints, where seafloor geodesy remains the key missing
+observation for the shallow, near-trench portion of the interface [@BurgmannChadwell14]
+(REF: recent Cascadia seafloor-geodesy results). Our offshore catalog does not by
+itself resolve interface slip, but it maps where upper-plate and intraslab seismicity
+concentrate relative to the locked zone.
+
 ## Endeavour and Nootka Region
 
 ```{=latex}

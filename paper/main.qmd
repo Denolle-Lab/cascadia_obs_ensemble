@@ -552,7 +552,7 @@ Describe how many we matched with other catalogs. where do we match best. Some
 possible differences are in the velocity models.
 
 The final quality-controlled catalog is shown in Figure
-[\[fig:fig7\]](#fig:fig7){reference-type="ref" reference="fig:fig7"}. Rather than
+[\[fig:fig4\]](#fig:fig4){reference-type="ref" reference="fig:fig4"}. Rather than
 focusing on a high-precision subregion, the map emphasizes the self-consistency
 and scalability of the workflow across the entire margin: a single automated
 pipeline resolves the offshore ridge--transform lineaments (Blanco and
@@ -562,7 +562,7 @@ seismicity from one homogeneous set of picks, associations, and relocations.
 ```{=latex}
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fig7_catalog_ml_confidence.png}
+    \includegraphics[width=\linewidth]{figures/fig4_catalog_map.png}
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
     (2010--2015).} The 31{,}014 quality-controlled events (${\ge}4$ P and
     ${\ge}4$ S picks, RMS ${<}2.5$~s), over gray shaded relief. Marker area
@@ -571,22 +571,38 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     weakly constrained ones fade), so detection confidence is legible directly
     from the map. The catalog is produced by a single, self-consistent pipeline
     applied uniformly across the margin.}
-    \label{fig:fig7}
+    \label{fig:fig4}
 \end{figure}
 ```
+
+At the scale of the whole margin the workflow reproduces the first-order tectonic
+domains; the regional zoom-ins in Figure
+[\[fig:regions\]](#fig:regions){reference-type="ref" reference="fig:regions"}
+allow direct comparison with the recent, region-focused studies of each area.
 
 ```{=latex}
 \begin{figure}
     \centering
-    \includegraphics[height=\textheight]{figures/fig4_cc_no_relief_tremor_contours.png}
-    \caption{{\bf New earthquake catalog}. (a) The new events that are matched
-    with existing catalogs are shown in purple and linked to their matched
-    events using a black line; the corresponding events from the ANSS catalogs
-    are in blue, from the \citet{Morton23} catalog in green, and the remaining
-    unmatched events are shown in green (Morton-2023) and yellow (ANSS). (b) New
-    events were detected that met the quality control criteria and were
-    color-coded by the number of picks.}
-    \label{fig:fig4}
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/blanco.png}
+        \caption{Blanco transform / Gorda ridge}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/mendocino.png}
+        \caption{Mendocino triple junction}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\linewidth]{figures/fig_regions/endeavour.png}
+        \caption{Endeavour / Nootka}
+    \end{subfigure}
+    \caption{{\bf Regional zoom-ins of the ensemble catalog}, same encoding as
+    Figure~\ref{fig:fig4} (size~$\sim M_L$, opacity~$\sim$ pick count), on a common
+    confidence scale. (a) The Blanco transform and Gorda ridge seismicity trace the
+    ridge--transform system; (b) the Mendocino triple junction hosts the densest and
+    largest offshore seismicity in the catalog; (c) the Endeavour segment and Nootka
+    fault zone. These panels enable side-by-side comparison with recent
+    region-specific relocations.}
+    \label{fig:regions}
 \end{figure}
 ```
 

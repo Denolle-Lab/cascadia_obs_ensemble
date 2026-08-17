@@ -32,14 +32,29 @@ def ml_to_size_cm(ml):
     return np.clip(0.018 * 3.0 ** (ml - 1.0), 0.006, 1.6)
 
 
-def picks_to_transparency(n, t_opaque=2.0, t_faint=92.0):
+def picks_to_transparency(n, ref, t_opaque=2.0, t_faint=92.0):
     """Map pick count -> GMT transparency (%). Many picks -> near-opaque (confident);
-    few picks -> nearly invisible. Log scale (nass is heavily right-skewed); the wide
-    2..92% range gives strong confidence contrast."""
+    few picks -> nearly invisible. Log scale (nass is heavily right-skewed). `ref` is
+    the pick array to normalize against (the FULL catalog), so the confidence scale is
+    identical across the whole-margin map and the regional zoom-ins."""
     lp = np.log10(np.maximum(np.asarray(n, float), 1.0))
-    span = lp.max() - lp.min()
-    norm = (lp - lp.min()) / span if span > 0 else np.ones_like(lp)
+    lo, hi = np.log10(max(ref.min(), 1.0)), np.log10(ref.max())
+    span = hi - lo
+    norm = np.clip((lp - lo) / span, 0, 1) if span > 0 else np.ones_like(lp)
     return t_faint - (t_faint - t_opaque) * norm
+
+
+# Regional zoom presets [W, E, S, N] -- chosen to line up with the recent (2025-2026)
+# region-focused Cascadia studies for side-by-side comparison. Tune as needed.
+REGIONS = {
+    "full":      [-130.8, -118.5, 38.5, 51.5],   # whole margin
+    "mendocino": [-125.6, -123.2, 39.6, 41.4],   # Mendocino triple junction / Gorda
+    "blanco":    [-130.6, -126.6, 42.6, 45.3],   # Blanco transform + Gorda ridge
+    "gorda":     [-128.8, -123.8, 40.0, 43.2],   # Gorda deformation zone
+    "endeavour": [-130.4, -127.2, 47.4, 49.8],   # Endeavour/JdF ridge + Nootka fault
+    "wa_margin": [-127.6, -123.2, 46.2, 49.2],   # offshore Washington forearc
+    "or_margin": [-126.8, -123.2, 42.8, 46.4],   # offshore Oregon forearc
+}
 
 
 def main(argv=None):
@@ -51,27 +66,43 @@ def main(argv=None):
                    help="QC origin table joined on orid==event_id to attach nass")
     p.add_argument("--mode", choices=["confidence", "depth"], default="confidence")
     p.add_argument("--color", default="firebrick", help="single fill (confidence mode)")
-    p.add_argument("--out", default="../../data/magnitude/cascadia_ML_map_confidence.png")
+    p.add_argument("--region", default="full", choices=list(REGIONS),
+                   help="map extent preset (full margin or a regional zoom)")
+    p.add_argument("--relief-res", default="02m",
+                   help="earth-relief resolution (02m is cached; 15s/30s need download)")
+    p.add_argument("--legend", dest="legend", action="store_true", default=None,
+                   help="draw the size/opacity legends (default: only on the full map)")
+    p.add_argument("--no-legend", dest="legend", action="store_false")
+    p.add_argument("--out", default=None,
+                   help="output PNG (default: cascadia_ML_map_<region>.png)")
     args = p.parse_args(argv)
+
+    region = REGIONS[args.region]
+    xmin, xmax, ymin, ymax = region
+    draw_legend = (args.region == "full") if args.legend is None else args.legend
+    out = args.out or f"../../data/magnitude/cascadia_ML_map_{args.region}.png"
 
     df = pd.read_csv(os.path.expanduser(args.catalog)).dropna(subset=["evla", "evlo", "ML"])
 
-    picks = None
+    picks_ref = None
     if args.mode == "confidence":
         qc = pd.read_csv(os.path.expanduser(args.qc_catalog))
         df = df.merge(qc[["orid", "nass"]], left_on="event_id", right_on="orid", how="inner")
-        picks = df["nass"].to_numpy()
-        print(f"joined QC catalog: {len(df):,} events, nass {int(picks.min())}..{int(picks.max())}")
+        picks_ref = df["nass"].to_numpy().copy()     # full-catalog reference for opacity
+        print(f"joined QC catalog: {len(df):,} events, nass {int(picks_ref.min())}"
+              f"..{int(picks_ref.max())}")
 
-    df = df.sort_values("ML")                       # small first -> large drawn on top
-    if picks is not None:
-        picks = df["nass"].to_numpy()               # keep aligned with the sort
-    region = [-130.8, -118.5, 38.5, 51.5]
+    df = df.sort_values("ML")                        # small first -> large drawn on top
+    n_in = int(((df.evlo.between(xmin, xmax)) & (df.evla.between(ymin, ymax))).sum())
+    picks = df["nass"].to_numpy() if args.mode == "confidence" else None
 
     fig = pygmt.Figure()
     proj = "M16c"
-    try:                                            # gray, semi-transparent shaded relief
-        grid = pygmt.datasets.load_earth_relief(resolution="02m", region=region)
+    # 02m relief covers the whole margin and is the one cached locally; finer grids
+    # (15s/30s) need a per-tile download and are used only if --relief-res is passed.
+    res = args.relief_res
+    try:                                             # gray, semi-transparent shaded relief
+        grid = pygmt.datasets.load_earth_relief(resolution=res, region=region)
         pygmt.makecpt(cmap="gray", series=[-6000, 4000])
         fig.grdimage(grid, region=region, projection=proj, cmap=True,
                      shading="+a315+nt1.2", transparency=45)
@@ -92,35 +123,35 @@ def main(argv=None):
                  style="cc", pen="0.25p,gray20", transparency=25)
         fig.colorbar(position="JMR+o0.6c/0c+w8c", frame=["x+lhypocentral depth", "y+lkm"])
     else:
-        transp = picks_to_transparency(picks)
+        transp = picks_to_transparency(picks, picks_ref)
         fig.plot(x=df["evlo"], y=df["evla"], size=size, fill=args.color,
                  style="cc", pen="0.2p,gray20", transparency=transp)
 
-    # magnitude size legend (reference circles + labels, top-left offshore)
-    lg_x, lg_y0 = -130.2, 51.05
-    for i, m in enumerate([1, 2, 3, 4]):
-        y = lg_y0 - i * 0.42
-        fig.plot(x=[lg_x], y=[y], size=[ml_to_size_cm(m)], style="cc",
-                 fill="white", pen="0.5p,black")
-        fig.text(x=lg_x + 0.35, y=y, text=f"ML {m}", justify="LM", font="9p,black")
-    fig.text(x=lg_x, y=lg_y0 + 0.4, text="magnitude", justify="LM",
-             font="10p,Helvetica-Bold,black")
-
-    if args.mode == "confidence":
-        # opacity legend: same-size markers, few vs many picks
-        ox, oy0 = -127.9, 51.05
-        fig.text(x=ox, y=oy0 + 0.4, text="no. picks", justify="LM",
+    if draw_legend:
+        sx, sy = xmax - xmin, ymax - ymin
+        lx, ly0, step = xmin + 0.03 * sx, ymax - 0.05 * sy, 0.055 * sy
+        fig.text(x=lx, y=ly0 + step, text="magnitude", justify="LM",
                  font="10p,Helvetica-Bold,black")
-        for i, (lab, t) in enumerate([("few", 88.0), ("many", 4.0)]):
-            y = oy0 - i * 0.42
-            fig.plot(x=[ox], y=[y], size=[0.32], style="cc", fill=args.color,
-                     pen="0.3p,gray20", transparency=t)
-            fig.text(x=ox + 0.35, y=y, text=lab, justify="LM", font="9p,black")
+        for i, m in enumerate([1, 2, 3, 4]):
+            y = ly0 - i * step
+            fig.plot(x=[lx], y=[y], size=[ml_to_size_cm(m)], style="cc",
+                     fill="white", pen="0.5p,black")
+            fig.text(x=lx + 0.05 * sx, y=y, text=f"ML {m}", justify="LM", font="9p,black")
+        if args.mode == "confidence":
+            ox = xmin + 0.20 * sx
+            fig.text(x=ox, y=ly0 + step, text="no. picks", justify="LM",
+                     font="10p,Helvetica-Bold,black")
+            for i, (lab, t) in enumerate([("few", 88.0), ("many", 4.0)]):
+                y = ly0 - i * step
+                fig.plot(x=[ox], y=[y], size=[0.32], style="cc", fill=args.color,
+                         pen="0.3p,gray20", transparency=t)
+                fig.text(x=ox + 0.05 * sx, y=y, text=lab, justify="LM", font="9p,black")
 
-    out = os.path.expanduser(args.out)
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    fig.savefig(out, dpi=200)
-    print(f"wrote {out}  ({len(df):,} events, ML {df.ML.min():.1f}..{df.ML.max():.1f}, mode={args.mode})")
+    outp = os.path.expanduser(out)
+    os.makedirs(os.path.dirname(outp), exist_ok=True)
+    fig.savefig(outp, dpi=200)
+    print(f"wrote {outp}  (region={args.region}: {n_in:,} events in view, "
+          f"{len(df):,} total, mode={args.mode})")
 
 
 if __name__ == "__main__":

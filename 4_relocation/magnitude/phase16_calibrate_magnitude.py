@@ -65,13 +65,18 @@ def main():
     types = MW_TYPES if args.target == "mw" else ML_TYPES
     anchors = a[a.magType.str.lower().isin(types) & a.mag.notna()]
 
+    cc = c.dropna(subset=["mag_in", "t", "lat", "lon"])   # candidates with a usable mag
     pairs = []
     for _, e in anchors.iterrows():
-        dt = (c.t - e.t).abs().dt.total_seconds()
-        m = c[(dt < args.dt) & ((c.lat - e.latitude).abs() < args.dd)
-              & ((c.lon - e.longitude).abs() < args.dd)]
+        dt = (cc.t - e.t).abs().dt.total_seconds()
+        m = cc[(dt < args.dt) & ((cc.lat - e.latitude).abs() < args.dd)
+               & ((cc.lon - e.longitude).abs() < args.dd)]
         if len(m):
-            pairs.append((m.iloc[m.mag_in.argmax()].mag_in, e.mag))
+            # closest anchor->catalog match: smallest space-time separation, not the
+            # largest nearby magnitude (which could be an unrelated bigger event)
+            sep = ((m.t - e.t).dt.total_seconds() / args.dt) ** 2 \
+                + ((m.lat - e.latitude) / args.dd) ** 2 + ((m.lon - e.longitude) / args.dd) ** 2
+            pairs.append((m.loc[sep.idxmin(), "mag_in"], e.mag))
     p = pd.DataFrame(pairs, columns=["mag_in", "target"]).dropna()
     if len(p) < 8:
         raise SystemExit(f"only {len(p)} {args.target} anchor matches; cannot calibrate.")

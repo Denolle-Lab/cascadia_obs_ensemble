@@ -23,6 +23,19 @@ This addresses the main Method-B seismological caveats:
   * SNR for quality gating; per-epoch tagging for OBS redeployments;
   * NC/BK filled via NCEDC (missing from the old IRIS-only Wood-Anderson run).
 
+PADDING (why the window is long)
+  The instrument response is removed on a window padded by --pad seconds on each
+  side, and the measurement window is sliced out only afterwards. This matters
+  enormously for disp_amp_um and not at all for wa_amp_mm: the Wood-Anderson
+  simulation is itself a sharp bandpass near 1 Hz and discards the long-period
+  deconvolution noise, whereas the 0.05-2 Hz displacement band does not. Measured
+  on five CI stations, the previous hardcoded 5 s pad underestimated disp_amp_um
+  by up to 12x (1.8 Mw units) versus a converged window, and the error was worst
+  at the LOW-amplitude stations - so it is not a constant offset that a linear
+  ComCat calibration can absorb. Values converge by ~60 s of pad; the default is
+  max(60, 5/--disp-lo). Cost: this fetches ~10x more data per pick than the old
+  5 s pad, which is the price of a usable Mw amplitude.
+
 MUST run on a host with pnwstore + FDSN/NCEDC access
 (`pixi install --environment internal`). It is slow (one request per pick); it
 appends to --out on the fly and supports --start-index for resume / sharding.
@@ -110,6 +123,13 @@ def main(argv=None):
     ap.add_argument("--disp-hi", type=float, default=2.0,
                     help="high corner (Hz) for the displacement (Mw) band")
     ap.add_argument("--noise-win", type=float, default=10.0, help="pre-signal noise window (s)")
+    ap.add_argument("--pad", type=float, default=None,
+                    help="seconds of extra data deconvolved on EACH side of the "
+                         "measurement window (default: max(60, 5/--disp-lo)). The "
+                         "response is removed on this padded window and the "
+                         "measurement window is sliced out afterwards. Must be "
+                         "several times the longest period in the displacement "
+                         "band or the deconvolution rings; see PADDING below.")
     ap.add_argument("--start-index", type=int, default=0, help="resume / shard start row")
     ap.add_argument("--limit", type=int, default=None, help="process at most N picks (testing)")
     ap.add_argument("--chunk-rows", type=int, default=0,
@@ -117,6 +137,19 @@ def main(argv=None):
                          "file). Use for the full ~40M-pick set; parts are numbered by "
                          "absolute row index so shards/resumes don't collide.")
     args = ap.parse_args(argv)
+
+    # The deconvolution needs several cycles of the longest period in the band.
+    # --disp-lo 0.05 Hz is a 20 s period, so the padded window must be ~100 s;
+    # measured error with the old hardcoded 5 s pad was up to 12x (see PADDING).
+    pad = args.pad if args.pad is not None else max(60.0, 5.0 / args.disp_lo)
+    if pad < 3.0 / args.disp_lo:
+        print(f"WARNING: --pad {pad:g}s is under 3/{args.disp_lo:g}Hz = "
+              f"{3.0 / args.disp_lo:g}s; disp_amp_um will be unreliable.",
+              file=sys.stderr)
+    # Taper the deconvolution below the signal band instead of relying on
+    # water_level alone to tame the low-frequency blow-up.
+    nyq = args.sample_rate / 2.0
+    pre_filt = [args.disp_lo / 4.0, args.disp_lo / 2.0, 0.8 * nyq, 0.9 * nyq]
 
     inv = read_inventory(args.inventory)
     picks = pd.read_csv(args.picks)
@@ -169,8 +202,8 @@ def main(argv=None):
                    dist_hypo_km=round(r, 3))
 
         try:
-            st = get_waveforms(net, sta, "*H*", tp - (args.noise_win + 5), tp + post + 5,
-                               source=args.source)
+            st = get_waveforms(net, sta, "*H*", tp - (args.noise_win + pad),
+                               tp + post + pad, source=args.source)
         except Exception as e:
             rec["reason"] = f"fetch:{str(e)[:80]}"; w.writerow(rec); continue
         if len(st) == 0:
@@ -178,14 +211,19 @@ def main(argv=None):
 
         try:
             st.merge(method=1, fill_value="interpolate")
-            st.resample(args.sample_rate)
+            # detrend/taper BEFORE resample: obspy resamples via scipy.signal.resample,
+            # which assumes the signal is periodic, so a trended untapered window
+            # wraps energy around its own edges.
             st.detrend("demean"); st.taper(0.05)
+            st.resample(args.sample_rate)
             st_disp = st.copy()                       # broadband displacement for Mw
-            st.remove_response(inventory=inv, output="VEL", water_level=60)
+            st.remove_response(inventory=inv, output="VEL", water_level=60,
+                               pre_filt=pre_filt)
             st.simulate(paz_simulate=PAZ_WA)          # ground velocity -> WA displacement (m)
             st.filter("highpass", freq=args.highpass)
             # displacement path: response -> DISP, low band for the moment-scale amplitude
-            st_disp.remove_response(inventory=inv, output="DISP", water_level=60)
+            st_disp.remove_response(inventory=inv, output="DISP", water_level=60,
+                                    pre_filt=pre_filt)
             st_disp.filter("bandpass", freqmin=args.disp_lo, freqmax=args.disp_hi,
                            zerophase=True)
         except Exception as e:

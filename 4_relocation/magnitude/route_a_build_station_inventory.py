@@ -66,7 +66,8 @@ def main(argv=None):
         by_net.setdefault(net, set()).add(sta)
     networks = sorted(by_net)
     if args.networks:
-        networks = [n for n in networks if n in args.networks.split(",")]
+        keep = {n.strip() for n in args.networks.split(",") if n.strip()}   # "NC, BK" ok
+        networks = [n for n in networks if n in keep]
     t0, t1 = UTCDateTime(args.t0), UTCDateTime(args.t1)
     print("networks:", networks)
 

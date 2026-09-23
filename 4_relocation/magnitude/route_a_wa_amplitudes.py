@@ -213,8 +213,12 @@ def main(argv=None):
     if args.only_arids:
         if args.chunk_rows:
             sys.exit("--only-arids requires --chunk-rows 0")
-        ids = pd.read_csv(args.only_arids)
-        ids = ids["arid"] if "arid" in ids.columns else ids.iloc[:, 0]
+        # headerless read, so a bare list of arids keeps its first line; an 'arid'
+        # header row (or column, in a CSV) is recognised and dropped
+        raw = pd.read_csv(args.only_arids, header=None, dtype=str)
+        first = [str(v).strip().lower() for v in raw.iloc[0]]
+        col = first.index("arid") if "arid" in first else 0
+        ids = raw.iloc[1 if "arid" in first else 0:, col].str.strip()
         picks = picks[picks["arid"].isin(set(ids.astype(int)))]
         print(f"--only-arids: {len(picks)} picks selected", file=sys.stderr)
 

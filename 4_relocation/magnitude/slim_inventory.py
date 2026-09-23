@@ -2,7 +2,7 @@
 """
 Shrink a Route A StationXML to what route_a_wa_amplitudes.py can use: only the
 stations that appear in the picks, and only ground-motion channels at >= --min-sr
-(the same filter the amplitude script applies). The full inventory holds every
+that carry a response (the same filter the amplitude script applies). The full inventory holds every
 station of every network in the picks (all of TA, nationwide) and parses to
 ~11.7 GB per process, so 20 shards filled a 250 GB host.
 
@@ -31,7 +31,8 @@ def main():
         net.stations = [s for s in net if (net.code, s.code) in want]
         for s in net:
             s.channels = [c for c in s.channels if len(c.code) == 3
-                          and c.code[1] in "HLNP" and (c.sample_rate or 0) >= args.min_sr]
+                          and c.code[1] in "HLNP" and (c.sample_rate or 0) >= args.min_sr
+                          and c.response is not None]      # unusable for deconvolution
     inv.networks = [n for n in inv if n.stations]
     n1 = sum(len(s.channels) for n in inv for s in n)
     inv.write(args.out, format="STATIONXML")

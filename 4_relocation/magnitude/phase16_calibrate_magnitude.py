@@ -57,10 +57,11 @@ def main():
     ap.add_argument("--dt", type=float, default=45.0, help="match window (s)")
     ap.add_argument("--dd", type=float, default=0.6, help="match window (deg)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--anss", default=ANSS, help="ANSS/ComCat CSV with time, magType, mag")
     args = ap.parse_args()
 
     c = load_catalog(args.catalog, args.mag_col)
-    a = pd.read_csv(os.path.expanduser(ANSS), index_col=0)
+    a = pd.read_csv(os.path.expanduser(args.anss), index_col=0)
     a["t"] = pd.to_datetime(a["time"], format="%Y-%m-%dT%H:%M:%S.%fZ", errors="coerce")
     types = MW_TYPES if args.target == "mw" else ML_TYPES
     anchors = a[a.magType.str.lower().isin(types) & a.mag.notna()]

@@ -20,6 +20,8 @@ export LD_LIBRARY_PATH="$ENV/lib"          # system libstdc++ is too old for pan
 PICKS="${PICKS:-/wd1/hbito_data/data/datasets_all_regions/Cascadia_updated_catalog_picks_assignment_ver_3.csv}"
 INV="${INV:-station_inventory_v2_slim.xml}"   # slim_inventory.py: ~0.6 GB/process vs 11.7 GB
 ANSS="${ANSS:-/wd1/hbito_data/data/datasets_anss/anss_2010-15.csv}"
+QC_CAT="${QC_CAT:-/wd1/hbito_data/data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc.csv}"
+MAPENV="${MAPENV:-$HERE/../../.pixi/envs/default}"   # pygmt lives in the default env
 NSHARD="${NSHARD:-20}"
 TRIES="${TRIES:-3}"
 OUT="${OUT:-rerun_v2}"
@@ -105,9 +107,11 @@ for tgt in ml mw; do
         --target "$tgt" --anss "$ANSS" \
         --out "$DATA/cascadia_catalog_routeA_calibrated_${tgt}.csv"
 done
-"$PY" phase5_pygmt_map.py --catalog "$DATA/cascadia_catalog_ML_routeA.csv" \
+# map in the default env (pygmt); its own lib dir first, as for the amplitude env
+LD_LIBRARY_PATH="$MAPENV/lib" "$MAPENV/bin/python" phase5_pygmt_map.py \
+    --catalog "$DATA/cascadia_catalog_ML_routeA.csv" --qc-catalog "$QC_CAT" \
     --out "$DATA/cascadia_ML_map_routeA.png" \
-    || status "map skipped (phase5 needs pygmt; not in the amplitude env)"
+    || status "map failed (non-fatal): see driver.log"
 
 status "ALL DONE"
 touch "$OUT/DONE"

@@ -111,11 +111,13 @@ def phase_window(phase, r_km):
 
 def epoch_id(inv, net, sta, t):
     """Index of the response epoch containing time t for net.sta (redeployment tag)."""
+    # Read start_date off the channel epochs active at t. (get_channel_metadata has
+    # no start time; reading one from it raised, the except swallowed it, and the
+    # first full run wrote an empty epoch for every pick.)
     try:
-        chans = inv.select(network=net, station=sta, time=t).get_contents()["channels"]
-        starts = sorted({inv.get_channel_metadata(cid, t).get("starttime")
-                         for cid in chans} - {None})
-        return f"{starts[0].date}" if starts else ""
+        sub = inv.select(network=net, station=sta, time=t)
+        starts = [c.start_date for n in sub for s in n for c in s.channels if c.start_date]
+        return f"{min(starts).date}" if starts else ""
     except Exception:
         return ""
 

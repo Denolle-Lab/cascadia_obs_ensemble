@@ -18,7 +18,7 @@ PY="$ENV/bin/python"
 export LD_LIBRARY_PATH="$ENV/lib"          # system libstdc++ is too old for pandas
 
 PICKS="${PICKS:-/wd1/hbito_data/data/datasets_all_regions/Cascadia_updated_catalog_picks_assignment_ver_3.csv}"
-INV="${INV:-station_inventory_v2.xml}"
+INV="${INV:-station_inventory_v2_slim.xml}"   # slim_inventory.py: ~0.6 GB/process vs 11.7 GB
 ANSS="${ANSS:-/wd1/hbito_data/data/datasets_anss/anss_2010-15.csv}"
 NSHARD="${NSHARD:-20}"
 TRIES="${TRIES:-3}"

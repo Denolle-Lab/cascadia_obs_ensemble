@@ -536,17 +536,19 @@ We required a minimum number of 5 P and 5 S picks to associate the events.
 ## Magnitude estimation
 
 We estimate a local magnitude $M_L$ for every relocated event that has
-enough usable amplitudes, and a per-event uncertainty. The procedure
-has four stages: a response-removed Wood--Anderson amplitude
-measurement, a joint amplitude--distance inversion for a relative
-magnitude, an absolute calibration against ComCat, and a set of
-consistency tests.
+enough usable amplitudes, with a per-event uncertainty, and replace it
+with a moment magnitude above $M\,4.5$. The procedure has five stages:
+a response-removed Wood--Anderson amplitude measurement, a joint
+inversion for event and station terms with a fixed distance correction,
+a calibration against ComCat local magnitudes, a switch to moment
+magnitude for the largest events, and a set of tests.
 
 *Amplitude measurement.* For each of the $1.00\times10^{6}$ associated
 P and S picks we fetch the waveform, remove the instrument response to
 ground velocity, convolve it with a Wood--Anderson response (natural
 period 0.8~s, damping 0.7, static gain 2080), and take the peak
-displacement over the components of the sensor. We use one sensor per
+displacement over the components of the sensor, after a 1~Hz high-pass
+filter. We use one sensor per
 pick, with the first available of broadband (HH, BH), short-period (EH,
 SH) and, only as a last resort, strong-motion (HN) channels. Pressure
 channels and channels sampled below 10~Hz are discarded. Mixing
@@ -565,99 +567,136 @@ and the instrument-response epoch that contains the pick. We measured
 sensors, and HN once). Keeping amplitudes with SNR~$\ge3$ leaves
 649,427 observations of 63,013 events on 525 station epochs.
 
-*Relative magnitude.* The log amplitudes are inverted jointly for a
-per-event relative magnitude $M_i$, a correction term $C_{j,p}$ for
-each station epoch $j$ and phase $p$, and a phase-dependent distance
-term with geometric spreading $n_p$ and anelastic coefficient $k_p$:
+*Local magnitude.* Each amplitude gives a station magnitude with the
+distance correction of \citet{Hutton87},
+$m_{ijp}=\log_{10}A_{ijp}+1.110\log_{10}(r_{ij}/100)+0.00189\,(r_{ij}-100)+3.0$
+($A$ in mm, $r$ hypocentral distance in km). We invert the station
+magnitudes of P and S picks within 150~km jointly for an event term and
+a station term,
 
 ```{=latex}
 \begin{equation}
-\log_{10} A_{ijp} = M_i + C_{j,p} - \big[\,n_p\log_{10}(r_{ij}/r_\mathrm{ref})
-+ k_p\,r_{ij}\,\big] + \varepsilon_{ijp},
+m_{ijp} = M_i + C_{j,p} + \varepsilon_{ijp},
 \end{equation}
 ```
 
-with $r_\mathrm{ref}=100$~km and the gauge $\sum_j C_{j,p}=0$. Because
-the response is removed, $C_{j,p}$ holds site amplification only. The
-station terms are separate for each deployment epoch, which matters
-for the Cascadia Initiative OBS, where a station code was reused across
-yearly redeployments with different instruments. We fix $n_p=1$ and
-solve for $k_p$ and the station terms by damped least squares
-(LSQR). We keep stations with at least eight observations and events
-with at least three, reject residuals larger than four median absolute
-deviations, and refit. The final inversion uses 628,750 observations
-and 1,014 station--phase terms. The residual RMS is 0.28 log units, and
-$k_p$ comes out close to zero ($-7\times10^{-4}$ and
-$-1\times10^{-4}$~km$^{-1}$ for P and S), so the decay with distance is
-described by the $1/r$ spreading term alone. In all, 55,707 events
-(88\% of the events with amplitudes, 87\% of the relocated catalog)
-receive a magnitude. The other events have fewer than three
-observations above the SNR threshold.
+with the gauge $\sum_j C_{j,p}=0$, by damped least squares (LSQR). We keep
+stations with at least eight observations, reject residuals larger than
+four scaled median absolute deviations, and refit. Because the response is
+removed, $C_{j,p}$ holds site amplification, which is large at the
+sediment-covered OBS. The station terms are separate for each deployment
+epoch, which matters for the Cascadia Initiative OBS, where a station code
+was reused across yearly redeployments with different instruments. The
+final inversion uses 476,939 observations and 809 station--phase terms,
+with a robust residual standard deviation of 0.22. We hold the distance
+correction fixed, and we use only picks within 150~km, because a decay
+fitted to these data is biased (see the tests below). Beyond about 200~km a
+small event is detected and picked only where its amplitude happens to be
+high. A joint inversion that also solves for the decay
+($\log_{10}A = M_i + C_{j,p} - [\log_{10}(r/100) + k_p r]$) therefore returns
+$k_p$ slightly below zero ($-7\times10^{-4}$ and $-1\times10^{-4}$~km$^{-1}$
+for P and S), a decay no steeper than $1/r$, and places large, distantly
+recorded events up to 1.6 magnitude units too low. The 48,759 events with at
+least three retained picks within 150~km get $M_i$ from this inversion. The
+6,948 others, mostly far offshore, are recorded only at larger distances.
+For them we take the magnitude from the fitted-decay inversion, mapped onto
+our scale by a Theil--Sen fit over the events that have both
+($M_L = 0.27 + 0.93\,M_L^{\mathrm{fit}}$, residual standard deviation 0.20).
+We tried the Hutton--Boore magnitude of their nearest picks instead and
+rejected it: it sits on a different scale for these events and flattens
+the regional $b$-values (to 0.6 at the Blanco transform). In all, 55,707
+events (88\% of the events with amplitudes, 87\% of the relocated catalog)
+receive a magnitude. The other events have fewer than three observations
+above the SNR threshold.
 
-*Absolute calibration and uncertainty.* We anchor the relative
-magnitudes to ComCat local magnitudes. Of the 6,627 ml-typed ComCat
-events ($M_L\ge1.5$) in the study region and period, 2,381 match one of
-our events within 15~s and 50~km. A Theil--Sen fit gives
-$M_L = 1.21\,M_\mathrm{rel} + 3.16$ (slope 95\% interval 1.18--1.23;
-correlation 0.92; residual standard deviation 0.22 and scaled median
-absolute deviation 0.19). The per-event uncertainty combines the
-standard error of the single-station magnitudes, scaled by the
-calibration slope, with the scatter of the anchors about the fit. The
-median single-station scatter is 0.24 magnitude units, the median
-event has seven observations, and the median $M_L$ uncertainty is 0.21.
+*Calibration and uncertainty.* We tie $M_i$ to ComCat local magnitudes by
+a single offset, with the slope fixed at 1 as the Wood--Anderson scale
+requires. Of the 6,627 ml-typed ComCat events ($M_L\ge1.5$) in the study
+region and period, 2,381 match one of our events within 15~s and 50~km, and
+the offset is fitted on the 2,261 of them that have picks within 150~km. The
+residual against ComCat has a standard deviation of 0.19, and its median is
+within 0.1 of zero in every 0.5-unit bin from ComCat $M_L$ 1.5 to 4. The
+slope of ours on ComCat is 0.93. The per-event uncertainty combines the
+standard error of the event's station residuals with the scatter of the
+anchors about the offset (0.15 after the anchors' own standard errors are
+removed). For the mapped events it combines the uncertainty of the
+fitted-decay magnitude with the scatter of the mapping. The median event has
+seven observations, and the median $M_L$ uncertainty is 0.17 (0.30 for the
+mapped events).
 
-*Tests of the magnitudes.* We tested the magnitudes in three ways.
-First, we compared them with an independent version of the inversion
-run on peak amplitudes in raw counts, without response removal. That
-version uses the same equation and calibration, with a single term per
-station and phase absorbing the in-band instrument gain
-(Supplement, section "Tests of the magnitudes", panels a--c). The two agree event by event for the
-55,659 events they share: $M_L^{\mathrm{resp}} = 1.035\,M_L^{\mathrm{counts}}
-- 0.15$ (correlation 0.91). The difference is a nearly constant $-0.12$
-(interquartile range about 0.27) from $M_L$ 0.5 to 3, and it is the same
-onshore ($-0.12$) and offshore ($-0.12$). Response removal therefore
-does not change the shape of the magnitude scale, and in particular
-does not change the small-magnitude end. It lowers the median
-single-station scatter from 0.31 to 0.24 magnitude units. It also
-removes about 8,000 small events, which fall below the SNR threshold
-that the counts-based version did not apply, and raises the
-maximum-curvature $M_c$ from 1.5 to 1.6; the $b$-values are 1.07 and
-1.10. Second, we compared both versions with the ComCat anchors as a
-function of magnitude (Supplement, panel d). The residuals are
-near zero at ComCat $M_L$ 1.5--2 and grow to $-0.3$ at $M_L$ 3--3.5 and
-$-0.4$ at 3.5--4 in both versions (slope of ours against ComCat 0.80
-and 0.77). The counts-based and response-removed amplitudes show the
-same compression, so it is not caused by the instrument response. We
-attribute it mostly to the calibration regression: scatter in
-$M_\mathrm{rel}$ flattens a fit of ComCat $M_L$ on $M_\mathrm{rel}$
-(regression dilution; the slope of 0.8 is close to the squared
-correlation), and the $M_L\ge1.5$ cut of the anchor set flattens it
-further. Users who need unbiased magnitudes above $M_L\sim3$ should
-use the ComCat magnitude where one exists. Third, a separate
-calibration against ANSS ml-typed events with the nearest space--time
-match (1,546 pairs) gives a residual RMS of 0.28 magnitude units and a
-slope of 1.22 of ANSS $M_L$ on ours, which shows the same high-end
-compression with a different anchor set and matching rule.
+*Moment magnitude above $M\,4.5$.* Wood--Anderson amplitudes near 1~Hz,
+here after a 1~Hz high-pass filter, miss the long-period energy of large
+ruptures, so $M_L$ falls below $M_w$ for the largest events. The
+ocean-bottom instruments do not record the low frequencies needed for a
+direct moment estimate of the largest events. We therefore report a
+preferred magnitude $M$ with its type. It is the $M_w$ of the preferred
+ComCat moment tensor \citep{ComCat17} where one matches the event (within
+5~s and 50~km) with $M_w\ge4.5$ (63 events). Otherwise, for events with
+picks within 150~km, it is a calibrated moment magnitude
+$M_W = M_L + 0.19$ once that reaches 4.5 (15 events, $M_W$ 4.5--5.0). The
+offset is the median $M_w-M_L$ of the 73 matched pairs with $M_L\ge3.5$
+(standard deviation 0.48). We fix the slope, because the tensor sample
+stops near $M_w\,4$ and a fitted slope is diluted by the scatter (0.70).
+Below 4.5 the preferred magnitude is $M_L$. We do not calibrate the mapped
+events against $M_w$. Their large events are 1.6 units below $M_w$, while
+their small ones agree with ComCat, so no single offset fits; most of their
+large events have a ComCat tensor, and only six without one have
+$M_L\ge4$. The maps mark the events whose preferred magnitude is a moment
+magnitude in orange. The same response-removed waveforms also give a peak
+displacement in the 0.05--2~Hz band for every pick, which we store for
+future work: a moment magnitude requires fitting the low-frequency
+displacement spectral level, which is possible up to the magnitude at which
+the corner frequency falls below the usable band.
 
-*From $M_L$ to $M_w$.* Wood--Anderson amplitudes near 1~Hz miss the
-long-period energy of large ruptures, and ocean-bottom instruments do
-not record the low frequencies needed for a direct moment estimate of
-the largest events. Comparing our $M_L$ with 188 co-located ANSS moment
-magnitudes gives $M_w \approx 1.03 + 0.90\,M_L$ (Theil--Sen, RMS 0.58
-magnitude units, over $M_L$ 2.4--5.5). The same response-removed
-waveforms also give a peak displacement in the 0.05--2~Hz band for
-every pick, which we store for future work: a moment magnitude requires
-fitting the low-frequency displacement spectral level, which is
-possible up to the magnitude at which the corner frequency falls below
-the usable band. We report $M_L$ as the primary magnitude and give the
-$M_L \to M_w$ conversion, with its uncertainty, only as an approximate
-guide.
+*Tests of the magnitudes.* We tested the magnitudes in four ways. The first
+two concern the amplitudes and use the fitted-decay inversion. First, we ran
+that inversion on peak amplitudes in raw counts, without response removal,
+with a single term per station and phase absorbing the in-band instrument
+gain (Supplement, section "Tests of the magnitudes", panels a--c). The two
+versions agree event by event for the 55,659 events they share
+($M_L^{\mathrm{resp}} = 1.035\,M_L^{\mathrm{counts}} - 0.15$, correlation
+0.91). The difference is a nearly constant $-0.12$ (interquartile range
+about 0.27) from $M_L$ 0.5 to 3, and it is the same onshore and offshore.
+Response removal therefore does not change the shape of the magnitude
+scale. It lowers the median single-station scatter from 0.31 to 0.24
+magnitude units, and it removes about 8,000 small events, which fall below
+the SNR threshold that the counts-based version did not apply. Second,
+against the ComCat anchors both fitted-decay versions fall progressively
+below ComCat above $M_L\sim2$, by $-0.4$ at $M_L$ 3.5--4 (Supplement,
+panel d; slope 0.80 and 0.77). The fixed-decay magnitudes have no such
+trend (above). Third, a separate calibration against ANSS ml-typed events
+with the nearest space--time match (1,546 pairs) gave a residual RMS of 0.28
+and showed the same compression for the fitted-decay magnitudes. Fourth, we
+compared our magnitudes with the moment magnitudes of the ComCat moment
+tensors. Of the 176 tensors in the study region and period, 112 match one of
+our events (median offsets 0.3~s and 14~km). The 64 without a match lie
+outside our network or at its edge: the Explorer plate and Queen Charlotte
+margin, the western Blanco transform, the 2014 Fort Bidwell (Nevada) swarm,
+and inland California, Nevada and eastern Washington. For the events with
+picks within 150~km, $M_L-M_w$ is $0.00$ at $M_w$ 3--4 (6 events), $-0.10$
+at 4--4.5 (40), $-0.39$ at 4.5--5 (15), and $-0.4$ to $-1.0$ above 5 (18),
+where the Wood--Anderson amplitude saturates. The fitted-decay $M_L$ is
+$-0.60$ already at $M_w$ 3--4.5, and $-1.4$ to $-1.6$ above (Supplement,
+panel e). Panel f of the Supplement shows why. With the Hutton--Boore
+correction and no station terms, the S-wave station magnitudes of the
+ComCat anchors ($M_L\ge2.5$) stay within 0.3 of ComCat out to 1,000~km,
+because far away only their loud picks survive. Those of the tensor events,
+which are recorded at every distance, are within 0.3 of $M_w$ inside
+200~km but fall 0.9 to 1.2 below it farther out. Large events have most of
+their picks beyond 200~km (84\% for $M_w\ge4.5$, against 22\% for the
+anchors), so a decay fitted mostly on small events pulls them low. The
+shortfall is not clipping, because the near stations agree with $M_w$.
+With the fixed-decay $M_L$, the regional $b$-values lie between 1.04 and
+1.19, and the whole catalog has $M_c=1.6$ and $b=0.98$ (1.07 for the
+fitted-decay $M_L$).
 
 *Catalog product.* Rather than release only the quality-controlled
 subset, we release **all relocated events** together with their
 per-event quality metrics (numbers of P and S picks, RMS residual,
-azimuthal gap, and associated-phase count), the magnitude and its
-uncertainty where one could be measured (87\% of the events; 98\% of the
+azimuthal gap, and associated-phase count), the preferred magnitude, its
+type ($M_L$, ComCat $M_w$ or calibrated $M_W$) and its uncertainty, together
+with $M_L$ and how it was obtained (within 150~km or mapped), where a
+magnitude could be measured (87\% of the events; 98\% of the
 quality-controlled subset), and a Boolean quality-control flag, so that users can
 apply their own selection criteria.
 
@@ -722,18 +761,21 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     local magnitude (87\% of the 63{,}798 relocated events), over gray shaded relief; the
     quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
     $N=31{,}020$) is flagged in the released catalog for users who prefer it.
-    Marker area scales with local magnitude $M_L$ (legend, top right) and marker
+    Marker area scales with the preferred magnitude (legend, top right): $M_L$ in red,
+    and in orange for the 78 events above 4.5 whose magnitude is a moment magnitude (ComCat
+    moment tensor, or $M_L$ calibrated to $M_w$; Methods). Marker
     opacity with the number of associated phase picks (well-constrained events
     appear solid, weakly constrained ones fade), so detection confidence is
     legible directly from the map. Larger events are drawn first so that they do not
     hide the smaller ones. The catalog is produced by a single, self-consistent pipeline
     applied uniformly across the margin. (b) The same events as faint dots, with the
     preferred ComCat moment tensors \citep{ComCat17} (lower-hemisphere projections at the
-    ComCat epicenters, size scaled with $M_w$): red, $M_w\ge5.0$ during the catalog
-    period (January 2010 to June 2015); gray, $M_w\ge5.5$ at other dates (1991--2026). The six largest
-    events of the catalog period (black) and four large earlier or later events (gray: the
-    2001 Nisqually, 2005 Gorda, 2018 Explorer and 2024 Cape Mendocino earthquakes) are
-    labeled with their date and $M_w$. The blue shading and
+    ComCat epicenters, size scaled with $M_w$): red, $M_w\ge5.0$ matched to an event of
+    this catalog (within 5~s and 50~km; January 2010 to June 2015); gray, $M_w\ge5.5$ at
+    other dates (1991--2026) or outside our network. The five largest matched events
+    (black) and five others (gray: the 2001 Nisqually, 2005 Gorda, 2018 Explorer and 2024
+    Cape Mendocino earthquakes, and the 2013 Explorer earthquake, which falls in the catalog
+    period but outside our network) are labeled with their date and $M_w$. The blue shading and
     10~mm/yr contours show the interseismic slip-deficit rate on the megathrust from the
     3-D viscoelastic model of \citet{Pollitz25}, as distributed by the Coupling Cloud
     \citep{Oryan26}. Arrows give the Juan de Fuca and Pacific plate velocities relative to
@@ -749,9 +791,9 @@ domains; the regional zoom-ins in Figure
 allow direct comparison with the recent, region-focused studies of each area. The
 ocean-bottom network lowers the magnitude of completeness offshore by one to two units
 relative to the land-based ANSS catalog (comparing local magnitudes only, e.g.
-$M_c\approx1.4$ vs $3.2$ at the Mendocino and Gorda segments and $2.0$ vs $3.2$ at the
-Blanco transform; Supplement). Onshore the two are comparable ($M_c\approx1.6$ vs $1.4$
-in Puget Sound).
+$M_c\approx1.6$ vs $3.2$ at the Mendocino and Gorda segments and $2.1$ vs $3.2$ at the
+Blanco transform; Supplement). Onshore the two are the same ($M_c\approx1.4$ in Puget
+Sound).
 
 ```{=latex}
 \begin{figure*}[tp]
@@ -783,11 +825,13 @@ in Puget Sound).
         \caption{Mendocino triple junction}
     \end{subfigure}
     \caption{{\bf Regional zoom-ins of the ensemble catalog}, same encoding as
-    Figure~\ref{fig:fig4} (size~$\sim M_L$, opacity~$\sim$ pick count), with one marker
+    Figure~\ref{fig:fig4} (size~$\sim M$, orange where $M$ is a moment magnitude,
+    opacity~$\sim$ pick count), with one marker
     size scale shared by the six panels (legend in a) and the same opacity scale as
     Figure~\ref{fig:fig4}a, over gray shaded GMRT relief. Beachballs are the preferred
-    ComCat moment tensors ($M_w\ge4.0$ during the catalog period in red, $M_w\ge4.5$ at other dates
-    in gray), with the three largest events of the catalog period labeled. Arrows show
+    ComCat moment tensors ($M_w\ge4.0$ matched to an event of this catalog in red,
+    $M_w\ge4.5$ at other dates or not in the catalog in gray), with the three largest
+    matched events labeled. Arrows show
     NNR-MORVEL56 plate velocities relative to North America, and in (b) and (c) the shading
     shows the slip-deficit rate of \citet{Pollitz25} (10~mm/yr contours). Top row, the northern/forearc domains:
     (a) the Endeavour segment and Nootka fault zone; (b) offshore Washington and (c)
@@ -830,9 +874,9 @@ the slab (Figure [\[fig:puget\]](#fig:puget){reference-type="ref" reference="fig
     \centering
     \includegraphics[width=7.3cm]{figures/fig_slab_puget.png}
     \caption{{\bf Slab-following seismicity beneath Puget Sound.} Catalog events
-    (size~$\sim M_L$, opacity~$\sim$ pick count) over high-resolution relief, with
+    (size~$\sim M$, opacity~$\sim$ pick count) over high-resolution relief, with
     Slab2 interface depth contours (blue, 10~km interval) and ComCat moment tensors
-    (gray, other dates; labeled: the 2001 $M_w$~6.8 Nisqually and 1999 $M_w$~5.8 Satsop
+    (gray, none in this catalog; labeled: the 2001 $M_w$~6.8 Nisqually and 1999 $M_w$~5.8 Satsop
     intraslab earthquakes). The deeper seismicity
     concentrates between the 40 and 60~km contours and trends parallel to them,
     consistent with intraslab/near-interface faulting that follows the along-strike

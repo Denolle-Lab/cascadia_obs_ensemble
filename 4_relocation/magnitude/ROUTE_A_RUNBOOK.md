@@ -81,9 +81,16 @@ python phase2_anchor_comcat_ml.py \
     --catalog ../../data/Cascadia_relocated_catalog_ver_3.csv \
     --outdir  ../../data/magnitude --suffix _routeA
 python phase4_qc_and_gr.py --catalog ../../data/magnitude/cascadia_catalog_ML_routeA.csv --tag routeA
-python phase5_pygmt_map.py --catalog ../../data/magnitude/cascadia_catalog_ML_routeA.csv \
-    --out ../../data/magnitude/cascadia_ML_map_routeA.png
+# preferred magnitude (the paper's catalog): match ComCat moment tensors, then
+# Hutton-Boore ML with station terms (picks <= 150 km), Mw above 4.5
+python phase18_moment_tensor_match.py      # -> data/focal/comcat_mt_matched.csv
+python phase19_preferred_magnitude.py      # -> cascadia_catalog_M_routeA.csv
+python phase10_event_classification.py     # carries M, M_type into the classified catalog
+python phase5_pygmt_map.py --region full   # reads cascadia_catalog_M_routeA.csv (Mw events purple)
 ```
+phase3's fitted decay (k slightly < 0) is kept for phase17's tests and for the
+"mapped" ML of events with no picks within 150 km; it is too shallow beyond ~200 km
+and places large events up to 1.6 units low (see phase18/19 docstrings).
 Because the epoch is folded into the station id, phase3's per-`(station, phase)`
 terms are automatically per-deployment — no change to the inversion code.
 

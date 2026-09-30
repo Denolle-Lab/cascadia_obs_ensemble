@@ -39,7 +39,7 @@ D = "../../data/datasets_all_regions"
 QC = f"{D}/origin_2010_2015_reloc_cog_ver3_cc.csv"
 QC_PASS = f"{D}/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 REL = f"{D}/Cascadia_relocated_catalog_ver_3.csv"
-ML = "../../data/magnitude/cascadia_catalog_ML_routeA.csv"
+ML = "../../data/magnitude/cascadia_catalog_M_routeA.csv"      # phase19
 VOLC = f"{D}/GVP_Volcano_List_Holocene_202504292212.csv"
 DEP = "../../data/slab2/cas_slab2_dep.xyz"
 UNC = "../../data/slab2/cas_slab2_unc.xyz"
@@ -70,7 +70,8 @@ def main():
 
     # ML by orid==event_id
     ml = pd.read_csv(os.path.expanduser(ML))
-    mlcols = ["event_id", "ML"] + [c for c in ("ML_unc",) if c in ml.columns]
+    mlcols = ["event_id", "ML"] + [c for c in ("ML_unc", "M", "M_unc", "M_type", "ML_method")
+                                    if c in ml.columns]
     qc = qc.merge(ml[mlcols], left_on="orid", right_on="event_id", how="left")
 
     # horizontal location uncertainty from the relocated catalog (join by origin time)
@@ -116,7 +117,8 @@ def main():
     cls[qc.vol_dist_km < args.vol_radius] = "volcanic"
     qc["event_class"] = cls
 
-    out_cols = ["orid", "t", "lat", "lon", "depth", "ML", "ML_unc", "h_unc_km",
+    out_cols = ["orid", "t", "lat", "lon", "depth", "ML", "ML_unc", "M", "M_unc", "M_type",
+                "ML_method", "h_unc_km",
                 "nass", "p_picks", "s_picks", "gap", "rms", "qc_pass", "z_slab",
                 "z_unc", "dz", "vol_dist_km", "nearest_volcano", "event_class"]
     out = qc[[c for c in out_cols if c in qc.columns]]

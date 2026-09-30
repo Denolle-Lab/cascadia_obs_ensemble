@@ -30,6 +30,8 @@ import pygmt
 
 import map_context as mc
 
+MW_COLOR = "#E69F00"     # preferred magnitude is an Mw (utils/paper_style.MW_COLOR)
+
 SLAB = "../../data/slab2/cas_slab2_dep.xyz"
 GMRT_DIR = "../../data/gmrt"     # cached GMRT grids (git-ignored)
 
@@ -53,7 +55,7 @@ def fetch_gmrt(region, res):
 def ml_to_size_cm(ml, scale=1.0):
     """Marker diameter (cm) growing strongly with magnitude (exaggerated so large
     events stand out); tiny for small events. `scale` enlarges markers on zooms."""
-    return np.clip(scale * 0.018 * 3.0 ** (ml - 1.0), 0.006 * scale, 1.8)
+    return np.clip(scale * 0.015 * 2.6 ** (ml - 1.0), 0.006 * scale, 1.0 * max(scale, 1.0))
 
 
 def load_relief(region, prefer):
@@ -138,7 +140,8 @@ CONTEXT = {
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--catalog", default="../../data/magnitude/cascadia_catalog_ML_routeA.csv")
+    p.add_argument("--catalog", default="../../data/magnitude/cascadia_catalog_M_routeA.csv",
+                   help="phase19 catalog: M (preferred), M_type (ML / Mw / Mw_cal), ML")
     p.add_argument("--qc-catalog",
                    default="../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc.csv",
                    help="origin table joined on orid==event_id to attach nass "
@@ -188,7 +191,10 @@ def main(argv=None):
     # go on the companion panel (--layer context). The zooms carry both.
     full_catalog = args.region == "full" and not ctx_panel
 
-    df = pd.read_csv(os.path.expanduser(args.catalog)).dropna(subset=["evla", "evlo", "ML"])
+    df = pd.read_csv(os.path.expanduser(args.catalog))
+    if "M" not in df.columns:                        # an ML-only catalog
+        df["M"], df["M_type"] = df["ML"], "ML"
+    df = df.dropna(subset=["evla", "evlo", "M"])
 
     picks_ref = None
     if args.mode == "confidence":
@@ -198,7 +204,8 @@ def main(argv=None):
         print(f"joined QC catalog: {len(df):,} events, nass {int(picks_ref.min())}"
               f"..{int(picks_ref.max())}")
 
-    df = df.sort_values("ML", ascending=False)       # large first -> small drawn on top, not hidden
+    df = df.sort_values("M", ascending=False)        # large first -> small drawn on top, not hidden
+    is_mw = (df["M_type"] != "ML").to_numpy()
     n_in = int(((df.evlo.between(xmin, xmax)) & (df.evla.between(ymin, ymax))).sum())
     picks = df["nass"].to_numpy() if args.mode == "confidence" else None
 
@@ -258,7 +265,7 @@ def main(argv=None):
     if not args.no_context:
         mc.draw_boundaries(fig, region, pen_scale=0.8 if args.region == "full" else 1.0)
 
-    size = ml_to_size_cm(df["ML"].to_numpy(), sscale)
+    size = ml_to_size_cm(df["M"].to_numpy(), sscale)
     # no in-figure title: the caption lives in the manuscript
     fig.basemap(region=region, projection=proj, frame=["af", "WSne"])
 
@@ -273,17 +280,20 @@ def main(argv=None):
         fig.colorbar(position="JMR+o0.6c/0c+w8c", frame=["x+lhypocentral depth", "y+lkm"])
     else:
         transp = picks_to_transparency(picks, picks_ref)
-        fig.plot(x=df["evlo"], y=df["evla"], size=size, fill=args.color,
-                 style="cc", pen="0.2p,gray20", transparency=transp)
+        # Mw events (the largest) first, outlined: orange is light on the gray relief
+        for sel, fill, pen in ((is_mw, MW_COLOR, "0.45p,gray10"), (~is_mw, args.color, "0.2p,gray20")):
+            if sel.any():
+                fig.plot(x=df["evlo"][sel], y=df["evla"][sel], size=size[sel], fill=fill,
+                         style="cc", pen=pen, transparency=np.minimum(transp[sel], 40) if fill == MW_COLOR else transp[sel])
 
     mt = None if (args.no_context or full_catalog) else mc.load_mt(region, df)
     top = pd.DataFrame()
     if mt is not None:
-        # moment tensors at other dates (context, gray) under those of the catalog window
-        # (red, matched to our events); balls scale with Mw (size at Mw 5 = bscale)
+        # moment tensors at other dates or not in our catalog (context, gray) under those
+        # matched to our events (phase18); balls scale with Mw (size at Mw 5 = bscale)
         bscale = 0.24 if args.region == "full" else 0.26
-        other = mt[~mt.in_window & (mt.Mw >= ctx["mw_out"])]
-        inwin = mt[mt.in_window & (mt.Mw >= ctx["mw_in"])]
+        other = mt[~mt.matched & (mt.Mw >= ctx["mw_out"])]
+        inwin = mt[mt.matched & (mt.Mw >= ctx["mw_in"])]
         mc.draw_mechanisms(fig, other, bscale, fill="gray55", pen="0.2p,gray30")
         mc.draw_mechanisms(fig, inwin, bscale, fill=args.color)
         if "labels" in ctx:          # hand-placed labels: exactly the events listed there
@@ -298,8 +308,8 @@ def main(argv=None):
         for _, r in top.iterrows():
             print(f"  labeled {r.time:%Y-%m-%d} Mw {r.Mw:.1f} ({r.mt_source}) "
                   f"our ML {r.ML_ours:.2f}  {r.place}")
-        print(f"moment tensors: {len(inwin)} in window (Mw>={ctx['mw_in']}), "
-              f"{len(other)} other dates (Mw>={ctx['mw_out']})")
+        print(f"moment tensors: {len(inwin)} matched to our events (Mw>={ctx['mw_in']}), "
+              f"{len(other)} other (Mw>={ctx['mw_out']})")
     if not args.no_context and not full_catalog and ctx["arrows"]:
         mc.draw_plate_motion(fig, ctx["arrows"], km_per_mm=ctx["km_per_mm"])
     spots = dict(ctx.get("labels", {}))
@@ -318,7 +328,7 @@ def main(argv=None):
         key = f"{r.time:%Y-%m-%d}"
         la, lo, just = spots[key]
         fig.plot(x=[r.lon, lo], y=[r.lat, la], pen="0.35p,gray15")
-        ink = "black" if r.in_window else "gray30"      # gray = other dates
+        ink = "black" if r.matched else "gray30"        # gray = not in our catalog
         fig.text(x=lo, y=la, text=f"{key} M@-w@-{r.Mw:.1f}", justify=just,
                  font=f"5.5p,Helvetica,{ink}", fill="white@15", clearance="0.03c/0.02c")
     if coupling:                                     # colorbar inside the map
@@ -348,7 +358,8 @@ def main(argv=None):
         conf = args.mode == "confidence" and not ctx_panel
         W = max(cw * len(mags) + 0.2, 3.6 if mt is not None else 2.75)  # widest header
         mt_key = mt is not None
-        H = (0.35 + max(sz) + 0.3 + (1.0 if conf else 0.0) if mags else 0.0) \
+        mw_key = bool(mags) and not ctx_panel and is_mw.any()
+        H = (0.35 + max(sz) + 0.3 + (0.35 if mw_key else 0.0) + (1.0 if conf else 0.0) if mags else 0.0) \
             + (0.75 if mt_key else 0.0)
         with fig.inset(position=f"j{args.legend_pos}+w{W:.2f}c/{H:.2f}c+o0.1c",
                        box="+gwhite@15+p0.3p,gray50+c0.08c"):
@@ -360,8 +371,15 @@ def main(argv=None):
             for i, (m, d) in enumerate(zip(mags, sz)):
                 xc = 0.1 + cw * (i + 0.5)
                 fig.plot(x=[xc], y=[yc], style=f"c{d:.3f}c", fill="white", pen="0.4p,black")
-                fig.text(x=xc, y=yc - max(sz) / 2 - 0.13, text=f"M@-L@- {m}",
+                fig.text(x=xc, y=yc - max(sz) / 2 - 0.13, text=f"M {m}",
                          justify="CM", font="6.5p,Helvetica")
+            if mw_key:                                # fill: which magnitude
+                ym = yc - max(sz) / 2 - 0.45
+                for xc, fc, lab in ((0.25, args.color, "M@-L@-"), (1.25, MW_COLOR, "M@-w@- @~\\263@~4.5")):
+                    fig.plot(x=[xc], y=[ym], style="c0.2c", fill=fc,
+                             pen="0.45p,gray10" if fc == MW_COLOR else "0.3p,gray20")
+                    fig.text(x=xc + 0.17, y=ym, text=lab, justify="LM", font="6.5p,Helvetica")
+                yc -= 0.35                            # shift the rows below
             if conf:
                 ref = picks_ref if picks_ref is not None else picks
                 lo, hi = int(np.min(ref)), int(np.max(ref))
@@ -381,8 +399,8 @@ def main(argv=None):
                          font="7p,Helvetica-Bold")
                 ss = dict(mrr=[0.0], mtt=[-1.0], mff=[1.0], mrt=[0.0], mrf=[0.0], mtf=[0.0],
                           exponent=[24])                          # a strike-slip ball
-                for i, (fc, lab) in enumerate([(args.color, "catalog period"),
-                                               ("gray55", "other dates")]):
+                for i, (fc, lab) in enumerate([(args.color, "in this catalog"),
+                                               ("gray55", "other")]):
                     xc = 0.25 + i * 1.8
                     fig.meca(spec=ss, convention="mt", longitude=[xc], latitude=[y3 - 0.33],
                              depth=[10], scale="0.26c+m", compressionfill=fc,

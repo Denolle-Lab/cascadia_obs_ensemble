@@ -2,7 +2,9 @@
 
 Joins cascadia_catalog_ML_routeA.csv and cascadia_catalog_ML_kpos.csv on event_id and
 prints the offset/slope, the difference per ML bin, onshore vs offshore, residuals
-against ComCat ML for each catalog, and Mc/b. Writes routeA_vs_kpos_comparison.png.
+against ComCat ML for each catalog, and Mc/b. Panels e-f test the magnitudes against
+ComCat moment-tensor Mw (data/focal/comcat_mt_matched.csv, from phase18 -- run it first).
+Writes routeA_vs_kpos_comparison.png.
 
 Usage (amplitude env, run from 4_relocation/magnitude):
     python phase17_routeA_vs_kpos.py [KPOS_DIR]   # default ../../data/magnitude
@@ -10,7 +12,8 @@ Usage (amplitude env, run from 4_relocation/magnitude):
 import pandas as pd, numpy as np, sys, os
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
-from paper_style import use, FULL, panel, save, OURS, REF, INK, MUTED
+from paper_style import use, FULL, panel, save, OURS, REF, INK, MUTED, CLASS_COLORS
+from phase18_moment_tensor_match import hutton_boore, RMAX
 use()
 D="../../data/magnitude"; O=sys.argv[1] if len(sys.argv)>1 else D
 A=pd.read_csv(f"{D}/cascadia_catalog_ML_routeA.csv"); K=pd.read_csv(f"{O}/cascadia_catalog_ML_kpos.csv")
@@ -38,7 +41,7 @@ def mc_b(x):
 for tag,c in [("A",A),("K",K)]:
     mc,b,n=mc_b(c.ML); print(f"{tag}: Mc(maxc+0.2)={mc:.1f}  b={b:.2f}  n>=Mc={n:,}  min {c.ML.min():.2f} p1 {c.ML.quantile(.01):.2f} median {c.ML.median():.2f}")
 RA,RK="response removed","raw counts"; COLS={RA:OURS,RK:REF}
-fig,ax=plt.subplots(2,2,figsize=(FULL,5.2)); ax=ax.ravel()
+fig,ax=plt.subplots(3,2,figsize=(FULL,7.8)); ax=ax.ravel()
 hb=ax[0].hexbin(m.ML_K,m.ML_A,gridsize=90,bins="log",cmap="cividis",mincnt=1,linewidths=0,rasterized=True); l=[-1.5,4.7]; ax[0].plot(l,l,"--",c=INK,lw=0.6)
 ax[0].set(xlabel="$M_L$, raw counts",ylabel="$M_L$, response removed"); ax[0].set_aspect("equal")
 cbar=fig.colorbar(hb,ax=ax[0],pad=0.02,fraction=0.05,aspect=18); cbar.set_label("Events per bin"); cbar.outline.set_linewidth(0.5)
@@ -55,5 +58,26 @@ for (tag,cat,anc),off in zip([(RA,A,f"{D}/route_b_ml_anchors_routeA.csv"),(RK,K,
     gb=r.groupby(pd.cut(a_.ml,cb,right=False),observed=True); x=np.array([i.mid for i in gb.median().index])+off
     ax[3].errorbar(x,gb.median(),yerr=[gb.median()-gb.quantile(.25),gb.quantile(.75)-gb.median()],fmt="o-",ms=3,lw=1,elinewidth=0.8,capsize=2,color=COLS[tag],label=f"{tag}, n={len(a_):,}")
 ax[3].axhline(0,c=MUTED,lw=.6); ax[3].set(xlabel="ComCat $M_L$",ylabel="$M_L$ residual, this study $-$ ComCat"); ax[3].legend(loc="lower left")
-for i,x in enumerate(ax): panel(x,"abcd"[i],x=(-0.24,-0.13,-0.11,-0.13)[i])
+# (e-f) against ComCat moment-tensor Mw
+T=pd.read_csv("../../data/focal/comcat_mt_matched.csv")
+ds=pd.read_csv(f"{D}/amp_distance_dataset_routeA.csv",usecols=["event_id","phase","dist_hypo_km","log10A"])
+ds["m"]=hutton_boore(ds.log10A,ds.dist_hypo_km)
+an=pd.read_csv(f"{D}/route_b_ml_anchors_routeA.csv")[["event_id","ml"]]
+nr=ds[ds.dist_hypo_km<=RMAX].groupby("event_id").m.agg(["median","size"]); nr=nr[nr["size"]>=3]["median"]
+aa=an.join(nr.rename("M"),on="event_id",how="inner"); T["test"]=T.event_id.map(nr)+(aa.ml-aa.M).median()
+TEST=CLASS_COLORS["oceanic"]
+for col,lab,c,mk in [("ML_routeA","catalog $M_L$",OURS,"o"),("MW_routeA","catalog $M_W$ (calibrated)",MUTED,"s"),("test",f"test $M_L$ (Hutton–Boore, $r\\leq${RMAX:.0f} km)",TEST,"^")]:
+    ok=T[col].notna(); ax[4].scatter(T.Mw_mt[ok],T[col][ok]-T.Mw_mt[ok],s=9,marker=mk,facecolor="none",edgecolor=c,lw=0.7,label=f"{lab}, n={ok.sum()}")
+ax[4].axhline(0,c=MUTED,lw=.6); ax[4].set(ylim=(-2.5,2.6),xlabel="ComCat moment-tensor $M_w$",ylabel="Magnitude $-$ $M_w$"); ax[4].legend(loc="upper right",frameon=True,facecolor="white",edgecolor="none",framealpha=0.9)
+db=np.array([0,30,60,100,150,200,300,400,500,700,1000])
+for name,ref,c in [("ComCat $M_L\\geq$2.5 anchors",an[an.ml>=2.5].rename(columns={"ml":"ref"}),INK),
+                   ("tensor $M_w<$4.5",T[T.Mw_mt<4.5][["event_id","Mw_mt"]].rename(columns={"Mw_mt":"ref"}),REF),
+                   ("tensor $M_w\\geq$4.5",T[T.Mw_mt>=4.5][["event_id","Mw_mt"]].rename(columns={"Mw_mt":"ref"}),OURS)]:
+    x=ds[ds.phase=="S"].merge(ref,on="event_id"); r=x.m-x.ref; gb=r.groupby(pd.cut(x.dist_hypo_km,db),observed=True)
+    k=gb.size()>=15; xc=np.array([np.sqrt(max(i.left,10)*i.right) for i in gb.median().index])[k.values]   # geometric bin centre
+    q=[gb.quantile(v)[k] for v in (.25,.5,.75)]
+    ax[5].fill_between(xc,q[0],q[2],color=c,alpha=.18,lw=0); ax[5].plot(xc,q[1],"o-",color=c,ms=3,lw=1,label=f"{name}, {x.event_id.nunique()} events")
+ax[5].axhline(0,c=MUTED,lw=.6); ax[5].axvline(RMAX,c=MUTED,lw=.6,ls=":"); ax[5].set_xscale("log")
+ax[5].set(xlabel="Hypocentral distance (km)",ylabel="S station $M_L$ $-$ reference magnitude"); ax[5].legend(loc="lower left",frameon=True,facecolor="white",edgecolor="none",framealpha=0.9)
+for i,x in enumerate(ax): panel(x,"abcdef"[i],x=(-0.24,-0.13,-0.11,-0.13,-0.11,-0.13)[i])
 fig.tight_layout(h_pad=1.0,w_pad=1.5); save(fig,f"{D}/routeA_vs_kpos_comparison.png"); print("wrote fig")

@@ -5,7 +5,7 @@
   * plate motions: NNR-MORVEL56 (Argus et al., 2011) relative velocities.
   * moment tensors: USGS ComCat preferred moment tensors
     (utils/fetch_focal_mechanisms.py -> data/focal/comcat_mt.csv), split into those
-    inside the catalog window (matched to our events) and those at other dates.
+    matched to our events (phase18) and the others (other dates, or not in our catalog).
   * interseismic slip-deficit rate from a published Cascadia model, as distributed by
     the Coupling Cloud (Oryan et al., 2026, https://couplingcloud.ucsd.edu).
 """
@@ -20,6 +20,7 @@ import pandas as pd
 DATA = "../../data"
 PB2002 = f"{DATA}/tectonics/PB2002_steps.json"
 FOCAL = f"{DATA}/focal/comcat_mt.csv"
+FOCAL_MATCHED = f"{DATA}/focal/comcat_mt_matched.csv"     # from phase18_moment_tensor_match.py
 
 # Coupling Cloud models: (file, variable, citation)
 # (Lindsey.nc's "slip_def" grows with depth as its coupling falls -- it is the creep rate,
@@ -121,10 +122,11 @@ def draw_plate_motion(fig, points, km_per_mm=3.0, font="5.5p,Helvetica-Bold,blac
 
 
 # ---------------------------------------------------------------- moment tensors
-def load_mt(region, catalog=None, tol_s=20.0, tol_deg=0.5):
-    """ComCat moment tensors in `region`, with Mw from the tensor and a flag for the
-    catalog window. If `catalog` (our events: otime, evla, evlo, ML) is given, each
-    in-window tensor is matched to our nearest event in time (<tol_s, <tol_deg)."""
+def load_mt(region, catalog=None):
+    """ComCat moment tensors in `region`, with Mw from the tensor, a flag for the
+    catalog window, and `matched`/`ML_ours` from phase18's match to our events
+    (comcat_mt_matched.csv; |dt|<5 s, <50 km). The window is the catalog's own span
+    when `catalog` (our events, with otime) is given."""
     p = os.path.expanduser(FOCAL)
     if not os.path.exists(p):
         return None
@@ -140,16 +142,15 @@ def load_mt(region, catalog=None, tol_s=20.0, tol_deg=0.5):
         tc = pd.to_datetime(catalog["otime"], utc=True, format="ISO8601")
         win = (tc.min().floor("D"), tc.max().ceil("D"))
     mt["in_window"] = mt.time.between(*win)
-    mt["ML_ours"] = np.nan
-    if catalog is not None:
-        t = tc.dt.tz_convert(None).to_numpy()
-        for i, r in mt[mt.in_window].iterrows():
-            dt = np.abs((t - r.time.tz_convert(None).to_datetime64()) / np.timedelta64(1, "s"))
-            ok = (dt < tol_s) & (np.abs(catalog.evla.to_numpy() - r.lat) < tol_deg) \
-                & (np.abs(catalog.evlo.to_numpy() - r.lon) < tol_deg)
-            if ok.any():
-                j = np.flatnonzero(ok)[np.argmin(dt[ok])]
-                mt.loc[i, "ML_ours"] = catalog["ML"].iloc[j]
+    pm = os.path.expanduser(FOCAL_MATCHED)
+    if os.path.exists(pm):
+        mm = pd.read_csv(pm, usecols=["comcat_id", "event_id", "ML_routeA"])
+        mt = mt.merge(mm.rename(columns={"comcat_id": "id", "ML_routeA": "ML_ours"}),
+                      on="id", how="left")
+    else:
+        print(f"  (no {pm}; run phase18_moment_tensor_match.py -- no tensor is matched)")
+        mt["event_id"], mt["ML_ours"] = np.nan, np.nan
+    mt["matched"] = mt.in_window & mt.event_id.notna()
     return mt.sort_values("Mw", ascending=False)
 
 

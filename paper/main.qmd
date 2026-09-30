@@ -725,7 +725,7 @@ confidence. The counts and criteria at each stage are:
   waveform cross-correlation differential times yields $6.39\times10^{4}$
   origins with a stable location (55\% of associated events; the
   remainder do not converge to a well-constrained hypocenter).
-- **Quality control.** Requiring at least four P and four S picks and
+- **Quality control.** Requiring at least five P and five S picks and
   an RMS residual below 2.5~s selects $3.10\times10^{4}$
   high-confidence events (49\% of the relocated set). Events shallower
   than 5~km were additionally checked by waveform inspection.
@@ -759,7 +759,7 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
     (2010--2015) and its tectonic setting.} (a) The 55{,}707 relocated events with a
     local magnitude (87\% of the 63{,}798 relocated events), over gray shaded relief; the
-    quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
+    quality-controlled subset (${\ge}5$ P and ${\ge}5$ S picks, RMS ${<}2.5$~s;
     $N=31{,}020$) is flagged in the released catalog for users who prefer it.
     Marker area scales with the preferred magnitude (legend, top right): $M_L$ in red,
     and in orange for the 78 events above 4.5 whose magnitude is a moment magnitude (ComCat

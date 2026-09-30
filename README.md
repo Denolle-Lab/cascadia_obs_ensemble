@@ -60,7 +60,7 @@ creation chain and row counts. The planned reorganization and Zenodo release are
 📜 pixi.toml / pixi.lock  # environments: default, internal (pnwstore), amplitude, paper
 📜 Makefile           # `make paper` (manuscript), `make figs` (collect paper figures)
 📜 download_data.sh   # rsync pipeline input catalogs from the lab server
-📦 1_picking          # ensemble ELEP picking: parallel_pick_20{10-15}*.py, picking_utils*.py
+📦 1_picking          # ELEP picking: run_picking.py + picking_config.csv (legacy/: ver3 scripts)
 📦 4_relocation       # post-relocation: merge, cross-correlation datasets, QC, amplitudes
  ┣ 📦 cross_correlation   # CC differential-time waveform dataset builders (GraphDD input)
  ┣ 📦 quality_control     # QC notebook that writes the final QC catalog + diagnostics

@@ -33,13 +33,24 @@ full creation chain are in [`data/LINEAGE.md`](data/LINEAGE.md).
 - The ver3 picks were written on 2025-03-05. The last commit of `1_picking/` before that date
   is `eb85d194` (2025-01-22), tagged `stage-picking-ver3`. The scripts may have run from a
   working copy with edits made after that commit. Later commits to `1_picking/` (through
-  2026-06-29) changed paths and tutorials; the git log does not show a change to the picking
-  logic, but **TO CONFIRM** with H. Bito.
+  2026-06-29) changed paths and tutorials. They also flip the channel rule back and forth;
+  the one that ran is "HH, else BH, else EH" (the tag's rule would have skipped OBS
+  station-days without EH, whose BH picks are in ver3).
+- Rerunning: `1_picking/run_picking.py` with `picking_config.csv` (one row per year and
+  region, 24 runs) replaces the per-year scripts, now in `1_picking/legacy/`. On 14 station-days
+  of 2011 from the four regions it reproduces the stored per-day picks (same picks and times;
+  probabilities within 3e-7). See `1_picking/legacy/README.md`.
+- The merge of the per-day files into ver3 is not in the repository, and it dropped whole
+  station-days of the two 46-50°N edge regions (about 17% and 34% of their 2011 files); the
+  rule is **TO CONFIRM** with H. Bito.
 - The ELEP commit is pinned in `pixi.lock`.
 - The Python environment used in 2024–25 was not locked (pixi arrived in 2026-03,
   `b07de7a0`). The current `default` env has seisbench 0.11.7, obspy 1.5.0 and numpy 1.26.4.
   Exact rerunning of the picker therefore depends on the SeisBench model weights, which should
-  be recorded (**TO CONFIRM**: model names and versions of the ensemble members).
+  be recorded. The ensemble members are EQTransformer `original` (v3), `ethz`, `instance`,
+  `scedc`, `stead` (v2); the weights used for the 2026-09 check are in
+  `~hbito/.seisbench/models/v3/eqtransformer` (files dated 2025-06-25, after the ver3 run, so
+  the versions at the time are **TO CONFIRM**; they reproduce the ver3 picks).
 - Waveforms came from pnwstore (UW) with an FDSN fallback (`run_detection(source=...)`).
 
 **2–3, 5. GENIE and GraphDD.** No GENIE or GraphDD code is in this repository. Their
@@ -58,8 +69,8 @@ For the CC re-run, record the differential-time files and the GraphDD settings.
   **P picks > 4, S picks > 4, RMS < 2.5 s** (at least 5 of each) reproduces exactly that set.
 - The rule written in the paper and in the notebook since `f12b7af8` (2026-07-11), "≥ 4 P and
   ≥ 4 S", gives 40,065 events.
-- **Open decision:** either the paper states "> 4" (≥ 5), or the QC file and every figure
-  built from it are regenerated with "≥ 4".
+- **Decided 2026-09-30:** keep the file the figures were made from; the paper now states
+  "at least five P and five S picks" (≥ 5).
 
 **8. Route A amplitudes.**
 - Command:

@@ -110,13 +110,14 @@ All waveform download logic is centralized in `utils/data_client.py`.
 
 ```sh
 # default (pnwstore — internal env):
-python parallel_pick_2011.py
+python run_picking.py --year 2011 --region 122-129
 
 # public FDSN:
-python parallel_pick_2011.py  # edit source='fdsn' in run_detection() call
+python run_picking.py --year 2011 --region 122-129 --source fdsn
 ```
 
-`run_detection()` accepts a `source` keyword argument defaulting to `'pnwstore'`.
+Years and regions are the rows of `picking_config.csv`. The per-year scripts of the ver3
+run are in `1_picking/legacy/`.
 
 ### Amplitudes and magnitudes (`4_relocation/magnitude/`)
 

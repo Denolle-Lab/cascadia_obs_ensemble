@@ -221,12 +221,12 @@ networks. By aggregating probability fields from multiple pretrained
 pickers such as PhaseNet, EQTransformer, and GPD, ensemble frameworks
 achieve improved recall and precision without retraining, demonstrating
 excellent performance across land, OBS, and distributed acoustic sensing
-(DAS) data \citep{yuan2023, shi2025, gaete2025}. Although
-computationally demanding, ensemble methods offer consistent performance
-across sensor types and are well-suited for on-premise or
-high-performance computing workflows. Once P and S arrivals are
-identified from continuous waveforms, these phase picks must be
-associated with coherent earthquake events to construct the catalog.
+(DAS) data \citep{Yuan23, shi2025, gaete2025}. Although computationally
+demanding, ensemble methods offer consistent performance across sensor
+types and are well-suited for on-premise or high-performance computing
+workflows. Once P and S arrivals are identified from continuous
+waveforms, these phase picks must be associated with coherent earthquake
+events to construct the catalog.
 
 \subsection{Phase Association}\label{phase-association}
 
@@ -452,8 +452,9 @@ the phase probabilities of several pretrained models by a statistical
 ensemble (the maximum probability), a coherence ensemble (semblance) or
 a learned ensemble; we used the coherence ensemble. The members are five
 EQTransformer models \citep{mousavi2020earthquake} with the weights
-distributed by SeisBench \citep{Woollam2022}: the original model and the
-models retrained on the ETHZ, INSTANCE, SCEDC and STEAD datasets.
+distributed by SeisBench \citep{woollam2022seisbench}: the original
+model and the models retrained on the ETHZ, INSTANCE, SCEDC and STEAD
+datasets.
 
 Each day of data is cut into windows of 6000 samples (60 s at 100~Hz)
 with a step of 3000 samples. Each window is demeaned and tapered over

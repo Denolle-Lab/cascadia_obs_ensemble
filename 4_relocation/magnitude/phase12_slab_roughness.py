@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,6 +28,11 @@ import pandas as pd
 import pygmt
 from scipy.ndimage import uniform_filter
 from scipy.stats import ks_2samp
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
+from paper_style import FULL, MUTED, OURS, panel, save, use  # noqa: E402
+
+use()
 
 CLS = "../../data/magnitude/cascadia_catalog_classified.csv"
 OUT = "../../data/magnitude/slab_roughness.png"
@@ -75,35 +81,41 @@ def main():
     print(f"KS test: D={ks.statistic:.3f}, p={ks.pvalue:.1e} "
           f"({'events rougher' if med_e > med_b else 'events smoother'})")
 
-    fig, (axm, axr) = plt.subplots(1, 2, figsize=(12.5, 6.4),
+    fig, (axm, axr) = plt.subplots(1, 2, figsize=(FULL, 3.4),
                                    gridspec_kw={"width_ratios": [1, 1.1]})
-    # (A) roughness map + seismicity
+    # (a) roughness map + seismicity
     im = axm.pcolormesh(lons, lats, rough, cmap="cividis",
-                        vmin=0, vmax=np.nanpercentile(rough, 97), shading="auto")
-    axm.scatter(off.lon, off.lat, s=3, c="red", alpha=0.35, linewidths=0,
-                label="offshore EQ")
+                        vmin=0, vmax=np.nanpercentile(rough, 98), shading="auto",
+                        rasterized=True)
+    axm.scatter(off.lon, off.lat, s=0.8, c=OURS, alpha=0.5, linewidths=0,
+                rasterized=True)                     # offshore EQ (see caption)
     axm.set_xlim(*REGION[:2]); axm.set_ylim(*REGION[2:])
-    axm.set_xlabel("longitude"); axm.set_ylabel("latitude")
-    axm.set_title("(A) Seafloor roughness (subducting-plate proxy)\n+ offshore seismicity")
-    fig.colorbar(im, ax=axm, label="roughness (km, local std)")
-    axm.legend(fontsize=8, loc="lower left")
+    axm.set_aspect(1 / np.cos(np.radians(np.mean(REGION[2:]))))
+    axm.set_xlabel("Longitude (°)"); axm.set_ylabel("Latitude (°)")
+    panel(axm, "a")
+    cb = fig.colorbar(im, ax=axm, extend="max", shrink=0.8, pad=0.02, aspect=25)
+    cb.set_label("Seafloor roughness (km)")
+    cb.outline.set_linewidth(0.4)
 
-    # (B) roughness at events vs random baseline
+    # (b) roughness at events vs random baseline
     bins = np.linspace(0, np.nanpercentile(base, 99), 40)
-    axr.hist(base, bins=bins, density=True, histtype="step", lw=2, color="gray",
-             label=f"random ocean (med {med_b:.2f})")
-    axr.hist(off.rough, bins=bins, density=True, histtype="step", lw=2, color="red",
-             label=f"at earthquakes (med {med_e:.2f})")
-    axr.axvline(med_b, color="gray", ls=":"); axr.axvline(med_e, color="red", ls=":")
-    axr.set_xlabel("seafloor roughness (km)"); axr.set_ylabel("density")
-    axr.set_title(f"(B) Roughness at events vs baseline\nKS D={ks.statistic:.2f}, "
-                  f"p={ks.pvalue:.0e}")
-    axr.legend(fontsize=8)
+    axr.hist(base, bins=bins, density=True, histtype="step", lw=1, color=MUTED,
+             label=f"Random ocean points (median {med_b:.2f} km)")
+    axr.hist(off.rough, bins=bins, density=True, histtype="step", lw=1, color=OURS,
+             label=f"Earthquakes (median {med_e:.2f} km)")
+    axr.axvline(med_b, color=MUTED, ls=":", lw=0.7)
+    axr.axvline(med_e, color=OURS, ls=":", lw=0.7)
+    axr.set_xlabel("Seafloor roughness (km)"); axr.set_ylabel("Probability density (1/km)")
+    axr.set_xlim(bins[0], bins[-1])
+    panel(axr, "b")
+    from matplotlib.lines import Line2D
+    axr.legend(handles=[Line2D([], [], color=MUTED, lw=1),
+                        Line2D([], [], color=OURS, lw=1)],
+               labels=[f"Random ocean points (median {med_b:.2f} km)",
+                       f"Earthquakes (median {med_e:.2f} km)"], loc="upper right")
 
-    fig.tight_layout()
-    fig.savefig(os.path.expanduser(OUT), dpi=200, bbox_inches="tight")
-    print(f"wrote {OUT}")
-
+    fig.tight_layout(w_pad=0.8)
+    save(fig, OUT)
 
 if __name__ == "__main__":
     main()

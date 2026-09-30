@@ -13,10 +13,16 @@ match metadata, not their events/magnitudes.)
 from __future__ import annotations
 
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
+from paper_style import FULL, OURS, REF, panel, save, use  # noqa: E402
+
+use()
 
 CLS = "../../data/magnitude/cascadia_catalog_classified.csv"
 ANSS = "../../data/datasets_anss/anss_2010-15.csv"
@@ -56,26 +62,31 @@ def main():
     if "magType" in anss.columns:
         anss = anss[anss.magType.str.lower() == "ml"]
 
-    fig, axes = plt.subplots(2, 4, figsize=(16, 8))
+    fig, axes = plt.subplots(2, 4, figsize=(FULL, 3.7), sharex=True, sharey=True)
     print(f"{'region':13s} {'our N':>6} {'Mc':>5} {'b':>5} | {'ANSS N':>6} {'Mc':>5} "
           f"{'b':>5}   (Mc improvement offshore)")
-    for ax, (name, box) in zip(axes.ravel(), REGIONS.items()):
+
+    def blab(tag, f):
+        return f"{tag}, b = {f['b']:.2f}" if np.isfinite(f["b"]) else f"{tag}, b n/a"
+
+    for k, (ax, (name, box)) in enumerate(zip(axes.ravel(), REGIONS.items())):
         w, e, s, n = box
         ours = cls[(cls.lon.between(w, e)) & (cls.lat.between(s, n))]["ML"].to_numpy()
         an = anss[(anss.longitude.between(w, e)) & (anss.latitude.between(s, n))]["mag"].to_numpy()
         fo, fa = fmd(ours), fmd(an)
 
         if fo:
-            ax.semilogy(fo["centers"], fo["cum"], "o", ms=3, color="firebrick",
-                        label=f"ours (b={fo['b']:.2f})")
-            ax.axvline(fo["mc"], color="firebrick", ls=":", lw=1)
+            ax.semilogy(fo["centers"], fo["cum"], "o", ms=1.6, mew=0, color=OURS,
+                        label=blab("this study", fo))
+            ax.axvline(fo["mc"], color=OURS, ls=":", lw=0.8, ymax=0.76)
         if fa:
-            ax.semilogy(fa["centers"], fa["cum"], "s", ms=3, color="navy",
-                        label=f"ANSS (b={fa['b']:.2f})")
-            ax.axvline(fa["mc"], color="navy", ls=":", lw=1)
-        ax.set_title(f"{name}")
-        ax.set_xlabel("magnitude"); ax.set_ylabel("N ($\\geq$ M)")
-        ax.legend(fontsize=7, loc="upper right")
+            ax.semilogy(fa["centers"], fa["cum"], "s", ms=1.6, mew=0, color=REF,
+                        label=blab("ANSS", fa))
+            ax.axvline(fa["mc"], color=REF, ls=":", lw=0.8, ymax=0.76)
+        ax.set_title(name)
+        panel(ax, "abcdefg"[k])
+        ax.legend(loc="upper right", handlelength=0.8, handletextpad=0.3,
+                  borderaxespad=0.2, markerscale=1.5)
         ax.set_xlim(-1, 6)
 
         print(f"{name:13s} {len(ours):6d} {fo['mc'] if fo else np.nan:5.1f} "
@@ -83,11 +94,16 @@ def main():
               f"{fa['mc'] if fa else np.nan:5.1f} {fa['b'] if fa else np.nan:5.2f}")
 
     axes.ravel()[-1].axis("off")
-    fig.suptitle("Frequency-magnitude distributions by region: ensemble ML vs ANSS "
-                 "(ML-typed events only)", fontsize=13)
-    fig.tight_layout()
-    fig.savefig(os.path.expanduser(OUT), dpi=200, bbox_inches="tight")
-    print(f"\nwrote {OUT}")
+    for ax in axes[:, 0]:
+        ax.set_ylabel("Number of events $\\geq M_L$")
+    for ax in list(axes[1, :3]) + [axes[0, 3]]:
+        ax.set_xlabel("Local magnitude $M_L$")
+    axes[0, 3].xaxis.set_tick_params(labelbottom=True)   # nothing below it
+    for ax in axes[:, 1:].ravel():
+        ax.tick_params(labelleft=False)
+    fig.tight_layout(h_pad=0.6, w_pad=0.4)
+    print()
+    save(fig, OUT)
 
 
 if __name__ == "__main__":

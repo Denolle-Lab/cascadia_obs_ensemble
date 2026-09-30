@@ -14,10 +14,16 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
+from paper_style import use, FULL, panel, INK, MUTED, OURS, REF, save  # noqa: E402
+
+use()
 
 QC = "../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 TREMOR = "../../data/datasets_all_regions/pnsn_tremor.json"
@@ -55,51 +61,46 @@ def main():
     tr_m = tr.set_index("t").resample("MS").size().loc[win]
     sta_m = active_stations_per_month().loc[win]
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+    fig, (axe, axr, axs, axl) = plt.subplots(
+        4, 1, figsize=(FULL, 5.4), sharex=True,
+        gridspec_kw={"height_ratios": [1, 1, 0.8, 2.2]})
+    erupt = dict(color=MUTED, ls="--", lw=0.6, zorder=3)
 
-    # (A) monthly earthquake rate vs tremor rate vs active-station count
-    ax1.bar(eq_m.index, eq_m.values, width=25, color="firebrick", alpha=0.75,
-            label="earthquakes / month")
-    ax1.set_ylabel("earthquakes / month", color="firebrick")
-    ax1.tick_params(axis="y", labelcolor="firebrick")
-    axt = ax1.twinx()
-    axt.plot(tr_m.index, tr_m.values, "-o", color="navy", ms=3, lw=1.3,
-             label="tremor detections / month")
-    axt.set_ylabel("tremor detections / month", color="navy")
-    axt.tick_params(axis="y", labelcolor="navy")
-    ax3 = ax1.twinx()                                   # active stations, offset axis
-    ax3.spines["right"].set_position(("outward", 52))
-    ax3.plot(sta_m.index, sta_m.values, "-", color="teal", lw=2.2,
-             label="active stations")
-    ax3.set_ylabel("active stations / month", color="teal")
-    ax3.tick_params(axis="y", labelcolor="teal")
-    ax3.set_ylim(0, 260)
-    ax1.axvline(AXIAL_ERUPTION, color="green", ls="--", lw=1.5)
-    ax1.text(AXIAL_ERUPTION, ax1.get_ylim()[1]*0.92, " Axial eruption\n Apr 2015",
-             color="green", fontsize=8, va="top")
-    ax1.set_title("(A) Monthly earthquake rate, tectonic tremor (ETS proxy), "
-                  "and active-station count")
+    # (a) monthly earthquake rate
+    axe.bar(eq_m.index, eq_m.values, width=25, color=OURS, lw=0)
+    axe.set_ylabel("Earthquakes\nper month")
+    # (b) monthly tectonic-tremor detections (ETS proxy)
+    axr.plot(tr_m.index, tr_m.values, "-", color=REF, lw=0.8)
+    axr.set_ylabel("Tremor\nper month")
+    # (c) active stations (unique stations with associated picks each month)
+    axs.plot(sta_m.index, sta_m.values, "-", color=INK, lw=0.8)
+    axs.set_ylabel("Active\nstations")
+    axs.set_ylim(0, 260)
+    for ax in (axe, axr, axs, axl):
+        ax.axvline(AXIAL_ERUPTION, **erupt)
+    axe.text(AXIAL_ERUPTION, 1.0, "Axial eruption ", transform=axe.get_xaxis_transform(),
+             ha="right", va="top", fontsize=6.5, color=MUTED)
 
-    # (B) offshore latitude vs time -> the central-ridge / Axial gap
+    # (d) offshore latitude vs time -> the central-ridge / Axial gap
     off = qc[qc.lon < -126.5]
-    ax2.scatter(off.t, off.lat, s=4, c="firebrick", alpha=0.4, linewidths=0)
-    ax2.axhspan(45.0, 46.6, color="green", alpha=0.12)
-    ax2.text(off.t.min(), 45.8, "  central JdF ridge / Axial: no events",
-             color="green", fontsize=9, va="center")
-    ax2.axvline(AXIAL_ERUPTION, color="green", ls="--", lw=1.5)
-    ax2.set_ylabel("latitude (offshore events, lon < -126.5)")
-    ax2.set_xlabel("time")
-    ax2.set_ylim(39, 51)
-    ax2.set_title("(B) Offshore seismicity in latitude-time: the Axial coverage gap")
-    ax2.xaxis.set_major_locator(mdates.YearLocator())
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    axl.axhspan(45.0, 46.6, color="0.92", lw=0, zorder=0)
+    axl.scatter(off.t, off.lat, s=1.2, c=OURS, alpha=0.4, linewidths=0, rasterized=True)
+    axl.text(off.t.min(), 45.8, " central JdF ridge / Axial: no events",
+             color=MUTED, fontsize=6.5, va="center")
+    axl.set_ylabel("Latitude (°)")
+    axl.set_xlabel("Year")
+    axl.set_ylim(39, 51)
+    axl.xaxis.set_major_locator(mdates.YearLocator())
+    axl.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    for ax, l in zip((axe, axr, axs, axl), "abcd"):
+        panel(ax, l, x=-0.07)
+    fig.align_ylabels((axe, axr, axs, axl))
 
-    fig.tight_layout()
+    fig.tight_layout(h_pad=0.4)
     outp = os.path.expanduser(OUT)
     os.makedirs(os.path.dirname(outp), exist_ok=True)
-    fig.savefig(outp, dpi=200, bbox_inches="tight")
+    save(fig, outp)
     n_axial = ((qc.lat.between(45.0, 46.6)) & (qc.lon < -129)).sum()
-    print(f"wrote {outp}")
     print(f"catalog {qc.t.min():%Y-%m} to {qc.t.max():%Y-%m}; "
           f"central-ridge/Axial events (45-46.6N, lon<-129): {n_axial}")
 

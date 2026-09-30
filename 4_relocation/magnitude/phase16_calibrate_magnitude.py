@@ -30,7 +30,7 @@ import pandas as pd
 from scipy.stats import theilslopes
 
 ANSS = "../../data/datasets_anss/anss_2010-15.csv"
-DEFAULT_CAT = "../../data/magnitude/cascadia_catalog_ML_kpos.csv"
+DEFAULT_CAT = "../../data/magnitude/cascadia_catalog_ML_routeA.csv"
 MW_TYPES = {"mw", "mww", "mwb", "mwc", "mwr"}
 ML_TYPES = {"ml"}
 

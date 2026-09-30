@@ -71,3 +71,4 @@ data/magnitude_hp05/
 
 # built catalog tables (utils/build_anss_tables.py) and the Zenodo package
 data/catalog_v3/
+data/picks_v4/

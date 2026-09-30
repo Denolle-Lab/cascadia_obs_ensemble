@@ -9,6 +9,11 @@
 # Status: rerun_v2/STATUS (one line per stage),
 # rerun_v2/DONE or rerun_v2/FAILED at the end. Stop everything: kill -- -<PGID>
 # (the PGID is in rerun_v2/driver.pid).
+#
+# A variant run must not touch the paper's outputs: give it its own OUT, DATA and
+# SUFFIX, e.g. the 0.5 Hz high-pass revision test:
+#   OUT=rerun_hp05 DATA=../../data/magnitude_hp05 SUFFIX=_routeA_hp05 HIGHPASS=0.5 \
+#     setsid nohup bash run_route_a_rerun.sh > rerun_hp05/driver.log 2>&1 < /dev/null &
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,6 +31,8 @@ NSHARD="${NSHARD:-20}"
 TRIES="${TRIES:-3}"
 OUT="${OUT:-rerun_v2}"
 DATA="${DATA:-../../data/magnitude}"
+SUFFIX="${SUFFIX:-_routeA}"               # stage-3 file suffix
+HIGHPASS="${HIGHPASS:-1.0}"               # post-Wood-Anderson high-pass (Hz)
 mkdir -p "$OUT" "$DATA"
 echo "$(ps -o pgid= $$ | tr -d ' ')" > "$OUT/driver.pid"
 rm -f "$OUT/DONE" "$OUT/FAILED"
@@ -35,7 +42,7 @@ fail()   { status "FAILED: $*"; touch "$OUT/FAILED"; exit 1; }
 
 TOTAL=$(( $(wc -l < "$PICKS") - 1 ))
 CHUNK=$(( (TOTAL + NSHARD - 1) / NSHARD ))
-status "start: $TOTAL picks, $NSHARD shards of $CHUNK, inventory $INV"
+status "start: $TOTAL picks, $NSHARD shards of $CHUNK, inventory $INV, highpass $HIGHPASS Hz, -> $DATA/*$SUFFIX*"
 
 # rows already written to a shard (drops a trailing partial line left by a crash)
 shard_done() {
@@ -57,7 +64,7 @@ for try in $(seq 1 "$TRIES"); do
         [ "$done_n" -ge "$n" ] && continue
         pending=$(( pending + 1 ))
         "$PY" route_a_wa_amplitudes.py --picks "$PICKS" --inventory "$INV" \
-            --source pnwstore --out "$f" \
+            --source pnwstore --out "$f" --highpass "$HIGHPASS" \
             --start-index $(( start + done_n )) --limit $(( n - done_n )) \
             >> "$(printf "%s/shard_%02d.log" "$OUT" "$i")" 2>&1 &
     done
@@ -90,27 +97,27 @@ status "stage2 merged -> $OUT/raw_wa_amplitudes_v2.csv"
 # ---- stage 3: dataset, inversion, anchoring, QC, calibration --------------------
 run() { status "run: $*"; "$@" || fail "$*"; }
 run "$PY" route_a_build_dataset.py --raw "$OUT/raw_wa_amplitudes_v2.csv" \
-    --out "$DATA/amp_distance_dataset_routeA.csv" --min-snr 3 --epoch-station
+    --out "$DATA/amp_distance_dataset$SUFFIX.csv" --min-snr 3 --epoch-station
 # amplitudes are in mm, so the counts-era floor --min-log10a 0 would drop everything;
 # noise is handled by the SNR gate above
 run "$PY" phase3_route_b_relative_magnitude.py \
-    --dataset "$DATA/amp_distance_dataset_routeA.csv" --outdir "$DATA" \
-    --fix-n 1.0 --min-log10a -99 --suffix _routeA
+    --dataset "$DATA/amp_distance_dataset$SUFFIX.csv" --outdir "$DATA" \
+    --fix-n 1.0 --min-log10a -99 --suffix "$SUFFIX"
 run "$PY" phase2_anchor_comcat_ml.py \
-    --events "$DATA/route_b_event_relative_mag_routeA.csv" \
+    --events "$DATA/route_b_event_relative_mag$SUFFIX.csv" \
     --catalog ../../data/Cascadia_relocated_catalog_ver_3.csv \
-    --outdir "$DATA" --suffix _routeA
-run "$PY" phase4_qc_and_gr.py --catalog "$DATA/cascadia_catalog_ML_routeA.csv" \
-    --tag routeA --outdir "$DATA"
+    --outdir "$DATA" --suffix "$SUFFIX"
+run "$PY" phase4_qc_and_gr.py --catalog "$DATA/cascadia_catalog_ML$SUFFIX.csv" \
+    --tag "${SUFFIX#_}" --outdir "$DATA"
 for tgt in ml mw; do
-    run "$PY" phase16_calibrate_magnitude.py --catalog "$DATA/cascadia_catalog_ML_routeA.csv" \
+    run "$PY" phase16_calibrate_magnitude.py --catalog "$DATA/cascadia_catalog_ML$SUFFIX.csv" \
         --target "$tgt" --anss "$ANSS" \
-        --out "$DATA/cascadia_catalog_routeA_calibrated_${tgt}.csv"
+        --out "$DATA/cascadia_catalog${SUFFIX}_calibrated_${tgt}.csv"
 done
 # map in the default env (pygmt); its own lib dir first, as for the amplitude env
 LD_LIBRARY_PATH="$MAPENV/lib" "$MAPENV/bin/python" phase5_pygmt_map.py \
-    --catalog "$DATA/cascadia_catalog_ML_routeA.csv" --qc-catalog "$QC_CAT" \
-    --out "$DATA/cascadia_ML_map_routeA.png" \
+    --catalog "$DATA/cascadia_catalog_ML$SUFFIX.csv" --qc-catalog "$QC_CAT" \
+    --out "$DATA/cascadia_ML_map$SUFFIX.png" \
     || status "map failed (non-fatal): see driver.log"
 
 status "ALL DONE"

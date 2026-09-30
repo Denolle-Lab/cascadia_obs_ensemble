@@ -30,7 +30,7 @@ import pygmt
 
 import map_context as mc
 
-MW_COLOR = "#6A3D9A"     # preferred magnitude is an Mw (utils/paper_style.MW_COLOR)
+MW_COLOR = "#E69F00"     # preferred magnitude is an Mw (utils/paper_style.MW_COLOR)
 
 SLAB = "../../data/slab2/cas_slab2_dep.xyz"
 GMRT_DIR = "../../data/gmrt"     # cached GMRT grids (git-ignored)
@@ -280,10 +280,11 @@ def main(argv=None):
         fig.colorbar(position="JMR+o0.6c/0c+w8c", frame=["x+lhypocentral depth", "y+lkm"])
     else:
         transp = picks_to_transparency(picks, picks_ref)
-        for sel, fill in ((is_mw, MW_COLOR), (~is_mw, args.color)):   # Mw events (largest) first
+        # Mw events (the largest) first, outlined: orange is light on the gray relief
+        for sel, fill, pen in ((is_mw, MW_COLOR, "0.45p,gray10"), (~is_mw, args.color, "0.2p,gray20")):
             if sel.any():
                 fig.plot(x=df["evlo"][sel], y=df["evla"][sel], size=size[sel], fill=fill,
-                         style="cc", pen="0.2p,gray20", transparency=transp[sel])
+                         style="cc", pen=pen, transparency=np.minimum(transp[sel], 40) if fill == MW_COLOR else transp[sel])
 
     mt = None if (args.no_context or full_catalog) else mc.load_mt(region, df)
     top = pd.DataFrame()
@@ -375,7 +376,8 @@ def main(argv=None):
             if mw_key:                                # fill: which magnitude
                 ym = yc - max(sz) / 2 - 0.45
                 for xc, fc, lab in ((0.25, args.color, "M@-L@-"), (1.25, MW_COLOR, "M@-w@- @~\\263@~4.5")):
-                    fig.plot(x=[xc], y=[ym], style="c0.2c", fill=fc, pen="0.3p,gray20")
+                    fig.plot(x=[xc], y=[ym], style="c0.2c", fill=fc,
+                             pen="0.45p,gray10" if fc == MW_COLOR else "0.3p,gray20")
                     fig.text(x=xc + 0.17, y=ym, text=lab, justify="LM", font="6.5p,Helvetica")
                 yc -= 0.35                            # shift the rows below
             if conf:

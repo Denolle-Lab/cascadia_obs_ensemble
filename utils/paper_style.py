@@ -35,7 +35,7 @@ CLASS_COLORS = {
 OURS, REF = "#D55E00", "#0072B2"
 INK, MUTED = "#222222", "#666666"
 # events whose preferred magnitude is a moment magnitude (ComCat tensor or calibrated)
-MW_COLOR = "#6A3D9A"
+MW_COLOR = "#E69F00"      # Okabe-Ito orange; vs firebrick dE 26 (deutan); outline it on gray
 
 _FONTS = Path(__file__).resolve().parent / "fonts"
 

@@ -642,7 +642,7 @@ events against $M_w$. Their large events are 1.6 units below $M_w$, while
 their small ones agree with ComCat, so no single offset fits; most of their
 large events have a ComCat tensor, and only six without one have
 $M_L\ge4$. The maps mark the events whose preferred magnitude is a moment
-magnitude in purple. The same response-removed waveforms also give a peak
+magnitude in orange. The same response-removed waveforms also give a peak
 displacement in the 0.05--2~Hz band for every pick, which we store for
 future work: a moment magnitude requires fitting the low-frequency
 displacement spectral level, which is possible up to the magnitude at which
@@ -762,7 +762,7 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
     $N=31{,}020$) is flagged in the released catalog for users who prefer it.
     Marker area scales with the preferred magnitude (legend, top right): $M_L$ in red,
-    and in purple for the 78 events above 4.5 whose magnitude is a moment magnitude (ComCat
+    and in orange for the 78 events above 4.5 whose magnitude is a moment magnitude (ComCat
     moment tensor, or $M_L$ calibrated to $M_w$; Methods). Marker
     opacity with the number of associated phase picks (well-constrained events
     appear solid, weakly constrained ones fade), so detection confidence is
@@ -825,7 +825,7 @@ Sound).
         \caption{Mendocino triple junction}
     \end{subfigure}
     \caption{{\bf Regional zoom-ins of the ensemble catalog}, same encoding as
-    Figure~\ref{fig:fig4} (size~$\sim M$, purple where $M$ is a moment magnitude,
+    Figure~\ref{fig:fig4} (size~$\sim M$, orange where $M$ is a moment magnitude,
     opacity~$\sim$ pick count), with one marker
     size scale shared by the six panels (legend in a) and the same opacity scale as
     Figure~\ref{fig:fig4}a, over gray shaded GMRT relief. Beachballs are the preferred

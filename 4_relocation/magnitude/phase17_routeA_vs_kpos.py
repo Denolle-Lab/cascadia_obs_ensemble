@@ -71,7 +71,7 @@ for sel,col,lab,c,mk in [(T.ML.notna(),"ML_routeA","joint-inversion $M_L$ (fitte
                          (T.ML_method=="mapped","ML","catalog $M_L$, mapped (no picks within 150 km)",OURS,"x")]:
     style=dict(color=c) if mk=="x" else dict(facecolor="none",edgecolor=c)          # "x" is unfilled
     ax[4].scatter(T.Mw_mt[sel],T[col][sel]-T.Mw_mt[sel],s=9,marker=mk,lw=0.7,label=f"{lab}, n={int(sel.sum())}",**style)
-ax[4].axvline(4.5,c=MW_COLOR,lw=.8,ls="--"); ax[4].text(4.55,-2.35,"$M_w$ used above 4.5",color=MW_COLOR,fontsize=6.5)
+ax[4].axvline(4.5,c=MW_COLOR,lw=1.0,ls="--"); ax[4].text(4.55,-2.35,"$M_w$ used above 4.5",color=INK,fontsize=6.5)
 ax[4].axhline(0,c=MUTED,lw=.6); ax[4].set(ylim=(-2.5,2.6),xlabel="ComCat moment-tensor $M_w$",ylabel="Magnitude $-$ $M_w$"); ax[4].legend(loc="upper right",frameon=True,facecolor="white",edgecolor="none",framealpha=0.9)
 db=np.array([0,30,60,100,150,200,300,400,500,700,1000])
 for name,ref,c in [("ComCat $M_L\\geq$2.5 anchors",an[an.ml>=2.5].rename(columns={"ml":"ref"}),INK),

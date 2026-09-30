@@ -354,23 +354,31 @@ sufficient network geometry to resolve offshore and intraslab events.
 The following seismic networks were included: \texttt{C8}, \texttt{7D},
 \texttt{7A}, \texttt{CN}, \texttt{NV}, \texttt{UW}, \texttt{UO},
 \texttt{NC}, \texttt{BK}, \texttt{TA}, \texttt{OO}, \texttt{PB},
-\texttt{X6}, \texttt{Z5}, and \texttt{X9}. Three-component data were
-used for ensemble phase picking. When both \texttt{BH} and \texttt{HH}
-channels were available, only the higher-bandwidth \texttt{HH} channels
-were retained. However, to increase land-based coverage, the workflow
-was later extended to include \texttt{EH} channels, which improved
-spatial sampling along the margin without compromising signal fidelity.
+\texttt{X6}, \texttt{Z5}, and \texttt{X9}. We picked in two passes. The
+first pass (2011--2015) covered 123°--127°W and used the \texttt{HH}
+channels of each station, or its \texttt{BH} channels when it had no
+\texttt{HH}, at their native sampling rate. The second pass (2010--2015)
+covered 122°--129°W. It used \texttt{HH}, then \texttt{BH}, then
+\texttt{EH} channels, and a separate run used the \texttt{EH} channels
+alone between 123° and 127°W to add the short-period stations of the
+regional networks. When one of these stations lacked a horizontal
+component, its vertical trace was copied to all three model inputs. Two
+more runs over 46°--50°N, at 122°--123°W and 127°--129°W, also accepted
+vertical channels named \texttt{3}. The first pass contributes 21.9
+million of the 39.6 million picks, the second pass 17.7 million.
 
 Waveform preprocessing followed the data conditioning pipeline typical
 of the deep learning phase picking \emph{EQTransformer}
-\citep{mousavi2020earthquake}. Each continuous waveform was bandpass
-filtered between 4--15~Hz to remove low-frequency microseismic noise,
-following the processing strategy of \citet{Morton2023}, who
-demonstrated improved detectability of small-magnitude events above 4~Hz
-in Cascadia OBS data. Short data gaps were filled by linear
-interpolation using the \texttt{ObsPy} \texttt{Stream.interpolate()}
-method, and all traces were resampled to 100~Hz to match the input
-sampling rate required by the deep learning models.
+\citep{mousavi2020earthquake}. Each day-long waveform was bandpass
+filtered between 4 and 15~Hz to remove low-frequency microseismic noise,
+following \citet{Morton2023}, who found that small events in Cascadia
+OBS data are easier to detect above 4~Hz. In the second pass, traces
+were then resampled to 100~Hz, the sampling rate of the training data of
+the models; the first pass gave the models the native rate (40 to
+100~Hz). Data gaps were filled by linear interpolation when merging the
+traces (\texttt{ObsPy}
+\texttt{Stream.merge(fill\_value=\textquotesingle{}interpolate\textquotesingle{})}),
+and the components were trimmed to a common time span.
 
 In total, the dataset comprised approximately 582,936 station-days of
 continuous three-component data, corresponding to about 56~TB of
@@ -414,18 +422,16 @@ earthquakes by OBS on the Cascadia margin \citep{krauss25}.
 Consultation of the CI data report \citep{obsic2011cascadia} In
 consultation with the CI data report (REF5), phase picking data from sta
 
-First, we pick on day-long mseed files, we store the data into CSV
-files, and run this embarrassing parallel using Dask.els
-
 \section{Methods}\label{sec:methods}
 
 \subsection{ML Pipeline}\label{ml-pipeline}
 
 \subsubsection{Phase Picking}\label{phase-picking}
 
-The process is multi-stage. First we pick on day-long mseed files, we
-store the data into CSV files and run this embarassing parallel using
-dask. Second
+We picked each station-day independently, in parallel with Dask, and
+wrote the picks of each station-day to a CSV file. The scripts and the
+settings of each of the 29 runs are in the code repository
+(\texttt{1\_picking/}).
 
 \begin{figure*}[tp]
     \centering
@@ -434,21 +440,28 @@ dask. Second
     \label{fig:fig2}
 \end{figure*}
 
-There are three methods for the prediction by semblance: statistical,
-coherent, and learning approaches. The statistical-based semblance will
-take the maximum probabilities among multiple predictions and keep it
-for the P- or S-phase. The coherence-based ensemble will output the
-probabilities in time series by applying a certain semblance
-calculation. The \textbf{phase picking} by ensemble learning was run
-from the first day of the year to the last day of the year from 2010 to
-2015 (Yuan et al., 2023).
+We used the ensemble learning picker ELEP \citep{Yuan23}. It combines
+the phase probabilities of several pretrained models by a statistical
+ensemble (the maximum probability), a coherence ensemble (semblance) or
+a learned ensemble; we used the coherence ensemble. The members are five
+EQTransformer models \citep{mousavi2020earthquake} with the weights
+distributed by SeisBench \citep{Woollam2022}: the original model and the
+models retrained on the ETHZ, INSTANCE, SCEDC and STEAD datasets.
 
-For the EQTransformer, the original model, ETHZ, INSTANCE, SCEDC, and
-STEAD were used. The picking threshold was set to 0.05 for both P and S
-picks(Yuan et al., 2023). The P and S picks for each station for each
-day were saved in a CSV file in the Seisbench format. data is normalized
-to min-max for teh ETH, INSTANCE, SCEDC, STEAD. pretrain\_list =
-{[}`original', `ethz', `instance', `scedc', `stead'{]}
+Each day of data is cut into windows of 6000 samples (60 s at 100~Hz)
+with a step of 3000 samples. Each window is demeaned and tapered over
+its first and last 6 samples, and normalized by its standard deviation
+for the original model and by its maximum absolute value for the other
+four. For each window, the P and the S probabilities of the five models
+are combined by a second-order semblance over 0.5 s windows, weighted by
+the maximum probability. The window semblances are stacked into a
+day-long trace by keeping the maximum at each sample, after discarding
+the first and last 500 samples of each window. A pick is the time of the
+semblance maximum within each segment above 0.05, for P and for S. The
+two passes differ in the trigger: in the second pass a segment starts
+and ends at 0.05, and we kept its onset, end and maximum; in the first
+pass it ends when the semblance falls below 0.025, and we kept the pick
+time only.
 
 \subsubsection{Training PINN for travel
 time}\label{training-pinn-for-travel-time}
@@ -856,7 +869,7 @@ The counts and criteria at each stage are:
   associated events; the remainder do not converge to a well-constrained
   hypocenter).
 \item
-  \textbf{Quality control.} Requiring at least four P and four S picks
+  \textbf{Quality control.} Requiring at least five P and five S picks
   and an RMS residual below 2.5\textasciitilde s selects
   \(3.10\times10^{4}\) high-confidence events (49\% of the relocated
   set). Events shallower than 5\textasciitilde km were additionally
@@ -892,7 +905,7 @@ relocations.
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
     (2010--2015) and its tectonic setting.} (a) The 55{,}707 relocated events with a
     local magnitude (87\% of the 63{,}798 relocated events), over gray shaded relief; the
-    quality-controlled subset (${\ge}4$ P and ${\ge}4$ S picks, RMS ${<}2.5$~s;
+    quality-controlled subset (${\ge}5$ P and ${\ge}5$ S picks, RMS ${<}2.5$~s;
     $N=31{,}020$) is flagged in the released catalog for users who prefer it.
     Marker area scales with the preferred magnitude (legend, top right): $M_L$ in red,
     and in orange for the 78 events above 4.5 whose magnitude is a moment magnitude (ComCat
@@ -1077,6 +1090,22 @@ Nootka}\label{axial-and-endeavour-seamounts-and-nootka}
 
 Seismicity on the edge of of our box.
 
+The pick table has two gaps, and both carry through association,
+relocation and every figure. First, the 2013 picks of the run at
+122°--123°W and 46°--50°N (1.78 million picks on 14,680 station-days)
+were not merged into the pick table. That box holds 876 relocated events
+in 2013, against 1,310 to 3,443 in the other years, and the 2013 low of
+the monthly rates in onshore Washington and around Puget Sound
+(Supplement, temporal context) is a gap in detection, not a change in
+seismicity. Second, in the other years 19,584 station-days of the two
+46°--50°N runs (21\% of their files) are missing from the pick table,
+and 13 stations of these runs contribute no pick (for example
+\texttt{UW.LON}, \texttt{UW.RVC}, \texttt{UW.JCW} and \texttt{NV.KEMF}).
+GENIE and GraphDD used the pick table as it is: 19 of the 1.09 million
+associated picks and 123 of the 1.0 million relocated arrivals fall on
+these station-days. Merging the missing picks and rerunning the
+association and relocation would fill both gaps.
+
 \section{Conclusion}\label{conclusion}
 
 Thank all relevant parties and acknowledge funding sources, if any.
@@ -1088,7 +1117,7 @@ All seismic data is available on the Earthscope Consortium and the
 various networks used have digital identifiers objects,
 \citep[C8][]{C8}, \citep[7D, 7A][]{7D}, \citep[CN][]{CN},
 \citep[UW][]{UW}, \citep[UO][]{UO}, \citep[NC][]{NC}, \citep[BK][]{BK},
-\citep[TA][]{TA}, \citep[OO][]{OO},, PB, \citep[X6][]{X6},
+\citep[TA][]{TA}, \citep[OO][]{OO}, PB, \citep[X6][]{X6},
 \citep[Z5][]{Z5}, \citep[X9][]{X9}. The software is available on GitHub
 \url{https://github.com/Denolle-Lab/cascadia_obs_ensemble/} and on
 zenodo (REF).

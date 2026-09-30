@@ -112,4 +112,4 @@ Every ELEP pick, associated or not.
 | `magnitude/station_terms_routeA.csv` | station-phase terms `C` (log10 units) per station epoch (`NET.STA@epoch`) and phase, with the number of observations. It holds 1,014 terms; the paper cites 809 (**TO CONFIRM** which selection) | phase3 (`route_b_station_terms_routeA.csv`) |
 | `magnitude/comcat_mt_matched.csv` | ComCat moment tensors matched to catalog events (time, distance and depth offsets, strike/dip/rake) | phase18 |
 | `comparison/anss_2010-2015.csv` | ANSS ComCat events in the study region, 2010-2015 | `utils/fetch_anss_catalog.py` |
-| `comparison/morton_reloc.csv` | Morton et al. (2023) comparison catalog as used in the paper (`origin_2010_2015_reloc_cog_morton_ver3.csv`) | |
+| `comparison/morton_reloc.csv` | our catalog as relocated before the cross-correlation step, matched to Morton et al. (2023), with the match offsets `dist`, `dt`, `NonDimDist` and `id_Morton` | `origin_2010_2015_reloc_cog_morton_ver3.csv` |

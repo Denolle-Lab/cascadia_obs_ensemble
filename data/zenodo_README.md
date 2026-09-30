@@ -9,6 +9,18 @@ by moment magnitudes above M 4.5.
 Paper: **CITATION TO ADD**. Code: **SOFTWARE DOI TO ADD**
 (github.com/Denolle-Lab/cascadia_obs_ensemble, release v1.0.0).
 
+## Pipeline
+
+Each stage keeps a subset of the previous one:
+
+| Stage | Product | Rows |
+|---|---|---|
+| ELEP picking | picks | 39,597,551 |
+| GENIE association | events / assigned picks | 116,591 / 1,086,007 |
+| GraphDD + cross-correlation relocation | origins / arrivals | 63,887 / 1,004,335 |
+| quality control (`qc_pass`) | origins used in the paper figures | 31,020 |
+| Route A magnitudes | origins with a magnitude | 55,707 |
+
 ## Contents
 
 | File | Rows | What it is |
@@ -19,7 +31,8 @@ Paper: **CITATION TO ADD**. Code: **SOFTWARE DOI TO ADD**
 | `magnitude/station_terms_routeA.csv` | 1,014 | station-phase magnitude terms |
 | `magnitude/comcat_mt_matched.csv` | 112 | ComCat moment tensors matched to catalog events |
 | `intermediate/genie_*.csv` | | GENIE association output, as received |
-| `comparison/*.csv` | | ANSS ComCat and Morton et al. (2023) catalogs used in the paper |
+| `comparison/anss_2010-2015.csv` | | ANSS ComCat events of the region (ComCat CSV format) |
+| `comparison/morton_reloc.csv` | 63,887 | our catalog (relocation before the cross-correlation step) matched to Morton et al. (2023), with the match offsets (`dist`, `dt`, `NonDimDist`, `id_Morton`) |
 
 `DATA_DICTIONARY.md` defines every column. `LINEAGE.md` gives the processing chain
 from picks to catalog. `CHECKSUMS.md5` holds the MD5 sums.
@@ -42,6 +55,10 @@ The tables follow the QuakeML split into picks, arrivals and origins:
 FDSN networks 7D, 7A, C8, CN, NV, UW, UO, NC, BK, TA, OO, PB, X6, Z5 and X9 (network
 DOIs in the paper), from the UW pnwstore archive, EarthScope and NCEDC.
 
+## Authors
+
+See the paper's author list and the repository `README.md` for contributions.
+
 ## License
 
-CC-BY-4.0.
+CC-BY-4.0. Verify the files with `md5sum -c CHECKSUMS.md5`.

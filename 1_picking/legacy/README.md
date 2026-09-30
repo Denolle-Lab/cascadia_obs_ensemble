@@ -85,3 +85,18 @@ times and probability). The ver3 table does not hold every v2 per-day file: in 2
 and 34% of the `127-129_46-50` files are not, as whole station-days (for example,
 UW EH-only stations LO2, JCW, RER and MBW are absent from ver3 in 2011). The rule
 used to drop them is **TO CONFIRM** with H. Bito.
+
+Two gaps in ver3 (checked 2026-09-30), both carried into GENIE and GraphDD (19 of the
+1,086,007 GENIE assignments and 123 of the 1,004,335 relocated arrivals fall on these
+station-days):
+
+- 2013, `122-123_46-50`: the per-day files are in a nested folder
+  (`picks_2013_122-123_46-50/picks_2013_122-123_46-50/`, 14,680 files, 1.78 M picks);
+  97% of their picks are not in ver3. That box holds 876 relocated events in 2013
+  against 1,310-3,443 in the other years.
+- Other years, both edge runs: 19,584 station-days with picks (21% of the files) are not
+  in ver3, and only 191 of them had a v1 pick for the same station-day, so v1 overlap is
+  not the rule. 13 stations never appear in ver3 (C8.FHRB, NV.KEMF, NV.NCHR, UW.ELW,
+  UW.JCW, UW.LO2, UW.LON, UW.MBW, UW.RATT, UW.RER, UW.RMW, UW.RVC, UW.STOR).
+
+Filling them means merging these picks and rerunning GENIE and GraphDD.

@@ -46,7 +46,9 @@ full creation chain are in [`data/LINEAGE.md`](data/LINEAGE.md).
   `1_picking/legacy/README.md`.
 - The merge of the per-day files into ver3 is not in the repository, and it dropped whole
   v2 station-days of the two 46-50°N edge regions (about 17% and 34% of their 2011 files); the
-  rule is **TO CONFIRM** with H. Bito.
+  rule is **TO CONFIRM** with H. Bito. The 2013 files of `122-123_46-50` (1.78 M picks, in a
+  nested folder) were not merged at all. Both gaps reached GENIE and GraphDD and are stated
+  in the paper (Current limitations); see `1_picking/legacy/README.md`.
 - The ELEP commit is pinned in `pixi.lock`.
 - The Python environment used in 2024–25 was not locked (pixi arrived in 2026-03,
   `b07de7a0`). The current `default` env has seisbench 0.11.7, obspy 1.5.0 and numpy 1.26.4.

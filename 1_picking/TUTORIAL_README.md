@@ -58,12 +58,13 @@ Once comfortable with the tutorial, the production scripts process full datasets
 
 ```
 run_picking.py        # one year and region: python run_picking.py --year 2011 --region 122-129
-picking_config.csv    # the 24 ver3 runs: year, region box, channel mode, workers
+picking_config.csv    # the 29 ver3 runs: year, region box, channel mode, workers
 elep_picker.py        # ELEP picker for one station-day (run_detection)
 legacy/               # the original per-year scripts of the ver3 run (see legacy/README.md)
 ```
 
-Regions: `122-129` (HH, else BH, else EH), `123-127_EH` (EH analog stations),
+Runs: `123-127_HH_BH` (v1, the first run of 2011-2015: HH or BH at the native rate),
+then per year `122-129` (HH, else BH, else EH), `123-127_EH` (EH analog stations),
 `122-123_46-50` and `127-129_46-50` (edge bands at 46-50°N).
 
 ## Workflow Architecture

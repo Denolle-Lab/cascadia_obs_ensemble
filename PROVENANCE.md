@@ -36,12 +36,16 @@ full creation chain are in [`data/LINEAGE.md`](data/LINEAGE.md).
   2026-06-29) changed paths and tutorials. They also flip the channel rule back and forth;
   the one that ran is "HH, else BH, else EH" (the tag's rule would have skipped OBS
   station-days without EH, whose BH picks are in ver3).
-- Rerunning: `1_picking/run_picking.py` with `picking_config.csv` (one row per year and
-  region, 24 runs) replaces the per-year scripts, now in `1_picking/legacy/`. On 14 station-days
-  of 2011 from the four regions it reproduces the stored per-day picks (same picks and times;
-  probabilities within 3e-7). See `1_picking/legacy/README.md`.
+- ver3 joins two picker runs: **v1** (2011-2015, `parallel_pick_{year}_HH_BH.py` with
+  `picking_utils_2012.py`; HH/BH at the native sampling rate; 21.9 M picks, the rows with an
+  empty `band_inst`) and **v2** (2010-2015, four region runs per year; 17.7 M picks).
+- Rerunning: `1_picking/run_picking.py` with `picking_config.csv` (29 rows: 5 v1 runs, 24 v2
+  runs) replaces the per-year scripts, now in `1_picking/legacy/`. It reproduces the stored
+  per-day picks: v2 on 14 station-days (same picks and times, probabilities within 3e-7), v1
+  on 11 station-days (10 byte-identical, 1 with one pick off by one sample). See
+  `1_picking/legacy/README.md`.
 - The merge of the per-day files into ver3 is not in the repository, and it dropped whole
-  station-days of the two 46-50°N edge regions (about 17% and 34% of their 2011 files); the
+  v2 station-days of the two 46-50°N edge regions (about 17% and 34% of their 2011 files); the
   rule is **TO CONFIRM** with H. Bito.
 - The ELEP commit is pinned in `pixi.lock`.
 - The Python environment used in 2024–25 was not locked (pixi arrived in 2026-03,

@@ -1,9 +1,10 @@
 """Run ELEP picking for one row of picking_config.csv (a year and a region).
 
-Replaces the 24 parallel_pick_{year}[_region].py scripts that wrote the ver3
-picks (now in legacy/). Each task is one station-day; its picks go to
-``OUTROOT/picks_{year}_{region}/NET_STA_YYYYMMDD_YYYYMMDD.csv``. Station-days
-already written are skipped, so the run can be restarted.
+Replaces the 29 parallel_pick_{year}[_region].py scripts that wrote the ver3
+picks (now in legacy/): the first run (``channel_mode`` v1, 2011-2015) and the
+four region runs of each year. Each task is one station-day; its picks go to
+``OUTROOT/<outdir>/`` (NET_STA_YYYYMMDD_YYYYMMDD.csv, or STA_YYYYMMDD.csv for v1).
+Station-days already written are skipped, so the run can be restarted.
 
     python run_picking.py --year 2011 --region 122-129 --outroot /wd1/hbito_data/data
     python run_picking.py --year 2011 --region 123-127_EH --station UW.NLO --day 2011-02-11
@@ -44,14 +45,18 @@ def station_list(cfg, time1, time2):
         minlatitude=cfg.minlat, maxlatitude=cfg.maxlat,
         minlongitude=cfg.minlon, maxlongitude=cfg.maxlon,
         starttime=time1.strftime('%Y%m%d'), endtime=time2.strftime('%Y%m%d'))
-    return [(net.code, sta.code) for net in inventory for sta in net]
+    return [(net.code, sta.code, sta.latitude, sta.longitude, sta.elevation)
+            for net in inventory for sta in net]
 
 
 @delayed
-def pick_station_day(network, station, day, outdir, cfg, skip_dir, source):
+def pick_station_day(network, station, lat, lon, elev, day, outdir, cfg, skip_dir, source):
     t1 = day.to_pydatetime()
     t2 = t1 + datetime.timedelta(days=1)
     try:
+        if cfg.channel_mode == 'v1':
+            return elep_picker.run_detection_v1(network, station, t1, outdir, lat, lon, elev,
+                                                source=source)
         return elep_picker.run_detection(network, station, t1, t2, outdir,
                                          channel_mode=cfg.channel_mode, vertical=cfg.vertical,
                                          skip_if_in=skip_dir, source=source)
@@ -74,7 +79,7 @@ def main():
     args = p.parse_args()
 
     cfg = load_config(args.year, args.region)
-    outdir = os.path.join(args.outroot, f"picks_{args.year}_{args.region}") + '/'
+    outdir = os.path.join(args.outroot, cfg.outdir) + '/'
     skip_dir = (os.path.join(args.outroot, f"picks_{args.year}_{cfg.skip_if_in}") + '/'
                 if cfg.skip_if_in else None)
     os.makedirs(outdir, exist_ok=True)
@@ -84,12 +89,11 @@ def main():
     days = pd.to_datetime(np.arange(time1, time2, pd.Timedelta(1, 'days')))
     if args.day:
         days = pd.to_datetime([args.day])
+    stations = station_list(cfg, time1, time2)
     if args.station:
-        stations = [tuple(args.station.split('.'))]
-    else:
-        stations = station_list(cfg, time1, time2)
+        stations = [s for s in stations if f"{s[0]}.{s[1]}" == args.station]
 
-    tasks = [pick_station_day(net, sta, d, outdir, cfg, skip_dir, args.source) for net, sta in stations for d in days]
+    tasks = [pick_station_day(*sta, d, outdir, cfg, skip_dir, args.source) for sta in stations for d in days]
     print(f"{args.year} {args.region}: {len(stations)} stations x {len(days)} days -> {outdir}")
     with ProgressBar():
         compute(tasks, scheduler='processes', num_workers=args.workers or int(cfg.workers))

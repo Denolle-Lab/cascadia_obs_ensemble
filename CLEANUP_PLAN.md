@@ -1,10 +1,16 @@
 # Repository cleanup and Zenodo release plan
 
-Status (2026-09-30): the safe steps of §8.1 are done on branch `cleanup/safe-steps`: tags
-pushed, PR #22 merged, `old/` / `3_post_processing/` / `0_data_availability/` / `_old` CSVs
-removed, two large diagnostic notebooks stripped, README rewritten, PROVENANCE.md added. The
-data products (§6) are being re-planned as ANSS-style pick / association / origin tables.
-Git history is kept, without a rewrite (§7); the README explains lightweight cloning.
+Status (2026-09-30, evening): on branch `cleanup/safe-steps`.
+- Done: safe steps of §8.1 (tags, PR #22, obsolete trees removed, README, PROVENANCE).
+- Done: picking consolidated (§4): `1_picking/elep_picker.py` + `run_picking.py` +
+  `picking_config.csv` (29 runs) replace the 29 per-year scripts and 6 utils, now in
+  `1_picking/legacy/`; reproduces stored per-day picks of both picker runs (v1, v2).
+- Done: QC threshold decided: the paper now says at least 5 P and 5 S picks, the rule of
+  the 31,020-event file behind every figure.
+- Done: data products (§6) are three ANSS-style tables, `utils/build_anss_tables.py`
+  (origins / arrivals / picks, QuakeML split), `data/DATA_DICTIONARY.md`, and the Zenodo
+  layout in `utils/assemble_zenodo.py`.
+- Waiting for `rerun_hp05/DONE`: the layout move of §2-3.
 
 Goal: the repo holds only the workflow behind the paper, in run order, with one script per
 paper figure, the at-scale launchers kept apart, a README that reproduces the paper, and a
@@ -163,6 +169,10 @@ Paper text to fix (Data and Code Availability, `main.qmd` §Data): replace "zeno
 with the two DOIs, list the data products, cite GENIE, GraphDD and ELEP, give PB its FDSN DOI,
 and remove the double comma.
 
+**Superseded (2026-09-30):** the data record now holds three ANSS-style tables
+(origins, arrivals, picks) instead of the folders above; see `data/ZENODO.md` and
+`utils/assemble_zenodo.py`.
+
 **Not in v1:** the 0.5 Hz high-pass test (`data/magnitude_hp05/`). If it changes the
 magnitudes, release it as data v3.1 during revision.
 
@@ -182,12 +192,14 @@ re-clone, and after merging or closing the open branches (`feat/*`, `marine-*`).
    assembled by hand); README and PROVENANCE. **Still to do by hand:** reserve the data DOI on
    Zenodo.
    **Found while writing PROVENANCE:** the 31,020-event QC file applies > 4 P and > 4 S picks,
-   not the ≥ 4 stated in the paper (≥ 4 gives 40,065). Decide which is right.
+   not the ≥ 4 stated in the paper (≥ 4 gives 40,065). Decided: keep the file; the paper
+   now says at least five.
 2. After `rerun_hp05/DONE`: move to the `workflow/`, `figures/` and `scale/` layout, rename the
    figures and labels, add `utils/paths.py`, `make catalog` and `make figures`, and verify that
    the figures and the PDF are unchanged.
-3. Extend `assemble_zenodo.py` with the magnitude products and the data dictionary; dry run;
-   check file sizes and MD5 sums.
+3. Done (2026-09-30): `build_anss_tables.py`, data dictionary, `assemble_zenodo.py`. Package assembled
+   in `data/zenodo/` (1.13 GB, 12 files, `md5sum -c` passes). To do: the TO CONFIRM items of
+   the dictionary, the paper and software DOIs in `data/zenodo_README.md`, the upload. Rebuild after the 0.5 Hz test if magnitudes change.
 4. At submission: GitHub release v1.0.0 (software DOI), fill in the DOIs in the paper, and
    publish or keep in review the data record.
 5. No history rewrite (§7).

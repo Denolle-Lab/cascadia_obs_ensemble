@@ -1,10 +1,14 @@
 """ELEP ensemble picker for one station-day.
 
-Consolidates the three ``picking_utils*.py`` variants that produced the ver3 picks
-(the originals are in ``legacy/``, and in git at tag ``pre-cleanup-2026-09``).
-They differed only in how they chose channels; the ELEP core (5
-EQTransformer models, semblance, stacking, 0.05 trigger) was identical. The
-choices are now arguments, set per run in ``picking_config.csv``:
+Consolidates the ``picking_utils*.py`` variants that produced the ver3 picks (the
+originals are in ``legacy/``, and in git at tag ``pre-cleanup-2026-09``). They share
+the ELEP core (5 EQTransformer models, semblance, stacking, 0.05 threshold) in
+:func:`ensemble_semblance_traces`.
+
+:func:`run_detection_v1` is the first run (picking_utils_2012/_2015, 2011-2015,
+55% of the ver3 picks); see its docstring. :func:`run_detection` is the later
+region runs; their variants differed only in how they chose channels, now
+arguments set per run in ``picking_config.csv``:
 
 ``channel_mode``
     ``'hh_bh_eh'``  HH if present, else BH, else EH           (picking_utils, _prio)
@@ -30,6 +34,7 @@ import torch
 from obspy import Stream, Trace, UTCDateTime
 from obspy.signal.trigger import trigger_onset
 from ELEP.elep.ensemble_coherence import ensemble_semblance
+from ELEP.elep.trigger_func import picks_summary_simple
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from utils.data_client import get_waveforms  # noqa: E402
@@ -129,6 +134,57 @@ def order_components(sdata, raw, channel_mode='hh_bh_eh', vertical='Z'):
     return _s2d + _s2x
 
 
+def ensemble_semblance_traces(arr_sdata, dt, models=None):
+    """ELEP core: window the (3, npts) array, predict with the 5 EQTransformer models,
+    take the ensemble semblance of each window and stack. Returns (smb_p, smb_s), each
+    of length npts. ``models`` is an optional dict {name: EQTransformer}.
+    """
+    # Reshape into overlapping windows
+    npts = arr_sdata.shape[1]
+    nseg = int(np.floor((npts - TWIN) / STEP)) + 1
+    tap = 0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, 6)))
+    windows = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
+    windows_std = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
+    windows_max = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
+    for iseg in range(nseg):
+        idx = iseg * STEP
+        windows[iseg, :] = arr_sdata[:, idx:idx + TWIN]
+        windows[iseg, :] -= np.mean(windows[iseg, :], axis=-1, keepdims=True)
+        # 'original' uses std normalization, the others max normalization
+        windows_std[iseg, :] = windows[iseg, :] / np.std(windows[iseg, :]) + 1e-10
+        windows_max[iseg, :] = windows[iseg, :] / (np.max(np.abs(windows[iseg, :]), axis=-1, keepdims=True))
+    windows_std[:, :, :6] *= tap
+    windows_std[:, :, -6:] *= tap[::-1]
+    windows_max[:, :, :6] *= tap
+    windows_max[:, :, -6:] *= tap[::-1]
+    del windows
+
+    # Predict on the base models. dim 0: 0 = P, 1 = S (EQTransformer output 0 is detection)
+    batch_pred = np.zeros([2, len(PRETRAIN_LIST), nseg, TWIN], dtype=np.float32)
+    for ipre, pretrain in enumerate(PRETRAIN_LIST):
+        t0 = time.time()
+        eqt = models[pretrain] if models else load_model(pretrain)
+        x = torch.Tensor(windows_std if pretrain == 'original' else windows_max)
+        with torch.no_grad():
+            _torch_pred = eqt(x.to(device))
+        batch_pred[0, ipre, :] = _torch_pred[1].detach().cpu().numpy()
+        batch_pred[1, ipre, :] = _torch_pred[2].detach().cpu().numpy()
+        Logger.debug(f"{pretrain}: {time.time() - t0:.1f} s")
+    del _torch_pred, x, windows_std, windows_max
+    gc.collect()
+
+    # Ensemble semblance per window, then stack
+    paras = dict(PARAS_SEMBLANCE, dt=dt)
+    smb_pred = np.zeros([2, nseg, TWIN], dtype=np.float32)
+    for iseg in range(nseg):
+        smb_pred[0, iseg, :] = ensemble_semblance(batch_pred[0, :, iseg, :], paras)
+        smb_pred[1, iseg, :] = ensemble_semblance(batch_pred[1, :, iseg, :], paras)
+    smb_p = stacking(smb_pred[0, :], npts, L_BLND, R_BLND, nseg)
+    smb_s = stacking(smb_pred[1, :], npts, L_BLND, R_BLND, nseg)
+    del smb_pred, batch_pred
+    return smb_p, smb_s
+
+
 def output_name(outdir, network, station, t1, t2):
     return os.path.join(outdir, f"{network}_{station}_{t1.strftime('%Y%m%d')}_{t2.strftime('%Y%m%d')}.csv")
 
@@ -182,55 +238,76 @@ def run_detection(network, station, t1, t2, outdir, channel_mode='hh_bh_eh', ver
 
     sdata = order_components(sdata, _sdata, channel_mode, vertical)
 
-    # Reshape into overlapping windows
-    arr_sdata = np.array(sdata)
-    npts = arr_sdata.shape[1]
-    nseg = int(np.floor((npts - TWIN) / STEP)) + 1
-    tap = 0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, 6)))
-    windows = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
-    windows_std = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
-    windows_max = np.zeros(shape=(nseg, 3, TWIN), dtype=np.float32)
-    for iseg in range(nseg):
-        idx = iseg * STEP
-        windows[iseg, :] = arr_sdata[:, idx:idx + TWIN]
-        windows[iseg, :] -= np.mean(windows[iseg, :], axis=-1, keepdims=True)
-        # 'original' uses std normalization, the others max normalization
-        windows_std[iseg, :] = windows[iseg, :] / np.std(windows[iseg, :]) + 1e-10
-        windows_max[iseg, :] = windows[iseg, :] / (np.max(np.abs(windows[iseg, :]), axis=-1, keepdims=True))
-    windows_std[:, :, :6] *= tap
-    windows_std[:, :, -6:] *= tap[::-1]
-    windows_max[:, :, :6] *= tap
-    windows_max[:, :, -6:] *= tap[::-1]
-    del windows
-
-    # Predict on the base models. dim 0: 0 = P, 1 = S (EQTransformer output 0 is detection)
-    batch_pred = np.zeros([2, len(PRETRAIN_LIST), nseg, TWIN], dtype=np.float32)
-    for ipre, pretrain in enumerate(PRETRAIN_LIST):
-        t0 = time.time()
-        eqt = models[pretrain] if models else load_model(pretrain)
-        x = torch.Tensor(windows_std if pretrain == 'original' else windows_max)
-        with torch.no_grad():
-            _torch_pred = eqt(x.to(device))
-        batch_pred[0, ipre, :] = _torch_pred[1].detach().cpu().numpy()
-        batch_pred[1, ipre, :] = _torch_pred[2].detach().cpu().numpy()
-        Logger.debug(f"{pretrain}: {time.time() - t0:.1f} s")
-    del _torch_pred, x, windows_std, windows_max
-    gc.collect()
-
-    # Ensemble semblance per window, then stack
-    paras = dict(PARAS_SEMBLANCE, dt=dt)
-    smb_pred = np.zeros([2, nseg, TWIN], dtype=np.float32)
-    for iseg in range(nseg):
-        smb_pred[0, iseg, :] = ensemble_semblance(batch_pred[0, :, iseg, :], paras)
-        smb_pred[1, iseg, :] = ensemble_semblance(batch_pred[1, :, iseg, :], paras)
-    smb_p = stacking(smb_pred[0, :], npts, L_BLND, R_BLND, nseg)
-    smb_s = stacking(smb_pred[1, :], npts, L_BLND, R_BLND, nseg)
-    del smb_pred, batch_pred
+    smb_p, smb_s = ensemble_semblance_traces(np.array(sdata), dt, models)
 
     idf_p = pred_trigger_pick(smb_p, sdata[0], 'P', thrd=P_THRD)
     idf_s = pred_trigger_pick(smb_s, sdata[0], 'S', thrd=S_THRD)
     df = pd.concat([idf_p, idf_s], axis=0, ignore_index=True)
     df.to_csv(save_file_name)
+    return save_file_name
+
+
+V1_COLUMNS = ['event_id', 'source_type', 'station_network_code', 'station_channel_code',
+              'station_code', 'station_location_code', 'station_latitude_deg',
+              'station_longitude_deg', 'station_elevation_m', 'trace_name',
+              'trace_sampling_rate_hz', 'trace_start_time', 'trace_S_arrival_sample',
+              'trace_P_arrival_sample', 'trace_S_onset', 'trace_P_onset', 'trace_snr_db',
+              'trace_s_arrival', 'trace_p_arrival']
+
+
+def run_detection_v1(network, station, t1, outdir, lat, lon, elev, source='pnwstore', models=None):
+    """The first ELEP run (picking_utils_2012/_2015, the ``_HH_BH`` scripts, 2011-2015).
+
+    Its picks are 55% of ver3. It differs from :func:`run_detection`: HH, else BH
+    (never EH); no vertical or constant-data check; no resampling (the models see the
+    native sampling rate); no component reordering; picks from ELEP
+    ``picks_summary_simple`` (trigger off at half the threshold), timed from the start
+    of the first trace before the trim, with no probability. It writes the old
+    SeisBench-like format to ``outdir/STA_YYYYMMDD.csv``.
+    """
+    save_file_name = os.path.join(outdir, f"{station}_{t1.strftime('%Y%m%d')}.csv")
+    if os.path.exists(save_file_name):
+        Logger.info(f'File {save_file_name} already exists')
+        return None
+    t1 = UTCDateTime(t1)
+    try:
+        _sdata = get_waveforms(network=network, station=station, channel='?H?',
+                               starttime=t1, endtime=t1 + 86400, source=source)
+    except obspy.clients.fdsn.header.FDSNNoDataException:
+        Logger.warning(f"No data for {network}.{station} on {t1}.")
+        return None
+
+    sdata = Stream()
+    for band in ('HH', 'BH'):
+        if _sdata.select(channel=f'{band}?'):
+            sdata += _sdata.select(channel=f'{band}?')
+            break
+    if len(sdata) == 0:
+        Logger.warning("No stream returned. Skipping.")
+        return None
+
+    sdata.filter(type='bandpass', freqmin=4, freqmax=15)
+    sdata.merge(fill_value='interpolate')
+    delta = sdata[0].stats.delta
+    starttime = sdata[0].stats.starttime
+    max_starttime = max([tr.stats.starttime for tr in sdata])
+    min_endtime = min([tr.stats.endtime for tr in sdata])
+    for tr in sdata:
+        tr.trim(starttime=max_starttime, endtime=min_endtime, nearest_sample=True)
+
+    smb_p, smb_s = ensemble_semblance_traces(np.array(sdata), delta, models)
+    p_index = picks_summary_simple(smb_p, P_THRD)
+    s_index = picks_summary_simple(smb_s, S_THRD)
+
+    rows = []
+    for label, index in (('P', p_index), ('S', s_index)):
+        for idx in index:
+            t = str(starttime + idx * delta)
+            rows.append([' ', ' ', network, ' ', station, sdata[0].stats.location, lat, lon, elev,
+                         ' ', sdata[0].stats.sampling_rate, sdata[0].stats.starttime,
+                         ' ', ' ', ' ', ' ', ' ',
+                         t if label == 'S' else np.nan, t if label == 'P' else np.nan])
+    pd.DataFrame(rows, columns=V1_COLUMNS).to_csv(save_file_name)
     return save_file_name
 
 

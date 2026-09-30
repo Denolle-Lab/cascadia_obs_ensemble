@@ -45,7 +45,7 @@ amplitudes for **absolute ML**.
 |---|---|---|
 | Relocated events | `data/Cascadia_relocated_catalog_ver_3.csv` | lat/lon/depth/origin/RMS/gap/Num P/Num S/**Event ID**; no magnitude. |
 | Amplitudes **A** — peak *counts*, per pick, phase-specific | `4_relocation/calculate_amplitudes.py` → `…_w_amp.csv` (remote `/wd1`) | max\|data\| in `[t_pick-0.5, t_pick+2]`, HP 2 Hz, 100 Hz, max over available comps. Used for **Route B** only. |
-| Amplitudes **B** — Wood-Anderson *displacement mm*, per station | `3_post_processing/event_waveform_processing.py`, `get_waveform_amplitude.py` → `data/split_files/…_with_amplitudes_part*.csv` | remove_response→WA simulate, `[origin, origin+120]`, Z/N/E max/min/duration. **Route A input — must be QC'd** (older run gave nonphysical ~1e9; split-file run ~0.2 mm). |
+| Amplitudes **B** — Wood-Anderson *displacement mm*, per station | `3_post_processing/event_waveform_processing.py`, `get_waveform_amplitude.py` (removed 2026-09; at tag `pre-cleanup-2026-09`) → `data/split_files/…_with_amplitudes_part*.csv` | remove_response→WA simulate, `[origin, origin+120]`, Z/N/E max/min/duration. **Route A input — must be QC'd** (older run gave nonphysical ~1e9; split-file run ~0.2 mm). |
 | Calibration mags | ANSS/ComCat via `concat_anss_catalogs_2010_2015.ipynb`; Morton 2023 `data/ds01.csv` (Md, reference only) | Anchor with **ComCat ML** where available. |
 | Catalog matching | `utils/qc_utils.py` `match_events` / `filter_and_match_events` | repair Morton matcher (no acceptance threshold — see audit). |
 | SNR | `utils/qc_utils.py` `calc_snr` | vertical-only, gap-interpolates, div-by-zero guarded in PR #8; adapt to the amplitude band. |

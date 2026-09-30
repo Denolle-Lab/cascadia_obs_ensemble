@@ -25,8 +25,8 @@ SPLIT = ROOT / "data" / "split_files"
 
 
 def groups() -> dict[str, list[Path]]:
-    # Only the standard <name>_partNNN.csv chunks; skip the superseded, differently
-    # named *_part001_old.csv provenance files.
+    # Only the standard <name>_partNNN.csv chunks (the superseded *_old.csv parts were
+    # removed in the 2026-09 cleanup; see PROVENANCE.md, tag pre-cleanup-2026-09).
     g: dict[str, list[Path]] = {}
     for p in sorted(SPLIT.glob("*_part*.csv")):
         m = re.match(r"^(.+)_part\d+\.csv$", p.name)

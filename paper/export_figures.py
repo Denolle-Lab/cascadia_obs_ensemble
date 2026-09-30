@@ -61,6 +61,9 @@ SCRIPT_FIGURES = [
     # full-margin catalog map (replaces the old fig4)
     ("fig4_catalog_map.png", _PHASE5, ["--region", "full"],
      "cascadia_ML_map_full.png", _MAG),
+    # companion tectonic-context panel: slip deficit, ComCat moment tensors, plate motions
+    ("fig4_context_map.png", _PHASE5, ["--region", "full", "--layer", "context"],
+     "cascadia_context_map_full.png", _MAG),
     # regional zoom-ins for comparison with recent region-focused studies
     ("fig_regions/blanco.png", _PHASE5, ["--region", "blanco", "--gmrt", "med"],
      "cascadia_ML_map_blanco.png", _MAG),
@@ -76,7 +79,8 @@ SCRIPT_FIGURES = [
      "cascadia_ML_map_or_margin.png", _MAG),
     # Puget Sound with Slab2 interface depth contours (slab-following seismicity)
     ("fig_slab_puget.png", _PHASE5,
-     ["--region", "puget", "--slab-contours", "--legend", "--gmrt", "med"],
+     ["--region", "puget", "--slab-contours", "--legend", "--legend-pos", "TR",
+      "--gmrt", "med"],
      "cascadia_ML_map_puget.png", _MAG),
     # supplementary analysis figures
     ("supp_depth_analysis.png", "4_relocation/magnitude/phase7_depth_analysis.py", [],
@@ -98,6 +102,9 @@ SCRIPT_FIGURES = [
     ("supp_tomography.png",
      "4_relocation/magnitude/phase13_tomography.py", [],
      "tomography_relation.png", _MAG),
+    ("supp_magnitude_tests.png",
+     "4_relocation/magnitude/phase17_routeA_vs_kpos.py", [],
+     "routeA_vs_kpos_comparison.png", _MAG),
     ("supp_completeness.png",
      "4_relocation/magnitude/phase14_completeness.py", [],
      "completeness_by_region.png", _MAG),

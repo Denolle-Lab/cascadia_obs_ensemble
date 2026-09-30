@@ -1,0 +1,39 @@
+DOI: 10.1029/2024JB029346
+Region: Cascadia
+Description: Cascadia elastic boundary inversion median model
+Model_type: Interseismic
+Observations:
+  Reference_frame: NAM14
+  Plate_fixed_frame: Juan De Fuca-Oregon Block
+  Pole_lat: -12.3
+  Pole_lon: -69.9
+  Pole_rotation_rate: 0.55
+  CR_factor: 0.962
+  CR_factor_Gorda: 0.9349
+  Converge_notes: Compute convergence rate for each patch with Euler pole. Then scale
+    the rate for patches on the Gorda plate by CR_factor_Gorda. Scale all other patches
+    by CR_factor.
+  Earliest_data_used: not provided
+  Latest_data_used: not provided
+  Data_notes: 'Data are from Zeng (2022). Epoch dates and times were not provided.
+    Columns within file are: site, lon, lat, east_rate_mm_yr, north_rate_mm_yr, east_std_mm_yr,
+    north_std_mm_yr, ref_frame'
+  GNSS:
+    Number_of_sites: 326
+    Number_of_observations: 900
+    Observation_components:
+    - E
+    - N
+Forward:
+  Formulation: Elastic half space
+  Number_of_layers: 1
+  Poisson_ratio: 0.25
+  Degrees_of_freedom: 58
+  Dislocations:
+    Values_on: cells
+    Type_of_dislocations: Triangular
+    Number_of_dislocations: 3847
+Inversion:
+  Type: boundary inversion median model
+  Regularization:
+    Type: No prescribed regularization.

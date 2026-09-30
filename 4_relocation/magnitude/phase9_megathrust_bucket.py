@@ -23,11 +23,17 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
+from paper_style import use, FULL, panel, CLASS_COLORS, INK, save  # noqa: E402
+
+use()
 
 QC = "../../data/datasets_all_regions/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 DEP = "../../data/slab2/cas_slab2_dep.xyz"
@@ -76,42 +82,67 @@ def main():
           f"({100*nmt/len(qc):.0f}%)  [well-constrained only: "
           f"{((qc.cls=='megathrust?') & good).sum():,}]")
 
-    # figure: (A) map by class, (B) cross-section with the uncertainty band
-    fig, (axm, axc) = plt.subplots(1, 2, figsize=(13, 6.2),
-                                   gridspec_kw={"width_ratios": [1, 1.15]})
-    colors = {"megathrust?": "#cc3311", "crustal": "#bbbbbb",
-              "deeper": "#4477aa", "no-slab": "#eecc66"}
-    for c in ["no-slab", "deeper", "crustal", "megathrust?"]:
-        d = qc[qc.cls == c]
-        axm.scatter(d.lon, d.lat, s=5, c=colors[c], alpha=0.5, linewidths=0,
-                    label=f"{c} (n={len(d)})")
-    axm.set_xlabel("longitude"); axm.set_ylabel("latitude")
-    axm.set_title(f"(A) Generous megathrust bucket\n{nmt:,} events "
-                  f"({100*nmt/len(qc):.0f}% of catalog)")
-    axm.legend(fontsize=8, loc="lower left", markerscale=2)
-    axm.set_xlim(-131, -121); axm.set_ylim(39, 51)
+    # figure: (a) large map by class (left); (b) smaller forearc cross-section with the
+    # uncertainty band (top right) above a shared legend. Axes placed in inches.
+    W, Ht = FULL, 5.05
+    fig = plt.figure(figsize=(W, Ht))
 
-    # (B) forearc cross-section with slab +/- band envelope
+    def put(x, y, w, h):                                # inches from the top-left
+        return fig.add_axes([x / W, 1 - (y + h) / Ht, w / W, h / Ht])
+
+    lon0, lon1, lat0, lat1 = -131.0, -121.0, 39.0, 51.0
+    asp = 1 / np.cos(np.deg2rad(45.0))
+    mw = 2.75; mh = mw * (lat1 - lat0) * asp / (lon1 - lon0)
+    axm = put(0.42, 0.12, mw, mh)
+    axc = put(0.42 + mw + 0.62, 0.12, W - (0.42 + mw + 0.62) - 0.05, 2.75)
+    colors = {"megathrust?": CLASS_COLORS["megathrust?"],
+              "crustal": CLASS_COLORS["crustal-fault"],
+              "deeper": CLASS_COLORS["intraslab"],
+              "no-slab": CLASS_COLORS["oceanic"]}
+    draw = ["crustal", "no-slab", "deeper", "megathrust?"]   # background class first
+    for c in draw:
+        d = qc[qc.cls == c]
+        axm.scatter(d.lon, d.lat, s=1.0, c=colors[c], alpha=0.5, linewidths=0,
+                    label=f"{c} (n={len(d):,})", rasterized=True)
+    axm.set_xlabel("Longitude (°)"); axm.set_ylabel("Latitude (°)")
+    axm.set_xlim(lon0, lon1); axm.set_ylim(lat0, lat1)
+    axm.set_aspect(asp)
+    axm.add_patch(plt.Rectangle((-127, 44), 5.5, 5, facecolor=INK, alpha=0.06, lw=0,
+                                zorder=0))                      # footprint of b
+    axm.text(-126.9, 48.9, "section b\n(44–49°N)", fontsize=6.5, color="#666666",
+             va="top", ha="left")
+    panel(axm, "a")
+
+    # (b) forearc cross-section with slab +/- band envelope
     fa = qc[qc.lat.between(44, 49) & good & qc.z_slab.notna()].sort_values("lon")
-    axc.scatter(fa.lon, fa.depth, s=7, c=[colors[c] for c in fa.cls], alpha=0.6,
-                linewidths=0)
     xs = np.arange(-127, -121.5, 0.2)
     sl = [fa.loc[fa.lon.between(x, x+0.2), "z_slab"].median() for x in xs]
     bd = [fa.loc[fa.lon.between(x, x+0.2), "band"].median() for x in xs]
     xs2, sl, bd = xs+0.1, np.array(sl), np.array(bd)
-    axc.plot(xs2, sl, "b-", lw=2, label="Slab2 interface")
-    axc.fill_between(xs2, sl-bd, sl+bd, color="#cc3311", alpha=0.15,
-                     label="megathrust band (unc + margin)")
+    axc.fill_between(xs2, sl-bd, sl+bd, color=colors["megathrust?"], alpha=0.12,
+                     lw=0, zorder=0, label="megathrust band (Slab2 unc + margin)")
+    for c in draw:
+        d = fa[fa.cls == c]
+        axc.scatter(d.lon, d.depth, s=1.2, c=colors[c], alpha=0.6, linewidths=0,
+                    rasterized=True)
+    axc.plot(xs2, sl, "-", color=INK, lw=1.0, label="Slab2 interface")
     axc.set_ylim(55, 0); axc.set_xlim(-127, -121.5)
-    axc.set_xlabel("longitude  ~  distance landward"); axc.set_ylabel("depth (km)")
-    axc.set_title("(B) Forearc cross-section (44-49$^\\circ$N,\nwell-constrained)")
-    axc.legend(fontsize=8, loc="lower left")
+    axc.set_xlabel("Longitude (°)"); axc.set_ylabel("Depth (km)")
+    panel(axc, "b", x=-0.1)
 
-    fig.tight_layout()
+    # one legend for both panels, under the section
+    h1, l1 = axm.get_legend_handles_labels()
+    h2, l2 = axc.get_legend_handles_labels()
+    leg = fig.legend(h1 + h2, l1 + l2, loc="upper left", ncol=1, markerscale=4,
+                     handletextpad=0.3, labelspacing=0.45,
+                     bbox_to_anchor=((0.42 + mw + 0.62) / W, 1 - (0.12 + 2.75 + 0.55) / Ht))
+    for h in leg.legend_handles[:len(h1)]:
+        h.set_alpha(1)
+
     outp = os.path.expanduser(OUT)
     os.makedirs(os.path.dirname(outp), exist_ok=True)
-    fig.savefig(outp, dpi=200, bbox_inches="tight")
-    print(f"\nwrote {outp}")
+    print()
+    save(fig, outp)
 
 
 if __name__ == "__main__":

@@ -13,9 +13,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS = {
-    # Delph et al. 2018 forearc Vs model (IRIS EMC), -3..80 km
+    # Delph et al. 2018 forearc Vs model (EarthScope EMC, formerly IRIS), -3..80 km;
+    # model page: https://data.earthscope.org/app/products/portal/emc_model_viewer.html?id=EMC-Cascadia_ANT%2BRF_Delph2018
     "Delph2018.nc":
-        "https://ds.iris.edu/files/products/emc/emc-files/Cascadia-ANT+RF-Delph2018.nc",
+        "https://data.earthscope.org/archive/seismology/products/emc/netcdf/"
+        "Cascadia-ANT%2BRF-Delph2018.r0.0-n4c.nc",
     # CRESCENT Gen0 Community Velocity Model (He et al. 2026), -4..100 km, whole margin
     # (Figshare doi:10.6084/m9.figshare.31902061, file mcmc_vs_model_masked.nc)
     "CRESCENT_Gen0.nc":

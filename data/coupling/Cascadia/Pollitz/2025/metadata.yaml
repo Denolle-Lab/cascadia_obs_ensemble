@@ -1,0 +1,25 @@
+DOI: 10.1029/2024JB029847
+Region: Cascadia
+Description: Cascadia Viscoelastic 3d
+Model_type: Interseismic
+Observations:
+  Reference_frame: ITRF2014
+  Plate_fixed_frame: North American
+  Type_of_observations:
+  - GNSS
+  - Leveling
+  Number_of_sites: 6560
+  Number_of_observations: 11539
+  Observation_components:
+  - E
+  - N
+  - U
+Forward:
+  Values_on: cells
+  Formulation: Viscoelastic 3d
+  Degrees_of_freedom: 1600
+  Dislocations:
+    Type: Rectangular
+    Number_of_dislocations: 1600
+Inversion:
+  Type: Simulated annealing

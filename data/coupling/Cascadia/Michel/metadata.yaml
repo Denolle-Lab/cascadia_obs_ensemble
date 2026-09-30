@@ -1,0 +1,35 @@
+DOI: 10.1007/s00024-018-1991-x
+Region: Cascadia
+Description: Cascadia subduction zone interseismic coupling using a priori model
+Model_type: Interseismic
+Observations:
+  Reference_frame: ITRF2008
+  Plate_fixed_frame: North America
+  Total_number_of_sites: 352
+  Total_number_of_observations: 1056
+  Earliest_data_used: 2007
+  Latest_data_used: 2017
+  Type_of_observations:
+  - GPS_permanent
+  GPS_permanent:
+    Number_of_sites: 352
+    Number_of_observations: 1056
+    Observation_components:
+    - E
+    - N
+    - V
+    Start_date: '2007'
+    End_date: '2017'
+Forward:
+  Values_on: cells
+  Formulation: Layered elastic half space
+  Number_of_layers: 1
+  Dislocations:
+    Type: Triangular
+    Number_of_dislocations: 3339
+Inversion:
+  Convergence_rate: 38
+  Type: Regularized least-squares inversion
+  Regularization:
+    Type: smoothing factors σ0=10^−0.1 and λ=15 km using Radiguet et al. (2011) regularization
+      scheme; rake constrained by Schmalzle et al. (2014) block model

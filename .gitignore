@@ -46,3 +46,23 @@ data/tomography/
 
 # Cached GMRT topography grids (fetched by phase5 --gmrt)
 data/gmrt/
+
+# Route A amplitude re-run: raw outputs, backups and full StationXML (large;
+# archived at /auto/c-wsd01/PNSN_exotic/cascadia_magnitude_routeA_v2)
+4_relocation/magnitude/_raw_pre_dedupe/
+4_relocation/magnitude/rerun_v2/
+4_relocation/magnitude/rerun_v2_backups/
+4_relocation/magnitude/raw_wa_amplitudes*.csv
+4_relocation/magnitude/station_inventory*.xml
+
+# Coupling Cloud download (couplingcloud.ucsd.edu, "download all"); only the
+# models map_context.py reads are committed
+data/coupling/*
+!data/coupling/Cascadia/
+data/coupling/Cascadia/*
+!data/coupling/Cascadia/Pollitz/
+data/coupling/Cascadia/Pollitz/*
+!data/coupling/Cascadia/Pollitz/2025/
+data/coupling/Cascadia/Pollitz/2025/dislocations/
+!data/coupling/Cascadia/Sherrill/
+!data/coupling/Cascadia/Michel/

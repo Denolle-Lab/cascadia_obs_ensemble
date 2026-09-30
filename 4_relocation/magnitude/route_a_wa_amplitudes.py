@@ -4,8 +4,8 @@ Route A, step 1: Wood-Anderson amplitudes for each P and S pick.
 
 For every pick this script fetches the waveform (NC/BK -> NCEDC via
 utils/data_client.py), removes the instrument response, and measures TWO amplitudes
-per pick in a *distance-scaled* window, taken as the max over all components
-(vertical fallback):
+per pick in a *distance-scaled* window, taken as the max over the components of
+one sensor (see CHANNELS; vertical fallback):
   - wa_amp_mm : peak Wood-Anderson displacement (near 1 Hz) -> local magnitude ML,
     comparable to other ML catalogs.
   - disp_amp_um : peak broadband displacement in a low band (--disp-lo/--disp-hi,
@@ -35,6 +35,21 @@ PADDING (why the window is long)
   ComCat calibration can absorb. Values converge by ~60 s of pad; the default is
   max(60, 5/--disp-lo). Cost: this fetches ~10x more data per pick than the old
   5 s pad, which is the price of a usable Mw amplitude.
+
+CHANNELS (one sensor per pick)
+  The fetch wildcard "*H*" also returns OBS pressure channels (BDH, BXH, LDH),
+  low-rate LH/VH/UH channels and co-located accelerometers. Only ground-motion
+  traces are kept (instrument code H, L, N or P, at >= --min-sr Hz) that have a
+  response in the inventory, and of those a SINGLE sensor is used, in the order of
+  SENSOR_PREF (broadband/short-period velocity first, accelerometer only if nothing
+  else). The chosen sensor is written to the `sensor` column. What the first full
+  run got wrong without this:
+    * the hydrophone had no response, so obspy's stream-wide remove_response failed
+      the whole pick: 95% of 7D (Cascadia Initiative) and all Z5/X9 picks lost;
+    * UH/VH (0.01/0.1 sps) traces were upsampled to 100 Hz and their interpolation
+      artifacts won the peak-over-components (e.g. TA.L02D: 5.6 mm vs a true 0.006);
+    * with HN mixed in, a small event's peak was the accelerometer noise floor
+      (10x the HH amplitude at TA.L02D), flattening the low end of the ML scale.
 
 MUST run on a host with pnwstore + FDSN/NCEDC access
 (`pixi install --environment internal`). It is slow (one request per pick); it
@@ -73,7 +88,7 @@ PAZ_WA = {"poles": [-5.49779 - 5.60886j, -5.49779 + 5.60886j],
 
 OUT_COLS = ["arid", "event_id", "network", "station", "phase", "evla", "evlo", "evdp",
             "stla", "stlo", "stel_m", "dist_hypo_km", "wa_amp_mm", "disp_amp_um",
-            "snr", "n_comp", "epoch", "reason"]
+            "snr", "n_comp", "epoch", "sensor", "reason"]
 
 
 def haversine_km(la1, lo1, la2, lo2):
@@ -96,13 +111,47 @@ def phase_window(phase, r_km):
 
 def epoch_id(inv, net, sta, t):
     """Index of the response epoch containing time t for net.sta (redeployment tag)."""
+    # Read start_date off the channel epochs active at t. (get_channel_metadata has
+    # no start time; reading one from it raised, the except swallowed it, and the
+    # first full run wrote an empty epoch for every pick.)
     try:
-        chans = inv.select(network=net, station=sta, time=t).get_contents()["channels"]
-        starts = sorted({inv.get_channel_metadata(cid, t).get("starttime")
-                         for cid in chans} - {None})
-        return f"{starts[0].date}" if starts else ""
+        sub = inv.select(network=net, station=sta, time=t)
+        starts = [c.start_date for n in sub for s in n for c in s.channels if c.start_date]
+        return f"{min(starts).date}" if starts else ""
     except Exception:
         return ""
+
+
+GROUND_MOTION_INSTR = frozenset("HLNP")   # seismometer (hi/lo gain), accelerometer, geophone
+# Band+instrument preference; velocity sensors before accelerometers.
+SENSOR_PREF = ["HH", "BH", "EH", "SH", "HL", "BL", "EP", "SP", "DP",
+               "HN", "BN", "EN", "SN"]
+
+
+def ground_motion(st, inv, t, min_sr):
+    """Pick ONE ground-motion sensor with a response in `inv` at time t.
+    Returns (stream, sensor, reason); reason is non-empty if nothing usable."""
+    st = st.__class__([tr for tr in st if len(tr.stats.channel) == 3
+                       and tr.stats.channel[1] in GROUND_MOTION_INSTR
+                       and tr.stats.sampling_rate >= min_sr])
+    if len(st) == 0:
+        return st, "", "no_ground_motion_channel"
+    keep = []
+    for tr in st:
+        try:
+            inv.get_response(tr.id, t)
+            keep.append(tr)
+        except Exception:
+            pass
+    if not keep:
+        return (st.__class__(), "",
+                f"no_response:{','.join(sorted({tr.id for tr in st}))[:60]}")
+    rank = {k: i for i, k in enumerate(SENSOR_PREF)}
+    # sensor = location + band/instrument code; ties go to the lowest location code
+    best = min({(tr.stats.location, tr.stats.channel[:2]) for tr in keep},
+               key=lambda s: (rank.get(s[1], len(rank)), s[0]))
+    sel = [tr for tr in keep if (tr.stats.location, tr.stats.channel[:2]) == best]
+    return st.__class__(sel), f"{best[0]}.{best[1]}", ""
 
 
 def _phase(v):
@@ -130,6 +179,12 @@ def main(argv=None):
                          "measurement window is sliced out afterwards. Must be "
                          "several times the longest period in the displacement "
                          "band or the deconvolution rings; see PADDING below.")
+    ap.add_argument("--min-sr", type=float, default=10.0,
+                    help="drop traces sampled below this (Hz); LH/VH are useless near 1 Hz")
+    ap.add_argument("--only-arids", default=None,
+                    help="file with one arid per line (or a CSV with an 'arid' column): "
+                         "only process these picks, e.g. to retry failures. Requires "
+                         "--chunk-rows 0; --start-index/--limit then index this subset.")
     ap.add_argument("--start-index", type=int, default=0, help="resume / shard start row")
     ap.add_argument("--limit", type=int, default=None, help="process at most N picks (testing)")
     ap.add_argument("--chunk-rows", type=int, default=0,
@@ -155,6 +210,17 @@ def main(argv=None):
     picks = pd.read_csv(args.picks)
     picks.columns = [c.strip() for c in picks.columns]
     ev_col = "idx" if "idx" in picks.columns else "event_id"
+    if args.only_arids:
+        if args.chunk_rows:
+            sys.exit("--only-arids requires --chunk-rows 0")
+        # headerless read, so a bare list of arids keeps its first line; an 'arid'
+        # header row (or column, in a CSV) is recognised and dropped
+        raw = pd.read_csv(args.only_arids, header=None, dtype=str)
+        first = [str(v).strip().lower() for v in raw.iloc[0]]
+        col = first.index("arid") if "arid" in first else 0
+        ids = raw.iloc[1 if "arid" in first else 0:, col].str.strip()
+        picks = picks[picks["arid"].isin(set(ids.astype(int)))]
+        print(f"--only-arids: {len(picks)} picks selected", file=sys.stderr)
 
     sl = slice(args.start_index, args.start_index + args.limit if args.limit else None)
 
@@ -208,6 +274,9 @@ def main(argv=None):
             rec["reason"] = f"fetch:{str(e)[:80]}"; w.writerow(rec); continue
         if len(st) == 0:
             rec["reason"] = "no_data"; w.writerow(rec); continue
+        st, rec["sensor"], why = ground_motion(st, inv, tp, args.min_sr)
+        if why:
+            rec["reason"] = why; w.writerow(rec); continue
 
         try:
             st.merge(method=1, fill_value="interpolate")

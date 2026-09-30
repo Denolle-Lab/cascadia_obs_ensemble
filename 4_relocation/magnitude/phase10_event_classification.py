@@ -9,7 +9,7 @@ Classes (in precedence order):
     intraslab      below the interface (subducting plate / mantle)
     oceanic        no modeled slab beneath (offshore ridge / transform)
 
-Each event also gets its k>0 local magnitude (ML) and a reported horizontal location
+Each event also gets its Route A (response-removed) local magnitude (ML) and a reported horizontal location
 uncertainty joined from the relocated catalog by origin time. Because focal depths are
 only moderately constrained, the megathrust bucket is a generous upper bound, not an
 assertion (see phase9).
@@ -20,11 +20,17 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
+from paper_style import CLASS_COLORS, FULL, INK, MUTED, panel, save, use  # noqa: E402
+
+use()
 
 D = "../../data/datasets_all_regions"
 # ALL relocated events (not just the QC subset); qc_pass flags membership in the
@@ -33,14 +39,13 @@ D = "../../data/datasets_all_regions"
 QC = f"{D}/origin_2010_2015_reloc_cog_ver3_cc.csv"
 QC_PASS = f"{D}/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"
 REL = f"{D}/Cascadia_relocated_catalog_ver_3.csv"
-ML = "../../data/magnitude/cascadia_catalog_ML_kpos.csv"
+ML = "../../data/magnitude/cascadia_catalog_ML_routeA.csv"
 VOLC = f"{D}/GVP_Volcano_List_Holocene_202504292212.csv"
 DEP = "../../data/slab2/cas_slab2_dep.xyz"
 UNC = "../../data/slab2/cas_slab2_unc.xyz"
 OUT_CSV = "../../data/magnitude/cascadia_catalog_classified.csv"
 OUT_FIG = "../../data/magnitude/event_classification.png"
-COLORS = {"volcanic": "#ee7733", "megathrust?": "#cc3311", "crustal-fault": "#888888",
-          "intraslab": "#4477aa", "oceanic": "#eecc66"}
+COLORS = dict(CLASS_COLORS)                          # single source: utils/paper_style.py
 
 
 def grid_at(path, pts):
@@ -123,30 +128,50 @@ def main():
     print(f"\nmedian horizontal uncertainty: {qc.h_unc_km.median():.1f} km "
           f"({qc.h_unc_km.notna().mean()*100:.0f}% joined)")
 
-    # figure: map by class + volcano markers
-    fig, (ax, axb) = plt.subplots(1, 2, figsize=(13, 6.4),
-                                  gridspec_kw={"width_ratios": [1.25, 1]})
-    order = ["oceanic", "intraslab", "crustal-fault", "megathrust?", "volcanic"]
+    # figure: (a) large map by class + volcano markers (left); (b) smaller bar chart of
+    # the most active volcanoes (top right) above the map legend. Axes placed in inches.
+    W, Ht = FULL, 5.05
+    fig = plt.figure(figsize=(W, Ht))
+
+    def put(x, y, w, h):                                # inches from the top-left
+        return fig.add_axes([x / W, 1 - (y + h) / Ht, w / W, h / Ht])
+
+    lon0, lon1, lat0, lat1 = -131.5, -119.5, 39.0, 51.0
+    asp = 1 / np.cos(np.radians(45.0))
+    mw = 3.25; mh = mw * (lat1 - lat0) * asp / (lon1 - lon0)
+    ax = put(0.42, 0.12, mw, mh)
+    xb = 0.42 + mw + 1.55                               # room for the volcano names
+    axb = put(xb, 0.12, W - xb - 0.12, 2.6)
+    order = ["crustal-fault", "oceanic", "intraslab", "megathrust?", "volcanic"]
     for c in order:
         d = qc[qc.event_class == c]
-        ax.scatter(d.lon, d.lat, s=5, c=COLORS[c], alpha=0.5, linewidths=0,
-                   label=f"{c} (n={len(d):,})")
-    ax.scatter(vc[vlon], vc[vlat], marker="^", s=70, facecolor="none",
-               edgecolor="black", linewidths=1.1, label="Holocene volcano")
-    ax.set_xlim(-131, -119.5); ax.set_ylim(39, 51)
-    ax.set_xlabel("longitude"); ax.set_ylabel("latitude")
-    ax.set_title("(A) Event classification")
-    ax.legend(fontsize=8, loc="lower left", markerscale=1.6)
+        ax.scatter(d.lon, d.lat, s=0.8, c=COLORS[c], alpha=0.5, linewidths=0,
+                   rasterized=True, label=c)   # counts go in the caption
+    ax.scatter(vc[vlon], vc[vlat], marker="^", s=9, facecolor="none",
+               edgecolor=INK, linewidths=0.6, label="Holocene volcano")
+    ax.set_xlim(lon0, lon1); ax.set_ylim(lat0, lat1)
+    ax.set_aspect(asp)
+    ax.set_xlabel("Longitude (°)"); ax.set_ylabel("Latitude (°)")
+    panel(ax, "a")
+    h, l = ax.get_legend_handles_labels()
+    leg = fig.legend(h, l, loc="upper left", handletextpad=0.3, labelspacing=0.45,
+                     bbox_to_anchor=((0.42 + mw + 0.45) / W, 1 - (0.12 + 2.6 + 0.6) / Ht))
+    for hh in leg.legend_handles[:-1]:
+        hh.set_sizes([10]); hh.set_alpha(1)
+    leg.legend_handles[-1].set_sizes([12])
 
-    # (B) events near the top volcanoes
+    # (b) events near the top volcanoes
     top = (qc[qc.event_class == "volcanic"].groupby("nearest_volcano").size()
            .sort_values(ascending=False).head(8))
-    axb.barh(top.index[::-1], top.values[::-1], color=COLORS["volcanic"])
-    axb.set_xlabel("events within %g km" % args.vol_radius)
-    axb.set_title("(B) Volcanic-seismicity by edifice")
-    fig.tight_layout()
-    fig.savefig(os.path.expanduser(OUT_FIG), dpi=200, bbox_inches="tight")
-    print(f"wrote {OUT_FIG}")
+    axb.barh(top.index[::-1], top.values[::-1], color=COLORS["volcanic"], height=0.7)
+    for yy, vv in enumerate(top.values[::-1]):
+        axb.text(vv, yy, f" {vv:,}", va="center", ha="left", fontsize=6.5, color=MUTED)
+    axb.set_xlim(0, top.values.max() * 1.22)
+    axb.set_xlabel("Events within %g km of edifice" % args.vol_radius)
+    axb.tick_params(axis="y", length=0)
+    axb.xaxis.set_major_locator(plt.MaxNLocator(3))
+    panel(axb, "b", x=-0.84)                          # left of the volcano names
+    save(fig, OUT_FIG)
 
 
 if __name__ == "__main__":

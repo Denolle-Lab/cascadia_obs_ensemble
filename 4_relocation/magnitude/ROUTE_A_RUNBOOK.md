@@ -12,7 +12,7 @@ removed) to address the main seismological caveats of the counts-based Method B:
 | Wood-Anderson product missing NC/BK (old IRIS-only run) | NC/BK fetched via **NCEDC** (`utils/data_client.py`) |
 
 Decisions in force: **Wood-Anderson** amplitude; measured for **both P and S**;
-**distance-scaled** window; **all components, vertical as fallback**.
+**distance-scaled** window; **all components of one sensor (HH > BH > EH > SH > ... > HN), vertical as fallback**.
 
 ## Where to run
 A UW-internal host with pnwstore + FDSN/NCEDC access:
@@ -101,7 +101,7 @@ bias, since the amplitudes are now physical.
   by the ComCat-ML calibration, so it does not affect final ML.
 - **Window**: P `[t_P−0.3, t_P + min(1+0.03r, 15, 0.8·(t_S−t_P))]`;
   S `[t_S−0.3, t_S + min(2+0.06r, 60)]` s (r = hypocentral distance, km).
-- **Components**: peak over all available components; vertical used when only a
+- **Components**: peak over the components of ONE sensor (velocity sensors preferred, accelerometer only as a fallback; pressure and <10 sps channels dropped; the choice is written to `sensor`); vertical used when only a
   vertical channel exists.
 - **SNR**: peak signal / RMS of a pre-signal noise window (default 10 s); gate at 3.
 - **Epochs**: the response epoch containing the pick time tags each measurement, so a

@@ -352,34 +352,36 @@ band beneath Puget Sound.
 
 \section{Tests of the magnitudes}
 
-Figure~\ref{fig:supp_magtest} compares the response-removed Wood--Anderson magnitudes
-used in the catalog with an independent inversion of peak amplitudes in raw counts
-(same inversion and ComCat calibration, one station term per station and phase, no SNR
-gate). The two agree event by event (a), with a nearly constant offset of $-0.12$ from
-$M_L$ 0.5 to 3 (b), so removing the instrument response does not change the shape of the
-magnitude scale; it lowers the median single-station scatter from 0.31 to 0.24. The
-response-removed catalog has about 8,000 fewer small events, which fall below the
-SNR~$\ge3$ threshold (c). Against the 2,381 ComCat anchors both versions fall
-progressively below ComCat above $M_L\sim2$, by about 0.4 at $M_L$ 3.5--4 (d). Part of
-this compression comes from the calibration regression (regression dilution and the
-$M_L\ge1.5$ cut of the anchor set).
+Figure~\ref{fig:supp_magtest} tests the magnitudes. Panels (a)--(d) concern the
+amplitudes and use the joint inversion that fits the distance decay (Methods). It is run
+on response-removed Wood--Anderson amplitudes and, independently, on peak amplitudes in
+raw counts (one station term per station and phase, no SNR gate). The two agree event by
+event (a), with a nearly constant offset of $-0.12$ from $M_L$ 0.5 to 3 (b), so removing
+the instrument response does not change the shape of the magnitude scale; it lowers the
+median single-station scatter from 0.31 to 0.24. The response-removed version has about
+8,000 fewer small events, which fall below the SNR~$\ge3$ threshold (c). Against the
+2,381 ComCat anchors both versions fall progressively below ComCat above $M_L\sim2$, by
+about 0.4 at $M_L$ 3.5--4 (d). The catalog $M_L$, with the fixed \citet{Hutton87}
+distance correction, station terms and picks within 150~km, has no such trend: its
+median residual against ComCat is within 0.1 of zero from $M_L$ 1.5 to 4.
 
 The ComCat moment tensors test the high end (e, f). Of the 176 tensors in the study
-region and period, 112 match one of our events (within 5~s and 50~km). Against their
-$M_w$, our $M_L$ is low by a median 0.60 at $M_w$ 3--4.5, 1.44 at 4.5--5.5 and 1.61
-above 5.5, and the calibrated $M_W$ by $-0.08$, 0.76 and 1.01 (e). Panel (f) locates
-the cause. With the \citet{Hutton87} distance correction and no station terms, the
-S-wave station magnitudes of the ComCat anchors stay within 0.3 of ComCat out to
-1,000~km, because beyond $\sim$200~km a small event is picked only where its amplitude
-is high. The tensor events are recorded at every distance, and their station
-magnitudes are within 0.3 of $M_w$ inside 200~km but 0.9--1.2 below it farther out.
-The joint inversion fits the decay mostly on small events, finds it no steeper than
-$1/r$, and so underpredicts the far-field decay. Because most picks of the large events
-are distant (84\% beyond 200~km for $M_w\ge4.5$), their magnitudes come out too low.
-A test catalog of Hutton--Boore station magnitudes from P and S picks within 150~km,
-with one offset to the ComCat anchors, removes the shortfall up to $M_w$ 5.5 ($+0.05$
-and $+0.04$; triangles in e) and leaves $-0.54$ above 5.5, as expected from the
-saturation of Wood--Anderson amplitudes.
+region and period, 112 match one of our events (within 5~s and 50~km). The
+fitted-decay $M_L$ falls below $M_w$ by a median 0.60 at $M_w$ 3--4.5 and by 1.4--1.6
+above (e, squares). The catalog $M_L$ of the events with picks within 150~km (circles)
+is within 0.1 of $M_w$ up to $M_w$ 4.5 and falls 0.4 to 1.0 below it above, where the
+Wood--Anderson amplitude, here high-passed at 1~Hz, saturates. Above 4.5 the catalog
+therefore uses the tensor $M_w$, or $M_L+0.19$ where no tensor exists. The events
+without picks within 150~km (crosses) carry the fitted-decay magnitude mapped onto the
+catalog scale, and their large events stay 1.6 units low. Most of them have a tensor, so
+their preferred magnitude is its $M_w$. Panel (f) locates the cause of the fitted-decay
+shortfall. With the Hutton--Boore correction and no station terms, the S-wave station
+magnitudes of the ComCat anchors stay within 0.3 of ComCat out to 1,000~km, because
+beyond $\sim$200~km a small event is picked only where its amplitude is high. The tensor
+events are recorded at every distance, and their station magnitudes are within 0.3 of
+$M_w$ inside 200~km but 0.9--1.2 below it farther out. A decay fitted mostly on small
+events is therefore too shallow, and it pulls large events, whose picks are mostly
+distant (84\% beyond 200~km for $M_w\ge4.5$), too low.
 
 \begin{figure*}[tp]
     \centering
@@ -389,10 +391,12 @@ saturation of Wood--Anderson amplitudes.
     (55,659 shared events; dashed line 1:1). (b) Median and interquartile range of their
     difference in 0.5-unit bins with at least 100 events. (c) Cumulative
     frequency--magnitude distributions. (d) Residual of each version against matched
-    ComCat $M_L$ (median and interquartile range per 0.5-unit bin). (e) Our magnitude
-    minus the $M_w$ of the 112 matched ComCat moment tensors: catalog $M_L$ (circles),
-    calibrated $M_W$ (squares) and the test $M_L$ from Hutton--Boore station magnitudes
-    within 150~km (triangles; 79 events with at least three such picks). (f) S-wave
+    ComCat $M_L$ (median and interquartile range per 0.5-unit bin), both from the
+    fitted-decay inversion. (e) Magnitude minus the $M_w$ of the 112 matched ComCat moment
+    tensors: fitted-decay $M_L$ (squares), catalog $M_L$ from Hutton--Boore station
+    magnitudes with station terms within 150~km (circles, 79 events) and mapped catalog
+    $M_L$ of events without picks within 150~km (crosses, 33 events); above $M_w$ 4.5
+    (dashed) the catalog uses a moment magnitude. (f) S-wave
     station magnitude (Hutton--Boore, no station terms) minus the reference magnitude
     against hypocentral distance, for the ComCat $M_L\ge2.5$ anchors and the tensor events
     below and above $M_w$ 4.5 (median and interquartile range per bin with at least 15
@@ -406,17 +410,14 @@ Figure~\ref{fig:supp_fmd} compares the regional frequency-magnitude distribution
 ensemble catalog (local magnitude $M_L$) with ANSS/ComCat. Offshore, the ocean-bottom
 network lowers the magnitude of completeness by roughly one to two units relative to
 the land-based ANSS (both compared as local magnitudes, ANSS restricted to ml-typed
-events; over all relocated events with a magnitude): $M_c\approx1.4$ at the
-Mendocino and Gorda segments, $2.0$ at the Blanco transform, and $1.9$ at the
-Endeavour segment, versus $M_c\approx3.1$--$3.2$ for the few ml-typed ANSS events
-offshore, with Gutenberg--Richter $b\approx1.0$--$1.3$ (max-curvature $M_c$,
-Aki--Utsu $b$). Offshore Washington is the exception, where ANSS reaches
-$M_c\approx1.8$ against our $1.7$. Onshore (Puget Sound) ANSS is slightly more
-complete ($M_c\approx1.4$ vs $1.6$), because the SNR~$\ge3$ threshold on the
-response-removed amplitudes removes some of the smallest onshore events. Our $M_L$ is
-compressed at the high end relative to ComCat (Figure~\ref{fig:supp_magtest}d, e), so
-ANSS retains more of the high-magnitude tail; the gain is at the small-magnitude,
-offshore end, where the network is designed to contribute.
+events; over all relocated events with a magnitude): $M_c\approx1.6$ at the
+Mendocino and Gorda segments, $2.1$ at the Blanco transform and the Endeavour segment,
+and $1.8$ offshore Oregon, versus $M_c\approx3.1$--$3.2$ for the few ml-typed ANSS
+events offshore, with Gutenberg--Richter $b\approx1.04$--$1.19$ in every region
+(max-curvature $M_c$, Aki--Utsu $b$). Offshore Washington is the exception, where ANSS
+reaches $M_c\approx1.8$ against our $1.6$. Onshore (Puget Sound) the two are equally
+complete ($M_c\approx1.4$). The gain is at the small-magnitude, offshore end, where the
+network is designed to contribute.
 
 \begin{figure*}[tp]
     \centering

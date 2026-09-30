@@ -3,7 +3,8 @@
 Joins cascadia_catalog_ML_routeA.csv and cascadia_catalog_ML_kpos.csv on event_id and
 prints the offset/slope, the difference per ML bin, onshore vs offshore, residuals
 against ComCat ML for each catalog, and Mc/b. Panels e-f test the magnitudes against
-ComCat moment-tensor Mw (data/focal/comcat_mt_matched.csv, from phase18 -- run it first).
+ComCat moment-tensor Mw (data/focal/comcat_mt_matched.csv, phase18) and the phase19
+catalog ML (cascadia_catalog_M_routeA.csv) -- run phase18 and phase19 first.
 Writes routeA_vs_kpos_comparison.png.
 
 Usage (amplitude env, run from 4_relocation/magnitude):
@@ -12,7 +13,7 @@ Usage (amplitude env, run from 4_relocation/magnitude):
 import pandas as pd, numpy as np, sys, os
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "utils"))
-from paper_style import use, FULL, panel, save, OURS, REF, INK, MUTED, CLASS_COLORS
+from paper_style import use, FULL, panel, save, OURS, REF, INK, MUTED, MW_COLOR
 from phase18_moment_tensor_match import hutton_boore, RMAX
 use()
 D="../../data/magnitude"; O=sys.argv[1] if len(sys.argv)>1 else D
@@ -63,11 +64,14 @@ T=pd.read_csv("../../data/focal/comcat_mt_matched.csv")
 ds=pd.read_csv(f"{D}/amp_distance_dataset_routeA.csv",usecols=["event_id","phase","dist_hypo_km","log10A"])
 ds["m"]=hutton_boore(ds.log10A,ds.dist_hypo_km)
 an=pd.read_csv(f"{D}/route_b_ml_anchors_routeA.csv")[["event_id","ml"]]
-nr=ds[ds.dist_hypo_km<=RMAX].groupby("event_id").m.agg(["median","size"]); nr=nr[nr["size"]>=3]["median"]
-aa=an.join(nr.rename("M"),on="event_id",how="inner"); T["test"]=T.event_id.map(nr)+(aa.ml-aa.M).median()
-TEST=CLASS_COLORS["oceanic"]
-for col,lab,c,mk in [("ML_routeA","catalog $M_L$",OURS,"o"),("MW_routeA","catalog $M_W$ (calibrated)",MUTED,"s"),("test",f"test $M_L$ (Hutton–Boore, $r\\leq${RMAX:.0f} km)",TEST,"^")]:
-    ok=T[col].notna(); ax[4].scatter(T.Mw_mt[ok],T[col][ok]-T.Mw_mt[ok],s=9,marker=mk,facecolor="none",edgecolor=c,lw=0.7,label=f"{lab}, n={ok.sum()}")
+F=pd.read_csv(f"{D}/cascadia_catalog_M_routeA.csv")[["event_id","ML","ML_method"]]   # phase19
+T=T.merge(F,on="event_id",how="left")
+for sel,col,lab,c,mk in [(T.ML.notna(),"ML_routeA","joint-inversion $M_L$ (fitted decay)",MUTED,"s"),
+                         (T.ML_method=="near","ML",f"catalog $M_L$ (Hutton–Boore + station terms, $r\\leq${RMAX:.0f} km)",OURS,"o"),
+                         (T.ML_method=="mapped","ML","catalog $M_L$, mapped (no picks within 150 km)",OURS,"x")]:
+    style=dict(color=c) if mk=="x" else dict(facecolor="none",edgecolor=c)          # "x" is unfilled
+    ax[4].scatter(T.Mw_mt[sel],T[col][sel]-T.Mw_mt[sel],s=9,marker=mk,lw=0.7,label=f"{lab}, n={int(sel.sum())}",**style)
+ax[4].axvline(4.5,c=MW_COLOR,lw=.8,ls="--"); ax[4].text(4.55,-2.35,"$M_w$ used above 4.5",color=MW_COLOR,fontsize=6.5)
 ax[4].axhline(0,c=MUTED,lw=.6); ax[4].set(ylim=(-2.5,2.6),xlabel="ComCat moment-tensor $M_w$",ylabel="Magnitude $-$ $M_w$"); ax[4].legend(loc="upper right",frameon=True,facecolor="white",edgecolor="none",framealpha=0.9)
 db=np.array([0,30,60,100,150,200,300,400,500,700,1000])
 for name,ref,c in [("ComCat $M_L\\geq$2.5 anchors",an[an.ml>=2.5].rename(columns={"ml":"ref"}),INK),

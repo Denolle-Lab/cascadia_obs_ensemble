@@ -34,6 +34,8 @@ CLASS_COLORS = {
 # two-series comparisons: this catalog vs a reference catalog / model
 OURS, REF = "#D55E00", "#0072B2"
 INK, MUTED = "#222222", "#666666"
+# events whose preferred magnitude is a moment magnitude (ComCat tensor or calibrated)
+MW_COLOR = "#6A3D9A"
 
 _FONTS = Path(__file__).resolve().parent / "fonts"
 

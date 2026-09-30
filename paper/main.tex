@@ -328,16 +328,23 @@ capabilities afforded by deep learning--based cataloging workflows.
 
 \subsection{Waveform Data}\label{waveform-data}
 
-Waveform data were retrieved using \emph{ROVER}, an EarthScope
-Consortium product designed for large-scale, programmatic waveform data
-access and management. We collected all available continuous seismic
-data between 2010 and 2015 from stations within a broad region
-encompassing the CSZ and its surrounding tectonic boundaries. The
-dataset includes OBS records from the CI experiment \citep{Stone2018},
-along with permanent and temporary land-based stations operated by
-regional networks across Washington, Oregon, and Northern California.
-The CI experiment deployed over 100 OBS instruments across four yearly
-cruises between 2010 and 2015, complemented by more than 60 coastal and
+We downloaded the continuous waveforms with \emph{ROVER}, the EarthScope
+Consortium tool for bulk retrieval of continuous data, into a local
+archive of day-long miniSEED files. To read this archive at scale, we
+built a database that indexes the files by network, station, channel and
+day, and a Python client that queries it and returns ObsPy streams
+(\emph{pnwstore}, \url{https://github.com/niyiyu/pnwstore}). All picking
+and amplitude measurements read the waveforms through this client,
+except for the \texttt{NC} and \texttt{BK} networks, which we requested
+directly from the Northern California Earthquake Data Center (NCEDC)
+FDSN web service. We collected all available continuous seismic data
+between 2010 and 2015 from stations within a broad region encompassing
+the CSZ and its surrounding tectonic boundaries. The dataset includes
+OBS records from the CI experiment \citep{Stone2018}, along with
+permanent and temporary land-based stations operated by regional
+networks across Washington, Oregon, and Northern California. The CI
+experiment deployed over 100 OBS instruments across four yearly cruises
+between 2010 and 2015, complemented by more than 60 coastal and
 nearshore broadband stations. After inspecting metadata, gain, and
 timing consistency, we identified \texttt{XX} CI OBS and \texttt{XX}
 onshore stations with continuous, high-quality recordings suitable for

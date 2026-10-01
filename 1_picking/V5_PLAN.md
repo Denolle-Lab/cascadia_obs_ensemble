@@ -166,3 +166,48 @@ per day trace costs a few seconds per station-day.
   in float32 ≈ 15 GB uncompressed.
 - What this does not replace: amplitudes on channels the picker did not use (e.g. an
   accelerometer at a station with a broadband sensor).
+
+## 9. Dry run of options (a) and (b), 2026-10-01
+
+`dryrun_tasks.py` → `dryrun_models.py` → `dryrun_score.py`; outputs in
+`/wd1/mdenolle_data/v5_dryrun/`. 400 station-days: 250 seafloor with v3 arrivals (the 3,293
+7D station-days in the OBSTransformer training set excluded), 50 seafloor never picked in v3,
+100 land. 399 picked, 1 constant. Vectorized semblance: same picks as ELEP's on 10 of 10.
+
+**7D is in the OBSTransformer training set** (SeisBench `OBST2024`): 5,603 earthquake traces
+on 4,179 7D station-days of 2011-2015 from 204 stations, plus 6,670 noise windows from 2011.
+X9, Z5, NV, OO, 7A and C8 are not.
+
+| group | phase | picks/day a → b | recall of v3 arrivals a → b | recall of ANSS M≥2 a → b | ver4 picks reproduced by a |
+|---|---|---|---|---|---|
+| seafloor (249 sd) | P | 174 → 174 | 0.81 → 0.80 | 0.36 → 0.36 (n=69, all M) | 0.54 |
+| | S | 117 → 227 | 0.85 → 0.90 | 0.53 → 0.56 | 0.52 |
+| land (100 sd) | P | 71 → 84 | 0.98 → 0.96 | 0.91 → 0.91 (n=203, all M) | 0.93 |
+| | S | 62 → 152 | 0.96 → 0.97 | 0.96 → 0.96 | 0.92 |
+| never-picked seafloor (48 sd) | P | 140 → 142 | — | (3 events) | 1.00 |
+| | S | 100 → 191 | — | | 1.00 |
+
+- (b) roughly doubles the S picks and keeps the P count; it recovers slightly more of the
+  associated v3 S arrivals (0.85 → 0.90 offshore) and slightly fewer P (0.81 → 0.80).
+  Whether the extra S picks are earthquakes, the GENIE dry run has to tell.
+- About a quarter of option (a)'s picks change in (b) (ver4 reproduced 0.93 → 0.68 on land P):
+  a sixth model that disagrees lowers the semblance below 0.05. The associated v3 arrivals
+  are barely affected, so these are mostly picks that were never associated.
+- `obst2024` alone at 0.05 gives 3-7 times more picks than the ensembles: too permissive
+  at this threshold on its own.
+- Option (a) with the v5 channel rule reproduces 93% of ver4 on land and 100% on the
+  "never picked" seafloor days (whose ver4 picks are from the region runs). Offshore it
+  reproduces only ~53%, because most ver4 seafloor picks are from the first run (native
+  sampling rate, different trigger).
+- ANSS has few events offshore (69 on 249 seafloor station-days), so it constrains little
+  there.
+
+**Throughput, measured:** 30 workers, 6 models, 125 s per station-day per worker
+(74 s with 2 workers: the workers compete for memory bandwidth). That is 0.24 station-days
+per second, so the full rerun (586,034) would take **~29 days at 30 workers**, not the
+7 days of §3. Before the run: a scaling test with 30/60/90 workers once `rerun_hp05` is
+done, and the cost of a sixth model (+20% inference) weighed against it. bfloat16
+(1.6× faster, §2) needs a check of the pick changes it causes against the 0.05 threshold.
+
+Two station-days failed on traces of unequal length after the trim (fixed: cut to the
+shortest).

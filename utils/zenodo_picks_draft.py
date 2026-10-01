@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import os
 import sys
+import time
 from pathlib import Path
 
 import requests
@@ -36,6 +37,9 @@ added station-day; see <code>README.md</code>.</li>
 </ul>
 <p>Two ver4 categories (edge_run_dropped, v1_not_in_ver3) are still to be confirmed and can be
 dropped by pick_id range.</p>"""
+
+
+TRIES = 4
 
 
 def api(sandbox):
@@ -92,11 +96,23 @@ def upload(s, base, dep_id, files):
     bucket = d["links"]["bucket"]
     for f in map(Path, files):
         # Zenodo file keys cannot contain '/': prefix with the parent folder instead
-        key = f"{f.parent.name}_{f.name}" if f.parent.name in ("ver3", "ver4") else f.name
+        prefix = f.parent.name if f.parent.name in ("ver3", "ver4") else ""
+        key = f.name if not prefix or f.name.startswith(prefix) or prefix in f.name else f"{prefix}_{f.name}"
         local = md5(f)
         print(f"{key}: {f.stat().st_size / 1e9:.2f} GB, md5 {local}", flush=True)
-        with open(f, "rb") as fh:
-            r = check(s.put(f"{bucket}/{key}", data=fh, timeout=None))
+        for attempt in range(1, TRIES + 1):
+            with open(f, "rb") as fh:
+                resp = s.put(f"{bucket}/{key}", data=fh, timeout=None)
+            if resp.ok:
+                break
+            print(f"  try {attempt}: {resp.status_code}", flush=True)
+            # a gateway error can come after the file was stored: check before resending
+            have = {x["filename"]: x["checksum"] for x in check(s.get(f"{base}/deposit/depositions/{dep_id}"))["files"]}
+            if have.get(key, "").removeprefix("md5:") == local:
+                resp = None
+                break
+            time.sleep(60 * attempt)
+        r = {"checksum": f"md5:{local}"} if resp is None else check(resp)
         remote = r.get("checksum", "").removeprefix("md5:")
         print(f"  uploaded, remote md5 {remote} {'OK' if remote == local else 'MISMATCH'}")
 
@@ -123,6 +139,7 @@ def main():
     ap.add_argument("--sandbox", action="store_true")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("create")
+    rm = sub.add_parser("delete-file"); rm.add_argument("id"); rm.add_argument("key")
     u = sub.add_parser("upload"); u.add_argument("id"); u.add_argument("files", nargs="+")
     for name in ("link", "show"):
         sub.add_parser(name).add_argument("id")
@@ -132,6 +149,10 @@ def main():
         create(s, base)
     elif a.cmd == "upload":
         upload(s, base, a.id, a.files)
+    elif a.cmd == "delete-file":
+        d = check(s.get(f"{base}/deposit/depositions/{a.id}"))
+        check(s.delete(f"{d['links']['bucket']}/{a.key}"))
+        print(f"deleted {a.key}")
     elif a.cmd == "link":
         link(s, base, a.id)
     else:

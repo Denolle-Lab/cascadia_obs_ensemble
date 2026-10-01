@@ -162,7 +162,8 @@ def run_one(task):
             z = sdata.select(channel=f"??{VERTICAL}")[0]
             sdata = Stream([z, z.copy(), z.copy()])
         rec["z_copied"] = not all(has_h)
-        arr = np.array([tr.data for tr in sdata[:3]])
+        n = min(len(tr.data) for tr in sdata[:3])     # trim can leave one-sample differences
+        arr = np.array([tr.data[:n] for tr in sdata[:3]])
         dt = sdata[0].stats.delta
         rec["t_pre"] = round(time.time() - t0, 1)
 

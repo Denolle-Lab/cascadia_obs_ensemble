@@ -104,7 +104,11 @@ def upload(s, base, dep_id, files):
 def link(s, base, dep_id):
     r = check(s.post(f"{base}/records/{dep_id}/access/links", json={"permission": "preview"}))
     host = base.removesuffix("/api")
-    print(f"share link: {host}/records/{dep_id}?preview=1&token={r['token']}")
+    # the link grants access to the draft: keep it out of terminal logs
+    out = Path.home() / "zenodo_picks_share_link.txt"
+    out.write_text(f"{host}/records/{dep_id}?preview=1&token={r['token']}\n")
+    out.chmod(0o600)
+    print(f"share link written to {out}")
 
 
 def show(s, base, dep_id):

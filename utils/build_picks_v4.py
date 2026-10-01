@@ -17,7 +17,8 @@ Sources, in priority order (see 1_picking/legacy/README.md):
 
 Writes, in --out:
     all_picks_all_regions_2010_2015_ver4.csv   the table
-    ver4_added_station_days.csv                one row per added station-day: source, pick_id range
+    ver4_added_station_days.csv                one row per added station-day: category, source,
+                                               pick_id range, file and its UTC date (fmtime)
     ver4_summary.txt                           counts per source, year and station
 
     python utils/build_picks_v4.py --out data/picks_v4
@@ -26,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import glob
 import os
 import shutil
@@ -38,6 +40,8 @@ PICKDIR = Path("/wd1/hbito_data/data")
 VER3 = ROOT / "data" / "datasets_all_regions" / "all_picks_all_regions_2010_2015_ver3.csv"
 YEARS = range(2010, 2016)
 REGIONS = ["122-129", "123-127_EH", "122-123_46-50", "127-129_46-50"]
+# newest file date the ver3 merge read (from the file dates; the merge itself is not in the repo)
+VER3_MERGED = "2025-03-05"
 COLUMNS = ["", "Unnamed: 0", "network", "station", "location", "band_inst", "label",
            "trace_starttime", "trigger_onset", "pick_time", "trigger_offset", "max_prob",
            "thresh_prob", "pick_id", "station_id"]
@@ -56,6 +60,19 @@ def sources():
             yield "v1", "v1", f
     for f in sorted(glob.glob(str(PICKDIR / "picks_2010_122-123_40-46" / "*.csv"))):
         yield "v2_40-46", "v2", f
+
+
+def category(source: str, f: str) -> str:
+    """Why the station-day is missing from ver3 (data/PICKS_VER4.md); drop by category there."""
+    if source == "v2_region":
+        return "eh_run_incomplete_at_merge" if "_EH" in f else "edge_run_dropped"
+    return {"v2_2013": "2013_nested_folder", "v1": "v1_not_in_ver3",
+            "v2_40-46": "new_run_2010_40-46N"}[source]
+
+
+def file_date(f: str) -> str:
+    """UTC modification date of a per-day file."""
+    return dt.datetime.fromtimestamp(os.path.getmtime(f), dt.timezone.utc).date().isoformat()
 
 
 def ver3_location(loc) -> str:
@@ -139,10 +156,12 @@ def main() -> int:
                 w.writerow([next_id, next_id] + row + [next_id, f"{row[0]}.{row[1]}."])
                 next_id += 1
             if next_id > first:
-                added.append((source, *key, next_id - first, first, next_id - 1, os.path.relpath(f, PICKDIR)))
+                added.append((category(source, f), source, *key, next_id - first, first, next_id - 1,
+                              os.path.relpath(f, PICKDIR), file_date(f)))
 
-    man = pd.DataFrame(added, columns=["source", "network", "station", "day", "n_picks",
-                                       "first_pick_id", "last_pick_id", "file"])
+    man = pd.DataFrame(added, columns=["category", "source", "network", "station", "day", "n_picks",
+                                       "first_pick_id", "last_pick_id", "file", "fmtime"])
+    man["after_ver3"] = man.fmtime > VER3_MERGED
     man.to_csv(args.out / "ver4_added_station_days.csv", index=False)
     man["year"] = man.day.str[:4]
     lines = [f"ver3 picks: {n3:,}", f"ver4 picks: {next_id:,}",

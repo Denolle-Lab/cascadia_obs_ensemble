@@ -54,21 +54,18 @@ The tutorial will generate:
 
 Once comfortable with the tutorial, the production scripts process full datasets:
 
-### Main Parallel Processing Scripts
+### Scripts
 
 ```
-parallel_pick_20XX.py              # Full year, all stations
-parallel_pick_20XX_HH_BH.py        # High-rate channels (HH/BH priority)
-parallel_pick_20XX_123_127_EH.py   # EH channels (analog stations)
-parallel_pick_20XX_122-123_46-50.py # Specific station subsets
+run_picking.py        # one year and region: python run_picking.py --year 2011 --region 122-129
+picking_config.csv    # the 29 ver3 runs: year, region box, channel mode, workers
+elep_picker.py        # ELEP picker for one station-day (run_detection)
+legacy/               # the original per-year scripts of the ver3 run (see legacy/README.md)
 ```
 
-### Utility Modules
-
-- **`picking_utils.py`**: Core processing functions for HH/BH channels
-- **`picking_utils_prio_EH.py`**: Specialized functions for EH priority
-- **`picking_utils_prio.py`**: Alternative prioritization schemes
-- **`picking_utils_123_127_HH_BH.py`**: Region-specific utilities
+Runs: `123-127_HH_BH` (v1, the first run of 2011-2015: HH or BH at the native rate),
+then per year `122-129` (HH, else BH, else EH), `123-127_EH` (EH analog stations),
+`122-123_46-50` and `127-129_46-50` (edge bands at 46-50°N).
 
 ## Workflow Architecture
 
@@ -275,14 +272,17 @@ CSV files contain:
 ## Example Production Usage
 
 ```bash
-# Process 2011 with HH/BH priority
-python parallel_pick_2011_HH_BH.py
+# Process 2011, all stations (HH, else BH, else EH)
+python run_picking.py --year 2011 --region 122-129
 
 # Process 2012 EH channels (analog stations)
-python parallel_pick_2012_123_127_EH.py
+python run_picking.py --year 2012 --region 123-127_EH
 
-# Process specific geographic subset
-python parallel_pick_2013_127-129_46-50.py
+# Process a geographic subset
+python run_picking.py --year 2013 --region 127-129_46-50
+
+# One station-day, to test
+python run_picking.py --year 2011 --region 122-129 --station UW.HBO --day 2011-09-04
 ```
 
 ## Next Steps After Picking

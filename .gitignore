@@ -68,3 +68,6 @@ data/coupling/Cascadia/Pollitz/2025/dislocations/
 !data/coupling/Cascadia/Michel/
 4_relocation/magnitude/rerun_hp05/
 data/magnitude_hp05/
+
+# built catalog tables (utils/build_anss_tables.py) and the Zenodo package
+data/catalog_v3/

@@ -211,3 +211,23 @@ done, and the cost of a sixth model (+20% inference) weighed against it. bfloat1
 
 Two station-days failed on traces of unequal length after the trim (fixed: cut to the
 shortest).
+
+## 10. Decision of 2026-10-01: fill the gaps with option (a), offshore first
+
+A full rerun (~25-29 days at the measured rate) is postponed. The gaps are filled with
+option (a), the method of the region runs, so the filled station-days match ver4 (93-100%
+of its region-run picks reproduced, §9). Option (b) on the gaps only would give the new
+station-days twice the S density of the old ones.
+
+| gap | station-days | option (a), 30 workers |
+|---|---:|---:|
+| offshore 2010-2015 | 51,097 | ~2.1 days |
+| offshore 2016 | 6,234 | ~0.3 days |
+| land 2010-2015 | 178,100 (122,416 on networks already picked) | ~7.5 days |
+| land 2016 | 67,411 | ~2.8 days |
+
+Offshore run: `1_picking/run_fill.sh` → `/wd1/mdenolle_data/picks_v5_fill/` (57,331
+station-days, `tasks_offshore.csv`, random order). It waits for `rerun_hp05/DONE`, runs
+the scaling test (30/60/90 workers, 20 minutes each) as the start of the fill, then
+finishes with the fastest count. Picks only: their Route A amplitudes come after association,
+with `route_a_wa_amplitudes.py`, as for v3. The land gaps and 2016 are still to be decided.

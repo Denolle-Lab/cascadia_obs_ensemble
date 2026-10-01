@@ -144,9 +144,11 @@ def run_one(task):
         rec["band"] = band
         if not sdata:
             rec["status"] = "no_vertical"
+            rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
             return rec
         if np.abs(np.mean(np.diff(sdata.select(channel=f"??{VERTICAL}")[0].data))) <= 1e-8:
             rec["status"] = "constant"
+            rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
             return rec
         sdata.filter(type="bandpass", freqmin=4, freqmax=15)
         sdata.resample(100)
@@ -196,6 +198,7 @@ def run_one(task):
         rec["status"] = f"error: {type(e).__name__}: {e}"[:300]
         Logger.debug(traceback.format_exc())
     rec["t_total"] = round(time.time() - t0, 1)
+    rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     return rec
 
 
@@ -205,7 +208,12 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=30)
     ap.add_argument("--check-elep", type=int, default=0)
+    ap.add_argument("--configs", default="a,b,o",
+                    help="ensembles to pick, e.g. 'a' for the gap fill (only their models are loaded)")
     a = ap.parse_args()
+    global MODELS, CONFIGS
+    CONFIGS = {k: CONFIGS[k] for k in a.configs.split(",")}
+    MODELS = [m for m in MODELS if any(m in v for v in CONFIGS.values())]
     tasks = pd.read_csv(a.tasks, dtype=str)
     logf = os.path.join(a.out, "log.csv")
     done = set()
@@ -217,7 +225,7 @@ def main():
     print(f"{len(todo)} station-days to do ({len(done)} done)", flush=True)
     os.makedirs(a.out, exist_ok=True)
     cols = ["network", "station", "day", "status", "band", "z_copied", "n_a", "n_b", "n_o",
-            "t_pre", "t_infer", "t_semb", "elep_check", "t_elep", "t_total"]
+            "t_pre", "t_infer", "t_semb", "elep_check", "t_elep", "t_total", "finished"]
     new = not os.path.exists(logf)
     with Pool(a.workers, initializer=init_worker) as pool, open(logf, "a") as f:
         if new:

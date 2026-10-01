@@ -66,8 +66,10 @@ If the machine time is short, run A1 first (offshore, one day) and the rest afte
    once per worker (`load_models()`), 1 torch thread per worker. Check: same picks.
 3. **Chunked windows**: build, predict and stack 256 windows at a time, so the day is never
    held as a (2, 5, 2879, 6000) array.
-4. **Channel request**: ask pnwstore for `[HBE]H?` (plus `[BH]DH`, the hydrophone, if the
-   PickBlue model of §7 is kept), not `*` (J38A returns 48 traces, 3 used).
+4. **Channel request**: ask pnwstore for `?H?` (plus `?DH`, the hydrophone, if the
+   PickBlue model of §7 is kept), not `*` (J38A returns 48 traces, 3 used). pnwstore
+   only knows the wildcards `?` and `*` (SQL LIKE), not `[HBE]`, so the band is chosen
+   after reading.
 5. **Driver** (`scale/run_picking_v5.sh` + `run_picking.py --tasks`): the task list comes
    from the pnwstore index (station-days that have data), not from an IRIS inventory per
    day; shards by station; resumable (skips files already written); a STATUS file and a

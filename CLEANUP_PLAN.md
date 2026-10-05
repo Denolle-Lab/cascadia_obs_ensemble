@@ -1,6 +1,6 @@
 # Repository cleanup and Zenodo release plan
 
-Status (2026-10-05).
+Status (2026-10-05). §3 done the same day: files, labels and figure notebooks renamed as in the table, except that Fig. 3 keeps its four panels (fig03a-d) and Fig. 2 is named fig02_pipeline.
 - Done: safe steps of §8.1 (tags, PR #22, obsolete trees removed, README, PROVENANCE).
 - Done: picking consolidated (§4): `workflow/01_picking/elep_picker.py` + `run_picking.py` +
   `picking_config.csv` (29 runs) replace the 29 per-year scripts and 6 utils, now in

@@ -1,10 +1,10 @@
 """Fig. 5: quality-control histograms of the ensemble catalog (one 2x2 figure).
 
-Reproduces the subsets and bins of fig5_histograms_cc.ipynb exactly, redrawn at
+Reproduces the subsets and bins of fig03_qc_histograms.ipynb exactly, redrawn at
 print size (18 cm wide) as step outlines instead of overlapping opaque fills.
 
 Run from figures/:
-    LD_LIBRARY_PATH=../.pixi/envs/default/lib ../.pixi/envs/default/bin/python fig5_qc_histograms.py
+    LD_LIBRARY_PATH=../.pixi/envs/default/lib ../.pixi/envs/default/bin/python fig03_qc_histograms_2x2.py
 """
 import os
 import sys
@@ -26,7 +26,7 @@ year, method, version = "all_regions", "reloc", "ver3"
 tag = f"{method}_cog_{version}_cc_p_4_s_4_rms_2_5"
 d = f"../data/datasets_{year}"
 
-# --- same inputs and subsets as fig5_histograms_cc.ipynb -------------------------
+# --- same inputs and subsets as fig03_qc_histograms.ipynb -------------------------
 df = pd.read_csv(f"{d}/origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv", index_col=0)
 matched_morton = pd.read_csv(f"{d}/matched_events_with_morton_mycatalog_{tag}.csv")
 matched_anss = pd.read_csv(f"{d}/matched_events_with_anss_mycatalog_{tag}.csv")

@@ -231,3 +231,22 @@ station-days, `tasks_offshore.csv`, random order). It waits for `rerun_hp05/DONE
 the scaling test (30/60/90 workers, 20 minutes each) as the start of the fill, then
 finishes with the fastest count. Picks only: their Route A amplitudes come after association,
 with `route_a_wa_amplitudes.py`, as for v3. The land gaps and 2016 are still to be decided.
+
+## 11. Offshore fill and ver5 (2026-10-01 to 10-05)
+
+- Scaling test, station-days per minute: 30 workers 19.6, 60 workers 23.1, 90 workers 9.1
+  (90 ran out of memory). The fill ran at 60 workers from a frozen worktree at `40c30245`.
+- At 60 workers the run sat at the memory limit (5-7 GB per worker). Out-of-memory kills on
+  2026-10-03 lost 18 station-days, and `multiprocessing.Pool` then waited forever. They and
+  the 22 station-days that had failed with memory errors were rerun at 10 workers on 10-05.
+  For the land gaps, use at most 40 workers, or give the pool `maxtasksperchild` and a
+  per-task timeout.
+- Outcome of the 57,331 station-days: 51,764 processed (48,638 with picks), 5,559 flat
+  data, 8 data errors (short or empty traces).
+- `utils/build_picks_v5.py` → `/wd1/mdenolle_data/picks_v5/`:
+  `all_picks_all_regions_2010_2016_ver5.csv.gz` = ver4 unchanged + 11,377,129 picks
+  (7.01 M P, 4.37 M S) on 48,638 station-days at 212 stations (7A, 7D, NV, OO, X9, Z5),
+  60,918,847 picks in all. Checked: one header, 15 columns on every row, pick_id equal to
+  the row index. `ver5_added_picks.csv.gz` holds the new rows alone.
+- Land gaps (2010-2015 and 2016): postponed (decision of 2026-10-05). Amplitudes for the new
+  picks come after association, as for v3.

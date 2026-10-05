@@ -331,7 +331,7 @@ CI data report (REF5), phase picking data from sta
 
 We picked each station-day independently, in parallel with Dask, and wrote
 the picks of each station-day to a CSV file. The scripts and the settings of
-each of the 29 runs are in the code repository (`1_picking/`).
+each of the 29 runs are in the code repository (`workflow/01_picking/`).
 
 ```{=latex}
 \begin{figure*}[tp]

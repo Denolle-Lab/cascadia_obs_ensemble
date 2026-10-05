@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # v5 gap fill with option (a) (the v3 model set; V5_PLAN §9-10), resumable.
 #
-#   setsid nohup bash 1_picking/run_fill.sh > $OUT/driver.log 2>&1 < /dev/null &
+#   setsid nohup bash scale/run_fill.sh > $OUT/driver.log 2>&1 < /dev/null &
 #
 # 1. waits for $WAIT_FOR (the 0.5 Hz amplitude rerun) to write DONE, so the two runs do not
 #    share the machine; stops if it writes FAILED;
@@ -14,7 +14,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$HERE/.."
 OUT="${OUT:-/wd1/mdenolle_data/picks_v5_fill}"
 TASKS="${TASKS:-$OUT/tasks_offshore.csv}"
-WAIT_FOR="${WAIT_FOR:-4_relocation/magnitude/rerun_hp05}"
+WAIT_FOR="${WAIT_FOR:-workflow/05_magnitude/rerun_hp05}"
 WORKER_STEPS="${WORKER_STEPS:-30 60 90}"
 STAGE_MIN="${STAGE_MIN:-20}"
 ENV="${ENV:-$PWD/.pixi/envs/default}"
@@ -24,7 +24,7 @@ mkdir -p "$OUT"
 echo "$(ps -o pgid= $$ | tr -d ' ')" > "$OUT/driver.pid"
 status() { echo "$(date '+%F %T') $*" | tee -a "$OUT/STATUS"; }
 pick() {  # $1 workers; runs in its own process group so a stage can be stopped cleanly
-  setsid "$ENV/bin/python" 1_picking/dryrun_models.py --tasks "$TASKS" --out "$OUT" \
+  setsid "$ENV/bin/python" workflow/01_picking/dryrun_models.py --tasks "$TASKS" --out "$OUT" \
     --configs a --workers "$1" >> "$OUT/picker.log" 2>&1 &
   PID=$!
 }

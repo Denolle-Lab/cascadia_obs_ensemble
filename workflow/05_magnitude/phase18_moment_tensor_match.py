@@ -15,7 +15,7 @@ It then prints the diagnostics behind the high-end magnitude shortfall:
   * a test catalog: Hutton-Boore station magnitudes, P and S picks within RMAX km,
     event median, one offset to the ComCat anchors (slope fixed at 1).
 
-Usage (default env, run from 4_relocation/magnitude):
+Usage (default env, run from workflow/05_magnitude):
     python phase18_moment_tensor_match.py
     # a variant run (e.g. the 0.5 Hz high-pass test), without touching the paper's files:
     python phase18_moment_tensor_match.py --data ../../data/magnitude_hp05 --suffix _routeA_hp05 \

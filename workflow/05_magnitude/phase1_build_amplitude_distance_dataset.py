@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 1 of the magnitude plan (see 4_relocation/magnitude_estimation_plan.md):
+Phase 1 of the magnitude plan (see workflow/05_magnitude_estimation_plan.md):
 build the clean amplitude-distance dataset from the per-pick counts amplitude file.
 
 Input  : Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv

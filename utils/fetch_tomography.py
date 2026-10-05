@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fetch the Delph et al. (2018) Cascadia forearc 3-D shear-velocity model (IRIS EMC
-Cascadia_ANT+RF_Delph2018) used by 4_relocation/magnitude/phase13_tomography.py.
+Cascadia_ANT+RF_Delph2018) used by workflow/06_analysis/phase13_tomography.py.
 
 Downloads the netCDF (~0.4 MB) into data/tomography/Delph2018.nc (git-ignored).
 

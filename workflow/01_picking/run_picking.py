@@ -69,7 +69,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--year', type=int, required=True)
     p.add_argument('--region', required=True, help="region column of picking_config.csv")
-    p.add_argument('--outroot', default=os.path.join(HERE, '..', 'data'),
+    p.add_argument('--outroot', default=os.path.join(HERE, '..', '..', 'data'),
                    help="parent of the picks_{year}_{region}/ directories")
     p.add_argument('--station', help="NET.STA: pick only this station (testing)")
     p.add_argument('--day', help="YYYY-MM-DD: pick only this day (testing)")

@@ -106,7 +106,7 @@ All waveform download logic is centralized in `utils/data_client.py`.
 | `fdsn` (default) | EarthScope FDSN | any |
 | `pnwstore` | UW waveform archive + NCEDC for NC/BK | internal |
 
-### Picking scripts (`1_picking/`)
+### Picking scripts (`workflow/01_picking/`)
 
 ```sh
 # default (pnwstore — internal env):
@@ -117,13 +117,13 @@ python run_picking.py --year 2011 --region 122-129 --source fdsn
 ```
 
 Years and regions are the rows of `picking_config.csv`. The per-year scripts of the ver3
-run are in `1_picking/legacy/`.
+run are in `workflow/01_picking/legacy/`.
 
-### Amplitudes and magnitudes (`4_relocation/magnitude/`)
+### Amplitudes and magnitudes (`workflow/05_magnitude/`)
 
 The paper's magnitudes come from the Route A pipeline, which needs the UW-internal
 `amplitude` env (pnwstore) and runs for about two days on the lab server. The steps, hosts
-and commands are in [`4_relocation/magnitude/ROUTE_A_RUNBOOK.md`](4_relocation/magnitude/ROUTE_A_RUNBOOK.md).
+and commands are in [`scale/RUNBOOK.md`](scale/RUNBOOK.md).
 The older event-waveform amplitude scripts (`3_post_processing/`) were removed in 2026-09;
 they remain at tag `pre-cleanup-2026-09`.
 

@@ -73,7 +73,7 @@ If the machine time is short, run A1 first (offshore, one day) and the rest afte
 5. **Driver** (`scale/run_picking_v5.sh` + `run_picking.py --tasks`): the task list comes
    from the pnwstore index (station-days that have data), not from an IRIS inventory per
    day; shards by station; resumable (skips files already written); a STATUS file and a
-   DONE marker, as `run_route_a_rerun.sh` does; one output per station-year instead of
+   DONE marker, as `scale/run_route_a.sh` does; one output per station-year instead of
    per day, to avoid ~600,000 small files.
 6. **v5 settings**: one `channel_mode` for all stations: HH, else BH, else EH; vertical
    `Z` or `3`; Z copied to the three inputs when a horizontal is missing (so EH-only
@@ -226,7 +226,7 @@ station-days twice the S density of the old ones.
 | land 2010-2015 | 178,100 (122,416 on networks already picked) | ~7.5 days |
 | land 2016 | 67,411 | ~2.8 days |
 
-Offshore run: `1_picking/run_fill.sh` → `/wd1/mdenolle_data/picks_v5_fill/` (57,331
+Offshore run: `scale/run_fill.sh` → `/wd1/mdenolle_data/picks_v5_fill/` (57,331
 station-days, `tasks_offshore.csv`, random order). It waits for `rerun_hp05/DONE`, runs
 the scaling test (30/60/90 workers, 20 minutes each) as the start of the fill, then
 finishes with the fastest count. Picks only: their Route A amplitudes come after association,

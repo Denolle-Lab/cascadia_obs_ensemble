@@ -36,7 +36,7 @@ from obspy.signal.trigger import trigger_onset
 from ELEP.elep.ensemble_coherence import ensemble_semblance
 from ELEP.elep.trigger_func import picks_summary_simple
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 from utils.data_client import get_waveforms  # noqa: E402
 
 Logger = logging.getLogger(__name__)

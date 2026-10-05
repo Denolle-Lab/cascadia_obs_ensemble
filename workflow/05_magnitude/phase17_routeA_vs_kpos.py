@@ -7,7 +7,7 @@ ComCat moment-tensor Mw (data/focal/comcat_mt_matched.csv, phase18) and the phas
 catalog ML (cascadia_catalog_M_routeA.csv) -- run phase18 and phase19 first.
 Writes routeA_vs_kpos_comparison.png.
 
-Usage (amplitude env, run from 4_relocation/magnitude):
+Usage (amplitude env, run from workflow/05_magnitude):
     python phase17_routeA_vs_kpos.py [KPOS_DIR]   # default ../../data/magnitude
 """
 import pandas as pd, numpy as np, sys, os

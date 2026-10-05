@@ -16,13 +16,13 @@ Outputs:
   station_inventory.xml   StationXML (input to route_a_wa_amplitudes.py)
   station_epochs.csv      one row per (network, station, channel, epoch)
 
-Usage:
-  python route_a_build_station_inventory.py \
+Usage (run from workflow/05_magnitude, where route_a_wa_amplitudes.py reads the outputs):
+  python ../../scale/build_station_inventory.py \
       --picks /path/Cascadia_updated_catalog_picks_assignment_ver_3.csv \
       --out-xml station_inventory.xml --out-csv station_epochs.csv
 
   # add one network to an existing inventory (e.g. after a failed request)
-  python route_a_build_station_inventory.py --picks ... --networks NC \
+  python ../../scale/build_station_inventory.py --picks ... --networks NC \
       --merge-into station_inventory.xml --out-xml station_inventory.xml \
       --out-csv station_epochs.csv
 

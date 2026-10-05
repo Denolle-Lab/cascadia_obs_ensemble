@@ -2,9 +2,9 @@
 
 Status (2026-09-30, evening): on branch `cleanup/safe-steps`.
 - Done: safe steps of §8.1 (tags, PR #22, obsolete trees removed, README, PROVENANCE).
-- Done: picking consolidated (§4): `1_picking/elep_picker.py` + `run_picking.py` +
+- Done: picking consolidated (§4): `workflow/01_picking/elep_picker.py` + `run_picking.py` +
   `picking_config.csv` (29 runs) replace the 29 per-year scripts and 6 utils, now in
-  `1_picking/legacy/`; reproduces stored per-day picks of both picker runs (v1, v2).
+  `workflow/01_picking/legacy/`; reproduces stored per-day picks of both picker runs (v1, v2).
 - Done: QC threshold decided: the paper now says at least 5 P and 5 S picks, the rule of
   the 31,020-event file behind every figure.
 - Done: data products (§6) are three ANSS-style tables, `utils/build_anss_tables.py`
@@ -16,8 +16,8 @@ Goal: the repo holds only the workflow behind the paper, in run order, with one 
 paper figure, the at-scale launchers kept apart, a README that reproduces the paper, and a
 Zenodo release of the code and the data products.
 
-**Hard constraint while the 0.5 Hz amplitude test runs** (`4_relocation/magnitude/rerun_hp05/`,
-started 2026-09-30): do not move, rename or delete anything in `4_relocation/magnitude/`.
+**Hard constraint while the 0.5 Hz amplitude test runs** (`workflow/05_magnitude/rerun_hp05/`,
+started 2026-09-30): do not move, rename or delete anything in `workflow/05_magnitude/`.
 The driver calls the stage-3 scripts by relative path when stage 1 finishes. Every step below
 that touches that directory waits for `rerun_hp05/DONE`.
 
@@ -30,11 +30,11 @@ outputs.
 
 | Keep (the workflow) | Remove from the main tree |
 |---|---|
-| `1_picking/` ELEP ensemble picking | `old/`: 279 MB of abandoned PyOcto, HypoInverse and old figures, all tracked |
-| `4_relocation/cross_correlation/` CC waveform sets (GraphDD input) | `3_post_processing/`, a duplicate of `4_relocation/` (identical or diverged copies) |
-| `4_relocation/merge_events_*`, `quality_control/4_quality_control_*` (the final QC catalog) | `0_data_availability/` (no paper figure) |
-| `4_relocation/magnitude/` Route A stages, phase18/19, analysis phases | `phase6_catalog_comparison.py`, `phase15_magnitude_diagnostic.py`, `METHODS_route_b.md` (superseded) |
-| `4_relocation/calculate_amplitudes.py` + `phase1` (counts baseline for Fig. S8a–d) | `data/*_old.csv`, `data/split_files/*_old.csv` (117 MB tracked) |
+| `workflow/01_picking/` ELEP ensemble picking | `old/`: 279 MB of abandoned PyOcto, HypoInverse and old figures, all tracked |
+| `workflow/03_relocation/` CC waveform sets (GraphDD input) | `3_post_processing/`, a duplicate of `4_relocation/` (identical or diverged copies) |
+| `workflow/04_merge_qc/merge_events_*`, `quality_control/4_quality_control_*` (the final QC catalog) | `0_data_availability/` (no paper figure) |
+| `workflow/05_magnitude/` Route A stages, phase18/19, analysis phases | `phase6_catalog_comparison.py`, `phase15_magnitude_diagnostic.py`, `METHODS_route_b.md` (superseded) |
+| `workflow/05_magnitude/calculate_amplitudes.py` + `phase1` (counts baseline for Fig. S8a–d) | `data/*_old.csv`, `data/split_files/*_old.csv` (117 MB tracked) |
 | `figures/` notebooks for Figs 1, 2, 3, 4, 8 | `figures/fig4_match_events.ipynb` and `paper/figures/fig4_cc_no_relief_tremor_contours.png` (no longer used) |
 | `utils/` (`data_client`, `paper_style`, `plot_utils`, `qc_utils`, `fetch_*`, `assemble_zenodo`) | `paper/template.tex`, `amplitude_run.log`, `3_post_processing/pnwstore/` (empty) |
 | `paper/`, `data/` small inputs, `LINEAGE.md` | `data/coupling/{__MACOSX,Humboldt_*,materna2023.zip}` (untracked leftovers) |
@@ -60,7 +60,7 @@ figures/                       # ONE entry point per paper figure, named by figu
   make_figures.py              # replaces paper/export_figures.py: runs each, copies to paper/figures
 scale/                         # at-scale launchers (not needed to redraw figures)
   run_picking.sh               # sharded ELEP picking per year/region
-  run_route_a.sh               # = run_route_a_rerun.sh (OUT/DATA/SUFFIX/HIGHPASS)
+  run_route_a.sh               # = scale/run_route_a.sh (OUT/DATA/SUFFIX/HIGHPASS)
   slim_inventory.py  build_station_inventory.py  RUNBOOK.md
 paper/                         # Quarto source, bib, Seismica kit, paper/figures (outputs)
 data/                          # small tracked inputs + fetch scripts; big products come from Zenodo
@@ -102,7 +102,7 @@ committed source images with a note in the README saying so.
   path lets a reader regenerate the paper from the release.
 - **At scale** (`scale/`, run on the lab server): picking (days), Route A amplitudes
   (≈40 h on 20 shards), inventory building. Each is a detached, resumable driver with a
-  STATUS file, as `run_route_a_rerun.sh` is now. It is documented in `scale/RUNBOOK.md` with
+  STATUS file, as `scale/run_route_a.sh` is now. It is documented in `scale/RUNBOOK.md` with
   host, env, runtime and memory.
 - **Stages between them** (`workflow/05_magnitude`, `06_analysis`): minutes each, taking
   products to products. `make catalog` runs phase18 → phase19 → phase10 in order.

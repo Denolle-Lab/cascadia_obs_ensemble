@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fetch the Slab2 (Hayes et al., 2018) Cascadia subduction-interface depth grid used
-by the depth cross-section (4_relocation/magnitude/phase7_depth_analysis.py).
+by the depth cross-section (workflow/06_analysis/phase7_depth_analysis.py).
 
 Downloads the Slab2 distribution from USGS ScienceBase and extracts just the Cascadia
 depth model as plain-text xyz into data/slab2/cas_slab2_dep.xyz (git-ignored). ~140 MB

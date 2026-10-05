@@ -9,7 +9,7 @@ References, all on the same station-days:
   ver4 picks    the raw ver4 picks on the station-day: how close option (a) with the v5
                 channel rule comes to the picks we have.
 
-    python 1_picking/dryrun_score.py --run DIR
+    python workflow/01_picking/dryrun_score.py --run DIR
 Writes DIR/score_by_group.csv and DIR/score_by_station_day.csv, prints the summary.
 """
 import argparse
@@ -19,7 +19,7 @@ import os
 import numpy as np
 import pandas as pd
 
-ROOT = __file__.rsplit("/1_picking/", 1)[0]
+ROOT = __file__.rsplit("/workflow/01_picking/", 1)[0]
 ARRIVALS = f"{ROOT}/data/catalog_v3/arrivals_v3.csv"
 ANSS = f"{ROOT}/data/datasets_anss/anss_2010-15.csv"
 STATIONS = f"{ROOT}/data/station_coverage_review_2026-09-30.csv"

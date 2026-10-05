@@ -7,14 +7,14 @@ Three groups, sampled with a fixed seed:
   seafloor_unpicked   50 seafloor station-days of stations never picked in v3 (pnwstore index)
   land               100 land station-days with v3 arrivals (NC/BK excluded: not in pnwstore)
 
-    python 1_picking/dryrun_tasks.py --obst-meta obst2024_metadata.csv --out tasks.csv
+    python workflow/01_picking/dryrun_tasks.py --obst-meta obst2024_metadata.csv --out tasks.csv
 """
 import argparse
 import sqlite3
 
 import pandas as pd
 
-ROOT = __file__.rsplit("/1_picking/", 1)[0]
+ROOT = __file__.rsplit("/workflow/01_picking/", 1)[0]
 ARRIVALS = f"{ROOT}/data/catalog_v3/arrivals_v3.csv"
 STATIONS = f"{ROOT}/data/station_coverage_review_2026-09-30.csv"
 INDEX = "/wd1/PNWstore_sqlite/{year}.sqlite"

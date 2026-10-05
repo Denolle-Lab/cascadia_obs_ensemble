@@ -37,7 +37,7 @@ Writes ../../data/magnitude/cascadia_catalog_M_routeA.csv (same events as
 cascadia_catalog_ML_routeA.csv; ML_inv keeps the inversion ML); with --data/--suffix,
 <data>/cascadia_catalog_M<suffix>.csv.
 
-Usage (default env, run from 4_relocation/magnitude, after phase18):
+Usage (default env, run from workflow/05_magnitude, after phase18):
     python phase19_preferred_magnitude.py
     # a variant run (e.g. the 0.5 Hz high-pass test), after phase18 with the same options:
     python phase19_preferred_magnitude.py --data ../../data/magnitude_hp05 --suffix _routeA_hp05 \

@@ -6,7 +6,8 @@ that carry a response (the same filter the amplitude script applies). The full i
 station of every network in the picks (all of TA, nationwide) and parses to
 ~11.7 GB per process, so 20 shards filled a 250 GB host.
 
-  python slim_inventory.py --picks <picks.csv> --inventory station_inventory_v2.xml \
+  # from workflow/05_magnitude:
+  python ../../scale/slim_inventory.py --picks <picks.csv> --inventory station_inventory_v2.xml \
       --out station_inventory_v2_slim.xml
 """
 import argparse

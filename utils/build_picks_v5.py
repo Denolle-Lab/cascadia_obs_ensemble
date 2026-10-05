@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build the ELEP pick table ver5: ver4 plus the offshore gap fill (1_picking/V5_PLAN.md §10).
+"""Build the ELEP pick table ver5: ver4 plus the offshore gap fill (workflow/01_picking/V5_PLAN.md §10).
 
 ver5 = ver4, byte for byte (so every ver4 pick_id is unchanged), followed by the picks
 of the v5 gap fill: the offshore station-days of 2010-2016 that have no pick in ver4,
-picked with option (a), the model set of the region runs (1_picking/dryrun_models.py
+picked with option (a), the model set of the region runs (workflow/01_picking/dryrun_models.py
 --configs a). New rows use the ver3/ver4 columns and conventions (numeric location
 codes as floats, station_id NET.STA.) and continue the pick_id.
 

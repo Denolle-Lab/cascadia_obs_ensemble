@@ -42,7 +42,7 @@ each pick's event/origin location + station coordinates) and computed **magnitud
 |------|---------|------|-------|
 | `Cascadia_updated_catalog_picks_assignment_ver_3.csv` | 2025-10-14 | 1,004,335 | pick table + event origins + station coords |
 | `Cascadia_updated_catalog_picks_assignment_ver_3_w_amp_0616/0622/0626_2026.csv` | 2026-06 | 1,004,335 | amplitude runs (iterations) |
-| `Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv` | **2026-06-29** | 1,004,335 | **amplitudes used for magnitude** (byte-identical to the copy in `~/Downloads`) → `4_relocation/magnitude/` ML |
+| `Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv` | **2026-06-29** | 1,004,335 | **amplitudes used for magnitude** (byte-identical to the copy in `~/Downloads`) → `workflow/05_magnitude/` ML |
 
 ## Version history
 

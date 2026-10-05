@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Route A end-to-end driver: sharded amplitude measurement -> merge -> steps 2-3.
+# Route A end-to-end driver (runs in workflow/05_magnitude; OUT and DATA are relative to it): sharded amplitude measurement -> merge -> steps 2-3.
 #
 # Detach it from the terminal so it survives logout (no screen/tmux needed):
-#   setsid nohup bash run_route_a_rerun.sh > rerun_v2/driver.log 2>&1 < /dev/null &
+#   setsid nohup bash scale/run_route_a.sh > workflow/05_magnitude/rerun_v2/driver.log 2>&1 < /dev/null &
 #
 # Re-running the same command resumes: each shard restarts after its last complete
 # row and finished shards are skipped; merge and stage 3 (minutes) always rerun.
@@ -13,10 +13,10 @@
 # A variant run must not touch the paper's outputs: give it its own OUT, DATA and
 # SUFFIX, e.g. the 0.5 Hz high-pass revision test:
 #   OUT=rerun_hp05 DATA=../../data/magnitude_hp05 SUFFIX=_routeA_hp05 HIGHPASS=0.5 \
-#     setsid nohup bash run_route_a_rerun.sh > rerun_hp05/driver.log 2>&1 < /dev/null &
+#     setsid nohup bash scale/run_route_a.sh > workflow/05_magnitude/rerun_hp05/driver.log 2>&1 < /dev/null &
 set -uo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../workflow/05_magnitude" && pwd)"   # runs in the magnitude stage
 cd "$HERE"
 ENV="${ENV:-$HERE/../../.pixi/envs/amplitude}"
 PY="$ENV/bin/python"
@@ -115,7 +115,7 @@ for tgt in ml mw; do
         --out "$DATA/cascadia_catalog${SUFFIX}_calibrated_${tgt}.csv"
 done
 # map in the default env (pygmt); its own lib dir first, as for the amplitude env
-LD_LIBRARY_PATH="$MAPENV/lib" "$MAPENV/bin/python" phase5_pygmt_map.py \
+LD_LIBRARY_PATH="$MAPENV/lib" "$MAPENV/bin/python" ../06_analysis/phase5_pygmt_map.py \
     --catalog "$DATA/cascadia_catalog_ML$SUFFIX.csv" --qc-catalog "$QC_CAT" \
     --out "$DATA/cascadia_ML_map$SUFFIX.png" \
     || status "map failed (non-fatal): see driver.log"

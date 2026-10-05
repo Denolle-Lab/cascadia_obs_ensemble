@@ -14,7 +14,7 @@ the region runs (4-15 Hz, 100 Hz). Semblance is the vectorized form of ELEP's
 ``ensemble_semblance`` (V5_PLAN §4.1); ``--check-elep K`` repeats option (a) with
 ELEP's own function on the first K station-days and records whether the picks agree.
 
-    python 1_picking/dryrun_models.py --tasks tasks.csv --out DIR --workers 30
+    python workflow/01_picking/dryrun_models.py --tasks tasks.csv --out DIR --workers 30
 tasks.csv: network,station,day (YYYY-MM-DD). Output: DIR/picks/NET.STA.DAY.csv
 (column ``config``) and DIR/log.csv (one row per station-day). Resumable.
 """
@@ -35,7 +35,7 @@ from obspy import Stream, UTCDateTime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(HERE, ".."))
+sys.path.insert(0, os.path.join(HERE, "..", ".."))
 import elep_picker as ep  # noqa: E402
 from ELEP.elep.ensemble_coherence import ensemble_semblance  # noqa: E402
 from utils.data_client import get_waveforms  # noqa: E402

@@ -3,9 +3,9 @@
 Event Waveform Processing (script version of the notebook)
 
 Usage:
-    python event_waveform_processing.py --events ../data/Cascadia_relocated_catalog_ver_3.csv \
-        --picks ../data/Cascadia_relocated_catalog_picks_ver_3.csv \
-        --out ../data/Cascadia_relocated_catalog_picks_with_amplitudes_ver_3.csv
+    python event_waveform_processing.py --events ../../data/Cascadia_relocated_catalog_ver_3.csv \
+        --picks ../../data/Cascadia_relocated_catalog_picks_ver_3.csv \
+        --out ../../data/Cascadia_relocated_catalog_picks_with_amplitudes_ver_3.csv
 
 Designed to run in a detached terminal (screen/tmux).
 

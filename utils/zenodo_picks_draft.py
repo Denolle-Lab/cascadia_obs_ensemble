@@ -11,6 +11,7 @@ in $ZENODO_TOKEN or in ~/.zenodo_token (chmod 600).
     python utils/zenodo_picks_draft.py upload ID FILE [FILE ...]  # add or replace files
     python utils/zenodo_picks_draft.py link ID                    # make a preview share link
     python utils/zenodo_picks_draft.py show ID                    # files, sizes, md5
+    python utils/zenodo_picks_draft.py describe ID                # set title/description/version below
 Add --sandbox to use sandbox.zenodo.org for a test.
 """
 import argparse
@@ -22,23 +23,29 @@ from pathlib import Path
 
 import requests
 
-TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2015, ver3 and ver4 "
+TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2016, ver3, ver4 and ver5 "
          "(working copy for the GENIE and GraphDD rerun)")
 DESCRIPTION = """<p>ELEP ensemble phase picks (five EQTransformer models, SeisBench) on
 the Cascadia Initiative ocean-bottom and nearby land stations, 40-50&deg;N, 131-122&deg;W,
 2010-2015. Working copy shared with collaborators before publication; not for redistribution.</p>
 <ul>
-<li><b>ver3</b> (<code>ver3/all_picks_all_regions_2010_2015_ver3.csv.gz</code>): 39,597,551 picks,
+<li><b>ver3</b> (<code>all_picks_all_regions_2010_2015_ver3.csv.gz</code>): 39,597,551 picks,
 the table used for the published v3 catalog association.</li>
-<li><b>ver4</b> (<code>ver4/all_picks_all_regions_2010_2015_ver4.csv.gz</code>): 49,541,718 picks, ver3
-byte for byte (same pick_id) followed by 9,944,167 picks on 75,709 station-days that the ver3
-merge left out. <code>ver4_added_station_days.csv</code> gives the category and pick_id range of each
-added station-day; see <code>README.md</code>.</li>
+<li><b>ver4</b>: 49,541,718 picks, ver3 byte for byte (same pick_id) followed by 9,944,167
+picks on 75,709 station-days that the ver3 merge left out (<code>ver4_added_picks.csv.gz</code>).
+<code>ver4_added_station_days.csv</code> gives the category and pick_id range of each added
+station-day; see <code>ver4_README.md</code>.</li>
+<li><b>ver5</b>: 60,918,847 picks, ver4 byte for byte followed by 11,377,129 picks of the
+offshore gap fill (48,638 station-days at 212 ocean-bottom stations, 2010-2016, picked with
+the model set of the region runs). Rebuild it from ver3 and the two added-picks files; see
+<code>ver5_HOW_TO_BUILD.txt</code> and <code>ver5_README.md</code>, which also lists stations
+to watch (high pick rates on the shallow FN shelf stations).</li>
 </ul>
-<p>Two ver4 categories (edge_run_dropped, v1_not_in_ver3) are still to be confirmed and can be
-dropped by pick_id range.</p>"""
+<p>All ver4 categories are kept (decision of the PI, 2026-10-05). Any category can still be
+dropped by its pick_id ranges.</p>"""
 
 
+VERSION = "ver3+ver4+ver5 working copy"
 TRIES = 4
 
 
@@ -85,7 +92,7 @@ def create(s, base):
         "access_right": "restricted",
         "access_conditions": "Shared with collaborators for the GENIE/GraphDD rerun before publication.",
         "keywords": ["Cascadia", "ocean-bottom seismometer", "phase picks", "EQTransformer", "ELEP"],
-        "version": "ver3+ver4 working copy",
+        "version": VERSION,
     }}
     d = check(s.post(f"{base}/deposit/depositions", json=meta))
     print(f"draft id {d['id']}\nedit: {d['links']['html']}")
@@ -96,7 +103,7 @@ def upload(s, base, dep_id, files):
     bucket = d["links"]["bucket"]
     for f in map(Path, files):
         # Zenodo file keys cannot contain '/': prefix with the parent folder instead
-        prefix = f.parent.name if f.parent.name in ("ver3", "ver4") else ""
+        prefix = f.parent.name if f.parent.name in ("ver3", "ver4", "ver5") else ""
         key = f.name if not prefix or f.name.startswith(prefix) or prefix in f.name else f"{prefix}_{f.name}"
         local = md5(f)
         print(f"{key}: {f.stat().st_size / 1e9:.2f} GB, md5 {local}", flush=True)
@@ -127,6 +134,15 @@ def link(s, base, dep_id):
     print(f"share link written to {out}")
 
 
+def describe(s, base, dep_id):
+    """Replace the draft's title, description and version, keeping its other metadata."""
+    d = check(s.get(f"{base}/deposit/depositions/{dep_id}"))
+    meta = {k: v for k, v in d["metadata"].items() if k not in ("doi", "prereserve_doi")}
+    meta.update(title=TITLE, description=DESCRIPTION, version=VERSION)
+    check(s.put(f"{base}/deposit/depositions/{dep_id}", json={"metadata": meta}))
+    print(f"updated: {TITLE}")
+
+
 def show(s, base, dep_id):
     d = check(s.get(f"{base}/deposit/depositions/{dep_id}"))
     print(d["metadata"]["title"], "| submitted:", d["submitted"])
@@ -141,7 +157,7 @@ def main():
     sub.add_parser("create")
     rm = sub.add_parser("delete-file"); rm.add_argument("id"); rm.add_argument("key")
     u = sub.add_parser("upload"); u.add_argument("id"); u.add_argument("files", nargs="+")
-    for name in ("link", "show"):
+    for name in ("link", "show", "describe"):
         sub.add_parser(name).add_argument("id")
     a = ap.parse_args()
     s, base = session(), api(a.sandbox)
@@ -155,6 +171,8 @@ def main():
         print(f"deleted {a.key}")
     elif a.cmd == "link":
         link(s, base, a.id)
+    elif a.cmd == "describe":
+        describe(s, base, a.id)
     else:
         show(s, base, a.id)
 

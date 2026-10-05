@@ -18,8 +18,8 @@ again, so no station-day mixes two picker runs.
 | `eh_run_incomplete_at_merge` | 37,158 | 5,095,669 | 73 | 2010, 2014, 2015 | add: the EH runs were still writing when ver3 was merged (files dated 2025-03 to 04) |
 | `2013_nested_folder` | 14,015 | 1,727,705 | 47 | 2013 | add: the 2013 files of the 122-123°W, 46-50°N run sit in a nested folder and were not read |
 | `new_run_2010_40-46N` | 5,692 | 580,676 | 38 | 2010 | add: a run of 2025-09 at 122-123°W, 40-46°N (2010 only) |
-| `edge_run_dropped` | 16,272 | 2,275,110 | 28 | 2010-2015 | ask H. Bito first: station-days of the two 46-50°N edge runs written before the merge but left out of ver3, for a reason not recorded |
-| `v1_not_in_ver3` | 2,572 | 265,007 | 3 | 2011-2015 | ask H. Bito first: first-run picks of CN.MGB, CN.YOUB, 7D.FN05A, absent from ver3 |
+| `edge_run_dropped` | 16,272 | 2,275,110 | 28 | 2010-2015 | add (PI decision, 2026-10-05): station-days of the two 46-50°N edge runs written before the merge but left out of ver3, for a reason not recorded |
+| `v1_not_in_ver3` | 2,572 | 265,007 | 3 | 2011-2015 | add (PI decision, 2026-10-05): first-run picks of CN.MGB, CN.YOUB, 7D.FN05A, absent from ver3 |
 | **total** | **75,709** | **9,944,167** | | | |
 
 To keep only some categories, drop the rows whose `pick_id` falls in the ranges of the

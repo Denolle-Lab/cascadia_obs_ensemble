@@ -34,11 +34,16 @@ removing the mean SE^2 of the anchors; "mapped" sqrt((slope ML_inv_unc)^2 + s_ma
 Mw: MW_MT_UNC; Mw_cal: std of (Mw - ML - offset) of its pairs.
 
 Writes ../../data/magnitude/cascadia_catalog_M_routeA.csv (same events as
-cascadia_catalog_ML_routeA.csv; ML_inv keeps the inversion ML).
+cascadia_catalog_ML_routeA.csv; ML_inv keeps the inversion ML); with --data/--suffix,
+<data>/cascadia_catalog_M<suffix>.csv.
 
 Usage (default env, run from 4_relocation/magnitude, after phase18):
     python phase19_preferred_magnitude.py
+    # a variant run (e.g. the 0.5 Hz high-pass test), after phase18 with the same options:
+    python phase19_preferred_magnitude.py --data ../../data/magnitude_hp05 --suffix _routeA_hp05 \
+        --matched ../../data/magnitude_hp05/comcat_mt_matched_routeA_hp05.csv
 """
+import argparse
 import numpy as np, pandas as pd
 from scipy import sparse
 from scipy.sparse.linalg import lsqr
@@ -46,6 +51,8 @@ from scipy.stats import theilslopes
 from phase18_moment_tensor_match import hutton_boore, RMAX
 
 D = "../../data/magnitude"
+SUFFIX = "_routeA"
+MATCHED = "../../data/focal/comcat_mt_matched.csv"
 M_SWITCH = 4.5
 FIT_MIN = 3.5
 MW_MT_UNC = 0.1
@@ -54,7 +61,7 @@ REJECT_MAD = 4.0
 
 
 def station_ml():
-    ds = pd.read_csv(f"{D}/amp_distance_dataset_routeA.csv",
+    ds = pd.read_csv(f"{D}/amp_distance_dataset{SUFFIX}.csv",
                      usecols=["event_id", "station", "phase", "dist_hypo_km", "log10A"])
     ds["m"] = hutton_boore(ds.log10A, ds.dist_hypo_km)
     ds["sp"] = ds.station + "|" + ds.phase
@@ -98,10 +105,21 @@ def event_ml(ds):
     return ev
 
 
+def parse_args():
+    ap = argparse.ArgumentParser(description="preferred magnitude: HB ML below M_SWITCH, Mw above")
+    ap.add_argument("--data", default=D, help="magnitude directory (default %(default)s)")
+    ap.add_argument("--suffix", default=SUFFIX, help="file suffix (default %(default)s)")
+    ap.add_argument("--matched", default=MATCHED, help="phase18 matched tensors (default %(default)s)")
+    return ap.parse_args()
+
+
 def main():
-    cat = pd.read_csv(f"{D}/cascadia_catalog_ML_routeA.csv")
+    global D, SUFFIX, MATCHED
+    a = parse_args()
+    D, SUFFIX, MATCHED = a.data, a.suffix, a.matched
+    cat = pd.read_csv(f"{D}/cascadia_catalog_ML{SUFFIX}.csv")
     ev = event_ml(station_ml())
-    an = pd.read_csv(f"{D}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]].join(ev, on="event_id", how="inner")
+    an = pd.read_csv(f"{D}/route_b_ml_anchors{SUFFIX}.csv")[["event_id", "ml"]].join(ev, on="event_id", how="inner")
     off = np.median(an.ml - an.m)
     s_anchor = np.sqrt(max(np.var(an.ml - an.m - off) - np.mean(an.se ** 2), 0))
     ev["ML"] = ev.m + off
@@ -123,7 +141,7 @@ def main():
           f"(fit over near events, residual std {s_map:.2f})")
     print("ML_method:", out.ML_method.value_counts().to_dict())
 
-    mt = pd.read_csv("../../data/focal/comcat_mt_matched.csv")[["event_id", "comcat_id", "Mw_mt"]]
+    mt = pd.read_csv(MATCHED)[["event_id", "comcat_id", "Mw_mt"]]
     mt = mt.sort_values("Mw_mt", ascending=False).drop_duplicates("event_id")
     out = out.merge(mt, on="event_id", how="left")
     pairs = out[out.Mw_mt.notna() & (out.ML >= FIT_MIN)]
@@ -157,8 +175,8 @@ def main():
     cols = ["event_id", "otime", "evla", "evlo", "evdp", "M", "M_unc", "M_type", "ML", "ML_unc",
             "n_ML", "ML_method", "Mw_mt", "comcat_id", "ML_inv", "ML_inv_unc"]
     out[cols].round({"M": 3, "M_unc": 3, "ML": 3, "ML_unc": 3, "ML_inv": 3, "ML_inv_unc": 3}).to_csv(
-        f"{D}/cascadia_catalog_M_routeA.csv", index=False)
-    print(f"wrote {D}/cascadia_catalog_M_routeA.csv ({len(out):,} events)")
+        f"{D}/cascadia_catalog_M{SUFFIX}.csv", index=False)
+    print(f"wrote {D}/cascadia_catalog_M{SUFFIX}.csv ({len(out):,} events)")
 
 
 if __name__ == "__main__":

@@ -37,7 +37,8 @@ picks on 75,709 station-days that the ver3 merge left out (<code>ver4_added_pick
 station-day; see <code>ver4_README.md</code>.</li>
 <li><b>ver5</b>: 60,918,847 picks, ver4 byte for byte followed by 11,377,129 picks of the
 offshore gap fill (48,638 station-days at 212 ocean-bottom stations, 2010-2016, picked with
-the model set of the region runs). Rebuild it from ver3 and the two added-picks files; see
+the model set of the region runs). Rebuild it from ver3, the ver4 added picks and the two
+parts of the ver5 added picks (Zenodo rejects the 344 MB file in one piece); see
 <code>ver5_HOW_TO_BUILD.txt</code> and <code>ver5_README.md</code>, which also lists stations
 to watch (high pick rates on the shallow FN shelf stations).</li>
 </ul>

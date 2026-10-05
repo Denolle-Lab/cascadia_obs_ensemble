@@ -1,6 +1,6 @@
 # Repository cleanup and Zenodo release plan
 
-Status (2026-09-30, evening): on branch `cleanup/safe-steps`.
+Status (2026-10-05).
 - Done: safe steps of §8.1 (tags, PR #22, obsolete trees removed, README, PROVENANCE).
 - Done: picking consolidated (§4): `workflow/01_picking/elep_picker.py` + `run_picking.py` +
   `picking_config.csv` (29 runs) replace the 29 per-year scripts and 6 utils, now in
@@ -10,16 +10,18 @@ Status (2026-09-30, evening): on branch `cleanup/safe-steps`.
 - Done: data products (§6) are three ANSS-style tables, `utils/build_anss_tables.py`
   (origins / arrivals / picks, QuakeML split), `data/DATA_DICTIONARY.md`, and the Zenodo
   layout in `utils/assemble_zenodo.py`.
-- Waiting for `rerun_hp05/DONE`: the layout move of §2-3.
+- Done (2026-10-05, branch `cleanup/layout`): the layout move of §2. Stages are in
+  `workflow/01_picking` … `06_analysis`, the at-scale drivers in `scale/`, the diagnostic
+  notebooks in `notebooks/diagnostics/`, and `utils/paths.py` resolves the repository paths.
+  Checked from the new paths: phase18/19 reproduce the paper's magnitude files byte for byte,
+  and the nine supplementary figure scripts reproduce the paper's PNGs pixel for pixel.
+- To do: the figure and label renames of §3, `make figures` / `make catalog` (§4).
 
 Goal: the repo holds only the workflow behind the paper, in run order, with one script per
 paper figure, the at-scale launchers kept apart, a README that reproduces the paper, and a
 Zenodo release of the code and the data products.
 
-**Hard constraint while the 0.5 Hz amplitude test runs** (`workflow/05_magnitude/rerun_hp05/`,
-started 2026-09-30): do not move, rename or delete anything in `workflow/05_magnitude/`.
-The driver calls the stage-3 scripts by relative path when stage 1 finishes. Every step below
-that touches that directory waits for `rerun_hp05/DONE`.
+The 0.5 Hz amplitude test finished on 2026-10-01; it no longer constrains the layout.
 
 ## 1. What stays, what goes
 

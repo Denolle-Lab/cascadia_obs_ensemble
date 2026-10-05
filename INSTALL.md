@@ -109,7 +109,7 @@ All waveform download logic is centralized in `utils/data_client.py`.
 ### Picking scripts (`workflow/01_picking/`)
 
 ```sh
-# default (pnwstore — internal env):
+# from workflow/01_picking; default (pnwstore — internal env):
 python run_picking.py --year 2011 --region 122-129
 
 # public FDSN:

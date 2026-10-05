@@ -28,9 +28,13 @@ and station coordinates).
 
 ## Steps
 
+Run every step from `workflow/05_magnitude/` (the inputs and outputs are relative to it),
+except phase10 and phase5, which live in `workflow/06_analysis/`. The end-to-end driver is
+`scale/run_route_a.sh` (resumable; run it from the repository root).
+
 **0. Station inventory** (coords + response + epochs; any machine with internet):
 ```
-python route_a_build_station_inventory.py \
+python ../../scale/build_station_inventory.py \
     --picks /wd1/.../Cascadia_updated_catalog_picks_assignment_ver_3.csv \
     --out-xml station_inventory.xml --out-csv station_epochs.csv
 ```
@@ -85,6 +89,7 @@ python phase4_qc_and_gr.py --catalog ../../data/magnitude/cascadia_catalog_ML_ro
 # Hutton-Boore ML with station terms (picks <= 150 km), Mw above 4.5
 python phase18_moment_tensor_match.py      # -> data/focal/comcat_mt_matched.csv
 python phase19_preferred_magnitude.py      # -> cascadia_catalog_M_routeA.csv
+cd ../06_analysis
 python phase10_event_classification.py     # carries M, M_type into the classified catalog
 python phase5_pygmt_map.py --region full   # reads cascadia_catalog_M_routeA.csv (Mw events purple)
 ```

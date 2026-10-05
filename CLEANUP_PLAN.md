@@ -15,7 +15,7 @@ Status (2026-10-05). §3 done the same day: files, labels and figure notebooks r
   notebooks in `notebooks/diagnostics/`, and `utils/paths.py` resolves the repository paths.
   Checked from the new paths: phase18/19 reproduce the paper's magnitude files byte for byte,
   and the nine supplementary figure scripts reproduce the paper's PNGs pixel for pixel.
-- To do: the figure and label renames of §3, `make figures` / `make catalog` (§4).
+- To do: `make figures` / `make catalog` (§4).
 
 Goal: the repo holds only the workflow behind the paper, in run order, with one script per
 paper figure, the at-scale launchers kept apart, a README that reproduces the paper, and a

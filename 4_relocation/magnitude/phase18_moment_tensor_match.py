@@ -17,12 +17,18 @@ It then prints the diagnostics behind the high-end magnitude shortfall:
 
 Usage (default env, run from 4_relocation/magnitude):
     python phase18_moment_tensor_match.py
+    # a variant run (e.g. the 0.5 Hz high-pass test), without touching the paper's files:
+    python phase18_moment_tensor_match.py --data ../../data/magnitude_hp05 --suffix _routeA_hp05 \
+        --matched ../../data/magnitude_hp05/comcat_mt_matched_routeA_hp05.csv
 """
+import argparse
 import os
 import numpy as np, pandas as pd
 
 D = "../../data/magnitude"
+SUFFIX = "_routeA"
 FOCAL = "../../data/focal"
+MATCHED = f"{FOCAL}/comcat_mt_matched.csv"
 TOL_S, TOL_KM, SEARCH_S = 5.0, 50.0, 60.0
 RMAX = 150.0                                 # test catalog: picks within this distance
 
@@ -58,10 +64,21 @@ def match(mt, cat):
     return pd.DataFrame(rows)
 
 
+def parse_args():
+    ap = argparse.ArgumentParser(description="match ComCat moment tensors; magnitude diagnostics")
+    ap.add_argument("--data", default=D, help="magnitude directory (default %(default)s)")
+    ap.add_argument("--suffix", default=SUFFIX, help="file suffix (default %(default)s)")
+    ap.add_argument("--matched", default=MATCHED, help="output: matched tensors (default %(default)s)")
+    return ap.parse_args()
+
+
 def main():
-    cat = pd.read_csv(f"{D}/cascadia_catalog_ML_routeA.csv")
+    global D, SUFFIX, MATCHED
+    a = parse_args()
+    D, SUFFIX, MATCHED = a.data, a.suffix, a.matched
+    cat = pd.read_csv(f"{D}/cascadia_catalog_ML{SUFFIX}.csv")
     cat["otime"] = pd.to_datetime(cat.otime, utc=True, format="ISO8601")
-    mw = pd.read_csv(f"{D}/cascadia_catalog_routeA_calibrated_mw.csv", usecols=["event_id", "MW"])
+    mw = pd.read_csv(f"{D}/cascadia_catalog{SUFFIX}_calibrated_mw.csv", usecols=["event_id", "MW"])
     mt = pd.read_csv(f"{FOCAL}/comcat_mt.csv")
     mt["time"] = pd.to_datetime(mt.time, utc=True, format="ISO8601")
     mt["Mw_mt"] = tensor_mw(mt).round(2)
@@ -77,9 +94,9 @@ def main():
               .merge(cat[["event_id", "ML"]].rename(columns={"ML": "ML_routeA"}), on="event_id")
               .merge(mw.rename(columns={"MW": "MW_routeA"}), on="event_id", how="left"))
     out = out.round({"ML_routeA": 2, "MW_routeA": 2})
-    out.to_csv(f"{FOCAL}/comcat_mt_matched.csv", index=False)
+    out.to_csv(MATCHED, index=False)
     print(f"tensors in window {len(win)}, in catalog box {len(box)}, matched {len(out)} "
-          f"(|dt|<{TOL_S:.0f} s, <{TOL_KM:.0f} km) -> {FOCAL}/comcat_mt_matched.csv")
+          f"(|dt|<{TOL_S:.0f} s, <{TOL_KM:.0f} km) -> {MATCHED}")
     print(f"  dt median {out.dt_s.median():+.2f} s; distance median {out.dist_km.median():.1f} km, "
           f"90% {out.dist_km.quantile(.9):.1f} km; depth diff IQR "
           f"{out.ddepth_km.quantile(.25):+.1f}..{out.ddepth_km.quantile(.75):+.1f} km")
@@ -94,10 +111,10 @@ def main():
         print(f"  Mw {lo}-{hi}: n={len(s):3d}  ML {np.median(s.ML_routeA - s.Mw_mt):+.2f}  "
               f"MW {np.nanmedian(s.MW_routeA - s.Mw_mt):+.2f}")
 
-    ds = pd.read_csv(f"{D}/amp_distance_dataset_routeA.csv",
+    ds = pd.read_csv(f"{D}/amp_distance_dataset{SUFFIX}.csv",
                      usecols=["event_id", "phase", "dist_hypo_km", "log10A"])
     ds["m"] = hutton_boore(ds.log10A, ds.dist_hypo_km)
-    an = pd.read_csv(f"{D}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
+    an = pd.read_csv(f"{D}/route_b_ml_anchors{SUFFIX}.csv")[["event_id", "ml"]]
     bins = [0, 100, 200, 300, 500, 1000]
     refs = [("ComCat ML>=2.5", an[an.ml >= 2.5].rename(columns={"ml": "ref"})),
             ("tensor Mw<4.5", out[out.Mw_mt < 4.5][["event_id", "Mw_mt"]].rename(columns={"Mw_mt": "ref"})),

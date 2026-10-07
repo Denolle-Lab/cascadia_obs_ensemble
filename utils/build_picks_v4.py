@@ -8,7 +8,7 @@ runs are never mixed on one station-day. New rows use the ver3 columns and
 conventions (v1 rows: empty band_inst and trigger fields; station_id NET.STA.;
 numeric location codes written as floats, e.g. 2.0) and continue the pick_id.
 
-Sources, in priority order (see 1_picking/legacy/README.md):
+Sources, in priority order (see workflow/01_picking/legacy/README.md):
 
     v2_region    picks_{year}_{122-129,123-127_EH,122-123_46-50,127-129_46-50}/
     v2_2013      picks_2013_122-123_46-50/picks_2013_122-123_46-50/  (nested, not merged in ver3)

@@ -3,7 +3,7 @@
 
 fig1 and fig3 plot the ANSS (USGS ComCat) catalog as an independent comparison for
 the offshore Cascadia region. The original file was built by hand
-(4_relocation/concat_anss_catalogs_2010_2015.ipynb): twelve half-year CSVs downloaded
+(workflow/04_merge_qc/concat_anss_catalogs_2010_2015.ipynb): twelve half-year CSVs downloaded
 from the USGS ComCat web search (split by half-year to stay under the 20,000-events
 per-query cap) and concatenated. This script reproduces that programmatically by
 querying the USGS FDSN event service (= ANSS ComCat) in half-year chunks and, if a

@@ -85,4 +85,4 @@ paper = {features = ["paper"], no-default-feature = true}
 [tasks]
 verify = "python verify_environment.py"
 notebook = "jupyter notebook"
-pick = "python 1_picking/run_picking.py --year 2011 --region 122-129"
+pick = "python workflow/01_picking/run_picking.py --year 2011 --region 122-129"

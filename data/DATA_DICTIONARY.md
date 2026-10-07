@@ -102,7 +102,7 @@ Every ELEP pick, associated or not.
 | `probability` | | maximum ensemble semblance within the trigger (`v2` only) |
 | `threshold` | | trigger threshold (0.05; `v2` only) |
 | `method` | | `ELEP`: semblance of 5 EQTransformer models (`original`, `ethz`, `instance`, `scedc`, `stead`) |
-| `picker_run` | | `v1`: first run, 2011-2015, HH or BH at the native sampling rate, trigger off at half the threshold, channel and probability not kept (21.9 M picks). `v2`: the region runs, 2010-2015, resampled to 100 Hz (17.7 M picks). See `1_picking/legacy/README.md` |
+| `picker_run` | | `v1`: first run, 2011-2015, HH or BH at the native sampling rate, trigger off at half the threshold, channel and probability not kept (21.9 M picks). `v2`: the region runs, 2010-2015, resampled to 100 Hz (17.7 M picks). See `workflow/01_picking/legacy/README.md` |
 | `evaluation_mode` | | `automatic` |
 
 ## Other files in the record

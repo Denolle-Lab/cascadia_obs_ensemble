@@ -27,6 +27,20 @@ full creation chain are in [`data/LINEAGE.md`](data/LINEAGE.md).
 | 10 | Paper magnitudes | `data/focal/comcat_mt_matched.csv`, `cascadia_catalog_M_routeA.csv`, `cascadia_catalog_classified.csv` | 2026-09-29 | phase18 → phase19 → phase10, tag `magnitudes-v1` (`f46941f0`) | `default` env |
 | 11 | Figures, paper | `paper/figures/*`, `paper/main.pdf` | 2026-09-30 | `paper/export_figures.py`, `make paper` at the release tag | `default` and `paper` envs |
 
+The **Code** column gives paths as they are at each tag. The 2026-10 layout move
+(CLEANUP_PLAN §2) renamed them in the current tree:
+
+| at the tags | now |
+|---|---|
+| `1_picking/` | `workflow/01_picking/` (`run_fill.sh` → `scale/`) |
+| `4_relocation/cross_correlation/create_*` | `workflow/03_relocation/` |
+| `4_relocation/merge_events_*`, `concat_anss_*`, `quality_control/4_quality_control_*` | `workflow/04_merge_qc/` |
+| `4_relocation/quality_control/` (other notebooks), `cross_correlation/verify_*` | `notebooks/diagnostics/` |
+| `4_relocation/calculate_amplitudes.*`, `event_waveform_processing.*`, `magnitude/` (Route A, phase1-4, 16-19) | `workflow/05_magnitude/` |
+| `4_relocation/magnitude/` phase5, 7-14, `map_context.py` | `workflow/06_analysis/` |
+| `4_relocation/magnitude/run_route_a_rerun.sh`, `ROUTE_A_RUNBOOK.md`, `slim_inventory.py`, `route_a_build_station_inventory.py` | `scale/run_route_a.sh`, `scale/RUNBOOK.md`, `scale/slim_inventory.py`, `scale/build_station_inventory.py` |
+| `4_relocation/magnitude/phase6_*`, `phase15_*`, `METHODS_route_b.md` | removed (superseded) |
+
 ## Stage notes
 
 **1. Picking.**

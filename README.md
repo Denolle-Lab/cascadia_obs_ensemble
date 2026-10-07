@@ -38,13 +38,13 @@ Nathan T. Stevens, Yifan Yu, and Gregory C. Beroza (Stanford Geophysics).
 
 | Stage | Where | Product | Version used |
 |---|---|---|---|
-| 1. Picking (ELEP ensemble) | [`1_picking/`](1_picking/) | 39.6 M P/S picks | tag `stage-picking-ver3`, ELEP `2f3f22a9` |
-| 2. Association (GENIE) | external (I. McBrearty) | 116,591 events | see PROVENANCE |
-| 3. Relocation (GraphDD) + CC refinement | external; CC datasets in [`4_relocation/cross_correlation/`](4_relocation/cross_correlation/) | 63,887 events, 1.00 M picks | tag `stage-reloc-cc-qc-ver3` |
-| 4. Merge + QC | [`4_relocation/`](4_relocation/) (`merge_events_*`, `quality_control/`) | origin/arrival/assoc tables; 31,020-event QC subset | tag `stage-reloc-cc-qc-ver3` |
-| 5. Amplitudes (Route A) | [`4_relocation/magnitude/`](4_relocation/magnitude/) (`run_route_a_rerun.sh`) | Wood–Anderson amplitude per pick | tag `stage-routeA-v2-amplitudes` |
-| 6. Magnitudes | `4_relocation/magnitude/` phase18 → phase19 → phase10 | preferred M (ML < 4.5, Mw above) for 55,707 events | tag `magnitudes-v1` |
-| 7. Figures + paper | `4_relocation/magnitude/phase*`, [`figures/`](figures/), [`paper/`](paper/) | manuscript | release tag |
+| 1. Picking (ELEP ensemble) | [`workflow/01_picking/`](workflow/01_picking/) | 39.6 M P/S picks | tag `stage-picking-ver3`, ELEP `2f3f22a9` |
+| 2. Association (GENIE) | external (I. McBrearty); [`workflow/02_association/`](workflow/02_association/) | 116,591 events | see PROVENANCE |
+| 3. Relocation (GraphDD) + CC refinement | external; CC datasets in [`workflow/03_relocation/`](workflow/03_relocation/) | 63,887 events, 1.00 M picks | tag `stage-reloc-cc-qc-ver3` |
+| 4. Merge + QC | [`workflow/04_merge_qc/`](workflow/04_merge_qc/) | origin/arrival/assoc tables; 31,020-event QC subset | tag `stage-reloc-cc-qc-ver3` |
+| 5. Amplitudes (Route A) | [`workflow/05_magnitude/`](workflow/05_magnitude/) (`scale/run_route_a.sh`) | Wood–Anderson amplitude per pick | tag `stage-routeA-v2-amplitudes` |
+| 6. Magnitudes | `workflow/05_magnitude/` phase18 → phase19, then `workflow/06_analysis/` phase10 | preferred M (ML < 4.5, Mw above) for 55,707 events | tag `magnitudes-v1` |
+| 7. Analysis, figures, paper | [`workflow/06_analysis/`](workflow/06_analysis/), [`figures/`](figures/), [`paper/`](paper/) | manuscript | release tag |
 
 **[PROVENANCE.md](PROVENANCE.md)** records, for every product, the date, the code version
 (git tag), the external tool and its version, the environment and checksums, and how to
@@ -60,12 +60,15 @@ creation chain and row counts. The planned reorganization and Zenodo release are
 📜 pixi.toml / pixi.lock  # environments: default, internal (pnwstore), amplitude, paper
 📜 Makefile           # `make paper` (manuscript), `make figs` (collect paper figures)
 📜 download_data.sh   # rsync pipeline input catalogs from the lab server
-📦 1_picking          # ELEP picking: run_picking.py + picking_config.csv (legacy/: ver3 scripts)
-📦 4_relocation       # post-relocation: merge, cross-correlation datasets, QC, amplitudes
- ┣ 📦 cross_correlation   # CC differential-time waveform dataset builders (GraphDD input)
- ┣ 📦 quality_control     # QC notebook that writes the final QC catalog + diagnostics
- ┗ 📦 magnitude           # Route A amplitudes, magnitudes, and the paper's map/supplement scripts
-                          #   (ROUTE_A_RUNBOOK.md: at-scale runs; phase5/7-14/17: figures)
+📦 workflow           # the pipeline, in run order
+ ┣ 📦 01_picking        # ELEP picking: run_picking.py + picking_config.csv; v5 picker dryrun_models.py; legacy/
+ ┣ 📦 02_association    # GENIE (external): version and outputs
+ ┣ 📦 03_relocation     # GraphDD (external); CC differential-time waveform dataset builders
+ ┣ 📦 04_merge_qc       # merge GraphDD + CC output; QC notebooks that write the final catalog
+ ┣ 📦 05_magnitude      # Route A amplitudes and magnitudes (phase1-4, 16-19), counts baseline
+ ┗ 📦 06_analysis       # maps and supplement analyses (phase5, 7-14), classification (phase10)
+📦 scale              # at-scale drivers: run_route_a.sh, run_fill.sh, inventory builders, RUNBOOK.md
+📦 notebooks/diagnostics  # notebooks behind QC choices; no paper figure
 📦 figures            # notebooks for Figs 1, 2, 3 (QC histograms), 4 (picks), 8
 📦 data               # small inputs and config; large CSVs as chunks in data/split_files/
 📦 utils              # data_client, paper_style, plot_utils, qc_utils, fetch_*, Zenodo helpers
@@ -74,7 +77,7 @@ creation chain and row counts. The planned reorganization and Zenodo release are
 
 Removed in the 2026-09 cleanup and kept at tag `pre-cleanup-2026-09`: `old/` (abandoned
 PyOcto association and HypoInverse location), `3_post_processing/` (a duplicate of
-`4_relocation/`), `0_data_availability/`, and the superseded `*_old.csv` amplitude files.
+the old `4_relocation/`), `0_data_availability/`, and the superseded `*_old.csv` amplitude files.
 
 ## Installation
 
@@ -100,7 +103,7 @@ pixi run verify
 
 # 5. Use it
 pixi run notebook        # Jupyter (notebook workflow)
-pixi run pick            # example CLI entry point (1_picking)
+pixi run pick            # example CLI entry point (workflow/01_picking)
 ```
 
 ### Cloning without the full history
@@ -180,12 +183,13 @@ make figs        # collect figure PNGs into paper/figures/ (needs the data above
 ```
 
 To regenerate the magnitude catalog and the figures that depend on it (from
-`4_relocation/magnitude/`, `default` env, after the Route A products exist; see the
+`workflow/05_magnitude/`, `default` env, after the Route A products exist; see the
 runbook):
 
 ```sh
 python phase18_moment_tensor_match.py   # ComCat moment tensors -> data/focal/comcat_mt_matched.csv
 python phase19_preferred_magnitude.py   # -> data/magnitude/cascadia_catalog_M_routeA.csv
+cd ../06_analysis
 python phase10_event_classification.py  # -> cascadia_catalog_classified.csv (+ Fig. S4)
 ```
 See [`paper/README.md`](paper/README.md) for the authoring + Overleaf-sync workflow.

@@ -14,7 +14,7 @@ pixi run -e amplitude python utils/assemble_zenodo.py --apply --out /path/with/s
 
 The build reads the lab-server products (`data/datasets_all_regions/`, symlinks to
 `/wd1/hbito_data/data/`), the magnitude outputs in `data/magnitude/` and the Route A
-amplitudes in `4_relocation/magnitude/rerun_v2/`.
+amplitudes in `workflow/05_magnitude/rerun_v2/`.
 
 Before publishing:
 - reserve the DOI on the Zenodo draft and cite it in the paper;

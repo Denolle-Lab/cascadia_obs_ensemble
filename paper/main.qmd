@@ -55,7 +55,7 @@ records focused on specific features like the Axial Seamount and Hydrate Ridge.
 A key advance came from the community-led Cascadia Initiative (CI) experiment
 [@Toomey14], which from 2010--2015 deployed a rolling array of more than 70
 ocean bottom seismometers (OBS), represented in
-Figure [\[fig:fig1\]](#fig:fig1){reference-type="ref" reference="fig:fig1"},
+Figure \ref{fig:stations},
 spanning the full width of the subduction system---from the outer Pacific Plate,
 across the trench, to the forearc and coast, and from the Nootka Fault in the
 north to the Mendocino Triple Junction in the south. This experiment yielded an
@@ -72,7 +72,7 @@ subspace detection to continuous CI data with a focus on the CSZ, combining land
 and OBS networks to reveal over 4,000 previously undetected events, particularly
 concentrated near subducted seamounts at `\ensuremath{\sim}`{=latex}44°N and
 along the downdip edge of the seismogenic zone beneath Vancouver Island (see
-Figure [\[fig:fig1\]](#fig:fig1){reference-type="ref" reference="fig:fig1"}).
+Figure \ref{fig:stations}).
 These results established that small-magnitude earthquakes preferentially occur
 near asperity boundaries or downdip transition zones rather than within strongly
 locked regions. While interplate seismicity in the CSZ remains sparse, the
@@ -89,12 +89,12 @@ microseismicity with regional deformation processes.
 ```{=latex}
 \begin{figure*}[tp]
 \centering
-\includegraphics[width=\textwidth]{figures/fig1.png}
+\includegraphics[width=\textwidth]{figures/fig01_stations.png}
 \caption{Network of Stations and Benchmark Earthquake Catalogs: (a) Map of all
 seismic stations, color-coded by the number of days they were active, used, and
 (b) benchmark earthquake catalogs from ANSS (green) and Morton-2023 (yellow)
 \citep{Morton23}.}
-\label{fig:fig1}
+\label{fig:stations}
 \end{figure*}
 ```
 
@@ -214,7 +214,7 @@ regional catalog. For this study, we extracted ANSS events between 38°--51° N
 and 119°--132° W, spanning 1 January 2011 to 31 December 2015 UTC. The resulting
 distribution shows that most recorded events during this period cluster in
 Washington State and near the Mendocino Triple Junction (Figure
-[\[fig:1\]](#fig:1){reference-type="ref" reference="fig:1"}b), reflecting the
+\ref{fig:stations}b), reflecting the
 higher station density in those regions.
 
 We also include the high-resolution earthquake catalog from @Morton23, who
@@ -228,7 +228,7 @@ highlights several key zones of activity: the Mendocino Triple Junction and
 adjacent Gorda plate, central Cascadia, where seamounts subduct beneath the
 margin, and the region west of Vancouver Island---likely representing activity
 downdip of the seismogenic zone and updip of the slow-slip region (Figure
-[\[fig:fig1\]](#fig:fig1){reference-type="ref" reference="fig:fig1"}b).
+\ref{fig:stations}b).
 Together, we label `ANSS` and `Morton23` the two catalogs @Morton23 that provide
 a robust baseline for assessing the improvement in detection and location
 capabilities afforded by deep learning--based cataloging workflows.
@@ -331,14 +331,14 @@ CI data report (REF5), phase picking data from sta
 
 We picked each station-day independently, in parallel with Dask, and wrote
 the picks of each station-day to a CSV file. The scripts and the settings of
-each of the 29 runs are in the code repository (`1_picking/`).
+each of the 29 runs are in the code repository (`workflow/01_picking/`).
 
 ```{=latex}
 \begin{figure*}[tp]
     \centering
-    \includegraphics[width=\textwidth]{figures/fig2.png}
+    \includegraphics[width=\textwidth]{figures/fig02_pipeline.png}
     \caption{Earthquake Catalog Pipeline.}
-    \label{fig:fig2}
+    \label{fig:pipeline}
 \end{figure*}
 ```
 
@@ -514,7 +514,7 @@ Together, these measures provide a robust basis for identifying poorly
 constrained events, diagnosing common failure modes of automated association,
 and defining objective filtering criteria. The distributions of these QC
 metrics, shown as histograms in Figure
-[\[fig:qc\]](#fig:qc){reference-type="ref" reference="fig:qc"}, are presented
+\ref{fig:qc}, are presented
 for the full catalog as well as for subsets of events matched and unmatched to
 existing authoritative catalogs, allowing direct comparison between newly
 detected events and those previously reported.
@@ -522,13 +522,13 @@ detected events and those previously reported.
 ```{=latex}
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.48\textwidth]{figures/fig5_histograms/hist_rms_reloc_cog_ver3_p_4_s_4_rms_2_5.png}
+  \includegraphics[width=0.48\textwidth]{figures/fig03a_qc_rms.png}
   \hfill
-  \includegraphics[width=0.48\textwidth]{figures/fig5_histograms/hist_p_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png}
+  \includegraphics[width=0.48\textwidth]{figures/fig03b_qc_p_picks.png}
   \vspace{0.5em}
-  \includegraphics[width=0.48\textwidth]{figures/fig5_histograms/hist_s_picks_reloc_cog_ver3_p_4_s_4_rms_2_5.png}
+  \includegraphics[width=0.48\textwidth]{figures/fig03c_qc_s_picks.png}
   \hfill
-  \includegraphics[width=0.48\textwidth]{figures/fig5_histograms/hist_gaps_reloc_cog_ver3_p_4_s_4_rms_2_5.png}
+  \includegraphics[width=0.48\textwidth]{figures/fig03d_qc_gaps.png}
   \caption{
   {\bf Distributions of QC metrics for our catalog.} Panels show (a) RMS
   travel-time residual, (b) number of P picks, (c) number of S picks, and (d)
@@ -542,10 +542,10 @@ We required a minimum number of 5 P and 5 S picks to associate the events.
 ```{=latex}
 \begin{figure*}[tp]
     \centering
-    \includegraphics[width=\textwidth]{figures/fig3.png}
+    \includegraphics[width=\textwidth]{figures/fig04_picks.png}
     \caption{Example of successful and unsuccessful picking and associated
     events}
-    \label{fig:fig3}
+    \label{fig:picks}
 \end{figure*}
 ```
 
@@ -755,7 +755,7 @@ per-event quality metrics and flag (see Magnitude estimation), and use
 the quality-controlled subset only for the figures below.
 
 The final quality-controlled catalog is shown in Figure
-[\[fig:fig4\]](#fig:fig4){reference-type="ref" reference="fig:fig4"}. Rather than
+\ref{fig:catalog_map}. Rather than
 focusing on a high-precision subregion, the map emphasizes the self-consistency
 and scalability of the workflow across the entire margin: a single automated
 pipeline resolves the offshore ridge--transform lineaments (Blanco and
@@ -766,11 +766,11 @@ seismicity from one homogeneous set of picks, associations, and relocations.
 \begin{figure*}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig4_catalog_map.png}
+        \includegraphics[width=\linewidth]{figures/fig05a_catalog_map.png}
         \caption{Ensemble catalog}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.49\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig4_context_map.png}
+        \includegraphics[width=\linewidth]{figures/fig05b_context_map.png}
         \caption{Tectonic context}
     \end{subfigure}
     \caption{{\bf Final ensemble earthquake catalog for offshore Cascadia
@@ -798,13 +798,13 @@ seismicity from one homogeneous set of picks, associations, and relocations.
     \citep{Oryan26}. Arrows give the Juan de Fuca and Pacific plate velocities relative to
     North America from NNR-MORVEL56 \citep{Argus11}; plate boundaries (both panels) are from
     \citet{Bird03}, with teeth on the overriding plate.}
-    \label{fig:fig4}
+    \label{fig:catalog_map}
 \end{figure*}
 ```
 
 At the scale of the whole margin the workflow reproduces the first-order tectonic
 domains; the regional zoom-ins in Figure
-[\[fig:regions\]](#fig:regions){reference-type="ref" reference="fig:regions"}
+\ref{fig:regions}
 allow direct comparison with the recent, region-focused studies of each area. The
 ocean-bottom network lowers the magnitude of completeness offshore by one to two units
 relative to the land-based ANSS catalog (comparing local magnitudes only, e.g.
@@ -816,36 +816,36 @@ Sound).
 \begin{figure*}[tp]
     \centering
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/endeavour.png}
+        \includegraphics[width=\linewidth]{figures/fig06a_endeavour.png}
         \caption{Endeavour / Nootka}
     \end{subfigure}\hfill
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/wa_margin.png}
+        \includegraphics[width=\linewidth]{figures/fig06b_wa_margin.png}
         \caption{Offshore Washington}
     \end{subfigure}\hfill
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/or_margin.png}
+        \includegraphics[width=\linewidth]{figures/fig06c_or_margin.png}
         \caption{Offshore Oregon}
     \end{subfigure}
 
     \vspace{0.4em}
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/blanco.png}
+        \includegraphics[width=\linewidth]{figures/fig06d_blanco.png}
         \caption{Blanco transform}
     \end{subfigure}\hfill
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/gorda.png}
+        \includegraphics[width=\linewidth]{figures/fig06e_gorda.png}
         \caption{Gorda deformation zone}
     \end{subfigure}\hfill
     \begin{subfigure}{0.32\textwidth}
-        \includegraphics[width=\linewidth]{figures/fig_regions/mendocino.png}
+        \includegraphics[width=\linewidth]{figures/fig06f_mendocino.png}
         \caption{Mendocino triple junction}
     \end{subfigure}
     \caption{{\bf Regional zoom-ins of the ensemble catalog}, same encoding as
-    Figure~\ref{fig:fig4} (size~$\sim M$, orange where $M$ is a moment magnitude,
+    Figure~\ref{fig:catalog_map} (size~$\sim M$, orange where $M$ is a moment magnitude,
     opacity~$\sim$ pick count), with one marker
     size scale shared by the six panels (legend in a) and the same opacity scale as
-    Figure~\ref{fig:fig4}a, over gray shaded GMRT relief. Beachballs are the preferred
+    Figure~\ref{fig:catalog_map}a, over gray shaded GMRT relief. Beachballs are the preferred
     ComCat moment tensors ($M_w\ge4.0$ matched to an event of this catalog in red,
     $M_w\ge4.5$ at other dates or not in the catalog in gray), with the three largest
     matched events labeled. Arrows show
@@ -884,12 +884,12 @@ concentrate relative to the locked zone.
 Beneath Puget Sound the deeper seismicity broadly tracks the down-dip geometry of the
 subducting plate: events concentrate between the 40 and 60~km Slab2 depth contours and
 trend north--south, parallel to the contours, following the along-strike curvature of
-the slab (Figure [\[fig:puget\]](#fig:puget){reference-type="ref" reference="fig:puget"}).
+the slab (Figure \ref{fig:puget}).
 
 ```{=latex}
 \begin{figure}
     \centering
-    \includegraphics[width=7.3cm]{figures/fig_slab_puget.png}
+    \includegraphics[width=7.3cm]{figures/fig07_puget_slab.png}
     \caption{{\bf Slab-following seismicity beneath Puget Sound.} Catalog events
     (size~$\sim M$, opacity~$\sim$ pick count) over high-resolution relief, with
     Slab2 interface depth contours (blue, 10~km interval) and ComCat moment tensors
@@ -907,9 +907,9 @@ the slab (Figure [\[fig:puget\]](#fig:puget){reference-type="ref" reference="fig
 ```{=latex}
 \begin{figure}
     \centering
-    \includegraphics[width=6.9cm]{figures/fig6.png}
+    \includegraphics[width=6.9cm]{figures/fig08_subregions.png}
     \caption{Earthquake Catalog in the Endeavor}
-    \label{fig:fig6}
+    \label{fig:subregions}
 \end{figure}
 ```
 

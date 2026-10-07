@@ -13,7 +13,7 @@ Run on the machine that has the data:
     pixi run python paper/export_figures.py --execute       # regen notebooks, then collect
     pixi run python paper/export_figures.py --src-dir /path # override output directory
 
-fig2 (pipeline schematic) and fig3 (assembled picking-example panels) have no
+fig02 (pipeline schematic) and fig04 (assembled picking-example panels) have no
 single generated source and are maintained by hand -- they are not listed here.
 """
 from __future__ import annotations
@@ -115,6 +115,9 @@ def main() -> int:
                     help="directory the figure notebooks write PNGs into")
     ap.add_argument("--execute", action="store_true",
                     help="run each generating notebook first (needs data + env)")
+    ap.add_argument("--scripts-only", action="store_true",
+                    help="with --execute: rerun only the script figures (they need only the "
+                         "data products), not the notebooks (they need the /wd1 data)")
     ap.add_argument("--kernel", default="python3",
                     help="Jupyter kernel to run notebooks with (they are saved with a "
                          "'seismo' kernel that isn't registered here; python3 = this env)")
@@ -123,7 +126,7 @@ def main() -> int:
     figdir = HERE / "figures"
 
     if args.execute:
-        for nb in sorted({nb for _, nb, _ in FIGURES}):
+        for nb in ([] if args.scripts_only else sorted({nb for _, nb, _ in FIGURES})):
             print(f"executing {nb} ...")
             r = subprocess.run(["jupyter", "nbconvert", "--to", "notebook",
                                 "--execute", "--inplace",
@@ -153,7 +156,7 @@ def main() -> int:
             miss += 1
             print(f"  MISS  {dest:58s} (not found: {s})")
     print(f"\ncopied {ok}, missing {miss}.  "
-          "(fig2 pipeline schematic + fig3 picking panels are maintained by hand.)")
+          "(fig02 pipeline schematic + fig04 picking panels are maintained by hand.)")
     return 1 if miss else 0
 
 

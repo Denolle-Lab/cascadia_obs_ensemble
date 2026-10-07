@@ -104,10 +104,10 @@ Recent advances in machine learning have revolutionized the way seismologists
 construct earthquake catalogs. Deep learning enables automated detection of weak
 and overlapping seismic signals buried in noise, producing catalogs that are far
 more complete and higher in spatial--temporal resolution than those derived from
-traditional algorithms [@poggiali2025fault; @mousavi2023machine]. The typical
+traditional algorithms [@poggiali2025fault; @Mousavi23]. The typical
 modern workflow consists of three key steps: (1) phase detection and picking,
 (2) phase association, and (3) event location and relocation
-[e.g., @zhu2022endtoend; @zhu2023quakeflow; @Isken25; @Shiddiqi25].
+[e.g., @Zhu22; @zhu2023quakeflow; @Isken25; @Shiddiqi25].
 
 ## Detection and Phase Picking
 
@@ -119,18 +119,18 @@ encoder--decoder models such as the *EQTransformer* [@mousavi2020earthquake].
 These models learn directly from waveform data to identify P- and S-arrivals and
 have produced denser catalogs that capture weak, overlapping events, greatly
 improving catalog completeness compared to conventional algorithms
-[@mousavi2023machine; @zhu2022endtoend]. However, models originally trained on
+[@Mousavi23; @Zhu22]. However, models originally trained on
 continental datasets show substantially reduced performance when applied to
 ocean-bottom seismometer (OBS) recordings due to coupling differences,
 reverberations, and complex noise structures [@ruppert2022]. To address this
 challenge, recent developments have focused on retraining and adapting pickers
 for marine environments. Two state-of-the-art examples, both implemented within
 the open-source *SeisBench* framework [@woollam2022seisbench], are
-*OBSTransformer* and *PickBlue*. *OBSTransformer* [@niksejel2024obstransformer]
+*OBSTransformer* and *PickBlue*. *OBSTransformer* [@Niksejel24]
 leverages automated labeling, transfer learning from land data, and a
 transformer-based encoder to improve generalization to noisy offshore waveforms,
 achieving higher recall and precision across distances. *PickBlue*
-[@bornstein2024pickblue] extends EQTransformer and PhaseNet by adding a
+[@Bornstein23] extends EQTransformer and PhaseNet by adding a
 hydrophone channel and retraining on a global OBS dataset comprising 15
 deployments and over 13,000 events, significantly enhancing phase onset
 accuracy. While these specialized models show superior performance for specific
@@ -155,7 +155,7 @@ performance declines under high-noise or high-density conditions. Newer
 algorithms such as *PyOcto* and the graph neural network-based *GENIE* achieve
 near-perfect association accuracy in both crustal and subduction environments
 while maintaining strong scalability to large or heterogeneous networks
-[@Puente2025]. Benchmarking studies demonstrate that these methods outperform
+[@puente2025benchmarking]. Benchmarking studies demonstrate that these methods outperform
 earlier associators, particularly in scenarios involving overlapping events or
 variable network geometry. Because GENIE learns spatial and temporal
 relationships directly from data and can adapt to varying network
@@ -177,7 +177,7 @@ experiments have been conducted near the Mendocino Triple Junction to study the
 interactions among the Gorda, Pacific, and North American plates
 [e.g., @Yoon2024]. More recently, efforts have revisited Cascadia Initiative
 (CI) data using modern machine learning tools, deep learning pickers applied to
-the Blanco Transform Fault [@liu25] and Axial Seamount [@wang], revealing
+the Blanco Transform Fault [@Liu25] and Axial Seamount [@wang], revealing
 substantial improvements in catalog completeness. However, these studies remain
 localized and methodologically heterogeneous, lacking a unified framework that
 can consistently capture seismicity across the entire Juan de Fuca system.
@@ -246,7 +246,7 @@ Northern California Earthquake Data Center (NCEDC) FDSN web service. We
 collected all available continuous seismic data between 2010 and 2015 from
 stations within a broad region encompassing the CSZ and its surrounding tectonic
 boundaries. The dataset includes OBS records from the CI experiment
-[@Stone2018], along with permanent and temporary land-based stations operated by
+[@Stone18], along with permanent and temporary land-based stations operated by
 regional networks across Washington, Oregon, and Northern California. The CI
 experiment deployed over 100 OBS instruments across four yearly cruises between
 2010 and 2015, complemented by more than 60 coastal and nearshore broadband
@@ -277,7 +277,7 @@ vertical channels named `3`. The first pass contributes 21.9 million of the
 Waveform preprocessing followed the data conditioning pipeline typical of the
 deep learning phase picking *EQTransformer* [@mousavi2020earthquake]. Each
 day-long waveform was bandpass filtered between 4 and 15 Hz to remove
-low-frequency microseismic noise, following @Morton2023, who found that small
+low-frequency microseismic noise, following @Morton23, who found that small
 events in Cascadia OBS data are easier to detect above 4 Hz. In the second
 pass, traces were then resampled to 100 Hz, the sampling rate of the training
 data of the models; the first pass gave the models the native rate (40 to
@@ -980,9 +980,11 @@ Thank all relevant parties and acknowledge funding sources, if any.
 # Data and Code Availability {#data-and-code-availability .unnumbered}
 
 All seismic data is available on the Earthscope Consortium and the various
-networks used have digital identifiers objects, [C8 @C8], [7D, 7A @7D],
+networks used have digital object identifiers, [C8 @C8], [7D, 7A @7D],
 [CN @CN], [UW @UW], [UO @UO], [NC @NC], [BK @BK], [TA @TA], [OO @OO], PB,
-[X6 @X6], [Z5 @Z5], [X9 @X9]. The software is available on GitHub
+[X6 @X6], [Z5 @Z5], [X9 @X9]. The catalog (origins, arrivals with amplitudes and
+magnitudes, and every ELEP pick) is archived on Zenodo
+(<https://doi.org/10.5281/zenodo.23223400>). The software is available on GitHub
 <https://github.com/Denolle-Lab/cascadia_obs_ensemble/> and on zenodo (REF).
 
 # Competing interests {#competing-interests .unnumbered}

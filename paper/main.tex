@@ -180,10 +180,10 @@ seismologists construct earthquake catalogs. Deep learning enables
 automated detection of weak and overlapping seismic signals buried in
 noise, producing catalogs that are far more complete and higher in
 spatial--temporal resolution than those derived from traditional
-algorithms \citep{poggiali2025fault, mousavi2023machine}. The typical
-modern workflow consists of three key steps: (1) phase detection and
-picking, (2) phase association, and (3) event location and relocation
-\citep[e.g.,][]{zhu2022endtoend, zhu2023quakeflow, Isken25, Shiddiqi25}.
+algorithms \citep{poggiali2025fault, Mousavi23}. The typical modern
+workflow consists of three key steps: (1) phase detection and picking,
+(2) phase association, and (3) event location and relocation
+\citep[e.g.,][]{Zhu22, zhu2023quakeflow, Isken25, Shiddiqi25}.
 
 \subsection{Detection and Phase
 Picking}\label{detection-and-phase-picking}
@@ -197,22 +197,21 @@ the \emph{EQTransformer} \citep{mousavi2020earthquake}. These models
 learn directly from waveform data to identify P- and S-arrivals and have
 produced denser catalogs that capture weak, overlapping events, greatly
 improving catalog completeness compared to conventional algorithms
-\citep{mousavi2023machine, zhu2022endtoend}. However, models originally
-trained on continental datasets show substantially reduced performance
-when applied to ocean-bottom seismometer (OBS) recordings due to
-coupling differences, reverberations, and complex noise structures
+\citep{Mousavi23, Zhu22}. However, models originally trained on
+continental datasets show substantially reduced performance when applied
+to ocean-bottom seismometer (OBS) recordings due to coupling
+differences, reverberations, and complex noise structures
 \citep{ruppert2022}. To address this challenge, recent developments have
 focused on retraining and adapting pickers for marine environments. Two
 state-of-the-art examples, both implemented within the open-source
 \emph{SeisBench} framework \citep{woollam2022seisbench}, are
 \emph{OBSTransformer} and \emph{PickBlue}. \emph{OBSTransformer}
-\citep{niksejel2024obstransformer} leverages automated labeling,
-transfer learning from land data, and a transformer-based encoder to
-improve generalization to noisy offshore waveforms, achieving higher
-recall and precision across distances. \emph{PickBlue}
-\citep{bornstein2024pickblue} extends EQTransformer and PhaseNet by
-adding a hydrophone channel and retraining on a global OBS dataset
-comprising 15 deployments and over 13,000 events, significantly
+\citep{Niksejel24} leverages automated labeling, transfer learning from
+land data, and a transformer-based encoder to improve generalization to
+noisy offshore waveforms, achieving higher recall and precision across
+distances. \emph{PickBlue} \citep{Bornstein23} extends EQTransformer and
+PhaseNet by adding a hydrophone channel and retraining on a global OBS
+dataset comprising 15 deployments and over 13,000 events, significantly
 enhancing phase onset accuracy. While these specialized models show
 superior performance for specific data types, ensemble deep learning
 remains the most robust and generalizable strategy for heterogeneous
@@ -238,8 +237,8 @@ high-noise or high-density conditions. Newer algorithms such as
 \emph{PyOcto} and the graph neural network-based \emph{GENIE} achieve
 near-perfect association accuracy in both crustal and subduction
 environments while maintaining strong scalability to large or
-heterogeneous networks \citep{Puente2025}. Benchmarking studies
-demonstrate that these methods outperform earlier associators,
+heterogeneous networks \citep{puente2025benchmarking}. Benchmarking
+studies demonstrate that these methods outperform earlier associators,
 particularly in scenarios involving overlapping events or variable
 network geometry. Because GENIE learns spatial and temporal
 relationships directly from data and can adapt to varying network
@@ -263,7 +262,7 @@ the Mendocino Triple Junction to study the interactions among the Gorda,
 Pacific, and North American plates \citep[e.g.,][]{Yoon2024}. More
 recently, efforts have revisited Cascadia Initiative (CI) data using
 modern machine learning tools, deep learning pickers applied to the
-Blanco Transform Fault \citep{liu25} and Axial Seamount \citep{wang},
+Blanco Transform Fault \citep{Liu25} and Axial Seamount \citep{wang},
 revealing substantial improvements in catalog completeness. However,
 these studies remain localized and methodologically heterogeneous,
 lacking a unified framework that can consistently capture seismicity
@@ -339,15 +338,14 @@ directly from the Northern California Earthquake Data Center (NCEDC)
 FDSN web service. We collected all available continuous seismic data
 between 2010 and 2015 from stations within a broad region encompassing
 the CSZ and its surrounding tectonic boundaries. The dataset includes
-OBS records from the CI experiment \citep{Stone2018}, along with
-permanent and temporary land-based stations operated by regional
-networks across Washington, Oregon, and Northern California. The CI
-experiment deployed over 100 OBS instruments across four yearly cruises
-between 2010 and 2015, complemented by more than 60 coastal and
-nearshore broadband stations. After inspecting metadata, gain, and
-timing consistency, we identified \texttt{XX} CI OBS and \texttt{XX}
-onshore stations with continuous, high-quality recordings suitable for
-analysis.
+OBS records from the CI experiment \citep{Stone18}, along with permanent
+and temporary land-based stations operated by regional networks across
+Washington, Oregon, and Northern California. The CI experiment deployed
+over 100 OBS instruments across four yearly cruises between 2010 and
+2015, complemented by more than 60 coastal and nearshore broadband
+stations. After inspecting metadata, gain, and timing consistency, we
+identified \texttt{XX} CI OBS and \texttt{XX} onshore stations with
+continuous, high-quality recordings suitable for analysis.
 
 The station data were initially gathered from the region bounded by
 123°--127°W and 40°--50°N. During early testing, we found that this
@@ -377,12 +375,12 @@ Waveform preprocessing followed the data conditioning pipeline typical
 of the deep learning phase picking \emph{EQTransformer}
 \citep{mousavi2020earthquake}. Each day-long waveform was bandpass
 filtered between 4 and 15~Hz to remove low-frequency microseismic noise,
-following \citet{Morton2023}, who found that small events in Cascadia
-OBS data are easier to detect above 4~Hz. In the second pass, traces
-were then resampled to 100~Hz, the sampling rate of the training data of
-the models; the first pass gave the models the native rate (40 to
-100~Hz). Data gaps were filled by linear interpolation when merging the
-traces (\texttt{ObsPy}
+following \citet{Morton23}, who found that small events in Cascadia OBS
+data are easier to detect above 4~Hz. In the second pass, traces were
+then resampled to 100~Hz, the sampling rate of the training data of the
+models; the first pass gave the models the native rate (40 to 100~Hz).
+Data gaps were filled by linear interpolation when merging the traces
+(\texttt{ObsPy}
 \texttt{Stream.merge(fill\_value=\textquotesingle{}interpolate\textquotesingle{})}),
 and the components were trimmed to a common time span.
 
@@ -1123,11 +1121,14 @@ Thank all relevant parties and acknowledge funding sources, if any.
 \addcontentsline{toc}{section}{Data and Code Availability}
 
 All seismic data is available on the Earthscope Consortium and the
-various networks used have digital identifiers objects,
-\citep[C8][]{C8}, \citep[7D, 7A][]{7D}, \citep[CN][]{CN},
-\citep[UW][]{UW}, \citep[UO][]{UO}, \citep[NC][]{NC}, \citep[BK][]{BK},
-\citep[TA][]{TA}, \citep[OO][]{OO}, PB, \citep[X6][]{X6},
-\citep[Z5][]{Z5}, \citep[X9][]{X9}. The software is available on GitHub
+various networks used have digital object identifiers, \citep[C8][]{C8},
+\citep[7D, 7A][]{7D}, \citep[CN][]{CN}, \citep[UW][]{UW},
+\citep[UO][]{UO}, \citep[NC][]{NC}, \citep[BK][]{BK}, \citep[TA][]{TA},
+\citep[OO][]{OO}, PB, \citep[X6][]{X6}, \citep[Z5][]{Z5},
+\citep[X9][]{X9}. The catalog (origins, arrivals with amplitudes and
+magnitudes, and every ELEP pick) is archived on Zenodo
+(\url{https://doi.org/10.5281/zenodo.23223400}). The software is
+available on GitHub
 \url{https://github.com/Denolle-Lab/cascadia_obs_ensemble/} and on
 zenodo (REF).
 

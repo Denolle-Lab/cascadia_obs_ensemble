@@ -15,7 +15,12 @@ Status (2026-10-05). §3 done the same day: files, labels and figure notebooks r
   notebooks in `notebooks/diagnostics/`, and `utils/paths.py` resolves the repository paths.
   Checked from the new paths: phase18/19 reproduce the paper's magnitude files byte for byte,
   and the nine supplementary figure scripts reproduce the paper's PNGs pixel for pixel.
-- To do: `make figures` / `make catalog` (§4).
+- Done (2026-10-07): `make catalog` (phase18 → phase19 → phase10; reproduces the three
+  files byte for byte) and `make figures` (every script figure, then collect). Data DOI
+  reserved: 10.5281/zenodo.23223400. 20 of the 25 citation keys missing from
+  `paper/mybibfile.bib` added or remapped.
+- To do: the 5 remaining citation keys; GENIE/GraphDD TO CONFIRM items (being collected);
+  data-record upload; GitHub release v1.0.0 at submission.
 
 Goal: the repo holds only the workflow behind the paper, in run order, with one script per
 paper figure, the at-scale launchers kept apart, a README that reproduces the paper, and a
@@ -191,8 +196,8 @@ re-clone, and after merging or closing the open branches (`feat/*`, `marine-*`).
 1. **Done 2026-09-30:** tagged `pre-cleanup-2026-09` and stage tags; merged PR #22; deleted
    `old/`, `3_post_processing/`, `0_data_availability/` and the `_old` CSVs; stripped the two
    >1 MB diagnostic notebooks (`figures/fig2.ipynb` keeps its outputs, since Fig. 2 is
-   assembled by hand); README and PROVENANCE. **Still to do by hand:** reserve the data DOI on
-   Zenodo.
+   assembled by hand); README and PROVENANCE. Data DOI reserved 2026-10-07: 10.5281/zenodo.23223400 (draft 23223400,
+   `utils/zenodo_data_record.py`; no files uploaded yet).
    **Found while writing PROVENANCE:** the 31,020-event QC file applies > 4 P and > 4 S picks,
    not the ≥ 4 stated in the paper (≥ 4 gives 40,065). Decided: keep the file; the paper
    now says at least five.

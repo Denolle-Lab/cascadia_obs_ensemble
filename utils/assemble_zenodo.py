@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Assemble the Zenodo submission package under data/zenodo/ from the keep-set.
+"""Assemble the Zenodo data record under data/zenodo/ (dry-run by default).
 
-Builds a single, self-describing record (the user's choice: one record, everything)
-that mirrors the three nested datasets of the pipeline plus the final QC catalog,
-amplitudes, and comparison catalogs. Source files are the paper keep-set (see
-utils/organize_review_data.py and data/LINEAGE.md); this script copies them into the
-published tree with clean names and writes an md5 checksum manifest. It copies (never
-moves) and overwrites the target tree, so it is safe to re-run.
+Layout of the record "Cascadia OBS ensemble earthquake catalog 2010-2015, v3":
 
-    python utils/assemble_zenodo.py            # dry-run: print the plan
+    README.md  DATA_DICTIONARY.md  LINEAGE.md  CHECKSUMS.md5
+    catalog/        origins_v3.csv  arrivals_v3.csv  picks_v3.csv.gz   (ANSS/QuakeML split)
+    magnitude/      station terms, matched ComCat moment tensors
+    intermediate/   GENIE association output (events, pick assignments), for provenance
+    comparison/     ANSS ComCat and Morton et al. (2023) catalogs used in the paper
+
+The three catalog tables come from utils/build_anss_tables.py (run it first). This
+script copies (never moves) and overwrites the target tree, so it is safe to re-run.
+
+    python utils/build_anss_tables.py          # -> data/catalog_v3/
+    python utils/assemble_zenodo.py            # dry-run: print the plan and sizes
     python utils/assemble_zenodo.py --apply    # copy files + write CHECKSUMS.md5
 
-The 5.5 GB raw ELEP picks are included (single record). data/zenodo/ is git-ignored.
+data/zenodo/ is git-ignored.
 """
 from __future__ import annotations
 
@@ -22,31 +27,29 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "data" / "datasets_all_regions"
+TABLES = ROOT / "data" / "catalog_v3"
 ANSS = ROOT / "data" / "datasets_anss"
+MAG = ROOT / "data" / "magnitude"
 PKG = ROOT / "data" / "zenodo" / "cascadia-obs-ensemble-catalog-v3"
 
-# (published relative path, source file)  -- pipeline order, three nested datasets first
+# (published relative path, source file)
 MAP = [
-    # (a) raw ELEP ensemble picks
-    ("01_raw_elep_picks/elep_picks_all_regions_2010_2015.csv", SRC / "all_picks_all_regions_2010_2015_ver3.csv"),
-    # (b) GENIE-associated picks + events
-    ("02_associated_genie/events.csv", SRC / "all_events_2010_2015_ver3.csv"),
-    ("02_associated_genie/pick_assignments.csv", SRC / "all_pick_assignments_all_regions_2010_2015_ver3.csv"),
-    # (c) relocated origins + picks (GraphDD + cross-correlation)
-    ("03_relocated/catalog.csv", SRC / "Cascadia_relocated_catalog_ver_3.csv"),
-    ("03_relocated/picks.csv", SRC / "Cascadia_relocated_catalog_picks_ver_3.csv"),
-    ("03_relocated/origins_reloc_cog.csv", SRC / "origin_2010_2015_reloc_cog_ver3.csv"),
-    ("03_relocated/origins_reloc_cog_cc.csv", SRC / "origin_2010_2015_reloc_cog_ver3_cc.csv"),
-    # FINAL QC catalog (the paper figures) + its arrivals/associations/stations
-    ("04_final_catalog_qc/events_qc_p4_s4_rms2.5.csv", SRC / "origin_2010_2015_reloc_cog_ver3_cc_p_4_s_4_rms_2_5.csv"),
-    ("04_final_catalog_qc/arrivals.csv", SRC / "arrival_2010_2015_reloc_cog_ver3.csv"),
-    ("04_final_catalog_qc/associations.csv", SRC / "assoc_2010_2015_reloc_cog_ver3.csv"),
-    ("04_final_catalog_qc/stations.csv", SRC / "all_stations_2010_2015_ver3.csv"),
-    # amplitudes / magnitude input (latest w_amp table)
-    ("05_amplitudes/picks_with_amplitudes.csv", SRC / "Cascadia_updated_catalog_picks_assignment_ver_3_w_amp.csv"),
+    ("README.md", ROOT / "data" / "zenodo_README.md"),
+    ("DATA_DICTIONARY.md", ROOT / "data" / "DATA_DICTIONARY.md"),
+    ("LINEAGE.md", ROOT / "data" / "LINEAGE.md"),
+    # the catalog: three ANSS-style tables
+    ("catalog/origins_v3.csv", TABLES / "origins_v3.csv"),
+    ("catalog/arrivals_v3.csv", TABLES / "arrivals_v3.csv"),
+    ("catalog/picks_v3.csv.gz", TABLES / "picks_v3.csv.gz"),
+    # magnitude inputs not already in the arrivals (amplitudes are there)
+    ("magnitude/station_terms_routeA.csv", MAG / "route_b_station_terms_routeA.csv"),
+    ("magnitude/comcat_mt_matched.csv", ROOT / "data" / "focal" / "comcat_mt_matched.csv"),
+    # GENIE output, as received
+    ("intermediate/genie_events.csv", SRC / "all_events_2010_2015_ver3.csv"),
+    ("intermediate/genie_pick_assignments.csv", SRC / "all_pick_assignments_all_regions_2010_2015_ver3.csv"),
     # comparison catalogs
-    ("06_comparison/anss_2010-2015.csv", ANSS / "anss_2010-15.csv"),
-    ("06_comparison/morton_reloc.csv", SRC / "origin_2010_2015_reloc_cog_morton_ver3.csv"),
+    ("comparison/anss_2010-2015.csv", ANSS / "anss_2010-15.csv"),
+    ("comparison/morton_reloc.csv", SRC / "origin_2010_2015_reloc_cog_morton_ver3.csv"),
 ]
 
 
@@ -59,40 +62,45 @@ def md5(p: Path, chunk: int = 1 << 20) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--apply", action="store_true", help="copy files (default: dry-run)")
+    ap.add_argument("--out", type=Path, default=PKG, help="package directory")
     args = ap.parse_args()
 
     missing = [str(s.relative_to(ROOT)) for _, s in MAP if not s.exists()]
     total = sum(s.stat().st_size for _, s in MAP if s.exists())
-    print(f"package: {PKG.relative_to(ROOT)}")
+    print(f"package: {args.out}")
     print(f"{len(MAP)} files, {total/1e9:.2f} GB{'  (dry-run)' if not args.apply else ''}\n")
     for dest, s in MAP:
         tag = "  " if s.exists() else "??"
-        sz = f"{s.stat().st_size/1e6:8.1f}MB" if s.exists() else "  missing "
-        print(f" {tag} {sz}  {dest:52s} <- {s.name}")
+        sz = f"{s.stat().st_size/1e6:9.1f} MB" if s.exists() else "   missing  "
+        print(f" {tag} {sz}  {dest:42s} <- {s.relative_to(ROOT)}")
     if missing:
-        print("\nMISSING sources (fix before publishing):")
+        print("\nMISSING sources (run utils/build_anss_tables.py, or fix before publishing):")
         for m in missing:
             print("   ", m)
 
     if not args.apply:
         print("\nRe-run with --apply to copy + write CHECKSUMS.md5.")
         return 0
+    if missing:
+        raise SystemExit("not applying with missing sources")
 
-    PKG.mkdir(parents=True, exist_ok=True)
+    free = shutil.disk_usage(args.out.parent if args.out.parent.exists() else ROOT).free
+    if free < 1.2 * total:
+        raise SystemExit(f"only {free/1e9:.1f} GB free for a {total/1e9:.1f} GB package; use --out")
+
+    args.out.mkdir(parents=True, exist_ok=True)
     lines = []
     for dest, s in MAP:
-        if not s.exists():
-            continue
-        d = PKG / dest
+        d = args.out / dest
         d.parent.mkdir(parents=True, exist_ok=True)
         print(f"  copy {dest} ...")
         shutil.copy2(s, d)
         lines.append(f"{md5(d)}  {dest}")
-    (PKG / "CHECKSUMS.md5").write_text("\n".join(lines) + "\n")
-    print(f"\nwrote {len(lines)} files + CHECKSUMS.md5 to {PKG.relative_to(ROOT)}")
-    print("Next: add README.md (provenance/columns/license) + create the Zenodo record.")
+    (args.out / "CHECKSUMS.md5").write_text("\n".join(lines) + "\n")
+    print(f"\nwrote {len(lines)} files + CHECKSUMS.md5 to {args.out}")
+    print("Check: cd <package> && md5sum -c CHECKSUMS.md5")
     return 0
 
 

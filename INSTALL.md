@@ -110,29 +110,22 @@ All waveform download logic is centralized in `utils/data_client.py`.
 
 ```sh
 # default (pnwstore — internal env):
-python parallel_pick_2011.py
+python run_picking.py --year 2011 --region 122-129
 
 # public FDSN:
-python parallel_pick_2011.py  # edit source='fdsn' in run_detection() call
+python run_picking.py --year 2011 --region 122-129 --source fdsn
 ```
 
-`run_detection()` accepts a `source` keyword argument defaulting to `'pnwstore'`.
+Years and regions are the rows of `picking_config.csv`. The per-year scripts of the ver3
+run are in `1_picking/legacy/`.
 
-### Event waveform processing (`3_post_processing/`)
+### Amplitudes and magnitudes (`4_relocation/magnitude/`)
 
-```sh
-# public (EarthScope FDSN)
-python event_waveform_processing.py \
-    --events data/Cascadia_relocated_catalog_ver_3.csv \
-    --picks  data/Cascadia_relocated_catalog_picks_ver_3.csv \
-    --source fdsn
-
-# UW internal (pnwstore)
-python event_waveform_processing.py \
-    --events data/Cascadia_relocated_catalog_ver_3.csv \
-    --picks  data/Cascadia_relocated_catalog_picks_ver_3.csv \
-    --source pnwstore
-```
+The paper's magnitudes come from the Route A pipeline, which needs the UW-internal
+`amplitude` env (pnwstore) and runs for about two days on the lab server. The steps, hosts
+and commands are in [`4_relocation/magnitude/ROUTE_A_RUNBOOK.md`](4_relocation/magnitude/ROUTE_A_RUNBOOK.md).
+The older event-waveform amplitude scripts (`3_post_processing/`) were removed in 2026-09;
+they remain at tag `pre-cleanup-2026-09`.
 
 ---
 

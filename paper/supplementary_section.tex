@@ -438,6 +438,111 @@ network is designed to contribute.
     \label{fig:supp_fmd}
 \end{figure*}
 
+\section{Comparison of the ELEP and PickBlue picks}
+
+QuakeScope ran PickBlue \citep{Bornstein23} (the \texttt{obs} weights, PhaseNet
+architecture, threshold 0.2) on ocean-bottom stations worldwide
+(\url{https://seisscoped.org/QuakeScope/obs_2026.html}). We compared its picks with
+ours at the 350 stations that both picked (networks 7A, 7D, NV, OO, X9 and Z5,
+2010--2016), on the 98,209 station-days where PickBlue ran with data. On those days
+ELEP has $2.76\times10^{7}$ picks ($1.59\times10^{7}$ P, $1.18\times10^{7}$ S) and
+PickBlue $1.83\times10^{7}$ ($1.40\times10^{7}$ P, $4.3\times10^{6}$ S). Two picks match
+when they are at the same station, have the same phase, are each other's nearest
+neighbour in time and are less than 0.5~s apart. There is no ground truth here, so we
+used four comparisons. Each one answers a different question and each one has a bias
+(Table~\ref{tab:supp_pickcompare}).
+
+\begin{table*}[tp]
+\centering
+\small
+\caption{Four ways to compare two pick sets that have no common ground truth.}
+\label{tab:supp_pickcompare}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{4.0cm}>{\raggedright\arraybackslash}p{4.8cm}>{\raggedright\arraybackslash}p{4.8cm}}
+\hline
+Comparison & Question & For & Against \\
+\hline
+Pick-to-pick matching & Do the two pickers flag the same arrivals? & Direct, needs nothing else; gives the timing offset. & Counts depend on each picker's threshold, and most picks of both are not earthquakes, so overlap mixes signal and noise. \\
+Equal count, threshold sweep & Do they agree once confidence calibration is removed? & Compares the $N$ most confident picks of each, so neither picker is favoured by a looser threshold. & Needs a pick probability: the first ELEP run (v1) stored none, which leaves out half of the station-days. \\
+Catalog-anchored recall & Does PickBlue find the arrivals of located earthquakes? & Restricted to picks that matter for the catalog; gives recall by distance and magnitude, and travel-time residuals. & The catalog was built from ELEP picks, so ELEP recall is near 1 by construction and the residuals favour ELEP. \\
+Network coincidence & Which picks are seen at neighbouring stations? & Treats the two pickers the same, needs no association or catalog; the time-shifted chance level corrects for pick rate. & Any coherent signal counts (whale calls, ship noise, tremor, synchronous instrument signals); misses events seen at one station only. \\
+\hline
+\end{tabular}
+\end{table*}
+
+\paragraph{Matching.} At each picker's own threshold, $2.45\times10^{6}$ P and
+$1.07\times10^{6}$ S picks match: 15\% of the ELEP P and 9\% of the ELEP S picks, 18\%
+of the PickBlue P and 25\% of the PickBlue S picks. The shared picks are 9\% (P) and
+7\% (S) of the union (Figure~\ref{fig:supp_pickblue}a). Half of the station-days carry
+ELEP picks from the first run (v1), which kept no probability; the other half carry
+picks with a semblance value, and no station-day mixes the two. On the scored days we
+kept the $N$ most confident picks of each picker, with $N$ the smaller of the two
+counts ($5.2\times10^{6}$ P, ELEP semblance $\ge0.06$; $1.3\times10^{6}$ S, ELEP
+$\ge0.19$; PickBlue at 0.2 in both). The overlap then rises only to 24\% (P) and 26\%
+(S) of each set. The disagreement is not a threshold artefact. It is asymmetric,
+though (Figure~\ref{fig:supp_pickblue}b): of the PickBlue picks above 0.7, ELEP has
+91\% (P) and 93\% (S), while of the ELEP picks above 0.5, PickBlue has 61\% (P) and 42\%
+(S). The confident PickBlue picks are almost a subset of ours. Many confident ELEP
+picks, mostly S, are absent from PickBlue. Daily pick counts at a station are only
+moderately correlated between the two pickers (median Spearman $\rho=0.57$ over 347
+stations), so they respond differently to the noise that drives the pick rate.
+
+\paragraph{Timing.} PickBlue picks earlier than ELEP at every network, by a median of
+0.09~s for P (interquartile range $-0.17$ to $-0.02$~s) and 0.12~s for S ($-0.21$ to
+$-0.05$~s; Figure~\ref{fig:supp_pickblue}c). ELEP takes the maximum of a semblance
+computed over 0.5~s windows, which can sit later than the onset that PickBlue was
+trained to mark. A shift common to all stations goes into the origin time. The
+difference between the P and S offsets does not: PickBlue S$-$P times are 0.07~s
+shorter (median of 30,907 station-event pairs), about 0.6~km of hypocentral distance.
+Without analyst picks we cannot say which of the two is closer to the true onset.
+
+\paragraph{Catalog arrivals.} The quality-controlled catalog has 71,755 P and 113,180
+S arrivals at these stations on days PickBlue ran. PickBlue picked 67\% and 68\% of
+them. The share is 73--80\% within 50~km and falls to 49\% (P) and 40\% (S) at
+250--400~km (Figure~\ref{fig:supp_pickblue}d). For P it rises with magnitude, from 30\%
+at $M_L$ 0.5--1 to 80\% above 2.5 (Figure~\ref{fig:supp_pickblue}e). Where PickBlue
+picked a catalog arrival, its travel-time residuals against our locations have the
+same spread as ours (median absolute deviation 0.40~s for P, 0.58~s for S), so its
+timing is as consistent with the locations as the picks the locations were made from.
+
+\paragraph{Network coincidence.} We counted, for each pick, the stations within 60~km
+(a median of 9) that have a pick of the same phase within $\pm10$~s, and took as
+chance the same count with the neighbours' picks shifted by 600~s. A 600~s shift also
+cancels signals that repeat every 300~s, such as the periodic PickBlue picks at
+7D.J48B. In the equal-count sets, 12.8\% of the ELEP and 9.0\% of the PickBlue P picks
+are seen at two or more neighbours, against 3.2\% and 2.1\% by chance. For S, it is
+14.3\% and 5.2\%, against 1.6\% and 0.5\%. For both pickers the excess grows with
+confidence and reaches 25\% for the most confident tenth of P picks
+(Figure~\ref{fig:supp_pickblue}f). For S it reaches 20\% for ELEP and 7\% for
+PickBlue. Coherent noise passes this test and single-station events fail it, so it
+ranks the two pick sets but does not count earthquakes.
+
+Taken together, ELEP at 0.05 contains nearly every confident PickBlue pick and many
+coherent S picks that PickBlue does not make, at the price of more picks overall.
+PickBlue misses about a third of the catalog arrivals, more often at large distance
+and small magnitude. The comparison that decides which of the
+unmatched picks are earthquakes is association. The PickBlue picks are archived with
+ours in the same table layout (Data and Code Availability) so that both sets can be associated
+with the same settings.
+
+\begin{figure*}[tp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/figS10_pickblue_compare.png}
+    \caption{{\bf ELEP and PickBlue picks at the 350 shared OBS stations}, on the
+    station-days where PickBlue ran. (a) Picks found by ELEP only (orange), by both
+    (black) and by PickBlue only (blue), at each picker's own threshold (ELEP 0.05,
+    PickBlue 0.2; all days) and at equal count (the $N$ most confident picks of each,
+    days with ELEP probabilities); percentages are shared picks over the union.
+    (b) Share of one picker's picks above a threshold (x axis) that the other picker
+    also made at its own threshold. (c) PickBlue minus ELEP pick time for matched pairs.
+    (d, e) Share of the arrivals of quality-controlled catalog events that PickBlue also
+    picked, by epicentral distance and magnitude (bins with at least 200 arrivals).
+    (f) Share of picks with a same-phase pick within $\pm10$~s at two or more stations
+    within 60~km, minus the share with the neighbours shifted by 600~s, by confidence
+    decile of each picker (equal-count sets). Solid: P; dashed: S. Matching: same
+    station and phase, mutual nearest neighbour, $|\Delta t|\le0.5$~s.}
+    \label{fig:supp_pickblue}
+\end{figure*}
+
 \section*{Competing interests}
 The authors declare no competing interests.
 

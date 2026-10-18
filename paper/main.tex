@@ -1092,6 +1092,48 @@ Nootka}\label{axial-and-endeavour-seamounts-and-nootka}
 
 \subsection{Northern Cascadia}\label{northern-cascadia}
 
+\subsection{Does the picker matter
+offshore?}\label{does-the-picker-matter-offshore}
+
+We compared our ELEP picks with the PickBlue picks that QuakeScope made
+at the same 350 ocean-bottom stations, 2010--2016 \citep{Bornstein23}
+(Supplement, section ``Comparison of the ELEP and PickBlue picks'').
+Without ground truth, we matched the picks one to one, compared the most
+confident \(N\) picks of each picker, measured how many of our catalog
+arrivals PickBlue recovers, and counted the picks that neighbouring
+stations also see. Four points stand out.
+
+\begin{itemize}
+\tightlist
+\item
+  The two pickers flag mostly different arrivals. Even when each keeps
+  only its \(N\) most confident picks, a quarter of the picks are
+  shared. The choice of picker changes the pick set more than the choice
+  of threshold does.
+\item
+  The disagreement is one-sided. ELEP, at its 0.05 threshold, contains
+  91--93\% of the PickBlue picks above 0.7, while PickBlue misses a
+  third of the arrivals of our quality-controlled events, more often
+  beyond 150 km and below \(M_L\) 1.5. A low-threshold ensemble,
+  followed by association to remove the false picks, is what makes the
+  catalog complete at small magnitudes offshore.
+\item
+  PickBlue picks earlier, by a median of 0.09 s for P and 0.12 s for S,
+  at every network, so its S\(-\)P times are 0.07 s shorter. A shift
+  common to all stations goes into the origin time, but this difference
+  does not: mixing picks from different pickers, in a joint relocation
+  or a tomography, should correct for it first.
+\item
+  A picker comparison is only as good as what the picks keep. Our first
+  picker run did not store the pick probability, so half of the
+  station-days could not enter the threshold tests. Pick tables should
+  keep the probability of every pick.
+\end{itemize}
+
+Associating both pick sets with the same settings will tell which of the
+unmatched picks are earthquakes. The PickBlue picks are archived with
+ours, in the same format, for that test.
+
 \subsection{Current limitations}\label{current-limitations}
 
 Seismicity on the edge of of our box.

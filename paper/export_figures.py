@@ -106,6 +106,9 @@ SCRIPT_FIGURES = [
     ("figS09_completeness.png",
      "workflow/06_analysis/phase14_completeness.py", [],
      "completeness_by_region.png", _MAG),
+    ("figS10_pickblue_compare.png",
+     "workflow/06_analysis/phase20_pickblue_compare.py", [],
+     "pickblue_compare.png", ROOT / "data" / "picks_compare"),
 ]
 
 

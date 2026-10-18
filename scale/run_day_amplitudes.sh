@@ -27,6 +27,7 @@ OUT="${OUT:-/wd1/mdenolle_data/amps_v5}"
 INV="${INV:-$HERE/station_inventory_v2_slim.xml}"
 NSHARD="${NSHARD:-48}"                     # one process each; ~1-3 GB RSS per shard
 TRIES="${TRIES:-4}"
+RUN_ARGS="${RUN_ARGS:-}"                   # e.g. --prefer-complete for a replan run
 ARRIVALS="${ARRIVALS:-$ROOT/data/zenodo/cascadia-obs-ensemble-catalog-v3/catalog/arrivals_v3.csv}"
 RAW_V2="${RAW_V2:-$HERE/rerun_v2/raw_wa_amplitudes_v2.csv}"
 mkdir -p "$OUT"
@@ -71,7 +72,7 @@ for try in $(seq 1 "$TRIES"); do
         left=$(shard_todo "$i")
         [ "$left" -le 0 ] && continue
         s=$(printf %03d "$i")
-        "$PY" route_a_day_amplitudes.py run --out "$OUT" --shard "$i" --inventory "$INV" \
+        "$PY" route_a_day_amplitudes.py run --out "$OUT" --shard "$i" --inventory "$INV" $RUN_ARGS \
             >> "$OUT/logs/shard_$s.out" 2>&1 &
         pids+=($!)
     done

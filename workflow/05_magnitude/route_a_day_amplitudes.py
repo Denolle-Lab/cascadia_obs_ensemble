@@ -151,14 +151,19 @@ class DayReader:
         return self._client
 
     def has_response(self, seed_id, t):
-        try:
-            self.inv.get_response(seed_id, t)
-            return True
-        except Exception:
-            return False
+        """t: start of the day. A response epoch that starts or ends inside the day
+        (deployment and recovery days) counts, so test the start, noon and the end."""
+        for dt in (1.0, 43200.0, 86399.0):
+            try:
+                self.inv.get_response(seed_id, t + dt)
+                return True
+            except Exception:
+                pass
+        return False
 
     def choose(self, net, sta, pairs, t):
-        """pairs: iterable of (location, channel). Best sensor with a response."""
+        """pairs: iterable of (location, channel); t: start of the day.
+        Best sensor with a response."""
         rank = {k: i for i, k in enumerate(self.pref)}
         cands = {}
         for loc, ch in pairs:
@@ -176,34 +181,133 @@ class DayReader:
             return None, None, "no_ground_motion_channel"
         return None, None, "no_response:" + ",".join(no_resp)[:60]
 
-    def read(self, net, sta, day_t0):
+    def read(self, net, sta, day_t0, prefer_complete=False):
+        """prefer_complete: when the pnwstore day has less than COMPLETE_S of usable
+        segments, also fetch it from EarthScope FDSN and keep the more complete copy."""
         from obspy import Stream, UTCDateTime
         t0 = UTCDateTime(day_t0)
-        noon = t0 + 43200
         if net in ("NC", "BK"):
-            from data_client import get_waveforms
-            st = get_waveforms(net, sta, "?H?,?N?,?L?,?P?", t0, t0 + 86400,
-                               source="pnwstore")
-            loc, bi, why = self.choose(net, sta, {(tr.stats.location, tr.stats.channel)
-                                                  for tr in st}, noon)
+            st, loc, bi, why = self.read_ncedc(net, sta, t0)
             if why:
                 return Stream(), "", why
-            st = Stream([tr for tr in st if tr.stats.location == loc
-                         and tr.stats.channel[:2] == bi])
         else:
             rows = set(self.client._query(["location", "channel"], network=net,
                                           station=sta, year=t0.year, doy=t0.julday))
             if not rows:
                 return Stream(), "", "no_data"
-            loc, bi, why = self.choose(net, sta, {(r[0] or "", r[1]) for r in rows}, noon)
+            loc, bi, why = self.choose(net, sta, {(r[0] or "", r[1]) for r in rows}, t0)
             if why:
                 return Stream(), "", why
             st = self.client.get_waveforms(network=net, station=sta,
                                            location=loc or "--", channel=f"{bi}?",
                                            year=t0.year, doy=t0.julday)
+            if prefer_complete and usable_s(st) < COMPLETE_S:
+                try:
+                    alt = with_retries(lambda: fdsn("EARTHSCOPE").get_waveforms(
+                        net, sta, loc or "--", f"{bi}?", t0, t0 + 86400))
+                    if usable_s(alt) > usable_s(st):
+                        st = alt
+                except Exception:
+                    pass
         if len(st) == 0:
             return st, "", "no_data"
         return st, f"{loc}.{bi}", ""
+
+    def read_ncedc(self, net, sta, t0):
+        """NC/BK day from the public NCEDC bucket on AWS (s3://ncedc-pds, one miniSEED
+        file per channel-day), falling back to NCEDC FDSN when the bucket has nothing."""
+        from obspy import Stream
+        keys = s3_list(f"{S3_PREFIX}/{net}/{t0.year}/{t0.year}.{t0.julday:03d}/{sta}.{net}.")
+        pairs = {}
+        for k in keys:          # {STA}.{NET}.{CHA}.{LOC}.D.{YEAR}.{DOY}
+            p = os.path.basename(k).split(".")
+            if len(p) == 7:
+                pairs[(p[3], p[2])] = k
+        if pairs:
+            loc, bi, why = self.choose(net, sta, set(pairs), t0)
+            if why:
+                return Stream(), "", "", why
+            st = Stream()
+            for (l, c), k in sorted(pairs.items()):
+                if l == loc and c[:2] == bi:
+                    st += s3_read(k)
+            return st, loc, bi, ""
+        st = with_retries(lambda: fdsn("NCEDC").get_waveforms(
+            net, sta, "*", "?H?,?N?,?L?,?P?", t0, t0 + 86400))
+        loc, bi, why = self.choose(net, sta, {(tr.stats.location, tr.stats.channel)
+                                              for tr in st}, t0)
+        if why:
+            return Stream(), "", "", why
+        st = Stream([tr for tr in st if tr.stats.location == loc
+                     and tr.stats.channel[:2] == bi])
+        return st, loc, bi, ""
+
+
+S3_URL = "https://ncedc-pds.s3.amazonaws.com"   # public, anonymous
+S3_PREFIX = "continuous_waveforms"
+COMPLETE_S = 23 * 3600.0     # prefer_complete: a day with less usable data is re-fetched
+_FDSN = {}
+
+
+def fdsn(name):
+    if name not in _FDSN:
+        from obspy.clients.fdsn import Client
+        _FDSN[name] = Client(name, timeout=300)
+    return _FDSN[name]
+
+
+def with_retries(fn, tries=6, wait=20.0):
+    """FDSN and S3 answer 503/502 under load: retry with a growing pause.
+    No data (FDSNNoDataException) is not retried."""
+    for i in range(tries):
+        try:
+            return fn()
+        except Exception as e:
+            if type(e).__name__ == "FDSNNoDataException" or i == tries - 1:
+                raise
+            time.sleep(wait * (i + 1))
+
+
+def s3_list(prefix):
+    import urllib.parse
+    import urllib.request
+    import xml.etree.ElementTree as ET
+    keys, token = [], None
+    while True:
+        q = {"list-type": "2", "prefix": prefix}
+        if token:
+            q["continuation-token"] = token
+        url = f"{S3_URL}/?{urllib.parse.urlencode(q)}"
+        body = with_retries(lambda: urllib.request.urlopen(url, timeout=120).read())
+        root = ET.fromstring(body)
+        ns = root.tag.split("}")[0] + "}" if root.tag.startswith("{") else ""
+        keys += [e.text for e in root.iter(f"{ns}Key")]
+        t = root.find(f"{ns}NextContinuationToken")
+        if t is None:
+            return keys
+        token = t.text
+
+
+def s3_read(key):
+    import io
+    import urllib.request
+    from obspy import read
+    data = with_retries(lambda: urllib.request.urlopen(f"{S3_URL}/{key}", timeout=300).read())
+    return read(io.BytesIO(data), format="MSEED")
+
+
+def usable_s(st):
+    """Seconds of the stream in contiguous segments long enough to deconvolve, per
+    component (max over components)."""
+    if len(st) == 0:
+        return 0.0
+    s = merge_split(st.copy())
+    tot = {}
+    for tr in s:
+        d = tr.stats.npts / tr.stats.sampling_rate
+        if d >= MIN_SEG_S:
+            tot[tr.id] = tot.get(tr.id, 0.0) + d
+    return max(tot.values(), default=0.0)
 
 
 RESP_GRID = 1 << 17       # response evaluated once per channel on this many points
@@ -234,6 +338,17 @@ class Responses:
             invert_spectrum(r, self.wl)
             self.cache[key] = r
         return self.cache[key]
+
+    def when(self, seed_id, t0, t1):
+        """A time in [t0, t1] covered by a response epoch of seed_id (the segment start
+        if possible; a segment can begin before a deployment's epoch), or None."""
+        for t in (t0, t0 + (t1 - t0) / 2, t1):
+            try:
+                self.inv.get_response(seed_id, t)
+                return t
+            except Exception:
+                pass
+        return None
 
     def on(self, f, seed_id, t, output):
         r = self.inverse(seed_id, t, output)
@@ -287,6 +402,9 @@ def process_segments(st, resp, hp, disp_band):
         n = tr.stats.npts
         if n / sr < MIN_SEG_S or sr < 10:
             continue
+        t_resp = resp.when(tr.id, tr.stats.starttime, tr.stats.endtime)
+        if t_resp is None:          # no response epoch over this segment: its picks stay
+            continue           # not_in_segment
         x = tr.data.astype(np.float64)
         x -= x.mean()
         nt = int(round(TAPER_S * sr))                       # cosine taper at both ends
@@ -299,6 +417,12 @@ def process_segments(st, resp, hp, disp_band):
         npad = sfft.next_fast_len(need, real=True)
         while npad % q or sfft.next_fast_len((npad * p) // q, real=True) != (npad * p) // q:
             npad = sfft.next_fast_len(npad + 1, real=True)
+            if npad > 4 * need:
+                # q has a prime factor > 11 (e.g. 41 Hz data: 100/41), so no fast
+                # length is a multiple of q: take q * a fast length (scipy handles
+                # the factor q with Bluestein), output p * that length
+                npad = q * sfft.next_fast_len(-(-need // q), real=True)
+                break
         nout = npad * p // q
         X = sfft.rfft(x, n=npad)
         del x
@@ -310,21 +434,20 @@ def process_segments(st, resp, hp, disp_band):
         del X
         f = np.arange(Y.size) * (SR / nout)
         Y *= cosine_sac_taper(f, flimit=pre_filt)
-        t = tr.stats.starttime
-        V = Y * resp.on(f, tr.id, t, "VEL")
+        V = Y * resp.on(f, tr.id, t_resp, "VEL")
         V *= s_freqs(b_wa, a_wa, 2 * np.pi * f)[1] * PAZ_WA["sensitivity"]
         V[-1] = abs(V[-1])
         n100 = int(n * p // q)
         wa = sfft.irfft(V, n=nout)[:n100]
         del V
-        D = Y * resp.on(f, tr.id, t, "DISP")
+        D = Y * resp.on(f, tr.id, t_resp, "DISP")
         D[-1] = abs(D[-1])
         del Y
         dsp = sfft.irfft(D, n=nout)[:n100]
         del D
         wa = highpass(wa, hp, SR, corners=4, zerophase=False)
         dsp = bandpass(dsp, disp_band[0], disp_band[1], SR, corners=4, zerophase=True)
-        out.append((float(t.timestamp), (wa * 1e3).astype(np.float32),     # m -> mm
+        out.append((float(tr.stats.starttime.timestamp), (wa * 1e3).astype(np.float32),     # m -> mm
                     (dsp * 1e6).astype(np.float32)))                        # m -> um
     return out
 
@@ -405,7 +528,7 @@ def run_task(reader, inv, net, sta, day, picks, a):
     out = empty_frame(picks)
     try:
         T0 = time.time()
-        st, sensor, why = reader.read(net, sta, day_t0)
+        st, sensor, why = reader.read(net, sta, day_t0, a.prefer_complete)
         TIMES['read'] = time.time() - T0
     except Exception as e:
         why, sensor, st = f"fetch:{str(e)[:60]}", "", None
@@ -432,7 +555,10 @@ def run_task(reader, inv, net, sta, day, picks, a):
     out["n_comp"] = nc
     out["seg_margin_s"] = mg
     out["sensor"] = sensor
-    out["epoch"] = epoch_id(inv, net, sta, UTCDateTime(day_t0 + 43200))
+    ep = epoch_id(inv, net, sta, UTCDateTime(day_t0 + 43200))
+    if not ep:          # deployment or recovery day: the epoch of the first segment
+        ep = epoch_id(inv, net, sta, UTCDateTime(segs[0][0] + len(segs[0][1]) / SR / 2))
+    out["epoch"] = ep
     out["status"] = np.where(nc > 0, "ok", "not_in_segment")
     return out, "ok", sensor
 
@@ -541,6 +667,96 @@ Route A amplitude of an associated pick: take the column whose WW is the Route A
 r = hypocentral distance in km) rounded UP to the next WW; SNR = wa_mm / wa_noise_mm.
 `route_a_day_amplitudes.py select` does this and writes the CSV that route_a_build_dataset.py reads.
 """
+
+
+def cmd_replan(a):
+    """Plan a second pass over the station-days of a finished run that failed
+    (status other than ok) or left at least --min-missing of their picks without a
+    value. Same layout as `plan`, so run and consolidate work on --out unchanged."""
+    logs = pd.concat([pd.read_csv(p) for p in
+                      sorted(glob.glob(os.path.join(a.src, "logs", "shard_*.csv")))])
+    logs = logs.drop_duplicates("task", keep="last")
+    logs["status"] = logs["status"].astype(str)
+    miss = 1.0 - logs["n_ok"] / logs["n_picks"].clip(lower=1)
+    redo = logs[(logs["status"] != "ok") | (miss >= a.min_missing)]
+    print(f"{len(redo):,} of {len(logs):,} station-days to redo, "
+          f"{int(redo['n_picks'].sum()):,} picks")
+    print(redo["status"].str.split(":").str[0].value_counts().to_string())
+    want = set(redo["task"])
+    os.makedirs(os.path.join(a.out, "shards"), exist_ok=True)
+    picks = []
+    for p in sorted(glob.glob(os.path.join(a.src, "shards", "picks_*.parquet"))):
+        d = pd.read_parquet(p)
+        task = (d["network"] + "." + d["station"] + "."
+                + pd.to_datetime(d["day"], unit="D").dt.strftime("%Y-%m-%d"))
+        picks.append(d[task.isin(want)])
+    df = pd.concat(picks, ignore_index=True)
+    df = df.sort_values(["network", "station", "day", "t"], kind="stable")
+    tasks = (df.groupby(["network", "station", "day"], sort=False)
+               .size().rename("n_picks").reset_index())
+    tasks["task"] = (tasks["network"] + "." + tasks["station"] + "."
+                     + pd.to_datetime(tasks["day"], unit="D").dt.strftime("%Y-%m-%d"))
+    tasks["shard"] = np.arange(len(tasks)) % a.nshard
+    tasks.to_csv(os.path.join(a.out, "tasks.csv"), index=False)
+    df = df.merge(tasks[["network", "station", "day", "shard"]],
+                  on=["network", "station", "day"], how="left")
+    for s, g in df.groupby("shard"):
+        g.drop(columns="shard").to_parquet(
+            os.path.join(a.out, "shards", f"picks_{s:03d}.parquet"), index=False)
+    json.dump(dict(src=os.path.abspath(a.src), n_picks=int(len(df)),
+                   n_tasks=int(len(tasks)), nshard=a.nshard, windows=WINDOWS,
+                   min_missing=a.min_missing),
+              open(os.path.join(a.out, "plan.json"), "w"), indent=1)
+    print(f"{len(df):,} picks, {len(tasks):,} station-days, {a.nshard} shards")
+
+
+def cmd_merge(a):
+    """First run + replan run -> one amps/ directory. A pick takes the rerun row when
+    the rerun measured it (status ok) or the first run did not either; otherwise it
+    keeps the first-run row. Files the rerun did not touch are hard-linked."""
+    import shutil
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    os.makedirs(a.out, exist_ok=True)
+    new = {os.path.basename(p): p for p in glob.glob(os.path.join(a.rerun, "amps_*.parquet"))}
+    stat, changed = [], 0
+    for p in sorted(glob.glob(os.path.join(a.src, "amps_*.parquet"))):
+        name = os.path.basename(p)
+        dst = os.path.join(a.out, name)
+        if os.path.exists(dst):
+            os.remove(dst)
+        if name not in new:
+            os.link(p, dst)
+            stat.append(pq.read_table(p, columns=["status"]).column(0).to_pandas()
+                        .astype(str).value_counts())
+            continue
+        old, rer = pd.read_parquet(p), pd.read_parquet(new[name])
+        for d in (old, rer):
+            for c in ("phase", "sensor", "epoch", "status"):
+                d[c] = d[c].astype(str)
+        o = old.set_index("pick_id")
+        r = rer.set_index("pick_id")
+        take = (r["status"] == "ok") | (o.loc[r.index, "status"] != "ok")
+        o.loc[r.index[take]] = r[take]
+        g = o.reset_index().sort_values("pick_id")
+        for c in ("phase", "sensor", "epoch", "status"):
+            g[c] = g[c].astype("category")
+        pq.write_table(pa.Table.from_pandas(g, preserve_index=False), dst,
+                       compression="zstd")
+        changed += 1
+        stat.append(g["status"].astype(str).value_counts())
+    extra = set(new) - {os.path.basename(p) for p in glob.glob(os.path.join(a.src, "amps_*"))}
+    if extra:
+        sys.exit(f"rerun has station-years the first run does not: {sorted(extra)[:5]}")
+    for f in ("README_amps.md",):
+        if os.path.exists(os.path.join(a.src, f)):
+            shutil.copy(os.path.join(a.src, f), os.path.join(a.out, f))
+    st = pd.concat(stat, axis=1).fillna(0).astype(int).sum(axis=1).sort_values(ascending=False)
+    summ = [f"merged {a.src} + {a.rerun}: {changed} station-year files replaced",
+            f"rows: {int(st.sum()):,}", "status:"]
+    summ += [f"  {k:<40s} {v:>12,}" for k, v in st.items()]
+    open(os.path.join(a.out, "SUMMARY.txt"), "w").write("\n".join(summ) + "\n")
+    print("\n".join(summ))
 
 
 def cmd_consolidate(a):
@@ -718,6 +934,18 @@ def main(argv=None):
     p.add_argument("--chunk-tasks", type=int, default=200,
                    help="station-days per output chunk (the resume granularity)")
     p.add_argument("--limit", type=int, default=0, help="at most N station-days (tests)")
+    p.add_argument("--prefer-complete", action="store_true",
+                   help="re-fetch fragmented pnwstore days from EarthScope FDSN")
+    p = sub.add_parser("replan")
+    p.add_argument("--src", required=True, help="finished run (logs/, shards/)")
+    p.add_argument("--out", required=True)
+    p.add_argument("--nshard", type=int, default=24)
+    p.add_argument("--min-missing", type=float, default=0.2,
+                   help="also redo ok days where this fraction of picks has no value")
+    p = sub.add_parser("merge")
+    p.add_argument("--src", required=True, help="amps/ of the first run")
+    p.add_argument("--rerun", required=True, help="amps/ of the replan run")
+    p.add_argument("--out", required=True, help="merged amps/ (unchanged files hard-linked)")
     p = sub.add_parser("consolidate")
     p.add_argument("--out", required=True)
     p.add_argument("--allow-missing", action="store_true")
@@ -736,7 +964,8 @@ def main(argv=None):
         q.add_argument("--disp-lo", type=float, default=0.05)
         q.add_argument("--disp-hi", type=float, default=2.0)
     a = ap.parse_args(argv)
-    {"plan": cmd_plan, "run": cmd_run, "consolidate": cmd_consolidate,
+    {"plan": cmd_plan, "replan": cmd_replan, "merge": cmd_merge,
+     "run": cmd_run, "consolidate": cmd_consolidate,
      "select": cmd_select, "validate": cmd_validate}[a.cmd](a)
 
 

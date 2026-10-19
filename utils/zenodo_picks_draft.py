@@ -23,8 +23,9 @@ from pathlib import Path
 
 import requests
 
-TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2016, ver3, ver4 and ver5 "
-         "(working copy for the GENIE and GraphDD rerun)")
+TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2016 (ver3, ver4, ver5) and PickBlue "
+         "picks on the same OBS stations, with Route A amplitudes for every ver5 pick (working copy "
+         "for the GENIE and GraphDD rerun)")
 DESCRIPTION = """<p>ELEP ensemble phase picks (five EQTransformer models, SeisBench) on
 the Cascadia Initiative ocean-bottom and nearby land stations, 40-50&deg;N, 131-122&deg;W,
 2010-2015. Working copy shared with collaborators before publication; not for redistribution.</p>
@@ -41,12 +42,26 @@ the model set of the region runs). Rebuild it from ver3, the ver4 added picks an
 parts of the ver5 added picks (Zenodo rejects the 344 MB file in one piece); see
 <code>ver5_HOW_TO_BUILD.txt</code> and <code>ver5_README.md</code>, which also lists stations
 to watch (high pick rates on the shallow FN shelf stations).</li>
+<li><b>PickBlue</b> (<code>pickblue_picks_part1-8.csv.gz</code>): 18,334,658 picks of the
+PickBlue <code>obs</code> model (threshold 0.2) at the 350 OBS stations that also have ELEP
+ver5 picks, 2010-2016, taken from the public QuakeScope 2026 OBS catalogue
+(<code>s3://quakescope-picks-2026/obs/</code>) and written in the ELEP column layout for a
+direct comparison. <code>pickblue_station_days.csv</code> says which station-days PickBlue
+ran on; <code>pickblue_README.md</code> gives the column map, the differences with ELEP and a
+first comparison.</li>
+<li><b>Amplitudes</b> (<code>ver5_amps_NET_partNN.parquet</code>, release r2, 2026-10-18): Route A
+Wood-Anderson and 0.05-2 Hz displacement peaks for every ver5 pick, joined on
+<code>pick_id</code>, over 69 windows after the pick (1-60 s), since the distance is not known
+before association. 57.9 M of the 60.9 M picks (95%) have an amplitude; <code>status</code> says
+why the others do not. The amplitude columns are stored log-encoded; read them with
+<code>read_amps_v5.py</code>. See <code>ver5_amps_README.md</code>, which lists the changes
+since r1.</li>
 </ul>
 <p>All ver4 categories are kept (decision of the PI, 2026-10-05). Any category can still be
 dropped by its pick_id ranges.</p>"""
 
 
-VERSION = "ver3+ver4+ver5 working copy"
+VERSION = "ver3+ver4+ver5+PickBlue+amps r2 working copy"
 TRIES = 4
 
 

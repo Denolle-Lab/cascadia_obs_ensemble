@@ -6,6 +6,7 @@ picker (ELEP), GENIE association and GraphDD relocation with waveform cross-corr
 Magnitudes are Hutton-Boore local magnitudes with station terms (Route A), replaced
 by moment magnitudes above M 4.5.
 
+This record: https://doi.org/10.5281/zenodo.23223400 (reserved 2026-10-07; resolves once published).
 Paper: **CITATION TO ADD**. Code: **SOFTWARE DOI TO ADD**
 (github.com/Denolle-Lab/cascadia_obs_ensemble, release v1.0.0).
 

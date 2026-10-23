@@ -178,8 +178,10 @@ separate Zenodo data record. The plan is in [CLEANUP_PLAN.md](CLEANUP_PLAN.md) Â
 ## Building the manuscript
 
 ```sh
+make catalog     # Route A products -> preferred magnitudes -> event classes (minutes)
+make figures     # redraw every script figure from the data products, collect into paper/figures/
+make figs        # only collect the figure PNGs into paper/figures/ (needs the data above)
 make paper       # paper/main.qmd -> paper/main.tex + main.pdf (Quarto -> Seismica -> tectonic)
-make figs        # collect figure PNGs into paper/figures/ (needs the data above)
 ```
 
 To regenerate the magnitude catalog and the figures that depend on it (from

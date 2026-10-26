@@ -35,7 +35,8 @@ from read_amps_v5 import SCALE, decode  # noqa: E402
 SRC = Path(os.environ.get("AMPS_SRC", "/wd1/mdenolle_data/amps_v5/amps"))
 OUT = Path(os.environ.get("AMPS_SHARE_OUT", "/wd1/mdenolle_data/picks_share/amps_v5"))
 TARGET = 150e6 / 0.067   # source bytes per part: ~150 MB after encoding (ratio measured on 12 files)
-N_PICKS = 60_918_847
+N_PICKS = int(os.environ.get("AMPS_N_PICKS", 60_918_847))
+PREFIX = os.environ.get("AMPS_PREFIX", "ver5")   # ver6: the v6 addition alone
 TOL = 0.5 / SCALE + 1e-6
 
 
@@ -133,11 +134,11 @@ def main():
             size += os.path.getsize(f)
         parts.append(cur)
         for k, p in enumerate(parts, 1):
-            name = f"ver5_amps_{net}_part{k:02d}.parquet"
+            name = f"{PREFIX}_amps_{net}_part{k:02d}.parquet"
             jobs.append((name, p))
             rows += [(name, Path(f).name[5:-8]) for f in p]
     print(f"{len(files)} station-year files -> {len(jobs)} parts", flush=True)
-    pd.DataFrame(rows, columns=["file", "station_year"]).to_csv(OUT / "ver5_amps_files.csv", index=False)
+    pd.DataFrame(rows, columns=["file", "station_year"]).to_csv(OUT / f"{PREFIX}_amps_files.csv", index=False)
 
     n, st, sums = 0, [], []
     with Pool(6) as pool:
@@ -150,7 +151,7 @@ def main():
     st = pd.DataFrame(st, columns=["network", "status", "n"]).groupby(["network", "status"]).n.sum().unstack(fill_value=0)
     st["total"] = st.sum(axis=1)
     st["ok_frac"] = (st["ok"] / st["total"]).round(3)
-    st.to_csv(OUT / "ver5_amps_status.csv")
+    st.to_csv(OUT / f"{PREFIX}_amps_status.csv")
     with open(OUT / "MD5SUMS", "w") as f:
         f.write("\n".join(sorted(sums, key=lambda s: s.split()[1])) + "\n")
     print(f"all {n:,} picks; status table and MD5SUMS written to {OUT}")

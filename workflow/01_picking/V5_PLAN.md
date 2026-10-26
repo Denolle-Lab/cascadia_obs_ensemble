@@ -271,3 +271,22 @@ worker. Expected ~20 station-days/min at 40 workers (v5 fill rate): ~2.5 days.
 
 After DONE: `ver6` = ver5 unchanged + the new picks (pick_id continues from 60,918,847), with
 the amplitudes keyed by the new pick_ids (builder to write, as `utils/build_picks_v5.py`).
+
+### 12.1 Run and ver6 (2026-10-19 to 10-26)
+
+Scope widened to 40-50°N (PI, 2026-10-19): 152,875 station-days at 204 stations. Ran at 48
+workers, 24 station-days/min, 10-19 20:35 to 10-24 06:50, no restarts. 139,315 station-days with
+picks, 10,746 flat, 2,399 without picks, 415 data errors (days under a minute long; BH at
+20 Hz, where the 4-15 Hz filter is above Nyquist).
+
+QC: on 1,846 station-days the pnwstore data are 6 s fragments (CN.HNBB October 2014 to April
+2015, CN.VDB, some CC and UW days). The picker fires on the joins (~3,500 picks a day) and the
+amplitude engine skips the fragments. Rule: >= 20 picks and < 50% with an amplitude. These days
+are dropped from ver6 (PI decision, 2026-10-26); 863 burst days (> 10x the station median, data
+continuous) are kept and flagged.
+
+`utils/build_picks_v6.py` -> `/wd1/mdenolle_data/picks_v6/`: ver6 = ver5 + 12,717,711 picks
+(137,469 station-days, 199 stations), 73,636,558 picks; pick_id = row number checked on every
+row; 98.8% of the new picks with an amplitude (`amps/`, keyed by pick_id). Two UW.LAB picks had
+a 0 where the window ended at the segment edge; set to NaN (`zero_past_end`). Zenodo package in
+`/wd1/mdenolle_data/picks_share/ver6/` (3 pick parts, 16 amplitude parts, README).

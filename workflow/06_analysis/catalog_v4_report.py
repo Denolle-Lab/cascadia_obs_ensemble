@@ -226,7 +226,7 @@ def fig_depth(ev, v3, out):
 def run_maps(cat, qc):
     def one(job):
         name, args = job
-        cmd = [sys.executable, "phase5_pygmt_map.py", "--catalog", str(cat), "--qc-catalog", str(qc),
+        cmd = [sys.executable, "phase5_pygmt_map.py", "--compact-sizes", "--catalog", str(cat), "--qc-catalog", str(qc),
                "--out", str(OUT / name)] + args
         r = subprocess.run(cmd, cwd=HERE, capture_output=True, text=True)
         return name, r.returncode, (r.stdout + r.stderr)[-400:]

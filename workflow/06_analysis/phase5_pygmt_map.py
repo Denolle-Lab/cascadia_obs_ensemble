@@ -163,6 +163,9 @@ def main(argv=None):
                    choices=["auto", "none"] + list(mc.COUPLING),
                    help="slip-deficit model drawn under the events (auto: Pollitz 2025 "
                         "on the WA/OR forearc zooms, none elsewhere)")
+    p.add_argument("--coupling-transparency", type=float, default=30,
+                   help="transparency (%%) of the slip-deficit grid; higher keeps it a "
+                        "muted background under the events")
     p.add_argument("--layer", choices=["catalog", "context"], default="catalog",
                    help="full margin only: 'catalog' = the catalog map (plate boundaries "
                         "only); 'context' = faint seismicity + slip deficit, moment tensors "
@@ -259,8 +262,10 @@ def main(argv=None):
         sd, sd_cite = mc.load_slip_deficit(coupling, region)
         pygmt.makecpt(cmap="lapaz", series=[0, 40, 5], reverse=True)
         fig.grdimage(sd, region=region, projection=proj, cmap=True, nan_transparent=True,
-                     transparency=30)
-        fig.grdcontour(sd, levels=10, pen="0.3p,0/50/100", region=region, projection=proj)
+                     transparency=args.coupling_transparency)
+        muted = args.coupling_transparency > 30
+        fig.grdcontour(sd, levels=10, pen="0.25p,0/50/100" if muted else "0.3p,0/50/100",
+                       region=region, projection=proj, transparency=50 if muted else 0)
         print(f"slip deficit: {sd_cite}")
     if not args.no_context:
         mc.draw_boundaries(fig, region, pen_scale=0.8 if args.region == "full" else 1.0)

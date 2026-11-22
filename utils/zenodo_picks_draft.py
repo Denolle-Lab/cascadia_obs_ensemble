@@ -68,9 +68,9 @@ See <code>ver6_README.md</code>.</li>
 (<code>Cascadia_relocated_catalog_v4.csv</code>, <code>Cascadia_picks_catalog_v4.csv.gz</code>), with
 21 events moved one day later (<code>catalog_v4_FIXES.md</code>). Not yet in the published-record
 format; see <code>catalog_v4_README.md</code>.</li>
-<li><b>Fault surfaces v0</b> (2026-11-22, <code>fault_surfaces_v0*</code>): 155 rectangular
-faults fitted to planar alignments of catalog v4 events (plane-based detection; 70% of the QC
-events lie on a fault; Blanco 27 faults, Mendocino triple junction 32, Gorda 20; Axial left out,
+<li><b>Fault surfaces v0</b> (2026-11-22, <code>fault_surfaces_v0*</code>): 145 rectangular
+faults fitted to planar alignments of catalog v4 events (plane-based detection; 69% of the QC
+events lie on a fault; Blanco 24 faults, Mendocino triple junction 32, Gorda 20; quarry blasts and artefacts removed; Axial left out,
 since published fault maps there are better), with per-vertex uncertainty and the full ensemble.
 On the v4 locations; to be redone on the relocated catalog. See
 <code>fault_surfaces_v0_README.md</code>.</li>

@@ -33,6 +33,33 @@ quarry-blast clusters (ON012, ON020, ON023, ON029, ON037, ON040) and four likely
 BL024, BL026, PU010). They are listed with the reason in `fault_surfaces_v0_removed.csv`
 (`workflow/07_faults/drop_surfaces.py`); their events count as unassigned.
 
+**Blanco strands (revised 2026-11-22).** Single planes had been fitted across the right-stepping
+strands of the Blanco transform. The Blanco surfaces were redone in three groups (East Blanco,
+Surveyor and West Blanco depressions; Blanco Ridge; Gorda Depression) with
+`workflow/07_faults/split_strands.py`:
+- strands are lines found in map view (where v4 locations are good), within 20° of plate motion
+  (111°), 1.5 km half-width, grown along strike across gaps < 4 km;
+- two overlapping parallel strands are kept apart only if their separation is justified: Ashman's
+  D > 2 across strike in the overlap (D = √2·|Δμ|/√(σ₁²+σ₂²)) and D > 2 again within every year
+  where both have ≥ 15 events, which rules out a shift between OBS deployments;
+- the depth of each pair was compared: a single fault would need a dip of 3–48° to produce most of
+  the offsets, far from the near-vertical strike-slip faults of the Blanco, so most separations are
+  horizontal;
+- the strands were then matched to the literature (`literature/matches_blanco_strands.md`). Six
+  NW-trending strands in the Cascadia Depression, where published faults strike N–S, were removed
+  as search artefacts. Two "deeper band 2 km south" strands (under Blanco Ridge and the Gorda
+  Transform) were merged into their main strand, because the offset follows depth, as expected from
+  depth-dependent location error, and OBS catalogs show one zone within 1.5 km (Lange et al. 2026,
+  10.1029/2025JB031584). Merges use `workflow/07_faults/merge_surfaces.py`.
+
+The 22 remaining overlapping parallel pairs have D = 2.8–15.9 (per-year minimum 2.7) and are
+1.6–10.7 km apart (`fault_surfaces_v0_strand_separation.csv`). The outer Surveyor strands (BL001a,
+BL006a, 5.3 km apart) match the two wall strands about 7 km apart in Ren et al. (2023) and Lange et
+al. (2026). The West Blanco to Surveyor and Blanco Ridge to Gorda Transform overlaps sit at the
+published pull-apart step-overs (Embley & Wilson 1992; Braunmiller & Nábělek 2008). Pairs about
+2 km apart with equal depths (BL004a/b, BL016a/b) are finer than any published spacing and are
+flagged as unconfirmed.
+
 A first v0, built the same day by density clustering (DBSCAN), kept only the densest knots
 (20% of events) and has been replaced by this one. Its code is still in `fault_surfaces_v0.py`,
 which also holds the helpers.
@@ -42,17 +69,17 @@ which also holds the helpers.
 | | |
 |---|---|
 | Events used | 76,281: QC (≥ 4 P and ≥ 4 S), catalog depth ≥ 0, Axial left out |
-| Events on a fault | 52,647 (69%) |
-| Surfaces | 145: Blanco 24, Mendocino triple junction 32, Gorda 20, Puget 24, Washington offshore 5, Oregon offshore 2, Endeavour 4, onshore and other 34 |
-| Steep (dip ≥ 45°) | 94 |
-| Size (10th–90th percentiles) | length 13–54 km, down-dip width 10–27 km |
-| Mesh | 1 km grid; 98,853 vertices, 182,880 triangles |
+| Events on a fault | 53,291 (70%) |
+| Surfaces | 141: Blanco 20, Mendocino triple junction 32, Gorda 20, Puget 24, Washington offshore 5, Oregon offshore 2, Endeavour 4, onshore and other 34 |
+| Steep (dip ≥ 45°) | 90 |
+| Size (10th–90th percentiles) | length 13–60 km, down-dip width 10–29 km |
+| Mesh | 1 km grid; 103,814 vertices, 192,864 triangles |
 
 Share of events assigned to a fault, by region:
 
 | Region | Events | On a fault |
 |---|---|---|
-| Blanco | 20,331 | 87% |
+| Blanco | 20,331 | 90% |
 | Mendocino triple junction | 24,996 | 72% |
 | Puget | 8,491 | 61% |
 | Onshore and other | 14,913 | 60% |
@@ -102,14 +129,14 @@ Puget Lowland and around Mount St. Helens.
      (100 draws).
    - `sigma_method`: spread over the surface-model choices (plane or quadratic, with or without
      trimming beyond 2.5 RMS).
-   - `sigma_total`: the three combined in quadrature. Median 0.44 km (10th–90th: 0.18–0.77 km).
+   - `sigma_total`: the three combined in quadrature. Median 0.44 km (10th–90th: 0.17–0.78 km).
 
    Strike and dip intervals (`*_68`, `*_95`) come from the bootstrap; `*_with_loc_mc` add the
    location Monte Carlo. For dips above 75°, strike intervals are modulo 180°.
 7. **Stability.** Detection is rerun four times: two other random seeds, and tolerance factor
    1.25 and 1.75.
    - `cluster_jaccard_median` is the median overlap of a fault's events with its best match in
-     the reruns; `stable` means ≥ 0.5 (39 of 145).
+     the reruns; `stable` means ≥ 0.5 (50 of 141).
    - `strike_settings_range` and `dip_settings_range` give the orientation spread of the
      matches.
    - Overlap is low where parallel or adjacent planes trade events between runs (most of
@@ -141,10 +168,15 @@ Puget Lowland and around Mount St. Helens.
   margin, Blanco, and Mendocino–Gorda.
 - `fault_surfaces_v0_traces.csv`: per fault, the top edge of the rectangle and the line where the
   plane would reach sea level if extended up dip, for comparison with mapped traces.
+- `fault_surfaces_v0_strand_separation.csv`: every overlapping parallel pair of Blanco strands with
+  Ashman's D, separation, overlap, per-year D, depth medians, and the dip a single fault would need.
 - `fault_surfaces_v0_literature.csv`: the literature match of every fault: `lit_match`,
   `lit_confidence` (high, medium-high, medium, low-medium, low, none), `lit_class` (known structure,
   duplicate, seismicity layer or volume, no known counterpart, likely artefact, quarry blasts),
-  `lit_new_candidate`, evidence and references. The same fields are in the summary and the GeoJSON.
+  `lit_new_candidate`, evidence, references (`lit_refs`, `lit_refs_full`), verified DOIs
+  (`lit_dois`, checked on Crossref or DataCite; every fault has at least one; where no structure is
+  known, the DOIs point to the papers describing the area), non-DOI sources (`lit_urls`) and
+  `doi_note`. The same fields are in the summary and the GeoJSON.
 - `fault_surfaces_v0_literature.html`: report of the matches (summary by region, strong matches,
   candidate new structures, blasts and artefacts), with the five regional notes
   (`literature/matches_*.md`: known structures, evidence per fault, references with DOI checks).

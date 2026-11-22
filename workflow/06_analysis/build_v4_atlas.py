@@ -228,9 +228,10 @@ def surfaces_display(path, max_side=12):
     for f in feats:
         p = f["properties"]
         v = vx[vx.surface_id == p["surface_id"]].sort_values("vertex")
-        key = {(round(a, 5), round(b, 5)): i for i, (a, b) in enumerate(zip(v.lon, v.lat))}
-        x, y, _ = f["geometry"]["coordinates"][0][0][2]          # third vertex of the first triangle = (row 1, col 1)
-        nu = key[(round(x, 5), round(y, 5))] - 1
+        x, y, z = f["geometry"]["coordinates"][0][0][2]          # third vertex of the first triangle = (row 1, col 1)
+        km = 111.195
+        d2 = ((v.lon - x) * km * np.cos(np.radians(y))) ** 2 + ((v.lat - y) * km) ** 2 + (v.depth_km + z / 1000.0) ** 2
+        nu = int(np.argmin(d2.to_numpy())) - 1                   # match in 3D: steep faults repeat lon/lat down dip
         nv = len(v) // nu
         G = v[["lon", "lat", "depth_km"]].to_numpy().reshape(nv, nu, 3)
         ri = np.unique(np.r_[np.linspace(0, nv - 1, min(nv, max_side)).round().astype(int)])
@@ -247,7 +248,11 @@ def surfaces_display(path, max_side=12):
                          dip=p["dip"], dip68=p["dip_68"], sig=p["sigma_total_median_km"],
                          L=p["length_km"], W=p["width_km"], a=a0, b=len(lon) // 3,
                          lm=(p.get("lit_match") or "")[:140], lc=p.get("lit_confidence"), lk=p.get("lit_class"),
-                         ln=bool(p.get("lit_new_candidate"))))
+                         ln=bool(p.get("lit_new_candidate")), refs=p.get("lit_refs") or "",
+                         dois=[d.strip() for d in str(p.get("lit_dois") or "").split(";") if d.strip().startswith("10.")],
+                         urls=[u.strip() for u in str(p.get("lit_urls") or "").split(";") if u.strip().startswith("http")],
+                         md=p.get("min_D_to_parallel"), top=p.get("top_km"), bot=p.get("bottom_km"),
+                         jac=p.get("cluster_jaccard_median")))
     return (np.array(lon, "<f4"), np.array(lat, "<f4"), np.array(dep, "<f4")), surf
 
 

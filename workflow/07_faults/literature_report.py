@@ -13,12 +13,12 @@ import pandas as pd
 V0 = Path(__file__).resolve().parents[2] / "data" / "faults" / "v0"
 REG = {"BL": "Blanco", "MT": "Mendocino triple junction", "GO": "Gorda", "PU": "Puget Lowland", "WA": "Offshore Washington",
        "ON": "Onshore and other", "OR": "Offshore Oregon", "EN": "Endeavour–Explorer"}
-NOTES = [("blanco", "Blanco"), ("mendocino", "Mendocino triple junction"), ("gorda", "Gorda"),
+NOTES = [("blanco_strands", "Blanco strands (revised; parallel and en-échelon strands, separation tests)"), ("blanco", "Blanco (first match)"), ("mendocino", "Mendocino triple junction"), ("gorda", "Gorda"),
          ("puget_wa", "Puget Lowland and offshore Washington"), ("onshore_or_en", "Onshore, offshore Oregon, Endeavour")]
 CLASSES = ["known structure", "duplicate", "seismicity layer or volume", "no known counterpart"]
 
 FINDINGS = """
-<li><b>Most surfaces are known structures.</b> 99 of the 145 kept surfaces match a published fault, ridge segment, transform
+<li><b>Most surfaces are known structures.</b> most of the 141 kept surfaces match a published fault, ridge segment, transform
 strand or seismic zone; 26 of them with high or medium-high confidence. Examples: Blanco Ridge
 (BL003, BL013, strike within 2°), the Cascadia Depression normal faults (BL005, BL008, BL021), the
 Escanaba Trough and the Jackson and Central Gorda Ridge segments (GO002, GO008, GO003), the faults of
@@ -33,7 +33,9 @@ reach below 25 km, where published Blanco seismicity stops at 10–14 km, and of
 OR001 cluster at 26–33 km against 6 km in v4. The relocation (Track A) is needed before dips and depths
 are interpreted.</li>
 <li><b>Several fits join structures that the literature separates.</b> The long western Blanco surfaces
-(BL001, BL002, BL006, BL009) cross right-stepping strands; the large Mendocino surfaces (MT001–MT007)
+crossed right-stepping strands and have since been redone as strands parallel to plate motion, kept apart
+only where Ashman's D &gt; 2 overall and within each year (22 pairs, D 2.8–15.9, 1.6–10.7 km apart; see the
+Blanco strands notes); the large Mendocino surfaces (MT001–MT007)
 are the two layers of the double seismic zone in the Gorda slab, not single faults; the broad low-dip
 Puget planes (PU001, PU002, PU005, PU013) are diffuse basement seismicity. 17 surfaces duplicate a
 neighbour.</li>
@@ -52,11 +54,16 @@ Falls, Daisy Bank or Wecoma.</li>
 """
 
 
+def doilinks(v):
+    ds = [d.strip() for d in str(v).split(";") if d.strip().startswith("10.")]
+    return "<br>".join(f'<a href="https://doi.org/{escape(d)}">{escape(d)}</a>' for d in ds)
+
+
 def table(df, cols, heads):
     h = "".join(f"<th>{escape(x)}</th>" for x in heads)
     body = ""
     for _, r in df.iterrows():
-        body += "<tr>" + "".join(f"<td>{escape(str(r[c]))}</td>" for c in cols) + "</tr>"
+        body += "<tr>" + "".join(f"<td>{doilinks(r[c]) if c == 'lit_dois' else escape(str(r[c]))}</td>" for c in cols) + "</tr>"
     return f'<div class="tbl"><table><tr>{h}</tr>{body}</table></div>'
 
 
@@ -64,6 +71,7 @@ def main():
     lit = pd.read_csv(V0 / "fault_surfaces_v0_literature.csv")
     s = pd.read_csv(V0 / "fault_surfaces_v0_summary.csv")
     d = s[["surface_id", "n_events", "lon", "lat", "strike", "dip", "length_km"]].merge(lit, on="surface_id")
+    d["lit_dois"] = d["lit_dois"].fillna("")
     d["region"] = d.surface_id.str[:2].map(REG)
     ct = pd.crosstab(d.region, d.lit_class).reindex(columns=CLASSES, fill_value=0)
     ct["total"] = ct.sum(axis=1)
@@ -96,7 +104,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:10px 0;background:
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
 <style>{css}</style></head><body><div class="wrap">
 <h1>Fault surfaces v0: literature matches</h1>
-<p class="sub">145 rectangular faults (155 found, 10 removed after this check) fitted to catalog v4 seismicity, each compared with published faults,
+<p class="sub">141 rectangular faults (155 found; 10 blast or artefact surfaces removed; the Blanco surfaces redone as strands with separation tests) fitted to catalog v4 seismicity, each compared with published faults,
 ridge and transform segments and seismic zones. Searches done 2026-11-22, one per region; every DOI was
 checked on Crossref or DataCite unless marked in the notes. Strikes and map positions were compared;
 v4 depths are biased shallow and its dips are weak.</p>
@@ -105,15 +113,19 @@ v4 depths are biased shallow and its dips are weak.</p>
 {table(ct, ["region"] + CLASSES + ["total"], ["Region"] + CLASSES + ["Total"])}
 <p>Confidence of the known-structure matches: {", ".join(f"{k} {v}" for k, v in d[d.lit_class == "known structure"].lit_confidence.value_counts().reindex(list(order), fill_value=0).items())}.</p>
 <h2>Strong matches (high or medium-high)</h2>
-{table(hi, ["surface_id", "lit_match", "lit_confidence", "strike", "dip", "length_km", "n_events"], ["Surface", "Match", "Conf.", "Strike", "Dip", "Length km", "Events"])}
+{table(hi, ["surface_id", "lit_match", "lit_confidence", "strike", "dip", "length_km", "n_events", "lit_dois"], ["Surface", "Match", "Conf.", "Strike", "Dip", "Length km", "Events", "DOIs"])}
 <h2>Candidate new structures</h2>
 <p>Surfaces that the searches could not tie to a published structure, or that suggest a structure
 beyond the mapped one. Check each against the relocated catalog (Track A) before any claim.</p>
-{table(new, ["surface_id", "lit_match", "lit_confidence", "lon", "lat", "strike", "dip", "n_events"], ["Surface", "What it is", "Conf.", "Lon", "Lat", "Strike", "Dip", "Events"])}
+{table(new, ["surface_id", "lit_match", "lit_confidence", "lon", "lat", "strike", "dip", "n_events", "lit_dois"], ["Surface", "What it is", "Conf.", "Lon", "Lat", "Strike", "Dip", "Events", "Area DOIs"])}
 <h2>Removed: quarry blasts and artefacts</h2>
 {table(bad, ["surface_id", "lit_class", "lit_match", "reason"], ["Surface", "Class", "Note", "Reason for removal"])}
 <h2>All surfaces</h2>
-{table(allrows, ["surface_id", "lit_class", "lit_confidence", "lit_match", "strike", "dip", "length_km", "n_events"], ["Surface", "Class", "Conf.", "Match", "Strike", "Dip", "Length km", "Events"])}
+{table(allrows, ["surface_id", "lit_class", "lit_confidence", "lit_match", "strike", "dip", "length_km", "n_events", "lit_dois"], ["Surface", "Class", "Conf.", "Match", "Strike", "Dip", "Length km", "Events", "DOIs (verified)"])}
+<h2>Blanco strands: separation tests</h2>
+<p>Each pair of overlapping parallel strands kept apart, with Ashman's D across strike in the overlap (D &gt; 2 means two
+populations), its minimum within single years, the separation, and the dip a single fault would need to produce the offset.</p>
+{table(pd.read_csv(V0 / "fault_surfaces_v0_strand_separation.csv"), ["a", "b", "D", "D_per_year_min", "sep_km", "overlap_km", "depth_med_a", "depth_med_b", "dip_if_single_fault"], ["Strand", "Strand", "D", "D per year (min)", "Separation km", "Overlap km", "Depth a", "Depth b", "Dip if one fault"])}
 <h2>Notes from the regional searches</h2>
 <p>The full write-ups, with the evidence for each surface, the known structures of each region and the
 reference lists with verification status. USGS ComCat moment tensors were used only to compare surfaces

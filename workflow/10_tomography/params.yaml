@@ -1,0 +1,33 @@
+# Track B (joint Vp/Vs tomography + relocation): single source of truth for parameters.
+# Every script in workflow/10_tomography reads its settings from here; a run manifest
+# (manifest.py) records the git commit, the md5 of this file and of the inputs/outputs.
+# Changing a value = new decision entry in DECISIONS.md (give the ID in the comment).
+
+paths:
+  base: /wd1/mdenolle_data/tomo_v1                       # large files (not in git)
+  reloc_v5: /wd1/mdenolle_data/reloc_v5                  # Track A outputs
+  trackA_run: iter1_vpvs176                              # D-B004: starting locations
+  trackA_catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv
+  picks_v4: data/catalog_v4/Cascadia_picks_catalog_v4.csv
+  start_model: /wd1/mdenolle_data/reloc_v5/model_vpvs176  # D-B005: Track A 3D model (NLL grid)
+  stations: /wd1/mdenolle_data/reloc_v5/model_vpvs176/stations_GTSRCE.in
+
+selection:                       # D-B003
+  tiers: [A, B, C]
+  min_nphs: 12
+  max_gap_deg: 200
+  max_rms_s: 0.5
+  decluster_cell_km: 3.0         # cubic cells, lat/lon/depth
+  decluster_keep_per_cell: 3     # keep the most-picked events
+  # pick-level QC and S requirements: see notes/dataset.md (to be fixed in D-B009)
+
+pick_errors:                     # D-B008, inherited from Track A (a2_make_obs.py)
+  # class by v4 pick_prob: p>=0.6 -> 2, 0.3<=p<0.6 or missing -> 1, p<0.3 -> 0
+  P_sigma_s: {0: 0.15, 1: 0.10, 2: 0.05}
+  S_over_P: 2.0
+
+station_terms:                   # D-B006
+  static_terms_in_tomography: false
+
+code:                            # D-B007
+  tomography: TomoATT            # version/commit recorded after build (notes/tomoatt_build.md)

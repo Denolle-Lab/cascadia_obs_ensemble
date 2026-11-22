@@ -1,0 +1,310 @@
+{
+ "name": "b1_obs_waveform_check",
+ "script": "/home/mdenolle/cascadia_obs_ensemble/workflow/10_tomography/b1_obs_waveform_check.py",
+ "argv": [
+  "--no-download"
+ ],
+ "utc": "2026-11-22T21:39:24.174638+00:00",
+ "git_commit": "b119326cdad6a219e6fd89477ad190d53086539e",
+ "git_dirty": true,
+ "params_md5": "749c6c36da43ecf8955daf12f2ed9d0a",
+ "params": {
+  "vpvs_model": 1.76,
+  "band_hz": [
+   2.0,
+   12.0
+  ],
+  "n_ev": 8,
+  "n_meas": 25,
+  "groups": {
+   "neg": [
+    "W01.7A",
+    "J35A.7D",
+    "M03C.7D",
+    "W02.7A",
+    "FN13C.7D",
+    "J35C.7D",
+    "J58C.7D",
+    "J67C.7D",
+    "J34A.7D",
+    "W03.7A",
+    "J11B.7D",
+    "GB220.Z5",
+    "G20D.7D",
+    "GB281.Z5",
+    "J20D.7D",
+    "J28D.7D"
+   ],
+   "shelf": [
+    "FC03D.7D",
+    "FS15D.7D",
+    "J33A.7D",
+    "FS18B.7D",
+    "FS14D.7D",
+    "FS42D.7D",
+    "FS08D.7D",
+    "M01C.7D"
+   ],
+   "ctrl_obs": [
+    "BB320.X9",
+    "J06B.7D",
+    "BB300.X9"
+   ],
+   "ctrl_land": [
+    "B047.PB",
+    "B045.PB",
+    "B049.PB"
+   ]
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b1_dataset/cache/phases_iter1_vpvs176.parquet",
+   "size": 57385722,
+   "mtime": "2026-11-22T21:15:19.311668+00:00",
+   "md5": "f5cb5b0e413b81b7b16c2a6d42b82fe7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/iter1_vpvs176/locations.csv",
+   "size": 52793227,
+   "mtime": "2026-11-22T17:12:41.165508+00:00",
+   "md5": "3ad253337cccd90ac7061d5d25e63252"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b1_dataset/station_terms_analysis.csv",
+   "size": 79070,
+   "mtime": "2026-11-22T21:26:24.361220+00:00",
+   "md5": "6083e58ac5a759ae71c273adb3f85c18"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b1_dataset/picks.csv",
+   "size": 92540119,
+   "mtime": "2026-11-22T21:26:23.973223+00:00",
+   "md5": "b15b7127ab197319047af3b469cda279"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/obs_check_station_stats.csv",
+   "size": 4431,
+   "mtime": "2026-11-22T21:39:23.310945+00:00",
+   "md5": "e07cc95b77f1a8399477aedf5e7d0c37"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/obs_check_events.csv",
+   "size": 75247,
+   "mtime": "2026-11-22T21:39:23.313945+00:00",
+   "md5": "7f6f6a46d743cc87436d394c1cab1bc9"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
+   "size": 22192,
+   "mtime": "2026-11-22T21:39:24.171939+00:00",
+   "md5": "272837c1eb6b1a52a61d1e8f8bff998a"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_W01.7A.png",
+   "size": 207462,
+   "mtime": "2026-11-22T21:38:58.287112+00:00",
+   "md5": "d9995f121eac1b6616bb047dc71668d4"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J35A.7D.png",
+   "size": 229863,
+   "mtime": "2026-11-22T21:38:58.886108+00:00",
+   "md5": "0a9d91550d63c26d0acec5002727de15"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_M03C.7D.png",
+   "size": 240710,
+   "mtime": "2026-11-22T21:38:59.561104+00:00",
+   "md5": "ff369d428c75a747213cca33148718ee"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_W02.7A.png",
+   "size": 202616,
+   "mtime": "2026-11-22T21:39:00.249099+00:00",
+   "md5": "bc7d549711daba4b33bd9e239c20914c"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_FN13C.7D.png",
+   "size": 183638,
+   "mtime": "2026-11-22T21:39:00.939095+00:00",
+   "md5": "dde5502a1a8a1728709e8756ea5f0882"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J35C.7D.png",
+   "size": 196467,
+   "mtime": "2026-11-22T21:39:01.741089+00:00",
+   "md5": "6391bd4e209f1c9e79c7885be7c01c4e"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J58C.7D.png",
+   "size": 216455,
+   "mtime": "2026-11-22T21:39:02.318085+00:00",
+   "md5": "1d2bf735fcd61acc316a69c8689b501b"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J67C.7D.png",
+   "size": 213888,
+   "mtime": "2026-11-22T21:39:03.400078+00:00",
+   "md5": "dec5f93aba07b8b7fbc0e1594d97d9d1"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J34A.7D.png",
+   "size": 166310,
+   "mtime": "2026-11-22T21:39:04.092073+00:00",
+   "md5": "618b3008c7d1a01a4ea40c5061eb4423"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_W03.7A.png",
+   "size": 194633,
+   "mtime": "2026-11-22T21:39:05.118067+00:00",
+   "md5": "438cf2d7eda389597cbc4ed9f838254a"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J11B.7D.png",
+   "size": 218269,
+   "mtime": "2026-11-22T21:39:05.876061+00:00",
+   "md5": "d80a00d5b183c13f2e6a1437b2233cb3"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_GB220.Z5.png",
+   "size": 223538,
+   "mtime": "2026-11-22T21:39:06.600057+00:00",
+   "md5": "d08290c3af34bf143433c13062c67e2c"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_G20D.7D.png",
+   "size": 202981,
+   "mtime": "2026-11-22T21:39:07.586050+00:00",
+   "md5": "96110f409f3cc4f1e7720656680e01d1"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_GB281.Z5.png",
+   "size": 159299,
+   "mtime": "2026-11-22T21:39:08.296045+00:00",
+   "md5": "7d7a96999fa46a37a0d5e7602099a7cd"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J20D.7D.png",
+   "size": 223063,
+   "mtime": "2026-11-22T21:39:08.979041+00:00",
+   "md5": "786b9da58d851e957d0776b8629ac172"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_neg_J28D.7D.png",
+   "size": 233471,
+   "mtime": "2026-11-22T21:39:09.733036+00:00",
+   "md5": "6ec792719ab0218a0342daeb6d5b5900"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FC03D.7D.png",
+   "size": 187645,
+   "mtime": "2026-11-22T21:39:10.417031+00:00",
+   "md5": "656221c516092a70369115e26fd14642"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FS15D.7D.png",
+   "size": 148925,
+   "mtime": "2026-11-22T21:39:11.471024+00:00",
+   "md5": "a6697e20fbd96ea79f514cd48aa6e8e0"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_J33A.7D.png",
+   "size": 172332,
+   "mtime": "2026-11-22T21:39:12.175019+00:00",
+   "md5": "8245e671db68827cdfad7ae8a748a70d"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FS18B.7D.png",
+   "size": 183673,
+   "mtime": "2026-11-22T21:39:12.900014+00:00",
+   "md5": "2935eb8d7eddbfaa46ab6f17fc78d360"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FS14D.7D.png",
+   "size": 200851,
+   "mtime": "2026-11-22T21:39:14.007007+00:00",
+   "md5": "3ad93d942e24e9ab452ccd48243689a3"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FS42D.7D.png",
+   "size": 175958,
+   "mtime": "2026-11-22T21:39:15.060000+00:00",
+   "md5": "a585c5b86d5d07c38b6d5ccd4ab39b42"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_FS08D.7D.png",
+   "size": 192336,
+   "mtime": "2026-11-22T21:39:16.100993+00:00",
+   "md5": "acd970f8054dd612ede1686cc45911bb"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_shelf_M01C.7D.png",
+   "size": 190422,
+   "mtime": "2026-11-22T21:39:16.851988+00:00",
+   "md5": "cf1d38790d36b93a32d0549df728483d"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_obs_BB320.X9.png",
+   "size": 210722,
+   "mtime": "2026-11-22T21:39:17.574983+00:00",
+   "md5": "457e37849eb2956596d156d0f11c2e1e"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_obs_J06B.7D.png",
+   "size": 206974,
+   "mtime": "2026-11-22T21:39:18.564976+00:00",
+   "md5": "a204e880a17a2f92cdd9db45f31ac866"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_obs_BB300.X9.png",
+   "size": 212781,
+   "mtime": "2026-11-22T21:39:19.287972+00:00",
+   "md5": "e83d1b2d5f18aa44143fb6842c072450"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_land_B047.PB.png",
+   "size": 140535,
+   "mtime": "2026-11-22T21:39:20.226965+00:00",
+   "md5": "183b29c6cc5169c91f959631fcce4212"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_land_B045.PB.png",
+   "size": 187410,
+   "mtime": "2026-11-22T21:39:21.228959+00:00",
+   "md5": "cfd2f06283647941fb61f63d209a905d"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/wf_ctrl_land_B049.PB.png",
+   "size": 171916,
+   "mtime": "2026-11-22T21:39:22.175952+00:00",
+   "md5": "7b18303b51b10b1a7eeef5b1c5b09537"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/summary_S_minus_Ppred.png",
+   "size": 118301,
+   "mtime": "2026-11-22T21:39:23.037946+00:00",
+   "md5": "55a45fd7a17463c130b6cca626318654"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/obs_check/summary_Sres_vs_dist.png",
+   "size": 137565,
+   "mtime": "2026-11-22T21:39:23.302945+00:00",
+   "md5": "478e9b81ba6648439a9ecd1fc4f94bb2"
+  }
+ ],
+ "counts": {
+  "b1_obs_S_picks_static_near100": 8336,
+  "b1_obs_S_picks_static_near60": 95804,
+  "b1_obs_S_picks_static_none": 2879,
+  "b1_obs_S_picks_trackA_term": 106927,
+  "obs_trackA_term_lt_-0.5": 45,
+  "obs_proposed_static_lt_-0.5": 13,
+  "stations": 30,
+  "waveform_windows": 699,
+  "windows_with_data": 699
+ },
+ "notes": null
+}

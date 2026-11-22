@@ -129,3 +129,18 @@ terms are "centred near zero". notes/dataset.md shows the median is near zero on
 (+0.55 s median) and 41 deep-water OBS (< -0.5 s, to -2.35 s) cancel. Negative delays cannot be sediment,
 so a sediment-only correction would leave them in the data. Resolution waits on the OBS waveform check
 (notes/obs_check.md). D-B010 stays in force until then.
+
+### D-B020 OBS S statics from near events only (adopted, 2026-11-22, coordinator; supersedes D-B010, resolves D-B019)
+Waveform check (notes/obs_check.md; data/tomo_v1/obs_check/): at 16 deep-water OBS with negative Track A
+S terms, 8 shelf OBS, 3 control OBS and 3 land stations (<= 25 events each, pnwstore archive), every S pick
+checked is the true S onset (S-Ppred 10-18 s, moveout slope 0.83-0.96 as controls, horizontal onset at the
+pick, H/Z 1.7-15), not Ps or Sp. The negative terms are a distance-dependent path misfit (S term vs median
+pick distance r = -0.47; most negative stations have median pick distance 125-190 km; controls show the same
+trend beyond 100 km), i.e. a starting-model error for B2 to fix, not a station constant. Shelf delays are
+station constants (near-event term = Track A term within 0.05 s; P terms ~0), consistent with 0.2-0.9 km
+of Vs 0.3-0.6 km/s sediment.
+Rule: keep all OBS S picks. Static = median no-term S residual of picks within 60 km (n >= 10); else
+within 100 km (n >= 10); else no static (pick kept uncorrected). B1 classes: 95,804 / 8,336 / 2,879 picks.
+13 OBS keep a static < -0.5 s (was 45), none below -0.91 s. P: no OBS statics (terms ~0).
+Literature sediment delays (D-B019 proposal) are used only as an independent check of the shelf statics,
+not applied. Follow-up for B2: check whether the starting Vp/Vs of 1.76 is too high in the oceanic plate.

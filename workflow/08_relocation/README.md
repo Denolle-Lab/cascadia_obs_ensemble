@@ -28,7 +28,8 @@ Model choices (each one is a setting to vary later):
 | Vs | CRESCENT CVM Gen0, offshore water-column fill removed, columns extended upward from their shallowest solid value |
 | Vp | Brocher (2005) eq. 9 from Vs, Vp/Vs at least 1.73 |
 | Outside Gen0 (west of ~128.5 W, south of ~40 N offshore) | 1D young oceanic crust below the seafloor (`YOUNG_OCEAN`), 80 km taper into Gen0 |
-| Outside Gen0 on land (north of ~49.6 N) | nearest Gen0 column (leaves vertical stripes; few events there) |
+| Axial, Endeavour, Blanco (outside Gen0) | published 1D location models below the seafloor: Wilcock et al. 2016 (Axial, MGDS 23844), Weekly et al. 2013 (Endeavour, after Cudrak & Clowes 1993), Kuna et al. 2019 Supp. Table 1 (Blanco); full weight within 25 km (20 km of the Blanco trace), tapered to `YOUNG_OCEAN` by 50 km (45 km). Alternatives not used: Baillard et al. 2019 3D Axial grids (datum unverified), Ren et al. 2023 Blanco VELEST model (only in a figure) |
+| Outside Gen0 on land (north of ~49.6 N) | nearest Gen0 column; coordinates clamped to the Gen0 box (no extrapolation). Leaves vertical stripes; few events there |
 | Water / air | Vp 1.5, Vs 0.4 / 0.3 km/s |
 | Surface | GMT earth_relief 01m |
 | Sphericity | no Earth-flattening transform; error grows with distance, to be checked against TauP at 250 km |

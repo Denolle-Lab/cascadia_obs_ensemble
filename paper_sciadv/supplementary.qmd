@@ -90,7 +90,7 @@ the surface with depths read below sea level, 16.2% below the local surface; 3D 
 
 # Text S6. Clustering: validation and sensitivity
 
-(Code: `workflow/06_analysis/v4_clusters_zbz.py` on branch `cluster/zbz`; report
+(Code: `workflow/06_analysis/v4_clusters_zbz.py`; report
 `data/catalog_v4/clusters_zbz/catalog_v4_clusters_report.html`.)
 - Mc per region and year (maximum curvature + 0.2); b by maximum likelihood per region; $d_f$ = 1.6
   (measured epicentral D2 0.8–1.4, run as a variant); epicentral distance floored at 0.5 km.
@@ -107,7 +107,7 @@ the surface with depths read below sea level, 16.2% below the local surface; 3D 
 
 # Text S7. Magnitude of completeness maps
 
-(Code: `workflow/06_analysis/v4_mc_maps.py`, branch `cluster/zbz`; README in `data/catalog_v4/mc_maps/`.)
+(Code: `workflow/06_analysis/v4_mc_maps.py`; README in `data/catalog_v4/mc_maps/`.)
 Magnitudes rounded to 0.1; every b fit needs ≥ 30 events above the cutoff. Methods: maximum curvature
 +0.2; b-value stability with the Shi–Bolt test over a five-bin window [@Woessner2005; @Shi1982] (the fixed
 0.03 tolerance of the AgentSeismo code almost never passes with 250 events); goodness of fit on cumulative
@@ -126,6 +126,6 @@ value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4
 - Table S4. Literature matches with verified references.
 - Table S5. Clustering families (`families_zbz.csv`) and per-region summary (`regions_zbz.csv`).
 - Table S6. Magnitude of completeness by region and period, three methods, with bootstrap sigma, b and
-  rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`, branch `cluster/zbz`); grids in
+  rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`); grids in
   `mc_grid.csv`, `mc_grid_<period>.csv` and NetCDF. Figs. S3–S7: three-method maps, bootstrap sigma and b,
   periods, regional frequency–magnitude distributions, QC variant (`data/catalog_v4/mc_maps/fig1–fig5`).

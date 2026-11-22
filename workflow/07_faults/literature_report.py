@@ -15,10 +15,10 @@ REG = {"BL": "Blanco", "MT": "Mendocino triple junction", "GO": "Gorda", "PU": "
        "ON": "Onshore and other", "OR": "Offshore Oregon", "EN": "Endeavour–Explorer"}
 NOTES = [("blanco", "Blanco"), ("mendocino", "Mendocino triple junction"), ("gorda", "Gorda"),
          ("puget_wa", "Puget Lowland and offshore Washington"), ("onshore_or_en", "Onshore, offshore Oregon, Endeavour")]
-CLASSES = ["known structure", "duplicate", "seismicity layer or volume", "no known counterpart", "likely artefact", "quarry blasts"]
+CLASSES = ["known structure", "duplicate", "seismicity layer or volume", "no known counterpart"]
 
 FINDINGS = """
-<li><b>Most surfaces are known structures.</b> 99 of 155 match a published fault, ridge segment, transform
+<li><b>Most surfaces are known structures.</b> 99 of the 145 kept surfaces match a published fault, ridge segment, transform
 strand or seismic zone; 26 of them with high or medium-high confidence. Examples: Blanco Ridge
 (BL003, BL013, strike within 2°), the Cascadia Depression normal faults (BL005, BL008, BL021), the
 Escanaba Trough and the Jackson and Central Gorda Ridge segments (GO002, GO008, GO003), the faults of
@@ -44,8 +44,9 @@ Fuca Ridge (BL025); a north-dipping E–W structure east of 122.1°W that could 
 (PU015, PU018); an E–W vertical alignment north of the Mendocino transform (MT020); a NNW dextral strand
 west of the Eaton Roughs fault (MT017); and a steep N-striking zone at Salmon Inlet, BC, active in 2015,
 about 4 km from the 2025 Mww 4.8 epicentre (ON022).</li>
-<li><b>To remove or fix before use.</b> Six surfaces are mostly quarry blasts (ON012, ON020, ON023,
-ON029, ON037, ON040); four are likely artefacts (BL022, BL024, BL026, PU010). The 2010–2016 catalog
+<li><b>Removed after this check.</b> Six surfaces that were mostly quarry blasts (ON012, ON020, ON023,
+ON029, ON037, ON040) and four likely artefacts (BL022, BL024, BL026, PU010) are no longer in the
+product; they are listed below and in fault_surfaces_v0_removed.csv. The 2010–2016 catalog
 has no intraslab surface under Puget Sound and no surface on the Leech River trace itself, Klamath
 Falls, Daisy Bank or Wecoma.</li>
 """
@@ -70,7 +71,7 @@ def main():
     order = {"high": 0, "medium-high": 1, "medium": 2, "low-medium": 3, "low": 4, "none": 5}
     hi = d[(d.lit_class == "known structure") & d.lit_confidence.isin(["high", "medium-high"])].sort_values("surface_id")
     new = d[d.lit_new_candidate].sort_values("surface_id")
-    bad = d[d.lit_class.isin(["quarry blasts", "likely artefact"])].sort_values("surface_id")
+    bad = pd.read_csv(V0 / "fault_surfaces_v0_removed.csv").sort_values("surface_id")
     allrows = d.assign(o=d.lit_confidence.map(order)).sort_values("surface_id")
     notes = ""
     for key, name in NOTES:
@@ -95,7 +96,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:10px 0;background:
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
 <style>{css}</style></head><body><div class="wrap">
 <h1>Fault surfaces v0: literature matches</h1>
-<p class="sub">155 rectangular faults fitted to catalog v4 seismicity, each compared with published faults,
+<p class="sub">145 rectangular faults (155 found, 10 removed after this check) fitted to catalog v4 seismicity, each compared with published faults,
 ridge and transform segments and seismic zones. Searches done 2026-11-22, one per region; every DOI was
 checked on Crossref or DataCite unless marked in the notes. Strikes and map positions were compared;
 v4 depths are biased shallow and its dips are weak.</p>
@@ -109,8 +110,8 @@ v4 depths are biased shallow and its dips are weak.</p>
 <p>Surfaces that the searches could not tie to a published structure, or that suggest a structure
 beyond the mapped one. Check each against the relocated catalog (Track A) before any claim.</p>
 {table(new, ["surface_id", "lit_match", "lit_confidence", "lon", "lat", "strike", "dip", "n_events"], ["Surface", "What it is", "Conf.", "Lon", "Lat", "Strike", "Dip", "Events"])}
-<h2>Quarry blasts and artefacts</h2>
-{table(bad, ["surface_id", "lit_class", "lit_match"], ["Surface", "Class", "Note"])}
+<h2>Removed: quarry blasts and artefacts</h2>
+{table(bad, ["surface_id", "lit_class", "lit_match", "reason"], ["Surface", "Class", "Note", "Reason for removal"])}
 <h2>All surfaces</h2>
 {table(allrows, ["surface_id", "lit_class", "lit_confidence", "lit_match", "strike", "dip", "length_km", "n_events"], ["Surface", "Class", "Conf.", "Match", "Strike", "Dip", "Length km", "Events"])}
 <h2>Notes from the regional searches</h2>

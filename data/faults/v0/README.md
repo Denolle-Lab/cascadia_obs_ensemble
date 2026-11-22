@@ -28,6 +28,11 @@ Three limits of v4 carry into v0:
 Next: v1 on the catalog relocated in a 3D velocity model, with an uncertainty for each event;
 v2 adds focal mechanisms we compute ourselves on our own locations.
 
+Ten surfaces found by the method were removed after the literature check (2026-11-22): six
+quarry-blast clusters (ON012, ON020, ON023, ON029, ON037, ON040) and four likely artefacts (BL022,
+BL024, BL026, PU010). They are listed with the reason in `fault_surfaces_v0_removed.csv`
+(`workflow/07_faults/drop_surfaces.py`); their events count as unassigned.
+
 A first v0, built the same day by density clustering (DBSCAN), kept only the densest knots
 (20% of events) and has been replaced by this one. Its code is still in `fault_surfaces_v0.py`,
 which also holds the helpers.
@@ -37,20 +42,20 @@ which also holds the helpers.
 | | |
 |---|---|
 | Events used | 76,281: QC (≥ 4 P and ≥ 4 S), catalog depth ≥ 0, Axial left out |
-| Events on a fault | 53,587 (70%) |
-| Surfaces | 155: Blanco 27, Mendocino triple junction 32, Gorda 20, Puget 25, Washington offshore 5, Oregon offshore 2, Endeavour 4, onshore and other 40 |
-| Steep (dip ≥ 45°) | 102 |
-| Size (10th–90th percentiles) | length 13–52 km, down-dip width 10–27 km |
-| Mesh | 1 km grid; 102,517 vertices, 189,476 triangles |
+| Events on a fault | 52,647 (69%) |
+| Surfaces | 145: Blanco 24, Mendocino triple junction 32, Gorda 20, Puget 24, Washington offshore 5, Oregon offshore 2, Endeavour 4, onshore and other 34 |
+| Steep (dip ≥ 45°) | 94 |
+| Size (10th–90th percentiles) | length 13–54 km, down-dip width 10–27 km |
+| Mesh | 1 km grid; 98,853 vertices, 182,880 triangles |
 
 Share of events assigned to a fault, by region:
 
 | Region | Events | On a fault |
 |---|---|---|
-| Blanco | 20,331 | 88% |
+| Blanco | 20,331 | 87% |
 | Mendocino triple junction | 24,996 | 72% |
-| Puget | 8,491 | 65% |
-| Onshore and other | 14,913 | 62% |
+| Puget | 8,491 | 61% |
+| Onshore and other | 14,913 | 60% |
 | Gorda | 4,060 | 50% |
 | Endeavour | 845 | 33% |
 | Washington offshore | 1,906 | 21% |
@@ -97,14 +102,14 @@ Puget Lowland and around Mount St. Helens.
      (100 draws).
    - `sigma_method`: spread over the surface-model choices (plane or quadratic, with or without
      trimming beyond 2.5 RMS).
-   - `sigma_total`: the three combined in quadrature. Median 0.44 km (10th–90th: 0.18–0.79 km).
+   - `sigma_total`: the three combined in quadrature. Median 0.44 km (10th–90th: 0.18–0.77 km).
 
    Strike and dip intervals (`*_68`, `*_95`) come from the bootstrap; `*_with_loc_mc` add the
    location Monte Carlo. For dips above 75°, strike intervals are modulo 180°.
 7. **Stability.** Detection is rerun four times: two other random seeds, and tolerance factor
    1.25 and 1.75.
    - `cluster_jaccard_median` is the median overlap of a fault's events with its best match in
-     the reruns; `stable` means ≥ 0.5 (41 of 155).
+     the reruns; `stable` means ≥ 0.5 (39 of 145).
    - `strike_settings_range` and `dip_settings_range` give the orientation spread of the
      matches.
    - Overlap is low where parallel or adjacent planes trade events between runs (most of

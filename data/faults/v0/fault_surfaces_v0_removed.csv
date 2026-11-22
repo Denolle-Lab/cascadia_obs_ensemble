@@ -1,0 +1,11 @@
+surface_id,n_events,lon,lat,strike,dip,lit_class,lit_match,reason
+ON012,163,-122.1276,49.1067,20.1,58.7,quarry blasts,Quarry blasts (Sumas Mountain / Chilliwack area),"quarry blasts (mostly daytime, weekday events)"
+ON020,108,-123.1069,46.1849,282.0,50.9,quarry blasts,Probable quarry blasts near Clatskanie (plus sparse events),"quarry blasts (mostly daytime, weekday events)"
+ON023,80,-122.5413,45.5538,127.9,81.4,quarry blasts,Blast-contaminated; possibly an East Bank / Lacamas Lake–parallel structure,"quarry blasts (mostly daytime, weekday events)"
+ON029,65,-122.6178,49.3005,7.7,65.4,quarry blasts,Quarry blasts (Pitt Meadows / Maple Ridge),"quarry blasts (mostly daytime, weekday events)"
+ON037,41,-123.0745,44.1077,51.1,29.1,quarry blasts,Blasts / artifact (Eugene–Springfield),"quarry blasts (mostly daytime, weekday events)"
+ON040,30,-122.2898,40.7315,262.8,88.4,quarry blasts,Quarry blasts (Redding area),"quarry blasts (mostly daytime, weekday events)"
+BL022,100,-128.7707,43.8498,314.7,77.9,likely artefact,Deep artefact beneath CAS (CAS cluster),likely artefact (literature check)
+BL024,78,-128.5819,43.6655,112.3,80.1,likely artefact,Deep artefact at the W tip of the BR / CAS junction,likely artefact (literature check)
+BL026,67,-127.1263,43.234,111.6,77.9,likely artefact,Deep artefact beneath the Gorda Depression,likely artefact (literature check)
+PU010,208,-122.3589,47.8294,286.3,14.2,likely artefact,Seismogenic-layer artifact under the N Seattle basin,likely artefact (literature check)

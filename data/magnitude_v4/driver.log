@@ -1,0 +1,121 @@
+[2026-11-21 14:43:59] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python v4_build_arrivals.py --outdir ../../data/magnitude_v4
+2,503,189 arrivals, 172,340 events, 696 stations -> ../../data/magnitude_v4/arrivals_v4.csv
+172,340 origins -> ../../data/magnitude_v4/catalog_v4_for_phase2.csv
+[2026-11-21 14:44:13] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python route_a_day_amplitudes.py select --amps /wd1/mdenolle_data/amps_v6_all --arrivals ../../data/magnitude_v4/arrivals_v4.csv --out ../../data/magnitude_v4/raw_wa_amplitudes_v4.csv
+2,503,189 arrivals -> ../../data/magnitude_v4/raw_wa_amplitudes_v4.csv
+reason
+ok                                                                    2492125
+not_in_segment                                                          10099
+no_segment                                                                349
+no_response:.EH                                                           277
+no_response:.HH,.HN                                                       238
+window_outside_data                                                       100
+fetch:The smallest possible mini-SEED record is made up of 128 byt          1
+[2026-11-21 14:49:41] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python route_a_build_dataset.py --raw ../../data/magnitude_v4/raw_wa_amplitudes_v4.csv --out ../../data/magnitude_v4/amp_distance_dataset_routeA.csv --min-snr 3 --epoch-station
+raw rows            : 2,503,189
+dropped low-SNR (<3.0) : 935,618
+clean observations  : 1,556,507  ->  ../../data/magnitude_v4/amp_distance_dataset_routeA.csv
+events              : 162,711
+station terms (ids) : 918  (epoch-keyed)
+phase counts        : {'S': 903855, 'P': 652652}
+[2026-11-21 14:49:52] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase3_route_b_relative_magnitude.py --dataset ../../data/magnitude_v4/amp_distance_dataset_routeA.csv --outdir ../../data/magnitude_v4 --fix-n 1.0 --min-log10a -99 --suffix _routeA
+=== Route B relative-magnitude inversion ===
+input observations     : 1,556,507   events total: 162,711
+dropped amp<floor      : 0
+dropped sta/ev<min-obs : 50,864
+robust-rejected obs    : 7,048
+final observations     : 1,498,595
+events WITH magnitude  : 130,767  (80.4% of all events)
+events MISSED          : 31,944  (too few well-recorded stations)
+station-phase terms    : 1,607  (|C|>10 pathological: 0)
+attenuation  P: n=1.000 k=0.00092   S: n=1.000 k=0.00185
+residual RMS=0.237  robustMAD=0.219  (log10 units)
+median single-station-magnitude scatter per event = 0.214
+M_rel range p1..p99    : -3.10 .. 0.73
+wrote ../../data/magnitude_v4/route_b_event_relative_mag_routeA.csv
+wrote ../../data/magnitude_v4/route_b_station_terms_routeA.csv
+NOTE: M_rel is RELATIVE (uncalibrated). Absolute ML needs a ComCat/Morton anchor (next step).
+wrote ../../data/magnitude_v4/route_b_diagnostics_routeA.png
+[2026-11-21 14:52:28] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase2_anchor_comcat_ml.py --events ../../data/magnitude_v4/route_b_event_relative_mag_routeA.csv --catalog ../../data/magnitude_v4/catalog_v4_for_phase2.csv --outdir ../../data/magnitude_v4 --suffix _routeA
+box lat[38.66,51.42] lon[-132.06,-120.46]  period 2010-01-01..2017-01-01
+[comcat] 2010: 575 ML events
+[comcat] 2011: 565 ML events
+[comcat] 2012: 557 ML events
+[comcat] 2013: 634 ML events
+[comcat] 2014: 626 ML events
+[comcat] 2015: 715 ML events
+[comcat] 2016: 786 ML events
+[comcat] 2017: 0 ML events
+[comcat] cached 4458 ML events -> ../../data/magnitude_v4/comcat_ml_events.csv
+ComCat ML events: 4,458   matched anchors: 3,555
+calibration  ML = 0.892 * M_rel + 2.875   (slope 95% CI 0.880..0.904)
+anchors: n=3555  corr=0.942  resid std=0.18  MAD=0.15  ML range 1.5..4.9
+final ML: n=130,767  range -1.52..5.95  median 1.55
+wrote ../../data/magnitude_v4/cascadia_catalog_ML_routeA.csv
+wrote ../../data/magnitude_v4/route_b_ml_calibration_routeA.png
+[2026-11-21 14:53:08] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase4_qc_and_gr.py --catalog ../../data/magnitude_v4/cascadia_catalog_ML_routeA.csv --tag v4_routeA --outdir ../../data/magnitude_v4
+=== v4_routeA: catalog QC + Gutenberg-Richter ===
+events            : 130,767
+ML range / median : -1.52 .. 5.95 / 1.55
+Mc (max curvature): 1.45   (events >= Mc: 74,887)
+b-value (MLE)     : 0.673 +/- 0.002
+b-value (LS fit)  : 0.851   over Mc..5.15
+a-value           : 5.85
+median ML_unc     : 0.16
+median #obs/event : 7
+wrote ../../data/magnitude_v4/v4_routeA_gutenberg_richter.png
+wrote ../../data/magnitude_v4/v4_routeA_qc.png
+[2026-11-21 14:53:10] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase16_calibrate_magnitude.py --catalog ../../data/magnitude_v4/cascadia_catalog_ML_routeA.csv --target ml --anss ../../data/magnitude_v4/anss_2010-16.csv --out ../../data/magnitude_v4/cascadia_catalog_routeA_calibrated_ml.csv
+ML calibration: 4348 anchors, ml = -0.30 + 1.13*ML  (Theil-Sen, RMS 0.21)
+  input ML range -0.4..5.9 -> ml -0.7..6.4
+  wrote ../../data/magnitude_v4/cascadia_catalog_routeA_calibrated_ml.csv  (+ ML_cal [median 1.5] and ML_cal_unc [median 0.27])
+[2026-11-21 14:54:07] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase16_calibrate_magnitude.py --catalog ../../data/magnitude_v4/cascadia_catalog_ML_routeA.csv --target mw --anss ../../data/magnitude_v4/anss_2010-16.csv --out ../../data/magnitude_v4/cascadia_catalog_routeA_calibrated_mw.csv
+MW calibration: 248 anchors, mw = 0.36 + 1.08*ML  (Theil-Sen, RMS 0.47)
+  input ML range 2.1..5.4 -> mw 2.6..6.2
+  wrote ../../data/magnitude_v4/cascadia_catalog_routeA_calibrated_mw.csv  (+ MW [median 2.0] and MW_unc [median 0.50])
+[2026-11-21 14:54:10] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase18_moment_tensor_match.py --data ../../data/magnitude_v4 --suffix _routeA --matched ../../data/magnitude_v4/comcat_mt_matched_v4.csv
+tensors in window 279, in catalog box 223, matched 147 (|dt|<5 s, <50 km) -> ../../data/magnitude_v4/comcat_mt_matched_v4.csv
+  dt median -0.07 s; distance median 14.2 km, 90% 36.7 km; depth diff IQR -8.9..+5.7 km
+  unmatched in box: 76, e.g. Port McNeill, Canada; Ferndale, California; Bandon, Oregon; Tofino, Canada; off the coast of Oregon
+
+our magnitude - tensor Mw (median), by tensor Mw
+  Mw 3-4.5: n= 67  ML -0.53  MW +0.13
+  Mw 4.5-5.5: n= 60  ML -1.18  MW -0.51
+  Mw 5.5-7.5: n= 20  ML -1.38  MW -0.63
+
+S station magnitude (Hutton-Boore, no station terms) - reference, by distance
+              ComCat ML>=2.5  tensor Mw<4.5  tensor Mw>=4.5
+dist_hypo_km                                               
+(0, 100]               -0.03           0.20            0.10
+(100, 200]             -0.12          -0.11           -0.18
+(200, 300]             -0.18          -0.38           -0.73
+(300, 500]             -0.27          -0.72           -1.01
+(500, 1000]             0.04          -0.79           -1.04
+
+test catalog (HB, P+S within 150 km, offset +0.56 to ComCat): 127,611 events (98%); anchor residual std 0.29
+  Mw 3-4.5: n= 52  test ML - Mw +0.03
+  Mw 4.5-5.5: n= 29  test ML - Mw +0.05
+  Mw 5.5-7.5: n=  9  test ML - Mw -0.18
+[2026-11-21 14:54:11] /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python phase19_preferred_magnitude.py --data ../../data/magnitude_v4 --suffix _routeA --matched ../../data/magnitude_v4/comcat_mt_matched_v4.csv
+inversion within 150 km: 1,364,190 picks, 1,338 station-phase terms, residual robust std 0.212
+ML offset to 3,416 ComCat anchors +0.413; anchor residual std 0.211 (s_anchor 0.204)
+Traceback (most recent call last):
+  File "/home/mdenolle/cascadia_obs_ensemble/workflow/05_magnitude/phase19_preferred_magnitude.py", line 183, in <module>
+    main()
+  File "/home/mdenolle/cascadia_obs_ensemble/workflow/05_magnitude/phase19_preferred_magnitude.py", line 134, in main
+    sl, ic, _, _ = theilslopes(nr.ML, nr.ML_inv)
+  File "/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib/python3.10/site-packages/scipy/stats/_stats_mstats_common.py", line 138, in theilslopes
+    deltay = y[:, np.newaxis] - y
+numpy.core._exceptions._ArrayMemoryError: Unable to allocate 121. GiB for an array with shape (127249, 127249) and data type float64
+inversion within 150 km: 1,364,190 picks, 1,338 station-phase terms, residual robust std 0.212
+ML offset to 3,416 ComCat anchors +0.413; anchor residual std 0.211 (s_anchor 0.204)
+mapped (no 3 picks within 150 km): ML = -0.353 + 1.154 ML_inv (fit over near events, residual std 0.76)
+ML_method: {'near': 127249, 'mapped': 3518}
+Mw_cal (mapped) = ML +0.97  (44 tensor pairs with ML >= 3.5; std 0.40; a fitted Theil-Sen slope would be 0.89)
+Mw_cal (near) = ML +0.04  (86 tensor pairs with ML >= 3.5; std 0.49; a fitted Theil-Sen slope would be 0.63)
+M_type: {'ML': 130652, 'Mw': 80, 'Mw_cal': 35} ; uncalibrated 'mapped' ML >= 4: 35
+  tensor Mw 3-4.5: n= 67  ML - Mw -0.02  (inversion ML -0.53)
+  tensor Mw 4.5-5.5: n= 60  ML - Mw -0.79  (inversion ML -1.18)
+  tensor Mw 5.5-7.5: n= 20  ML - Mw -1.01  (inversion ML -1.38)
+ML - ML_inv: median -0.01, std 0.70; ML median 1.46
+wrote ../../data/magnitude_v4/cascadia_catalog_M_routeA.csv (130,767 events)

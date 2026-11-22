@@ -1,0 +1,31 @@
+# Axial Seamount and Endeavour–Explorer (agent report, 2026-11-21; DOIs checked on Crossref)
+
+## Axial Seamount
+Papers:
+1. Wilcock, Tolstoy, Waldhauser, Garcia, Tan, Bohnenstiehl, Caplan-Auerbach, Dziak, Arnulf & Mann (2016). Seismic constraints on caldera dynamics from the 2015 Axial Seamount eruption. Science 354(6318), 1395–1399. 10.1126/science.aah5563 — Reference study for our window and network (OO, from Nov 2014): pre-eruption rate rise, outward-dipping ring faults above the reservoir, rate drop after; eruption seismicity moved onto the rift. Check our rate curve and both lobes against it.
+2. Nooner & Chadwick (2016). Inflation-predictable behavior and co-eruption deformation at Axial Seamount. Science 354(6318), 1399–1403. 10.1126/science.aah4666 — Uplift/deflation history; test whether our rate tracks inflation.
+3. Baillard, Wilcock, Arnulf, Tolstoy & Waldhauser (2019). A joint inversion for three-dimensional P and S wave velocity structure and earthquake locations beneath Axial Seamount. JGR Solid Earth 124(12), 12997–13020. 10.1029/2019JB017970 — Same OO stations; 3-D model; check our depths, datum and the 4–5 km cluster.
+4. Waldhauser, Wilcock, Tolstoy, Baillard, Tan & Schaff (2020). Precision seismic monitoring and analysis at Axial Seamount using a real-time double-difference system. JGR Solid Earth 125(5), e2019JB018796. 10.1029/2019JB018796 — Event-by-event benchmark: completeness, offsets, sharpness of ring faults.
+5. Carbotte, Arnulf, Spiegelman, Lee, Harding, Kent, Canales & Nedimović (2020). Stacked sills forming a deep melt-mush feeder conduit beneath Axial Seamount. Geology 48(7), 693–697. 10.1130/G47223.1 — Magma reservoir and sills: where brittle failure is expected; read the 4–5 km cluster against it.
+Also: Arnulf et al. 2014 Geology 42(8) 655–658 10.1130/G35629.1; Wang, Waldhauser, Schaff, Tolstoy, Wilcock & Tan 2024 SRL 95(5) 2651–2662 10.1785/0220240086 (ML real-time detection, same data); Tan, Waldhauser, Tolstoy & Wilcock 2019 EPSL 512 39–45 10.1016/j.epsl.2019.01.047 (tidal b-value; corrigendum 10.1016/j.epsl.2019.05.014); Levy et al. 2018 Geology 46(5) 447–450 10.1130/G39978.1; Zhu, Tan, Zhong, Tolstoy, Waldhauser et al. 2026 Geology 54 567–571 10.1130/G54254.1 (migrating tremor before 2015).
+Questions:
+1. Does an independent ML catalog reproduce the pre-eruption acceleration; more or fewer events than the DD and real-time ML catalogs? Match to Waldhauser 2020 / Wang 2024; daily rates, shape Nov 2014–Apr 2015, drop timing. Limits: starts with OO (late 2014), no baseline; ends 2016; QC and matching rules.
+2. Do rate and b-value scale with inflation, change across the eruption? Moving-window b/Mc vs Nooner & Chadwick uplift. Limits: ML pending, calibration below ~M1, Mc changes with rate (overlapping events). Consistency check vs Tan 2019 unless magnitudes hold up.
+3. Is the 4–5 km seismicity real? Settle datum; relocate subset in Baillard 3-D model; check timing and network dependence. Limits: datum; 1-D bias under the reservoir; small array.
+4. Does the south-rift lobe record rift stressing/intrusion distinct from ring faults? Split by lobe, compare rate histories. Limits: array centred on caldera, poorer rift locations.
+
+## Endeavour, Endeavour–Explorer junction, Sovanco, Nootka
+Papers:
+1. Weekly, Wilcock, Hooft, Toomey, McGill & Stakes (2013). Termination of a 6 year ridge-spreading event observed using a seafloor seismic network on the Endeavour Segment, Juan de Fuca Ridge. G3 14(5), 1375–1398. 10.1002/ggge.20105 — On-axis events shallow above the magma lens (our 12.4 km median does not fit); state before our window.
+2. Krauss, Wilcock, Heesemann, Schlesinger, Kukovica & Farrugia (2023). A long-term earthquake catalog for the Endeavour Segment: Constraints on the extensional cycle and evidence for hydrothermal venting supported by propagating rifts. JGR Solid Earth 128(2), e2022JB025662. 10.1029/2022JB025662 — ONC (NV) catalog; compare our 283 events and the 47.6°N cluster.
+3. Krauss, Baillard, Wilcock, Heesemann, Schlesinger & Kukovica (2025). A single-station earthquake catalog for the Endeavour Segment of the Juan de Fuca Ridge (2011–2016): Challenges and implications for the spreading cycle. SRL 97(1), 369–382. 10.1785/0220240427 — Same years; independent rate history; tests deployment dependence.
+4. Braunmiller & Nábělek (2002). Seismotectonics of the Explorer region. JGR Solid Earth 107(B10). 10.1029/2001JB000220 — Moment tensors/centroid depths for Explorer, Sovanco, junction, Nootka.
+5. Hutchinson, Kao, Spence, Obana, Wang & Kodaira (2019). Seismic characteristics of the Nootka fault zone: Results from the Seafloor Earthquake Array Japan–Canada Cascadia Experiment (SeaJade). BSSA 109(6), 2252–2276. 10.1785/0120190008 — OBS depths and mechanisms on Nootka.
+Also: Hutchinson et al. 2023 Sci Rep 13 7873 10.1038/s41598-023-33310-z; Rohr, Furlong & Riedel 2018 G3 19(11) 4290–4312 10.1029/2018GC007851; Van Ark et al. 2007 JGR 112(B2) 10.1029/2005JB004210; Wilcock, Archer & Purdy 2002 JGR 107(B12) 10.1029/2001JB000505; Weekly et al. 2014 G3 15(4) 1296–1315 10.1002/2013GC005159; Obana et al. 2015 BSSA 105 489–495 10.1785/0120140095; Wilcock et al. 2009 Nat Geosci 2 509–513 10.1038/ngeo550.
+Questions:
+1. Seismic state of the Endeavour segment 2011–2016 between spreading episodes? Compare with Krauss 2025/2023. Limits: 39 QC events; deployment-dependent; upper bound only.
+2. How does seismicity divide between Sovanco, the junction and Nootka (distributed deformation)? Map vs Rohr 2018 / Hutchinson traces; mechanisms vs Braunmiller & Nábělek. Limits: edge of networks, km-scale errors, short window.
+3. Are the 12.4 km median depths real? Datum; depth by sub-area vs Weekly 2013/Van Ark 2007 (on-axis ~<3 km) and Hutchinson 2019 (Nootka); velocity-model and 7D sensitivity. Limits: network to the east, depth–origin-time trade-off.
+4. What is the 47.6°N cluster? Timing, waveform similarity, 7D dependence. Limits: possible artifact; no independent catalog unless ComCat/CN.
+Magnitude work weak here (~1,000 QC events across settings).
+Unverified/not used: no journal ML catalog of Axial beyond Wang 2024; "Tolstoy 2018 tidal" = Tan 2018 GRL is EPR 9°50'N; several ESSOAr preprints with no journal version (Chadwick/Nooner/Lau 2020, Chadwick 2021, Fredrickson 2020, Wilcock 2020); Ruan 2026 EGU abstract.

@@ -209,6 +209,36 @@ def tensors():
     return out
 
 
+def surfaces_display(path, max_side=12):
+    """Fault surfaces on a coarser grid for display: each rectangle's 1 km vertex grid (row-major in
+    _vertices.csv) is subsampled to at most max_side points per side, corners kept."""
+    feats = json.load(open(path))["features"]
+    vx = pd.read_csv(path.with_name("fault_surfaces_v0_vertices.csv"))
+    lon, lat, dep, surf = [], [], [], []
+    for f in feats:
+        p = f["properties"]
+        v = vx[vx.surface_id == p["surface_id"]].sort_values("vertex")
+        key = {(round(a, 5), round(b, 5)): i for i, (a, b) in enumerate(zip(v.lon, v.lat))}
+        x, y, _ = f["geometry"]["coordinates"][0][0][2]          # third vertex of the first triangle = (row 1, col 1)
+        nu = key[(round(x, 5), round(y, 5))] - 1
+        nv = len(v) // nu
+        G = v[["lon", "lat", "depth_km"]].to_numpy().reshape(nv, nu, 3)
+        ri = np.unique(np.r_[np.linspace(0, nv - 1, min(nv, max_side)).round().astype(int)])
+        ci = np.unique(np.r_[np.linspace(0, nu - 1, min(nu, max_side)).round().astype(int)])
+        G = G[np.ix_(ri, ci)]
+        a0 = len(lon) // 3
+        for i in range(G.shape[0] - 1):
+            for k in range(G.shape[1] - 1):
+                q = G[i, k], G[i, k + 1], G[i + 1, k + 1], G[i + 1, k]
+                for t in ((q[0], q[1], q[2]), (q[0], q[2], q[3])):
+                    for pt in t:
+                        lon.append(pt[0]); lat.append(pt[1]); dep.append(pt[2])
+        surf.append(dict(id=p["surface_id"], kind=p["kind"], stable=p["stable"], n=p["n_events"], strike=p["strike"],
+                         dip=p["dip"], dip68=p["dip_68"], sig=p["sigma_total_median_km"],
+                         L=p["length_km"], W=p["width_km"], a=a0, b=len(lon) // 3))
+    return (np.array(lon, "<f4"), np.array(lat, "<f4"), np.array(dep, "<f4")), surf
+
+
 def tri_mesh(features, keep):
     """MultiPolygon triangle features -> flat lon/lat/depth(km, down) per vertex + per-feature ranges."""
     lon, lat, dep, ranges = [], [], [], []
@@ -262,15 +292,10 @@ def faults():
     arr = {"f_lon": lo, "f_lat": la, "f_dep": de, "c_lon": clo, "c_lat": cla, "c_dep": cde}
     surf = []
     sv = D / "faults" / "v0" / "fault_surfaces_v0.geojson"
-    if sv.exists():                         # event-derived surfaces v0 (workflow/07_faults/fault_surfaces_v0.py)
-        sf = json.load(open(sv))["features"]
-        (slo, sla, sde), srng = tri_mesh(sf, lambda f: True)
+    if sv.exists():                         # event-derived surfaces v0 (workflow/07_faults/fault_surfaces_planes.py)
+        (slo, sla, sde), surf = surfaces_display(sv)
         arr.update({"s_lon": slo, "s_lat": sla, "s_dep": sde})
-        for i, a0, b0 in srng:
-            p = sf[i]["properties"]
-            surf.append(dict(id=p["surface_id"], kind=p["kind"], stable=p["stable"], n=p["n_events"], strike=p["strike"],
-                             dip=p["dip"], dip68=p["dip_68"], sig=p["sigma_total_median_km"], a=a0 // 3, b=b0 // 3))
-        print(f"  surfaces v0: {len(surf)} ({len(slo) // 3:,} triangles)")
+        print(f"  surfaces v0: {len(surf)} ({len(slo) // 3:,} display triangles)")
     return arr, dict(meshes=props, traces=traces, surf=surf)
 
 

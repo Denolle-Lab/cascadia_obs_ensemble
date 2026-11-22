@@ -1,117 +1,153 @@
 # Cascadia fault surfaces v0 (from catalog v4 seismicity)
 
-**Version v0, 2026-11-22. A method test, not for interpretation.** Shared privately in the catalog v4 working-copy Zenodo draft (files `fault_surfaces_v0*`), not as a record of its own.
+**Version v0, 2026-11-22.** Shared privately in the catalog v4 working-copy Zenodo draft
+(files `fault_surfaces_v0*`). A first product on the catalog v4 locations; it will be redone
+on the relocated catalog.
 
-v0 fits 3D surfaces to clusters of earthquakes in the Cascadia catalog v4 (172,340 events,
-2010–2016, GENIE association and GraphDD location of the ELEP ver6 picks; catalog by
-I. McBrearty). The aim is to build and test the fitting and uncertainty steps before the
-catalog is relocated. The surfaces use the v4 locations as they are, and three things limit them:
+v0 fits rectangular fault surfaces to planar alignments of earthquakes in the Cascadia catalog
+v4 (172,340 events, 2010–2016; ELEP ver6 picks, GENIE association and GraphDD location by
+I. McBrearty). The criterion is that events gather around planes and that most events can be
+assigned to a fault, whatever the local density.
 
-- **Depths:** absolute depths are biased shallow. 23.5% of v4 events plot above the ground or
-  seafloor when depths are read below sea level; 16.2% do when depths are read below the
+Three limits of v4 carry into v0:
+- **Depths** are biased shallow. 23.5% of v4 events plot above the ground or seafloor when
+  depths are read below sea level, and 16.2% when they're read below the local surface.
+- **Datum:** the depth datum is not confirmed. `surface_elev_km` is given at every vertex:
+  depth below sea level = `depth_km - surface_elev_km` if the catalog depth is below the
   local surface.
-- **Datum:** the depth datum of v4 is not confirmed. `surface_elev_km` is given at every vertex
-  so the surfaces can be moved: depth below sea level = `depth_km - surface_elev_km` if the
-  catalog depth turns out to be below the local surface.
-- **Relocation:** v4 has no relative relocation, and its `spatial_sigma` is 3–20 km.
+- **Relocation:** there is no relative relocation, so dips are less reliable than strikes.
 
-Later versions: v1 reruns the same code on the catalog relocated in a 3D velocity model,
-with an uncertainty for each event; v2 adds focal mechanisms that we compute ourselves on our
-own locations. Published mechanisms (ComCat) are not used, because they belong to other
-catalogs' locations and velocity models.
+**Not included:**
+- **Axial Seamount:** published fault maps from the cabled-array catalogs are much better than
+  v4 allows (for example Wilcock et al. 2016; Waldhauser et al. 2020).
+- **Flat structures** (dip < 30°): with v4 depths, a diffuse cloud of events passes for a flat
+  plane.
+- **Published focal mechanisms** (ComCat): they belong to other catalogs' locations and velocity
+  models, so they are not used.
+
+Next: v1 on the catalog relocated in a 3D velocity model, with an uncertainty for each event;
+v2 adds focal mechanisms we compute ourselves on our own locations.
+
+A first v0, built the same day by density clustering (DBSCAN), kept only the densest knots
+(20% of events) and has been replaced by this one. Its code is still in `fault_surfaces_v0.py`,
+which also holds the helpers.
 
 ## Content
 
 | | |
 |---|---|
-| Surfaces | 74 (Blanco 23, Mendocino triple junction 20, Gorda 6, Axial 2, Puget 11, onshore/other 12) |
-| Steep surfaces (dip ≥ 45°) | 43, of which 39 are stable under changes of the clustering settings |
-| Events used | 35,279 (members of a surface) of 51,559 selected |
-| Mesh | 27,480 vertices, 48,552 triangles, 1 km grid |
+| Events used | 76,281: QC (≥ 4 P and ≥ 4 S), catalog depth ≥ 0, Axial left out |
+| Events on a fault | 53,587 (70%) |
+| Surfaces | 155: Blanco 27, Mendocino triple junction 32, Gorda 20, Puget 25, Washington offshore 5, Oregon offshore 2, Endeavour 4, onshore and other 40 |
+| Steep (dip ≥ 45°) | 102 |
+| Size (10th–90th percentiles) | length 13–52 km, down-dip width 10–27 km |
+| Mesh | 1 km grid; 102,517 vertices, 189,476 triangles |
 
-The Blanco transform comes out as 23 near-vertical surfaces: segments along strike, parallel
-overlapping strands and a N–S pair in the Cascadia Depression step-over.
+Share of events assigned to a fault, by region:
 
-Near the triple junction, several gently dipping surfaces within 5 km of Slab2 are labelled
-"near-slab layer (not a single fault)". They are pieces of one continuous seismicity layer,
-and the clustering splits it differently from one setting to the next (`stable` = False).
+| Region | Events | On a fault |
+|---|---|---|
+| Blanco | 20,331 | 88% |
+| Mendocino triple junction | 24,996 | 72% |
+| Puget | 8,491 | 65% |
+| Onshore and other | 14,913 | 62% |
+| Gorda | 4,060 | 50% |
+| Endeavour | 845 | 33% |
+| Washington offshore | 1,906 | 21% |
+| Oregon offshore | 739 | 19% |
 
-## Method (`fault_surfaces_v0.py`)
+Sparse offshore areas stay low: with few events, few planes reach the 30-event minimum.
 
-1. **Events:** at least 4 P and 4 S picks, catalog depth ≥ 0, and `spatial_sigma` below the
-   60th percentile of its region, capped at 20 km. The regional cuts are in
-   `fault_surfaces_v0_sigma_cuts.csv`. A relative cut is used because `spatial_sigma` behaves
-   like an absolute error: events scatter 0.6–1.8 km (RMS normal to the surface, 10th–90th
-   percentile) about the surfaces, while the median `spatial_sigma` of their members is
-   2.6–15 km.
-2. **Clusters:** DBSCAN in 3D, with a 2.5 km link distance, 8 links for a core event, and depth
-   weighted by 0.5.
-3. **Recursive splitting:** each cluster is split until every piece is planar
-   (sqrt(l3/l2) ≤ 0.5, where l1 ≥ l2 ≥ l3 are the variances along the principal axes) and
-   shorter than 40 km. Each split tries two options and keeps the one with the smaller summed
-   normal variance:
-   - two planes (k-planes with k = 2), which separates parallel strands and step-overs;
-   - a cut across strike at the median, which separates segments.
-4. **Surface:** each piece is fitted in a local projection centred on it, in the frame of its
-   best plane (u along strike, v down dip, w normal). The fit is w = f(u, v), a plane or a
-   quadratic chosen by BIC, on a 1 km (u, v) grid inside the convex hull of the events with a
-   1 km buffer.
-5. **Uncertainty, per vertex** (normal to the surface, 1σ, km):
-   - `sigma_boot`: bootstrap of the events (100 draws).
-   - `sigma_loc`: Monte Carlo over location errors, with each event moved by N(0, spatial_sigma)
-     on x, y and z (100 draws). Since `spatial_sigma` is larger than the observed scatter, this
-     is a worst case.
+The surfaces outline the Blanco segments and their parallel strands, the N–S structures in the
+Cascadia Depression, the Gorda Ridge segments, the Mendocino transform, and steep faults in the
+Puget Lowland and around Mount St. Helens.
+
+## Method (`fault_surfaces_planes.py`)
+
+1. **Tolerance.** A plane with upward normal n has thickness tolerance
+   tol = 1.5 · sqrt((1.5 km · |n_h|)² + (3 km · n_z)²). The nominal relative errors are
+   1.5 km horizontal and 3 km in depth, so vertical faults are about 2.3 km thick and
+   flatter ones thicker. `spatial_sigma` is not used: it behaves like an absolute error
+   (3–20 km, while events scatter 0.7–1.7 km about the fitted surfaces).
+2. **Detection.** Sequential local RANSAC with growth:
+   - Seeds are taken from dense to sparse.
+   - Around a seed, 150 random planes through the seed and two events within 10 km are scored
+     by the number of free events within tol in a 20 km ball.
+   - The best plane grows: free events within tol are kept only if connected to the seed in
+     the plane (4 km cells), then the plane is refit, and this repeats.
+   - A plane is kept with ≥ 30 events, planarity sqrt(l3/l2) ≤ 0.5, in-plane width ≥ 1 km and
+     dip ≥ 30°. Its events are then removed from the pool.
+3. **Reassignment** (k-planes, three passes). Each event goes to the plane with the smallest
+   |distance|/tol among planes whose rectangle contains its projection. Planes with fewer than
+   30 events are dropped.
+4. **Merging.** Two planes join when all of these hold:
+   - normals within 15°;
+   - each within tol of the other;
+   - events closer than 4 km;
+   - the joined set is still planar, with RMS ≤ tol and dip ≥ 30°.
+
+   Then reassignment runs again.
+5. **Rectangles.** Each fault is the rectangle [u2%, u98%] × [v2%, v98%] (+ 0.5 km) in its own
+   plane (u along strike, v down dip), whether or not it reaches the surface. On it,
+   w = f(u, v) is a plane or a gentle quadratic chosen by BIC. `constrained` marks vertices
+   with ≥ 5 events within 2.5 km in the plane.
+6. **Uncertainty, per vertex** (1σ normal to the surface, km):
+   - `sigma_boot`: bootstrap of the fault's events (100 draws).
+   - `sigma_loc`: Monte Carlo with each event moved by N(0, 1.5, 1.5, 3 km) in x, y, z
+     (100 draws).
    - `sigma_method`: spread over the surface-model choices (plane or quadratic, with or without
-     trimming events beyond 2.5 RMS).
-   - `sigma_total`: the three combined in quadrature.
+     trimming beyond 2.5 RMS).
+   - `sigma_total`: the three combined in quadrature. Median 0.44 km (10th–90th: 0.18–0.79 km).
 
-   Velocity-model and datum effects are not included in v0. They move all surfaces together
-   and will be measured as the shift between v0 and v1.
-6. **Orientation:** `strike_68`/`_95` and `dip_68`/`_95` come from refitting the plane in every
-   bootstrap draw. `*_with_loc_mc` adds the location Monte Carlo (worst case). For dips above
-   75°, strike intervals are given modulo 180°.
-7. **Clustering stability:** the whole pipeline is rerun over a 3 × 3 grid of DBSCAN settings
-   (link distance 2, 2.5, 3 km; core 6, 8, 10). `cluster_jaccard_median` is the median overlap
-   of the surface's events with the best-matching piece; `stable` means it is ≥ 0.5.
-   `strike_settings_range` and `dip_settings_range` give the spread of the matched pieces'
-   orientation.
-8. **Checks:**
-   - `rms_normal_km` (zone width) against `median_sigma_km`, as `width_to_error`;
-   - nearest CRESCENT CFM v1.0 fault (`nearest_cfm`, 3D distance, its dip);
-   - `slab2_minus_depth_km`, Slab2 depth minus the surface's centroid depth.
-9. **Kind:**
-   - "steep zone (fault candidate)": dip ≥ 45°;
-   - "near-slab layer (not a single fault)": dip ≤ 25° and within 5 km of Slab2;
-   - otherwise "dipping zone".
+   Strike and dip intervals (`*_68`, `*_95`) come from the bootstrap; `*_with_loc_mc` add the
+   location Monte Carlo. For dips above 75°, strike intervals are modulo 180°.
+7. **Stability.** Detection is rerun four times: two other random seeds, and tolerance factor
+   1.25 and 1.75.
+   - `cluster_jaccard_median` is the median overlap of a fault's events with its best match in
+     the reruns; `stable` means ≥ 0.5 (41 of 155).
+   - `strike_settings_range` and `dip_settings_range` give the orientation spread of the
+     matches.
+   - Overlap is low where parallel or adjacent planes trade events between runs (most of
+     Blanco), even when the geometry barely moves. Compare the orientation ranges before
+     discarding a surface.
+8. **Checks.**
+   - `rms_normal_km` against `tolerance_km`;
+   - nearest CRESCENT CFM v1.0 fault (3D distance, its dip);
+   - `slab2_minus_depth_km`;
+   - `kind`: "steep zone (fault candidate)" for dip ≥ 45°, otherwise "dipping zone".
 
 ## Files
 
-- `fault_surfaces_v0.geojson`: one Feature per surface. The geometry is a MultiPolygon of
-  triangles (lon, lat, elevation in m, negative down), in the layout of the CRESCENT
-  Community Fault Model. The properties are the summary fields.
-- `fault_surfaces_v0_summary.csv`: one row per surface. List fields are separated by ";".
+- `fault_surfaces_v0.geojson`: one Feature per fault. The geometry is a MultiPolygon of
+  triangles (lon, lat, elevation in m, negative down), as in the CRESCENT Community Fault
+  Model; the properties are the summary fields.
+- `fault_surfaces_v0_summary.csv`: one row per fault, with list fields separated by ";".
+  Includes top_km, bottom_km, length_km, width_km, strike, dip, their intervals, the sigmas,
+  stability and checks.
 - `fault_surfaces_v0_vertices.csv`: surface_id, vertex, lon, lat, depth_km, sigma_boot_km,
-  sigma_loc_km, sigma_method_km, sigma_total_km, constrained (1 if at least 5 events lie
-  within 2.5 km in the surface plane), surface_elev_km (GMT earth_relief 01m, km, positive up).
-- `fault_surfaces_v0_ensemble.csv.gz`: the full ensemble (bootstrap plus location Monte Carlo,
-  100 draws). Columns: surface_id, vertex, draw, normal_offset_km, the offset of the vertex
-  along the surface's upward normal (`normal_xyz` in the summary; x east, y north, z down).
+  sigma_loc_km, sigma_method_km, sigma_total_km, constrained, surface_elev_km (GMT
+  earth_relief 01m, km, positive up). Vertices are row-major on the rectangle grid.
+- `fault_surfaces_v0_ensemble.csv.gz`: surface_id, vertex, draw, normal_offset_km. These are
+  100 draws (bootstrap + location Monte Carlo) of each vertex's offset along the fault's upward
+  normal (`normal_xyz` in the summary; x east, y north, z down).
 - `fault_surfaces_v0_members.csv`: event_id (catalog v4 `ID`) and surface_id.
-- `fault_surfaces_v0_sigma_cuts.csv`: the `spatial_sigma` cut of each region.
-- `fault_surfaces_v0_map.png`: map of the surfaces, for the whole margin, Blanco, and
-  Mendocino–Gorda.
-- `fault_surfaces_v0.py`: the code that made all of the above (uses NumPy, SciPy, pandas,
-  matplotlib and PyGMT).
+- `fault_surfaces_v0_assignment.csv`: events and share on a fault per region.
+- `fault_surfaces_v0_map.png`: events coloured by fault, and the rectangles, for the whole
+  margin, Blanco, and Mendocino–Gorda.
+- `fault_surfaces_planes.py` (the method) and `fault_surfaces_v0.py` (helpers, and the first
+  DBSCAN version). They use NumPy, SciPy, pandas, matplotlib and PyGMT.
 
 Region prefixes in `surface_id`:
-- AX: Axial Seamount
-- BL: Blanco transform
-- GO: Gorda plate
+- BL: Blanco
 - MT: Mendocino triple junction
-- PU: Puget Lowland
+- GO: Gorda
+- PU: Puget
+- WA: Washington offshore
+- OR: Oregon offshore
+- EN: Endeavour–Explorer
 - ON: onshore and other
 
-## Licence and citation
+## Licence
 
-CC BY 4.0. Shared with collaborators in the catalog v4 working-copy draft; not for redistribution. Code:
+Working copy shared with collaborators; not for redistribution. Code:
 https://github.com/Denolle-Lab/cascadia_obs_ensemble (`workflow/07_faults/`).

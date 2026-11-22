@@ -89,3 +89,6 @@ data/magnitude_v4/*.csv
 !data/magnitude_v4/comcat_ml_events.csv
 !data/magnitude_v4/route_b_ml_anchors_routeA.csv
 !data/magnitude_v4/route_b_station_terms_routeA.csv
+
+# Fault-surface ensembles (large; shared on the private Zenodo draft)
+data/faults/*/fault_surfaces_*_ensemble.csv.gz

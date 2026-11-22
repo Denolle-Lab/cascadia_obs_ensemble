@@ -327,6 +327,48 @@ def faults():
     return arr, dict(meshes=props, traces=traces, surf=surf)
 
 
+MC_LAYERS = [  # key, label, file, column
+    ("best", "All years · best (GFT95, GFT90, MAXC+0.2)", "mc_grid.csv", "mc_best"),
+    ("maxc", "All years · MAXC+0.2", "mc_grid.csv", "mc_maxc"),
+    ("mbs", "All years · b-value stability", "mc_grid.csv", "mc_mbs"),
+    ("gft95", "All years · goodness of fit 95%", "mc_grid.csv", "mc_gft95"),
+    ("p2010", "2010 (no OBS) · best", "mc_grid_2010.csv", "mc_best"),
+    ("p2011", "2011–2012 (OBS) · best", "mc_grid_2011-2012.csv", "mc_best"),
+    ("p2013", "2013–2015 (OBS) · best", "mc_grid_2013-2015.csv", "mc_best"),
+    ("p2016", "2016 (no OBS) · best", "mc_grid_2016.csv", "mc_best"),
+]
+MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs", "mc_gft95": "sigma_gft"}
+
+
+def mc_grids():
+    """Mc on the 0.1 deg grid (v4_mc_maps.py): uint8 Mc*20+40 and sigma*50, 255 = no value."""
+    d = D / "catalog_v4" / "mc_maps"
+    if not (d / "mc_grid.csv").exists():
+        return None, None
+    base = pd.read_csv(d / "mc_grid.csv")
+    lons, lats = np.round(np.sort(base.lon.unique()), 4), np.round(np.sort(base.lat.unique()), 4)
+    out, layers = {}, []
+    u8 = lambda v, s, o: np.where(np.isfinite(v), np.clip(np.round(v * s + o), 0, 254), 255).astype("u1")
+    for key, label, f, col in MC_LAYERS:
+        g = pd.read_csv(d / f)
+        g = g.assign(lon=g.lon.round(4), lat=g.lat.round(4)).set_index(["lat", "lon"])
+        idx = pd.MultiIndex.from_product([lats, lons], names=["lat", "lon"])
+        mc = g[col].reindex(idx).to_numpy(float); sg = g[MC_SIG[col]].reindex(idx).to_numpy(float)
+        nn = g["n"].reindex(idx).to_numpy(float)
+        out[f"mc_{key}"], out[f"sg_{key}"] = u8(mc, 20, 40), u8(sg, 50, 0)
+        if key == "best" or key.startswith("p"):
+            out[f"n_{key}"] = np.nan_to_num(nn).astype("<u2")
+        layers.append(dict(key=key, label=label, nodes=int(np.isfinite(mc).sum())))
+        print(f"  Mc {key}: {np.isfinite(mc).sum():,} nodes")
+    # colour table of the paper figures (GMT cpt: z0 r/g/b z1 r/g/b)
+    cpt = [ln.split() for ln in (d / "mc.cpt").read_text().splitlines() if ln[:1].replace("-", "").replace(".", "").isdigit()]
+    stops = [[float(r[0])] + [int(round(float(x))) for x in r[1].split("/")] for r in cpt]
+    stops.append([float(cpt[-1][2])] + [int(round(float(x))) for x in cpt[-1][3].split("/")])
+    meta = dict(nx=len(lons), ny=len(lats), west=float(lons[0]), south=float(lats[0]), step=float(np.round(lons[1] - lons[0], 4)),
+                layers=layers, cpt=stops)
+    return out, meta
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
@@ -337,11 +379,13 @@ def main(argv=None):
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()
     fa, fa_meta = faults()
+    mc, mc_meta = mc_grids()
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],
-                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta,
+                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta,
                      built=pd.Timestamp.now().strftime("%Y-%m-%d")),
         "events": blob(ev), "terrain": blob(ter), "slab": blob(sl), "faults": blob(fa) if fa else None,
+        "mc": blob(mc) if mc else None,
         "stations": stations(), "plates": plates(), "tensors": tensors(),
     }
     html = Path(a.template).read_text().replace("/*__ATLAS_DATA__*/null", json.dumps(payload, separators=(",", ":")))

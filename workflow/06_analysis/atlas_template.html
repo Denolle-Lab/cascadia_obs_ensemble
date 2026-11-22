@@ -174,6 +174,7 @@
   <h4>Layers</h4>
   <div class="layers" id="layers"></div>
   <div class="ctl-row"><span class="lab">Slab color</span><select id="slabColor"></select></div>
+  <div class="ctl-row" id="mcRow"><span class="lab">Mc map</span><select id="mcSel"></select></div>
   <div class="sep"></div>
   <div class="ctl-row"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
   <div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div>
@@ -223,8 +224,8 @@ async function unblob(b) {
   for (const [k, t] of Object.entries(b.table)) out[k] = new T[t.dtype](buf, t.off, t.n);
   return out;
 }
-const [EV, TER, SLAB, FLT] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
-  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null)]);
+const [EV, TER, SLAB, FLT, MCG] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
+  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null), ATLAS.mc ? unblob(ATLAS.mc) : Promise.resolve(null)]);
 
 // ---------- projection: local equirectangular, 1 unit = 1 km; y up, depth down ----------
 const LON0 = M.lon0, LAT0 = M.lat0;
@@ -494,6 +495,56 @@ const slabDepAt = (lon, lat) => {
   return Number.isNaN(v) ? null : v;
 };
 
+// ---------- magnitude of completeness: 0.1 deg cells draped just above the ground ----------
+const MCM = M.mc;
+let mcMesh = null, mcKey = "best";
+const mcCol = v => { const S = MCM.cpt; if (v <= S[0][0]) return S[0].slice(1);
+  for (let j = 1; j < S.length; j++) if (v <= S[j][0]) { const t = (v - S[j - 1][0]) / (S[j][0] - S[j - 1][0]);
+    return [0, 1, 2].map(c => S[j - 1][c + 1] + t * (S[j][c + 1] - S[j - 1][c + 1])); }
+  return S[S.length - 1].slice(1); };
+const mcCell = [];                                     // display cell -> grid node
+if (MCG) {
+  const nx = MCM.nx, ny = MCM.ny, h = MCM.step / 2;
+  const any = new Uint8Array(nx * ny);
+  for (const L of MCM.layers) { const a = MCG["mc_" + L.key]; for (let i = 0; i < a.length; i++) if (a[i] !== 255) any[i] = 1; }
+  for (let i = 0; i < any.length; i++) if (any[i]) mcCell.push(i);
+  const nc = mcCell.length, pos = new Float32Array(nc * 12), elev = new Float32Array(nc * 4), col = new Float32Array(nc * 12);
+  mcCell.forEach((i, k) => {
+    const lon = MCM.west + (i % nx) * MCM.step, lat = MCM.south + Math.floor(i / nx) * MCM.step;
+    const top = Math.max(0, elevAt(lon, lat));         // a land cell rides the terrain; sea cells sit at sea level
+    [[-h, -h], [h, -h], [h, h], [-h, h]].forEach(([a, b], j) => {
+      pos[(k * 4 + j) * 3] = toX(lon + a); pos[(k * 4 + j) * 3 + 2] = toZ(lat + b);
+      elev[k * 4 + j] = Math.max(top, elevAt(lon + a, lat + b), 0);
+    });
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  geo.userData.elev = elev;
+  mcMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.78, side: THREE.DoubleSide,
+    depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 }));
+  mcMesh.renderOrder = 20;
+  scene.add(mcMesh);
+}
+function placeMc() {                                   // follow the vertical exaggeration
+  if (!mcMesh) return;
+  const p = mcMesh.geometry.attributes.position, el = mcMesh.geometry.userData.elev, e = U.exag.value;
+  for (let i = 0; i < el.length; i++) p.array[i * 3 + 1] = el[i] * 0.001 * e + 0.25;
+  p.needsUpdate = true; mcMesh.geometry.computeBoundingSphere();
+}
+function setMc(key) {
+  if (!mcMesh) return;
+  mcKey = key; const a = MCG["mc_" + key], g = mcMesh.geometry, c = g.attributes.color.array, idx = [];
+  mcCell.forEach((i, k) => {
+    if (a[i] === 255) return;
+    const rgb = mcCol((a[i] - 40) / 20).map(v => (v / 255) ** 2.2);   // sRGB table -> linear for the renderer
+    for (let j = 0; j < 4; j++) c.set(rgb, (k * 4 + j) * 3);
+    const v = k * 4; idx.push(v, v + 1, v + 2, v, v + 2, v + 3);
+  });
+  g.attributes.color.needsUpdate = true; g.setIndex(idx);
+}
+placeMc(); setMc("best");
+
 // ---------- faults: CRESCENT CFM crustal meshes + CASIE21 megathrust ----------
 const FM = M.faults || {};
 function triMesh(lon, lat, dep, color, opacity) {
@@ -605,6 +656,7 @@ const LAYERS = [
   { key: "plates", label: "Plates", color: "#f2efe6", obj: [plateLines], on: true },
   { key: "stations", label: "Stations", color: "#66ccf2", obj: [stPoints], on: true },
   { key: "tensors", label: "Tensors", color: "#e8a33d", obj: [tensorGroup], on: true },
+  { key: "mc", label: "Mc map", color: "#6f9f6b", obj: [mcMesh].filter(Boolean), on: false },
 ];
 const lay = $("layers");
 for (const L of LAYERS) {
@@ -617,6 +669,12 @@ const layer = k => LAYERS.find(L => L.key === k);
 const sc = $("slabColor");
 sc.innerHTML = `<option value="depth">Depth (10 km contours)</option>` + SM.models.map(m => `<option value="${m}">Coupling: ${m}</option>`).join("");
 sc.onchange = () => { setSlabColor(sc.value); if (!layer("slab").on) layer("slab").set(true); drawLegend(); };
+const mcSel = $("mcSel");
+if (MCM) mcSel.innerHTML = MCM.layers.map(L => `<option value="${L.key}">${L.label} (${L.nodes.toLocaleString()} cells)</option>`).join("");
+else $("mcRow").style.display = "none";
+mcSel.onchange = () => { setMc(mcSel.value); if (!layer("mc").on) layer("mc").set(true); drawLegend(); };
+{ const L = layer("mc"); if (L && L.set) { const s0 = L.set; L.set = on => { s0(on); drawLegend(); }; } }
+lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend(); }; });
 
 // ---------- controls ----------
 let refreshT = 0;                                                  // debounce timer of refresh()
@@ -675,7 +733,7 @@ function showFaultCard(k) {
   $("fcClose").onclick = () => selectFault(-1);
 }
 const bind = (id, fmt, cb) => { const el = $(id), out = $(id + "V"); const f = () => { out.textContent = fmt(+el.value); cb(+el.value); }; el.oninput = f; f(); };
-bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); drawSection3D(); });
+bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); placeMc(); drawSection3D(); });
 bind("ground", v => v >= 0.99 ? "solid" : v <= 0.01 ? "cut" : Math.round(v * 100) + "%", v => {
   terrainOpacity.value = v; terrainGroup.visible = v > 0.01 && layer("ground").on;
   });
@@ -788,9 +846,14 @@ function drawLegend() {
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] }][F.mode];
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
     ? `<div><h4>Slab2 coloured by coupling (${sc.value})</h4><div class="ramp" style="background:linear-gradient(90deg,#4578b3,#d9d9d1,#cc4038)"></div><div class="ramp-labels"><span>0 creeping</span><span>0.5</span><span>1 locked</span></div></div>` : "";
+  const mcL = MCM && layer("mc") && layer("mc").on ? MCM.layers.find(L => L.key === mcKey) : null;
+  const mcLeg = mcL ? `<div><h4>Magnitude of completeness, ${mcL.label}</h4><div class="ramp" style="background:linear-gradient(90deg,${
+    [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(v => `rgb(${mcCol(v).map(Math.round).join(",")})`).join(",")})"></div>
+    <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4><div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div></div>
-    ${slab}
+    ${slab}${mcLeg}
     <div><h4>Symbols</h4>
       <div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#f2a65a"/></svg>Event, size by magnitude; non-QC fainter</div>
       <div class="row"><svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#66ccf2"/></svg>Ocean-bottom station · <svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#f2f2eb"/></svg>land</div>
@@ -801,7 +864,7 @@ function drawLegend() {
     <div class="attribution"><span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>
       Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
-      Tensors: ComCat. Built ${M.built}.</div>`;
+      Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div>`;
   layoutPanels();
 }
 
@@ -853,6 +916,16 @@ function hover(mx, my) {
     // raycast against the displayed (exaggerated) geometry
     const h = ray.intersectObject(pickMesh(cfmMesh, "cfm"))[0];
     if (h) { const f = faultOf(h.faceIndex); if (f) return showTip(`<b>${f.name}</b> <span class="k">${f.id}</span><br>dip ${f.dip}° ${f.dipdir ?? ""} · rake ${f.rake}<br>${f.top}–${f.bot} km · ${f.src}<br><span class="k">CRESCENT CFM v1.0 (under review)</span>`, mx, my); }
+  }
+  if (mcMesh && layer("mc").on) {
+    const h = ray.intersectObject(mcMesh)[0];
+    if (h) { const i = mcCell[Math.floor(h.face.a / 4)], nx = MCM.nx, v = k => MCG["mc_" + k][i], f = k => v(k) === 255 ? "–" : ((v(k) - 40) / 20).toFixed(1);
+      const s = MCG["sg_" + mcKey][i], nk = mcKey.startsWith("p") ? mcKey : "best", n = MCG["n_" + nk] ? MCG["n_" + nk][i] : 0;
+      const per = ["p2010", "p2011", "p2013", "p2016"].map(k => `${MCM.layers.find(L => L.key === k).label.split(" ")[0]} ${f(k)}`).join(" · ");
+      return showTip(`<b>Mc ${f(mcKey)}</b>${s !== 255 ? ` ± ${(s / 50).toFixed(2)}` : ""} <span class="k">${MCM.layers.find(L => L.key === mcKey).label}</span><br>
+        ${(MCM.south + Math.floor(i / nx) * MCM.step).toFixed(1)}°N ${(-(MCM.west + (i % nx) * MCM.step)).toFixed(1)}°W${n ? ` · ${n} events in the sample` : ""}<br>
+        <span class="k">all years</span> best ${f("best")} · MAXC+0.2 ${f("maxc")} · b-stab. ${f("mbs")} · GFT95 ${f("gft95")}<br>
+        <span class="k">periods (best)</span> ${per}`, mx, my); }
   }
   hideTip();
 }

@@ -219,6 +219,17 @@ def tensors():
     return out
 
 
+def split_dois(v):
+    """Split a ';'-separated DOI list; old GSA DOIs end in 'CO;2', so a lone '2' rejoins the previous DOI."""
+    out = []
+    for p in (x.strip() for x in str(v or "").split(";")):
+        if out and p == "2" and out[-1].upper().endswith(".CO"):
+            out[-1] += ";2"
+        elif p.startswith("10."):
+            out.append(p)
+    return out
+
+
 def surfaces_display(path, max_side=12):
     """Fault surfaces on a coarser grid for display: each rectangle's 1 km vertex grid (row-major in
     _vertices.csv) is subsampled to at most max_side points per side, corners kept."""
@@ -249,7 +260,7 @@ def surfaces_display(path, max_side=12):
                          L=p["length_km"], W=p["width_km"], a=a0, b=len(lon) // 3,
                          lm=(p.get("lit_match") or "")[:140], lc=p.get("lit_confidence"), lk=p.get("lit_class"),
                          ln=bool(p.get("lit_new_candidate")), refs=p.get("lit_refs") or "",
-                         dois=[d.strip() for d in str(p.get("lit_dois") or "").split(";") if d.strip().startswith("10.")],
+                         dois=split_dois(p.get("lit_dois")),
                          urls=[u.strip() for u in str(p.get("lit_urls") or "").split(";") if u.strip().startswith("http")],
                          md=p.get("min_D_to_parallel"), top=p.get("top_km"), bot=p.get("bottom_km"),
                          jac=p.get("cluster_jaccard_median")))

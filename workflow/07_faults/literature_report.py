@@ -54,8 +54,19 @@ Falls, Daisy Bank or Wecoma.</li>
 """
 
 
+def split_dois(v):
+    """Split a ';'-separated DOI list; old GSA DOIs end in 'CO;2', so a lone '2' rejoins the previous DOI."""
+    out = []
+    for p in (x.strip() for x in str(v or "").split(";")):
+        if out and p == "2" and out[-1].upper().endswith(".CO"):
+            out[-1] += ";2"
+        elif p.startswith("10."):
+            out.append(p)
+    return out
+
+
 def doilinks(v):
-    ds = [d.strip() for d in str(v).split(";") if d.strip().startswith("10.")]
+    ds = split_dois(v)
     return "<br>".join(f'<a href="https://doi.org/{escape(d)}">{escape(d)}</a>' for d in ds)
 
 

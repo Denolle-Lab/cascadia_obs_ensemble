@@ -1,26 +1,22 @@
 surface_id,n_events,n_analysis,n_background,n_mainshock-aftershock,n_swarm,n_multiplet,pct_background,pct_swarm,n_families,region,lit_match
-BL001,2184,555,226,142,139,48,40.7,25.0,74,BL,Surveyor Depression strands plus link to EBD. A composite fit across right steps
-BL002,1890,461,172,88,165,36,37.3,35.8,59,BL,"East Blanco Depression strands, extending W to the E end of the WBD"
-BL003,1666,328,219,41,22,46,66.8,6.7,51,BL,"Blanco Ridge transform, central and eastern part (the two Mw 6 asperities)"
-BL004,1623,314,176,32,75,31,56.1,23.9,41,BL,West Blanco Depression transform (central valley; most likely WBDS or the central-valley strand)
+BL001a,1593,369,259,63,12,35,70.2,3.3,45,BL,Surveyor Depression S-wall strand
+BL001b,733,132,69,22,22,19,52.3,16.7,30,BL,Third (intra-basin) strand inside the Surveyor Depression
+BL003a,3441,748,414,162,64,108,55.3,8.6,105,BL,"Blanco Ridge transform (principal, crustal strand)"
+BL004a,2589,726,168,182,327,49,23.1,45.0,55,BL,"West Blanco Depression transform zone (central valley / WBDS-WBDC zone), running E to the EBD; the S member of a 2 km parallel pair"
+BL004b,2270,514,212,102,146,54,41.2,28.4,55,BL,"West Blanco Depression transform zone, N member of the 2 km pair with BL004a"
 BL005,1022,195,81,47,46,21,41.5,23.6,50,BL,Cascadia Depression: N–S (spreading-parallel) normal faults
-BL006,983,256,81,80,73,22,31.6,28.5,30,BL,"Surveyor Depression, northern strand (or E end of BL001)"
+BL006a,1766,321,142,36,111,32,44.2,34.6,37,BL,"Surveyor Depression N-wall strand, continuing W into the EBD"
 BL007,970,204,124,30,22,28,60.8,10.8,34,BL,CAS internal structure joining the CAS N–S faults to the W tip of the BR (oblique composite)
 BL008,910,176,79,29,35,33,44.9,19.9,44,BL,Cascadia Depression N–S normal fault (parallel to BL005)
-BL009,789,140,96,14,14,16,68.6,10.0,23,BL,"Surveyor Depression, southern strand extending W toward the EBD"
-BL010,711,201,26,30,141,4,12.9,70.1,8,BL,Oblique step-over structure between the EBD and SUR (pull-apart cross fault)
-BL011,707,161,91,38,20,12,56.5,12.4,37,BL,Western Blanco Ridge seismicity shifted N toward CAS (BR–CAS junction / NE crustal fault bend)
+BL011b,119,20,9,2,7,2,45.0,35.0,6,BL,"Western tip of the Blanco Ridge, N-shifted strand next to CAS"
 BL012,668,152,60,18,50,24,39.5,32.9,29,BL,Cascadia Depression N–S normal fault (deeper image of BL005)
-BL013,605,157,65,42,20,30,41.4,12.7,31,BL,Western Blanco Ridge transform (W of the 127.9°W barrier)
-BL014,494,146,106,19,5,16,72.6,3.4,18,BL,Gorda Depression interior / S-of-BR trough (BN08)
-BL015,436,118,42,27,38,11,35.6,32.2,18,BL,West Blanco Depression near the RTI (WBDN/WBDS trend)
-BL016,393,127,90,19,0,18,70.9,0.0,23,BL,Gorda Depression north wall (SE continuation of the Blanco Ridge)
-BL017,382,162,123,35,0,4,75.9,0.0,19,BL,Gorda Transform segment (GD south wall to the Gorda Ridge RTI)
-BL018,361,65,20,1,15,29,30.8,23.1,16,BL,"WBDC: oblique strand from the NE corner of the WBD to the JdF ridge tip, or the N branch of Lange's RTI bifurcation"
-BL019,318,101,46,25,8,22,45.5,7.9,23,BL,"Blanco Ridge, eastern asperity / barrier zone (overlaps BL003)"
-BL020,271,54,37,5,6,6,68.5,11.1,9,BL,"Southern SUR strand, W extension toward the EBD"
+BL014a,483,135,89,25,4,17,65.9,3.0,22,BL,"Gorda Depression intra-basin transtensional strand (central GD clusters), extending E to the Gorda Ridge RTI"
+BL015a,397,113,39,25,39,10,34.5,34.5,15,BL,WBD near the RTI: S branch of Lange's two parallel clusters at the JdF intersection (WBDS trend)
+BL016a,306,107,78,17,1,11,72.9,0.9,18,BL,"Gorda Depression N wall, S member"
+BL016b,146,51,36,6,0,9,70.6,0.0,10,BL,"Gorda Depression N wall (SE continuation of the Blanco Ridge), N member"
+BL017a,497,184,149,30,0,5,81.0,0.0,18,BL,Gorda Transform segment (GD S wall to the Gorda Ridge RTI)
+BL018a,210,43,16,2,13,12,37.2,30.2,11,BL,WBD N wall strand (WBDN) / N branch of the RTI bifurcation
 BL021,122,32,7,19,3,3,21.9,9.4,6,BL,Cascadia Depression normal fault (NNW-striking)
-BL023,93,22,4,3,14,1,18.2,63.6,5,BL,Blanco Ridge mantle seismicity (deep image of BL003/BL013)
 BL025,68,21,16,2,1,2,76.2,4.8,5,BL,"Cleft segment, southern Juan de Fuca Ridge (ridge-parallel structure)"
 BL027,42,13,10,1,0,2,76.9,0.0,2,BL,RTI curved/rotated transform piece at the WBD–Cleft corner
 EN001,121,16,1,1,14,0,6.2,87.5,2,EN,Southern end of the Endeavour segment / Cobb propagating-rift overlap; ridge-parallel normal faulting

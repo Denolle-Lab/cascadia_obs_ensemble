@@ -778,8 +778,9 @@ swarm and multiplet events above Mc.</p>""")
     h.append("<img src='fig_faults.png' alt='faults'>")
     h.append(tab(pfs.head(15), ["surface_id", "n_analysis", "pct_background", "pct_swarm", "n_families", "lit_match"],
                  rename={"n_analysis": "events &ge; Mc", "lit_match": "literature match"}).replace("&amp;", "&"))
-    h.append("""<p>Swarm shares are highest on the Blanco step-over and depression surfaces (BL010, the cross
-fault between the East Blanco and Surveyor depressions: 70% swarm events; BL002, BL012, BL015: 32-36%), on
+    h.append("""<p>Swarm shares are highest on the Blanco depression strands (BL004a, the West Blanco Depression strand that
+runs into the East Blanco Depression: 45% of its events above Mc are in swarms; BL006a in the Surveyor
+Depression, BL015a near the Juan de Fuca ridge end and the Cascadia Depression normal fault BL012: 33-35%), on
 the northern Escanaba Trough axis (GO002, 47%) and on a recurring swarm source north of Mount McLoughlin
 (ON027, 71%). The 36 Puget and Mendocino surfaces with 30 or more events are 11-94% background (median 65%) and
 most have no swarm events; the 2010 and 2014 Gorda sequences dominate the clustered events on MT011 and
@@ -798,7 +799,7 @@ sequences are typical of oceanic transforms (McGuire et al. 2005; Roland &amp; M
 Blanco, Kuna et al. (2019) proposed that episodic creep in the mantle below the seismic crust triggers
 swarms, and Lange et al. (2026) found bursts with interevent times mostly under 5 minutes and repeating
 earthquakes in the western Blanco and the Gorda Depression. Our highest swarm shares are on the pull-apart
-and step-over surfaces of the western Blanco (BL010, BL002, BL012, BL015), where Ren et al. (2023) and Lange
+and step-over strands of the western Blanco (BL004a, BL006a, BL015a, BL012), where Ren et al. (2023) and Lange
 et al. (2026) place the extensional basins and the intra-transform spreading of the Cascadia Depression.
 That is where fluids and magma could also drive swarms (Hill 1977). Mainshock-aftershock events are
 spread over the Blanco surfaces (23-31% of events on the Blanco Ridge, Surveyor and Cascadia Depression

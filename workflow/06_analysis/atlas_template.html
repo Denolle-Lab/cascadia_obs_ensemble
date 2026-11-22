@@ -493,7 +493,7 @@ let cfmMesh = null, casMesh = null, surfMesh = null;
 if (FLT) {
   cfmMesh = triMesh(FLT.f_lon, FLT.f_lat, FLT.f_dep, "#e8a33d", 0.5); cfmMesh.renderOrder = 5; scene.add(cfmMesh);
   casMesh = triMesh(FLT.c_lon, FLT.c_lat, FLT.c_dep, "#5fb3a6", 0.45); casMesh.renderOrder = 4; scene.add(casMesh);
-  if (FLT.s_lon) { surfMesh = triMesh(FLT.s_lon, FLT.s_lat, FLT.s_dep, "#d77bff", 0.6); surfMesh.renderOrder = 6; scene.add(surfMesh); }
+  if (FLT.s_lon) { surfMesh = triMesh(FLT.s_lon, FLT.s_lat, FLT.s_dep, "#3d8bff", 0.7); surfMesh.renderOrder = 6; scene.add(surfMesh); }
 }
 const surfOf = tri => (FM.surf || []).find(m => tri >= m.a && tri < m.b);
 const faultOf = tri => (FM.meshes || []).find(m => tri >= m.a && tri < m.b);
@@ -579,7 +579,7 @@ const LAYERS = [
   { key: "ground", label: "Bathymetry", color: "#62908f", obj: [terrainGroup], on: true },
   { key: "slab", label: "Slab2", color: "#9fb3cc", obj: [slabMesh], on: false },
   { key: "casie", label: "CASIE21", color: "#5fb3a6", obj: [casMesh].filter(Boolean), on: false },
-  { key: "surf", label: "Surfaces v0", color: "#d77bff", obj: [surfMesh].filter(Boolean), on: false },
+  { key: "surf", label: "Surfaces v0", color: "#3d8bff", obj: [surfMesh].filter(Boolean), on: true },
   { key: "cfm", label: "CFM faults", color: "#e8a33d", obj: [cfmMesh, traceLines].filter(Boolean), on: true },
   { key: "plates", label: "Plates", color: "#f2efe6", obj: [plateLines], on: true },
   { key: "stations", label: "Stations", color: "#66ccf2", obj: [stPoints], on: true },
@@ -723,7 +723,7 @@ function drawLegend() {
       <div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#f2a65a"/></svg>Event, size by magnitude; non-QC fainter</div>
       <div class="row"><svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#66ccf2"/></svg>Ocean-bottom station · <svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#f2f2eb"/></svg>land</div>
       <div class="row"><span class="sw" style="background:#e8a33d"></span>CRESCENT CFM fault (5 km contours)</div>
-      <div class="row"><span class="sw" style="background:#d77bff"></span>Fault surfaces v0 from v4 events (method test)</div>
+      <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events (method test)</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
     <div class="attribution"><span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>
@@ -899,7 +899,7 @@ function drawSection() {
     sctx.stroke();
   };
   if (FLT) { cut(FLT.c_lon, FLT.c_lat, FLT.c_dep, "#5fb3a6", layer("casie").on); cut(FLT.f_lon, FLT.f_lat, FLT.f_dep, "#e8a33d", layer("cfm").on);
-    if (FLT.s_lon) cut(FLT.s_lon, FLT.s_lat, FLT.s_dep, "#d77bff", layer("surf").on); }
+    if (FLT.s_lon) cut(FLT.s_lon, FLT.s_lat, FLT.s_dep, "#3d8bff", layer("surf").on); }
   // events
   sel.sort((p, q) => emag[p] - emag[q]);
   for (const i of sel) {

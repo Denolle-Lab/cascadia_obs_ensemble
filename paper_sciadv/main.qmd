@@ -58,8 +58,17 @@ focus on spatial structure and on processes lasting hours to months, not on mult
 The catalog has 172,340 events from 2010 to 2016, located with 2,503,189 P and S picks on 696 stations,
 322 of them on the seafloor (Fig. 1; Materials and Methods). Local magnitudes calibrated to ComCat exist
 for 130,767 events (3,416 common events, scatter 0.21 magnitude units). The magnitude of completeness
-(Mc) varies by a factor of 50 in energy across the region and through time, because the array moved:
-[TO ADD from the Mc maps: Mc ranges by region and period, three methods; Fig. 2]. Epicenters are
+(Mc), mapped with three methods (Fig. 2; Table S6), is lowest at Mount St. Helens and in the Axial
+caldera (0.0–0.3) and in the Puget Lowland and offshore Washington (node medians 1.0–1.1), and highest on
+the western Blanco transform and the northern Gorda Ridge (2.9–3.2). Pooled by region, Mc is 1.2–1.7
+onshore and in the forearc and 1.8–2.2 on the offshore plate boundaries. Completeness follows the moving
+array. Offshore Mc can be measured only while the ocean-bottom stations were deployed (2011–2015): in 2010
+and 2016 no offshore node has 150 events within 50 km, and the rate of M ≥ 2.5 events on the Blanco
+transform drops to 5% (2010) and 8% (2016) of its 2013–2015 rate. Offshore Mc also improved by 0.2–0.4
+between the first two deployment years and 2013–2015 (Blanco 2.6 to 2.2). Where the land network was
+stable, Mc changes little between periods (median change 0.0 to 0.1). The 2016 drop near Mendocino (M ≥ 2.5
+rate 10% of 2013–2015) comes from missing northern California picks, not from the ocean-bottom array.
+These maps bound every comparison between places and times in this study. Epicenters are
 reliable enough to place offshore earthquakes on bathymetric features: on the Gorda Ridge, catalog
 epicenters fall on the axial valley, while ComCat epicenters of the same events lie 10–20 km east
 (Text S5). Absolute depths are not yet reliable: 23.5% of events plot above the seafloor or ground in the
@@ -187,7 +196,12 @@ event size, distance attenuation and station terms, and anchored to 3,416 ComCat
 moment magnitudes from regional moment tensors replace ML above 4.5 (Text S5). Mc was mapped on a 0.1°
 grid from the nearest 250 events with three methods: maximum curvature with a +0.2 correction,
 b-value stability, and goodness of fit [@Wiemer2000; @Cao2002; @Woessner2005], with bootstrap
-uncertainty, for the whole period and for each deployment period [TO UPDATE with results].
+uncertainty (200 resamples), for the whole period and for each deployment period (nearest 150 events
+there), adapting the implementation of the AgentSeismo project (Z. Zhang). The b-value stability test
+follows @Woessner2005 with the standard error of b of @Shi1982; the best estimate is the goodness of fit
+at 95%, else 90%, else maximum curvature [@Mignan2012]. Because the samples are often incomplete when
+the array was absent (b ≈ 0.6), we also compare annual rates of M ≥ 2.0, 2.5 and 3.0 events between
+periods, which needs no fit.
 
 ## Fault surfaces
 

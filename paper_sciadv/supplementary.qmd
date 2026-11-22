@@ -105,6 +105,19 @@ the surface with depths read below sea level, 16.2% below the local surface; 3D 
 - Limits: the per-region Mc keeps 27,555 events; Mc differs between regions (0.75–2.45); the swarm rule's
   magnitude gap (0.5) is close to the ML uncertainty (about 0.2).
 
+# Text S7. Magnitude of completeness maps
+
+(Code: `workflow/06_analysis/v4_mc_maps.py`, branch `cluster/zbz`; README in `data/catalog_v4/mc_maps/`.)
+Magnitudes rounded to 0.1; every b fit needs ≥ 30 events above the cutoff. Methods: maximum curvature
++0.2; b-value stability with the Shi–Bolt test over a five-bin window [@Woessner2005; @Shi1982] (the fixed
+0.03 tolerance of the AgentSeismo code almost never passes with 250 events); goodness of fit on cumulative
+counts at 90% and 95% [@Wiemer2000]. Maximum curvature + 0.2 is the most conservative at 84% of nodes;
+b-value stability averages 0.19 lower and the best estimate 0.14 lower. The QC-only catalog (≥ 4 P and ≥ 4
+S) leaves Mc unchanged (median difference 0.0, interquartile range ±0.1). The per-region Mc of the
+clustering is at or above all three methods everywhere except the Blanco b-value-stability value (2.5
+against 2.45). At Axial the frequency–magnitude distribution has two slopes, so the pooled goodness-of-fit
+value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4–1.0).
+
 # Supplementary tables (files)
 
 - Table S1. Events and share on a fault, per region.
@@ -112,4 +125,7 @@ the surface with depths read below sea level, 16.2% below the local surface; 3D 
 - Table S3. Fault surfaces: geometry, uncertainty, stability (`fault_surfaces_v0_summary.csv`).
 - Table S4. Literature matches with verified references.
 - Table S5. Clustering families (`families_zbz.csv`) and per-region summary (`regions_zbz.csv`).
-- Table S6. Magnitude of completeness by region and period, three methods [TO ADD].
+- Table S6. Magnitude of completeness by region and period, three methods, with bootstrap sigma, b and
+  rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`, branch `cluster/zbz`); grids in
+  `mc_grid.csv`, `mc_grid_<period>.csv` and NetCDF. Figs. S3–S7: three-method maps, bootstrap sigma and b,
+  periods, regional frequency–magnitude distributions, QC variant (`data/catalog_v4/mc_maps/fig1–fig5`).

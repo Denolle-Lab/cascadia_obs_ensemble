@@ -8,3 +8,4 @@
 10.1785/BSSA0840040974             Wells & Coppersmith 1994, BSSA (rupture length scaling)
 10.1086/117248                     Ashman, Bird & Zepf 1994, AJ (bimodality, Ashman's D)
 10.1145/358669.358692              Fischler & Bolles 1981, CACM (RANSAC)
+10.5078/corssa-00180805           Mignan & Woessner 2012, CORSSA (estimating Mc; DataCite DOI)

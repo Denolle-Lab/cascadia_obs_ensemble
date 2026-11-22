@@ -86,7 +86,7 @@ def main(run):
     cat = cat.rename(columns={"magnitude": "v4_magnitude"})
     (B / "catalog").mkdir(exist_ok=True)
     out = B / f"catalog/catalog_v5_trackA_{run}.csv"
-    cat.to_csv(out, index=False, float_format="%.5g")
+    cat.to_csv(out, index=False, float_format="%.8g")
 
     # summary + ANSS check per tier
     lines = [f"# Catalog v5 Track A ({run}): location-quality tiers", "",

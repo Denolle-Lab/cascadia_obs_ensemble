@@ -54,3 +54,37 @@ Adopted once the build and the code's own examples pass (notes/tomoatt_build.md)
 ### D-B008 Pick uncertainties (adopted, 2026-11-22)
 Same classes as Track A (a2_make_obs.py): P sigma 0.05 / 0.10 / 0.15 s for pick_prob >= 0.6 /
 0.3-0.6 or missing / < 0.3; S twice P. Mapping to TomoATT weights: see notes/dataset.md.
+
+### D-B009 Pick QC (adopted, 2026-11-22, coordinator; proposal in notes/dataset.md)
+Keep picks NLLoc used in iter1 (weight > 0); drop |iter1 residual - median| > 4 sigma_MAD with median and
+sigma_MAD from iter0 (P 0.83 s, S 1.80 s); drop S picks with tS/tP outside [1.4, 2.5] or station-corrected
+S-P residual beyond 5 sigma_MAD (1.23 s); no minimum S count. Testing iter1 (with station terms) rather than
+iter0 residuals avoids cutting OBS preferentially (4.8% of OBS P vs 2.5% land at k = 4 on iter0).
+Effect: -9.4% picks (weight 0), -0.9% (residual + S-P). Params: params.yaml `pick_qc`.
+Amended by D-B012 for the weight-0 picks.
+
+### D-B010 OBS S correction, exception to D-B006 (adopted, 2026-11-22, coordinator)
+For B2 iteration 1, subtract the Track A iter1 S station term from OBS S travel times only; land stations
+and all P picks are uncorrected. Move to jointly solved, damped station statics if TomoATT supports them.
+Drop the 92 OBS S picks at stations without an S term. Before B2: waveform check of the deep-water OBS with
+the most negative S terms (W01.7A, J35A.7D, M03C.7D, W02.7A) to tell a too-slow shallow model from Sp
+picked as S. Evidence: shelf OBS median S term +0.55 s vs P +0.06 s; 41/205 deep-water OBS with S term
+< -0.5 s, which a sediment layer cannot produce. Alternatives: sediment layer (not resolvable on the
+inversion grid, does not explain negative terms); drop OBS S (-31% of S picks).
+
+### D-B011 Events below D-B003 after pick QC (adopted, 2026-11-22, coordinator)
+Keep an event with >= 10 kept picks and gap <= 200 deg (284, flagged in events.csv); drop the other 121
+(listed in events_below_threshold.csv); no replacement within the cell.
+
+### D-B012 Re-admit far-station picks in B2 (adopted, 2026-11-22, coordinator)
+The 72,868 weight-0 picks (median distance 216 km) were rejected by NLLoc only because Track A searched
+each 25 km tile in a box of tile +-75 km, so stations beyond ~150-175 km had no time grid there: a Track A
+geometry artefact, not a pick-quality flag. They are the longest rays and carry the deep (slab, mantle wedge)
+constraint. B2 re-admits them (from picks_rejected.csv) after a forward calculation in the starting model,
+with the same 4 sigma_MAD residual test as D-B009 computed on the forward residuals. Report the count
+re-admitted and the depth coverage gained.
+
+### D-B013 Full-precision Track A coordinates (adopted, 2026-11-22)
+catalog_v5_trackA_*.csv was written with float_format %.5g (lon to ~+-400 m). Fixed in
+workflow/08_relocation/a2_build_catalog.py (%.8g) and the catalog rebuilt. B1 already read
+full precision from runs/iter1_vpvs176/locations.csv, so the B1 dataset is unaffected.

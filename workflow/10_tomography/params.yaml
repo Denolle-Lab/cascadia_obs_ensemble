@@ -31,3 +31,17 @@ station_terms:                   # D-B006
 
 code:                            # D-B007
   tomography: TomoATT            # version/commit recorded after build (notes/tomoatt_build.md)
+
+pick_qc:                         # proposed, see notes/dataset.md (to be fixed in D-B009)
+  require_iter1_weight: true     # drop picks NLLoc gave EDT weight 0 in iter1 (station outside the tile grids)
+  res_ref_run: iter0_vpvs176     # residual distribution (no station terms) that sets median and MAD sigma
+  res_applied_to: iter1          # residual tested: iter1 with Track A station terms (iter1 | iter0 | iter1_noterm)
+  res_k_mad: 4.0                 # drop |res - median| > k * 1.4826 MAD, per phase
+  sp_ratio_range: [1.4, 2.5]     # tS/tP outside -> drop the S pick
+  sp_k_mad: 5.0                  # station-median-corrected S-P differential residual outlier -> drop the S pick
+  min_S_per_event: 0             # no S requirement (counts in notes/dataset.md)
+  post_qc_min_picks: 10          # events below D-B003 after pick QC: keep if npick >= this and gap <= max gap
+  post_qc_max_gap_deg: 200
+
+obs:                             # proposed, see notes/dataset.md (D-B006 exception, to be fixed in D-B010)
+  identify_by: seafloor flag of stations_ver5_v6.csv (same set as GTSRCE zSrce > 0.1 km)

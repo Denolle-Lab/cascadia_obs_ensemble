@@ -89,3 +89,4 @@ data/magnitude_v4/*.csv
 !data/magnitude_v4/comcat_ml_events.csv
 !data/magnitude_v4/route_b_ml_anchors_routeA.csv
 !data/magnitude_v4/route_b_station_terms_routeA.csv
+data/reloc_v5/**/*.npz

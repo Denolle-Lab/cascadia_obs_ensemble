@@ -1,0 +1,19 @@
+{
+ "rmin": 0.5,
+ "rcap_min": 10.0,
+ "q": 0.5,
+ "nshuffle": 3,
+ "variants": [
+  "d3",
+  "mc+0.3",
+  "df_est",
+  "df1.3",
+  "df2.0",
+  "noM_floor",
+  "mc_year",
+  "eta0_shuf5"
+ ],
+ "df_main": 1.6,
+ "catalog": "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+ "magnitudes": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv"
+}

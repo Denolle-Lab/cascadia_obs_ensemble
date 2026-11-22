@@ -1,0 +1,146 @@
+surface_id,n_events,n_analysis,n_background,n_mainshock-aftershock,n_swarm,n_multiplet,pct_background,pct_swarm,n_families,region,lit_match
+BL001,2184,555,226,142,139,48,40.7,25.0,74,BL,Surveyor Depression strands plus link to EBD. A composite fit across right steps
+BL002,1890,461,172,88,165,36,37.3,35.8,59,BL,"East Blanco Depression strands, extending W to the E end of the WBD"
+BL003,1666,328,219,41,22,46,66.8,6.7,51,BL,"Blanco Ridge transform, central and eastern part (the two Mw 6 asperities)"
+BL004,1623,314,176,32,75,31,56.1,23.9,41,BL,West Blanco Depression transform (central valley; most likely WBDS or the central-valley strand)
+BL005,1022,195,81,47,46,21,41.5,23.6,50,BL,Cascadia Depression: N–S (spreading-parallel) normal faults
+BL006,983,256,81,80,73,22,31.6,28.5,30,BL,"Surveyor Depression, northern strand (or E end of BL001)"
+BL007,970,204,124,30,22,28,60.8,10.8,34,BL,CAS internal structure joining the CAS N–S faults to the W tip of the BR (oblique composite)
+BL008,910,176,79,29,35,33,44.9,19.9,44,BL,Cascadia Depression N–S normal fault (parallel to BL005)
+BL009,789,140,96,14,14,16,68.6,10.0,23,BL,"Surveyor Depression, southern strand extending W toward the EBD"
+BL010,711,201,26,30,141,4,12.9,70.1,8,BL,Oblique step-over structure between the EBD and SUR (pull-apart cross fault)
+BL011,707,161,91,38,20,12,56.5,12.4,37,BL,Western Blanco Ridge seismicity shifted N toward CAS (BR–CAS junction / NE crustal fault bend)
+BL012,668,152,60,18,50,24,39.5,32.9,29,BL,Cascadia Depression N–S normal fault (deeper image of BL005)
+BL013,605,157,65,42,20,30,41.4,12.7,31,BL,Western Blanco Ridge transform (W of the 127.9°W barrier)
+BL014,494,146,106,19,5,16,72.6,3.4,18,BL,Gorda Depression interior / S-of-BR trough (BN08)
+BL015,436,118,42,27,38,11,35.6,32.2,18,BL,West Blanco Depression near the RTI (WBDN/WBDS trend)
+BL016,393,127,90,19,0,18,70.9,0.0,23,BL,Gorda Depression north wall (SE continuation of the Blanco Ridge)
+BL017,382,162,123,35,0,4,75.9,0.0,19,BL,Gorda Transform segment (GD south wall to the Gorda Ridge RTI)
+BL018,361,65,20,1,15,29,30.8,23.1,16,BL,"WBDC: oblique strand from the NE corner of the WBD to the JdF ridge tip, or the N branch of Lange's RTI bifurcation"
+BL019,318,101,46,25,8,22,45.5,7.9,23,BL,"Blanco Ridge, eastern asperity / barrier zone (overlaps BL003)"
+BL020,271,54,37,5,6,6,68.5,11.1,9,BL,"Southern SUR strand, W extension toward the EBD"
+BL021,122,32,7,19,3,3,21.9,9.4,6,BL,Cascadia Depression normal fault (NNW-striking)
+BL023,93,22,4,3,14,1,18.2,63.6,5,BL,Blanco Ridge mantle seismicity (deep image of BL003/BL013)
+BL025,68,21,16,2,1,2,76.2,4.8,5,BL,"Cleft segment, southern Juan de Fuca Ridge (ridge-parallel structure)"
+BL027,42,13,10,1,0,2,76.9,0.0,2,BL,RTI curved/rotated transform piece at the WBD–Cleft corner
+EN001,121,16,1,1,14,0,6.2,87.5,2,EN,Southern end of the Endeavour segment / Cobb propagating-rift overlap; ridge-parallel normal faulting
+EN002,73,28,15,7,5,1,53.6,17.9,6,EN,"Eastern Sovanco fracture zone, conjugate-fault deformation zone"
+EN003,46,27,0,27,0,0,0.0,0.0,1,EN,2014 Mw 6.4 Nootka sequence fault inside the subducted Explorer plate
+EN004,39,17,13,2,0,2,76.5,0.0,2,EN,"Nootka fault zone, southern primary fault (SNF), or a N–S conjugate fault inside the zone"
+GO001,282,52,41,11,0,0,78.8,0.0,5,GO,"Mendocino transform, segment at 125.7–126.5°W that ruptured in the 2016-12-08 Mw 6.6 event"
+GO002,231,30,11,0,14,5,36.7,46.7,9,GO,"Escanaba Trough axis, northern half (NESCA area); ridge-axis normal faults"
+GO003,194,47,21,20,5,1,44.7,10.6,7,GO,"Ridge axis north of the 41°35′N offset (Central segment, or possibly Phoenix; segment name not verified); axial normal faults"
+GO004,189,37,10,21,6,0,27.0,16.2,6,GO,"Mendocino transform, westernmost active segment just east of the Escanaba RTI"
+GO005,185,16,9,2,2,3,56.2,12.5,5,GO,"Southern Escanaba Trough axial faults, where the axis bends SE into the RTI (SESCA area)"
+GO006,151,12,9,2,0,1,75.0,0.0,3,GO,Same as GO004 (Mendocino transform near the RTI)
+GO007,107,15,11,2,0,2,73.3,0.0,3,GO,Duplicate of GO005
+GO008,99,29,7,1,15,6,24.1,51.7,7,GO,"Ridge axis at 42.28–42.52°N: Jackson segment, possibly its junction with southern North Gorda; axial normal faults next to the President Jackson Seamounts"
+GO009,76,14,10,3,1,0,71.4,7.1,3,GO,Duplicate of GO005
+GO010,62,12,9,2,0,1,75.0,0.0,2,GO,"Persistent intraplate source near 41.85°N, 126.1°W; WNW/NW strike-slip zone (right-lateral on the WNW plane, or the conjugate NE left-lateral plane)"
+GO011,54,8,1,2,0,5,12.5,0.0,3,GO,Same zone as GO010; best defined by the 2014-10-03 M4.3
+GO012,53,2,2,0,0,0,100.0,0.0,0,GO,Non-transform offset between Escanaba Trough and the segment to the north (axis jog near 41°35′N)
+GO013,48,2,2,0,0,0,100.0,0.0,0,GO,Southern Gorda plate NNE left-lateral fault; source zone of the 2005-06-17 Mw 6.6
+GO014,47,4,4,0,0,0,100.0,0.0,0,GO,Central Gorda plate NE left-lateral fault (family that produced the Aug 1991 Mw 7.1)
+GO015,44,2,2,0,0,0,100.0,0.0,0,GO,Rupture fault of the 2005-06-15 Mw 7.2 (NE-striking left-lateral)
+GO016,40,5,3,1,0,1,60.0,0.0,2,GO,"Duplicate of GO002 (Escanaba axis, shallow part)"
+GO017,37,9,7,0,0,2,77.8,0.0,1,GO,NE conjugate within the GO010/GO011 zone
+GO018,37,2,2,0,0,0,100.0,0.0,0,GO,NE fault starting at the 2005 Mw 7.2 epicentre and running toward the Aug 1991 Mw 7.1 epicentre
+GO019,35,2,1,0,0,1,50.0,0.0,1,GO,"Duplicate of GO004 (Mendocino transform near the RTI, shallow part)"
+GO020,30,11,2,1,6,2,18.2,54.5,3,GO,"No published counterpart. Swarm about 10–15 km offshore Brookings, Oregon, near the Gorda slab"
+MT001,2840,485,359,114,1,11,74.0,0.2,39,MT,"Southern Gorda slab next to the near-shore MFZ: lower (mantle) layer of the double seismic zone. A seismic volume, not one fault."
+MT002,2198,698,441,208,6,43,63.2,0.9,78,MT,Same volume. May image the south-dipping southern edge of the Gorda slab against the MFZ.
+MT003,2152,520,351,136,7,26,67.5,1.3,64,MT,Same volume as MT001 (duplicate).
+MT004,1495,156,76,21,43,16,48.7,27.6,18,MT,"Uppermost Gorda slab crust beneath Fortuna: the ""Fortuna cluster"". This is the volume that later hosted the 2022 Ferndale Mw 6.4 aftershocks."
+MT005,1366,180,146,19,0,15,81.1,0.0,14,MT,Same upper-slab layer (duplicate of MT004/MT006).
+MT006,1297,165,123,33,0,9,74.5,0.0,18,MT,Same upper-slab layer (duplicate).
+MT007,889,92,63,16,4,9,68.5,4.3,11,MT,Gorda slab top / interface-proximal seismic layer beneath Rio Dell–Scotia.
+MT008,832,575,91,484,0,0,15.8,0.0,7,MT,Rupture/aftershock zone of the 2014-03-10 Mw 6.8 offshore Ferndale earthquake: NE-striking left-lateral Gorda intraplate fault.
+MT009,776,106,66,23,5,12,62.3,4.7,13,MT,"""Garberville swarm"" / Mendocino LFE plane: the buried eastward continuation of the Mendocino transform at the southern edge of the Gorda slab (Pioneer-fragment boundary)."
+MT010,774,164,78,48,22,16,47.6,13.4,23,MT,"1992 Mw 7.2 Cape Mendocino / 1991 M6.0 Honeydew low-angle thrust zone. Southernmost Cascadia interface per Shelly 2026, or an upper-plate thrust per McCrory 2012 / Guo 2021."
+MT011,590,226,38,188,0,0,16.8,0.0,7,MT,Gorda slab-mantle seismicity at the 2010-01-10 Mw 6.5 source; probably a low-dip duplicate of MT014.
+MT012,524,340,41,299,0,0,12.1,0.0,2,MT,Same 2014 Mw 6.8 fault (duplicate of MT008; better dip).
+MT013,384,27,21,2,0,4,77.8,0.0,4,MT,Garberville swarm volume: steep SSW-dipping companion to MT009. Possibly the fluid-assisted tear faulting above the Pioneer–Gorda boundary suggested by Shelly 2026.
+MT014,380,187,29,155,0,3,15.5,0.0,7,MT,2010-01-10 Mw 6.5 offshore Eureka/Ferndale fault: NE-striking left-lateral fault in the Gorda slab mantle.
+MT015,258,172,116,51,0,5,67.4,0.0,17,MT,"N–S striking fault in the southern Gorda plate near the MFZ, of the 2016-09-03 M5.6 type. No named fault."
+MT016,169,133,46,85,0,2,34.6,0.0,6,MT,"Mendocino transform at depth, or 2010-02-04 M5.9 source (MFZ-parallel right-lateral plane)."
+MT017,165,17,15,2,0,0,88.2,0.0,1,MT,"NNW dextral San Andreas-system strand: parallel to the Eaton Roughs fault (about 13 km west of its CFM trace), possibly a northward continuation of Garberville–Briceland. Position does not match any mapped fault, so treat as a candidate new structure."
+MT018,121,14,9,4,0,1,64.3,0.0,3,MT,Upper-plate seismicity beneath the Table Bluff / Little Salmon fold-thrust belt. Geometry does not fit the mapped NW-striking thrusts.
+MT019,108,28,20,6,0,2,71.4,0.0,3,MT,"Gorda intraslab normal faulting under down-dip tension (N-striking), east of the triple junction. No named fault."
+MT020,104,65,26,37,0,2,40.0,0.0,6,MT,No known counterpart. An E–W (MFZ-parallel) vertical alignment across the deformation front between the 2010 M6.5 and 2014 M6.8 sources. Candidate structure or a fit artifact joining clusters.
+MT021,85,57,49,8,0,0,86.0,0.0,3,MT,"Gorda plate (seaward of the trench) off Trinidad. A NW-striking dipping zone with no named counterpart, roughly parallel to the NW nodal planes of the 1980/2014 mechanisms."
+MT022,72,55,45,10,0,0,81.8,0.0,5,MT,Mendocino transform at depth (offshore segment west of the 2024 Mw 7.0).
+MT023,71,46,35,11,0,0,76.1,0.0,3,MT,Same as MT021 (duplicate).
+MT024,63,36,4,32,0,0,11.1,0.0,1,MT,"2010-01-10 Mw 6.5 fault, shallower part (duplicate of MT014)."
+MT025,63,13,8,2,0,3,61.5,0.0,2,MT,Gorda slab top / upper-slab seismicity beneath the Trinidad coast. Geometry resembles the N-striking slab normal faults (2012 Willow Creek type).
+MT026,58,43,35,6,0,2,81.4,0.0,3,MT,NE-striking left-lateral fault in the unsubducted Gorda plate (Wilson/Chaytor fabric). Unnamed; same orientation as the 1980 Trinidad (51/89) and 2014 (228/82) faults.
+MT027,53,4,2,2,0,0,50.0,0.0,1,MT,"Upper-plate seismicity above the 1992 rupture, at the junction of the Garberville–Briceland north tip, the Russ fault and the Bear River fault. No geometric match to any of them."
+MT028,45,8,6,2,0,0,75.0,0.0,1,MT,Intraslab NE-trending seismicity (lower layer) beneath Eureka–Arcata.
+MT029,43,24,8,16,0,0,33.3,0.0,1,MT,2012-02-13 M5.6 Willow Creek intraslab normal-faulting sequence plus nearby slab events.
+MT030,42,19,9,10,0,0,47.4,0.0,2,MT,"Shallow seismicity in the southern Gorda plate on the north side of the MFZ, possibly the shallow Pacific–wedge strike-slip interface (Materna 2018)."
+MT031,38,7,5,2,0,0,71.4,0.0,1,MT,"Northern San Andreas fault, offshore Shelter Cove / Point Delgada section."
+MT032,32,4,4,0,0,0,100.0,0.0,0,MT,"Upper plate beneath Blue Lake–Korbel. Weak similarity to McKinleyville / Mad River, but opposite dip; no good match."
+ON001,2620,57,25,10,19,3,43.9,33.3,4,ON,"St. Helens seismic zone (SHZ), main strand"
+ON002,1041,23,15,3,1,4,65.2,4.3,8,ON,SHZ base / deep band at about 12–18 km in lower Siletzia
+ON003,682,17,11,3,0,3,64.7,0.0,4,ON,"SHZ, a second parallel strand (duplicate of ON001)"
+ON004,561,12,8,2,0,2,66.7,0.0,2,ON,Southern continuation of the SHZ toward Portland / the NE-trending SHZ–Portland zone at about 18 km
+ON005,539,19,15,4,0,0,78.9,0.0,2,ON,Northern end of the SHZ / ENE stepover to the western Rainier zone at 12–20 km
+ON006,474,6,4,2,0,0,66.7,0.0,1,ON,Mount St. Helens dextral offset zone (local extension) / east-flank volcanic seismicity
+ON007,255,2,0,0,0,2,0.0,0.0,1,ON,none (Wind River / Indian Heaven area)
+ON008,229,2,1,1,0,0,50.0,0.0,1,ON,NE-trending SHZ–Portland zone at about 18 km (Siletzia block)
+ON009,179,9,3,2,1,3,33.3,11.1,5,ON,"Same cluster as ON011 (San Juan Islands, Spieden–Stuart Island area)"
+ON010,179,7,4,2,0,1,57.1,0.0,2,ON,Same cluster as ON011
+ON011,175,9,1,0,4,4,11.1,44.4,3,ON,Skipjack Island fault zone or a parallel strand; Balfour lineation
+ON013,163,20,12,3,0,5,60.0,0.0,3,ON,"Portland Hills fault (north) / Sylvan–Oatfield, deep part"
+ON014,162,16,7,7,0,2,43.8,0.0,3,ON,2015-07-04 Springfield earthquake (ComCat M4.1; SLU Mw 3.75); no mapped Quaternary fault
+ON015,158,24,8,2,7,7,33.3,29.2,5,ON,"Mount Hood fault zone, Twin Lakes segment"
+ON016,144,4,4,0,0,0,100.0,0.0,0,ON,"MSH east flank, overlapping ON006"
+ON017,132,2,2,0,0,0,100.0,0.0,0,ON,SHZ segment south of the volcano
+ON018,129,23,18,3,0,2,78.3,0.0,3,ON,"Goat Rocks zone (GRZ), NNW alignment north of Goat Rocks near Packwood"
+ON019,110,26,7,5,11,3,26.9,42.3,5,ON,Mount Hood south-flank swarm zone (Twin Lakes / Multorpor graben)
+ON021,91,2,2,0,0,0,100.0,0.0,0,ON,"Possible companion of ON014 (same strike, 10 km north)"
+ON022,86,15,5,10,0,0,33.3,0.0,1,ON,"Site of the 2025-02-21 Salmon Inlet earthquake (Mww 4.8, ComCat 49.693°N, 123.545°W); no mapped fault"
+ON024,79,4,4,0,0,0,100.0,0.0,0,ON,none (Sweet Home–Lebanon foothills)
+ON025,77,5,5,0,0,0,100.0,0.0,0,ON,"Portland Hills / Sylvan–Oatfield, deep part (duplicate of ON013)"
+ON026,77,12,3,7,0,2,25.0,0.0,3,ON,"none (Acme–Sudden Valley, south of the Bellingham basin)"
+ON027,76,34,3,0,24,7,8.8,70.6,5,ON,Recurring swarms about 19 km N of Mount McLoughlin (east of Butte Falls)
+ON028,66,7,5,2,0,0,71.4,0.0,1,ON,Woodburn–Canby deep events; Canby / Mount Angel fault area
+ON030,63,35,20,7,5,3,57.1,14.3,6,ON,Deep crustal seismicity beneath Redding / Keswick (outside the target region)
+ON031,53,0,0,0,0,0,,,0,ON,"Portland Hills fault (south) / Bolton fault, deep part"
+ON032,53,1,1,0,0,0,100.0,0.0,0,ON,West side of the northern SHZ (Mossyrock–Onalaska)
+ON033,46,2,2,0,0,0,100.0,0.0,0,ON,none (Carson / lower Wind River)
+ON034,45,11,9,0,0,2,81.8,0.0,1,ON,"Abbotsford–Sumas; parallel to Boulder Creek (Kendall), ΔS = 3°, 23 km NW of it"
+ON035,43,10,10,0,0,0,100.0,0.0,0,ON,none (Lebanon–Scio)
+ON036,42,6,6,0,0,0,100.0,0.0,0,ON,none (Jervis Inlet / Powell River coast)
+ON038,36,13,1,0,12,0,7.7,92.3,1,ON,Oct 2015 swarm at the Davis Lake volcanic complex (SW of La Pine)
+ON039,33,6,0,6,0,0,0.0,0.0,2,ON,"Boulder Creek–Canyon Creek fault zone (Kendall), cross-strike"
+OR001,93,17,7,7,0,3,41.2,0.0,5,OR,Shelf cluster west of Yachats/Waldport: plate-boundary / subducted-seamount seismicity; Alvin Canyon fault as alternative
+OR002,49,12,4,3,0,5,33.3,0.0,3,OR,Stonewall Bank anticline / shelf cluster off Newport
+PU001,1025,235,145,34,42,14,61.7,17.9,24,PU,Diffuse mid-crustal Puget Lowland basement seismicity. SE end reaches the WRSZ
+PU002,784,137,66,48,13,10,48.2,9.5,20,PU,"East-dipping western edge of seismogenic Crescent basement (Crescent / Olympic subduction complex contact, Hurricane Ridge fault trend). Alternative: Hood Canal fault zone"
+PU003,457,50,43,3,0,4,86.0,0.0,4,PU,Western Rainier Seismic Zone
+PU004,295,146,57,23,35,31,39.0,24.0,25,PU,"No known counterpart, probably several clusters chained together"
+PU005,255,98,81,7,5,5,82.7,5.1,9,PU,Same as PU001 (parallel duplicate)
+PU006,253,89,62,20,0,7,69.7,0.0,9,PU,"DDMFZ, Darrington–Oso section"
+PU007,246,108,86,12,6,4,79.6,5.6,11,PU,SE end of the SWIF in Seattle basin basement
+PU008,213,58,29,12,9,8,50.0,15.5,10,PU,"DDMFZ / SWIF junction volume, geometry discordant"
+PU009,210,30,9,5,12,4,30.0,40.0,8,PU,Hood Canal fault zone (northern reach)
+PU011,198,31,29,2,0,0,93.5,0.0,1,PU,Leech River fault: NNE-dipping relocated seismic zone
+PU012,187,36,30,4,0,2,83.3,0.0,5,PU,"Western SFZ (Bremerton–Hood Canal), Seattle–Saddle Mountain transfer zone"
+PU013,185,15,15,0,0,0,100.0,0.0,0,PU,Duplicate of PU002
+PU014,118,29,12,15,0,2,41.4,0.0,6,PU,Tacoma fault (western/central part)
+PU015,83,36,26,6,0,4,72.2,0.0,7,PU,Duplicate of PU018 (eastern Tacoma fault / roof thrust); Seattle fault (east) backthrust also possible
+PU016,79,7,6,0,0,1,85.7,0.0,1,PU,"Olympia structure, SE end"
+PU017,75,44,17,27,0,0,38.6,0.0,2,PU,Cherry Creek fault zone / Duvall area
+PU018,75,28,20,5,0,3,71.4,0.0,5,PU,Eastern continuation of the Tacoma fault / north-dipping roof thrust of the Seattle uplift
+PU019,68,42,36,2,0,4,85.7,0.0,3,PU,Rattlesnake Mountain fault zone (SWIF SE extension); 1996 Duvall source region
+PU020,65,12,5,7,0,0,41.7,0.0,3,PU,Hood Canal–Discovery Bay fault zone (northern)
+PU021,62,4,4,0,0,0,100.0,0.0,0,PU,Shallow LRF / Langford area. Check for quarry blasts
+PU022,57,27,23,2,0,2,85.2,0.0,3,PU,Mount Rainier edifice VT seismicity
+PU023,56,33,20,13,0,0,60.6,0.0,4,PU,Possible eastern continuation of the Strawberry Point / Utsalady Point (SWIF–DDMFZ) splays
+PU024,47,21,13,2,0,6,61.9,0.0,6,PU,"Seattle fault east tip / RMFZ junction, no ENE structure known"
+PU025,44,14,14,0,0,0,100.0,0.0,0,PU,SWIF main strand (Possession Sound)
+WA001,160,9,7,0,0,2,77.8,0.0,1,WA,Secondary structure within the LRF seismic zone / Saanich–Malahat area
+WA002,118,4,4,0,0,0,100.0,0.0,0,WA,"No known counterpart (W Vancouver Island forearc, Barkley Sound / Ucluelet)"
+WA003,44,1,1,0,0,0,100.0,0.0,0,WA,Gulf Islands crustal cluster (Saltspring); no named fault
+WA004,43,2,2,0,0,0,100.0,0.0,0,WA,"Duplicate of WA003 (same cluster, steep plane)"
+WA005,30,9,1,2,6,0,11.1,66.7,2,WA,"Near-slab-top seismicity off La Push (upper slab or interface region), not a crustal fault"

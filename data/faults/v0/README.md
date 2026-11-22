@@ -134,6 +134,17 @@ Puget Lowland and around Mount St. Helens.
 - `fault_surfaces_v0_assignment.csv`: events and share on a fault per region.
 - `fault_surfaces_v0_map.png`: events coloured by fault, and the rectangles, for the whole
   margin, Blanco, and Mendocino–Gorda.
+- `fault_surfaces_v0_traces.csv`: per fault, the top edge of the rectangle and the line where the
+  plane would reach sea level if extended up dip, for comparison with mapped traces.
+- `fault_surfaces_v0_literature.csv`: the literature match of every fault: `lit_match`,
+  `lit_confidence` (high, medium-high, medium, low-medium, low, none), `lit_class` (known structure,
+  duplicate, seismicity layer or volume, no known counterpart, likely artefact, quarry blasts),
+  `lit_new_candidate`, evidence and references. The same fields are in the summary and the GeoJSON.
+- `fault_surfaces_v0_literature.html`: report of the matches (summary by region, strong matches,
+  candidate new structures, blasts and artefacts), with the five regional notes
+  (`literature/matches_*.md`: known structures, evidence per fault, references with DOI checks).
+- On Zenodo, the code, the assignment and trace tables and the literature files are bundled in
+  `fault_surfaces_v0_extras.zip` (the record is at Zenodo's 100-file limit).
 - `fault_surfaces_planes.py` (the method) and `fault_surfaces_v0.py` (helpers, and the first
   DBSCAN version). They use NumPy, SciPy, pandas, matplotlib and PyGMT.
 

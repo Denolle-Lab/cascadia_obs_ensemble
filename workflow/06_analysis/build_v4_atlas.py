@@ -164,6 +164,16 @@ def events():
         "np": c["Num_p_picks"].clip(0, 255).to_numpy("u1"), "ns": c["Num_s_picks"].clip(0, 255).to_numpy("u1"),
         "new": np.round(newfrac * 100).astype("u1"), "mtype": Mtype,
     }
+    # fault of each event: index into the surfaces in GeoJSON feature order (the order the atlas draws them); 65535 = none
+    flt = np.full(len(c), 65535, "<u2")
+    sv = D / "faults" / "v0" / "fault_surfaces_v0.geojson"
+    if sv.exists():
+        ids = [f["properties"]["surface_id"] for f in json.load(open(sv))["features"]]
+        mem = pd.read_csv(sv.with_name("fault_surfaces_v0_members.csv")).set_index("event_id").surface_id
+        k = c["ID"].map(mem).map({s_: i for i, s_ in enumerate(ids)})
+        flt = np.where(k.notna(), k.fillna(0), 65535).astype("<u2")
+        print(f"  events on a fault: {(flt < 65535).sum():,}")
+    arr["flt"] = flt
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
     arr = {k: v[order] for k, v in arr.items()}
     print(f"  events: {len(c):,}; magnitudes: {msrc}")

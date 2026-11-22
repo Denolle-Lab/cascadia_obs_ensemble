@@ -55,6 +55,22 @@ def parse(path):
     return rows
 
 
+REGIONS = [  # name, lat0, lat1, lon0, lon1 (first match wins; v4 epicentre)
+    ("Axial", 45.7, 46.2, -130.3, -129.7), ("Endeavour", 47.7, 48.3, -129.5, -128.7),
+    ("Explorer", 48.3, 51.5, -131.5, -127.5), ("Blanco", 42.8, 44.7, -130.8, -126.4),
+    ("Gorda", 40.5, 42.8, -128.0, -124.9), ("Mendocino", 39.5, 40.5, -128.5, -123.5),
+    ("JdF ridge/plate", 44.7, 48.3, -131.5, -127.3), ("Offshore forearc", 40.5, 51.5, -127.3, -124.0),
+    ("Puget/Georgia", 46.8, 49.5, -123.5, -121.8), ("Cascades", 40.5, 49.5, -122.4, -120.5),
+]
+
+
+def region(lat, lon):
+    for name, a, b, c, d in REGIONS:
+        if a <= lat < b and c <= lon < d:
+            return name
+    return "Other onshore"
+
+
 def main(run):
     rd = B / "runs" / run
     rows = []
@@ -81,10 +97,13 @@ def main(run):
     loc["shift_h_km"] = 2 * R * np.arcsin(np.sqrt(np.sin((la2 - la1) / 2)**2 +
                                                  np.cos(la1) * np.cos(la2) * np.sin((lo2 - lo1) / 2)**2))
     loc["shift_z_km"] = loc.depth - loc.v4_depth
+    loc["region"] = [region(a, b) for a, b in zip(loc.v4_lat, loc.v4_lon)]
     loc.to_csv(rd / "locations.csv", index=False)
     ok = loc[loc.status == "LOCATED"]
-    print(f"{len(loc)} events, {len(ok)} located")
-    print(ok.groupby("tile").agg(n=("ID", "size"), rms=("rms", "median"), nphs=("nphs", "median"),
+    print(f"{len(loc)} events, {len(ok)} located; above surface: new {ok.above_surface.mean():.1%}, "
+          f"v4 (same events) {ok.v4_above_surface.mean():.1%}")
+    key = "tile" if loc.tile.nunique() <= 12 else "region"
+    print(ok.groupby(key).agg(n=("ID", "size"), rms=("rms", "median"), nphs=("nphs", "median"),
                                  v4_npick=("v4_npick", "median"), h_max=("h_max", "median"),
                                  sig_z=("sig_z", "median"), dz=("shift_z_km", "median"),
                                  dh=("shift_h_km", "median"), depth=("depth", "median"),
@@ -107,7 +126,8 @@ def anss_check(loc, rd):
     m["dz_v4"] = m.v4_depth - m.a_depth
     m.to_csv(rd / "anss_matched.csv", index=False)
     print(f"\nANSS depth check: {len(m)} matched (median depth; median |dz|)")
-    print(m.groupby("tile").agg(n=("ID", "size"), anss=("a_depth", "median"), v4=("v4_depth", "median"),
+    key = "tile" if m.tile.nunique() <= 12 else "region"
+    print(m.groupby(key).agg(n=("ID", "size"), anss=("a_depth", "median"), v4=("v4_depth", "median"),
                                 new=("depth", "median"), v4_absdz=("dz_v4", lambda s: s.abs().median()),
                                 new_absdz=("dz_new", lambda s: s.abs().median())).round(1).to_string())
 

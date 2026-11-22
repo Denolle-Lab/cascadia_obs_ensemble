@@ -110,8 +110,9 @@ Background: `data/catalog_v4/next_steps/catalog_v4_next_steps.html`, section 4 (
    - cross-sections through Mendocino, Gorda, Blanco and the Washington and Oregon forearc, with
      seismicity, Slab2 and CASIE21;
    - comparison with CRESCENT Gen0 and Delph et al. 2018, using `phase13_tomography.py`.
-4. **Report:** HTML in `data/tomo_v1/`. A Zenodo draft is prepared, and published only when the
-   PI says so.
+4. **Report:** HTML in `data/tomo_v1/`. Zenodo: add the files to the private working-copy draft
+   (deposition 23084158, `utils/zenodo_picks_draft.py`). Never publish or make a new record unless
+   the PI asks.
 
 ### B5. Feedback (after B4)
 
@@ -125,7 +126,7 @@ Background: `data/catalog_v4/next_steps/catalog_v4_next_steps.html`, section 4 (
 - Vp/Vs of the Gorda plate interior: hydration of the deforming plate before subduction.
 - The slab edge and the slab window south of the Mendocino triple junction.
 - Low velocities along the Blanco transform and its step-overs, compared with the event-derived
-  fault surfaces (Zenodo 10.5281/zenodo.24443891, v0).
+  fault surfaces v0 (`data/faults/v0/`).
 - Forearc Vp/Vs along strike, against the locked/creeping coupling models (in `data/coupling/`).
 
 ## Limits to report honestly

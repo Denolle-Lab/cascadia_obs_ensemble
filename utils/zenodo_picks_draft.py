@@ -68,6 +68,11 @@ See <code>ver6_README.md</code>.</li>
 (<code>Cascadia_relocated_catalog_v4.csv</code>, <code>Cascadia_picks_catalog_v4.csv.gz</code>), with
 21 events moved one day later (<code>catalog_v4_FIXES.md</code>). Not yet in the published-record
 format; see <code>catalog_v4_README.md</code>.</li>
+<li><b>Fault surfaces v0</b> (2026-11-22, <code>fault_surfaces_v0*</code>): 74 surfaces fitted to
+clusters of catalog v4 events across the margin (23 on the Blanco transform), as triangle meshes
+with per-vertex uncertainty (bootstrap, location Monte Carlo, model choice) and the full ensemble.
+A method test on the v4 locations, not for interpretation; it will be redone on the relocated
+catalog. See <code>fault_surfaces_v0_README.md</code>.</li>
 <li><b>Stations</b> (<code>stations_ver5_v6.csv</code>): coordinates and epochs of the 728
 stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 </ul>
@@ -75,7 +80,7 @@ stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 dropped by its pick_id ranges.</p>"""
 
 
-VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2+catalog v4 working copy"
+VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2+catalog v4+fault surfaces v0 working copy"
 TRIES = 4
 
 

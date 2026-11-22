@@ -114,8 +114,9 @@ below sea level, stations at true elevation, 250 km distance cap) and documents 
    focal mechanisms use this directly.
 3. Write a README in the style of `data/faults/v0/README.md`: method, every column, settings,
    checks, limits.
-4. **Zenodo:** prepare a draft record; publish only when the PI says so. There's an example
-   script in `utils/zenodo_fault_surfaces.py` on branch `paper/v4-methods`.
+4. **Zenodo:** keep everything private. Add the files to the existing private working-copy
+   draft (deposition 23084158) with `utils/zenodo_picks_draft.py upload` and update its
+   description (`describe`). Never publish, and never make a new record, unless the PI asks.
 5. **Atlas:** in `workflow/06_analysis/build_v4_atlas.py`, `events()` reads the v4 file. Add a
    v5 option (keep v4 selectable) and say in the report how to rebuild. The atlas is published
    from the `gh-pages` branch; don't push there yourself, tell the PI.

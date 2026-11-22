@@ -1,6 +1,6 @@
 # Cascadia fault surfaces v0 (from catalog v4 seismicity)
 
-**Version v0, 2026-11-22. A method test, not for interpretation.** Zenodo: https://doi.org/10.5281/zenodo.24443891
+**Version v0, 2026-11-22. A method test, not for interpretation.** Shared privately in the catalog v4 working-copy Zenodo draft (files `fault_surfaces_v0*`), not as a record of its own.
 
 v0 fits 3D surfaces to clusters of earthquakes in the Cascadia catalog v4 (172,340 events,
 2010–2016, GENIE association and GraphDD location of the ELEP ver6 picks; catalog by
@@ -113,5 +113,5 @@ Region prefixes in `surface_id`:
 
 ## Licence and citation
 
-CC BY 4.0. Please cite this record and the catalog v4 record. Code:
+CC BY 4.0. Shared with collaborators in the catalog v4 working-copy draft; not for redistribution. Code:
 https://github.com/Denolle-Lab/cascadia_obs_ensemble (`workflow/07_faults/`).

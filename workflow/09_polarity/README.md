@@ -1,6 +1,6 @@
 # 09_polarity — P first-motion polarities for catalog v4
 
-Status (2026-11-22): testing AxialPolCap (FM_ML, Zhang et al., in prep.) on v4 Axial picks; nothing run at scale yet.
+Status (2026-11-22): PAUSED until the DL polarity models are fixed. See `STATUS.md` for findings, data locations and how to resume.
 
 | file | what |
 |---|---|

@@ -120,6 +120,9 @@
   <div class="ctl-row"><span class="lab">QC only</span><div class="seg" id="segQC"><button data-v="0" class="on">All</button><button data-v="1">≥4 P &amp; ≥4 S</button></div></div>
   <div class="ctl-row"><span class="lab">Min M</span><input type="range" id="mmin" min="-1" max="4" step="0.1" value="-1"><span class="val mono" id="mminV">all</span></div>
   <div class="ctl-row"><span class="lab">Max σ loc</span><input type="range" id="sig" min="1" max="30" step="0.5" value="30"><span class="val mono" id="sigV">all</span></div>
+  <div class="ctl-row"><span class="lab">Depth datum</span><div class="seg" id="segDatum"><button data-v="0" class="on">Sea level</button><button data-v="1">Local surface</button></div></div>
+  <div class="ctl-row"><span class="lab">Above ground</span><div class="seg" id="segAir"><button data-v="0">Show</button><button data-v="1" class="on">Grey</button><button data-v="2">Hide</button></div></div>
+  <div class="ctl-row"><span class="lab"></span><span class="val mono" id="airV" style="width:auto;text-align:left"></span></div>
   <div class="ctl-row"><span class="lab">Depth from</span><input type="range" id="d0" min="-5" max="80" step="1" value="-5"><span class="val mono" id="d0V">−5 km</span></div>
   <div class="ctl-row"><span class="lab">Depth to</span><input type="range" id="d1" min="-5" max="80" step="1" value="80"><span class="val mono" id="d1V">80 km</span></div>
   <div class="sep"></div>
@@ -290,6 +293,7 @@ const elevAt = (lon, lat) => { for (const k of patchKeys) { const v = grids[k].s
 
 // ---------- events ----------
 const N = EV.lon.length;
+const esurf = new Float32Array(N), edep = new Float32Array(N), eair = new Float32Array(N);   // surface elev (km, up), displayed depth (km bsl), above-ground flag
 const ex = new Float32Array(N), ez = new Float32Array(N), emag = new Float32Array(N), eflag = new Float32Array(N), esig = new Float32Array(N), enew = new Float32Array(N);
 for (let i = 0; i < N; i++) {
   ex[i] = toX(EV.lon[i]); ez[i] = toZ(EV.lat[i]);
@@ -297,21 +301,36 @@ for (let i = 0; i < N; i++) {
   eflag[i] = (EV.np[i] >= 4 && EV.ns[i] >= 4) ? 1 : 0;
   esig[i] = EV.sig[i] === 65535 ? 999 : EV.sig[i] / 100;     // km
   enew[i] = EV.new[i] / 100;
+  esurf[i] = elevAt(EV.lon[i], EV.lat[i]) / 1000;
 }
 const evGeo = new THREE.BufferGeometry();
 const evPos = new Float32Array(N * 3);
 for (let i = 0; i < N; i++) { evPos[i * 3] = ex[i]; evPos[i * 3 + 1] = 0; evPos[i * 3 + 2] = ez[i]; }
 evGeo.setAttribute("position", new THREE.BufferAttribute(evPos, 3));
-evGeo.setAttribute("dep", new THREE.BufferAttribute(EV.dep, 1));
+// Depth datum of the relocation is not confirmed. "Sea level": the catalog depth is km below sea level (as reported).
+// "Local surface": the catalog depth is km below the ground/seafloor under the epicentre, so we add the water depth or
+// subtract the elevation. Events still above the surface after that are flagged (eair) and greyed or hidden.
+let nAir = 0;
+function applyDatum(mode) {
+  nAir = 0;
+  for (let i = 0; i < N; i++) {
+    edep[i] = mode ? EV.dep[i] - esurf[i] : EV.dep[i];
+    eair[i] = edep[i] < -esurf[i] ? 1 : 0; nAir += eair[i];
+  }
+}
+applyDatum(0);
+const depAttr = new THREE.BufferAttribute(edep, 1), airAttr = new THREE.BufferAttribute(eair, 1);
+evGeo.setAttribute("dep", depAttr);
+evGeo.setAttribute("air", airAttr);
 evGeo.setAttribute("day", new THREE.BufferAttribute(EV.day, 1));
 evGeo.setAttribute("mag", new THREE.BufferAttribute(emag, 1));
 evGeo.setAttribute("qc", new THREE.BufferAttribute(eflag, 1));
 evGeo.setAttribute("sig", new THREE.BufferAttribute(esig, 1));
 evGeo.setAttribute("nw", new THREE.BufferAttribute(enew, 1));
-const F = { t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
+const F = { datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
 const EU = { uExag: U.exag, uT0: { value: F.t0 }, uT1: { value: F.t1 }, uMmin: { value: -9 }, uSig: { value: 999 }, uQC: { value: 0 },
   uD0: { value: -99 }, uD1: { value: 999 }, uBox: { value: new THREE.Vector4() }, uBoxOn: { value: 0 }, uMode: { value: 0 },
-  uSize: { value: 1 }, uPix: { value: renderer.getPixelRatio() }, uTmax: { value: M.events.days_max } };
+  uSize: { value: 1 }, uAir: { value: 1 }, uPix: { value: renderer.getPixelRatio() }, uTmax: { value: M.events.days_max } };
 const ramps = `
   vec3 rampDepth(float d) {   // shallow pale gold -> deep violet, all readable on dark
     float t = clamp(d / 45.0, 0.0, 1.0);
@@ -326,12 +345,12 @@ const ramps = `
   vec3 rampNew(float t) { return mix(vec3(0.55,0.62,0.72), vec3(1.0,0.50,0.20), t); }`;
 const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthWrite: true,
   vertexShader: `
-    attribute float dep, day, mag, qc, sig, nw;
-    uniform float uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
+    attribute float dep, day, mag, qc, sig, nw, air;
+    uniform float uAir, uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
     varying vec3 vCol; varying float vFade;
     ${ramps}
     void main() {
-      bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1;
+      bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1 && !(uAir > 1.5 && air > 0.5);
       if (uBoxOn > 0.5) keep = keep && position.x >= uBox.x && position.x <= uBox.y && position.z >= uBox.z && position.z <= uBox.w;
       if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
       vec4 mv = modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0);
@@ -341,6 +360,7 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
       gl_PointSize = clamp(s * uSize * uPix * clamp(pow(320.0 / -mv.z, 0.45), 0.35, 1.6), 1.2 * uPix, 30.0 * uPix);
       vCol = uMode < 0.5 ? rampDepth(dep) : (uMode < 1.5 ? rampTime(day / uTmax) : rampNew(nw));
       vFade = qc > 0.5 ? 1.0 : 0.7;
+      if (uAir > 0.5 && uAir < 1.5 && air > 0.5) { vCol = vec3(0.55); vFade *= 0.45; }
     }`,
   fragmentShader: `
     varying vec3 vCol; varying float vFade;
@@ -353,7 +373,8 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
 const evPoints = new THREE.Points(evGeo, evMat); evPoints.frustumCulled = false; evPoints.renderOrder = 3;
 scene.add(evPoints);
 function passes(i) {
-  const d = EV.dep[i];
+  const d = edep[i];
+  if (F.air === 2 && eair[i]) return false;
   if (EV.day[i] < F.t0 || EV.day[i] > F.t1 || emag[i] < F.mmin || esig[i] > F.sig || eflag[i] < F.qc || d < F.d0 || d > F.d1) return false;
   if (F.box) { const x = ex[i], z = ez[i]; if (x < F.box[0] || x > F.box[1] || z < F.box[2] || z > F.box[3]) return false; }
   return true;
@@ -545,6 +566,10 @@ function seg(id, cb) {
 }
 seg("segColor", v => { F.mode = v; EU.uMode.value = v; drawLegend(); drawSection(); });
 seg("segQC", v => { F.qc = v; EU.uQC.value = v; refresh(); });
+const airText = () => $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / N).toFixed(1)}%) above ground`;
+airText();
+seg("segDatum", v => { F.datum = v; applyDatum(v); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText(); refresh(); });
+seg("segAir", v => { F.air = v; EU.uAir.value = v; refresh(); });
 const bind = (id, fmt, cb) => { const el = $(id), out = $(id + "V"); const f = () => { out.textContent = fmt(+el.value); cb(+el.value); }; el.oninput = f; f(); };
 bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); drawSection3D(); });
 bind("ground", v => v >= 0.99 ? "solid" : v <= 0.01 ? "cut" : Math.round(v * 100) + "%", v => {
@@ -658,7 +683,7 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#e8a33d"></span>CRESCENT CFM fault (5 km contours)</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
-    <div class="attribution"><span class="caveat">Depth datum of the v4 relocation not yet confirmed (sea level or seafloor). </span>
+    <div class="attribution"><span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>
       Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Built ${M.built}.</div>`;
@@ -673,7 +698,8 @@ const hideTip = () => tip.style.opacity = 0;
 const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][EV.mtype[i]] ?? ""}`;
 const evHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">${eflag[i] ? "QC" : "below QC"}</span><br>
   <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span><br>
-  ${EV.lat[i].toFixed(3)}°N ${(-EV.lon[i]).toFixed(3)}°W · <b>${EV.dep[i].toFixed(1)} km</b><br>
+  ${EV.lat[i].toFixed(3)}°N ${(-EV.lon[i]).toFixed(3)}°W · <b>${edep[i].toFixed(1)} km</b> bsl${F.datum ? ` <span class="k">(catalog ${EV.dep[i].toFixed(1)})</span>` : ""}<br>
+  <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above ground</span>' : ""}<br>
   M ${fmtM(i)} · ${EV.np[i]} P, ${EV.ns[i]} S<br>
   <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%`;
 function pickEvent(mx, my) {
@@ -682,7 +708,7 @@ function pickEvent(mx, my) {
   const pm = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), el = pm.elements;
   for (let i = 0; i < N; i++) {
     if (!passes(i)) continue;
-    const x = ex[i], y = -EV.dep[i] * e, z = ez[i];
+    const x = ex[i], y = -edep[i] * e, z = ez[i];
     const w = el[3] * x + el[7] * y + el[11] * z + el[15]; if (w <= 0) continue;
     const sx = ((el[0] * x + el[4] * y + el[8] * z + el[12]) / w + 1) / 2 * innerWidth;
     const sy = (1 - (el[1] * x + el[5] * y + el[9] * z + el[13]) / w) / 2 * innerHeight;
@@ -784,7 +810,7 @@ function drawSection() {
     if (!passes(i)) continue;
     const rx = ex[i] - a.x, rz = ez[i] - a.z, s = rx * ux + rz * uz, o = -rx * uz + rz * ux;
     if (s < 0 || s > L || Math.abs(o) > SEC.w) continue;
-    sel.push(i); if (EV.dep[i] > dmax) dmax = EV.dep[i];
+    sel.push(i); if (edep[i] > dmax) dmax = edep[i];
   }
   // slab, terrain profiles
   const prof = [], NS = 300;
@@ -825,8 +851,8 @@ function drawSection() {
   for (const i of sel) {
     const rx = ex[i] - a.x, rz = ez[i] - a.z, s = rx * ux + rz * uz, m = emag[i] < -8 ? 0.5 : emag[i];
     const r = Math.max(1.3, 1.2 + 0.9 * Math.pow(1.7, Math.min(m, 3)) * Math.pow(1.2, Math.max(m - 3, 0)));
-    const px = X(s), py = Y(EV.dep[i]);
-    sctx.globalAlpha = eflag[i] ? 0.85 : 0.5; sctx.fillStyle = rampJS(F.mode, F.mode === 0 ? EV.dep[i] : F.mode === 1 ? EV.day[i] / M.events.days_max : enew[i]);
+    const px = X(s), py = Y(edep[i]);
+    sctx.globalAlpha = eflag[i] ? 0.85 : 0.5; sctx.fillStyle = rampJS(F.mode, F.mode === 0 ? edep[i] : F.mode === 1 ? EV.day[i] / M.events.days_max : enew[i]);
     sctx.beginPath(); sctx.arc(px, py, r, 0, 2 * Math.PI); sctx.fill(); secPts.push([px, py, i]);
   }
   sctx.globalAlpha = 1;

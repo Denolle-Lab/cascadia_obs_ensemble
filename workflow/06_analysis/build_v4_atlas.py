@@ -260,7 +260,18 @@ def faults():
     print(f"  faults: {len(props)} CFM meshes ({len(lo) // 3:,} triangles), {len(traces)} traces, "
           f"CASIE21 {len(clo) // 3:,} triangles")
     arr = {"f_lon": lo, "f_lat": la, "f_dep": de, "c_lon": clo, "c_lat": cla, "c_dep": cde}
-    return arr, dict(meshes=props, traces=traces)
+    surf = []
+    sv = D / "faults" / "v0" / "fault_surfaces_v0.geojson"
+    if sv.exists():                         # event-derived surfaces v0 (workflow/07_faults/fault_surfaces_v0.py)
+        sf = json.load(open(sv))["features"]
+        (slo, sla, sde), srng = tri_mesh(sf, lambda f: True)
+        arr.update({"s_lon": slo, "s_lat": sla, "s_dep": sde})
+        for i, a0, b0 in srng:
+            p = sf[i]["properties"]
+            surf.append(dict(id=p["surface_id"], kind=p["kind"], stable=p["stable"], n=p["n_events"], strike=p["strike"],
+                             dip=p["dip"], dip68=p["dip_68"], sig=p["sigma_total_median_km"], a=a0 // 3, b=b0 // 3))
+        print(f"  surfaces v0: {len(surf)} ({len(slo) // 3:,} triangles)")
+    return arr, dict(meshes=props, traces=traces, surf=surf)
 
 
 def main(argv=None):

@@ -46,3 +46,17 @@ for focal-mechanism takeoffs). About 86 MB per grid, ~240 GB with angles.
 
 A2: NLLoc (EDT, oct-tree) on all 172k events, station terms by iteration (`LOCSTAWT`/SSST), outlier picks.
 A3: GrowClust on catalog differential times, checked against v4 and ComCat.
+
+## A2 status (2026-11-22)
+
+Runs in `/wd1/mdenolle_data/reloc_v5/runs/`: `iter0_vpvs176` (no station terms), `iter1_vpvs176` (static
+terms from iter0, `a2_station_terms.py`). NLLoc needs the search grid inside every station's ±250 km time
+grid, so events are located in 25 km tiles with a tile ±75 km search box (`a2_make_obs.py`, `a2_run_nlloc.py`).
+
+Catalog with all v4 events and location-quality tiers A-D, U: `a2_build_catalog.py`; summary
+`data/reloc_v5/catalog_v5_trackA_iter1_vpvs176_tiers.md`. Use tiers A-B (`depth_constrained`) for depth work.
+
+Mount Hood test (`a2_model_1d_test.py`, tile t33_30, 269 events, nearest station 29 km): Ian's 1D
+`pnsn_wa` gives median depth -1.0 km, `pnsn_nor` 8.1 km, the 3D model 16.7 km, all at RMS 0.26-0.29 s;
+ANSS 4.3 km. Depths without a station within ~2 focal depths follow the velocity model, not the data.
+The 3D model is the deepest of the three, which matches the deep bias of tiers B-D against ANSS.

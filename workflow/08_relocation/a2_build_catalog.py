@@ -4,7 +4,8 @@ Events NLLoc located get the 3D maximum-likelihood location (loc_source = "nll3d
 locate (fewer than 6 usable phases once stations beyond ~150-175 km drop out, or rejected) keep their v4
 location (loc_source = "v4") and tier U.
 
-Tiers (first one met; z* = max(depth below surface, 5 km); dist_min = nearest station used, km):
+Tiers (first one met; z* = max(shallower of 3D and v4 depth, below surface, 5 km); dist_min = nearest
+station used, km):
   A  nphs >= 10, gap <= 180, h_max <= 3 km, sig_z <= 3 km, dist_min <= 1 z*, rms <= 0.3 s
   B  nphs >= 8,  gap <= 250, h_max <= 6 km, sig_z <= 6 km, dist_min <= 2 z*, rms <= 0.5 s
   C  h_max <= 15 km, gap <= 300: epicentre usable, depth not reliable
@@ -12,7 +13,8 @@ Tiers (first one met; z* = max(depth below surface, 5 km); dist_min = nearest st
   U  not relocated in 3D; v4 location kept
 h_max is the 68% horizontal semi-major axis; sig_z is sqrt(CovZZ) of the NLLoc PDF. Formal errors leave out
 velocity-model error; the dist_min / z* condition is there because depths with no station within
-2 z* were 3-11 km deeper than ANSS (iter1 check).
+2 z* were 3-11 km deeper than ANSS (iter1 check), and at Mount Hood (nearest station 29 km) three velocity
+models gave -1, 8 and 17 km with the same RMS: such depths follow the model, not the data.
 Also: depth_constrained = tier in (A, B).
 
 Usage: python a2_build_catalog.py RUN_NAME
@@ -41,7 +43,9 @@ def md_table(df):
 
 
 def tier(df):
-    zstar = np.maximum(df.depth + df.surface_km, 5.0)
+    # shallower of the 3D and v4 depths (below surface): a depth pushed deep by the model must not
+    # make its own nearest-station test pass (Mount Hood: 3D 16.7 km, v4 3.3, ANSS 4.3, nearest station 29 km)
+    zstar = np.maximum(np.minimum(df.depth, df.v4_depth) + df.surface_km, 5.0)
     ratio = df.dist_min / zstar
     t = np.full(len(df), "D", dtype=object)
     c = (df.h_max <= 15) & (df.gap <= 300)

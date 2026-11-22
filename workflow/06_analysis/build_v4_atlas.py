@@ -235,7 +235,9 @@ def surfaces_display(path, max_side=12):
                         lon.append(pt[0]); lat.append(pt[1]); dep.append(pt[2])
         surf.append(dict(id=p["surface_id"], kind=p["kind"], stable=p["stable"], n=p["n_events"], strike=p["strike"],
                          dip=p["dip"], dip68=p["dip_68"], sig=p["sigma_total_median_km"],
-                         L=p["length_km"], W=p["width_km"], a=a0, b=len(lon) // 3))
+                         L=p["length_km"], W=p["width_km"], a=a0, b=len(lon) // 3,
+                         lm=(p.get("lit_match") or "")[:140], lc=p.get("lit_confidence"), lk=p.get("lit_class"),
+                         ln=bool(p.get("lit_new_candidate"))))
     return (np.array(lon, "<f4"), np.array(lat, "<f4"), np.array(dep, "<f4")), surf
 
 

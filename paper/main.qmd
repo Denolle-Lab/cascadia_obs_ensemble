@@ -243,7 +243,7 @@ it and returns ObsPy streams (*pnwstore*, <https://github.com/niyiyu/pnwstore>).
 All picking and amplitude measurements read the waveforms through this client,
 except for the `NC` and `BK` networks, which we requested directly from the
 Northern California Earthquake Data Center (NCEDC) FDSN web service. We
-collected all available continuous seismic data between 2010 and 2015 from
+collected all available continuous seismic data between 2010 and 2016 from
 stations within a broad region encompassing the CSZ and its surrounding tectonic
 boundaries. The dataset includes OBS records from the CI experiment
 [@Stone2018], along with permanent and temporary land-based stations operated by
@@ -261,8 +261,9 @@ verifying phase association. To improve azimuthal coverage and increase the
 robustness of association and relocation, we expanded the domain to include
 stations from 122°--123°W onshore and 127°--129°W offshore. This iterative
 approach ensured sufficient network geometry to resolve offshore and intraslab
-events. The following seismic networks were included: `C8`, `7D`, `7A`, `CN`,
-`NV`, `UW`, `UO`, `NC`, `BK`, `TA`, `OO`, `PB`, `X6`, `Z5`, and `X9`.
+events. Picks of catalog v4 come from 696 stations of 24 networks: `7A`, `7D`,
+`BK`, `C8`, `CC`, `CN`, `GS`, `NC`, `NV`, `OO`, `PB`, `TA`, `UO`, `UW`, `X4`,
+`X9`, `XD`, `XG`, `XU`, `YG`, `YH`, `YW`, `Z5` and `ZZ`.
 We picked in two passes. The first pass (2011--2015) covered 123°--127°W and
 used the `HH` channels of each station, or its `BH` channels when it had no
 `HH`, at their native sampling rate. The second pass (2010--2015) covered
@@ -272,7 +273,11 @@ stations of the regional networks. When one of these stations lacked a
 horizontal component, its vertical trace was copied to all three model inputs.
 Two more runs over 46°--50°N, at 122°--123°W and 127°--129°W, also accepted
 vertical channels named `3`. The first pass contributes 21.9 million of the
-39.6 million picks, the second pass 17.7 million.
+39.6 million picks, the second pass 17.7 million. These 39.6 million picks are
+the pick table ver3, on which catalog v3 was built. Three later fills complete
+it to 73.6 million picks (ver6, Section \ref{sec:pickfill}): the picks of the
+region runs left out of ver3, the ocean-bottom station-days that had no pick,
+and the land strip at 122°--123°W. Catalog v4 is built on ver6.
 
 Waveform preprocessing followed the data conditioning pipeline typical of the
 deep learning phase picking *EQTransformer* [@mousavi2020earthquake]. Each
@@ -285,10 +290,11 @@ data of the models; the first pass gave the models the native rate (40 to
 (`ObsPy` `Stream.merge(fill_value='interpolate')`), and the components were
 trimmed to a common time span.
 
-In total, the dataset comprised approximately 582,936 station-days of continuous
-three-component data, corresponding to about 56 TB of waveform data after
-preprocessing. All processing and metadata management steps were scripted to
-ensure reproducibility and traceability of data provenance.
+The two passes read about 582,936 station-days, about 56 TB of waveform data
+after preprocessing, and the fills of ver5 and ver6 read another 210,206. The
+ver6 table has picks on 509,249 station-days at 728 stations. Every step is
+scripted in the code repository, and each pick table is archived with a list of
+the station-days it adds.
 
 ### Known Data Issues
 
@@ -319,6 +325,21 @@ Depending on relative source and receiver depths, T-phases are often more
 strongly recorded than body wave arrivals such as P- and S-waves, and are
 sometimes the only earthquake arrival recorded for regional earthquakes by OBS
 on the Cascadia margin [@krauss25].
+
+Some station-days of the archive are broken into fragments a few seconds long.
+At `CN.HNBB`, from October 2014 to April 2015, the day is stored as hundreds of
+6 s packets, and the same occurs on some days of `CN.VDB` and of `CC` and `UW`
+stations. Merging the fragments by linear interpolation leaves a step at every
+join, and the picker triggers on the steps: these days carry about 3,500 picks
+against about 30 on complete days, and on the `CN` days we checked, 81% of the
+picks lie within 1 s of a join, against none on complete days. The amplitude
+measurement (Section \ref{sec:magnitude}) skips segments shorter than 300 s, so
+such picks have no amplitude. In the ver6 fill we dropped the station-days with
+at least 20 picks of which fewer than half have an amplitude (1,846
+station-days, 1.15 million picks). The same rule flags 6,073 station-days
+(2.83 million picks, 1.98 million of them at `CN` stations) in ver5, which we
+have not removed. **[TO DO: flag or remove the ver5 artifact picks before the
+final association.]**
 
 Consultation of the CI data report [@obsic2011cascadia] In consultation with the
 CI data report (REF5), phase picking data from sta
@@ -363,6 +384,46 @@ for S. The two passes differ in the trigger: in the second pass a segment
 starts and ends at 0.05, and we kept its onset, end and maximum; in the first
 pass it ends when the semblance falls below 0.025, and we kept the pick time
 only.
+
+### Completing the pick table (ver4 to ver6) {#sec:pickfill}
+
+The pick table of the two passes (ver3) had gaps, and we filled them in three
+steps. Each step appends its picks to the previous table, so every pick keeps
+its identifier (`pick_id`) from one version to the next, and each version is
+archived with the list of the station-days it adds.
+
+*ver4* adds 9.9 million picks on 75,709 station-days that the region runs had
+written but that the ver3 merge left out: the `EH` runs of 2010, 2014 and 2015,
+still running when ver3 was assembled (37,158 station-days); the 2013 files of
+the run at 122°--123°W and 46°--50°N (14,015); a run of 2010 at 122°--123°W and
+40°--46°N (5,692); station-days of the two 46°--50°N runs left out for no
+recorded reason (16,272); and first-pass picks of three stations (2,572). A
+station-day already in ver3 was never added again, so no station-day mixes two
+picker runs. ver4 has 49.5 million picks.
+
+*ver5* adds the ocean-bottom station-days of 2010--2016 that had data in the
+archive but no pick: 57,331 station-days, of which 51,764 were readable and not
+flat. We picked them with the five models and the trigger of the second pass,
+and with one channel rule for all stations: `HH`, else `BH`, else `EH`, with a
+vertical channel named `Z` or `3`, the vertical copied to the horizontal inputs
+when a horizontal is missing. Before the run we replaced the semblance of ELEP,
+a Python callback in a moving filter, by a moving sum over all windows at once.
+It returns the same picks on ten of ten test station-days and is 255 times
+faster: the semblance of a station-day went from 192 s to under 1 s. We also tested adding OBSTransformer [@niksejel2024obstransformer]
+as a sixth member on 400 station-days. It doubled the number of S picks and
+changed the recall of the associated v3 arrivals by at most 0.05, so the fills
+keep the five-model set of the region runs and stay comparable with ver4. ver5
+adds 11.4 million picks on 48,638 station-days at 212 stations of `7A`, `7D`,
+`NV`, `OO`, `X9` and `Z5`, among them the cabled array of the Ocean Observatories
+Initiative at Axial Seamount. ver5 has 60.9 million picks.
+
+*ver6* adds the land strip 122°--123°W, 40°--50°N, 2010--2016, which the region
+runs covered only in part: 152,875 station-days at 204 stations without a pick
+in ver5. The picker is that of ver5, and the same job measures the amplitudes of
+the new picks (Section \ref{sec:magnitude}). We left out 1,846 station-days of
+fragmented data (Section \ref{sec:data}, Known Data Issues). ver6 adds 12.7
+million picks on 137,469 station-days at 199 stations, and has 73,636,558
+picks. Catalog v4 is built on it.
 
 ### Training PINN for travel time
 
@@ -550,7 +611,7 @@ We required a minimum number of 5 P and 5 S picks to associate the events.
 ```
 
 
-## Magnitude estimation
+## Magnitude estimation {#sec:magnitude}
 
 We estimate a local magnitude $M_L$ for every relocated event that has
 enough usable amplitudes, with a per-event uncertainty, and replace it
@@ -560,29 +621,43 @@ inversion for event and station terms with a fixed distance correction,
 a calibration against ComCat local magnitudes, a switch to moment
 magnitude for the largest events, and a set of tests.
 
-*Amplitude measurement.* For each of the $1.00\times10^{6}$ associated
-P and S picks we fetch the waveform, remove the instrument response to
-ground velocity, convolve it with a Wood--Anderson response (natural
-period 0.8~s, damping 0.7, static gain 2080), and take the peak
-displacement over the components of the sensor, after a 1~Hz high-pass
-filter. We use one sensor per
-pick, with the first available of broadband (HH, BH), short-period (EH,
-SH) and, only as a last resort, strong-motion (HN) channels. Pressure
-channels and channels sampled below 10~Hz are discarded. Mixing
-sensors caused three problems in an earlier run: an OBS hydrophone
-without a response removed the whole pick, interpolated low-rate
-channels produced spurious peaks, and the accelerometer noise floor set
-the peak of small events. The response is removed on a window padded
-by at least 60~s. The amplitude is then measured in a window that
-grows with hypocentral distance $r$ (km),
+*Amplitude measurement.* We measure the amplitude of every pick of the ver6
+table, associated or not, once per station-day rather than once per pick. For
+each station-day we read one sensor: the first with an instrument response among
+broadband (HH, BH), short-period (EH, SH) and, only as a last resort,
+strong-motion (HN) channels. Pressure channels and channels sampled below 10~Hz
+are discarded. Mixing sensors caused three problems in an earlier run: an OBS
+hydrophone without a response removed the whole pick, interpolated low-rate
+channels produced spurious peaks, and the accelerometer noise floor set the peak
+of small events. The trace is demeaned, tapered over 10~s and resampled to
+100~Hz, and the response is removed to ground velocity (water level 60, cosine
+pre-filter 0.0125--0.025~Hz and 40--45~Hz) on each contiguous segment of at
+least 300~s, which avoids the long-period edge effects of a short window around
+the pick. We convolve the velocity with a Wood--Anderson response (natural
+period 0.8~s, damping 0.7, static gain 2080) after a 1~Hz high-pass filter, and
+also keep the ground displacement band-passed between 0.05 and 2~Hz. The source
+distance is unknown when a pick is measured, so for each pick we store the peak
+over the components of the sensor from 0.3~s before the pick to $W$~s after it,
+for 70 values of $W$ (1 to 15~s every 0.25~s, 16 to 20~s every 1~s, 25 to 60~s
+every 5~s), together with the noise RMS from 11~s to 1~s before the pick and the
+time from the pick to the nearest edge of its data segment. After association,
+the amplitude of an arrival is the stored peak for the window that grows with
+hypocentral distance $r$ (km),
 $[t_P-0.3,\ t_P+\min(1+0.03r,\ 15,\ 0.8(t_S-t_P))]$~s for P and
-$[t_S-0.3,\ t_S+\min(2+0.06r,\ 60)]$~s for S, so the measurement
-captures the delayed S and Lg peak at regional distance. We record a
-signal-to-noise ratio (peak over the RMS of a 10~s pre-signal window)
-and the instrument-response epoch that contains the pick. We measured
-99.8\% of the picks (1,002,707; on EH 454k, HH 287k and BH 262k
-sensors, and HN once). Keeping amplitudes with SNR~$\ge3$ leaves
-649,427 observations of 63,013 events on 525 station epochs.
+$[t_S-0.3,\ t_S+\min(2+0.06r,\ 60)]$~s for S, rounded up to the next value of
+the grid. The window captures the delayed S and Lg peak at regional distance,
+and the 0.25~s step keeps a rounded P window ahead of the S arrival. On 996,111
+arrivals of catalog v3, these amplitudes match a per-pick measurement made on a
+window padded by at least 60~s around each pick: the median of
+$\log_{10}$ of their ratio is 0.000 and its 95th percentile 0.017. The
+signal-to-noise ratio of an arrival is its peak over the noise RMS, and we record
+the instrument-response epoch that contains the pick. 70.5 million of the
+73.6 million picks of ver6 (95.8\%) have an amplitude; the others lack data, an
+instrument response or a segment of 300~s (Section \ref{sec:data}). Of the
+2,503,189 arrivals of catalog v4, 99.6\% have one. **[TO UPDATE for catalog v4:
+the numbers of observations, events and station epochs below, and in the next
+paragraphs, are those of catalog v3.]** Keeping amplitudes with SNR~$\ge3$
+leaves 649,427 observations of 63,013 events on 525 station epochs.
 
 *Local magnitude.* Each amplitude gives a station magnitude with the
 distance correction of \citet{Hutton87},
@@ -985,22 +1060,20 @@ the same format, for that test.
 
 Seismicity on the edge of of our box.
 
-The pick table has three gaps, and all carry through association, relocation
-and every figure. First, the 2013 picks of the run at 122°--123°W and
-46°--50°N (1.78 million picks on 14,680 station-days) were not merged into the
-pick table. That box holds 876 relocated events in 2013, against 1,310 to 3,443
-in the other years, and the 2013 low of the monthly rates in onshore Washington and around
-Puget Sound (Supplement, temporal context) is a gap in detection, not a change
-in seismicity. Second, in the other years 19,584 station-days of the two
-46°--50°N runs (21% of their files) are missing from the pick table, and 13
-stations of these runs contribute no pick (for example `UW.LON`, `UW.RVC`,
-`UW.JCW` and `NV.KEMF`). GENIE and GraphDD used the pick table as it is: 19 of
-the 1.09 million associated picks and 123 of the 1.0 million relocated
-arrivals fall on these station-days. Third, the `EH` runs of 2010, 2014 and
-2015 were not complete when the pick table was assembled: 5.1 million of their
-picks, on 37,158 station-days, are missing. Merging the missing picks (9.9
-million in all) and rerunning the association and relocation would fill the
-three gaps.
+Catalog v4 is built on the ver6 pick table, which fills the three gaps of
+ver3: the 2013 picks of the run at 122°--123°W and 46°--50°N, the station-days
+of the two 46°--50°N runs missing from ver3, and the `EH` runs of 2010, 2014 and
+2015 that were not complete when ver3 was assembled (Section \ref{sec:pickfill}).
+In catalog v3 these gaps produced, for example, the 2013 low of the monthly
+rates in onshore Washington and around Puget Sound, a gap in detection rather
+than a change in seismicity. Some gaps remain in ver6. Land station-days west
+of 122°W outside the 122°--123°W strip that had no pick in the region runs were
+not picked again, and no station east of 122°W was picked. 2016 is incomplete:
+the Cascadia Initiative deployments ended in 2015, and the land stations are
+picked in 2016 only on the 122°--123°W strip, so v4 has 7,052 events in 2016
+(18\% offshore) against 52,298 in 2015 (70\% offshore). Finally, ver5 still
+holds the picks of the fragmented station-days described in Section
+\ref{sec:data}, which the association may have grouped into events.
 
 # Conclusion
 

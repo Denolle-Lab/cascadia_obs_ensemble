@@ -88,3 +88,44 @@ re-admitted and the depth coverage gained.
 catalog_v5_trackA_*.csv was written with float_format %.5g (lon to ~+-400 m). Fixed in
 workflow/08_relocation/a2_build_catalog.py (%.8g) and the catalog rebuilt. B1 already read
 full precision from runs/iter1_vpvs176/locations.csv, so the B1 dataset is unaffected.
+
+### D-B014 Code facts that reshape D-B002/D-B007 (adopted, 2026-11-22; source notes/design.md, TomoATT commit 8b72f69)
+TomoATT inverts one velocity field per run, so "joint Vp/Vs" = separate P and S runs, and in-run
+relocation sees only one phase. It does not solve station statics for absolute local times
+(`use_sta_correction` only with common-source differential data). Consequences: B2 is an outer loop of
+[P run, S run with hypocentres fixed] -> [external relocation with P+S in the updated models], up to 3
+loops; OBS corrections (D-B010 / D-B019) are applied to the picks before inversion. To verify on our build
+(notes/tomoatt_build.md, pending PI approval of the build).
+
+### D-B015 Forward grid (proposed, 2026-11-22)
+Spherical 0.02 deg (lat) x 0.025 deg (lon) x 1.0 km, z -3 to 80 km (20.2 M nodes, ~130 GB at 32
+simultaneous sources). Adopted only if it passes an accuracy test against a 0.5 km reference:
+P median error <= 0.02 s, 95th percentile <= 0.05 s, including slope and shelf OBS. Fallback: 3 x 3 x 1 km.
+
+### D-B016 Inversion grid and optimisation (adopted, 2026-11-22)
+Five staggered multigrids, 0.30 x 0.40 deg, then 0.20 x 0.25 deg; depth nodes -3 to 80 km (notes/design.md
+section 2.2), horizontal spacing x1.5 below 30 km. Gradient descent, max update 1 %/iteration,
+Kdensity_coe 0.3, no Laplacian smoothing. Stop at chi^2 <= 1.1, or < 1 % misfit gain over 5 iterations,
+or 20 iterations per run. Isotropic (no anisotropy in the first model).
+
+### D-B017 Data types and weights (adopted, 2026-11-22)
+Absolute P and S throughout; common-source differential times (weight 0.5, separation <= 60 km) added in
+stage 2; no common-receiver differentials in B2 (GrowClust in B5 does that). Weights: pick (0.05/sigma)^2;
+residual down-weighting P [0.5, 1.5] s, S [1, 3] s; distance taper 150-250 km (applies to the D-B012
+re-admitted picks); event-density weights. Test the Bai et al. (2026) S-P correction as a variant, not
+the baseline.
+
+### D-B018 Resolution and robustness (adopted, 2026-11-22)
+Before any interpretation: checkerboards 40 / 60 / 100 km by depth at +-8 %, two phases of the pattern,
+noise per pick sigma, perturbed hypocentres run through the full outer loop; 6 spike tests; restoring
+test. "Resolved" = local correlation >= 0.7 and amplitude recovery >= 0.5. Robustness: inversions from a
+1D start and from Delph et al. (2018) onshore, 5 x 70 % jackknife, a no-OBS run. Interpret only features
+stable to 2 % (Vp) / 3 % (Vs) across these.
+
+### D-B019 OBS corrections: open conflict (proposed, 2026-11-22)
+notes/design.md proposes a priori sediment delays from the literature (Rychert 2018, Ruan 2014, Bell 2016,
+own receiver functions, GlobSed) instead of D-B010's Track A S terms, on the claim that Track A OBS S
+terms are "centred near zero". notes/dataset.md shows the median is near zero only because shelf OBS
+(+0.55 s median) and 41 deep-water OBS (< -0.5 s, to -2.35 s) cancel. Negative delays cannot be sediment,
+so a sediment-only correction would leave them in the data. Resolution waits on the OBS waveform check
+(notes/obs_check.md). D-B010 stays in force until then.

@@ -1,0 +1,60 @@
+# Blanco strands (revised surfaces): literature match and grounding of parallel / en-échelon strands
+
+Per-strand matches are in `blanco_strands_matches.csv` (21 rows). Positions use the same reference frame as `matches_blanco.md`: along-strike distance from the JdF RTI at 44.45°N 130.4°W, azimuth 111°. Every DOI below returned HTTP 200 from the Crossref API (`api.crossref.org/works/DOI`) on 2026-11-22, and the title and authors matched.
+
+## 1. What the literature has resolved, depression by depression
+
+Precision matters when comparing spacings. Teleseismic JED relocations (BN08) are ±5–10 km and cannot resolve strands spaced under about 10 km. The 2012–13 OBS catalogs (Kuna 2019; Ren 2023; Lange 2026; Journeau 2026) have ≤0.6 km (absolute) and <0.5 km (relative) horizontal error (Lange 2026) and can resolve strands 1–2 km apart.
+
+| Area | Parallel / stepped strands published | Spacing, method, data | Single-strand statements | Our strands | Agreement |
+|---|---|---|---|---|---|
+| **West Blanco Depression (WBD) / JdF RTI** | Four candidate strands: WBDN (N wall), WBDC (oblique, 287–288°), WBDS (S wall), PPF. BN08 says "all four… could be active"; WBDS is the most active. Lange: near the RTI the seismicity "bifurcates into two parallel clusters". | BN08: SeaBeam walls (Embley & Wilson 1992; Dauteuil 1995), submersible striations on the N wall (Juteau et al. 1995), and three groups of teleseismic slip vectors. Spacing "<10 km". Lange: OBS ML catalog | Ren 2023: seismicity "in the deepest parts of the central valley". Lange: a zone about 10 km wide | BL015a / BL018a (5.5 km apart, near the RTI); BL004a / BL004b (2.0 km, 88 km long) | BL015a/BL018a are consistent with two wall strands (WBDS/WBDN) and with Lange's bifurcation. **BL004a/b at 2 km has no published counterpart.** It is narrower than any mapped wall spacing and sits inside Lange's 10 km zone. It is a candidate new resolution, not a contradiction, but it has not been confirmed. |
+| **East Blanco Depression (EBD)** | A pull-apart with a right step of the plate boundary (Embley & Wilson 1992; BN08 Fig. 17 shows "right stepping of (some) transform motion at the EBD"). Lange: "at least two sub-parallel clusters… step-overs". | Bathymetry plus teleseismic slip vectors (BN08); OBS catalog (Lange). Spacing not quantified | — | BL004a/b W strands overlap BL006a and BL001b over about 20 km (129.42–129.67°W), offset 1.7–3.6 km to the S | **Consistent.** A right-stepping en-échelon overlap is what a dextral pull-apart requires, and it matches the published right step at the EBD. |
+| **Surveyor Depression (SUR)** | Two strands on the N and S walls (Ren 2023). "Two parallel, closely spaced clusters separated by approximately 7 km; the southern strand extends further westward" (Lange 2026). BN08: pull-apart, T axes 245–270°. | OBS catalogs (Ren: 138 events; Lange: 12,708 events) | — | BL006a (N), BL001b (middle), BL001a (S). N–S spacing 5.3 km; middle strand 2.4–2.8 km from each | **Two outer strands agree** (5.3 vs about 7 km). **BL001b (third, central strand) is not in the literature.** The W-extent detail is reversed: the N strand reaches farther W in our data. |
+| **Cascadia Depression (CAS)** | Not parallel transform strands. Lange: "seismicity patterns suggest north-south trending faults". Embley & Wilson 1992: inward-facing, back-tilted normal-fault blocks. Ren: normal faulting on the axis and transtensional strike-slip near both ends. | Seismic reflection (Embley & Wilson); RMT/CMT T axes 275–290° (BN08); OBS catalogs | No transform-parallel strands are reported inside CAS. Lange: about 12 km aseismic W of CAS | BL001c–e, BL011a, c, d (NW-trending, 12–24 km, many median depths 12–23 km); BL011b (BR tip) | **Contradicts the literature.** The strand search allowed only azimuths within 20° of 111°, so it cannot represent the N–S CAS faults (kept as BL005/008/012/021). The NW-trending CAS strands are probably by-products of the search; several are also too deep. The exception is BL011b, which matches the ~5 km N-ward shift of BR seismicity near CAS (Lange) and the NE crustal fault bend (Journeau 2026). |
+| **Blanco Ridge (BR)** | A single transform. Kuna 2019: vertical fault W of 127.92°W; **E of 127.92°W, mantle seismicity (8–13 km) is offset about 1 km S of crustal seismicity (3–7 km)**; a 10 km barrier between asperities at about 128°W and 127.7°W. Journeau 2026: three rupture barriers and a NE crustal fault bend. | OBS, 1,600 events, cross-sections (Kuna); OBS ML catalog >30,000 events (Journeau) | Lange: "deformation within ±1.5 km of the fault trace", fault-zone width <1 km on the eastern BR. BN08: seismic zone about 9 km wide (teleseismic) | BL003a (crustal, median 8.4 km) and BL013a (2.07 km S, median 11.3 km), parallel over 130 km | **Partly consistent.** The sense matches Kuna (deeper = south), but the offset is twice as large (2.1 vs 1 km) and runs the full length, whereas Kuna saw it only E of 127.92°W. A 2 km pair is at the edge of Lange's ±1.5 km zone. Most likely one vertical fault plus depth-dependent location bias in catalog v4, or Kuna's crust–mantle offset exaggerated by it. dip_if_single_fault = 55° conflicts with Kuna's vertical fault. Recommended test: compute the offset separately E and W of 127.92°W. |
+| **Gorda Depression (GD) / Gorda Transform (GT)** | BN08: both the N and S scarps may be active; the N wall continues the BR; a trough S of the BR near 43.2°N 127.2–127.4°W; distributed extension inside the whole rhomb-shaped basin. Lange: "sub-parallel faults" in the GD; two clusters in the central deepest part; **about 20 km step-over** with transtension of that width; sparse seismicity 5 km N of the GT. Ren: activity on both sides of the GT and BR scarps; normal faulting inside the basin. | Teleseismic plus bathymetry (BN08; Embley & Wilson 1992); OBS catalogs (Ren; Lange) | GT: "focused linear distribution… damage zone ±1.5 km" (Lange). Ren: GT fits a single morphological trace | Five strands N→S: BL016b, BL016a, BL014a, BL017a, BL017b, each about 2.1 km apart (8.4 km total); BL003a–BL017a overlap of about 21 km | **The step-over geometry agrees.** The BR→GT right step is a dextral pull-apart, and the about 21 km overlap matches Lange's about 20 km step-over. A N-wall group (BL016a/b), a central group (BL014a) and a S-wall group (BL017a) also agree with BN08, Ren and Lange. **But five strands at 2 km spacing are more than has been published.** BL017b (deeper, 2 km S of the GT) contradicts the single focused GT and looks like the same deep-equals-south shift as on the BR. BL014a running parallel to the GT all the way to the RTI also conflicts with a single GT. |
+
+### Cross-cutting observations
+
+1. **Every ≈2 km pair sits at the scale where catalog v4 location error matters.** OBS studies that resolve 1–2 km structure (Kuna 2019; Lange 2026) report a single strand on the BR and the GT, with deep events offset by ≤1 km. In the BR (BL003a→BL013a) and GT (BL017a→BL017b) pairs, the deeper member is about 2 km S. In other pairs the depth contrast is absent or reversed (BL004a/b equal depths; BL016a/b and BL001a/b deeper to the N). So a uniform network bias does not explain everything, but where the deep member is the S one, a depth-dependent location shift is the simplest explanation. Journeau 2026 shows that OBS depth estimates themselves change with velocity model and location method.
+2. **The en-échelon overlaps at the step-overs are the most literature-consistent result.** At the EBD (WBD strands → SUR strands, about 20 km overlap, right step) and the GD (BR → GT, about 21 km overlap, right step, matching Lange's about 20 km), right steps on a dextral transform are pull-aparts, as published.
+3. **The strand-search window (±20° of 111°) is wrong for the CAS.** There the published faults trend N–S, and the window produces NW-trending artefacts (BL001c–e, BL011a/c/d).
+
+### Strands that contradict the literature
+
+- BL001b: third, central SUR strand; the literature has two wall strands.
+- BL001c, BL001d, BL001e, BL011a, BL011c, BL011d: NW-trending strands inside CAS, where the published faults are N–S normal faults; several are also deep.
+- BL013a: as a separate fault. As Kuna's mantle band it fits, but the offset is twice Kuna's and extends W of 127.92°W.
+- BL017b: second GT strand; Lange describes a single focused GT within ±1.5 km.
+- BL014a: its E half runs parallel to the GT to the RTI, against the single GT.
+- BL016a/b: a 2 km pair on the GD N wall; the literature mentions only a N-wall fault.
+- Minor: in SUR the N strand (BL006a) extends farthest W; Lange says the S strand does.
+
+## 2. DOIs for the unchanged Blanco surfaces (earlier matches stand)
+
+| surface_id | match (from matches_blanco.md) | verified DOIs |
+|---|---|---|
+| BL005 | Cascadia Depression N–S normal fault | 10.1029/2007JB005213; 10.1029/2022JB026045; 10.1029/2025JB031584; 10.1007/BF01674064 |
+| BL007 | CAS oblique composite (CAS to BR tip) | 10.1029/2025JB031584; 10.1029/2007JB005213 |
+| BL008 | Cascadia Depression N–S normal fault (parallel to BL005) | 10.1029/2007JB005213; 10.1029/2025JB031584 |
+| BL012 | Cascadia Depression N–S normal fault, deeper duplicate of BL005 | 10.1029/2022JB026045; 10.1029/2025JB031584 |
+| BL021 | Cascadia Depression NNW normal fault | 10.1029/2007JB005213; 10.1029/2025JB031584 |
+| BL025 | Cleft segment, southern JdF Ridge (ridge-parallel); possible new seismogenic structure | 10.1029/2025JB031584; 10.1029/2007JB005213 |
+| BL027 | Rotated transform piece at the WBD–Cleft RTI (slip vectors 310–316°) | 10.1029/2007JB005213; 10.1029/2025JB031584 |
+
+## 3. References (all verified through Crossref, HTTP 200 and matching metadata)
+
+- Braunmiller, J., & Nábělek, J. (2008). Segmentation of the Blanco Transform Fault Zone from earthquake analysis. JGR 113, B07108. 10.1029/2007JB005213 (full text read)
+- Dauteuil, O. (1995). Fault pattern from Seabeam processing: the western part of the Blanco Fracture Zone. Mar. Geophys. Res. 17, 17–35. 10.1007/BF01268049 (cited through BN08)
+- Dziak, R. P., et al. (2000). Recent tectonics of the Blanco Ridge, eastern Blanco transform fault zone. Mar. Geophys. Res. 21, 423–450. 10.1023/A:1026545910893 (cited through BN08 / Ren 2023; not read)
+- Dziak, R. P., Chadwick, W. W., Fox, C. G., & Embley, R. W. (2003). Hydrothermal temperature changes at the southern Juan de Fuca Ridge associated with Mw 6.2 Blanco Transform earthquake. Geology 31, 119. 10.1130/0091-7613(2003)031<0119:HTCATS>2.0.CO;2
+- Embley, R. W., & Wilson, D. S. (1992). Morphology of the Blanco Transform Fault Zone–NE Pacific. Mar. Geophys. Res. 14, 25–45. 10.1007/BF01674064
+- Journeau, C., Thomas, A., Abercrombie, R., Hirao, ..., Liu, ..., Kuna, V. (2026). OBS data mining reveals seismic structure and dynamics of the oceanic Blanco Transform Fault. JGR Solid Earth 131. 10.1029/2025JB032982 (abstract read)
+- Juteau, T., et al. (1995). A submersible study in the western Blanco Fracture Zone. Mar. Geophys. Res. 17, 399–430. 10.1007/BF01371786 (cited through BN08)
+- Kuna, V. M., Nábělek, J. L., & Braunmiller, J. (2019). Mode of slip and crust–mantle interaction at oceanic transform faults. Nature Geoscience 12, 138–142. 10.1038/s41561-018-0287-1 (full text read)
+- Lange, D., Ren, Y., & Grevemeyer, I. (2026). Seismicity, repeating earthquakes, and tomographic imaging of the Blanco Transform Fault System. JGR Solid Earth 131. 10.1029/2025JB031584. Details come from the arXiv preprint 2503.17148; the published version was not read and may differ. arXiv identifiers are not Crossref DOIs, so the preprint is not in any doi column.
+- Ren, Y., Lange, D., & Grevemeyer, I. (2023). Seismotectonics of the Blanco Transform Fault System. JGR Solid Earth 128, e2022JB026045. 10.1029/2022JB026045 (full text read)
+- Wilson, D. S. (1993). Confidence intervals for motion and deformation of the Juan de Fuca plate. JGR 98, 16053–16071. 10.1029/93JB01227
+
+Not verified or not used in doi columns: Kuna (2020, PhD thesis); Nedimović et al. (2009); Fox & Dziak (1999). They are cited only through Lange 2026 / BN08.

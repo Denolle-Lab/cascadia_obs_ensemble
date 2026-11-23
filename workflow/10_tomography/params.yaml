@@ -348,6 +348,8 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       "A: N-S through MTJ (124.4 W)": [[39.5, -124.4], [43.1, -124.4]]
       "B: E-W across Gorda plate (41.3 N)": [[41.3, -127.5], [41.3, -122.5]]
     highlight_box: {lat: [40.0, 40.6], lon: [-125.2, -124.0]}   # MTJ shallow-anomaly box (b2_mtj_common.MTJ)
+    dws_min: 100                   # spike DWS mask: spikes at nodes with first-iteration P DWS below this are "unsampled"
+                                   # (ridges_north median DWS of sampled nodes 132, Mendocino-Gorda 451); recovery also by DWS band
     regions:                       # D-B033: per-tile overrides, selected with TOMO_RES_REGION=<tile>_v2 (default: region above)
       blanco_v2:
         spike: {lon: [-130.35, -129.35, -128.35, -127.35, -126.35], lat: [42.8, 43.6, 44.4]}
@@ -368,7 +370,10 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
           "B: N-S at 122.5 W": [[45.8, -122.5], [49.8, -122.5]]
         highlight_box: null
       ridges_north_v2:
-        spike: {lon: [-130.75, -129.75, -128.75, -127.75], lat: [44.6, 45.4, 46.2, 47.0, 47.8, 48.6, 49.4]}
+        spike: {lon: [-130.75, -129.75, -128.75, -127.75], lat: [44.6, 45.4, 46.2, 47.0, 47.8, 48.6, 49.4],
+                # PI 2026-11-23: spikes at the event clusters (nodes with the most events, >= min_sep_nodes apart,
+                # at most max_spikes), used with SPIKES_ONLY=1 / TOMO_SPIKE_PLACEMENT=clusters
+                cluster: {min_sep_nodes: 4, max_spikes: 15}}
         sections:
           "A: N-S at 130.0 W (Axial)": [[44.4, -130.0], [50.0, -130.0]]
           "B: E-W at 46.0 N": [[46.0, -131.0], [46.0, -126.6]]

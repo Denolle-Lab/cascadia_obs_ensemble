@@ -53,11 +53,17 @@ BASE_BRANCH=${BASE_BRANCH:-tomo/res-tests-mg_v2}
 DAMP=${DAMP:-}
 TAGD=${DAMP:+_d$DAMP}
 DTEST=${DAMP:-$(cd $W && $PY -c "import yaml; print(yaml.safe_load(open('params.yaml'))['tomodd']['res_tests']['damp'])")}
-if [ -n "$DAMP" ]; then export TOMO_RES_DAMP=$DAMP; Q=$RT/queue$TAGD; OUT=$OUT/d$DAMP; fi
+# SPIKES_ONLY=1: spikes at the event clusters (TOMO_SPIKE_PLACEMENT=clusters, dirs spikec_*) with the DWS mask; no
+# checkerboards, no real-data scan; own stage records (prep_spikec, queue_spikec[_d<d>] ...)
+SPIKES_ONLY=${SPIKES_ONLY:-}
+TAGM=${SPIKES_ONLY:+_spikec}
+SPFX=spike_; [ -n "$SPIKES_ONLY" ] && { SPFX=spikec_; export TOMO_SPIKE_PLACEMENT=clusters; }
+[ -n "$DAMP" ] && { export TOMO_RES_DAMP=$DAMP; OUT=$OUT/d$DAMP; }
+Q=$RT/queue$TAGM$TAGD
 mkdir -p $RUNS/$REGION
 
 log() { echo "$(date '+%F %T') [$REGION] $*"; }
-skey() { case $1 in build|prep) echo $1 ;; *) echo "$1$TAGD" ;; esac; }   # build/prep shared by all dampings
+skey() { case $1 in build) echo $1 ;; prep) echo "prep$TAGM" ;; *) echo "$1$TAGM$TAGD" ;; esac; }   # build shared by all
 done_stage() { grep -qx "$(skey $1)" "$STATE" 2>/dev/null; }
 mark() { skey $1 >> "$STATE"; log "stage $(skey $1) done"; }
 py() { (cd $CODE && $PY "$@"); }
@@ -97,11 +103,12 @@ parallel_py() {   # run "args" lines (one python call each) with at most $1 at a
 }
 
 stage_prep() {
-  [ -d $RT/spike_null ] || { log "spike prep"; py $W/b2_smooth_spike_test.py --cfg res_tests prep || return 1; }
+  [ -d $RT/${SPFX}null ] || { log "spike prep ($SPFX)"; py $W/b2_smooth_spike_test.py --cfg res_tests prep || return 1; }
   local jobs=()
-  for d in $RT/spike_*/; do t=$(basename $d); t=${t#spike_}
+  for d in $RT/${SPFX}*/; do t=$(basename $d); t=${t#$SPFX}
     [ -s $d/inputs/absolute.dat ] || jobs+=("$W/b2_smooth_spike_test.py --cfg res_tests syn $t > $d/syn.log 2>&1"); done
   [ ${#jobs[@]} -eq 0 ] || { log "spike synthetics: ${#jobs[@]}"; parallel_py 8 "${jobs[@]}" || return 1; }
+  [ -n "$SPIKES_ONLY" ] && return 0
   ls -d $RT/chk_L* > /dev/null 2>&1 || { log "checkerboard prep"; py $W/b2_res_checker.py prep || return 1; }
   jobs=()
   for d in $RT/chk_L???_p?/; do p=$(basename $d); p=${p#chk_}
@@ -122,10 +129,12 @@ stage_queue() {
     if [ -n "$DAMP" ]; then scan="$DAMP 10 10 5|$DAMP 20 20 10|$DAMP 40 40 20"
     else scan="500 20 20 10|1000 10 10 5|1000 20 20 10|1000 40 40 20|2000 20 20 10"; fi
     local IFS_OLD=$IFS; IFS='|'; set -f; local scans=($scan); IFS=$IFS_OLD; set +f
+    [ -n "$SPIKES_ONLY" ] && scans=()
     for ds in "${scans[@]}"; do set -- $ds
       echo "$REGION d$1_s$2 $1 $2 $3 $4"; done
     for sm in "20 20 10" "10 10 5" "40 40 20"; do set -- $sm
-      for d in $RT/spike_*/; do echo "$R/$(basename $d) inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done
+      for d in $RT/${SPFX}*/; do echo "$R/$(basename $d) inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done
+      [ -n "$SPIKES_ONLY" ] && continue
       for L in 060 040 100; do
         for v in p0_noise p0_clean $( [ $1 = 20 ] && echo p1_noise p0_noise_ploc ); do echo "$R/chk_L${L}_$v inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done; done
     done
@@ -156,7 +165,7 @@ stage_run() {
 }
 
 stage_analyse() {
-  log "checkerboard analysis"; py $W/b2_res_checker.py analyse || return 1
+  [ -n "$SPIKES_ONLY" ] || { log "checkerboard analysis"; py $W/b2_res_checker.py analyse || return 1; }
   local w
   for w in $(param "' '.join(str(s[0]) for s in T['res_tests']['smooth'])"); do
     log "spike analysis, damping $DTEST, smoothing $w"; py $W/b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d${DTEST}_s$w || return 1; done
@@ -174,7 +183,7 @@ stage_publish() {
   git add $(cd $OUT && find . -type f -size -5M -printf "${OUT#$CODE/}/%P\n")
   if git diff --cached --quiet; then log "nothing new to commit"; else
     git commit -q -F - <<EOF || return 1
-Track B B2: $REGION resolution tests${DAMP:+ at damping $DAMP} analysed $(date +%F) (checkerboards + spikes, D-B018; damping/smoothing scan)
+Track B B2: $REGION resolution tests${SPIKES_ONLY:+ (cluster spikes, DWS mask)}${DAMP:+ at damping $DAMP} analysed $(date +%F) (checkerboards + spikes, D-B018; damping/smoothing scan)
 
 $(grep -c ' done rc=0' $Q/runner.log) inversions done (queue and log in data/tomo_v1/b2_res_tests/$REGION/run_log/).
 Inversion directories stay on $RUNS/$REGION.
@@ -183,7 +192,17 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 EOF
   fi
   git push -q -u origin $br || return 1
-  local summ; summ=$(sed -n '1,/^## Vs/p' $OUT/summary_tables.md | head -n -1)
+  local summ
+  if [ -n "$SPIKES_ONLY" ]; then
+    summ="Spikes at the event clusters, DWS mask $(param "T['res_tests'].get('dws_min', 100)") (smoothing 20). Recovery by DWS band:
+\`\`\`
+$(cat $OUT/${SPFX}inv_d${DTEST}_s20/recovery_by_dws.csv)
+\`\`\`
+By depth (sampled spikes):
+\`\`\`
+$(cut -d, -f1,2,14- $OUT/${SPFX}inv_d${DTEST}_s20/by_depth.csv)
+\`\`\`"
+  else summ=$(sed -n '1,/^## Vs/p' $OUT/summary_tables.md | head -n -1); fi
   local note="**$REGION${DAMP:+, damping $DAMP}**: resolution tests analysed $(date '+%F %H:%M'), $(grep -c ' done rc=0' $Q/runner.log) inversions. Results in \`data/tomo_v1/b2_res_tests/$REGION/\`.${big:+ Files over 5 MB not in git: see \`run_log/not_in_git.txt\`.}
 
 $summ"

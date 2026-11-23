@@ -56,7 +56,20 @@ def hwhm_1d(vals, pos, c):
     return out  # [toward lower index, toward higher index]
 
 
+def dws_grid(m):
+    """First-iteration P DWS on the full MOD grid (nz, ny, nx)."""
+    return _dws(m)
+
+
 def dws_by_layer(m):
+    d = _dws(m)
+    lo, la = T["regions"][st.REG]["events_lon"], T["regions"][st.REG]["events_lat"]
+    ii = (m["x"] >= lo[0]) & (m["x"] <= lo[1])
+    jj = (m["y"] >= la[0]) & (m["y"] <= la[1])
+    return d[:, jj][:, :, ii]
+
+
+def _dws(m):
     # DWS of the first iteration (background-model rays): check01 when it has it, else this test's null run
     # (same events, stations and settings; mendocino_gorda_v2/check01 was written without the DWS block)
     for vel in (st.BASE / "check01" / "Output_Files" / "tomoDD.vel", st.zdir("null") / INV / "Output_Files" / "tomoDD.vel"):
@@ -67,11 +80,7 @@ def dws_by_layer(m):
     else:
         raise SystemExit("no DWS block in check01 or the null run")
     nz, ny, nx = m["vp"].shape
-    d = np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
-    lo, la = T["regions"][st.REG]["events_lon"], T["regions"][st.REG]["events_lat"]
-    ii = (m["x"] >= lo[0]) & (m["x"] <= lo[1])
-    jj = (m["y"] >= la[0]) & (m["y"] <= la[1])
-    return d[:, jj][:, :, ii]
+    return np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
 
 
 def run_settings():
@@ -94,6 +103,8 @@ def main():
     null = st.zdir("null") / INV / "Output_Files"
     nvp = read_model(null / "Vp_model.dat", (nz, ny, nx)) / m["vp"] - 1
     nvs = read_model(null / "Vs_model.dat", (nz, ny, nx)) / vs0 - 1
+    dwsg = dws_grid(m)
+    dws_min = st.CFG.get("dws_min", 100)
     rows = []
     for ztag, k, nodes in sp:
         o = st.zdir(ztag) / INV / "Output_Files"
@@ -109,7 +120,8 @@ def main():
                 r = dict(ztag=ztag, z=z[k], wave=wave, lon=x[i], lat=y[j], rec=pk / S["amp"],
                          rec_max_win=win.max() / S["amp"], peak_at_node=bool(pk >= win.max() - 1e-9),
                          dz_up=z[k] - z[k - 1], dz_dn=z[k + 1] - z[k], dx_km=0.125 * kx, dy_km=0.1 * KM_DEG,
-                         nul_rms=float(np.sqrt(np.mean(nul[k, j - 2:j + 3, i - 2:i + 3] ** 2))) / S["amp"])
+                         nul_rms=float(np.sqrt(np.mean(nul[k, j - 2:j + 3, i - 2:i + 3] ** 2))) / S["amp"],
+                         dws=float(dwsg[k, j, i]), sampled=bool(dwsg[k, j, i] >= dws_min))
                 if pk / S["amp"] >= MIN_REC:
                     hx = hwhm_1d(dv[k, j, :], x * kx, i)
                     hy = hwhm_1d(dv[k, :, i], y * KM_DEG, j)
@@ -132,6 +144,16 @@ def main():
     by = res.groupby(["wave", "z"]).agg(agg).reindex(sp_df.groupby(["wave", "z"]).size().index)
     by["n_resolved"] = res.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
     by["n"] = sp_df.groupby(["wave", "z"]).size()
+    # DWS mask (PI 2026-11-23): statistics over sampled spikes only (first-iteration P DWS >= dws_min)
+    smp = sp_df[sp_df.sampled]
+    by["n_sampled"] = smp.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
+    by["rec_median_sampled"] = smp.groupby(["wave", "z"]).rec.median().reindex(by.index)
+    by["rec_max_sampled"] = smp.groupby(["wave", "z"]).rec.max().reindex(by.index)
+    by["n_resolved_sampled"] = smp[smp.rec >= MIN_REC].groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
+    bands = pd.cut(sp_df.dws, [-1, 10, 100, 1000, np.inf], labels=["<10", "10-100", "100-1000", ">1000"])
+    sp_df.assign(dws_band=bands).groupby(["wave", "dws_band"], observed=False).rec.agg(
+        n="size", rec_median="median", rec_p75=lambda x: x.quantile(0.75), rec_max="max",
+        n_ge_half=lambda x: int((x >= MIN_REC).sum())).round(3).to_csv(OUT / "recovery_by_dws.csv")
     by.to_csv(OUT / "by_depth.csv", float_format="%.3g")
 
     # per-layer spacing table
@@ -197,5 +219,5 @@ if __name__ == "__main__":
         if st.CFG["name"] != "smooth_test":
             INV = a[a.index("--inv") + 1] if "--inv" in a else st.CFG["inv_tags"][0]
             OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / st.REG / \
-                (f"d{st.CFG['damp']:g}" if os.environ.get("TOMO_RES_DAMP") else "") / f"spike_{INV}"
+                (f"d{st.CFG['damp']:g}" if os.environ.get("TOMO_RES_DAMP") else "") / f"{st.CFG['prefix']}{INV}"
     main()

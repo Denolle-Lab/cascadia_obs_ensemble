@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -59,7 +60,9 @@ def config(name="smooth_test"):
         r = res_cfg()
         s = dict(r["spike"], region=r["region"])
         test = Path(T["runs"]) / r["region"] / r["subdir"]
-        return dict(name=name, S=s, region=r["region"], test=test, prefix="spike_", exact_mod=True,
+        placement = os.environ.get("TOMO_SPIKE_PLACEMENT", "lattice")   # clusters: spikes at event clusters (spikec_*)
+        return dict(name=name, S=s, region=r["region"], test=test, exact_mod=True, placement=placement,
+                    prefix="spikec_" if placement == "clusters" else "spike_", dws_min=r.get("dws_min", 100),
                     inv_tags=[inv_tag(r["damp"], w) for w in r["smooth"]], damp=r["damp"], smooth=r["smooth"])
     raise SystemExit(f"unknown cfg {name}")
 
@@ -168,10 +171,36 @@ def geo_to_mod(lat, lon):
     return forward(lat, lon, json.loads(f.read_text()))
 
 
+def cluster_nodes(m):
+    """Nodes (j, i) under the event clusters: event epicentres (inputs/events.csv) counted at their nearest MOD
+    node, nodes taken by decreasing count, each >= cluster.min_sep_nodes (Chebyshev, i/j) from those kept."""
+    c = S["cluster"]
+    ev = pd.read_csv(INP / "events.csv")
+    lat_m, lon_m = geo_to_mod(ev.lat.to_numpy(float), ev.lon.to_numpy(float))
+    ii = np.abs(m["x"][None, :] - lon_m[:, None]).argmin(1)
+    jj = np.abs(m["y"][None, :] - lat_m[:, None]).argmin(1)
+    cnt = pd.Series(1, index=pd.MultiIndex.from_arrays([jj, ii])).groupby(level=[0, 1]).size().sort_values(ascending=False)
+    out = []
+    for (j, i), n in cnt.items():
+        if 0 < i < len(m["x"]) - 1 and 0 < j < len(m["y"]) - 1 and \
+                all(max(abs(i - i2), abs(j - j2)) >= c["min_sep_nodes"] for j2, i2 in out):
+            out.append((int(j), int(i)))
+        if len(out) >= c["max_spikes"]:
+            break
+    return out
+
+
 def spikes():
-    """(ztag, k, [(j, i), ...]) for each target depth."""
+    """(ztag, k, [(j, i), ...]) for each target depth (lattice, or event clusters when CFG placement = clusters)."""
     m = read_mod(INP / "MOD")
     out = []
+    if CFG.get("placement") == "clusters":
+        nodes = cluster_nodes(m)
+        for zd in S["depths_km"]:
+            k = int(np.argmin(np.abs(m["z"] - zd)))
+            assert abs(m["z"][k] - zd) < 1e-6, f"{zd} km is not a node"
+            out.append((f"z{zd:+04.0f}".replace("+", "p").replace("-", "m"), k, nodes))
+        return m, out
     for zd in S["depths_km"]:
         k = int(np.argmin(np.abs(m["z"] - zd)))
         assert abs(m["z"][k] - zd) < 1e-6, f"{zd} km is not a node"

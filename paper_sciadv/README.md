@@ -9,7 +9,8 @@ seismic behavior of the Juan de Fuca plate system. Started 2026-11-22.
   title, journal, volume, pages. Rebuild with
   `python utils/build_bib.py --out paper_sciadv/references.bib --sources <files with verified DOIs> paper_sciadv/extra_dois.txt`.
   `references_doi_map.csv` maps DOI to key and source; `references_failed.csv` lists any DOI that did not
-  resolve. Add new references to `extra_dois.txt` (one DOI per line), never by hand. One entry
+  resolve. Add new references to `extra_dois.txt` (one DOI per line), never by hand. Sources without a DOI
+  are listed in `references_no_doi.md` and stay out of the bibliography unless the PI decides otherwise. One entry
   (`Anon2025`, a GSA abstract) has no author in its DOI record.
 - Build for Overleaf: `pixi run -e paper python paper_sciadv/build.py` writes `main.tex` and
   `supplementary.tex` (plain article class, natbib, figures with captions from the planned-figure list;

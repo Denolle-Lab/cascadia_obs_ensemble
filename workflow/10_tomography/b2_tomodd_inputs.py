@@ -60,7 +60,7 @@ from b2_fwd_mods import ellipsoid_coords, radii  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
-B1B = Path(P["paths"]["base"]) / "b1b_balanced"
+B1B_DEFAULT = Path(P["paths"]["base"]) / "b1b_balanced"   # a region's `b1b` key selects another version (D-B035: b1b_balanced_c)
 MODEL = Path(P["paths"]["start_model"])
 PROJ = Proj(proj="lcc", lat_0=45.0, lon_0=-125.8, lat_1=41.0, lat_2=49.0, ellps="WGS84")  # = NLL grid
 LOG = []
@@ -78,7 +78,13 @@ def nodes(spec):
 
 
 # ---------------------------------------------------------------- data
+def b1b_dir(R):
+    return Path(P["paths"]["base"]) / R["b1b"] if R.get("b1b") else B1B_DEFAULT
+
+
 def select(R):
+    B1B = b1b_dir(R)
+    log(f"dataset {B1B}")
     ev = pd.read_csv(B1B / "events.csv")
     pk = pd.read_csv(B1B / "picks.csv")
     if R.get("extra_b1b"):                            # extra events/picks in B1b format (b2_shallow_events.py)
@@ -345,7 +351,7 @@ def main():
                                "events.csv", "picks_used.csv", "summary.json", "forward.json", "station_corr.csv")
              if (out / f).exists()]
     write_manifest(f"b2_tomodd_inputs_{region}", out,
-                   inputs=[B1B / "events.csv", B1B / "picks.csv", REPO / F["statics_file"],
+                   inputs=[b1b_dir(R) / "events.csv", b1b_dir(R) / "picks.csv", REPO / F["statics_file"],
                            MODEL / "cascadia3d.P.mod.buf", MODEL / "cascadia3d.S.mod.buf"],
                    outputs=files, params={"tomodd": T, "region": region}, counts=summ)
 

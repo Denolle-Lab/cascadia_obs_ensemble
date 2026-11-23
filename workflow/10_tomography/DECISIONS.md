@@ -296,3 +296,43 @@ checkerboards 40/60/100 km at smoothing 10/20/40; pick noise, both pattern phase
 smoothing 20) on a spike lattice 8 nodes apart inside each events box, plus the real-data damping/smoothing scan
 (d500/1000/2000 at s20, s10/s40 at d1000). Driver: b2_res_pipeline.sh (detached, resumable, publishes to GitHub).
 Damping and smoothing per tile are chosen after these runs, as for Mendocino-Gorda.
+
+### D-B034 FORMAT-fixed tomoDD builds for the new tiles (adopted, 2026-11-23, agent; bug fix)
+tomoDD-SE.f line 2324 (and tomoDD-SE_syn.f) writes the "Location summary" with `f7.3")"`, a missing comma that
+gfortran's runtime rejects ("Missing comma between descriptors") in some runs: always in the -fcheck=bounds build
+(notes/forward_accuracy.md 7.4), never in the Mendocino-Gorda production runs, and in every ridges_north run after the
+first LSQR (exit 2, no model written). Fix: `f7.3,")"` in both writes; nothing else changed. Builds O3nofs_fmt,
+chk_fmt, O3nofs_o140_fmt, chk_o140_fmt (binaries *_fmt in tomo_v1/bin), selected per tile with `bins`. A ridges_north
+test (d1000, s20) with the fixed build ran to the end (exit 0, 12 location summaries). Mendocino-Gorda v2 and v2s keep
+the original builds, so their results stay reproducible; the forward (syn) builds are unchanged.
+
+### D-B035 Offshore forearc kept: soft selection rule and OBS keep all picks (adopted, 2026-11-23, PI)
+PI: offshore Washington is hard to image but should be in the model, poorly constrained if need be, with the
+bootstrap ensemble grading it; balancing should not remove regions from the map. Before this change the D-B003
+selection kept 371 of 2,196 v4-NLL3D events off Washington (west of 124.6 W) and 123 of 761 off Oregon (west of
+124.3 W), mostly losing events to nphs >= 12 and gap <= 200; B1b then dropped all 223 OBS picks of Washington-tile
+events, because the 17 OBS there passed only the ridge bar and kept only ridge-event picks.
+Changes: (1) the region `Offshore forearc` uses the D-B023 soft rule (tiers A-D, nphs >= 8, gap <= 270, rms <= 0.5,
+1 km declustering; after B1b >= 6 picks, gap <= 300); (2) `balance.ridge.obs_keep_all`: an OBS admitted by the soft
+station bar keeps all its picks, not only soft-rule ones (88 OBS, +3,346 picks). Weights unchanged (w_bin, region
+targets), so dense regions stay down-weighted. Outputs versioned: b1_dataset_c, b1b_balanced_c (B1 inputs identical,
+picks file = catalog v4.0, md5 17b7d0bced600f8c83e4e1a8c5881e38); b1_dataset / b1b_balanced are kept and
+mendocino_gorda_v2 / v2s (ensemble work) stay on them.
+Result: 28,986 events (was 24,249), 754,710 picks (689,602), 521 stations (475); weighted region shares 13.2-13.3 %
+each (ridges group 7.1 %, weight clipped at 3).
+
+| tile (events box as D-B033) | events old -> c | stations | OBS stations | OBS picks | offshore forearc events |
+|---|---|---|---|---|---|
+| mendocino_gorda (-> mendocino_gorda_c) | 9,334 -> 12,191 | 153 -> 161 | 111 -> 113 | 97,823 -> 102,789 | 1,471 -> 4,296 |
+| blanco | 4,294 -> 4,378 | 81 -> 87 | 81 -> 87 | 83,640 -> 85,293 | 25 -> 87 |
+| oregon | 3,061 -> 3,390 | 156 -> 181 | 21 -> 39 | 771 -> 2,005 | 138 -> 470 |
+| washington | 7,968 -> 9,332 | 189 -> 225 | 0 -> 22 | 0 -> 297 | 556 -> 1,921 |
+| ridges_north | 1,489 -> 1,592 | 78 -> 82 | 73 -> 76 | 14,153 -> 14,537 | 0 -> 91 |
+
+Offshore Washington stays recorded mostly by land stations (297 OBS picks over 22 OBS), so expect poor resolution
+there; the checkerboards and the ensemble will say how poor. New builds for the sizes (FORMAT-fixed, D-B034):
+O3nofs_e13k_fmt / chk_e13k_fmt (MAXEVE 13000, MAXDATA 2e6) for mendocino_gorda_c, O3nofs_w_fmt / syn_w_fmt /
+chk_w_fmt (MAXSTA 260, MAXOBS 140) for washington. The tile runs started under D-B033 on the old dataset were stopped
+and deleted before any result (logs in b2_tomodd/_superseded_pre_DB035/).
+Not done here: CASIE21 (2021 active-source survey off Washington and Oregon) as a constraint on the shallow offshore
+starting model / prior; to be taken up with the starting-model items (D-B005, D-B030).

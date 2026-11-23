@@ -72,7 +72,10 @@ def main():
         dlp = (vp / vp0 - 1)[inner]
         dls = (vs / vs0 - 1)[inner]
         drat = (vp / vs - vp0 / vs0)[inner]
-        rel = pd.read_csv(run / "Output_Files" / "tomoDD.reloc", sep=r"\s+", header=None)
+        fr = run / "Output_Files" / "tomoDD.reloc_geo"          # D-B028 P-2: back-transformed if present
+        if not fr.exists():
+            fr = run / "Output_Files" / "tomoDD.reloc"
+        rel = pd.read_csv(fr, sep=r"\s+", header=None)
         rel = rel.set_index(0)
         s = start.reindex(rel.index)
         dh = np.hypot((rel[1] - s.lat) * 111.19, (rel[2] - s.lon) * 111.19 * np.cos(np.radians(s.lat)))

@@ -105,7 +105,7 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       forward:                             # D-B028; absent = first build (sphere, box, no correction, old statics)
         coords: ellipsoid                  # P-2: ellipsoid | sphere (rescaled lat/lon, b2_fwd_mods.ellipsoid_coords)
         mod: nearest                       # P-3: nearest (NLL rock column at the node) | box (model_box_avg_km mean)
-        station_corr: true                 # P-4: subtract median(tomoDD - P-1 reference) per station-phase
+        station_corr: true                 # P-4: ADD c = median(tomoDD - P-1 reference) per station-phase (D-B031)
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv   # P-6 (b2_fwd_statics.py)
         p1_reference: mendocino_gorda_v2/p1_reference   # under tomodd.runs (b2_fwd_p1.py)
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)

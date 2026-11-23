@@ -125,8 +125,15 @@ epicenters of the same events lie 10–20 km east.
 Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
 including the 8 December 2016 Mw 6.6 on the Mendocino transform (10 at the northern edge, 3 offshore in
 2016 without ocean-bottom stations, 1 in the 2016 northern California pick gap, 1 on the Blanco in 2011;
-script in the figure notes). [TO ASK Ian: association of the 2016 Mw 6.6 (event 172113 at 14:51:18, 4 P
-and 1 S, placed near Mount St. Helens).] Depth limitations: 23.5% of events above
+script in the figure notes). Event 172113 (14:51:18, 4 P and 1 S, near Mount St. Helens) is the Mw 6.6 mis-associated: its P picks
+are the Pn arrivals at 708–797 km, within 2 s of iasp91, and should be flagged. We repicked the Mw 6.6, its
+M 4.7 aftershock and the January 2016 Gorda pair on 30-minute windows of all stations within 4° (279 for
+the Mw 6.6, 193 of them `NC`/`BK`) with the same ELEP ensemble, kept the picks near the predicted
+arrivals from the ComCat origins, and located them with NonLinLoc in the 3D model of the relocation and
+in iasp91. The picks are clean to 400 km (Mw 6.6: 146 P, 54 S), but every station is east of the events
+(nearest 156 km, gap 255–310°): depths go to the bottom of every search range and epicenters move 7–41 km
+west of ComCat. The three missing events are added with the ComCat hypocenter and magnitude and our
+picks (branch `fix/m66-2016`, `data/catalog_v4/fixes/m66_2016/`). Depth limitations: 23.5% of events above
 the surface with depths read below sea level, 16.2% below the local surface; 3D relocation in progress.
 
 # Text S6. Clustering: validation and sensitivity

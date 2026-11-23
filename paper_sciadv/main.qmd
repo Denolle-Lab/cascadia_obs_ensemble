@@ -175,9 +175,11 @@ from our picks are the tests.
 The moving array also shows where the catalog is blind. Along the western Mendocino transform,
 seismicity appears along the whole segment when ocean-bottom stations were within 120 km, and only
 events near the coast or above M 4 remain when they were not (Fig. 6D). The Mw 6.6 of 8 December 2016,
-after the array left, is missing from the catalog; only its M 4.7 aftershock is there, and an event
-mislocated near Mount St. Helens 93 s after the origin time is probably part of its wavefield wrongly
-associated. Of the 61 ComCat earthquakes of M ≥ 5 in 2010–2016 inside the catalog area, 46 are in the
+after the array left, is missing from catalog v4: no northern California picks exist in 2016, the nearest
+picks that day were 300 km away, and four of its Pn arrivals at 708–797 km were associated into a spurious
+event near Mount St. Helens. Repicking 279 stations recovers it (146 P and 54 S picks on 148 stations,
+156–400 km), but with all stations to the east and a 255° gap our epicenter falls 20–41 km west of
+ComCat and the depth is unresolved; we add it with the ComCat hypocenter and our picks (Text S5). Of the 61 ComCat earthquakes of M ≥ 5 in 2010–2016 inside the catalog area, 46 are in the
 catalog; 10 of the 15 missing lie north of 49.3°N at the edge of the network, 3 are offshore in 2016
 (the Mw 6.6 and an M 5.1–5.0 pair in the Gorda plate), 1 is in northern California in 2016, where picks
 are missing (Text S5), and 1 is on the Blanco in 2011. Rates over years offshore cannot be read from this
@@ -237,7 +239,7 @@ ground), so dips and depth extents of the surfaces are provisional; the 3D reloc
 [TO UPDATE]. The per-region Mc keeps 27,555 events for the clustering, so volcanic microswarms are below
 it. Several fault planes, including the Gorda source, cannot be chosen between conjugates without focal
 mechanisms, which we will compute from our own picks. Catalog v4 misses 15 of the 61 ComCat events of
-M ≥ 5, most at the northern edge of the network and offshore in 2016 [TO UPDATE after the 2016 repick].
+M ≥ 5, most at the northern edge of the network and offshore in 2016 (the 2016 Mw 6.6 and Gorda M 5.1–5.0 are added from a repick with ComCat hypocenters, Text S5).
 
 # Materials and Methods
 

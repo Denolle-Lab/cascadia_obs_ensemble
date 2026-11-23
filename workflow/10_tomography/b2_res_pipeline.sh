@@ -77,9 +77,11 @@ check01_ok() {   # notes/forward_accuracy.md 7.4: the -fcheck=bounds build stops
   # tomoDD-SE.f line 2324 (production builds do not); pass = exit 0, or that stop with no array-bound error before it
   local d=$RUNS/$REGION/check01
   grep -q "exit 0" $RUNS/$REGION/check01.log 2>/dev/null && return 0
-  grep -q "At line 2324 of file tomoDD-SE.f" $d/stdout.txt 2>/dev/null &&
-    grep -q "Missing comma between descriptors" $d/stdout.txt && grep -q "~ lsqr" $d/stdout.txt &&
-    ! grep -qi "out of bounds\|Index '" $d/stdout.txt
+  # the Fortran runtime error goes to stderr (time.txt); stdout.txt holds binary bytes, hence grep -a
+  local f="$d/stdout.txt $d/time.txt"
+  cat $f 2>/dev/null | command grep -aq "At line 2324 of file tomoDD-SE.f" &&
+    cat $f | command grep -aq "Missing comma between descriptors" && cat $f | command grep -aq "~ lsqr" &&
+    ! cat $f | command grep -aqi "out of bounds\|Index '"
 }
 
 parallel_py() {   # run "args" lines (one python call each) with at most $1 at a time

@@ -93,14 +93,44 @@ def select(R):
         assert not xe.ID.isin(ev.ID).any(), "extra events overlap B1b"
         log(f"extra_b1b {X}: {len(xe)} events, {len(xp)} picks appended")
         ev, pk = pd.concat([ev, xe], ignore_index=True), pd.concat([pk, xp], ignore_index=True)
-    (la0, la1), (lo0, lo1) = R["events_lat"], R["events_lon"]
     mla, mlo = R["station_margin_deg"]
-    e = ev[ev.lat.between(la0, la1) & ev.lon.between(lo0, lo1)].copy()
-    p = pk[pk.event_ID.isin(e.ID) & pk.sta_lat.between(la0 - mla, la1 + mla)
-           & pk.sta_lon.between(lo0 - mlo, lo1 + mlo)].copy()
-    log(f"events in box {len(e)}; picks {len(p)} (of {int(pk.event_ID.isin(e.ID).sum())} for these events; "
-        f"the rest are at stations outside the box + margin)")
-    return e, p
+    # events_boxes (joint tiles, whole-margin M0): union of [lat0, lat1, lon0, lon1] boxes, stations in the union of
+    # the boxes + margin; else the single events_lat/events_lon box
+    boxes = R.get("events_boxes") or [[*R["events_lat"], *R["events_lon"]]]
+    in_e = np.zeros(len(ev), bool)
+    in_s = np.zeros(len(pk), bool)
+    for la0, la1, lo0, lo1 in boxes:
+        in_e |= (ev.lat.between(la0, la1) & ev.lon.between(lo0, lo1)).values
+        in_s |= (pk.sta_lat.between(la0 - mla, la1 + mla) & pk.sta_lon.between(lo0 - mlo, lo1 + mlo)).values
+    e = ev[in_e].copy()
+    p = pk[pk.event_ID.isin(e.ID).values & in_s].copy()
+    log(f"events in {len(boxes)} box(es) {len(e)}; picks {len(p)} (of {int(pk.event_ID.isin(e.ID).sum())} for "
+        f"these events; the rest are at stations outside the box + margin)")
+    if R.get("decluster"):
+        e, p = decluster(e, p, R["decluster"])
+    return e, p, q_of(pk).max()
+
+
+def q_of(p):
+    return p.w_bal * (0.05 / p.sigma_s) ** 2
+
+
+def decluster(e, p, D):
+    """Keep the keep_per_cell best-recorded events (most picks kept, then most S picks) per
+    cell_km x cell_km x depth_cell_km cell (B1b Lambert x_km, y_km; depth below sea level)."""
+    n = p.groupby("event_ID").size().rename("n_pk")
+    ns = p[p.phase == "S"].groupby("event_ID").size().rename("n_s")
+    d = e.set_index("ID").join(n).join(ns).fillna({"n_pk": 0, "n_s": 0})
+    c, cz = float(D["cell_km"]), float(D["depth_cell_km"])
+    d["cell"] = list(zip(np.floor(d.x_km / c).astype(int), np.floor(d.y_km / c).astype(int),
+                         np.floor(d.depth_bsl_km / cz).astype(int)))
+    d = d.sort_values(["n_pk", "n_s"], ascending=False, kind="mergesort")
+    keep = d.groupby("cell", sort=False).head(int(D["keep_per_cell"])).index
+    e2 = e[e.ID.isin(keep)].copy()
+    p2 = p[p.event_ID.isin(keep)].copy()
+    log(f"declustered ({D}): {len(e2)} of {len(e)} events kept in {d.cell.nunique()} cells; "
+        f"picks {len(p2)} of {len(p)}")
+    return e2, p2
 
 
 def obs_statics(p, F):
@@ -115,14 +145,20 @@ def obs_statics(p, F):
     return p
 
 
-def weights(p):
+def weights(p, R, q_dataset_max):
+    """w = clip_max * q / q_ref. q_ref = largest q of the region's picks (default, builds before D-B045), or of
+    the whole dataset (region key weights_scale: dataset), so that one pick has one weight in every tile. tomoDD
+    scales the G columns after adding the smoothing rows, so the weight scale sets the data/smoothing balance."""
     W = T["weights"]
-    q = p.w_bal * (0.05 / p.sigma_s) ** 2
-    q = W["clip_max"] * q / q.max()                   # best pick -> clip_max; relative weights unchanged
+    q = q_of(p)
+    scale = R.get("weights_scale", "region")
+    q_ref = {"region": q.max(), "dataset": q_dataset_max}[scale]
+    q = W["clip_max"] * q / q_ref                     # best pick -> clip_max; relative weights unchanged
     p["w_raw"] = q
     p["w"] = np.clip(q, 0.0, W["clip_max"])
-    log(f"weights: median P {p.w[p.phase == 'P'].median():.3f}, S {p.w[p.phase == 'S'].median():.3f}; "
-        f"clipped at {W['clip_max']}: {int((q > W['clip_max']).sum())} picks ({100 * (q > W['clip_max']).mean():.2f}%)")
+    log(f"weights (scale {scale}, q_ref {q_ref:.4f}): median P {p.w[p.phase == 'P'].median():.3f}, "
+        f"S {p.w[p.phase == 'S'].median():.3f}; clipped at {W['clip_max']}: {int((q > W['clip_max']).sum())} "
+        f"picks ({100 * (q > W['clip_max']).mean():.2f}%)")
     return p
 
 
@@ -207,7 +243,7 @@ def write_mod(path, R, F, center):
     xi, yi = nodes(R["node_lon"]), nodes(R["node_lat"])
     zi = np.array(R.get("node_z", T["node_z"]), float)
     z_model = zi[zi <= 80]
-    box = 1 if F["mod"] == "nearest" else T["model_box_avg_km"]
+    box = 1 if F["mod"] == "nearest" else R.get("model_box_avg_km", T["model_box_avg_km"])   # M0: ~node spacing
     VP, VS = sample_model(xi, yi, z_model, box)
     # fill any interior column outside the NLL grid with the nearest valid column
     bad = np.isnan(VP[:, :, 0])
@@ -286,9 +322,9 @@ def main():
     center = (round(float(np.mean(R["events_lat"])), 3), round(float(np.mean(R["events_lon"])), 3))
     log(f"forward settings (D-B028): {F}")
 
-    e, p = select(R)
+    e, p, q_dataset_max = select(R)
     p = obs_statics(p, F)
-    p = weights(p)
+    p = weights(p, R, q_dataset_max)
     st = p.groupby("station")[["network", "sta_lat", "sta_lon", "sta_elev_km", "is_obs"]].first().reset_index()
     st["code"] = [f"S{i:04d}" for i in range(len(st))]
     p["code"] = p.station.map(dict(zip(st.station, st.code)))

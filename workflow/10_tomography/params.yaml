@@ -269,6 +269,104 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         station_corr: true
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv
         p1_reference: ridges_north_v2/p1_reference
+    # T6 joint-vs-stitched test (notes/merge_design.md; PI go 2026-11-23): blanco + oregon as one tile. Events and
+    # stations = union of the two tiles' boxes (events_boxes); events_lat/lon = bounding box (centre, plots only).
+    # Interior lon nodes on the blanco lattice, 88 + 2 boundary = maxnx 90. Weights on the dataset scale (D-B045).
+    blanco_oregon:                         # first build (P-1 picks)
+      b1b: b1b_balanced_c
+      bins:                                # 242 stations: MAXSTA 260 / MAXOBS 140 builds (as washington)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      events_boxes: [[42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0]]
+      events_lat: [42.6, 46.4]
+      events_lon: [-130.6, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -120.475, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+    blanco_oregon_v2:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt         # md5 85875a89eec843eebe3e81374a4b670e
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt      # md5 ccbc7193712e24819ca9a560f0a6c72f
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      events_boxes: [[42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0]]
+      events_lat: [42.6, 46.4]
+      events_lon: [-130.6, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -120.475, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+      damp: 200                            # D-B045
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco_oregon.csv
+        p1_reference: blanco_oregon_v2/p1_reference
+    # T6 stitched side: oregon_v2 rebuilt on the dataset weight scale (D-B045); P-1 reference and OBS S statics of
+    # oregon_v2 reused. blanco_v2 needs no rebuild: its largest pick weight is the dataset's.
+    oregon_v2g:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+      damp: 200                            # D-B045
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv
+        p1_reference: oregon_v2/p1_reference
+    # M0 (D-B044): coarse whole-margin inversion, the common starting model of every tile. Events of the five tile
+    # boxes declustered to 2 per 10 x 10 x 10 km cell (6,943 of 28,816); ~0.375 x 0.3 deg nodes; start = D-B005
+    # model averaged over a 31 km box (node spacing, no aliasing of single columns); weights on the dataset scale.
+    margin_m0:                             # first build (P-1 picks)
+      b1b: b1b_balanced_c
+      bins:                                # 518 stations, 109 per event: MAXSTA 560 / MAXOBS 130 builds (11-23)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt         # md5 27599b20ecff18dbbf23e73c2c805114 (src tomoDD_opt/O3nofs_m_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt      # md5 3e680298e29463fddbfc5e5bcd3fd8b1 (chk_m_fmt)
+      limits: {MAXSTA: 560, MAXOBS: 130}
+      events_boxes: [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0],
+                     [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]]
+      events_lat: [39.5, 50.0]
+      events_lon: [-131.0, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -120.125, 0.375]
+      node_lat: [38.9, 50.6, 0.3]
+      decluster: {cell_km: 10, depth_cell_km: 10, keep_per_cell: 2}
+      model_box_avg_km: 31
+      weights_scale: dataset
+    margin_m0_v2:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt         # md5 27599b20ecff18dbbf23e73c2c805114
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt      # md5 3e680298e29463fddbfc5e5bcd3fd8b1
+      limits: {MAXSTA: 560, MAXOBS: 130}
+      events_boxes: [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0],
+                     [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]]
+      events_lat: [39.5, 50.0]
+      events_lon: [-131.0, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -120.125, 0.375]
+      node_lat: [38.9, 50.6, 0.3]
+      decluster: {cell_km: 10, depth_cell_km: 10, keep_per_cell: 2}
+      model_box_avg_km: 31
+      weights_scale: dataset
+      damp: 200                            # D-B045 (one damping for all); d1000 run alongside for the CND record
+      forward:
+        coords: ellipsoid
+        mod: box                           # box average at the node spacing (coarse grid), not the nearest column
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv
+        p1_reference: margin_m0_v2/p1_reference
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -389,3 +487,14 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       - [mendocino_gorda_c_v2, oregon_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d1000_s20, d300_s20]]]
       - [blanco_v2, ridges_north_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d200_s20], [d1000_s20, d200_s20]]]
       - [oregon_v2, washington_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d1000_s20]]]
+    t6:                            # T6 joint vs stitched (b2_t6_joint.py; PI go 2026-11-23), damping D-B045
+      joint: [blanco_oregon_v2, d200_s20]
+      tile_a: [blanco_v2, d200_s20]          # dataset weight scale = its own (largest pick weight is the dataset's)
+      tile_b: [oregon_v2g, d200_s20]         # oregon_v2 rebuilt on the dataset weight scale
+      mask_tiles: [blanco_v2, oregon_v2]     # checkerboard masks at d200 (oregon_v2g has none: oregon_v2's used)
+      taper_km: 15                           # resolution window taper (M3: one to two node spacings)
+      floor: 0.1                             # M3 placeholder, set from T3 later
+      yardsticks:                            # diff rms of these pairs, inside the first run's events box
+        damp200_vs_300_A: [blanco_v2, d200_s20, blanco_v2, d300_s20]
+        damp200_vs_300_B: [oregon_v2, d200_s20, oregon_v2, d300_s20]
+        weightscale_B: [oregon_v2, d200_s20, oregon_v2g, d200_s20]

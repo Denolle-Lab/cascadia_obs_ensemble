@@ -397,3 +397,32 @@ damping 100); one spike >= 50 % (21 km, 49.2 N, 128.0 W, DWS 271). None of the f
 northern Blanco and Axial that pass at damping 100 passes at 200, so the D-B038 exception volume stays as written
 there (reported from the damping-100 model inside its mask) unless the PI drops it. Set in params
 tomodd.regions.ridges_north_v2.damp.
+
+### D-B044 Common starting model from a coarse whole-margin inversion, M0 (adopted, 2026-11-23, PI; P-M2 (a))
+One coarse tomoDD inversion of the whole margin (region margin_m0_v2) becomes the starting model of every tile, as
+in the California statewide model (Lin et al. 2010; notes/merge_design.md M0). Set-up: events of the five tile boxes
+declustered to the two best-recorded events (most picks, then most S picks) per 10 x 10 x 10 km cell (6,943 of
+28,816 events, 229,308 picks, 518 stations); interior nodes 0.375 x 0.3 deg (32 x 40) on the shared depth nodes;
+start = the D-B005 model averaged over a 31 km box at each node (the node spacing; a single nearest column would
+alias at 30 km spacing); forward fixes as the tiles (D-B028 P-1, P-2, P-4, P-6); weights on the dataset scale
+(D-B045); damping 200, with a damping-1000 run for the condition-number record; smoothing 20. New tomoDD build for
+518 stations (MAXSTA 560, MAXOBS 130; array sizes only, tomoDD_opt/O3nofs_m_fmt and chk_m_fmt). After review of M0,
+each tile's damping run and resolution tests are rerun from it (about one day of the machine). Fallback if M0 fails
+review: the D-B005 model sampled once (M1).
+
+### D-B045 One damping for all tiles: 200, on one weight scale (adopted, 2026-11-23, PI; P-M1)
+The PI asked for one small damping in every tile. Chosen: damping 200, smoothing 20 in every tile and in M0 (the
+value already set for ridges_north, D-B043). At 200 against 300 the resolved area is the same (Blanco Vp at 15 km:
+19,558 against 19,783 km2) and Oregon's weighted RMS is the same (0.1505 against 0.1511), with more air quakes
+(Oregon: 10 against 4 repeats, 24 events of 3,382 lost against 10); Mendocino-Gorda and Washington have not been run
+below 500. Condition numbers (first iteration) will be higher than the Mendocino-Gorda benchmark (Blanco 284, Oregon
+347, ridges_north 119 at 200) and are recorded, not used to choose.
+Weight scale: pick weights were scaled per tile (w = 3 q / max q of the tile's picks), so one pick had a different
+weight in each tile (largest q: Blanco and ridges_north 4.941, Mendocino-Gorda 2.788, Oregon and Washington 1.646).
+tomoDD-SE adds the smoothing rows before it scales the G columns to unit norm (tomoDD-SE.f lines 1694-2064), so the
+weight scale sets the balance of data against smoothing and damping: the same damping number was a different
+regularisation in each tile. From now on every build uses one scale, the largest q of the whole dataset (4.941;
+region key weights_scale: dataset). Blanco and ridges_north inputs are unchanged by this; Oregon and Washington
+weights drop to a third, Mendocino-Gorda to 0.56. The column scaling also divides by the number of data rows, so
+the same damping still weighs less in a tile with more data; that part is left as is (it is what the condition
+number shows). Applies to M0, the T6 test and the tile reruns from M0.

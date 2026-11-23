@@ -37,7 +37,7 @@ Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting mo
 3. **Grid and ray-tracer accuracy test.** Velocity grid with top edge at or above -4 km (bounds check check01 on Mendocino-Gorda 55x49x23: clean, 4.9 min, 2.6 GB, 2026-11-22); travel-time
    accuracy of the pseudo-bending tracer (10 km minimum segment, hard-coded) against a fine reference
    (D-B015 analogue for tomoDD); one bounds-checked run per new grid.
-4. **Bayesian ensemble design (D-B029, note notes/bayes_design.md).** Randomize-then-optimize over the
+4. **Bayesian ensemble design (D-B030, note notes/bayes_design.md).** Randomize-then-optimize over the
    starting model (published models + smooth random perturbations), station statics (priors per station
    class from the v4-NLL3D terms), pick noise per class and damping/smoothing; ~100 members per region
    as parallel serial jobs; compiler, flags and machine pinned (D-B026: last-bit differences move
@@ -58,10 +58,7 @@ Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting mo
 
 ## Open questions for the PI
 
-* D-B028 (proposed): keep current node_z; repeat the spike test at the L-curve weights and per new grid (notes/smoothing_test.md).
-  Coordinator note: the number D-B028 is already used in DECISIONS.md (forward-model fixes, adopted by the PI),
-  whose P-3 adopts finer depth nodes (1 km to 9 km, 2 km to 49 km). This smoothing proposal needs its own number
-  and has to be reconciled with P-3 before the v2 inputs are used.
+* Resolved: depth nodes kept, smoothing spike test adopted as D-B029 (PI, 2026-11-22; amends D-B028 P-3).
 
 * Ridges weight held at the clip of 3 (7.5% of the misfit weight instead of 12.5%): keep? (notes/balanced.md)
 * Far-station picks (D-B012) re-admitted after a forward check in the starting model: still wanted with tomoDD?

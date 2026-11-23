@@ -223,3 +223,16 @@ Consequences: the v4-NLL3D catalog (atlas layer "preliminary") was located with 
 Mendocino-Gorda L-curve (summary_runs.csv, damping 100-3000) used the old MOD and statics and is superseded
 except as a guide for damping (~1000, CND ~60). The Bayesian ensemble design becomes D-B029.
 
+### D-B029 Depth nodes kept; smoothing checked by spike test (adopted, 2026-11-22, PI; amends D-B028 P-3)
+Spike test of tomoDD smoothing against uneven node spacing (notes/smoothing_test.md, parallel session; proposed
+there under the label "D-B028", renumbered here): at smooth 20/20/10, spikes in the resolved crust (12-34 km) are
+not broadened (factor 1.0-1.1 laterally and vertically); above 12 km almost nothing is resolved at node scale
+(1 of 25 spikes at 3 and 7 km), so the upper crust is coverage-limited. PI: choose the option grounded in that
+physics. Decision: keep the current node_z (21 interior depth nodes); from D-B028 P-3 keep only the nearest-NLL-
+rock-column sampling (forward sampling error +0.018 / +0.031 s instead of +0.012 / +0.017 s with 42 levels; the
+difference is far below pick sigma and partly absorbed by the P-4 station corrections). Finer upper-crust nodes
+would add unresolved parameters, double derivatives per ray and worsen thin-layer smoothing. Repeat the spike test
+at the smoothing and damping finally selected and on every new region grid; if broadening in the resolved crust
+exceeds ~1.5, move to more even spacing in 0-40 km. Report upper-crust structure only where spike/checkerboard
+tests show recovery. The Bayesian ensemble design becomes D-B030.
+

@@ -1,0 +1,131 @@
+{
+ "name": "b2_smooth_spike_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_smooth_spike_analyse.py",
+ "argv": [
+  "--cfg",
+  "res_tests",
+  "--inv",
+  "inv_d300_s40"
+ ],
+ "utc": "2026-11-23T15:38:27.466016+00:00",
+ "git_commit": "443b36d8733bc8b3c670c4a551af382c53001623",
+ "git_dirty": false,
+ "params_md5": "f0981d0cef332098450ffed517172425",
+ "params": {
+  "min_rec": 0.5,
+  "amp": 0.05,
+  "depths_km": [
+   -1,
+   3,
+   7,
+   12,
+   21,
+   34,
+   55
+  ],
+  "lon": [
+   -130.75,
+   -129.75,
+   -128.75,
+   -127.75
+  ],
+  "lat": [
+   44.6,
+   45.4,
+   46.2,
+   47.0,
+   47.8,
+   48.6,
+   49.4
+  ],
+  "region": "ridges_north_v2",
+  "smooth": [
+   40.0,
+   40.0,
+   20.0
+  ],
+  "damp": 300.0,
+  "cfg": "res_tests",
+  "inv": "inv_d300_s40"
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zm001/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:33:52.659392+00:00",
+   "md5": "dfa20624bc0af1e2847499be76dd985d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp003/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:34:06.912315+00:00",
+   "md5": "29be6db4846969ba7d3445903c2e9f94"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp007/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:34:38.676146+00:00",
+   "md5": "f1b869a02ccf88ad128165cdf0127f3c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp012/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:35:08.625995+00:00",
+   "md5": "a4d324b1f5485ba25877a9c00dba528a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp021/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:35:27.277894+00:00",
+   "md5": "150abbf2bea81562430a716e6bba87c7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp034/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:35:29.684881+00:00",
+   "md5": "cc6caba70cc54efc3099b83f19b202cb"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_zp055/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:36:05.624690+00:00",
+   "md5": "6b89f60671d970e643536a6debdca29f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/spike_null/inv_d300_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:33:20.185567+00:00",
+   "md5": "d71644d0162825b4df47a9a8dc2f7f67"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d300/spike_inv_d300_s40/spikes.csv",
+   "size": 25789,
+   "mtime": "2026-11-23T15:38:26.968945+00:00",
+   "md5": "d136812ccab4748d293cb0431af6de0e"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d300/spike_inv_d300_s40/by_depth.csv",
+   "size": 384,
+   "mtime": "2026-11-23T15:38:26.974945+00:00",
+   "md5": "e19e568f1c51bd2fb1984b987a566ec9"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d300/spike_inv_d300_s40/layers.csv",
+   "size": 1013,
+   "mtime": "2026-11-23T15:38:26.993945+00:00",
+   "md5": "513abb6b7ee7dc18688a6fcf3e134c23"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d300/spike_inv_d300_s40/psf.png",
+   "size": 125213,
+   "mtime": "2026-11-23T15:38:27.463942+00:00",
+   "md5": "5fccd3e1a55638ce0245753f602feb71"
+  }
+ ],
+ "counts": {
+  "spikes": 392
+ },
+ "notes": null
+}

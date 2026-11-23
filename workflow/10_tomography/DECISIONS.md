@@ -256,3 +256,13 @@ tests show recovery. The Bayesian ensemble design becomes D-B030.
   (debug build only). Production 1-iteration run: 284 s, 2.65 GB. P-1 1 km region grids kept (4.8 GB); they are
   region-limited and not the B4 grids.
 
+### D-B030 Bayesian uncertainty by randomize-then-optimize ensemble (adopted, 2026-11-22, PI; design notes/bayes_design.md)
+Ensemble of full tomoDD inversions, each with its own draws of: starting model (mixture of the v4-NLL3D model with
+Vp/Vs 1.76 / 1.73 / 1.80, plus Delph et al. 2018 where it covers the region, each with a 3% Vp and Vs random field,
+correlation 30 km laterally and 8 km in depth, tapered below 60 km), station statics (OBS S around the D-B031
+statics, others around 0), forward-error offsets, pick noise (class factors by empirical Bayes), starting hypocentres
+(v4-NLL3D covariance), damping (700-1500) and smoothing. Members: 100 for the synthetic calibration, 200 for real
+data per region. Gate: synthetic calibration (68/95% interval coverage on resolved nodes and hypocentres) must pass
+before any real-data ensemble. B4 relocates all events in 20 ensemble models for location uncertainty. Damping
+baseline 1000 (CND ~60, Mendocino-Gorda v2 scan); smoothing chosen from spike/checkerboard tests (D-B029 repeat).
+

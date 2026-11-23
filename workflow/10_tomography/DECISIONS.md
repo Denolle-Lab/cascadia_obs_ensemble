@@ -144,3 +144,23 @@ within 100 km (n >= 10); else no static (pick kept uncorrected). B1 classes: 95,
 13 OBS keep a static < -0.5 s (was 45), none below -0.91 s. P: no OBS statics (terms ~0).
 Literature sediment delays (D-B019 proposal) are used only as an independent check of the shelf statics,
 not applied. Follow-up for B2: check whether the starting Vp/Vs of 1.76 is too high in the oceanic plate.
+
+### D-B021 tomoDD instead of TomoATT (adopted, 2026-11-22, PI; supersedes D-B007, and D-B014 where it assumed TomoATT)
+The tomography uses tomoDD (Zhang & Thurber) with the catalog v4 picks as absolute travel times, plus
+catalog differential times built from the same picks. tomoDD solves Vp, Vp/Vs and hypocentres in one run, so
+the separate P/S runs and outer loop of D-B014 are not needed. Consequences to work out (notes, next steps):
+Cartesian grid and compile-time array sizes, so the margin is split into overlapping sub-regions of up to
+~400 km (curvature ~38 km over 700 km); source and build need PI approval. Uncertainty from a Bayesian
+ensemble over station terms, pick noise and the starting velocity model (design to come, D-B023).
+
+### D-B022 B1b balanced dataset of well-recorded stations (adopted, 2026-11-22, PI approved the plan)
+Core stations: per phase >= 100 picks (land) / 30 (OBS), >= 3 (land) / 2 (OBS) back-azimuth sectors of
+45 deg and >= 2 of 4 distance bins with >= 5 picks each; P or S may pass. Weights instead of a cap:
+w_bin = min(1, 40/n) per station, phase, 25 km x 30 deg bin; region weights to equal shares over 7 regions
+(clip 0.33-3); events keep >= 10 core picks and gap <= 200. Result: 424 stations (174 OBS), 22,976 events,
+677,235 picks; station Gini 0.65 -> 0.39, top-50 share 0.37 -> 0.29, region shares 7.8-24.2% -> 13.8-14.4%,
+Kish n_eff 462k. Alternatives: hard cap per bin (K = 40 loses a third of the picks and 7.5k events with >= 10
+picks; region shares unchanged), P-only coverage test (drops S-rich Mendocino/Gorda OBS), 3 sectors for
+OBS (drops the Blanco arrays, linear geometry). Evidence: notes/balanced.md, data/tomo_v1/b1b_balanced/.
+Params: params.yaml `balance`.
+

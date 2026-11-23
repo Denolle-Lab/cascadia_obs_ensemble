@@ -30,7 +30,7 @@ station_terms:                   # D-B006
   static_terms_in_tomography: false
 
 code:                            # D-B007
-  tomography: TomoATT            # version/commit recorded after build (notes/tomoatt_build.md)
+  tomography: tomoDD             # D-B021 (supersedes D-B007 TomoATT); version recorded after build
 
 pick_qc:                         # proposed, see notes/dataset.md (to be fixed in D-B009)
   require_iter1_weight: true     # drop picks NLLoc gave EDT weight 0 in iter1 (station outside the tile grids)
@@ -45,3 +45,20 @@ pick_qc:                         # proposed, see notes/dataset.md (to be fixed i
 
 obs:                             # proposed, see notes/dataset.md (D-B006 exception, to be fixed in D-B010)
   identify_by: seafloor flag of stations_ver5_v6.csv (same set as GTSRCE zSrce > 0.1 km)
+
+balance:                         # D-B022 (B1b): balanced dataset of well-recorded stations
+  min_P_land: 100                # B1 picks of one phase (P, or S if P fails) for a land station
+  min_P_obs: 30                  # lower bar for OBS (deployments ~1 year)
+  sector_deg: 45                 # back-azimuth sectors for the coverage test
+  min_sectors: 3                 # land
+  min_sectors_obs: 2             # OBS: linear Blanco/Gorda arrays see events from 2 sectors (X9, Z5, 7D)
+  dist_edges_km: [50, 100, 200]  # distance bins 0-50, 50-100, 100-200, >200 km
+  min_dist_bins: 2
+  min_per_bin: 5                 # P picks for a sector / distance bin to count
+  bin_dist_km: 25                # path-redundancy bins (per station and phase)
+  bin_az_deg: 30
+  K_per_bin: 40                  # w_bin = min(1, K / n_bin)
+  regions: [Puget/Georgia, Other onshore, Cascades, Mendocino, Gorda, Blanco, Offshore forearc]
+  region_w_clip: [0.33, 3.0]
+  post_min_picks: 10             # events: picks at core stations
+  post_max_gap_deg: 200

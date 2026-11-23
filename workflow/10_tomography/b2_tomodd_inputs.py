@@ -55,7 +55,7 @@ from scipy.spatial import cKDTree
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
-from b2_fwd_common import RE, tomodd_forward  # noqa: E402
+from b2_fwd_common import RE, mod_velocity, tomodd_forward  # noqa: E402
 from b2_fwd_mods import ellipsoid_coords, radii  # noqa: E402
 
 P = load_params()
@@ -239,12 +239,28 @@ def sample_model(xn, yn, zn_int, box_km):
     return VP, VS
 
 
+def sample_run(spec, xn, yn, zn_int):
+    """Vp, Vs of a finished run (<runs>/<region>/<tag>/Output_Files/model_geo.npz, geographic nodes after the
+    D-B028 back-transform) at these nodes, with tomoDD's trilinear lookup (b2_fwd_common.mod_velocity)."""
+    f = Path(T["runs"]) / spec / "Output_Files" / "model_geo.npz"
+    g = np.load(f)
+    m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=g["vp"], vs=g["vs"])
+    LON, LAT, Z = np.meshgrid(xn, yn, zn_int, indexing="ij")
+    VP = mod_velocity(m, "P", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
+    VS = mod_velocity(m, "S", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
+    log(f"start model from {f}: {len(xn)} x {len(yn)} x {len(zn_int)} nodes, Vp {VP.min():.2f}-{VP.max():.2f} km/s")
+    return VP, VS
+
+
 def write_mod(path, R, F, center):
     xi, yi = nodes(R["node_lon"]), nodes(R["node_lat"])
     zi = np.array(R.get("node_z", T["node_z"]), float)
     z_model = zi[zi <= 80]
     box = 1 if F["mod"] == "nearest" else R.get("model_box_avg_km", T["model_box_avg_km"])   # M0: ~node spacing
-    VP, VS = sample_model(xi, yi, z_model, box)
+    if R.get("start_model"):                         # D-B044: start from a finished run (M0), "<region>/<tag>"
+        VP, VS = sample_run(R["start_model"], xi, yi, z_model)
+    else:
+        VP, VS = sample_model(xi, yi, z_model, box)
     # fill any interior column outside the NLL grid with the nearest valid column
     bad = np.isnan(VP[:, :, 0])
     if bad.any():

@@ -1,0 +1,92 @@
+# Catalog registry for the location / velocity-model comparison (workflow/11_compare/compare_catalogs.py).
+# Add one entry per new location run; never edit an entry once a figure or the atlas has used it (add a new id).
+#
+# Fields
+#   id         short name used in tables, figures and the atlas
+#   label      human-readable name
+#   adapter    reader: v4 | v3_origins | nll_catalog | nll_run | tomodd_reloc
+#   file       path (absolute, or relative to the repo root)
+#   keyed_v4   true if event IDs are catalog v4 IDs; false -> matched to the reference by origin time
+#   velocity   velocity model used for the locations
+#   method     location method
+#   parent     catalog whose picks / events this run starts from
+#   status     final | preliminary | superseded
+#   date       when the locations were produced
+#   atlas      true -> shown as a catalog in the 3D atlas
+
+reference: v4.1          # shifts are measured from this catalog
+benchmark: anss          # ComCat/ANSS events 2010-2016 (data/magnitude_v4/anss_2010-16.csv)
+
+catalogs:
+  - id: v3
+    label: Catalog v3 (Zenodo record, 2010-2015)
+    adapter: v3_origins
+    file: data/catalog_v3/origins_v3.csv
+    keyed_v4: false
+    velocity: PNSN 1D regional models
+    method: GENIE association, GraphDD + cross-correlation relocation (ver3 picks)
+    parent: null
+    status: superseded
+    date: 2026-09-30
+    atlas: false
+
+  - id: v4.0
+    label: Catalog v4.0 (GENIE + GraphDD)
+    adapter: v4
+    file: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv
+    keyed_v4: true
+    velocity: PNSN 1D regional models (I. McBrearty)
+    method: GENIE association, GraphDD relocation (ver6 picks)
+    parent: null
+    status: superseded
+    date: 2026-11-21
+    atlas: false
+
+  - id: v4.1
+    label: Catalog v4.1 (v4.0 + 2016 repick)
+    adapter: v4
+    file: data/catalog_v4/Cascadia_relocated_catalog_v4.csv
+    keyed_v4: true
+    velocity: PNSN 1D regional models (I. McBrearty); ComCat for 3 added events
+    method: GENIE + GraphDD; targeted ELEP repick of four 2016 offshore events
+    parent: v4.0
+    status: final
+    date: 2026-11-22
+    atlas: true
+
+  - id: NLL3D-i0
+    label: v4-NLL3D iteration 0 (no station terms)
+    adapter: nll_run
+    file: /wd1/mdenolle_data/reloc_v5/runs/iter0_vpvs176/locations.csv
+    keyed_v4: true
+    velocity: CRESCENT Gen0 Vs + Brocher Vp, Vp/Vs >= 1.76, literature 1D at the ridges
+    method: NonLinLoc EDT, 3D grids, no station terms
+    parent: v4.1
+    status: superseded
+    date: 2026-11-22
+    atlas: false
+
+  - id: NLL3D-i1
+    label: v4-NLL3D iteration 1 (static station terms)
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv
+    keyed_v4: true
+    velocity: CRESCENT Gen0 Vs + Brocher Vp, Vp/Vs >= 1.76, literature 1D at the ridges
+    method: NonLinLoc EDT, 3D grids, static station terms from iteration 0; tiers A-D, U = v4 kept
+    parent: NLL3D-i0
+    status: preliminary
+    date: 2026-11-22
+    atlas: true
+
+  # Template for Track B (tomoDD) relocations -- uncomment when a run is accepted:
+  # - id: tomoDD-MG1
+  #   label: tomoDD Mendocino-Gorda, model 1
+  #   adapter: tomodd_reloc
+  #   file: /wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda/<run>/tomoDD.reloc
+  #   keyed_v4: true
+  #   velocity: tomoDD Vp, Vs (run <run>)
+  #   method: tomoDD-SE joint inversion, double differences
+  #   parent: NLL3D-i1
+  #   status: preliminary
+  #   date: 2026-xx-xx
+  #   atlas: true

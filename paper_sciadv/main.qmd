@@ -72,8 +72,22 @@ rate 10% of 2013–2015) comes from missing northern California picks, not from 
 These maps bound every comparison between places and times in this study. Epicenters are
 reliable enough to place offshore earthquakes on bathymetric features: on the Gorda Ridge, catalog
 epicenters fall on the axial valley, while ComCat epicenters of the same events lie 10–20 km east
-(Text S5). Absolute depths are not yet reliable: 23.5% of events plot above the seafloor or ground in the
-current locations, and a relocation in a 3D velocity model is under way [TO UPDATE].
+(Text S5). Absolute depths depend on the velocity model, so we track every location version with the same
+measures (Text S8; Fig. S8; Table S7). In catalog v4 23.5% of events plot above the seafloor or ground.
+Relocating the same events in a 3D model moves epicenters by a median of 2.4 km (15% by more than 5 km)
+and depths by a median of 2.7 km downward, and puts no event above the surface. Where a station with a pick
+lies closer than the event depth, the median depth difference with ComCat goes from −1.0 km (v4) to
++0.4 km (3D) with the same spread (2.4 km). Where no station is near, depths follow the model: offshore
+Gorda events sit 3.7 km deeper than ComCat, and the Explorer median depth goes from 9 to 33 km. These
+numbers will change with the locations in the tomography model [TO UPDATE].
+
+## Seismic velocity structure
+
+[TO UPDATE when the tomography model is final.] Joint Vp and Vs tomography with double-difference
+relocation (tomoDD) in overlapping regions, starting with Mendocino–Gorda, on a travel-time dataset
+balanced across stations and regions (Materials and Methods; Fig. 7). Placeholder for: the main
+velocity anomalies, their resolution, and how relocating every event in the new model changes the
+faults and depths of the previous sections.
 
 ## Seventy percent of earthquakes lie on 141 rectangular faults
 
@@ -250,8 +264,20 @@ Continuous data from 728 land and ocean-bottom stations, 40–50°N and 131–12
 the Cascadia Initiative ocean-bottom array, were picked with an ensemble of EQTransformer models
 [@Mousavi2020; @Yuan2023] in SeisBench [@Woollam2022]. Picks were associated with GENIE
 [@McBrearty2023] and located with a graph-network double-difference method [@McBrearty2025] (catalog
-v4, I. McBrearty). Pick completion, quality control and data issues are in Text S5. [TO UPDATE: 3D
-relocation, NonLinLoc and GrowClust, catalog v5.]
+v4, I. McBrearty). Pick completion, quality control and data issues are in Text S5. Every later
+location version (NonLinLoc in a 3D starting model, then the tomography model) is registered with its
+velocity model and method and compared with the same measures: depth distribution, events above the
+surface, shift from catalog v4, depth and epicenter differences with ComCat for events near and far
+from stations, and the spread of events about each fault surface (Text S8; code
+`workflow/11_compare/`). [TO UPDATE: 3D relocation, NonLinLoc and GrowClust, catalog v5.]
+
+## Tomography
+
+[TO UPDATE.] tomoDD [@Zhang2003] inverts P and S absolute and differential travel times for Vp, Vs and
+hypocenters in overlapping regions. Travel times come from the stations that recorded the most events,
+weighted so that no station, distance–azimuth bin or region dominates. Resolution from spike and
+checkerboard tests; uncertainty from an ensemble of inversions over station terms, pick noise and the
+starting model. Every parameter and decision is logged (`workflow/10_tomography/DECISIONS.md`).
 
 ## Magnitudes and completeness
 
@@ -326,3 +352,6 @@ https://denolle-lab.github.io/cascadia_obs_ensemble/; code: https://github.com/D
   events by year with fault surfaces and ComCat moment tensors (1996–2026, dark: 2010–2016); (D) the
   western Mendocino transform, longitude against time, with periods when ocean-bottom stations were
   within 120 km (blue) and ComCat Mw ≥ 5 (stars).
+- **Fig. 7.** Tomography (`figures/fig7_tomography`, from `workflow/08_figures/tomo_figures.py`) [TO UPDATE]:
+  depth slices of Vp and Vs perturbations and Vp/Vs, masked where rays are too few, with the relocated
+  events; cross-sections through the Mendocino transform and the Gorda plate; resolution test.

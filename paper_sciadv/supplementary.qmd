@@ -169,6 +169,33 @@ clustering is at or above all three methods everywhere except the Blanco b-value
 against 2.45). At Axial the frequency–magnitude distribution has two slopes, so the pooled goodness-of-fit
 value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4–1.0).
 
+# Text S8. Location versions and their differences
+
+(Code: `workflow/11_compare/compare_catalogs.py` and `fig_compare.py`; registry
+`workflow/11_compare/catalogs.yaml`; outputs and `SUMMARY.md` in `data/catalog_compare/`.)
+Each location run is entered once in the registry with its velocity model, method, parent catalog and
+status, and is read into one table layout. Events are linked to the catalog v4 event IDs, directly for
+runs that relocate v4 events and by origin time (≤ 3 s, ≤ 50 km) for catalog v3. The same measures are
+computed for every version, overall and in eleven regions: depth percentiles (km below sea level), the
+share of events above the topography or bathymetry (GMT earth_relief, 1 arc-minute), the shift from
+catalog v4.1 for the same events, and the depth and epicenter differences with ComCat events matched to
+v4.1 (16,584 events, ≤ 3 s and ≤ 50 km). "Near" events have a station with a pick closer than
+max(depth, 5 km). The spread of events about each fault surface (RMS distance to the best-fitting plane
+of its members) is also computed, but it favors v4, on which the surfaces were fitted, and it is lower
+for double-difference catalogs than for single-event locations by construction.
+
+Current versions (Table S7, Fig. S8): v3 (Zenodo record; ver3 picks, GraphDD), v4.0 and v4.1 (GENIE
+and GraphDD on ver6 picks in 1D models; v4.1 adds the 2016 repick), and the NonLinLoc relocation of the
+v4 events in a 3D starting model without (iteration 0) and with (iteration 1) static station terms.
+Iteration 1 locates 157,267 events; the 15,073 others keep their v4 location (tier U). Station terms
+change locations little (median 0.8 km horizontally, 0.1 km in depth). Against v4.1, iteration 1 moves
+epicenters by a median of 2.4 km and depths by +2.7 km (10–90%: −3.7 to +10.6 km). Against ComCat, near
+events go from −1.0 ± 2.4 km (v4.1) to +0.4 ± 2.4 km (median ± MAD); all matched events from
+−0.9 ± 3.8 km to +1.2 ± 4.2 km, the deep bias of poorly constrained events. By region, the 3D locations
+remove the shallow bias of v4 at Axial (median 0.3 to 3.0 km, 71% to 0% above the seafloor) and on the
+Juan de Fuca ridges, and push Gorda (+3.7 km against ComCat, near events) and Mendocino (+2.8 km)
+deeper. Each new run (tomography relocations, GrowClust) is added to the registry and to this text.
+
 # Supplementary tables (files)
 
 - Table S1. Events and share on a fault, per region.
@@ -180,3 +207,7 @@ value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4
   rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`); grids in
   `mc_grid.csv`, `mc_grid_<period>.csv` and NetCDF. Figs. S3–S7: three-method maps, bootstrap sigma and b,
   periods, regional frequency–magnitude distributions, QC variant (`data/catalog_v4/mc_maps/fig1–fig5`).
+- Table S7. Location versions compared: whole catalog and per region (`data/catalog_compare/summary.csv`,
+  `anss.csv`, `pairs.csv`, `faults_summary.csv`; readable tables in `SUMMARY.md`). Fig. S8: depth, depth
+  against ComCat and events above the surface by region and version, and the change from v4.1 to the
+  latest version (`figures/figS_catalog_compare`).

@@ -60,3 +60,33 @@ Mount Hood test (`a2_model_1d_test.py`, tile t33_30, 269 events, nearest station
 `pnsn_wa` gives median depth -1.0 km, `pnsn_nor` 8.1 km, the 3D model 16.7 km, all at RMS 0.26-0.29 s;
 ANSS 4.3 km. Depths without a station within ~2 focal depths follow the velocity model, not the data.
 The 3D model is the deepest of the three, which matches the deep bias of tiers B-D against ANSS.
+
+## A3a. Frame transfer: v4 (GraphDD) geometry in the Track A frame (2026-11-23)
+
+Question: the 3D relocation fixes depths but loses the double-difference tightness of v4 where single-event
+NLL errors are large. `a3_frame_transfer.py` keeps the v4 relative positions and moves them by the
+**smoothed** NLL-minus-v4 shift (median of up to 300 NLL events within R km, at least 10). The event-by-event
+remainder of the shift is treated as NLL error and dropped. Events without enough neighbours keep the NLL
+location (tier U: v4). This is an interim product until B5 (double-difference relocation in the final
+3D model, with cross-correlation times); the same script can be rerun on the B4 catalog.
+
+First check (R = 5 km, iter1, NLL-located events): local thickness 0.53 (v4) / 0.49 (NLL) / 0.46 km
+(transfer); depth IQR in 1 km columns 3.87 / 2.67 / 1.95 km; above surface 23.0% / 0.4% / 1.1%. The 3D
+catalog spreads in depth only at Gorda, Mendocino and the offshore forearc. NLL depths pile up on grid
+nodes at Axial (10% at 3.01 km) and Blanco (7.03, 9.98, 11.01 km): `pinning.csv` tracks this.
+
+Radius test (R = 1, 2, 3, 5, 7.5, 10, 15 km; NLL `depth` and `exp_depth`), run detached:
+
+    cd ~/wt_reloc   # worktree of reloc/track-a
+    setsid nohup ~/cascadia_obs_ensemble/.pixi/envs/amplitude/bin/python \
+        workflow/08_relocation/a3_frame_transfer.py \
+        > /wd1/mdenolle_data/reloc_v5/frame_transfer/run.log 2>&1 < /dev/null &
+    pgrep -af a3_frame_transfer        # running?  DONE marker: data/reloc_v5/a3_frame_transfer/DONE
+
+(The `default` pixi env fails to import pandas on this host, GLIBCXX; the `amplitude` env works.)
+Outputs: catalogs `/wd1/mdenolle_data/reloc_v5/frame_transfer/catalog_xfer_{depth,exp_depth}_R*.csv.gz`
+(all 172,340 events; `src` = xfer / nll3d / v4; field `fE fN fZ` in km, `n_field`, `r_eff_km`); QC tables in
+`data/reloc_v5/a3_frame_transfer/` (`metrics.csv`, `consistency.csv`, `field.csv`, `pinning.csv`, `run_meta.json`).
+How to choose R: the largest radius that keeps most tier A-B transfers within the NLL uncertainty
+(`consistency.csv`, `in_1sig_z`, `in_hmax`) while thickness and depth IQR still drop (`metrics.csv`).
+Tighter is not automatically better: the final test is the fit to cross-correlation differential times.

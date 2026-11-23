@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalog v4 Science Questions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#fbfaf7; --fg:#1d1c1a; --muted:#6b6862; --line:#e4e1d9; --card:#ffffff; --accent:#a45a12; --warn-bg:#fdf3e2; --warn:#7a4a0c; --link:#1f5f8b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141413; --fg:#ebe9e3; --muted:#9c998f; --line:#2c2b28; --card:#1b1b19; --accent:#e8a33d; --warn-bg:#2a2213; --warn:#e3bf7c; --link:#8cc3ea; color-scheme:dark; } }
+:root[data-theme="dark"] { --bg:#141413; --fg:#ebe9e3; --muted:#9c998f; --line:#2c2b28; --card:#1b1b19; --accent:#e8a33d; --warn-bg:#2a2213; --warn:#e3bf7c; --link:#8cc3ea; color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:15.5px/1.6 "Source Serif 4", Georgia, serif; }
+.wrap { max-width:900px; margin:0 auto; padding-block:40px 80px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); }
+h1,h2,h3,h4,.sans,table,nav { font-family:"IBM Plex Sans", system-ui, sans-serif; }
+h1 { font-size:28px; margin:0 0 6px; letter-spacing:-0.01em; }
+.sub { color:var(--muted); font:14px/1.5 "IBM Plex Sans", sans-serif; margin:0 0 26px; }
+h2 { font-size:21px; margin:46px 0 10px; padding-top:14px; border-top:1px solid var(--line); }
+h3 { font-size:16.5px; margin:26px 0 6px; }
+h4 { font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); margin:18px 0 6px; font-weight:500; }
+a { color:var(--link); }
+.mono, code { font-family:"IBM Plex Mono", monospace; font-size:0.86em; }
+.box { background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:12px 16px; margin:18px 0; font-family:"IBM Plex Sans", sans-serif; font-size:14px; }
+.box ul { margin:6px 0 0; padding-left:20px; }
+.tbl { overflow-x:auto; margin:14px 0; }
+table { border-collapse:collapse; width:100%; font-size:13.5px; }
+th, td { text-align:left; vertical-align:top; padding:7px 9px; border-bottom:1px solid var(--line); }
+th { font-weight:500; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:0.05em; }
+td.n { text-align:right; font-family:"IBM Plex Mono", monospace; font-size:12.5px; white-space:nowrap; }
+ol.refs { padding-left:22px; } ol.refs li { margin:0 0 10px; }
+.cite { font-family:"IBM Plex Sans", sans-serif; font-size:13.5px; }
+.why { display:block; color:var(--fg); margin-top:2px; }
+.q { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 14px; margin:10px 0; }
+.q b { font-family:"IBM Plex Sans", sans-serif; font-size:14.5px; }
+.q p { margin:6px 0 0; font-size:14.5px; }
+.lab { font-family:"IBM Plex Sans", sans-serif; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-right:4px; }
+nav.toc { font-size:13.5px; columns:2; column-gap:30px; margin:10px 0 0; }
+nav.toc a { display:block; text-decoration:none; padding:2px 0; }
+.flag { color:var(--accent); font-family:"IBM Plex Sans", sans-serif; font-size:12.5px; }
+@media (max-width:600px) { nav.toc { columns:1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Catalog v4: science questions by region</h1>
+<p class="sub">Cascadia OBS ensemble catalog v4 (Ian's final catalog on the ver6 picks), 2010–2016 · literature, open questions, a fault-model plan · 21 November 2026</p>
+
+<p>For each subregion of the margin, this note lists five peer-reviewed papers to interpret what v4 shows, and the open questions a 2010–2016 catalog can realistically answer. It ends with what a seismicity-based 3D fault model would add, and how to put uncertainties on its surfaces. The v4 magnitudes (our Route A ML) were computed today and are summarized first. A 3D atlas of the catalog with faults, slab and coupling sits next to this file.</p>
+
+<div class="box"><b>Read before interpreting anything below</b>
+<ul>
+<li><b>Depth datum.</b> v4 depths are relative to an unconfirmed datum, sea level or seafloor. Offshore, water depth is 1.5–4 km, about the thickness of the oceanic crust. Every crust/mantle or interface/slab statement waits on Ian's answer.</li>
+<li><b>Absolute locations.</b> v4 is not relatively relocated. Fault-scale structure (planes, ring faults, cluster widths) needs cross-correlation double-difference relocation first.</li>
+<li><b>Station coverage changes by year.</b> Rates follow deployments: X9 (Sep 2012–Oct 2013, Blanco), Z5 (Sep 2013–Oct 2015, 40–44.7°N), 7D (Jul 2011–Oct 2015), OO at Axial (from late 2014). <span class="flag">New finding:</span> south of 42°N, the NC and BK networks contribute almost no v4 picks in 2010–2011 (NC: 456 picks in 2010, against 51,092 in 2014) and none in 2016. Events there in 2010–2011 rest on PB borehole and TA stations. Check whether NC data are missing from the pick tables for those years before reading any Mendocino or Gorda rate change.</li>
+<li><b>Magnitudes</b> are new (below). Use a completeness magnitude per region and per deployment period before any b-value or productivity comparison.</li>
+<li><b>Sources.</b> Five research passes found the papers, and every DOI was checked against its Crossref record. A few content notes rest on the abstract or on the reviewer's knowledge of the paper; they are marked. Three citations need a check on the publisher page (listed at the end).</li>
+</ul></div>
+
+<nav class="toc">
+<a href="#mag">v4 magnitudes</a><a href="#summary">Summary by region</a>
+<a href="#endeavour">Endeavour – Explorer – Nootka</a><a href="#axial">Axial Seamount</a>
+<a href="#wa">Offshore Washington</a><a href="#puget">Puget Lowland</a>
+<a href="#or">Offshore Oregon</a><a href="#blanco">Blanco transform</a>
+<a href="#gorda">Gorda plate</a><a href="#mendocino">Mendocino triple junction</a>
+<a href="#faults">A 3D fault model from v4</a><a href="#uncert">Uncertainty on fault surfaces</a>
+<a href="#atlas">The 3D atlas</a><a href="#checks">Citations to check</a>
+</nav>
+
+<h2 id="mag">v4 magnitudes</h2>
+<p>Same chain as v3: Route A Wood-Anderson amplitudes, now taken from the per-station-day tables (ver5 r2 and ver6), with the window chosen per arrival from its distance, then station terms, ComCat ML anchoring and the preferred magnitude. Outputs are in <code>data/magnitude_v4/</code>; the driver is <code>scale/run_magnitude_v4.sh</code>.</p>
+<div class="tbl"><table>
+<tr><th>Step</th><th>Result</th></tr>
+<tr><td>Arrivals with an amplitude</td><td class="n">2,492,125 of 2,503,189</td></tr>
+<tr><td>Observations after SNR ≥ 3</td><td class="n">1,556,507</td></tr>
+<tr><td>Events with ML</td><td class="n">130,767 of 172,340 (76%)</td></tr>
+<tr><td>ComCat ML anchors (2010–2016)</td><td class="n">3,416; residual std 0.21</td></tr>
+<tr><td>Preferred type</td><td class="n">ML 130,652 · Mw (tensor) 80 · Mw_cal 35</td></tr>
+<tr><td>ML − tensor Mw</td><td class="n">Mw 3–4.5: −0.02 · 4.5–5.5: −0.79 · 5.5+: −1.01</td></tr>
+<tr><td>v4 − v3 ML, 41,111 shared events</td><td class="n">median +0.12 (offshore +0.19, onshore +0.03)</td></tr>
+<tr><td>Ian's column − ours</td><td class="n">offshore +0.31 · onshore −0.15</td></tr>
+</table></div>
+<p>Our ML matches ComCat tensors below Mw 4.5 and saturates above, as in v3, so the tensor Mw takes over there. Ian's magnitude column runs about 0.3 high offshore and should not be published. Our v4 values sit 0.12 above v3 on shared events, more offshore. The station terms now include many more ocean-bottom stations, which probably explains it; check this before the paper's magnitude numbers are updated. phase19 needed one fix: its Theil-Sen fit is O(n²) in memory (121 GiB for v4), so it now fits a fixed random subsample of 5,000 events, which leaves v3 results unchanged.</p>
+
+<h2 id="summary">Summary by region</h2>
+<div class="tbl"><table>
+<tr><th>Region</th><th class="n">v3 QC</th><th class="n">v4 QC</th><th class="n">Median depth</th><th>Most promising question</th></tr>
+<tr><td>Endeavour – Explorer</td><td class="n">903</td><td class="n">1,019</td><td class="n">12.4 km</td><td>Partition between Sovanco, the junction and Nootka; are the deep events real?</td></tr>
+<tr><td>Axial Seamount</td><td class="n">0</td><td class="n">19,186</td><td class="n">0.2 km</td><td>Does an independent ML catalog reproduce the 2015 pre-eruption acceleration?</td></tr>
+<tr><td>Offshore Washington</td><td class="n">1,864</td><td class="n">2,755</td><td class="n">17.8 km</td><td>Is the shallow megathrust quiet or under-detected?</td></tr>
+<tr><td>Puget Lowland</td><td class="n">4,704</td><td class="n">9,204</td><td class="n">15.6 km</td><td>Do crustal events concentrate on Seattle, Tacoma, SWIF?</td></tr>
+<tr><td>Offshore Oregon</td><td class="n">808</td><td class="n">1,063</td><td class="n">10.0 km</td><td>Are the 44.5°N clusters on fixed structure or upper-plate faults?</td></tr>
+<tr><td>Blanco transform</td><td class="n">1,487</td><td class="n">21,082</td><td class="n">8.7 km</td><td>Along-strike coupling and its stability over 2012–2015</td></tr>
+<tr><td>Gorda plate</td><td class="n">21,997</td><td class="n">28,610</td><td class="n">21.5 km</td><td>Inherited weak zones; slab vs plate-interior deformation</td></tr>
+<tr><td>Mendocino triple junction</td><td class="n">19,253</td><td class="n">25,460</td><td class="n">21.6 km</td><td>Interface share of seismicity; aseismic slip on the Mendocino fault</td></tr>
+</table></div>
+<p class="sans" style="font-size:13px;color:var(--muted)">QC: ≥ 4 P and ≥ 4 S picks (v3 also RMS &lt; 2.5 s). Boxes as in the paper's map presets; Gorda and Mendocino overlap.</p>
+
+<!-- ======================================================================= -->
+<h2 id="endeavour">Endeavour, Endeavour–Explorer junction, Sovanco, Nootka</h2>
+<p>v4 has 2,439 events here (1,019 QC), 1.5 times v3, with 39% of the picks new (7D, CN, NV). It records the junction, the Sovanco fracture zone, the Nootka area and a cluster near 47.6°N. On the Endeavour segment near the 48°N vent fields there are 283 events (39 QC), against 13 in v3. Shared events moved 8.7 km shallower between v3 and v4, and the median QC depth of 12.4 km is deep for a ridge. Ian should also explain the 906 v3 events that v4 drops.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Weekly, R. T., Wilcock, W. S. D., Hooft, E. E. E., Toomey, D. R., McGill, P. R., &amp; Stakes, D. S. (2013). Termination of a 6 year ridge-spreading event observed using a seafloor seismic network on the Endeavour Segment, Juan de Fuca Ridge. <i>G³</i>, 14(5), 1375–1398. <a href="https://doi.org/10.1002/ggge.20105">10.1002/ggge.20105</a><span class="why">On-axis events sit in the upper few km above the magma lens, which our 12.4 km median does not fit; also the state of the segment just before our window.</span></li>
+<li class="cite">Krauss, Z., Wilcock, W. S. D., Heesemann, M., Schlesinger, A., Kukovica, J., &amp; Farrugia, J. (2023). A long-term earthquake catalog for the Endeavour Segment: Constraints on the extensional cycle and evidence for hydrothermal venting supported by propagating rifts. <i>JGR Solid Earth</i>, 128(2), e2022JB025662. <a href="https://doi.org/10.1029/2022JB025662">10.1029/2022JB025662</a><span class="why">Catalog from the same ONC (NV) stations; location pattern of segment seismicity to compare with our 283 events and the 47.6°N cluster.</span></li>
+<li class="cite">Krauss, Z., Baillard, C., Wilcock, W. S. D., Heesemann, M., Schlesinger, A., &amp; Kukovica, J. (2025). A single-station earthquake catalog for the Endeavour Segment of the Juan de Fuca Ridge (2011–2016): Challenges and implications for the spreading cycle. <i>SRL</i>, 97(1), 369–382. <a href="https://doi.org/10.1785/0220240427">10.1785/0220240427</a><span class="why">Same years as ours: an independent rate history to test whether our on-segment counts follow the 7D deployment.</span></li>
+<li class="cite">Braunmiller, J., &amp; Nábělek, J. (2002). Seismotectonics of the Explorer region. <i>JGR Solid Earth</i>, 107(B10). <a href="https://doi.org/10.1029/2001JB000220">10.1029/2001JB000220</a><span class="why">Moment tensors and centroid depths for Explorer, Sovanco, the junction and Nootka; expected faulting style and depth.</span></li>
+<li class="cite">Hutchinson, J., Kao, H., Spence, G., Obana, K., Wang, K., &amp; Kodaira, S. (2019). Seismic characteristics of the Nootka fault zone: Results from the Seafloor Earthquake Array Japan–Canada Cascadia Experiment (SeaJade). <i>BSSA</i>, 109(6), 2252–2276. <a href="https://doi.org/10.1785/0120190008">10.1785/0120190008</a><span class="why">OBS-constrained depths and mechanisms on Nootka, where deeper events are plausible.</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>How does seismicity divide between Sovanco, the junction and Nootka?</b><p><span class="lab">Analysis</span>Map QC events against the fault traces of Rohr et al. (2018, <a href="https://doi.org/10.1029/2018GC007851">10.1029/2018GC007851</a>) and Hutchinson et al. (2019, 2023); compare matched mechanisms with Braunmiller &amp; Nábělek (2002). <span class="lab">Limits</span>The area sits at the edge of both networks; epicentral errors of several km blur fault-scale structure.</p></div>
+<div class="q"><b>Are the deep hypocentres real?</b><p><span class="lab">Analysis</span>After the datum is fixed, compare depths on-axis (expected &lt; 3 km) with Nootka and Sovanco, and test sensitivity to the velocity model and to the presence of 7D stations. <span class="lab">Limits</span>Stations lie mostly to the east, so depth trades off with origin time. Deep on-axis events after these checks would point to a location problem, not ridge physics.</p></div>
+<div class="q"><b>What was the Endeavour segment doing in 2011–2016?</b><p><span class="lab">Analysis</span>Compare our on-segment rate with Krauss et al. (2025). <span class="lab">Limits</span>39 QC events; small on-axis events are under-detected without local stations, so our count is an upper bound on quiet.</p></div>
+<div class="q"><b>What is the 47.6°N cluster?</b><p><span class="lab">Analysis</span>Timing (single swarm or persistent), waveform similarity, dependence on 7D stations. <span class="lab">Limits</span>Could be an association artifact; no independent catalog unless ComCat or the Canadian catalog has it.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="axial">Axial Seamount</h2>
+<p>New in v4: 26,697 events (19,186 QC), all from the OOI cabled array (OO), on the seafloor since late 2014 and first picked in ver5. The rate climbs from 672 events per month in November 2014 to 8,147 in March 2015, before the 24 April 2015 eruption, drops to 566 in May, and runs near 100 a month into 2016. Events form two lobes along the caldera rim and the south rift, between about −2 and 2 km, with a second cluster at 4–5 km. The caldera floor is about 1.5 km below sea level, so the datum matters most here.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Wilcock, W. S. D., Tolstoy, M., Waldhauser, F., Garcia, C., Tan, Y. J., Bohnenstiehl, D. R., Caplan-Auerbach, J., Dziak, R. P., Arnulf, A. F., &amp; Mann, M. E. (2016). Seismic constraints on caldera dynamics from the 2015 Axial Seamount eruption. <i>Science</i>, 354(6318), 1395–1399. <a href="https://doi.org/10.1126/science.aah5563">10.1126/science.aah5563</a><span class="why">The reference for our window and network: pre-eruption rate rise, outward-dipping ring faults above the reservoir, rate drop after the eruption.</span></li>
+<li class="cite">Nooner, S. L., &amp; Chadwick, W. W. (2016). Inflation-predictable behavior and co-eruption deformation at Axial Seamount. <i>Science</i>, 354(6318), 1399–1403. <a href="https://doi.org/10.1126/science.aah4666">10.1126/science.aah4666</a><span class="why">Uplift and deflation history; test whether our event rate tracks inflation.</span></li>
+<li class="cite">Baillard, C., Wilcock, W. S. D., Arnulf, A. F., Tolstoy, M., &amp; Waldhauser, F. (2019). A joint inversion for three-dimensional P and S wave velocity structure and earthquake locations beneath Axial Seamount. <i>JGR Solid Earth</i>, 124(12), 12997–13020. <a href="https://doi.org/10.1029/2019JB017970">10.1029/2019JB017970</a><span class="why">3-D model and locations from the same stations: the direct check on our depths, the datum and the 4–5 km cluster.</span></li>
+<li class="cite">Waldhauser, F., Wilcock, W. S. D., Tolstoy, M., Baillard, C., Tan, Y. J., &amp; Schaff, D. P. (2020). Precision seismic monitoring and analysis at Axial Seamount using a real-time double-difference system. <i>JGR Solid Earth</i>, 125(5), e2019JB018796. <a href="https://doi.org/10.1029/2019JB018796">10.1029/2019JB018796</a><span class="why">About 100,000 double-difference events; ring faults under 200 m wide. The event-by-event benchmark for completeness and location.</span></li>
+<li class="cite">Carbotte, S. M., Arnulf, A., Spiegelman, M., Lee, M., Harding, A., Kent, G., Canales, J. P., &amp; Nedimović, M. (2020). Stacked sills forming a deep melt-mush feeder conduit beneath Axial Seamount. <i>Geology</i>, 48(7), 693–697. <a href="https://doi.org/10.1130/G47223.1">10.1130/G47223.1</a><span class="why">Where the magma reservoir and sills are, so where brittle failure is and is not expected.</span></li>
+</ol>
+<p class="cite" style="font-size:13px">Also: Wang et al. (2024), machine-learning real-time detection at Axial, <i>SRL</i> 95(5), 2651–2662, <a href="https://doi.org/10.1785/0220240086">10.1785/0220240086</a> (the closest method comparison); Tan et al. (2019), tidal b-value, <i>EPSL</i> 512, 39–45, <a href="https://doi.org/10.1016/j.epsl.2019.01.047">10.1016/j.epsl.2019.01.047</a>.</p>
+<h4>Questions</h4>
+<div class="q"><b>Does an independent ML catalog reproduce the pre-eruption acceleration, and does it find more or fewer events than the double-difference and real-time ML catalogs?</b><p><span class="lab">Analysis</span>Match events in time with Waldhauser et al. (2020) and Wang et al. (2024); compare daily rates, the shape of the acceleration, and the timing of the drop. <span class="lab">Limits</span>No baseline before late 2014; the catalog ends in 2016.</p></div>
+<div class="q"><b>Does b-value change across the eruption, and does rate follow inflation?</b><p><span class="lab">Analysis</span>Moving-window b and Mc against the Nooner &amp; Chadwick uplift curve. <span class="lab">Limits</span>ML calibration for very small, close-recorded events; Mc rises when events overlap at peak rate. Without careful magnitudes this is a consistency check on Tan et al. (2019), not a new result.</p></div>
+<div class="q"><b>Is the 4–5 km seismicity real?</b><p><span class="lab">Analysis</span>Fix the datum, relocate a subset in the Baillard et al. 3-D model, test network dependence and timing. <span class="lab">Limits</span>A 1-D model biases depths under the low-velocity reservoir.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="wa">Offshore Washington forearc</h2>
+<p>2,755 QC events (1,864 in v3), 300–650 a year in 2010–2015, median depth 17.8 km (10–90%: 0.9–30.5 km). Coverage depends on 7D (2011–2015) and coastal stations. The earlier Cascadia Initiative catalog found this part of the margin sparse (Stone et al. 2018), so ours is a large increase that needs checking for false associations.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Stone, I., Vidale, J. E., Han, S., &amp; Roland, E. (2018). Catalog of offshore seismicity in Cascadia: Insights into the regional distribution of microseismicity and its relation to subduction processes. <i>JGR Solid Earth</i>, 123(1), 641–652. <a href="https://doi.org/10.1002/2017JB014966">10.1002/2017JB014966</a><span class="why">STA/LTA catalog from the same OBS data (271 forearc events, 440 seaward of the deformation front); the baseline to beat. Its supplements are already in <code>data/</code>.</span></li>
+<li class="cite">Morton, E. A., Bilek, S. L., &amp; Rowe, C. A. (2023). Cascadia subduction zone fault heterogeneities from newly detected small magnitude earthquakes. <i>JGR Solid Earth</i>, 128(6), e2023JB026607. <a href="https://doi.org/10.1029/2023JB026607">10.1029/2023JB026607</a><span class="why">5,282 subspace-detected events; downdip edge of interplate seismicity at the 20% locking contour; no updip edge found. The direct comparison for our near-interface subset.</span></li>
+<li class="cite">Li, S., Wang, K., Wang, Y., Jiang, Y., &amp; Dosso, S. E. (2018). Geodetically inferred locking state of the Cascadia megathrust based on a viscoelastic Earth model. <i>JGR Solid Earth</i>, 123(9), 8056–8072. <a href="https://doi.org/10.1029/2018JB015620">10.1029/2018JB015620</a><span class="why">States that land geodesy cannot tell whether the shallowest megathrust creeps: the gap seismicity can help fill.</span></li>
+<li class="cite">Han, S., Carbotte, S. M., Canales, J. P., Nedimović, M. R., &amp; Carton, H. (2018). Along-trench structural variations of the subducting Juan de Fuca plate from multichannel seismic reflection imaging. <i>JGR Solid Earth</i>, 123(4), 3122–3146. <a href="https://doi.org/10.1002/2017JB015059">10.1002/2017JB015059</a><span class="why">Bending faults and hydration change near 45.8°N (less faulted to the north): a structural reason for fewer events off Washington.</span></li>
+<li class="cite">Watt, J. T., &amp; Brothers, D. S. (2020). Systematic characterization of morphotectonic variability along the Cascadia convergent margin: Implications for shallow megathrust behavior and tsunami hazards. <i>Geosphere</i>, 17(1), 95–117. <a href="https://doi.org/10.1130/GES02178.1">10.1130/GES02178.1</a><span class="why">Margin segments by wedge shape and vergence; test whether events follow segment boundaries.</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>Is the shallow Washington megathrust aseismic, or are events missed there?</b><p><span class="lab">Analysis</span>Map detection completeness against distance to the deformation front (synthetic events or station-subset bootstrap), then count events within ±5 km of the interface (Slab2 or CASIE21) by distance to the trench, against Morton et al. (2023) and Stone et al. (2018). <span class="lab">Limits</span>Offshore depth errors and the datum; a quiet zone gives only an upper bound on rate, and cannot separate locked from creeping without seafloor geodesy.</p></div>
+<div class="q"><b>Does offshore seismicity follow coupling or structure?</b><p><span class="lab">Analysis</span>Assign each event its coupling under all six models we hold (<code>data/coupling/</code>) and test for density changes at 45.8–46°N and at the Watt &amp; Brothers boundaries, with permutation tests. <span class="lab">Limits</span>The coupling models disagree offshore; results must hold across them.</p></div>
+<div class="q"><b>Does the rate change around ETS episodes?</b><p><span class="lab">Analysis</span>Declustered near-interface rates around PNSN tremor episodes. <span class="lab">Limits</span>7D redeployments change detection year to year; needs a fixed station set or M above completeness; low power with a few hundred events a year.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="puget">Puget Lowland</h2>
+<p>9,204 QC events (4,704 in v3), 1,200–1,600 a year through 2016, median depth 15.6 km: mostly crustal, with fewer intraslab events at 40–60 km. Part of the doubling comes from the 122–123°W strip added in ver6. The 10% depth of 1.1 km suggests quarry blasts to remove.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Brocher, T. M., Parsons, T., Blakely, R. J., Christensen, N. I., Fisher, M. A., Wells, R. E., &amp; SHIPS Working Group (2001). Upper crustal structure in Puget Lowland, Washington: Results from the 1998 Seismic Hazards Investigation in Puget Sound. <i>JGR Solid Earth</i>, 106(B7), 13541–13564. <a href="https://doi.org/10.1029/2001JB000154">10.1029/2001JB000154</a><span class="why">3-D velocity to 11 km and the main fault zones; basin contrasts that bias 1-D locations.</span></li>
+<li class="cite">Blakely, R. J., Wells, R. E., Weaver, C. S., &amp; Johnson, S. Y. (2002). Location, structure, and seismicity of the Seattle fault zone, Washington: Evidence from aeromagnetic anomalies, geologic mapping, and seismic-reflection data. <i>GSA Bulletin</i>, 114(2), 169–177. <a href="https://doi.org/10.1130/0016-7606(2002)114%3C0169:LSASOT%3E2.0.CO;2">10.1130/0016-7606(2002)114&lt;0169:LSASOT&gt;2.0.CO;2</a><span class="why">Seattle fault geometry against seismicity.</span></li>
+<li class="cite">Preston, L. A., Creager, K. C., Crosson, R. S., Brocher, T. M., &amp; Tréhu, A. M. (2003). Intraslab earthquakes: Dehydration of the Cascadia slab. <i>Science</i>, 302(5648), 1197–1200. <a href="https://doi.org/10.1126/science.1090751">10.1126/science.1090751</a><span class="why">Intraslab events split at the 45 km slab-Moho contour: the framework for our deep population.</span></li>
+<li class="cite">Bostock, M. G., Christensen, N. I., &amp; Peacock, S. M. (2019). Seismicity in Cascadia. <i>Lithos</i>, 332–333, 55–66. <a href="https://doi.org/10.1016/j.lithos.2019.02.019">10.1016/j.lithos.2019.02.019</a><span class="why">Where crustal and slab seismicity concentrate relative to the tremor band and fluid pressure.</span></li>
+<li class="cite">Bombardier, M., Cassidy, J. F., &amp; Dosso, S. E. (2026). Does episodic tremor and slip influence seismicity in northern Cascadia? <i>Seismica</i>, 5(1). <a href="https://doi.org/10.26443/seismica.v5i1.1953">10.26443/seismica.v5i1.1953</a><span class="why">Expected ETS signal and the magnitude range where it shows (M &gt; 2.5).</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>Is crustal seismicity concentrated on the Seattle, Tacoma and SWIF zones, or diffuse?</b><p><span class="lab">Analysis</span>Relocate (3-D model or double-difference), measure distance to the CRESCENT CFM fault surfaces at depth against randomized catalogs, check mechanisms against N–S compression. <span class="lab">Limits</span>Blasts, basin bias, and the new station strip. No published study images SWIF or Tacoma at depth from seismicity, so a positive result would be new.</p></div>
+<div class="q"><b>Does crustal or intraslab rate change with ETS?</b><p><span class="lab">Analysis</span>Stack rates around the five or so 2010–2016 episodes by depth class. <span class="lab">Limits</span>Small sample; the effect appears at M &gt; 2.5, where we have few events.</p></div>
+<div class="q"><b>Do deep events split at the slab Moho?</b><p><span class="lab">Analysis</span>Cross-sections against McCrory et al. (2012) and the Preston et al. reflector. <span class="lab">Limits</span>Needs depth errors well below the ~7 km slab crust, which a land network at 40–60 km may not give.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="or">Offshore Oregon forearc</h2>
+<p>1,063 QC events (808 in v3), 60–270 a year, median depth 10.0 km (10–90%: 0.0–30.0 km). It includes the persistent clusters near 44.5°N and events seaward of the deformation front. The 10th percentile at 0.0 km suggests events at a fixed or default depth; flag them first.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Tréhu, A. M., Braunmiller, J., &amp; Davis, E. (2015). Seismicity of the central Cascadia continental margin near 44.5°N: A decadal view. <i>SRL</i>, 86(3), 819–829. <a href="https://doi.org/10.1785/0220140207">10.1785/0220140207</a> <span class="flag">(note from title and reviewer knowledge)</span><span class="why">Long-term record of the 44.5°N clusters, to compare rates and depths.</span></li>
+<li class="cite">Morton, E. A., Bilek, S. L., &amp; Rowe, C. A. (2018). Newly detected earthquakes in the Cascadia subduction zone linked to seamount subduction and deformed upper plate. <i>Geology</i>, 46(11), 943–946. <a href="https://doi.org/10.1130/G45354.1">10.1130/G45354.1</a> <span class="flag">(note from title and reviewer knowledge)</span><span class="why">The structure-control hypothesis our clusters can test with more events.</span></li>
+<li class="cite">Schmalzle, G. M., McCaffrey, R., &amp; Creager, K. C. (2014). Central Cascadia subduction zone creep. <i>G³</i>, 15(4), 1515–1532. <a href="https://doi.org/10.1002/2013GC005172">10.1002/2013GC005172</a> <span class="flag">(note from title and reviewer knowledge)</span><span class="why">Partial creep off central Oregon; a reason to expect more interface microseismicity than off Washington.</span></li>
+<li class="cite">Pearson, A. M., &amp; Schmidt, D. A. (2026). The distribution of interseismic locking on the Cascadia subduction zone using Bayesian methods. <i>Seismica</i>, 2(4). <a href="https://doi.org/10.26443/seismica.v2i4.1701">10.26443/seismica.v2i4.1701</a> <span class="flag">(check volume and year on the Seismica page)</span><span class="why">Bayesian locking with seafloor GNSS; strongest locking off central Oregon, the opposite of Schmalzle et al. A useful pair to test against.</span></li>
+<li class="cite">Carbotte, S. M., Boston, B., Han, S., Shuck, B., Beeson, J., Canales, J. P., Tobin, H., Miller, N., Nedimović, M., Tréhu, A., et al. (2024). Subducting plate structure and megathrust morphology from deep seismic imaging linked to earthquake rupture segmentation at Cascadia. <i>Science Advances</i>, 10(23), eadl3198. <a href="https://doi.org/10.1126/sciadv.adl3198">10.1126/sciadv.adl3198</a><span class="why">The imaged megathrust (CASIE21, now in the atlas): a better reference surface than Slab2 for "near-interface", and domain boundaries to test.</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>Are the Oregon clusters plate-boundary events on fixed structure, or upper-plate faulting?</b><p><span class="lab">Analysis</span>Relative relocation of the 44.5°N and Heceta/Stonewall clusters; depth against CASIE21; polarity mechanisms to separate low-angle thrusts. <span class="lab">Limits</span>Datum (water 0.1–3 km); azimuthal coverage only part of the time.</p></div>
+<div class="q"><b>Does event density follow locking, when the locking models disagree?</b><p><span class="lab">Analysis</span>Density against Schmalzle (creep) and Pearson &amp; Schmidt (locked), and against the Carbotte domains. If density follows structure under both, that points to structural control. <span class="lab">Limits</span>Few events, dominated by clusters; completeness changes as OBS sites move.</p></div>
+<div class="q"><b>What do events seaward of the deformation front say about the incoming plate?</b><p><span class="lab">Analysis</span>Against bending faults and propagator wakes (Han et al. 2018; Carbotte et al. 2024) and the 440 seaward events of Stone et al. <span class="lab">Limits</span>Outside the array: locations yes, mechanisms no.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="blanco">Blanco transform (with northern Gorda Ridge)</h2>
+<p>42,806 events (21,082 QC), 18 times v3. The gain comes from X9 (Sep 2012–Oct 2013) and Z5 (Sep 2013–Oct 2015), first picked in ver5. QC events per year: 3,660 (2012), 10,231 (2013), 4,691 (2014), 2,319 (2015). The seismicity outlines the transform segment by segment. Median depth 8.7 km, with vertical columns where depth is poorly constrained. Four recent papers all use the one-year X9 array; none uses 2013–2015. Z5 covers the Blanco in 2013–2015, so our multi-year view of the transform is likely new.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Braunmiller, J., &amp; Nábělek, J. (2008). Segmentation of the Blanco Transform Fault Zone from earthquake analysis: Complex tectonics of an oceanic transform fault. <i>JGR Solid Earth</i>, 113(B7). <a href="https://doi.org/10.1029/2007JB005213">10.1029/2007JB005213</a><span class="why">Segment and step-over layout and long-term seismic slip rates: labels for our segments and the comparison for any coupling estimate.</span></li>
+<li class="cite">Kuna, V. M., Nábělek, J. L., &amp; Braunmiller, J. (2019). Mode of slip and crust–mantle interaction at oceanic transform faults. <i>Nature Geoscience</i>, 12(2), 138–142. <a href="https://doi.org/10.1038/s41561-018-0287-1">10.1038/s41561-018-0287-1</a><span class="why">Coupled crust, episodic mantle creep that drives swarms and precedes large events. Bears on our deep events.</span></li>
+<li class="cite">Liu, M., &amp; Tan, Y. J. (2025). Evaluating the performance of machine-learning-based phase pickers when applied to ocean bottom seismic data: Blanco oceanic transform fault as a case study. <i>GJI</i>, 242(3), ggaf256. <a href="https://doi.org/10.1093/gji/ggaf256">10.1093/gji/ggaf256</a><span class="why">EQTransformer, PickBlue and OBSTransformer catalogs on X9; PickBlue gives the most events and best locations; gaps on three extensional segments. The closest method analogue to ours.</span></li>
+<li class="cite">Journeau, C., Thomas, A. M., Abercrombie, R. E., Hirao, B. W., Liu, M., &amp; Kuna, V. (2026). OBS data mining reveals seismic structure and dynamics of the oceanic Blanco Transform Fault, Northeast Pacific. <i>JGR Solid Earth</i>, 131(6), e2025JB032982. <a href="https://doi.org/10.1029/2025JB032982">10.1029/2025JB032982</a><span class="why">More than 30,000 events from one year; 2.4 times more events at step-overs; depths that change with method. The caveat for our columns.</span></li>
+<li class="cite">Lange, D., Ren, Y., &amp; Grevemeyer, I. (2026). Seismicity, repeating earthquakes, and tomographic imaging of the Blanco Transform Fault System, Northeast Pacific. <i>JGR Solid Earth</i>, 131(5), e2025JB031584. <a href="https://doi.org/10.1029/2025JB031584">10.1029/2025JB031584</a><span class="why">Events within 2 km of simple strands, repeaters, Vp/Vs above 2; a 3-D model to test our depths.</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>How does seismic coupling vary along strike, and does the pattern hold over 2012–2015?</b><p><span class="lab">Analysis</span>Counts and, with magnitudes, summed moment per segment per year against the Braunmiller &amp; Nábělek slip rates; test whether the step-over contrast and the extensional gaps persist beyond the X9 year. <span class="lab">Limits</span>Completeness changes between X9 and Z5; four years is short next to M6 recurrence (10–20 yr), so rates and b-values are more robust than moment sums.</p></div>
+<div class="q"><b>Are the deep events mantle swarms, or poor depth control?</b><p><span class="lab">Analysis</span>Restrict to events with an OBS within about one focal depth; compare with the 600 °C isotherm and with Journeau and Lange for the overlap year; relocate in the Lange 3-D model. <span class="lab">Limits</span>The datum shifts depth by about a crustal thickness here.</p></div>
+<div class="q"><b>Do swarms migrate, and do they precede larger events?</b><p><span class="lab">Analysis</span>Swarm detection, migration fits, activity before the M5+ events of 2012–2015. <span class="lab">Limits</span>Few M5+ events; repeaters need waveform correlation.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="gorda">Gorda plate</h2>
+<p>28,610 QC events (21,997 in v3) in every year 2010–2015, median depth 21.5 km. It includes the January 2010 M6.5 and March 2014 M6.8 offshore events. The 2010–2011 events rest on PB and TA stations, not NC (see the box at the top).</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">Chaytor, J. D., Goldfinger, C., Dziak, R. P., &amp; Fox, C. G. (2004). Active deformation of the Gorda plate: Constraining deformation models with new geophysical data. <i>Geology</i>, 32(4), 353. <a href="https://doi.org/10.1130/G20178.2">10.1130/G20178.2</a> <span class="flag">(DOI suffix .2 per Crossref; content note from reviewer knowledge)</span><span class="why">Mapped active faults in the plate: check our lineation strikes against them.</span></li>
+<li class="cite">Rollins, J. C., &amp; Stein, R. S. (2010). Coulomb stress interactions among M ≥ 5.9 earthquakes in the Gorda deformation zone and on the Mendocino Fault Zone, Cascadia subduction zone, and northern San Andreas Fault. <i>JGR Solid Earth</i>, 115(B12). <a href="https://doi.org/10.1029/2009JB007117">10.1029/2009JB007117</a><span class="why">Twenty M ≥ 5.9 events since 1976 on four fault orientations, with triggering: a frame for the 2010 and 2014 sequences.</span></li>
+<li class="cite">Chen, X., &amp; McGuire, J. J. (2016). Measuring earthquake source parameters in the Mendocino triple junction region using a dense OBS array: Implications for fault strength variations. <i>EPSL</i>, 453, 276–287. <a href="https://doi.org/10.1016/j.epsl.2016.08.022">10.1016/j.epsl.2016.08.022</a> <span class="flag">(note from the matching AGU abstract)</span><span class="why">Same 7D stations; stress drops and NW–SE faults in the plate; a check on our magnitudes.</span></li>
+<li class="cite">Guo, H., McGuire, J. J., &amp; Zhang, H. (2021). Correlation of porosity variations and rheological transitions on the southern Cascadia megathrust. <i>Nature Geoscience</i>, 14(5), 341–348. <a href="https://doi.org/10.1038/s41561-021-00740-1">10.1038/s41561-021-00740-1</a> <span class="flag">(note from reviewer knowledge)</span><span class="why">3-D Vp/Vs and relocations separating slab crust, slab mantle and interface; a model to re-check our depths.</span></li>
+<li class="cite">McPherson, R. C., Patton, J. R., Hellweg, M., Smith, S. W., Dengler, L., Lomax, A., &amp; Dreger, D. S. (2025). Large repeating Gorda intraplate earthquakes occurring along an inherited weak zone near the Mendocino Triple Junction. <i>SRL</i>, 96(5), 3179–3188. <a href="https://doi.org/10.1785/0220250005">10.1785/0220250005</a><span class="why">The 2022 Ferndale event re-ruptured the 1975 fault. Do 2010–2015 lineations mark such inherited structures?</span></li>
+</ol>
+<h4>Questions</h4>
+<div class="q"><b>Do small-event lineations in 2010–2015 mark inherited weak zones, including the future 2022 Ferndale fault?</b><p><span class="lab">Analysis</span>Planar clusters against the 1975/2022, 1980 and 2005 ruptures. A spatial test that does not need magnitudes. <span class="lab">Limits</span>Needs relative relocation; six years cannot show recurrence.</p></div>
+<div class="q"><b>How is deformation shared between plate-interior faults, the slab and the megathrust?</b><p><span class="lab">Analysis</span>Classify events against Slab2 and the Guo et al. interface; compare lineation strikes with Chaytor et al. and with our matched tensors. <span class="lab">Limits</span>Datum; offshore west of ~125.5°W only 7D and distant land stations.</p></div>
+<div class="q"><b>Aftershocks of the 2010 M6.5 and 2014 M6.8 events: productivity, decay, triggering.</b><p><span class="lab">Analysis</span>ETAS or Omori fits above completeness, against the Rollins &amp; Stein stress pattern. <span class="lab">Limits</span>Coverage in early 2010 is land-only and without NC; completeness right after each mainshock is poor.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="mendocino">Mendocino triple junction</h2>
+<p>25,460 QC events (19,253 in v3), median depth 21.6 km. Counts per year jump from 2,831 (2013) to 6,549 (2014). Part of that is the March 2014 M6.8 sequence, and part is coverage: NC picks double from 2013 to 2014, and Z5 arrives. 2016 has 13 QC events because NC and BK give no picks that year.</p>
+<h4>Papers</h4>
+<ol class="refs">
+<li class="cite">McCrory, P. A., Blair, J. L., Waldhauser, F., &amp; Oppenheimer, D. H. (2012). Juan de Fuca slab geometry and its relation to Wadati-Benioff zone seismicity. <i>JGR Solid Earth</i>, 117(B9), B09306. <a href="https://doi.org/10.1029/2012JB009407">10.1029/2012JB009407</a><span class="why">A slab surface built partly from relocated seismicity; slab seismicity peaks where the slab is warped under NW California.</span></li>
+<li class="cite">Materna, K., Taira, T., &amp; Bürgmann, R. (2018). Aseismic transform fault slip at the Mendocino Triple Junction from characteristically repeating earthquakes. <i>GRL</i>, 45(2), 699–707. <a href="https://doi.org/10.1002/2017GL075899">10.1002/2017GL075899</a><span class="why">The eastern Mendocino fault creeps at about 65% of its long-term rate (2008–2017), with possible acceleration after the 2015 M5.7.</span></li>
+<li class="cite">Yoon, C. E., &amp; Shelly, D. R. (2024). Distinct yet adjacent earthquake sequences near the Mendocino Triple Junction: 20 December 2021 Mw 6.1 and 6.0 Petrolia, and 20 December 2022 Mw 6.4 Ferndale. <i>The Seismic Record</i>, 4(1), 81–92. <a href="https://doi.org/10.1785/0320230053">10.1785/0320230053</a><span class="why">A deep-learning catalog in the same area that separates Gorda crust, mantle and interface faults; structure, not overlapping years.</span></li>
+<li class="cite">Chamarczuk, M., Chen, T., &amp; Johnson, C. W. (2026). Fifteen years of observations suggest structural and ocean-wave control on seismicity at the Mendocino triple junction. <i>SRL</i>, 97(4), 2388–2398. <a href="https://doi.org/10.1785/0220250447">10.1785/0220250447</a><span class="why">Seasonal wave loading changes rates by 10–40%; also a warning that detection is seasonal.</span></li>
+<li class="cite">Hsu, Martínez-Garzón, Trugman &amp; Ben-Zion (2026). Earthquake clustering and stress inversion in the Mendocino Triple Junction region. <i>GJI</i>, 245, ggag089. <a href="https://doi.org/10.1093/gji/ggag089">10.1093/gji/ggag089</a> <span class="flag">(found by the fault-model search; first names not recorded)</span><span class="why">Clustering and stress inversion in the same region: a direct test for our clusters and a source of stress orientations for fault-surface checks.</span></li>
+</ol>
+<p class="cite" style="font-size:13px">Also: Chen &amp; McGuire (2016) above; Gong &amp; McGuire (2018), <i>EPSL</i> 482, 414–422, <a href="https://doi.org/10.1016/j.epsl.2017.11.022">10.1016/j.epsl.2017.11.022</a> (2015 M5.7 and afterslip of the 2010 M6.5); Waldhauser (2009), <i>BSSA</i> 99, 2736–2748, <a href="https://doi.org/10.1785/0120080294">10.1785/0120080294</a> (double-difference catalog to compare against). No peer-reviewed study of the 2014 M6.8 sequence was found.</p>
+<h4>Questions</h4>
+<div class="q"><b>What share of seismicity is on the Gorda–North America interface, against Gorda crust and mantle, North American crust and the Mendocino fault?</b><p><span class="lab">Analysis</span>Project hypocentres onto McCrory et al. (2012) or Gong &amp; McGuire (2021); count by depth relative to the slab, by year; compare shared events with Waldhauser. <span class="lab">Limits</span>A few km of datum error moves events across the interface; without per-event uncertainty the share is a range.</p></div>
+<div class="q"><b>Did aseismic slip on the Mendocino fault change after the 2014 M6.8 and 2015 M5.7?</b><p><span class="lab">Analysis</span>Find repeater candidates in tight clusters, confirm by waveform correlation, compare recurrence with Materna et al. <span class="lab">Limits</span>Needs waveforms (we have them); moment–slip scaling needs magnitudes.</p></div>
+<div class="q"><b>Is seismicity modulated seasonally?</b><p><span class="lab">Analysis</span>Monthly rates above completeness against wave height. <span class="lab">Limits</span>Six years, coverage gaps (2010–2011, 2016), and noise-dependent ML detection; test above a conservative magnitude.</p></div>
+
+<!-- ======================================================================= -->
+<h2 id="faults">A 3D fault model from v4</h2>
+<p>A margin-wide fault model from this catalog alone is out of reach. A set of seismicity-derived fault surfaces, used to update and test the existing models, is not. The case rests on one fact from the review of existing models: none of the 3D fault geometries in Cascadia comes from hypocentres.</p>
+<h4>What exists</h4>
+<div class="tbl"><table>
+<tr><th>Model</th><th>What it is</th><th>3D?</th></tr>
+<tr><td>CRESCENT Community Fault Model v1.0 (<a href="https://github.com/cascadiaquakes/CRESCENT-CFM">GitHub</a>, CC BY 4.0, under review, no data DOI yet)</td><td>329 crustal fault sections, MTJ to Vancouver Island, plus Nootka and Mendocino. 3D geometry: 228 from the trace at constant dip, 80 from trace plus 1–2 seismic lines, 21 from SCEC CFM7, <b>0 from hypocentres</b>. Mendocino is a vertical plane to 10 km. No Blanco, no Gorda plate faults, no ridge or Axial.</td><td>Meshes</td></tr>
+<tr><td>CASIE21 megathrust (Carbotte et al. 2024)</td><td>Imaged interface beneath the wedge, mesh in the CFM repository.</td><td>Surface</td></tr>
+<tr><td>Slab2 (Hayes et al. 2018, <a href="https://doi.org/10.1126/science.aat4723">10.1126/science.aat4723</a>); McCrory et al. 2012</td><td>Slab surfaces; McCrory partly from relocated seismicity.</td><td>Surfaces</td></tr>
+<tr><td>Bloch, Bostock &amp; Audet (2023), <a href="https://doi.org/10.1029/2023GC011088">10.1029/2023GC011088</a></td><td>Slab model from receiver functions (onshore, deeper).</td><td>Surface</td></tr>
+<tr><td>USGS NSHM23 fault sections (Hatem et al. 2022, <a href="https://doi.org/10.1038/s41597-022-01609-7">10.1038/s41597-022-01609-7</a>); USGS Qfaults; Watt (2026) offshore traces (<a href="https://doi.org/10.5066/P14HJMM9">10.5066/P14HJMM9</a>); WA DNR</td><td>Traces with dip and depth attributes.</td><td>No</td></tr>
+</table></div>
+<h4>Methods to build surfaces from hypocentres</h4>
+<ul class="cite">
+<li>Clustering of planes: Ouillon et al. (2008) <a href="https://doi.org/10.1029/2007JB005032">10.1029/2007JB005032</a>; with location uncertainty, Wang et al. (2013) <a href="https://doi.org/10.1002/2013JB010164">10.1002/2013JB010164</a>; agglomerative, Kamer et al. (2020) <a href="https://doi.org/10.5194/nhess-20-3611-2020">10.5194/nhess-20-3611-2020</a>.</li>
+<li>Implicit surfaces from traces, nodal planes and hypocentres: Riesner et al. (2017) <a href="https://doi.org/10.1785/0220160192">10.1785/0220160192</a>; applied to Ridgecrest for the SCEC CFM, Plesch et al. (2020) <a href="https://doi.org/10.1785/0120200053">10.1785/0120200053</a>.</li>
+<li>Density clustering plus PCA: Truttmann et al. (2023) <a href="https://doi.org/10.1029/2023JB026352">10.1029/2023JB026352</a>; Piegari et al. (2024) <a href="https://doi.org/10.1029/2023EA003267">10.1029/2023EA003267</a>.</li>
+<li><b>SURF</b> (USGS Python): clustering, merging by orientation, non-planar meshes. Alongi et al. (2025) <a href="https://doi.org/10.1785/0220250126">10.1785/0220250126</a>. The most usable tool; one author also works on NSHM and the CRESCENT CFM.</li>
+<li>ML catalog example: Ross et al. (2020), Cahuilla swarm, <a href="https://doi.org/10.1126/science.abb0779">10.1126/science.abb0779</a>.</li>
+</ul>
+<h4>Where to start</h4>
+<p><b>Mendocino and the Gorda plate first.</b> It is the most active area, recorded from land and sea, and the existing model is weakest there (a vertical Mendocino plane, no Gorda faults). Independent catalogs exist to check against (Yoon &amp; Shelly 2024; Hsu et al. 2026). <b>Blanco second</b>: absent from every fault model, with four independent X9 catalogs for the overlap year. Axial and Endeavour already have denser cabled-array catalogs; Puget seismicity is diffuse. Either pilot needs three things first: the depth datum, double-difference relocation, and per-event location uncertainty.</p>
+
+<h2 id="uncert">Uncertainty on fault surfaces</h2>
+<p>Yes, people care, and the hazard community most of all. Dip is one of the parameters hazard results are most sensitive to, and the CFM assigns default dips with no uncertainty. A surface without an uncertainty cannot enter a logic tree. The plan is to give each surface a mean geometry plus an ensemble, and to keep apart the sources of error that behave differently.</p>
+<div class="tbl"><table>
+<tr><th>Source</th><th>How to quantify</th><th>What it gives</th></tr>
+<tr><td>Location error (random)</td><td>Monte Carlo: perturb every hypocentre within its uncertainty (covariance from double-difference bootstrap, or v4's <code>spatial_sigma</code> until then), rerun clustering and fitting N times (Wang et al. 2013 do this inside the fit).</td><td>Per-vertex spread normal to the surface; strike and dip distributions.</td></tr>
+<tr><td>Sampling</td><td>Bootstrap the events of each cluster.</td><td>How much a surface depends on a few events; unstable surfaces get flagged.</td></tr>
+<tr><td>Method choices</td><td>Vary clustering parameters (minimum cluster size, merge angle) and surface smoothness over a sensible range.</td><td>Whether a fault is robust or an artefact of the settings.</td></tr>
+<tr><td>Velocity model and datum (systematic)</td><td>Relocate with 2–3 models (1-D, CRESCENT or regional 3-D, e.g. Guo et al. 2021, Baillard et al. 2019) and both datums.</td><td>A systematic shift, reported separately: it moves all surfaces together and does not average out.</td></tr>
+<tr><td>Width vs error</td><td>Compare the spread of events normal to each surface with the expected location error.</td><td>If the spread is much larger than the error, the zone is truly wide (distributed deformation); if similar, the width is unresolved.</td></tr>
+<tr><td>Independent checks</td><td>Angle between the surface and focal-mechanism nodal planes (our matched tensors, later the polarity mechanisms); dips from seismic lines (CASIE21, CFM lines).</td><td>An external test of each dip.</td></tr>
+</table></div>
+<p>Each surface would ship as a mean mesh with a per-vertex uncertainty (km, normal to the surface), strike and dip with 90% intervals, the number of events, a mask of where events constrain it versus where it is extrapolated, and the ensemble of meshes. The atlas can show the uncertainty as colour on the surface or as an envelope.</p>
+
+<h2 id="atlas">The 3D atlas</h2>
+<p><code>data/catalog_v4/atlas/cascadia_v4_atlas.html</code> is a single 8.6 MB file in the style of the Cascadia Offshore Sensor Atlas (RCA atlas). It is built by <code>workflow/06_analysis/build_v4_atlas.py</code>. It shows:</p>
+<ul class="cite">
+<li>v4 events with our magnitudes, coloured by depth, time or share of picks added after ver3;</li>
+<li>GMRT and GMT bathymetry, which can be made see-through or cut away to look from below;</li>
+<li>Slab2, coloured by depth or by any of the six coupling models;</li>
+<li>CASIE21, the CRESCENT CFM meshes and traces, plate boundaries, stations, and ComCat moment tensors as beachballs.</li>
+</ul>
+<p>Filters cover time (drag on the histogram, or play a moving window), magnitude, Ian's location sigma, depth and QC. The cross-section tool draws events, terrain, Slab2 and the CFM and CASIE21 intersections, with no vertical exaggeration by default. It needs a browser with WebGL and an internet connection for three.js. Open it from a copy on your laptop, or serve it with <code>python -m http.server</code> and forward the port.</p>
+
+<h2 id="checks">Citations to check before use</h2>
+<ul class="cite">
+<li>Pearson &amp; Schmidt, <i>Seismica</i> 2(4): Crossref gives volume 2 with a 2026 date; Seismica volume 2 is normally 2023.</li>
+<li>Chaytor et al. (2004): Crossref resolves the DOI suffix <code>.2</code>, not <code>.1</code>.</li>
+<li>Guo et al., low effective stress in Gorda slab crust, <i>SRL</i> 96(3), 1504–1520, <a href="https://doi.org/10.1785/0220240078">10.1785/0220240078</a>: one search dated it 2024, another 2025.</li>
+<li>Content notes marked above (Tréhu 2015, Morton 2018, Schmalzle 2014, Chaytor 2004, Guo 2021, Chen &amp; McGuire 2016) rest on abstracts or reviewer knowledge; read the papers before citing a specific result.</li>
+<li>Not peer-reviewed, left out: the Ren, Lange &amp; Grevemeyer EGU 2025 abstract on Gorda intraplate shear zones (watch for a journal version); several ESSOAr preprints on Axial.</li>
+</ul>
+<p class="sans" style="color:var(--muted);font-size:12.5px">Notes from the five literature passes are in <code>data/catalog_v4/science_report/notes/</code>.</p>
+</div>
+</body>
+</html>

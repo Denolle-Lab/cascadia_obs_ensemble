@@ -1,0 +1,2004 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Catalog v4 clusters</title><style>
+:root{--bg:#ffffff;--ink:#222;--muted:#666;--rule:#ddd;--head:#f4f4f4}
+@media (prefers-color-scheme: dark){:root{--bg:#1b1b1b;--ink:#e6e6e6;--muted:#aaa;--rule:#444;--head:#2a2a2a}
+ img{background:#fff}}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+ max-width:1050px;margin:0 auto;padding:16px}
+h1{font-size:1.6em;margin-bottom:.2em} h2{margin-top:1.8em;border-bottom:1px solid var(--rule)} h3{margin-top:1.3em}
+table{border-collapse:collapse;font-size:12.5px;margin:.6em 0;display:block;overflow-x:auto}
+th,td{border:1px solid var(--rule);padding:3px 6px;text-align:right;white-space:nowrap}
+th{background:var(--head)} td:first-child,th:first-child{text-align:left}
+img{max-width:100%;height:auto;border:1px solid var(--rule)}
+.muted{color:var(--muted);font-size:.92em} code{font-size:.92em}
+</style></head><body>
+<h1>Earthquake clusters in catalog v4 (nearest-neighbor method)</h1>
+<p class='muted'>Cascadia catalog v4, 2010-2016, 172,340 events. Method of Zaliapin &amp; Ben-Zion (2013a, 2016). Code: <code>workflow/06_analysis/v4_clusters_zbz.py</code> (clustering) and <code>v4_clusters_zbz_report.py</code> (figures, validation, this page). Branch <code>cluster/zbz</code>, 2026-11-22.</p>
+<h2>Summary</h2>
+<p>We linked every event to its nearest earlier neighbor in space, time and magnitude and cut the
+links at a threshold set separately in each of nine regions. Above the regional completeness magnitude Mc
+there are 27,555 events; 60% of them are background singles and the
+rest fall in 1,944 families: 945 mainshock-aftershock
+families, 177 swarms and 822 doublets or small
+multiplets. Events below Mc or without a magnitude (144,785) were attached to these families afterwards when
+their nearest above-Mc neighbor passed the same test; 17% of the whole catalog ends up in a family.</p>
+<p>The main results:</p>
+<ol>
+<li>All nine regions show the two modes in the (T, R) plane. Time-shuffled catalogs lose them: the
+bimodality index D (Ashman) drops from 1.6-3.4 to 0.3-1.6.</li>
+<li>Background share splits by tectonic setting: about 50% at Axial, Endeavour-Explorer and the Blanco,
+58-61% in the Gorda plate and at the Mendocino triple junction, 68-84% in the forearc, Puget Lowland and the
+rest of the onshore. Ridge and transform families are mostly swarms (61-66% of families with 5 or more
+events) with deep, chain-like trees (median mean leaf depth 2.5-3.0). At the Mendocino triple junction only
+31% are swarms and the trees are shallow and bushy (median 1.33). This is the heat-flow ordering of
+Zaliapin &amp; Ben-Zion (2013b, 2016).</li>
+<li>All six large tectonic mainshocks we checked (2010 Mw 6.5 and 2014 Mw 6.8 Gorda, 2011 Mw 6.4 and 2014
+Mw 6.5 Vancouver Island, 2012 Mw 6.1 Explorer plate, 2015 Mw 5.7 Mendocino fault zone) come out as
+mainshock-aftershock families. The 2015 Axial eruption comes out as one 632-event swarm starting
+2015-04-24 05:11 UTC.</li>
+<li>The largest Blanco events behave like oceanic-transform events elsewhere (McGuire et al. 2005; Roland
+&amp; McGuire 2009; Boettcher &amp; McGuire 2009): the 2012 Mw 5.8/6.0 pair and the 2015 Mw 5.8/5.4/5.9
+triplet sit in swarms with M1-M2 near 0.1, and 4 of 21 Blanco M&ge;5 events have no linked event above
+M 2.45.</li>
+<li>At the Mendocino triple junction the events 1-2 units above Mc have 0.40 linked offspring on average,
+against 0.85-1.8 at Axial, Endeavour, the Gorda plate and the Blanco; 76% have none. The two Mw 6.5-6.8
+sequences hold 2,097 of the 3,272 clustered events above Mc. This fits the high background and low productivity found by
+Hsu et al. (2026) with the same method on a different catalog.</li>
+<li>The background/clustered label of an event is stable: 84-99% of events keep it when we change df (1.3,
+2.0, regional estimate), use 3-D distance, raise Mc by 0.3 or use yearly Mc. The exception is the
+threshold: a conservative eta0 that admits only 5% of links from shuffled catalogs raises the background
+share by 1-32 points, most at Axial (51% to 82%).</li>
+</ol>
+<h2>Results by region</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>name</th>
+      <th>events &ge; Mc</th>
+      <th>Mc</th>
+      <th>b</th>
+      <th>log eta0</th>
+      <th>D</th>
+      <th>D shuffled</th>
+      <th>% linked, shuffled</th>
+      <th>% background</th>
+      <th>% in MA</th>
+      <th>% in swarms</th>
+      <th>% in multiplets</th>
+      <th>MA families</th>
+      <th>MA n&ge;5</th>
+      <th>swarms</th>
+      <th>multiplets</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AX</td>
+      <td>Axial Seamount</td>
+      <td>4290</td>
+      <td>0.75</td>
+      <td>0.77</td>
+      <td>-5.47</td>
+      <td>2.27</td>
+      <td>0.30</td>
+      <td>34.00</td>
+      <td>50.60</td>
+      <td>15.10</td>
+      <td>25.40</td>
+      <td>8.90</td>
+      <td>209</td>
+      <td>26</td>
+      <td>40</td>
+      <td>155</td>
+    </tr>
+    <tr>
+      <td>EN</td>
+      <td>Endeavour-Explorer</td>
+      <td>512</td>
+      <td>2.25</td>
+      <td>0.84</td>
+      <td>-4.18</td>
+      <td>3.42</td>
+      <td>1.61</td>
+      <td>12.80</td>
+      <td>51.60</td>
+      <td>37.10</td>
+      <td>6.10</td>
+      <td>5.30</td>
+      <td>18</td>
+      <td>4</td>
+      <td>3</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>BL</td>
+      <td>Blanco transform</td>
+      <td>6133</td>
+      <td>2.45</td>
+      <td>1.27</td>
+      <td>-6.86</td>
+      <td>3.41</td>
+      <td>0.58</td>
+      <td>15.60</td>
+      <td>50.20</td>
+      <td>17.60</td>
+      <td>22.40</td>
+      <td>9.80</td>
+      <td>190</td>
+      <td>32</td>
+      <td>62</td>
+      <td>245</td>
+    </tr>
+    <tr>
+      <td>GO</td>
+      <td>Gorda ridge and plate</td>
+      <td>1150</td>
+      <td>2.45</td>
+      <td>1.17</td>
+      <td>-5.54</td>
+      <td>2.82</td>
+      <td>0.82</td>
+      <td>7.80</td>
+      <td>60.80</td>
+      <td>16.70</td>
+      <td>14.30</td>
+      <td>8.30</td>
+      <td>47</td>
+      <td>9</td>
+      <td>17</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>MT</td>
+      <td>Mendocino triple junction</td>
+      <td>7690</td>
+      <td>1.85</td>
+      <td>1.06</td>
+      <td>-5.34</td>
+      <td>2.46</td>
+      <td>1.27</td>
+      <td>16.60</td>
+      <td>57.50</td>
+      <td>37.30</td>
+      <td>1.50</td>
+      <td>3.80</td>
+      <td>228</td>
+      <td>34</td>
+      <td>15</td>
+      <td>130</td>
+    </tr>
+    <tr>
+      <td>WA</td>
+      <td>Offshore Washington</td>
+      <td>412</td>
+      <td>1.65</td>
+      <td>1.09</td>
+      <td>-3.38</td>
+      <td>1.84</td>
+      <td>1.29</td>
+      <td>2.60</td>
+      <td>84.20</td>
+      <td>8.70</td>
+      <td>1.50</td>
+      <td>5.60</td>
+      <td>16</td>
+      <td>0</td>
+      <td>1</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>OR</td>
+      <td>Offshore Oregon</td>
+      <td>389</td>
+      <td>1.85</td>
+      <td>1.01</td>
+      <td>-3.25</td>
+      <td>1.62</td>
+      <td>1.33</td>
+      <td>12.70</td>
+      <td>68.40</td>
+      <td>21.90</td>
+      <td>0.00</td>
+      <td>9.80</td>
+      <td>16</td>
+      <td>2</td>
+      <td>0</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td>PU</td>
+      <td>Puget Lowland</td>
+      <td>3245</td>
+      <td>1.35</td>
+      <td>1.33</td>
+      <td>-4.32</td>
+      <td>1.78</td>
+      <td>1.25</td>
+      <td>4.80</td>
+      <td>79.00</td>
+      <td>11.10</td>
+      <td>4.20</td>
+      <td>5.80</td>
+      <td>104</td>
+      <td>13</td>
+      <td>12</td>
+      <td>82</td>
+    </tr>
+    <tr>
+      <td>ON</td>
+      <td>Onshore and other</td>
+      <td>3734</td>
+      <td>1.75</td>
+      <td>0.93</td>
+      <td>-3.97</td>
+      <td>2.13</td>
+      <td>1.26</td>
+      <td>6.10</td>
+      <td>69.40</td>
+      <td>14.60</td>
+      <td>7.70</td>
+      <td>8.30</td>
+      <td>117</td>
+      <td>14</td>
+      <td>27</td>
+      <td>132</td>
+    </tr>
+  </tbody>
+</table>
+<p class='muted'>Percentages are of events above Mc in the region. MA = mainshock-aftershock. A family belongs to the region of its largest event; swarms are all of size 5 or more by definition. D: Ashman bimodality index of the two-Gaussian fit to log eta (D&gt;2 means clean separation). '% linked, shuffled': share of events in time-shuffled catalogs that pass the real threshold, a false-link rate.</p>
+<img src='fig_family_map.png' alt='Map of families'><p class='muted'>Families with 5 or more events above Mc at their largest event, sized by log n; grey dots are background events above Mc. Dashed boxes: regions.</p>
+<h2>Data and choices</h2>
+<p><b>Catalog and magnitudes.</b> Catalog v4 (172,340 events) with the Route-A magnitudes
+(ML calibrated to ComCat; Mw from moment tensors above 4.5). The catalog's own magnitude column is not used
+because it is biased high offshore. 41,573 events (24%) have no magnitude. They are mostly small and poorly
+recorded. They are left out of the clustering and attached afterwards (see below); the variant
+<code>noM_floor</code> gives them M = Mc instead.</p>
+<p><b>Regions.</b> The nine project boxes, most specific first (AX, MT, PU, EN, BL, GO, WA, OR; ON for the
+rest). ON is mixed: it holds the onshore crust and slab, the Cascade volcanoes, northern Vancouver Island and
+the Juan de Fuca Ridge segments between the Blanco and Axial and between Axial and Endeavour. Mc, b and the
+threshold are regional. The parent search runs over the whole catalog, but a parent from another region is
+allowed only within the distance cap below; that keeps the 2014 Vancouver Island aftershocks (69 of 97 in
+the EN box) in one family.</p>
+<p><b>Completeness.</b> Mc by maximum curvature + 0.2 for each region and year with at least 200 events;
+the region Mc is the largest yearly value, so Mc is constant over 2010-2016. The OBS years (2011-2015)
+reach lower magnitudes offshore, and NC/BK picks are almost absent south of 42&deg;N in 2010-2011 and 2016,
+so a constant Mc throws away small events in good years to keep the catalog homogeneous. Sparse years
+(fewer than 200 events, e.g. Blanco 2010, 2011 and 2016) do not set Mc and are less complete than the rest.
+The b-value-stability Mc (Woessner &amp; Wiemer 2005 style) is equal within 0.15 or lower than ours in
+every region except Axial, where it is 1.3 against 0.75; the Mc + 0.3 variant partly covers that case. Variants: Mc + 0.3, and Mc per region and year.</p>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>events</th>
+      <th>with M</th>
+      <th>Mc (all years)</th>
+      <th>Mc (b-stability)</th>
+      <th>Mc used</th>
+      <th>years setting Mc</th>
+      <th>events &ge; Mc</th>
+      <th>b</th>
+      <th>b error</th>
+      <th>D2 epicentres</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AX</td>
+      <td>26697</td>
+      <td>13913</td>
+      <td>0.65</td>
+      <td>1.30</td>
+      <td>0.75</td>
+      <td>2014;2015;2016</td>
+      <td>4282</td>
+      <td>0.77</td>
+      <td>0.01</td>
+      <td>0.83</td>
+    </tr>
+    <tr>
+      <td>EN</td>
+      <td>2439</td>
+      <td>1823</td>
+      <td>2.25</td>
+      <td>2.30</td>
+      <td>2.25</td>
+      <td>2012;2013;2014</td>
+      <td>512</td>
+      <td>0.84</td>
+      <td>0.04</td>
+      <td>1.18</td>
+    </tr>
+    <tr>
+      <td>BL</td>
+      <td>42806</td>
+      <td>31563</td>
+      <td>2.35</td>
+      <td>2.40</td>
+      <td>2.45</td>
+      <td>2012;2013;2014;2015</td>
+      <td>6122</td>
+      <td>1.27</td>
+      <td>0.02</td>
+      <td>0.93</td>
+    </tr>
+    <tr>
+      <td>GO</td>
+      <td>10120</td>
+      <td>6958</td>
+      <td>2.15</td>
+      <td>2.10</td>
+      <td>2.45</td>
+      <td>2010;2011;2012;2013;2014;2015</td>
+      <td>1148</td>
+      <td>1.17</td>
+      <td>0.04</td>
+      <td>1.24</td>
+    </tr>
+    <tr>
+      <td>MT</td>
+      <td>38256</td>
+      <td>28750</td>
+      <td>1.55</td>
+      <td>1.70</td>
+      <td>1.85</td>
+      <td>2010;2011;2012;2013;2014;2015</td>
+      <td>7677</td>
+      <td>1.06</td>
+      <td>0.01</td>
+      <td>1.39</td>
+    </tr>
+    <tr>
+      <td>WA</td>
+      <td>3515</td>
+      <td>2828</td>
+      <td>1.15</td>
+      <td>1.30</td>
+      <td>1.65</td>
+      <td>2010;2011;2012;2013;2014;2015</td>
+      <td>412</td>
+      <td>1.09</td>
+      <td>0.06</td>
+      <td>1.42</td>
+    </tr>
+    <tr>
+      <td>OR</td>
+      <td>1874</td>
+      <td>1393</td>
+      <td>1.75</td>
+      <td>1.50</td>
+      <td>1.85</td>
+      <td>2012;2013;2014;2015;2016</td>
+      <td>389</td>
+      <td>1.01</td>
+      <td>0.05</td>
+      <td>1.05</td>
+    </tr>
+    <tr>
+      <td>PU</td>
+      <td>14020</td>
+      <td>13348</td>
+      <td>1.15</td>
+      <td>1.30</td>
+      <td>1.35</td>
+      <td>2010;2011;2012;2013;2014;2015;2016</td>
+      <td>3239</td>
+      <td>1.33</td>
+      <td>0.02</td>
+      <td>1.40</td>
+    </tr>
+    <tr>
+      <td>ON</td>
+      <td>32613</td>
+      <td>30191</td>
+      <td>1.55</td>
+      <td>1.30</td>
+      <td>1.75</td>
+      <td>2010;2011;2012;2013;2014;2015;2016</td>
+      <td>3725</td>
+      <td>0.93</td>
+      <td>0.02</td>
+      <td>0.93</td>
+    </tr>
+  </tbody>
+</table>
+<p><b>Proximity.</b> eta_ij = t_ij r_ij^df 10^(-b m_i) (Baiesi &amp; Paczuski 2004), t in years,
+r in km, with rescaled time T = t 10^(-q b m_i) and distance R = r^df 10^(-(1-q) b m_i), q = 0.5 (Zaliapin et
+al. 2008). b is the Aki (1965) estimate above Mc of the parent's region. Distance is epicentral, floored at
+0.5 km. We use 2-D distance because v4 depths are biased shallow (23.5% of events plot above the surface);
+3-D distance is a variant. df = 1.6 in all regions, as in Zaliapin &amp; Ben-Zion (2013a, 2016). The
+correlation dimension of the epicentres (3-30 km) is 0.8-1.4, lower than 1.6 because the offshore seismicity
+lies on narrow strands and the catalog is itself clustered; df 1.3, 2.0 and the regional estimate are
+variants.</p>
+<p><b>Threshold.</b> A two-component Gaussian mixture fitted to log10 eta in each region; eta0 is where the
+weighted components cross. The KDE valley gives lower (stricter) values by 0.4-1.3 log units. A third
+choice, used as a variant, sets eta0 so that only 5% of links in time-shuffled catalogs pass it.</p>
+<p><b>Distance cap.</b> A link that passes eta0 is kept only if r &le; max(10 km, 3 L), with L the subsurface
+rupture length of the parent from Wells &amp; Coppersmith (1994), log10 L = -2.44 + 0.59 M (18 km for M 5.5,
+76 km for M 6.5). Without it, a M 6.5 parent links events 300 km away within a few days. The cap removed
+513 of 9,726 sub-threshold links above Mc. It also cuts real links when epicentres are poor: three Blanco
+M 5.0-5.5 events within 2 h on 2010-05-07 (before the OBS deployments) are 21-38 km apart and stay
+separate.</p>
+<p><b>Families and attachment.</b> Kept links form trees; connected trees are families, events with no kept
+link are background singles. Events below Mc or without M are then given their nearest above-Mc parent
+(eta needs only the parent's magnitude) and join its family if the link passes the same threshold and cap
+(roles ending in <code>_belowMc</code>). They do not change the family classification.</p>
+<p><b>Classification.</b> For families with 2-4 events above Mc: a <i>multiplet</i> (doublet, triplet)
+when M1-M2 &lt; 0.3, else <i>mainshock-aftershock</i>. For 5 or more events we use three swarm indicators,
+from the topology analysis of Zaliapin &amp; Ben-Zion (2013b, 2016) and the burst criteria of Vidale &amp;
+Shearer (2006): S1, no dominant event (M1-M2 &lt; 0.5); S2, late peak (at least 20% of the family occurs
+before its largest event); S3, chain-like tree (mean leaf depth &ge; 2 and fewer than half of the family are
+direct offspring of the largest event). A family is a <i>swarm</i> when at least two hold, otherwise a
+<i>mainshock-aftershock</i> family. In mainshock-aftershock families the largest event is the mainshock and
+the others are foreshocks or aftershocks by time; in swarms and multiplets all events take the family type
+as role. Migration: Spearman rank correlation and Theil-Sen slope of distance from the first 10% of events
+against time, for families of 10 or more; migrating when rho &ge; 0.5, p &lt; 0.01 and the slope is
+positive.</p>
+<h2>Bimodality and threshold</h2>
+<img src='fig_TR_density.png' alt='T-R density per region'>
+<p class='muted'>Density of rescaled time T and distance R of each event's nearest neighbor, events above Mc. Blue contours: one time-shuffled catalog (80% and 95% density levels). Red: the threshold line.</p>
+<img src='fig_eta_hist.png' alt='log eta histograms'>
+<p>The clustered mode (small T and small R) is clear in BL, EN, GO and MT (D = 2.5-3.4) and
+weaker in WA, OR and PU (D = 1.6-1.8), where the catalog is dominated by background and families are few.
+Axial is the special case. Its 4,290 events above M 0.75 sit in a 5 km wide caldera and most occur in the
+five months before the April 2015 eruption, when the rate rose steadily (Wilcock et al. 2016). Shuffling
+times keeps that rate history and that spatial density, so 34% of shuffled Axial events still pass the
+threshold, against 49% of real ones. At Axial the clustered/background split mostly separates the
+eruption-driven rate change from the rest, and should be read as such.</p>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>w clustered</th>
+      <th>mu clustered</th>
+      <th>sd clustered</th>
+      <th>w background</th>
+      <th>mu background</th>
+      <th>sd background</th>
+      <th>log eta0 (mixture)</th>
+      <th>KDE valley</th>
+      <th>5% shuffled</th>
+      <th>links below eta0</th>
+      <th>cut by cap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AX</td>
+      <td>0.42</td>
+      <td>-6.31</td>
+      <td>0.86</td>
+      <td>0.58</td>
+      <td>-4.41</td>
+      <td>0.81</td>
+      <td>-5.47</td>
+      <td>-6.31</td>
+      <td>-6.75</td>
+      <td>1754</td>
+      <td>39</td>
+    </tr>
+    <tr>
+      <td>EN</td>
+      <td>0.47</td>
+      <td>-6.34</td>
+      <td>1.34</td>
+      <td>0.53</td>
+      <td>-2.52</td>
+      <td>0.85</td>
+      <td>-4.18</td>
+      <td>-4.60</td>
+      <td>-5.68</td>
+      <td>234</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>BL</td>
+      <td>0.44</td>
+      <td>-8.39</td>
+      <td>0.96</td>
+      <td>0.56</td>
+      <td>-5.59</td>
+      <td>0.66</td>
+      <td>-6.86</td>
+      <td>-7.22</td>
+      <td>-7.89</td>
+      <td>2636</td>
+      <td>82</td>
+    </tr>
+    <tr>
+      <td>GO</td>
+      <td>0.34</td>
+      <td>-7.00</td>
+      <td>1.26</td>
+      <td>0.66</td>
+      <td>-4.04</td>
+      <td>0.79</td>
+      <td>-5.54</td>
+      <td>-6.58</td>
+      <td>-6.13</td>
+      <td>369</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <td>MT</td>
+      <td>0.43</td>
+      <td>-6.83</td>
+      <td>1.34</td>
+      <td>0.57</td>
+      <td>-4.31</td>
+      <td>0.55</td>
+      <td>-5.34</td>
+      <td>-6.57</td>
+      <td>-6.44</td>
+      <td>3013</td>
+      <td>114</td>
+    </tr>
+    <tr>
+      <td>WA</td>
+      <td>0.16</td>
+      <td>-4.30</td>
+      <td>1.73</td>
+      <td>0.84</td>
+      <td>-1.89</td>
+      <td>0.63</td>
+      <td>-3.38</td>
+      <td>-4.30</td>
+      <td>-3.64</td>
+      <td>51</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <td>OR</td>
+      <td>0.40</td>
+      <td>-3.96</td>
+      <td>1.44</td>
+      <td>0.60</td>
+      <td>-2.13</td>
+      <td>0.71</td>
+      <td>-3.25</td>
+      <td>-3.96</td>
+      <td>-4.43</td>
+      <td>122</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <td>PU</td>
+      <td>0.22</td>
+      <td>-5.12</td>
+      <td>1.48</td>
+      <td>0.78</td>
+      <td>-3.15</td>
+      <td>0.53</td>
+      <td>-4.32</td>
+      <td>-5.12</td>
+      <td>-4.63</td>
+      <td>561</td>
+      <td>76</td>
+    </tr>
+    <tr>
+      <td>ON</td>
+      <td>0.32</td>
+      <td>-5.23</td>
+      <td>1.64</td>
+      <td>0.68</td>
+      <td>-2.50</td>
+      <td>0.77</td>
+      <td>-3.97</td>
+      <td>-5.23</td>
+      <td>-4.37</td>
+      <td>986</td>
+      <td>119</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Validation</h2><h3>Known sequences</h3>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>label</th>
+      <th>expected</th>
+      <th>region</th>
+      <th>M</th>
+      <th>role</th>
+      <th>type</th>
+      <th>n &ge; Mc</th>
+      <th>n all</th>
+      <th>M2</th>
+      <th>t90 (days)</th>
+      <th>extent (km)</th>
+      <th>leaf depth</th>
+      <th>regions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2010-01-10 Mw 6.5 Gorda</td>
+      <td>mainshock-aftershock</td>
+      <td>MT</td>
+      <td>6.50</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>824</td>
+      <td>2248</td>
+      <td>5.88</td>
+      <td>103.90</td>
+      <td>75.70</td>
+      <td>1.28</td>
+      <td>MT:824</td>
+    </tr>
+    <tr>
+      <td>2014-03-10 Mw 6.8 Gorda</td>
+      <td>mainshock-aftershock</td>
+      <td>MT</td>
+      <td>6.80</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>1273</td>
+      <td>2438</td>
+      <td>4.85</td>
+      <td>81.30</td>
+      <td>132.90</td>
+      <td>3.21</td>
+      <td>MT:1273</td>
+    </tr>
+    <tr>
+      <td>2011-09-09 Mw 6.4 Vancouver Island</td>
+      <td>mainshock-aftershock</td>
+      <td>ON</td>
+      <td>6.41</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>144</td>
+      <td>344</td>
+      <td>4.63</td>
+      <td>372.70</td>
+      <td>44.60</td>
+      <td>1.00</td>
+      <td>ON:139;EN:5</td>
+    </tr>
+    <tr>
+      <td>2014-04-24 Mw 6.5 Vancouver Island</td>
+      <td>mainshock-aftershock</td>
+      <td>ON</td>
+      <td>6.53</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>97</td>
+      <td>300</td>
+      <td>5.07</td>
+      <td>24.10</td>
+      <td>74.10</td>
+      <td>1.05</td>
+      <td>EN:69;ON:28</td>
+    </tr>
+    <tr>
+      <td>2012-11-08 Mw 6.1 Explorer plate</td>
+      <td>mainshock-aftershock</td>
+      <td>EN</td>
+      <td>6.14</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>27</td>
+      <td>103</td>
+      <td>3.01</td>
+      <td>156.40</td>
+      <td>38.30</td>
+      <td>1.04</td>
+      <td>EN:27</td>
+    </tr>
+    <tr>
+      <td>2015-01-28 Mw 5.7 Mendocino fault zone</td>
+      <td>mainshock-aftershock</td>
+      <td>MT</td>
+      <td>5.71</td>
+      <td>mainshock</td>
+      <td>mainshock-aftershock</td>
+      <td>90</td>
+      <td>672</td>
+      <td>4.29</td>
+      <td>57.10</td>
+      <td>37.10</td>
+      <td>1.12</td>
+      <td>MT:90</td>
+    </tr>
+    <tr>
+      <td>2015-06-01 Mw 5.8, 5.4, 5.9 Blanco triplet</td>
+      <td>swarm or multiplet</td>
+      <td>BL</td>
+      <td>5.80</td>
+      <td>swarm</td>
+      <td>swarm</td>
+      <td>77</td>
+      <td>755</td>
+      <td>5.80</td>
+      <td>20.60</td>
+      <td>47.20</td>
+      <td>1.61</td>
+      <td>BL:76;ON:1</td>
+    </tr>
+    <tr>
+      <td>2012-02/04 Mw 5.8 and 6.0 Blanco</td>
+      <td>swarm or multiplet</td>
+      <td>BL</td>
+      <td>5.95</td>
+      <td>swarm</td>
+      <td>swarm</td>
+      <td>77</td>
+      <td>109</td>
+      <td>5.83</td>
+      <td>70.50</td>
+      <td>38.20</td>
+      <td>1.47</td>
+      <td>BL:77</td>
+    </tr>
+    <tr>
+      <td>2015-04-24 Axial Seamount eruption onset</td>
+      <td>swarm</td>
+      <td>AX</td>
+      <td>4.28</td>
+      <td>largest event</td>
+      <td>swarm</td>
+      <td>632</td>
+      <td>805</td>
+      <td>4.16</td>
+      <td>1.20</td>
+      <td>15.40</td>
+      <td>23.93</td>
+      <td>AX:632</td>
+    </tr>
+  </tbody>
+</table>
+<p>The six tectonic mainshocks are all mainshock-aftershock families with the mainshock first
+(no foreshock above Mc except two for the 2014 Gorda event) and bushy trees (mean leaf depth 1.0-1.3), except
+the 2014 Mw 6.8 Gorda sequence, whose tree is deeper (3.2) because of secondary sequences inside it. The 2010
+Mw 6.5 family includes the 2010-02-04 Mw 5.9 event 44 km to the south, which we count as triggered. Both
+Gorda families keep linking small events for years (the 2010 family's last event is in 2016), but 90% of
+their events come within 81-104 days. The Blanco events behave differently (next sections). The Axial
+eruption family starts at 05:11 UTC on 24 April 2015, has 632 events above Mc (805 in all), 90% of them
+within 1.2 days, and a mean leaf depth of 24: a long chain, the shape of a migrating or steadily driven
+swarm. It holds 61% of all Axial events above Mc between 23 April and 31 May 2015.</p>
+<img src='fig_examples.png' alt='Example sequences'>
+<p class='muted'>Magnitude and distance from the largest event against time for the validation families and the largest swarms in GO, PU, ON and BL. Colored: events above Mc; grey: attached events below Mc (missing M plotted at -0.5).</p>
+<h3>Shuffled catalogs</h3>
+<p>Three catalogs with event times permuted among the events of each region (locations and
+magnitudes kept). The two modes disappear (D shuffled in the region table: 0.3-1.6, against 1.6-3.4 for the
+real catalog), and the share of events that pass the real threshold and cap drops to 3-17% outside Axial
+(34% at Axial). In BL, GO and MT the real clustered share is 2.5-5 times the shuffled one; in WA, OR, PU and
+ON, 2.5-6 times, on smaller clustered shares.</p>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>share below eta0</th>
+      <th>share linked (eta0 and cap)</th>
+      <th>D</th>
+      <th>mu 1</th>
+      <th>mu 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AX</td>
+      <td>0.357</td>
+      <td>0.340</td>
+      <td>0.300</td>
+      <td>-5.307</td>
+      <td>-5.020</td>
+    </tr>
+    <tr>
+      <td>EN</td>
+      <td>0.265</td>
+      <td>0.128</td>
+      <td>1.611</td>
+      <td>-4.203</td>
+      <td>-2.699</td>
+    </tr>
+    <tr>
+      <td>BL</td>
+      <td>0.221</td>
+      <td>0.156</td>
+      <td>0.577</td>
+      <td>-6.382</td>
+      <td>-5.872</td>
+    </tr>
+    <tr>
+      <td>GO</td>
+      <td>0.126</td>
+      <td>0.078</td>
+      <td>0.823</td>
+      <td>-4.936</td>
+      <td>-4.158</td>
+    </tr>
+    <tr>
+      <td>MT</td>
+      <td>0.246</td>
+      <td>0.166</td>
+      <td>1.267</td>
+      <td>-5.346</td>
+      <td>-4.323</td>
+    </tr>
+    <tr>
+      <td>WA</td>
+      <td>0.082</td>
+      <td>0.026</td>
+      <td>1.291</td>
+      <td>-3.034</td>
+      <td>-1.943</td>
+    </tr>
+    <tr>
+      <td>OR</td>
+      <td>0.196</td>
+      <td>0.127</td>
+      <td>1.328</td>
+      <td>-3.471</td>
+      <td>-2.113</td>
+    </tr>
+    <tr>
+      <td>PU</td>
+      <td>0.091</td>
+      <td>0.048</td>
+      <td>1.255</td>
+      <td>-3.923</td>
+      <td>-3.112</td>
+    </tr>
+    <tr>
+      <td>ON</td>
+      <td>0.088</td>
+      <td>0.061</td>
+      <td>1.263</td>
+      <td>-3.701</td>
+      <td>-2.503</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Comparison with the short-swarm scan (v4_swarms.py)</h3>
+<p>The earlier DBSCAN scan found 455 short clusters. Most of their events are small: only 3-36%
+are above the regional Mc (3% at Mount St. Helens, 11% at Mount Hood, 19% on the Blanco). Of the members that
+are above Mc, 85-100% are in nearest-neighbor families (Axial: 28%). The two methods agree where both can
+see the events. The nearest-neighbor analysis above a regional Mc cannot see the microswarms at the Cascade
+volcanoes; we ran a zoomed analysis for them (below).</p>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>DBSCAN region / volcano</th>
+      <th>DBSCAN members</th>
+      <th>% above Mc</th>
+      <th>% of those in NN families</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Axial Seamount</td>
+      <td>1014</td>
+      <td>18.2</td>
+      <td>28.1</td>
+    </tr>
+    <tr>
+      <td>Blanco transform</td>
+      <td>11872</td>
+      <td>18.9</td>
+      <td>85.2</td>
+    </tr>
+    <tr>
+      <td>Endeavour - Explorer</td>
+      <td>525</td>
+      <td>21.7</td>
+      <td>98.2</td>
+    </tr>
+    <tr>
+      <td>Gorda plate</td>
+      <td>1186</td>
+      <td>17.5</td>
+      <td>93.8</td>
+    </tr>
+    <tr>
+      <td>Mendocino triple junction</td>
+      <td>3978</td>
+      <td>35.6</td>
+      <td>96.3</td>
+    </tr>
+    <tr>
+      <td>Mount Hood</td>
+      <td>118</td>
+      <td>11.0</td>
+      <td>100.0</td>
+    </tr>
+    <tr>
+      <td>Mount St. Helens</td>
+      <td>2495</td>
+      <td>2.8</td>
+      <td>88.4</td>
+    </tr>
+    <tr>
+      <td>Offshore Oregon</td>
+      <td>18</td>
+      <td>11.1</td>
+      <td>100.0</td>
+    </tr>
+    <tr>
+      <td>Offshore Washington</td>
+      <td>15</td>
+      <td>13.3</td>
+      <td>100.0</td>
+    </tr>
+    <tr>
+      <td>Other</td>
+      <td>511</td>
+      <td>27.6</td>
+      <td>99.3</td>
+    </tr>
+    <tr>
+      <td>Puget Lowland</td>
+      <td>360</td>
+      <td>22.2</td>
+      <td>98.8</td>
+    </tr>
+  </tbody>
+</table>
+<p>DBSCAN 'swarm-like' flag against the type of the nearest-neighbor family that holds most of the cluster's members ('background' when none):</p><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>main_family_type</th>
+      <th>background</th>
+      <th>mainshock-aftershock</th>
+      <th>multiplet</th>
+      <th>swarm</th>
+    </tr>
+    <tr>
+      <th>swarm_like</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>False</th>
+      <td>51</td>
+      <td>75</td>
+      <td>10</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <th>True</th>
+      <td>135</td>
+      <td>40</td>
+      <td>54</td>
+      <td>69</td>
+    </tr>
+  </tbody>
+</table>
+<p>The DBSCAN flag and our type agree poorly: of the 298 DBSCAN swarm-like clusters, 69 sit
+mainly in our swarms, 54 in multiplets, 40 in mainshock-aftershock families and 135 in no family. The
+DBSCAN flag uses all events, including those below Mc, so its magnitude gap and largest-event position come
+from a different and less complete set of events.</p>
+<h3>Cascade volcanoes</h3>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>volcano</th>
+      <th>events &ge; Mc within 15 km</th>
+      <th>pct_background</th>
+      <th>n_families</th>
+      <th>n_swarm</th>
+      <th>n_MA</th>
+      <th>n_multiplet</th>
+      <th>largest_family_n</th>
+      <th>largest_family_type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Mount Baker</td>
+      <td>3</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Glacier Peak</td>
+      <td>1</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mount Rainier</td>
+      <td>106</td>
+      <td>85.80</td>
+      <td>6</td>
+      <td>0</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>mainshock-aftershock</td>
+    </tr>
+    <tr>
+      <td>Mount St. Helens</td>
+      <td>357</td>
+      <td>40.10</td>
+      <td>52</td>
+      <td>9</td>
+      <td>19</td>
+      <td>24</td>
+      <td>18</td>
+      <td>swarm</td>
+    </tr>
+    <tr>
+      <td>Mount Adams</td>
+      <td>1</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mount Hood</td>
+      <td>45</td>
+      <td>37.80</td>
+      <td>8</td>
+      <td>1</td>
+      <td>3</td>
+      <td>4</td>
+      <td>11</td>
+      <td>swarm</td>
+    </tr>
+    <tr>
+      <td>Three Sisters</td>
+      <td>2</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Medicine Lake</td>
+      <td>2</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mount Shasta</td>
+      <td>9</td>
+      <td>100.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Lassen Peak</td>
+      <td>18</td>
+      <td>44.40</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>11</td>
+      <td>swarm</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>volcano</th>
+      <th>radius_km</th>
+      <th>events within radius</th>
+      <th>Mc_local</th>
+      <th>b_local</th>
+      <th>events &amp;ge; local Mc</th>
+      <th>log_eta0</th>
+      <th>ashman_D</th>
+      <th>D shuffled</th>
+      <th>pct_background</th>
+      <th>n_families</th>
+      <th>n_swarm</th>
+      <th>n_MA</th>
+      <th>n_multiplet</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Mount St. Helens</td>
+      <td>20.00</td>
+      <td>9727</td>
+      <td>0.35</td>
+      <td>0.79</td>
+      <td>3681</td>
+      <td>-3.79</td>
+      <td>2.23</td>
+      <td>1.91</td>
+      <td>67.20</td>
+      <td>308</td>
+      <td>0</td>
+      <td>169</td>
+      <td>139</td>
+    </tr>
+    <tr>
+      <td>Mount Hood</td>
+      <td>20.00</td>
+      <td>356</td>
+      <td>1.45</td>
+      <td>1.35</td>
+      <td>104</td>
+      <td>-3.26</td>
+      <td>2.32</td>
+      <td>2.03</td>
+      <td>12.50</td>
+      <td>13</td>
+      <td>0</td>
+      <td>5</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>Mount Rainier</td>
+      <td>20.00</td>
+      <td>1132</td>
+      <td>1.05</td>
+      <td>1.31</td>
+      <td>336</td>
+      <td>-4.70</td>
+      <td>2.91</td>
+      <td>1.33</td>
+      <td>85.40</td>
+      <td>19</td>
+      <td>0</td>
+      <td>11</td>
+      <td>8</td>
+    </tr>
+  </tbody>
+</table>
+<p>With a local Mc (0.35 at St. Helens, 1.45 at Hood, 1.05 at Rainier, within 20 km) the method
+finds 308 families at Mount St. Helens and 13 at Mount Hood, but the test is weak: a shuffled catalog in
+such a small volume is almost as bimodal (D 1.9-2.0 against 2.2-2.3). None of the volcano families meets two
+swarm indicators. They are small bursts of near-equal events (the largest at St. Helens: 181 events above
+M 0.35 from 2011-01-27, M 3.9 then M 3.1). We do not claim a swarm/burst distinction at the volcanoes from
+this catalog; it needs relocated, lower-Mc data (e.g. waveform-based detection, Skoumal et al. 2016).</p>
+<h2>Sensitivity</h2>
+<img src='fig_sensitivity.png' alt='sensitivity'>
+<p>% background above Mc by variant:</p><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variant</th>
+      <th>region</th>
+      <th>d3</th>
+      <th>df1.3</th>
+      <th>df2.0</th>
+      <th>df_est</th>
+      <th>eta0_shuf5</th>
+      <th>main</th>
+      <th>mc+0.3</th>
+      <th>mc_year</th>
+      <th>noM_floor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th></th>
+      <td>AX</td>
+      <td>60.7</td>
+      <td>48.1</td>
+      <td>58.0</td>
+      <td>47.9</td>
+      <td>82.2</td>
+      <td>50.6</td>
+      <td>48.0</td>
+      <td>57.0</td>
+      <td>33.0</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>EN</td>
+      <td>58.0</td>
+      <td>51.2</td>
+      <td>52.1</td>
+      <td>51.2</td>
+      <td>65.2</td>
+      <td>51.6</td>
+      <td>54.2</td>
+      <td>51.1</td>
+      <td>49.3</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>BL</td>
+      <td>56.7</td>
+      <td>50.8</td>
+      <td>51.0</td>
+      <td>51.0</td>
+      <td>63.0</td>
+      <td>50.2</td>
+      <td>50.9</td>
+      <td>49.9</td>
+      <td>58.8</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>GO</td>
+      <td>67.4</td>
+      <td>61.5</td>
+      <td>62.4</td>
+      <td>61.8</td>
+      <td>67.1</td>
+      <td>60.8</td>
+      <td>66.7</td>
+      <td>57.3</td>
+      <td>65.0</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>MT</td>
+      <td>59.9</td>
+      <td>57.9</td>
+      <td>56.1</td>
+      <td>57.8</td>
+      <td>71.0</td>
+      <td>57.5</td>
+      <td>59.4</td>
+      <td>63.1</td>
+      <td>66.6</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>WA</td>
+      <td>87.4</td>
+      <td>85.2</td>
+      <td>84.0</td>
+      <td>84.7</td>
+      <td>85.2</td>
+      <td>84.2</td>
+      <td>90.1</td>
+      <td>82.2</td>
+      <td>88.5</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>OR</td>
+      <td>84.6</td>
+      <td>79.9</td>
+      <td>60.7</td>
+      <td>81.5</td>
+      <td>84.3</td>
+      <td>68.4</td>
+      <td>70.1</td>
+      <td>72.7</td>
+      <td>79.2</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>PU</td>
+      <td>81.7</td>
+      <td>81.8</td>
+      <td>76.5</td>
+      <td>80.9</td>
+      <td>82.0</td>
+      <td>79.0</td>
+      <td>82.2</td>
+      <td>78.6</td>
+      <td>80.2</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>ON</td>
+      <td>72.1</td>
+      <td>70.8</td>
+      <td>67.4</td>
+      <td>70.9</td>
+      <td>73.7</td>
+      <td>69.4</td>
+      <td>70.5</td>
+      <td>72.6</td>
+      <td>67.7</td>
+    </tr>
+  </tbody>
+</table>
+<p>Share of events (in both runs) with the same background/clustered label as the main run:</p><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variant</th>
+      <th>region</th>
+      <th>d3</th>
+      <th>df1.3</th>
+      <th>df2.0</th>
+      <th>df_est</th>
+      <th>eta0_shuf5</th>
+      <th>mc+0.3</th>
+      <th>mc_year</th>
+      <th>noM_floor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th></th>
+      <td>AX</td>
+      <td>0.897</td>
+      <td>0.970</td>
+      <td>0.923</td>
+      <td>0.963</td>
+      <td>0.684</td>
+      <td>0.923</td>
+      <td>0.946</td>
+      <td>0.703</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>EN</td>
+      <td>0.916</td>
+      <td>0.988</td>
+      <td>0.990</td>
+      <td>0.984</td>
+      <td>0.863</td>
+      <td>0.932</td>
+      <td>0.998</td>
+      <td>0.963</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>BL</td>
+      <td>0.897</td>
+      <td>0.984</td>
+      <td>0.983</td>
+      <td>0.980</td>
+      <td>0.872</td>
+      <td>0.924</td>
+      <td>0.939</td>
+      <td>0.885</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>GO</td>
+      <td>0.894</td>
+      <td>0.983</td>
+      <td>0.982</td>
+      <td>0.981</td>
+      <td>0.937</td>
+      <td>0.876</td>
+      <td>0.926</td>
+      <td>0.928</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>MT</td>
+      <td>0.957</td>
+      <td>0.972</td>
+      <td>0.965</td>
+      <td>0.980</td>
+      <td>0.865</td>
+      <td>0.951</td>
+      <td>0.974</td>
+      <td>0.972</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>WA</td>
+      <td>0.968</td>
+      <td>0.990</td>
+      <td>0.998</td>
+      <td>0.995</td>
+      <td>0.990</td>
+      <td>0.932</td>
+      <td>0.959</td>
+      <td>0.964</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>OR</td>
+      <td>0.838</td>
+      <td>0.884</td>
+      <td>0.923</td>
+      <td>0.869</td>
+      <td>0.841</td>
+      <td>0.918</td>
+      <td>0.958</td>
+      <td>0.869</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>PU</td>
+      <td>0.963</td>
+      <td>0.971</td>
+      <td>0.976</td>
+      <td>0.981</td>
+      <td>0.970</td>
+      <td>0.913</td>
+      <td>0.979</td>
+      <td>0.994</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>ON</td>
+      <td>0.924</td>
+      <td>0.979</td>
+      <td>0.970</td>
+      <td>0.974</td>
+      <td>0.957</td>
+      <td>0.955</td>
+      <td>0.964</td>
+      <td>0.960</td>
+    </tr>
+  </tbody>
+</table>
+<p>Number of swarms by variant:</p><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variant</th>
+      <th>region</th>
+      <th>d3</th>
+      <th>df1.3</th>
+      <th>df2.0</th>
+      <th>df_est</th>
+      <th>eta0_shuf5</th>
+      <th>main</th>
+      <th>mc+0.3</th>
+      <th>mc_year</th>
+      <th>noM_floor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th></th>
+      <td>AX</td>
+      <td>30</td>
+      <td>46</td>
+      <td>30</td>
+      <td>47</td>
+      <td>13</td>
+      <td>40</td>
+      <td>24</td>
+      <td>46</td>
+      <td>336</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>EN</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>3</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>BL</td>
+      <td>54</td>
+      <td>57</td>
+      <td>60</td>
+      <td>55</td>
+      <td>29</td>
+      <td>62</td>
+      <td>24</td>
+      <td>117</td>
+      <td>136</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>GO</td>
+      <td>13</td>
+      <td>12</td>
+      <td>17</td>
+      <td>12</td>
+      <td>11</td>
+      <td>17</td>
+      <td>7</td>
+      <td>27</td>
+      <td>35</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>MT</td>
+      <td>11</td>
+      <td>9</td>
+      <td>17</td>
+      <td>10</td>
+      <td>5</td>
+      <td>15</td>
+      <td>7</td>
+      <td>17</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>WA</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>5</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>OR</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>PU</td>
+      <td>9</td>
+      <td>9</td>
+      <td>14</td>
+      <td>11</td>
+      <td>11</td>
+      <td>12</td>
+      <td>7</td>
+      <td>17</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>ON</td>
+      <td>27</td>
+      <td>25</td>
+      <td>30</td>
+      <td>25</td>
+      <td>27</td>
+      <td>27</td>
+      <td>16</td>
+      <td>50</td>
+      <td>55</td>
+    </tr>
+  </tbody>
+</table>
+<p>Changing df, using 3-D distance or yearly Mc moves the background share by a few points
+(3-D distance raises it by 2-16 points, most offshore Oregon and at Axial: v4 depths scatter more than
+epicentres). Raising Mc by
+0.3 halves the number of families of 5 or more, as expected, but leaves the background share within 6
+points. The conservative threshold (5% shuffled links) is the largest change. Under it the Blanco, Endeavour and
+Gorda plate (63-67% background) stay below offshore Washington, offshore Oregon and Puget (82-85%), while
+Axial moves to 82%. Giving the events without
+magnitude M = Mc (<code>noM_floor</code>) adds 12,800 events at Axial, most of them in the eruption period,
+and turns 300 more Axial families into swarms; this variant overstates their size and is only a bound.</p>
+<h2>Cluster topology and tectonic setting</h2>
+<img src='fig_topology.png' alt='topology'>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>families n&ge;5</th>
+      <th>% swarms (n&ge;5)</th>
+      <th>median leaf depth (n&ge;5)</th>
+      <th>events Mc+1 to Mc+2</th>
+      <th>mean offspring &ge; Mc</th>
+      <th>% with no offspring</th>
+      <th>events &ge; Mc+1</th>
+      <th>% of those single</th>
+      <th>% MA families with foreshocks</th>
+      <th>% migrating (n&ge;10)</th>
+      <th>families n&ge;10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AX</td>
+      <td>66</td>
+      <td>60.60</td>
+      <td>2.67</td>
+      <td>570</td>
+      <td>0.85</td>
+      <td>50.70</td>
+      <td>739</td>
+      <td>21.00</td>
+      <td>34.00</td>
+      <td>9.50</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <td>EN</td>
+      <td>7</td>
+      <td>42.90</td>
+      <td>2.00</td>
+      <td>36</td>
+      <td>0.89</td>
+      <td>72.20</td>
+      <td>63</td>
+      <td>46.00</td>
+      <td>33.30</td>
+      <td>50.00</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>BL</td>
+      <td>94</td>
+      <td>66.00</td>
+      <td>2.50</td>
+      <td>276</td>
+      <td>1.80</td>
+      <td>50.70</td>
+      <td>315</td>
+      <td>37.50</td>
+      <td>31.60</td>
+      <td>6.70</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <td>GO</td>
+      <td>26</td>
+      <td>65.40</td>
+      <td>3.00</td>
+      <td>60</td>
+      <td>0.87</td>
+      <td>63.30</td>
+      <td>73</td>
+      <td>46.60</td>
+      <td>25.50</td>
+      <td>30.00</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td>MT</td>
+      <td>49</td>
+      <td>30.60</td>
+      <td>1.33</td>
+      <td>592</td>
+      <td>0.40</td>
+      <td>75.70</td>
+      <td>694</td>
+      <td>44.40</td>
+      <td>22.40</td>
+      <td>0.00</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <td>WA</td>
+      <td>1</td>
+      <td>100.00</td>
+      <td>2.00</td>
+      <td>27</td>
+      <td>0.22</td>
+      <td>77.80</td>
+      <td>32</td>
+      <td>68.80</td>
+      <td>18.80</td>
+      <td></td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>OR</td>
+      <td>2</td>
+      <td>0.00</td>
+      <td>1.57</td>
+      <td>34</td>
+      <td>0.29</td>
+      <td>79.40</td>
+      <td>37</td>
+      <td>56.80</td>
+      <td>50.00</td>
+      <td>0.00</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>PU</td>
+      <td>25</td>
+      <td>48.00</td>
+      <td>2.00</td>
+      <td>150</td>
+      <td>1.17</td>
+      <td>60.00</td>
+      <td>166</td>
+      <td>54.80</td>
+      <td>16.30</td>
+      <td>12.50</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>ON</td>
+      <td>41</td>
+      <td>65.90</td>
+      <td>2.83</td>
+      <td>366</td>
+      <td>0.34</td>
+      <td>80.90</td>
+      <td>421</td>
+      <td>60.10</td>
+      <td>35.00</td>
+      <td>10.00</td>
+      <td>20</td>
+    </tr>
+  </tbody>
+</table>
+<p class='muted'>Offspring: events above Mc whose kept nearest-neighbor link points to the event. With a constant magnitude offset above Mc this is comparable between regions if the magnitude-frequency law holds.</p>
+<h2>Families on the v0 fault surfaces</h2>
+<p>The fault link is a join on <code>data/faults/v0/fault_surfaces_v0_members.csv</code> and is
+rerun with <code>v4_clusters_zbz.py --faults-only</code> when the surfaces change (the Blanco surfaces are
+being revised). Each family carries the fraction of its events on each surface (<code>fault_ids</code>);
+<code>faults_v0_cluster_counts.csv</code> gives, per surface, the counts of background, mainshock-aftershock,
+swarm and multiplet events above Mc.</p>
+<img src='fig_faults.png' alt='faults'>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>surface_id</th>
+      <th>events &ge; Mc</th>
+      <th>pct_background</th>
+      <th>pct_swarm</th>
+      <th>n_families</th>
+      <th>literature match</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ON027</td>
+      <td>34</td>
+      <td>8.80</td>
+      <td>70.60</td>
+      <td>5</td>
+      <td>Recurring swarms about 19 km N of Mount McLoughlin (east of Butte Falls)</td>
+    </tr>
+    <tr>
+      <td>GO002</td>
+      <td>30</td>
+      <td>36.70</td>
+      <td>46.70</td>
+      <td>9</td>
+      <td>Escanaba Trough axis, northern half (NESCA area); ridge-axis normal faults</td>
+    </tr>
+    <tr>
+      <td>BL004a</td>
+      <td>726</td>
+      <td>23.10</td>
+      <td>45.00</td>
+      <td>55</td>
+      <td>West Blanco Depression transform zone (central valley / WBDS-WBDC zone), running E to the EBD; the S member of a 2 km parallel pair</td>
+    </tr>
+    <tr>
+      <td>PU009</td>
+      <td>30</td>
+      <td>30.00</td>
+      <td>40.00</td>
+      <td>8</td>
+      <td>Hood Canal fault zone (northern reach)</td>
+    </tr>
+    <tr>
+      <td>BL006a</td>
+      <td>321</td>
+      <td>44.20</td>
+      <td>34.60</td>
+      <td>37</td>
+      <td>Surveyor Depression N-wall strand, continuing W into the EBD</td>
+    </tr>
+    <tr>
+      <td>BL015a</td>
+      <td>113</td>
+      <td>34.50</td>
+      <td>34.50</td>
+      <td>15</td>
+      <td>WBD near the RTI: S branch of Lange's two parallel clusters at the JdF intersection (WBDS trend)</td>
+    </tr>
+    <tr>
+      <td>ON001</td>
+      <td>57</td>
+      <td>43.90</td>
+      <td>33.30</td>
+      <td>4</td>
+      <td>St. Helens seismic zone (SHZ), main strand</td>
+    </tr>
+    <tr>
+      <td>BL012</td>
+      <td>152</td>
+      <td>39.50</td>
+      <td>32.90</td>
+      <td>29</td>
+      <td>Cascadia Depression N–S normal fault (deeper image of BL005)</td>
+    </tr>
+    <tr>
+      <td>BL018a</td>
+      <td>43</td>
+      <td>37.20</td>
+      <td>30.20</td>
+      <td>11</td>
+      <td>WBD N wall strand (WBDN) / N branch of the RTI bifurcation</td>
+    </tr>
+    <tr>
+      <td>BL004b</td>
+      <td>514</td>
+      <td>41.20</td>
+      <td>28.40</td>
+      <td>55</td>
+      <td>West Blanco Depression transform zone, N member of the 2 km pair with BL004a</td>
+    </tr>
+    <tr>
+      <td>MT004</td>
+      <td>156</td>
+      <td>48.70</td>
+      <td>27.60</td>
+      <td>18</td>
+      <td>Uppermost Gorda slab crust beneath Fortuna: the "Fortuna cluster". This is the volume that later hosted the 2022 Ferndale Mw 6.4 aftershocks.</td>
+    </tr>
+    <tr>
+      <td>PU004</td>
+      <td>146</td>
+      <td>39.00</td>
+      <td>24.00</td>
+      <td>25</td>
+      <td>No known counterpart, probably several clusters chained together</td>
+    </tr>
+    <tr>
+      <td>BL005</td>
+      <td>195</td>
+      <td>41.50</td>
+      <td>23.60</td>
+      <td>50</td>
+      <td>Cascadia Depression: N–S (spreading-parallel) normal faults</td>
+    </tr>
+    <tr>
+      <td>BL008</td>
+      <td>176</td>
+      <td>44.90</td>
+      <td>19.90</td>
+      <td>44</td>
+      <td>Cascadia Depression N–S normal fault (parallel to BL005)</td>
+    </tr>
+    <tr>
+      <td>PU001</td>
+      <td>235</td>
+      <td>61.70</td>
+      <td>17.90</td>
+      <td>24</td>
+      <td>Diffuse mid-crustal Puget Lowland basement seismicity. SE end reaches the WRSZ</td>
+    </tr>
+  </tbody>
+</table>
+<p>Swarm shares are highest on the Blanco depression strands (BL004a, the West Blanco Depression strand that
+runs into the East Blanco Depression: 45% of its events above Mc are in swarms; BL006a in the Surveyor
+Depression, BL015a near the Juan de Fuca ridge end and the Cascadia Depression normal fault BL012: 33-35%), on
+the northern Escanaba Trough axis (GO002, 47%) and on a recurring swarm source north of Mount McLoughlin
+(ON027, 71%). The 36 Puget and Mendocino surfaces with 30 or more events are 11-94% background (median 65%) and
+most have no swarm events; the 2010 and 2014 Gorda sequences dominate the clustered events on MT011 and
+MT008.</p>
+<h2>Interpretation by setting</h2>
+<h3>Blanco transform</h3>
+<p>Half of the Blanco events above M 2.45 are clustered, and two thirds of the families with 5 or more events
+are swarms, short (median t90 4 hours) and compact (median extent 4 km). The large events behave the same
+way. The 2012 Mw 5.8 and 6.0 events, two months apart, share one 77-event swarm with M1-M2 = 0.12, and
+the 2015-06-01 sequence holds three M 5.4-5.9 events within 13 hours (M1-M2 = 0.09). Several other M 5+
+events have one or no linked event above Mc. Low aftershock productivity, many foreshocks and swarm-like
+sequences are typical of oceanic transforms (McGuire et al. 2005; Roland &amp; McGuire 2009; Boettcher
+&amp; McGuire 2009), usually explained by aseismic slip transients loading small seismic patches. On the
+Blanco, Kuna et al. (2019) proposed that episodic creep in the mantle below the seismic crust triggers
+swarms, and Lange et al. (2026) found bursts with interevent times mostly under 5 minutes and repeating
+earthquakes in the western Blanco and the Gorda Depression. Our highest swarm shares are on the pull-apart
+and step-over strands of the western Blanco (BL004a, BL006a, BL015a, BL012), where Ren et al. (2023) and Lange
+et al. (2026) place the extensional basins and the intra-transform spreading of the Cascadia Depression.
+That is where fluids and magma could also drive swarms (Hill 1977). Mainshock-aftershock events are
+spread over the Blanco surfaces (23-31% of events on the Blanco Ridge, Surveyor and Cascadia Depression
+surfaces), so the swarm/burst split is not a simple east-west contrast along the transform. A caveat: the Blanco network changes between the 2012-2013
+and 2013-2015 OBS deployments and is poor in 2010, 2011 and 2016, so Mc = 2.45 hides the small-event
+structure that Lange et al. (2026) resolve at lower magnitude.</p>
+<h3>Axial Seamount and the Juan de Fuca Ridge</h3>
+<p>Axial has the lowest background share (51%) and the most swarms per event. The monthly count of
+swarm families climbs from one in November 2014 to 16 in March and 13 in April 2015, ahead of the eruption,
+and the eruption itself is one chain-like swarm. This matches the inflation-driven ring-fault seismicity
+and the abrupt rate drop after the dike drained the reservoir (Wilcock et al. 2016), and the build-up before
+the 2005-2006 East Pacific Rise eruption (Tolstoy et al. 2006). Because shuffled catalogs pass 34% of Axial
+events, we treat the Axial clustered share as an upper bound; the conservative threshold gives 18%. The
+ridge segments north and south of Axial (in ON) and the Gorda Ridge (GO) show the same swarm-dominated
+pattern, as expected for ridge-axis sequences, which are often swarms with weak Omori decay (Bohnenstiehl et
+al. 2002; Hooft et al. 2010 for Endeavour).</p>
+<h3>Endeavour-Explorer and Vancouver Island</h3>
+<p>The Endeavour-Explorer box has few events above M 2.25 (512). Its clustered events are mostly
+mainshock-aftershock families of plate-interior events (2012 Mw 6.1 Explorer plate, 2012-02-04 Mw 5.6) and
+aftershocks of the 2014 Mw 6.5 Vancouver Island event, whose epicentre is just outside the box. The 2011
+and 2014 Vancouver Island events are classic mainshock-aftershock families with all or nearly all aftershocks direct
+offspring of the mainshock (leaf depth 1.0-1.05). Two migrating families in EN (2012-02-04 and the 2012-11
+Explorer sequence) expand at 0.2-1.2 km/day.</p>
+<h3>Gorda plate and Mendocino triple junction</h3>
+<p>The Gorda plate (GO) mixes swarms on the Gorda Ridge and Escanaba Trough (65% of families with 5 or more
+are swarms; the 2013-05-20 swarm on the northern Escanaba Trough migrates at about 10 km/day, a dike-like
+rate) with mainshock-aftershock families in the plate interior (2013-12-01 Mw 5.5, 2015-04-24 Mw 5.5).
+At the Mendocino triple junction the families look different: 69% of families with 5 or more are
+mainshock-aftershock families, trees are the shallowest of all regions (median leaf depth 1.33), and small
+and moderate events have few offspring (0.40 per event 1-2 units above Mc). Hsu et al. (2026), using the same
+nearest-neighbor method on a northern California catalog, found high background rates and low aftershock
+productivity in the triple-junction region, decreasing away from it. Our catalog agrees on both. The
+clustered share at MT (42%) is driven by the 2010 and 2014 Gorda sequences, which hold 2,097 of the 3,272
+clustered events above Mc.</p>
+<h3>Forearc, slab and Puget Lowland</h3>
+<p>Offshore Washington and Oregon and the Puget Lowland are 68-84% background. Families are few and small;
+offshore Washington has no mainshock-aftershock family of 5 or more events above M 1.65. The forearc and
+intraslab seismicity seen by the OBS deployments is diffuse and dominated by single events (Stone et al.
+2018; Morton et al. 2023), and the nearest-neighbor analysis finds the same: the clustered mode is weak
+(D = 1.6-1.8) and the clustered share is two to six times the shuffled one only because the latter is very
+small. Puget swarms (12) and bursts are crustal: the Hood Canal fault zone (PU009) has 40% swarm events.
+Cold, thick forearc and slab lithosphere is where Zaliapin &amp; Ben-Zion (2013b, 2016) find burst-like
+families and singles; our forearc results are consistent but rest on few families.</p>
+<h3>Heat flow and topology</h3>
+<p>Across regions, the share of swarms among families with 5 or more events goes from 31% at the
+Mendocino triple junction and 0% offshore Oregon (2 families) to 61-66% at Axial, the Blanco and the Gorda
+plate, and the median leaf depth goes from 1.3-1.6 to 2.5-3.0. Young, hot oceanic lithosphere and the ridge
+axes have swarm-like, deep trees; the older Gorda-North America boundary and the forearc have burst-like,
+shallow trees and more singles. Zaliapin &amp; Ben-Zion (2013b) found this dependence on heat flow in
+southern California and Zaliapin &amp; Ben-Zion (2016) globally; geothermal fields show the same shift with
+fluid injection (Martínez-Garzón et al. 2018). Our regions differ in Mc (0.75 to 2.45) as well as in heat
+flow, and topology depends on how many events a family has above Mc, so we compare medians at fixed
+family-size thresholds; a cleaner test would use a common Mc of 2.45, which leaves too few events outside
+the Blanco and the Gorda plate.</p>
+<h2>Limits</h2><ul>
+<li>Completeness changes in space and time. A constant regional Mc (0.75-2.45) keeps the analysis homogeneous but discards most events (only 27,555 of 172,340 are above Mc). Families made only of small events, such as the volcano microswarms, are invisible above Mc.</li>
+<li>Depths are biased shallow, so the main run uses epicentral distance; this merges events at different depths (slab and crust) that share an epicentre. The 3-D variant changes 3-16% of labels.</li>
+<li>spatial_sigma is not a usable relative error, so we cannot weight links by location quality. The 0.5 km floor and the rupture-length cap are fixed choices; the cap cut true links where pre-OBS epicentres are off by 20-40 km (Blanco, 2010).</li>
+<li>41,573 events have no magnitude. They cannot be parents. They are attached as children when possible, and the noM_floor variant gives them M = Mc as a bound.</li>
+<li>Magnitudes mix calibrated ML and Mw; M1-M2 gaps of a few tenths, which drive the swarm/multiplet rules, are close to the ML uncertainty (about 0.2).</li>
+<li>The swarm criteria are thresholds on continuous properties. Families near the thresholds (M1-M2 near 0.5, 20% foreshocks) can switch type with small magnitude changes.</li>
+<li>Region boxes are coarse; ON mixes the volcanic arc, the onshore slab, Vancouver Island and two ridge sections.</li>
+<li>The 2016 gap in northern California picks and the network changes between OBS deployments make rates before, during and after 2011-2015 not comparable.</li>
+</ul>
+<h2>Files</h2><ul>
+<li><code>events_zbz.csv.gz</code>: per event: event_id, region, in_analysis, M, parent_id, log_eta, log_T, log_R, nn_dist_km, nn_dt_days, linked, family_id, role, time, lat, lon, depth</li>
+<li><code>families_zbz.csv</code>: per family: size, Mmax, M2, start, durations, extent, type, swarm indicators, topology, migration, fault fractions</li>
+<li><code>regions_zbz.csv</code>: per-region summary</li>
+<li><code>thresholds_zbz.csv</code>: mixture fits and thresholds</li>
+<li><code>completeness_b_df.csv, completeness_by_year.csv</code>: Mc, b, D2</li>
+<li><code>sensitivity_zbz.csv</code>: summary for each variant</li>
+<li><code>shuffle_test.csv</code>: shuffled-catalog statistics</li>
+<li><code>faults_v0_cluster_counts.csv</code>: per fault surface</li>
+<li><code>validation_sequences.csv, validation_v4_swarms.csv, volcano_families.csv, volcano_local_zbz.csv, volcano_local_families.csv, setting_stats.csv</code>: validation and setting tables</li>
+</ul>
+<h2>References</h2><p class='muted'>DOIs checked against Crossref on 2026-11-22. Entries without a DOI were not checked.</p><ul>
+<li>Aki, K. (1965). Maximum likelihood estimate of b in the formula log N = a - bM and its confidence limits. Bull. Earthq. Res. Inst. 43, 237-239. (not checked on Crossref)</li>
+<li>Baiesi, M., &amp; Paczuski, M. (2004). Scale-free networks of earthquakes and aftershocks. Phys. Rev. E 69, 066106. <a href='https://doi.org/10.1103/PhysRevE.69.066106'>doi:10.1103/PhysRevE.69.066106</a></li>
+<li>Boettcher, M. S., &amp; McGuire, J. J. (2009). Scaling relations for seismic cycles on mid-ocean ridge transform faults. GRL 36, L21301. <a href='https://doi.org/10.1029/2009GL040115'>doi:10.1029/2009GL040115</a></li>
+<li>Bohnenstiehl, D. R., Tolstoy, M., Dziak, R. P., Fox, C. G., &amp; Smith, D. K. (2002). Aftershock sequences in the mid-ocean ridge environment: an analysis using hydroacoustic data. Tectonophysics 354, 49-70. <a href='https://doi.org/10.1016/S0040-1951(02)00289-5'>doi:10.1016/S0040-1951(02)00289-5</a></li>
+<li>Hill, D. P. (1977). A model for earthquake swarms. JGR 82, 1347-1352. <a href='https://doi.org/10.1029/JB082i008p01347'>doi:10.1029/JB082i008p01347</a></li>
+<li>Hooft, E. E. E., et al. (2010). A seismic swarm and regional hydrothermal and hydrologic perturbations: The northern Endeavour segment, February 2005. G3 11, Q12015. <a href='https://doi.org/10.1029/2010GC003264'>doi:10.1029/2010GC003264</a></li>
+<li>Hsu, Y.-F., Martínez-Garzón, P., Trugman, D. T., &amp; Ben-Zion, Y. (2026). Earthquake clustering and stress inversion in the Mendocino Triple Junction region. GJI 245(3), ggag089. (first author&#x27;s initials not checked) <a href='https://doi.org/10.1093/gji/ggag089'>doi:10.1093/gji/ggag089</a></li>
+<li>Jones, J., &amp; Malone, S. D. (2005). Mount Hood earthquake activity: Volcanic or tectonic origins? BSSA 95(3), 818-832. <a href='https://doi.org/10.1785/0120040019'>doi:10.1785/0120040019</a></li>
+<li>Kuna, V. M., Nábělek, J. L., &amp; Braunmiller, J. (2019). Mode of slip and crust-mantle interaction at oceanic transform faults. Nat. Geosci. 12, 138-142. <a href='https://doi.org/10.1038/s41561-018-0287-1'>doi:10.1038/s41561-018-0287-1</a></li>
+<li>Lange, D., Ren, Y., &amp; Grevemeyer, I. (2026). Seismicity, repeating earthquakes, and tomographic imaging of the Blanco Transform Fault System, Northeast Pacific. JGR Solid Earth 131(5), e2025JB031584. <a href='https://doi.org/10.1029/2025JB031584'>doi:10.1029/2025JB031584</a></li>
+<li>Martínez-Garzón, P., Zaliapin, I., Ben-Zion, Y., Kwiatek, G., &amp; Bohnhoff, M. (2018). Comparative study of earthquake clustering in relation to hydraulic activities at geothermal fields in California. JGR 123, 4041-4062. <a href='https://doi.org/10.1029/2017JB014972'>doi:10.1029/2017JB014972</a></li>
+<li>McGuire, J. J., Boettcher, M. S., &amp; Jordan, T. H. (2005). Foreshock sequences and short-term earthquake predictability on East Pacific Rise transform faults. Nature 434, 457-461. <a href='https://doi.org/10.1038/nature03377'>doi:10.1038/nature03377</a></li>
+<li>Morton, E. A., Bilek, S. L., &amp; Rowe, C. A. (2023). Cascadia subduction zone fault heterogeneities from newly detected small magnitude earthquakes. JGR 128, e2023JB026607. <a href='https://doi.org/10.1029/2023JB026607'>doi:10.1029/2023JB026607</a></li>
+<li>Ren, Y., Lange, D., &amp; Grevemeyer, I. (2023). Seismotectonics of the Blanco Transform Fault System, Northeast Pacific: Evidence for an immature plate boundary. JGR 128, e2022JB026045. <a href='https://doi.org/10.1029/2022JB026045'>doi:10.1029/2022JB026045</a></li>
+<li>Roland, E., &amp; McGuire, J. J. (2009). Earthquake swarms on transform faults. GJI 178(3), 1677-1690. <a href='https://doi.org/10.1111/j.1365-246X.2009.04214.x'>doi:10.1111/j.1365-246X.2009.04214.x</a></li>
+<li>Shearer, P. M. (2012). Self-similar earthquake triggering, Båth&#x27;s law, and foreshock/aftershock magnitudes. JGR 117, B06310. <a href='https://doi.org/10.1029/2011JB008957'>doi:10.1029/2011JB008957</a></li>
+<li>Skoumal, R. J., Brudzinski, M. R., &amp; Currie, B. S. (2016). An efficient repeating signal detector to investigate earthquake swarms. JGR 121, 5880-5897. <a href='https://doi.org/10.1002/2016JB012981'>doi:10.1002/2016JB012981</a></li>
+<li>Stone, I., Vidale, J. E., Han, S., &amp; Roland, E. (2018). Catalog of offshore seismicity in Cascadia. JGR 123, 641-652. <a href='https://doi.org/10.1002/2017JB014966'>doi:10.1002/2017JB014966</a></li>
+<li>Tolstoy, M., et al. (2006). A sea-floor spreading event captured by seismometers. Science 314, 1920-1922. <a href='https://doi.org/10.1126/science.1133950'>doi:10.1126/science.1133950</a></li>
+<li>Vidale, J. E., &amp; Shearer, P. M. (2006). A survey of 71 earthquake bursts across southern California: Exploring the role of pore fluid pressure fluctuations and aseismic slip as drivers. JGR 111, B05312. <a href='https://doi.org/10.1029/2005JB004034'>doi:10.1029/2005JB004034</a></li>
+<li>Wells, D. L., &amp; Coppersmith, K. J. (1994). New empirical relationships among magnitude, rupture length, rupture width, rupture area, and surface displacement. BSSA 84, 974-1002. (not checked on Crossref)</li>
+<li>Wilcock, W. S. D., et al. (2016). Seismic constraints on caldera dynamics from the 2015 Axial Seamount eruption. Science 354, 1395-1399. <a href='https://doi.org/10.1126/science.aah5563'>doi:10.1126/science.aah5563</a></li>
+<li>Woessner, J., &amp; Wiemer, S. (2005). Assessing the quality of earthquake catalogues: estimating the magnitude of completeness and its uncertainty. BSSA 95, 684-698. (not checked on Crossref)</li>
+<li>Zaliapin, I., Gabrielov, A., Keilis-Borok, V., &amp; Wong, H. (2008). Clustering analysis of seismicity and aftershock identification. PRL 101, 018501. <a href='https://doi.org/10.1103/PhysRevLett.101.018501'>doi:10.1103/PhysRevLett.101.018501</a></li>
+<li>Zaliapin, I., &amp; Ben-Zion, Y. (2013). Earthquake clusters in southern California I: Identification and stability. JGR 118, 2847-2864. <a href='https://doi.org/10.1002/jgrb.50179'>doi:10.1002/jgrb.50179</a></li>
+<li>Zaliapin, I., &amp; Ben-Zion, Y. (2013). Earthquake clusters in southern California II: Classification and relation to physical properties of the crust. JGR 118, 2865-2877. <a href='https://doi.org/10.1002/jgrb.50178'>doi:10.1002/jgrb.50178</a></li>
+<li>Zaliapin, I., &amp; Ben-Zion, Y. (2016). A global classification and characterization of earthquake clusters. GJI 207(1), 608-634. <a href='https://doi.org/10.1093/gji/ggw300'>doi:10.1093/gji/ggw300</a></li>
+<li>Zaliapin, I., &amp; Ben-Zion, Y. (2016). Discriminating characteristics of tectonic and human-induced seismicity. BSSA 106(3), 846-859. <a href='https://doi.org/10.1785/0120150211'>doi:10.1785/0120150211</a></li>
+<li>Zaliapin, I., &amp; Ben-Zion, Y. (2020). Earthquake declustering using the nearest-neighbor approach in space-time-magnitude domain. JGR 125, e2018JB017120. <a href='https://doi.org/10.1029/2018JB017120'>doi:10.1029/2018JB017120</a></li>
+</ul></body></html>

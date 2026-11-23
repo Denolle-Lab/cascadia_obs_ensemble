@@ -1,0 +1,33 @@
+2,503,189 arrivals -> ../../data/magnitude_v4/raw_wa_amplitudes_v4.csv
+reason
+ok                                                                    1313009
+not_in_amps                                                           1181071
+not_in_segment                                                           8183
+no_segment                                                                349
+no_response:.EH                                                           277
+no_response:.HH,.HN                                                       238
+window_outside_data                                                        60
+fetch:The smallest possible mini-SEED record is made up of 128 byt          2
+	Command being timed: "../../.pixi/envs/default/bin/python route_a_day_amplitudes.py select --amps /wd1/mdenolle_data/amps_v6_all --arrivals ../../data/magnitude_v4/arrivals_v4.csv --out ../../data/magnitude_v4/raw_wa_amplitudes_v4.csv"
+	User time (seconds): 268.80
+	System time (seconds): 37.74
+	Percent of CPU this job got: 149%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:25.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12097132
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 35
+	Minor (reclaiming a frame) page faults: 1920234
+	Voluntary context switches: 1070962
+	Involuntary context switches: 1771
+	Swaps: 0
+	File system inputs: 18041472
+	File system outputs: 748024
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

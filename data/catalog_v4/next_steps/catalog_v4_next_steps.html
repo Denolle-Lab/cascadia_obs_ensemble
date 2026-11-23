@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalog v4 Next Steps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#fbfaf7; --fg:#1d1c1a; --muted:#6b6862; --line:#e4e1d9; --card:#ffffff; --accent:#a45a12; --warn-bg:#fdf3e2; --warn:#7a4a0c; --link:#1f5f8b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141413; --fg:#ebe9e3; --muted:#9c998f; --line:#2c2b28; --card:#1b1b19; --accent:#e8a33d; --warn-bg:#2a2213; --warn:#e3bf7c; --link:#8cc3ea; color-scheme:dark; } }
+:root[data-theme="dark"] { --bg:#141413; --fg:#ebe9e3; --muted:#9c998f; --line:#2c2b28; --card:#1b1b19; --accent:#e8a33d; --warn-bg:#2a2213; --warn:#e3bf7c; --link:#8cc3ea; color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:15.5px/1.6 "Source Serif 4", Georgia, serif; }
+.wrap { max-width:900px; margin:0 auto; padding-block:40px 80px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); }
+h1,h2,h3,h4,.sans,table,nav { font-family:"IBM Plex Sans", system-ui, sans-serif; }
+h1 { font-size:28px; margin:0 0 6px; letter-spacing:-0.01em; }
+.sub { color:var(--muted); font:14px/1.5 "IBM Plex Sans", sans-serif; margin:0 0 26px; }
+h2 { font-size:21px; margin:46px 0 10px; padding-top:14px; border-top:1px solid var(--line); }
+h3 { font-size:16.5px; margin:26px 0 6px; }
+h4 { font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); margin:18px 0 6px; font-weight:500; }
+a { color:var(--link); }
+.mono, code { font-family:"IBM Plex Mono", monospace; font-size:0.86em; }
+.box { background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:12px 16px; margin:18px 0; font-family:"IBM Plex Sans", sans-serif; font-size:14px; }
+.box ul { margin:6px 0 0; padding-left:20px; }
+.tbl { overflow-x:auto; margin:14px 0; }
+table { border-collapse:collapse; width:100%; font-size:13.5px; }
+th, td { text-align:left; vertical-align:top; padding:7px 9px; border-bottom:1px solid var(--line); }
+th { font-weight:500; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:0.05em; }
+td.n { text-align:right; font-family:"IBM Plex Mono", monospace; font-size:12.5px; white-space:nowrap; }
+ol.refs { padding-left:22px; } ol.refs li { margin:0 0 10px; }
+.cite { font-family:"IBM Plex Sans", sans-serif; font-size:13.5px; }
+.why { display:block; color:var(--fg); margin-top:2px; }
+.q { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 14px; margin:10px 0; }
+.q b { font-family:"IBM Plex Sans", sans-serif; font-size:14.5px; }
+.q p { margin:6px 0 0; font-size:14.5px; }
+.lab { font-family:"IBM Plex Sans", sans-serif; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-right:4px; }
+nav.toc { font-size:13.5px; columns:2; column-gap:30px; margin:10px 0 0; }
+nav.toc a { display:block; text-decoration:none; padding:2px 0; }
+.flag { color:var(--accent); font-family:"IBM Plex Sans", sans-serif; font-size:12.5px; }
+@media (max-width:600px) { nav.toc { columns:1; } }
+.tl td:first-child { white-space:nowrap; font-family:"IBM Plex Sans",sans-serif; }
+.ph { border-left:3px solid var(--accent); padding:4px 0 4px 14px; margin:14px 0; }
+.ph b { font-family:"IBM Plex Sans",sans-serif; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Catalog v4: next steps</h1>
+<p class="sub">Depths above ground, swarm candidates, polarities and focal mechanisms, tomography and relocation, and the fault-surface plan. Catalog v4 (172,340 events, 2010–2016), no new picking. 21 November 2026.</p>
+
+<div class="box"><b>Read first</b>
+<ul>
+<li>23.5% of v4 events sit above the land surface or seafloor if depths are read below sea level. 16.2% still do if depths are read below the local surface. A datum convention alone can't fix this. It's an absolute-depth problem, and a relocation in a 3D model is the fix.</li>
+<li>Relocating in a 3D model should come before both the focal mechanisms and the fault surfaces, because both need reliable depths and takeoff angles. Most of the time would go into checking the results, not into compute.</li>
+<li>Full body-wave tomography (Vp, Vs) is worth doing, but as a separate product that runs alongside the rest. Nothing else waits on it.</li>
+</ul></div>
+
+<nav class="toc">
+<a href="#depth">1. Events above ground</a>
+<a href="#swarms">2. Swarm candidates</a>
+<a href="#fm">3. Polarities and focal mechanisms</a>
+<a href="#tomo">4. Tomography and relocation</a>
+<a href="#time">5. Timeline</a>
+<a href="#faults">6. Fault-surface plan</a>
+</nav>
+
+<h2 id="depth">1. Events above ground</h2>
+<p>I sampled GMT earth_relief (1 arc-minute) under each epicentre and compared it with the catalog depth.</p>
+<div class="tbl"><table>
+<tr><th>Depth read as</th><th>Above surface</th><th>Share</th><th>Note</th></tr>
+<tr><td>km below sea level (as reported)</td><td class="n">40,570</td><td class="n">23.5%</td><td>offshore: 33,465 in the water column, median 2.4 km above the seafloor</td></tr>
+<tr><td>km below the local surface</td><td class="n">27,984</td><td class="n">16.2%</td><td>these are the events with negative catalog depth</td></tr>
+</table></div>
+<p>Two observations point to a shallow bias in the relocation, not only an unclear datum. At Axial the median catalog depth is −0.8 km, while the caldera floor is about 1.5 km below sea level and the seismicity there is known to lie 0.5–2 km under it. The offshore 1D models (<span class="mono">data/vel_or_shelf_trench.csv</span> and the others) start with 1.8 km/s at depth 0, a sediment velocity, which suggests depth 0 is the seafloor. Yet 16% of events are still negative with that reading.</p>
+<p>The atlas now has a <b>Depth datum</b> switch (sea level or local surface) and an <b>Above ground</b> control (show, grey or hide; grey by default). The question for Ian is unchanged: what datum, and are negative depths an air-quake artefact of the 1D models?</p>
+
+<h2 id="swarms">2. Swarm candidates</h2>
+<p><span class="mono">workflow/06_analysis/v4_swarms.py</span> clusters events in space and time. It uses epicentre and origin time, with 1 day counting as 2 km; depth is left out because it's unreliable. It keeps clusters with at least 15 events and a 5–95% duration under 30 days.</p>
+<p>Each cluster's rate is divided by the background rate within 10 km over the 90 days before and after. Network changes act over months to years, so this ratio mostly escapes them.</p>
+<p>A cluster is called swarm-like when its largest event is not in the first 10% of events and the two largest magnitudes differ by less than 0.5. Results are in <span class="mono">data/catalog_v4/swarms/</span>.</p>
+<div class="tbl"><table>
+<tr><th>Region</th><th>Clusters</th><th>Events</th><th>Swarm-like</th></tr>
+<tr><td>Blanco transform</td><td class="n">244</td><td class="n">11,872</td><td class="n">174</td></tr>
+<tr><td>Mendocino triple junction</td><td class="n">57</td><td class="n">3,978</td><td class="n">24</td></tr>
+<tr><td>Gorda plate</td><td class="n">35</td><td class="n">1,186</td><td class="n">24</td></tr>
+<tr><td>Puget Lowland</td><td class="n">12</td><td class="n">360</td><td class="n">6</td></tr>
+<tr><td>Endeavour – Explorer</td><td class="n">9</td><td class="n">525</td><td class="n">3</td></tr>
+<tr><td>Axial Seamount</td><td class="n">6</td><td class="n">1,014</td><td class="n">5</td></tr>
+<tr><td>Offshore Oregon, Washington</td><td class="n">2</td><td class="n">33</td><td class="n">1</td></tr>
+<tr><td>Onshore outside these boxes (mostly Cascade volcanoes)</td><td class="n">90</td><td class="n">3,124</td><td class="n">61</td></tr>
+<tr><td><b>Total</b></td><td class="n">455</td><td class="n">22,092</td><td class="n">298</td></tr>
+</table></div>
+<p><b>Sanity checks:</b> the 2011 M6.4 and 2014 M6.5 earthquakes off Vancouver Island come out as mainshock-aftershock sequences, as they should.</p>
+<h3>Strongest swarm-like clusters (at least 10 QC events)</h3>
+<div class="tbl"><table>
+<tr><th>Where</th><th>Start (UTC)</th><th>Days</th><th>n (QC)</th><th>Depth</th><th>Mmax, M2</th><th>Rate ×</th><th>Migration</th></tr>
+<tr><td>22 km S of Mount Hood</td><td class="mono">2012-04-08</td><td class="n">0.2</td><td class="n">23 (18)</td><td class="n">5.1</td><td class="n">2.6, 2.3</td><td class="n">≫100*</td><td class="n">8.6 km/d</td></tr>
+<tr><td>Gorda plate, 40.74°N 127.57°W</td><td class="mono">2013-04-19</td><td class="n">0.2</td><td class="n">24 (17)</td><td class="n">23.3</td><td class="n">3.1, 2.7</td><td class="n">504</td><td class="n">8.6 km/d</td></tr>
+<tr><td>Puget Lowland, 47.77°N 122.82°W</td><td class="mono">2016-02-03</td><td class="n">0.7</td><td class="n">39 (28)</td><td class="n">17.0</td><td class="n">2.4, 2.1</td><td class="n">428</td><td class="n">0.7 km/d</td></tr>
+<tr><td>SW Washington, 45.94°N 122.81°W</td><td class="mono">2014-01-26</td><td class="n">0.7</td><td class="n">22 (19)</td><td class="n">16.0</td><td class="n">2.6, 2.2</td><td class="n">360</td><td class="n">0.3 km/d</td></tr>
+<tr><td>7 km from Mount Hood</td><td class="mono">2016-05-16</td><td class="n">2.3</td><td class="n">63 (57)</td><td class="n">2.4</td><td class="n">2.5, 2.2</td><td class="n">312</td><td class="n">0.2 km/d</td></tr>
+<tr><td>Gorda plate, 41.29°N 127.45°W</td><td class="mono">2015-08-13</td><td class="n">0.9</td><td class="n">50 (29)</td><td class="n">1.1</td><td class="n">3.4, 3.2</td><td class="n">285</td><td class="n">–</td></tr>
+<tr><td>Puget Lowland, 47.32°N 122.67°W</td><td class="mono">2015-10-15</td><td class="n">0.9</td><td class="n">36 (31)</td><td class="n">21.1</td><td class="n">2.7, 2.7</td><td class="n">278</td><td class="n">0.7 km/d</td></tr>
+<tr><td>Central Oregon Cascades, 43.55°N 121.78°W</td><td class="mono">2015-10-22</td><td class="n">2.6</td><td class="n">29 (26)</td><td class="n">6.4</td><td class="n">3.1, 2.9</td><td class="n">249</td><td class="n">0.3 km/d</td></tr>
+<tr><td>Gorda plate, 41.35°N 127.44°W</td><td class="mono">2013-05-19</td><td class="n">0.6</td><td class="n">44 (27)</td><td class="n">−0.5</td><td class="n">3.8, 3.5</td><td class="n">247</td><td class="n">3.0 km/d</td></tr>
+<tr><td>Southern Oregon, 42.61°N 122.36°W</td><td class="mono">2013-03-24</td><td class="n">1.9</td><td class="n">33 (25)</td><td class="n">7.6</td><td class="n">3.2, 2.7</td><td class="n">214</td><td class="n">0.7 km/d</td></tr>
+<tr><td>Blanco, 43.55°N 128.17°W</td><td class="mono">2015-02-12</td><td class="n">0.2</td><td class="n">27 (10)</td><td class="n">19.8</td><td class="n">2.1, 2.1</td><td class="n">186</td><td class="n">4.6 km/d</td></tr>
+<tr><td>Blanco, 44.42°N 130.20°W</td><td class="mono">2012-11-20</td><td class="n">0.2</td><td class="n">43 (27)</td><td class="n">5.3</td><td class="n">3.5, 3.5</td><td class="n">130</td><td class="n">0.1 km/d</td></tr>
+</table></div>
+<p class="sans" style="font-size:13px;color:var(--muted)">* No background events within 10 km, so the ratio has no meaning there. Migration is a Theil-Sen slope of distance from the first five events against time; with fewer than about 30 events it is noisy.</p>
+<h3>What looks worth describing</h3>
+<div class="q"><b>Mount St. Helens crater, 2013–2016.</b><p>About 25 short clusters (15–90 events, 2–8 days each) lie within 1 km of the summit, between 1 km below and 2.5 km above sea level, with M below 1.3. They could be shallow volcano-tectonic swarms, glacier or rockfall signals, or picking artefacts. They should be checked against the PNSN catalog and event types before any interpretation.</p></div>
+<div class="q"><b>Mount Hood, 2014–2016.</b><p>Three swarm-like clusters lie within 10 km of the summit, including 63 events over 2.3 days in May 2016 at 2.4 km depth. Mount Hood is known for short swarms; the ML catalog may add smaller events to them.</p></div>
+<div class="q"><b>Gorda plate interior, 2013–2015.</b><p>Several bursts near 41.3°N 127.4°W, at the Gorda Ridge end of the plate, last under a day, have near-equal largest magnitudes and some fast migration. These fit ridge-axis dike or fluid swarms, and only the OBS deployments (2011–2015) can see them at this size.</p></div>
+<div class="q"><b>Blanco, 174 swarm-like clusters.</b><p>That count means swarms are how much of the Blanco seismicity happens. A per-segment table of swarm count, duration and migration is the natural extension of the published 2012–2013 studies into 2013–2015.</p></div>
+<p>Settings to vary before publishing: link distance (3 km), time scaling (2 km per day) and the 30-day limit. Swarm counts per year still depend on coverage, because a cluster needs 15 detected events to be counted. Compare years only where the network stayed the same.</p>
+
+<h2 id="fm">3. Polarities and focal mechanisms (no repicking)</h2>
+<p>The 2.5 million existing picks (1.28 million P, 1.23 million S) on 696 stations are enough. First-motion polarity is a property of the waveform around the existing P pick, so we predict it there and pick nothing new.</p>
+<div class="ph"><b>Polarity.</b> Run a deep-learning polarity classifier on short windows around each P pick. Maochuan's model is the planned choice (pointer still needed). Check the predictions against manual polarities on a subset, and against ComCat first motions where they exist. OBS verticals need their own check: a share of Cascadia Initiative instruments are thought to have flipped or mislabelled channels, which can be tested station by station using teleseismic P or polarities from well-located events.</div>
+<div class="ph"><b>Amplitude ratios.</b> The Route A amplitude run already holds P and S amplitudes for each pick, so S/P ratios cost almost nothing extra. They add constraint where polarities are few, in SKHASH or HASH.</div>
+<div class="ph"><b>Takeoff angles</b> depend on depth and velocity model. Run mechanisms after the 3D relocation, or at least after the datum question is settled. Otherwise every offshore mechanism inherits the shallow-depth bias.</div>
+<div class="ph"><b>Checks:</b> the 112 ComCat moment tensors already matched to v4 events (phase18), plus nodal-plane stability under bootstrap of polarities and velocity models.</div>
+
+<h2 id="tomo">4. Tomography and relocation</h2>
+<p>What we have: 172,340 events; 122,306 with at least 8 arrivals and 44,034 with at least 15; 322 of the 696 stations are on the seafloor and carry 0.99 million of the arrivals. Two 3D shear-velocity models are already on disk. CRESCENT CVM Gen0 (Vs with uncertainty, whole margin, −4 to 100 km) is in <span class="mono">data/tomography/CRESCENT_Gen0.nc</span>. Delph et al. (2018) covers only the forearc, from ambient noise and receiver functions.</p>
+<h3>My recommendation: two tracks</h3>
+<div class="q"><b>Track A, relocation in an existing 3D model (do first).</b>
+<p>Take Vs from CRESCENT Gen0 and derive Vp from Brocher (2005) or a regional Vp/Vs. Include topography and bathymetry, with stations at their real elevation or depth, so no event can sit above its surface. Add station terms, which matter for OBS S picks because sediments delay S by up to a few seconds. Locate with NonLinLoc to get a full uncertainty for each event. Then do a relative relocation (GrowClust or hypoDD on catalog differential times).</p>
+<p>This fixes the depths, gives the location uncertainties the fault surfaces need, and gives focal mechanisms consistent takeoff angles. Ian is the author of the relocation, so he should take part or at least agree.</p></div>
+<div class="q"><b>Track B, joint Vp and Vs tomography with relocation (a separate paper).</b>
+<p>An adjoint eikonal method such as TomoATT handles topography and seafloor stations and scales to millions of arrivals. Double-difference tomography (tomoDD) is the alternative. Start from the Track A model and locations, and use a declustered set of about 30–40k well-recorded events.</p>
+<p>What's new is a body-wave Vp and Vs (and Vp/Vs) model of the Gorda plate, the Mendocino region and the offshore forearc, from the 2011–2015 OBS data. Surface-wave models there are smooth and give Vs only.</p>
+<p>The limits: event–station geometry offshore leaves the region between the ridge and the trench poorly sampled, and resolution must be shown with checkerboard and spike tests. Vp/Vs at OBS depends on handling the sediment layer.</p></div>
+<h3>Why not tomography first?</h3>
+<p>Tomography takes the longest, and its value depends on resolution tests we can't predict. The two items you most want, focal mechanisms and fault surfaces, need correct depths, not a new velocity model. Track A gives those in weeks. Track B can then replace the Track A model, and the surfaces and mechanisms get recomputed, which is the same "version 2" step already planned for the focal mechanisms.</p>
+
+<h2 id="time">5. Timeline (one person full time, plus Claude for code)</h2>
+<div class="tbl"><table class="tl">
+<tr><th>Step</th><th>Weeks</th><th>Output</th></tr>
+<tr><td>Datum answer from Ian</td><td class="n">–</td><td>blocks the start of A1</td></tr>
+<tr><td>A1. 3D model grid (CRESCENT Gen0 + Brocher Vp, topography), NonLinLoc travel-time grids</td><td class="n">1</td><td>model and grids for 696 stations</td></tr>
+<tr><td>A2. Absolute relocation, station terms, outlier picks</td><td class="n">1–2</td><td>locations with full uncertainty</td></tr>
+<tr><td>A3. Relative relocation (GrowClust), checks against v4 and ComCat</td><td class="n">1–2</td><td>catalog v5 locations</td></tr>
+<tr><td>Polarity predictions on all P picks (runs alongside A)</td><td class="n">1–2</td><td>polarity + probability per pick</td></tr>
+<tr><td>Focal mechanisms (SKHASH: polarities + S/P), after A3</td><td class="n">2–3</td><td>mechanisms with quality grades</td></tr>
+<tr><td>Fault-surface pilot (Mendocino/Gorda), after A3</td><td class="n">2–3</td><td>surfaces with uncertainty, v1</td></tr>
+<tr><td>B. Joint Vp/Vs tomography + relocation, resolution tests</td><td class="n">8–12</td><td>3D Vp, Vs, Vp/Vs; catalog v6 locations</td></tr>
+</table></div>
+<p>Track A, mechanisms and the fault pilot: about 2 to 2.5 months. Track B runs alongside them and finishes about 3 months after it starts. Compute is not the limit; most of the time goes into checking results and choosing settings.</p>
+
+<h2 id="faults">6. Fault-surface plan</h2>
+<p>The surfaces are built in versions. v0 uses today's catalog, only to build and test the code. v1 uses the Track A relocations. v2 adds focal mechanisms. v3, if it happens, uses the Track B locations. Each version ships with uncertainties computed the same way, so the versions can be compared.</p>
+<div class="ph"><b>Phase 0 (can start now; v0, not for interpretation).</b> Code and tests on the Mendocino/Gorda v4 events.
+<ul>
+<li>Event selection: QC events, and location σ below a threshold.</li>
+<li>Clustering: HDBSCAN on epicentre and depth, with depth scaled by its larger error.</li>
+<li>Surface fitting: a plane by PCA, then curved surfaces with a SURF-style method or a thin-plate/Gaussian-process fit.</li>
+<li>Uncertainty: Monte Carlo over location errors, bootstrap of events, sweeps of the method's settings.</li>
+<li>Output in the format of the community fault model (mesh as GeoJSON or a TSurf file), with σ at each vertex.</li>
+<li>A new atlas layer.</li>
+</ul></div>
+<div class="ph"><b>Phase 1 (v1, after A3).</b> Rerun on the relocated catalog with NonLinLoc PDFs as the location errors. Compare with:
+<ul>
+<li>the CRESCENT CFM faults (Mendocino fault zone, faults inside the Gorda plate);</li>
+<li>the 2022 Ferndale rupture;</li>
+<li>Slab2 and CASIE21;</li>
+<li>nodal planes of the 112 matched ComCat tensors.</li>
+</ul>
+Then extend to Blanco, then the Axial and Endeavour ring faults, the Puget faults and the volcano clusters.</div>
+<div class="ph"><b>Phase 2 (v2, after focal mechanisms).</b> Use the mechanisms in three ways:
+<ul>
+<li>to pick the nodal plane consistent with each surface;</li>
+<li>to report where the surface and the mechanisms disagree, a direct check on each surface;</li>
+<li>to constrain dip where events alone give a wide range.</li>
+</ul>
+The difference between v1 and v2 is itself a measure of uncertainty.</div>
+<div class="ph"><b>Uncertainty delivered per surface:</b>
+<ul>
+<li>the mean mesh, with σ normal to the surface at each vertex;</li>
+<li>strike and dip with 68% and 95% intervals;</li>
+<li>a mask of where events actually constrain the surface;</li>
+<li>zone width compared with location error (a width larger than the error means a real damage zone or several strands);</li>
+<li>the full ensemble.</li>
+</ul>
+Velocity-model and datum effects are reported separately, as the shift between surfaces fitted to the Track A and Track B locations, because they move all surfaces together.</div>
+<p><b>Decisions for you:</b>
+<ul>
+<li>start Phase 0 now on v4 (my suggestion: yes, it costs about a week and the code carries over);</li>
+<li>whether Track A is ours or Ian's;</li>
+<li>whether Track B is a separate paper.</li>
+</ul></p>
+</div>
+</body>
+</html>

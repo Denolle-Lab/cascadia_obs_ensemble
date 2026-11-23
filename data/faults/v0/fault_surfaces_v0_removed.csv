@@ -1,0 +1,36 @@
+surface_id,n_events,lon,lat,strike,dip,lit_class,lit_match,reason
+ON012,163,-122.1276,49.1067,20.1,58.7,quarry blasts,Quarry blasts (Sumas Mountain / Chilliwack area),"quarry blasts (mostly daytime, weekday events)"
+ON020,108,-123.1069,46.1849,282.0,50.9,quarry blasts,Probable quarry blasts near Clatskanie (plus sparse events),"quarry blasts (mostly daytime, weekday events)"
+ON023,80,-122.5413,45.5538,127.9,81.4,quarry blasts,Blast-contaminated; possibly an East Bank / Lacamas Lake–parallel structure,"quarry blasts (mostly daytime, weekday events)"
+ON029,65,-122.6178,49.3005,7.7,65.4,quarry blasts,Quarry blasts (Pitt Meadows / Maple Ridge),"quarry blasts (mostly daytime, weekday events)"
+ON037,41,-123.0745,44.1077,51.1,29.1,quarry blasts,Blasts / artifact (Eugene–Springfield),"quarry blasts (mostly daytime, weekday events)"
+ON040,30,-122.2898,40.7315,262.8,88.4,quarry blasts,Quarry blasts (Redding area),"quarry blasts (mostly daytime, weekday events)"
+BL022,100,-128.7707,43.8498,314.7,77.9,likely artefact,Deep artefact beneath CAS (CAS cluster),likely artefact (literature check)
+BL024,78,-128.5819,43.6655,112.3,80.1,likely artefact,Deep artefact at the W tip of the BR / CAS junction,likely artefact (literature check)
+BL026,67,-127.1263,43.234,111.6,77.9,likely artefact,Deep artefact beneath the Gorda Depression,likely artefact (literature check)
+PU010,208,-122.3589,47.8294,286.3,14.2,likely artefact,Seismogenic-layer artifact under the N Seattle basin,likely artefact (literature check)
+BL001,2184,-129.3331,44.0798,124.3,76.1,known structure,Surveyor Depression strands plus link to EBD. A composite fit across right steps,"split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL002,1890,-129.5937,44.1968,300.7,68.3,known structure,"East Blanco Depression strands, extending W to the E end of the WBD","split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL004,1623,-129.9993,44.3406,110.6,87.4,known structure,West Blanco Depression transform (central valley; most likely WBDS or the central-valley strand),"split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL006,983,-129.2224,44.0559,122.1,83.2,known structure,"Surveyor Depression, northern strand (or E end of BL001)","split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL009,789,-129.3615,44.062,299.7,77.4,known structure,"Surveyor Depression, southern strand extending W toward the EBD","split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL010,711,-129.4479,44.1364,143.2,66.5,known structure,Oblique step-over structure between the EBD and SUR (pull-apart cross fault),"split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL015,436,-130.2732,44.4023,114.6,85.8,known structure,West Blanco Depression near the RTI (WBDN/WBDS trend),"split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL018,361,-130.303,44.4527,106.1,88.9,known structure,"WBDC: oblique strand from the NE corner of the WBD to the JdF ridge tip, or the N branch of Lange's RTI bifurcation","split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL020,271,-129.4248,44.0581,292.7,84.4,known structure,"Southern SUR strand, W extension toward the EBD","split into strands (BL004a, BL004b, BL006a, BL001a, BL001b, BL015a, BL018a, BL001c, BL001d, BL001e)"
+BL003,1666,-127.7464,43.4327,113.0,85.8,known structure,"Blanco Ridge transform, central and eastern part (the two Mw 6 asperities)","split into strands (BL003a, BL013a, BL011a, BL011b, BL011c, BL011d)"
+BL011,707,-128.6197,43.7195,302.5,54.3,known structure,Western Blanco Ridge seismicity shifted N toward CAS (BR–CAS junction / NE crustal fault bend),"split into strands (BL003a, BL013a, BL011a, BL011b, BL011c, BL011d)"
+BL013,605,-128.0647,43.5221,112.8,72.1,known structure,Western Blanco Ridge transform (W of the 127.9°W barrier),"split into strands (BL003a, BL013a, BL011a, BL011b, BL011c, BL011d)"
+BL019,318,-127.7109,43.4129,302.2,80.8,known structure,"Blanco Ridge, eastern asperity / barrier zone (overlaps BL003)","split into strands (BL003a, BL013a, BL011a, BL011b, BL011c, BL011d)"
+BL023,93,-127.9922,43.48,114.7,80.2,known structure,Blanco Ridge mantle seismicity (deep image of BL003/BL013),"split into strands (BL003a, BL013a, BL011a, BL011b, BL011c, BL011d)"
+BL014,494,-127.1285,43.2123,297.9,77.6,known structure,Gorda Depression interior / S-of-BR trough (BN08),"split into strands (BL014a, BL017a, BL016a, BL016b, BL017b)"
+BL016,393,-127.0704,43.2174,303.0,78.0,known structure,Gorda Depression north wall (SE continuation of the Blanco Ridge),"split into strands (BL014a, BL017a, BL016a, BL016b, BL017b)"
+BL017,382,-126.9973,43.1374,295.4,89.0,known structure,Gorda Transform segment (GD south wall to the Gorda Ridge RTI),"split into strands (BL014a, BL017a, BL016a, BL016b, BL017b)"
+BL001c,106,-128.7655,43.8222,313.1,89.1,duplicate,Cascadia Depression: NW-trending cluster (map-view strand),strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL001d,98,-128.7712,43.7973,130.6,89.9,duplicate,Cascadia Depression: NW-trending cluster,strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL001e,57,-128.7779,43.7754,121.7,89.8,duplicate,"Cascadia Depression: NW-trending cluster (S edge, toward the BR tip)",strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL011a,178,-128.6938,43.7701,308.7,88.1,duplicate,Cascadia Depression / BR-W-tip junction: NW-trending cluster,strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL011c,108,-128.7068,43.8066,309.5,88.8,duplicate,Cascadia Depression: deep NW-trending cluster,strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL011d,80,-128.6864,43.8192,296.3,89.9,duplicate,Cascadia Depression: deep cluster (artefact),strand-search artefact in the Cascadia Depression (NW strands where published faults strike N-S; literature check)
+BL013a,1332,-128.0028,43.4924,112.5,89.7,known structure,"Blanco Ridge: deeper, S-shifted band = mantle seismicity offset S of the crustal fault (Kuna19)","merged into BL003a: deeper band about 2 km south of the main strand; the offset follows depth (median 11.3 vs 8.4 km), as expected from depth-dependent location error, and published OBS catalogs show one zone within 1.5 km (Lange et al. 2026); Kuna et al. 2019 mantle offset is 1 km and only east of 127.92W"
+BL017b,127,-127.1442,43.1771,117.4,89.9,duplicate,"Gorda Transform: deeper, S-shifted band (deep image of BL017a)",merged into BL017a: deeper band about 2 km south of the Gorda Transform strand; same depth-dependent pattern as Blanco Ridge; Lange et al. 2026 resolve a single Gorda Transform within 1.5 km

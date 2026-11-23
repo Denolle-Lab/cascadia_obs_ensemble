@@ -55,6 +55,7 @@ SUFFIX = "_routeA"
 MATCHED = "../../data/focal/comcat_mt_matched.csv"
 M_SWITCH = 4.5
 FIT_MIN = 3.5
+THEIL_MAX = 5000         # subsample size for the Theil-Sen mapping fit (memory is O(n^2))
 MW_MT_UNC = 0.1
 MIN_STA_OBS = 8
 REJECT_MAD = 4.0
@@ -131,7 +132,10 @@ def main():
         ["event_id", "otime", "evla", "evlo", "evdp", "ML_inv", "ML_inv_unc"]]
     out = out.join(ev[["ML", "ML_unc", "n", "ML_method"]].rename(columns={"n": "n_ML"}), on="event_id")
     nr = out[out.ML_method == "near"]
-    sl, ic, _, _ = theilslopes(nr.ML, nr.ML_inv)
+    # Theil-Sen is O(n^2) in memory: above THEIL_MAX events, fit a fixed random subsample
+    # (catalog v4 has ~127k "near" events -> 121 GiB). Unchanged for smaller catalogs (v3).
+    fit = nr.sample(THEIL_MAX, random_state=0) if len(nr) > THEIL_MAX else nr
+    sl, ic, _, _ = theilslopes(fit.ML, fit.ML_inv)
     s_map = np.std(nr.ML - ic - sl * nr.ML_inv)
     miss = out.ML.isna()
     out.loc[miss, "ML"] = ic + sl * out.ML_inv[miss]

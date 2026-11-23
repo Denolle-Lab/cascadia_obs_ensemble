@@ -1,0 +1,182 @@
+---
+title: "Supplementary Materials for: The fault architecture and seismic behavior of an entire plate-boundary system offshore Cascadia"
+bibliography: references.bib
+format:
+  latex:
+    output-file: supplementary_body
+    cite-method: natbib
+---
+
+<!--
+Draft 2026-11-22. Technical development and tests. Each section points to the code and product files
+in the repository; figures listed here exist as PNG files and will be redrawn for print.
+-->
+
+# Text S1. Detecting fault planes in seismicity
+
+**Why planes, not clusters.** A first version found clusters by density (DBSCAN: eight neighbors within
+2.5 km in 3D). It kept only the densest knots (20% of events) and missed long, sparse alignments such as
+the plate boundaries, because density never tests whether events lie on a plane. The method used here
+searches for planes directly, in the spirit of anisotropic clustering [@Ouillon2008; @Wang2013] and of
+recent hypocenter-based fault models [@Alongi2025].
+
+**Detection.** (Code: `workflow/07_faults/fault_surfaces_planes.py`.)
+- Events: at least four P and four S picks, catalog depth ≥ 0, Axial Seamount excluded (76,281 events).
+- Tolerance: $\tau = 1.5\sqrt{(1.5\,|n_h|)^2 + (3\,n_z)^2}$ km for a plane with unit normal $n$ (about 2.3 km
+  for a vertical plane, 4.5 km for a horizontal one).
+- Seeds from dense to sparse; 150 random planes per seed through the seed and two events within 10 km,
+  scored in a 20 km ball [@Fischler1981]; growth through events within $\tau$ that are connected in the
+  plane (4 km cells, 8-connectivity); acceptance with ≥ 30 events, planarity $\sqrt{\lambda_3/\lambda_2} \le
+  0.5$, in-plane width ≥ 1 km, dip ≥ 30° (v4 depths cannot resolve flatter structures; a diffuse cloud
+  passes for a flat plane).
+- Reassignment (three passes, k-planes): each event to the plane with the smallest $|d|/\tau$ whose
+  rectangle contains its projection.
+- Merging: normals within 15°, each within $\tau$ of the other, events closer than 4 km, joined set still
+  planar.
+- Rectangles: the 2–98% range of the events along strike and down dip plus 0.5 km; plane or quadratic by
+  BIC; 1 km grid.
+
+**Result.** 155 faults detected; 10 removed (Text S3); Blanco redone as strands (Text S2); 141 in the
+product, 70% of events assigned (Table S1: `data/faults/v0/fault_surfaces_v0_assignment.csv`).
+Fig. S1: map of events colored by fault (`fault_surfaces_v0_map.png`).
+
+# Text S2. Uncertainty, stability and Blanco strands
+
+**Uncertainty per vertex** (1σ normal to the surface): bootstrap of the fault's events (100 draws); Monte
+Carlo moving each event by N(0; 1.5, 1.5, 3 km); spread over model choices (plane or quadratic, with or
+without trimming beyond 2.5 RMS); combined in quadrature, median 0.44 km (10th–90th percentile 0.17–0.78
+km). The catalog's `spatial_sigma` (3–20 km) is not used: events scatter only 0.6–1.8 km about the fitted
+surfaces, so it behaves like an absolute, not a relative, error. Strike and dip intervals come from the
+bootstrap; the full ensemble is provided (`fault_surfaces_v0_ensemble.csv.gz`).
+
+**Stability.** Detection rerun with two other random seeds and tolerance factors 1.25 and 1.75; for each
+fault, the median Jaccard overlap of its events with the best match; "stable" if ≥ 0.5 (50 of 141).
+Overlap is low where parallel planes trade events between runs, even when the geometry barely moves.
+
+**Blanco strands** (`workflow/07_faults/split_strands.py`, `merge_surfaces.py`). Strands are lines in map
+view within 20° of plate motion (111°), 1.5 km half width, grown across gaps under 4 km, merged when
+collinear. Two overlapping parallel strands stay separate only if Ashman's D > 2 [@Ashman1994] over the
+overlap and within each year with ≥ 15 events in each. Depth test: the dip a single fault would need to
+produce the offset. The literature check then removed six NW-trending strands in the Cascadia Depression
+(where published faults strike N–S) and merged two depth-dependent "deeper band" strands. Table S2
+(`fault_surfaces_v0_strand_separation.csv`) lists the 22 remaining pairs. Fig. S2: Blanco strands with
+their events and top edges.
+
+# Text S3. Removed surfaces
+
+Six surfaces were quarry blasts (mostly daytime, weekday events: ON012, ON020, ON023, ON029, ON037, ON040),
+four were artefacts (BL022, BL024, BL026: deep planes where published Blanco seismicity stops at 10–14 km;
+PU010: a seismogenic-layer artefact), six were strand-search artefacts and two were merged
+(`fault_surfaces_v0_removed.csv`, with reasons).
+
+# Text S4. Comparison with the literature
+
+Five searches, one per region (Blanco; Mendocino triple junction; Gorda; Puget and offshore Washington;
+onshore, offshore Oregon and Endeavour), compared each fault's position, strike, dip, length and depth with
+published faults, ridge and transform segments, seismic zones and earthquake sequences. Matches carry a
+confidence (high to none) and a class (known structure, duplicate, seismicity layer, no known counterpart).
+Every DOI was checked on Crossref or DataCite; where no structure is known, the references describe the
+area so the claim can be checked. USGS moment tensors were used only to compare surfaces with known
+earthquakes, never to build them. Table S4: `fault_surfaces_v0_literature.csv` and
+`fault_surfaces_v0_literature.html`; regional notes in `data/faults/v0/literature/`.
+
+# Text S5. Building the catalog
+
+(Adapted from the catalog draft, `paper/main.qmd`, Data and Methods.)
+
+**Data.** Continuous data from 2010 to 2016 were retrieved with ROVER into a day-file archive read through
+an indexed client (pnwstore); the `NC` and `BK` networks were requested from the NCEDC FDSN service.
+Picks of catalog v4.0 come from 696 stations of 24 networks (`7A`, `7D`, `BK`, `C8`, `CC`, `CN`, `GS`,
+`NC`, `NV`, `OO`, `PB`, `TA`, `UO`, `UW`, `X4`, `X9`, `XD`, `XG`, `XU`, `YG`, `YH`, `YW`, `Z5`, `ZZ`);
+the 2016 repicks of v4.1 add 105 land stations (71 `NC`, 13 `NP`, 7 `BK`, 6 `UW`, 4 `CE`, 2 `YK`, 1 `UO`, 1 `PB`),
+among them the Cascadia Initiative ocean-bottom stations [@Stone2018] and the cabled stations of the
+Ocean Observatories Initiative at Axial Seamount.
+
+**Picking.** ELEP [@Yuan2023] combines five EQTransformer models [@Mousavi2020] distributed by
+SeisBench [@Woollam2022] (original, ETHZ, INSTANCE, SCEDC, STEAD) by second-order semblance over 0.5 s,
+on 60 s windows stepped by 30 s, after a 4–15 Hz band-pass; a pick is the semblance maximum of each
+segment above 0.05. Two region passes (2011–2015, 123–127°W; 2010–2015, 122–129°W) produced the ver3
+table (39.6 million picks). Three fills completed it: ver4 adds region-run station-days left out of ver3
+(9.9 million picks); ver5 adds ocean-bottom station-days without picks, including the Axial cabled
+stations (11.4 million); ver6 adds the land strip 122–123°W (12.7 million), for 73.6 million picks on
+509,249 station-days. Every pick keeps its identifier across versions.
+
+**Association and location.** GENIE [@McBrearty2023], trained for 38–51°N, 119–132°W on synthetic
+events in a 3D model, associated the ver6 picks day by day on the stations available each day; events
+with at least five stations were kept and located, then relocated with GraphDD [@McBrearty2025] on
+catalog and cross-correlation differential times. Catalog v4 (I. McBrearty) has 172,340 events and
+2,503,189 arrivals; v4.1, used here, has 172,342 events and 2,503,627 arrivals after the 2016 repick
+below (`data/catalog_v4/FIXES.md`). Quality metrics are the numbers of P and S picks, stations, the azimuthal gap and the
+RMS residual; the "QC" subset used for fault surfaces requires at least 4 P and 4 S picks.
+
+**Magnitudes (Route A).** Wood–Anderson amplitudes are measured once per station-day for every pick, in
+windows that grow with distance after association (P: up to 1 + 0.03r s, S: up to 2 + 0.06r s); 99.6% of
+v4 arrivals have one. Station magnitudes with the Hutton–Boore distance term are inverted for event and
+station terms (separate for each deployment epoch) within 150 km, anchored to 3,416 ComCat local
+magnitudes (scatter 0.21), and replaced by regional moment magnitudes above M 4.5. 130,767 events have a
+magnitude.
+
+**Known data issues.** Ocean-bottom records carry ship noise, short-duration events, T-phases and high
+microseism noise on the shelf [@Hilmo2020]; fragmented station-days produce picks at every data join
+(1,846 station-days removed in ver6, 6,073 flagged in ver5); `NC` and `BK` picks are missing in 2016 and
+parts of 2010–2011 (Text S7). Depth limitations: see below.
+
+**Offshore location check.** On the Gorda Ridge, catalog epicenters fall on the axial valley, while ComCat
+epicenters of the same events lie 10–20 km east.
+
+Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
+including the 8 December 2016 Mw 6.6 on the Mendocino transform (10 at the northern edge, 3 offshore in
+2016 without ocean-bottom stations, 1 in the 2016 northern California pick gap, 1 on the Blanco in 2011;
+script in the figure notes). Event 172113 (14:51:18, 4 P and 1 S, near Mount St. Helens) is the Mw 6.6 mis-associated: its P picks
+are the Pn arrivals at 708–797 km, within 2 s of iasp91; it is removed in v4.1. We repicked the Mw 6.6, its
+M 4.7 aftershock and the January 2016 Gorda pair on 30-minute windows of all stations within 4° (279 for
+the Mw 6.6, 193 of them `NC`/`BK`) with the same ELEP ensemble, kept the picks near the predicted
+arrivals from the ComCat origins, and located them with NonLinLoc in the 3D model of the relocation and
+in iasp91. The picks are clean to 400 km (Mw 6.6: 146 P, 54 S), but every station is east of the events
+(nearest 156 km, gap 255–310°): depths go to the bottom of every search range and epicenters move 7–41 km
+west of ComCat. Catalog v4.1 adds the three missing events (IDs 900001–900003) with the ComCat hypocenter and magnitude and
+our picks, and adds 160 repicks to the M 4.7 aftershock (event 172114), which keeps its v4 hypocenter
+(`data/catalog_v4/fixes/m66_2016/`, `utils/fix_catalog_v4.py`). Depth limitations: 23.5% of events above
+the surface with depths read below sea level, 16.2% below the local surface; 3D relocation in progress.
+
+# Text S6. Clustering: validation and sensitivity
+
+(Code: `workflow/06_analysis/v4_clusters_zbz.py`; report
+`data/catalog_v4/clusters_zbz/catalog_v4_clusters_report.html`.)
+- Mc per region and year (maximum curvature + 0.2); b by maximum likelihood per region; $d_f$ = 1.6
+  (measured epicentral D2 0.8–1.4, run as a variant); epicentral distance floored at 0.5 km.
+- Parent search over the whole catalog with a rupture-length cap; events below Mc or without magnitude
+  attached afterwards to their nearest parent.
+- Shuffled catalogs (times permuted in each region): bimodality index drops from 1.6–3.4 to 0.3–1.6; only
+  3–17% of shuffled events pass the real threshold (34% at Axial, whose clustered share is an upper bound).
+- Validation: the 2010 and 2014 Gorda, 2011 and 2014 Vancouver Island, 2012 Explorer and 2015 Mendocino
+  fault zone earthquakes are mainshock–aftershock sequences; the 2015 Axial eruption is one swarm.
+- Sensitivity: 84–99% of events keep their background or clustered label under $d_f$ 1.3/2.0/estimated,
+  3D distance, Mc + 0.3 and yearly Mc; a conservative threshold raises background by 1–32 points.
+- Limits: the per-region Mc keeps 27,555 events; Mc differs between regions (0.75–2.45); the swarm rule's
+  magnitude gap (0.5) is close to the ML uncertainty (about 0.2).
+
+# Text S7. Magnitude of completeness maps
+
+(Code: `workflow/06_analysis/v4_mc_maps.py`; README in `data/catalog_v4/mc_maps/`.)
+Magnitudes rounded to 0.1; every b fit needs ≥ 30 events above the cutoff. Methods: maximum curvature
++0.2; b-value stability with the Shi–Bolt test over a five-bin window [@Woessner2005; @Shi1982] (the fixed
+0.03 tolerance of the AgentSeismo code almost never passes with 250 events); goodness of fit on cumulative
+counts at 90% and 95% [@Wiemer2000]. Maximum curvature + 0.2 is the most conservative at 84% of nodes;
+b-value stability averages 0.19 lower and the best estimate 0.14 lower. The QC-only catalog (≥ 4 P and ≥ 4
+S) leaves Mc unchanged (median difference 0.0, interquartile range ±0.1). The per-region Mc of the
+clustering is at or above all three methods everywhere except the Blanco b-value-stability value (2.5
+against 2.45). At Axial the frequency–magnitude distribution has two slopes, so the pooled goodness-of-fit
+value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4–1.0).
+
+# Supplementary tables (files)
+
+- Table S1. Events and share on a fault, per region.
+- Table S2. Blanco strand separation tests.
+- Table S3. Fault surfaces: geometry, uncertainty, stability (`fault_surfaces_v0_summary.csv`).
+- Table S4. Literature matches with verified references.
+- Table S5. Clustering families (`families_zbz.csv`) and per-region summary (`regions_zbz.csv`).
+- Table S6. Magnitude of completeness by region and period, three methods, with bootstrap sigma, b and
+  rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`); grids in
+  `mc_grid.csv`, `mc_grid_<period>.csv` and NetCDF. Figs. S3–S7: three-method maps, bootstrap sigma and b,
+  periods, regional frequency–magnitude distributions, QC variant (`data/catalog_v4/mc_maps/fig1–fig5`).

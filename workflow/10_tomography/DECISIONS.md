@@ -186,3 +186,17 @@ tomoDD runs on overlapping sub-regions of up to ~400 km (flat-earth/Cartesian gr
 earth curvature ~38 km over 700 km). First region Mendocino-Gorda. Region boundaries, overlaps and how the overlap
 zones are compared or merged: proposed with the tomoDD audit (notes/tomodd_build.md) and the regional design note.
 
+### D-B026 tomoDD version, build and run strategy (proposed, 2026-11-22, agent; source notes/tomodd_build.md)
+Code: tomoDD-SE (Zhang & Thurber; spherical pseudo-bending) from the USTC 2020 training package (archive sha256
+e618c691...275fe1; same source as the GitHub mirror travisalongi/tomoDD-SE-training2020; the 2017 USTC package is
+the same code without the 2020 fixes, incl. the longitude wrap that negative longitudes need). No author repository
+exists; ask Haijiang Zhang to confirm the version. Built with gfortran 8.5 (gfortran 13 stops at a malformed FORMAT),
+shipped flags minus -ffloat-store (1.72x faster, outputs byte-identical); not -march=native (changes hypocentres by
+0.1-0.3 km median, up to 5-8 km: compiler, flags and machine are pinned for all ensemble members). Shipped example
+reproduced byte for byte. Mendocino benchmark (9,334 events, 828k data, 40x40x23 nodes, 5 iterations): 9.9 min on one
+core, 2.5 GB; ensemble members run as parallel serial jobs (64 at once = 34x throughput). Licence (WARF academic):
+use allowed; no modification beyond the array sizes the manual asks users to set, no public posting, so source and
+binaries stay out of git and Zenodo. Input rules: weights rescaled into (0, 3]; numeric station codes (7-character
+limit); OBS statics applied to the picks; top grid edge at or above -4 km; air-quake depth about -2.2 km.
+Amends D-B025: ray tracing is spherical, so the sub-region size is set by memory and run time, not by curvature.
+

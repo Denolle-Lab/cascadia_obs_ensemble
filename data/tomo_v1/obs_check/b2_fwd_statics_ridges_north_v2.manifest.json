@@ -4,10 +4,10 @@
  "argv": [
   "ridges_north_v2"
  ],
- "utc": "2026-11-23T14:31:46.628121+00:00",
- "git_commit": "31bc263c964b1481398964a2971aae6c6198007e",
+ "utc": "2026-11-23T14:52:08.217023+00:00",
+ "git_commit": "1bee7f1f34ad5d0090ff3652e4aa164d1d98d99f",
  "git_dirty": false,
- "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
+ "params_md5": "f0981d0cef332098450ffed517172425",
  "params": {
   "forward": {
    "coords": "ellipsoid",
@@ -20,9 +20,9 @@
  "inputs": [
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/p1_reference/obs_S_iter1_p1.parquet",
-   "size": 10588290,
-   "mtime": "2026-11-23T14:31:43.739740+00:00",
-   "md5": "152e1081e46fd18a02f9272d5a93dd7a"
+   "size": 10588807,
+   "mtime": "2026-11-23T14:52:05.013850+00:00",
+   "md5": "71a687878c7e84fff12dbfb3b03b0d4f"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
@@ -34,13 +34,13 @@
  "outputs": [
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv",
-   "size": 6048,
-   "mtime": "2026-11-23T14:31:46.616720+00:00",
-   "md5": "4e36db1fba1bc56ba7b6e55fd916402b"
+   "size": 6159,
+   "mtime": "2026-11-23T14:52:08.204833+00:00",
+   "md5": "0388e21f9e481e0170baa353edf7f506"
   }
  ],
  "counts": {
-  "stations": 71,
+  "stations": 74,
   "with_static": 59,
   "with_static_old": 59,
   "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,

@@ -4,10 +4,10 @@
  "argv": [
   "oregon_v2"
  ],
- "utc": "2026-11-23T14:36:46.796010+00:00",
- "git_commit": "037a7a0db4909a5278e403b7b2ef355dba91d87c",
+ "utc": "2026-11-23T14:58:30.691030+00:00",
+ "git_commit": "1bee7f1f34ad5d0090ff3652e4aa164d1d98d99f",
  "git_dirty": false,
- "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
+ "params_md5": "f0981d0cef332098450ffed517172425",
  "params": {
   "forward": {
    "coords": "ellipsoid",
@@ -20,9 +20,9 @@
  "inputs": [
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/p1_reference/obs_S_iter1_p1.parquet",
-   "size": 246062,
-   "mtime": "2026-11-23T14:36:44.816873+00:00",
-   "md5": "faaf7e545973b9e53b174ab351e0b8bd"
+   "size": 347799,
+   "mtime": "2026-11-23T14:58:28.529632+00:00",
+   "md5": "4d0f36be2424aa09078674697934ac2e"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
@@ -34,21 +34,21 @@
  "outputs": [
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv",
-   "size": 1851,
-   "mtime": "2026-11-23T14:36:46.786860+00:00",
-   "md5": "342f6f1fbf000305c67ffd3c36639291"
+   "size": 3094,
+   "mtime": "2026-11-23T14:58:30.680621+00:00",
+   "md5": "0c6d7538c9aebf4e6f27fadc7f5c32de"
   }
  ],
  "counts": {
-  "stations": 21,
-  "with_static": 17,
-  "with_static_old": 17,
+  "stations": 38,
+  "with_static": 29,
+  "with_static_old": 29,
   "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,
   "old_recomputed_vs_file_maxabs": 0.0005,
-  "change_median": 0.277,
+  "change_median": 0.285,
   "change_p5_p95": [
-   0.161,
-   0.458
+   0.175,
+   0.446
   ],
   "below_minus_0p5_new": 1,
   "below_minus_0p5_old": 3

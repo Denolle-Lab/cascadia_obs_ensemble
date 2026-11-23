@@ -2,10 +2,50 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-22.
+Last update: 2026-11-23 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## Handoff 2026-11-23 08:10 (read first)
+
+**Where the work is.** Worktree `~/wt_tomo_res`, branch `tomo/tiles` = PR #33, stacked on `tomo/res-tests-mg_v2` = PR #32
+(Mendocino-Gorda v2 resolution tests), stacked on `tomo/track-b`. PR #32 also holds a snapshot of the code that was
+uncommitted in the main checkout (the main checkout has not changed since; it still sits on `tomo/track-b` with that
+work uncommitted). The main checkout is not used for this work.
+
+**What was decided today.** D-B033 tiles (blanco, oregon, washington, ridges_north beside Mendocino-Gorda); D-B034
+FORMAT-fixed tomoDD builds (missing comma at tomoDD-SE.f line 2324 stopped some runs); D-B035 offshore forearc kept
+(soft selection rule, soft-bar OBS keep all picks; datasets `b1_dataset_c`, `b1b_balanced_c`; 28,986 events).
+mendocino_gorda_v2 / v2s and the ensemble work stay on the old dataset; `mendocino_gorda_c` is Mendocino-Gorda on
+the new one.
+
+**Running (detached, survive logout; not a reboot).** `b2_res_pipeline.sh <tile>_v2` for mendocino_gorda_c, blanco,
+oregon, washington at damping 1000 (53 inversions each: 5 real-data scan runs + checkerboards + lattice spikes).
+At 08:10: blanco 40/53, oregon 32/53, mendocino_gorda_c 8/53, washington 3/53. Each tile commits its results to
+`tomo/tiles` and comments on PR #33 when done. Progress: `res_tests/queue/runner.log` and `pipeline.log` under
+`/wd1/mdenolle_data/tomo_v1/b2_tomodd/<tile>_v2/`. If a run stopped (reboot, kill), resume with the same command
+from `~/wt_tomo_res`; finished pieces are skipped:
+
+    setsid nohup bash workflow/10_tomography/b2_res_pipeline.sh blanco_v2 \
+        >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/pipeline.log 2>&1 < /dev/null &
+
+Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
+the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
+
+**ridges_north result (done, all on PR #33).** Lattice checkerboards and spikes: nothing resolved at any damping
+(1000, 300, 200, 100). Spikes at the event clusters with DWS >= 100 (52 of 105 P spikes sampled): median recovery
+22 % (damping 100), 21 % (200), 19 % (300), 10 % (1000); only 3 spikes >= 50 %, all at 12 km between northern Blanco
+and Axial (44.4-45.4 N, 130.0-130.3 W, DWS 1,165-7,203, smearing about one node). Real-data condition number at
+s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at CND ~60).
+
+**Open, for the PI.**
+1. ridges_north damping: 100 or 200 (not 1000); log as a decision and set in params.
+2. Damping scan for the other tiles once their damping-1000 runs are in (ridges shows 1000 can be far too strong
+   for a small tile): rerun with `DAMP=` as for ridges.
+3. Whether ridges_north is reported as a model (masked, amplitudes ~25 % of true) or used for relocation only.
+4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
+5. Merge order: PR #32, then PR #33, into `tomo/track-b`.
 
 ## Done
 

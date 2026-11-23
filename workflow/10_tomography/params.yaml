@@ -125,6 +125,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     # D-B033 (proposed 2026-11-23): other tiles. <tile> = first build (B1b data, old statics, no forward fixes);
     # <tile>_v2 = forward fixes as mendocino_gorda_v2 (P-1 reference from <tile>, per-tile OBS S statics).
     blanco:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [42.6, 45.2]
       events_lon: [-130.6, -125.6]
       station_margin_deg: [0.5, 0.7]
@@ -132,6 +135,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lat: [42.1, 45.7, 0.1]
 
     blanco_v2:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [42.6, 45.2]
       events_lon: [-130.6, -125.6]
       station_margin_deg: [0.5, 0.7]
@@ -144,6 +150,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv
         p1_reference: blanco_v2/p1_reference
     oregon:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [42.6, 46.4]
       events_lon: [-126.2, -121.0]
       station_margin_deg: [0.5, 0.7]
@@ -151,6 +160,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lat: [42.1, 46.9, 0.1]
 
     oregon_v2:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [42.6, 46.4]
       events_lon: [-126.2, -121.0]
       station_margin_deg: [0.5, 0.7]
@@ -169,9 +181,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lon: [-127.15, -120.25, 0.125]
       node_lat: [45.3, 50.3, 0.1]
       bins:                                # MAXOBS 140 build (max 109 stations per event, +20%, notes/tomodd_build.md)
-        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140          # md5 e1ed7683ccde80ceef012533f3f8cf64 (src tomoDD_opt/O3nofs_o140)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140_fmt      # md5 c643da2e4c759c83c6cd069dbcbbd864 (src O3nofs_o140_fmt; D-B034 FORMAT fix)
         bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_o140  # md5 825472157d4fea77e41b9d3a18d53003 (syn_o140)
-        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140       # md5 803f90d72ba49030a7e9d38487d6946d (chk_o140)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140_fmt   # md5 b828a1c21be1fc8847e5b9697c45a12d (chk_o140_fmt; D-B034)
       limits: {MAXOBS: 140}
     washington_v2:
       events_lat: [45.8, 49.8]
@@ -180,9 +192,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lon: [-127.15, -120.25, 0.125]
       node_lat: [45.3, 50.3, 0.1]
       bins:                                # MAXOBS 140 build (max 109 stations per event, +20%, notes/tomodd_build.md)
-        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140          # md5 e1ed7683ccde80ceef012533f3f8cf64 (src tomoDD_opt/O3nofs_o140)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140_fmt      # md5 c643da2e4c759c83c6cd069dbcbbd864 (src O3nofs_o140_fmt; D-B034 FORMAT fix)
         bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_o140  # md5 825472157d4fea77e41b9d3a18d53003 (syn_o140)
-        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140       # md5 803f90d72ba49030a7e9d38487d6946d (chk_o140)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140_fmt   # md5 b828a1c21be1fc8847e5b9697c45a12d (chk_o140_fmt; D-B034)
       limits: {MAXOBS: 140}
       forward:
         coords: ellipsoid
@@ -191,6 +203,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv
         p1_reference: washington_v2/p1_reference
     ridges_north:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [44.4, 50.0]
       events_lon: [-131.0, -126.6]
       station_margin_deg: [0.5, 0.7]
@@ -198,6 +213,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lat: [43.9, 50.5, 0.1]
 
     ridges_north_v2:
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
       events_lat: [44.4, 50.0]
       events_lon: [-131.0, -126.6]
       station_margin_deg: [0.5, 0.7]

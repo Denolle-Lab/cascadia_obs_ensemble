@@ -1,0 +1,57 @@
+{
+ "name": "b2_fwd_statics_ridges_north_v2",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_fwd_statics.py",
+ "argv": [
+  "ridges_north_v2"
+ ],
+ "utc": "2026-11-23T14:31:46.628121+00:00",
+ "git_commit": "31bc263c964b1481398964a2971aae6c6198007e",
+ "git_dirty": false,
+ "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
+ "params": {
+  "forward": {
+   "coords": "ellipsoid",
+   "mod": "nearest",
+   "station_corr": true,
+   "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv",
+   "p1_reference": "ridges_north_v2/p1_reference"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/p1_reference/obs_S_iter1_p1.parquet",
+   "size": 10588290,
+   "mtime": "2026-11-23T14:31:43.739740+00:00",
+   "md5": "152e1081e46fd18a02f9272d5a93dd7a"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
+   "size": 22192,
+   "mtime": "2026-11-23T14:16:13.586080+00:00",
+   "md5": "272837c1eb6b1a52a61d1e8f8bff998a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv",
+   "size": 6048,
+   "mtime": "2026-11-23T14:31:46.616720+00:00",
+   "md5": "4e36db1fba1bc56ba7b6e55fd916402b"
+  }
+ ],
+ "counts": {
+  "stations": 71,
+  "with_static": 59,
+  "with_static_old": 59,
+  "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,
+  "old_recomputed_vs_file_maxabs": 0.0005,
+  "change_median": 0.442,
+  "change_p5_p95": [
+   0.2,
+   0.875
+  ],
+  "below_minus_0p5_new": 0,
+  "below_minus_0p5_old": 1
+ },
+ "notes": null
+}

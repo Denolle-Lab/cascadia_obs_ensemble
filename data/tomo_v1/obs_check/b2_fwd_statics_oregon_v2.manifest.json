@@ -1,0 +1,57 @@
+{
+ "name": "b2_fwd_statics_oregon_v2",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_fwd_statics.py",
+ "argv": [
+  "oregon_v2"
+ ],
+ "utc": "2026-11-23T14:36:46.796010+00:00",
+ "git_commit": "037a7a0db4909a5278e403b7b2ef355dba91d87c",
+ "git_dirty": false,
+ "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
+ "params": {
+  "forward": {
+   "coords": "ellipsoid",
+   "mod": "nearest",
+   "station_corr": true,
+   "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv",
+   "p1_reference": "oregon_v2/p1_reference"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/p1_reference/obs_S_iter1_p1.parquet",
+   "size": 246062,
+   "mtime": "2026-11-23T14:36:44.816873+00:00",
+   "md5": "faaf7e545973b9e53b174ab351e0b8bd"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
+   "size": 22192,
+   "mtime": "2026-11-23T14:16:13.586080+00:00",
+   "md5": "272837c1eb6b1a52a61d1e8f8bff998a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv",
+   "size": 1851,
+   "mtime": "2026-11-23T14:36:46.786860+00:00",
+   "md5": "342f6f1fbf000305c67ffd3c36639291"
+  }
+ ],
+ "counts": {
+  "stations": 21,
+  "with_static": 17,
+  "with_static_old": 17,
+  "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,
+  "old_recomputed_vs_file_maxabs": 0.0005,
+  "change_median": 0.277,
+  "change_p5_p95": [
+   0.161,
+   0.458
+  ],
+  "below_minus_0p5_new": 1,
+  "below_minus_0p5_old": 3
+ },
+ "notes": null
+}

@@ -19,7 +19,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from manifest import load_params, write_manifest  # noqa: E402
+from manifest import load_params, tomodd_bin, write_manifest  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
@@ -125,7 +125,7 @@ def main():
         region=a.region, tag=a.tag, air=summ["air_dep_km"], nset=len(rows), stepl=T["inp"]["stepl_km"],
         clat=summ["center_lat"], clon=summ["center_lon"], w1=w1, w2=w2, w3=w3, sets="\n".join(rows)))
 
-    binary = a.bin or (T["bin_check"] if a.check else T["bin"])
+    binary = a.bin or tomodd_bin("bin_check" if a.check else "bin", a.region)
     t0 = time.time()
     with open(run / "stdout.txt", "w") as so, open(run / "time.txt", "w") as se:
         rc = subprocess.run(["/usr/bin/time", "-f", "%e s %U user %M KB", binary, "tomoDD-SE.inp"],

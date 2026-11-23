@@ -192,5 +192,5 @@ if __name__ == "__main__":
         st.use(a[a.index("--cfg") + 1])
         if st.CFG["name"] != "smooth_test":
             INV = a[a.index("--inv") + 1] if "--inv" in a else st.CFG["inv_tags"][0]
-            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / f"spike_{INV}"
+            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / st.REG / f"spike_{INV}"
     main()

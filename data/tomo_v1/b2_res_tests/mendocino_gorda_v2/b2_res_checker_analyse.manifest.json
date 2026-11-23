@@ -1,13 +1,13 @@
 {
  "name": "b2_res_checker_analyse",
- "script": "/home/mdenolle/cascadia_obs_ensemble/workflow/10_tomography/b2_res_checker.py",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_res_checker.py",
  "argv": [
   "analyse"
  ],
- "utc": "2026-11-23T14:18:52.657920+00:00",
- "git_commit": "0e626250153f69aa52f6e35d305c975c30c572bd",
+ "utc": "2026-11-23T14:29:04.513318+00:00",
+ "git_commit": "a3b4b7ea85c98a283a548f1cebc1c8a96e836b8e",
  "git_dirty": true,
- "params_md5": "b880c997a86a3857616d4b27877ab803",
+ "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
  "params": {
   "amp": 0.08,
   "cell_km": [
@@ -276,62 +276,51 @@
  ],
  "outputs": [
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/b2_res_checker_analyse.manifest.json",
-   "size": 12782,
-   "mtime": "2026-11-23T14:17:54.509382+00:00",
-   "md5": "7cec0687b63dc0600d311e72c1838eb6"
-  },
-  {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/checker_by_depth.csv",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/checker_by_depth.csv",
    "size": 69639,
-   "mtime": "2026-11-23T14:18:49.515014+00:00",
+   "mtime": "2026-11-23T14:29:01.309840+00:00",
    "md5": "e5d95b562c0a37a903ec9132ad72a3fe"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/checker_maps_p_s20.png",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/checker_maps_p_s20.png",
    "size": 791491,
-   "mtime": "2026-11-23T14:18:50.577007+00:00",
+   "mtime": "2026-11-23T14:29:02.438833+00:00",
    "md5": "f7ba535669cb10c4aa635f8430fb7f58"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/checker_maps_s_s20.png",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/checker_maps_s_s20.png",
    "size": 806036,
-   "mtime": "2026-11-23T14:18:51.484000+00:00",
+   "mtime": "2026-11-23T14:29:03.345827+00:00",
    "md5": "93045a3752f635b35914479198d07454"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/coast_i.txt",
-   "size": 9191,
-   "mtime": "2026-11-23T14:17:51.490402+00:00",
-   "md5": "98808e188fbbe6eb2f4f8274c2ae5a8b"
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/coast_i.txt",
+   "size": 9704,
+   "mtime": "2026-11-23T14:29:01.509839+00:00",
+   "md5": "46696edf4f160f468751bce88a0c3c01"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/resolution_mask.npz",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/resolution_mask.npz",
    "size": 4463,
-   "mtime": "2026-11-23T14:18:49.519014+00:00",
+   "mtime": "2026-11-23T14:29:01.313840+00:00",
    "md5": "e784b121946f18aadd02287ddca4e641"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/resolution_mask_maps_s20.png",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/resolution_mask_maps_s20.png",
    "size": 82183,
-   "mtime": "2026-11-23T14:18:52.001997+00:00",
+   "mtime": "2026-11-23T14:29:03.866823+00:00",
    "md5": "70a9240da03147b4aa1e69688f068aea"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/resolution_sections_s20.png",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/resolution_sections_s20.png",
    "size": 302694,
-   "mtime": "2026-11-23T14:18:52.655993+00:00",
+   "mtime": "2026-11-23T14:29:04.511819+00:00",
    "md5": "65a9d512387660f81d51219d85c0c1a3"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/spike_inv_d1000_s10",
-   "size": 44,
-   "mtime": "2026-11-23T14:17:55.082378+00:00"
-  },
-  {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/summary_tables.md",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/summary_tables.md",
    "size": 6347,
-   "mtime": "2026-11-23T14:18:49.527014+00:00",
+   "mtime": "2026-11-23T14:29:01.320840+00:00",
    "md5": "df3ee0ab81b8370a150e647a62ce6434"
   }
  ],

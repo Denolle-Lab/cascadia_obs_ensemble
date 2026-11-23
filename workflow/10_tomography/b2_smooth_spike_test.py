@@ -18,6 +18,7 @@ Inversions: python b2_tomodd_run.py <region>/smooth_test/<ZTAG> inv             
 Run from the repo root with LD_LIBRARY_PATH=.pixi/envs/default/lib.
 """
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -27,10 +28,21 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from manifest import load_params, write_manifest  # noqa: E402
+from manifest import load_params, tomodd_bin, write_manifest  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
+
+
+def res_cfg():
+    """tomodd.res_tests for the selected tile: env TOMO_RES_REGION (default res_tests.region), with
+    res_tests.regions.<tile> over the defaults (spike and checker merged key by key; other keys replaced)."""
+    base = {k: v for k, v in T["res_tests"].items() if k != "regions"}
+    region = os.environ.get("TOMO_RES_REGION") or base["region"]
+    for k, v in (T["res_tests"].get("regions") or {}).get(region, {}).items():
+        base[k] = {**base[k], **v} if k in ("spike", "checker") else v
+    base["region"] = region
+    return base
 
 
 def config(name="smooth_test"):
@@ -41,7 +53,7 @@ def config(name="smooth_test"):
         return dict(name=name, S=s, region=s["region"], test=test, prefix="", exact_mod=False,
                     inv_tags=["inv"], damp=T["inp"]["damp"], smooth=[T["inp"]["smooth"]])
     if name == "res_tests":
-        r = T["res_tests"]
+        r = res_cfg()
         s = dict(r["spike"], region=r["region"])
         test = Path(T["runs"]) / r["region"] / r["subdir"]
         return dict(name=name, S=s, region=r["region"], test=test, prefix="spike_", exact_mod=True,
@@ -229,7 +241,7 @@ def read_weights_abs(path):
 
 def run_syn(sd, label):
     with open(sd / "stdout.txt", "w") as so:
-        rc = subprocess.run([T["bin_syn"], "tomoDD-SE_syn.inp"], cwd=sd, stdout=so, stderr=subprocess.STDOUT).returncode
+        rc = subprocess.run([tomodd_bin("bin_syn", sd), "tomoDD-SE_syn.inp"], cwd=sd, stdout=so, stderr=subprocess.STDOUT).returncode
     if rc:
         raise SystemExit(f"{label}: tomoDD-SE_syn exit {rc}")
 
@@ -240,7 +252,7 @@ def syn(ztag):
     run_syn(sd, ztag)
     counts = syn_to_inputs(sd, d / "inputs")
     print(ztag, counts)
-    write_manifest(f"b2_smooth_spike_syn_{ztag}", d, inputs=[sd / "MOD", T["bin_syn"], INP / "absolute.dat", INP / "dt.ct"],
+    write_manifest(f"b2_smooth_spike_syn_{ztag}", d, inputs=[sd / "MOD", tomodd_bin("bin_syn", sd), INP / "absolute.dat", INP / "dt.ct"],
                    outputs=[d / "inputs" / "absolute.dat", d / "inputs" / "dt.ct", sd / "absolute.syn", sd / "dt.syn"],
                    params={"ztag": ztag, "cfg": CFG["name"], **S}, counts=counts)
 

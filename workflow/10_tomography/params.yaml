@@ -122,6 +122,93 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         station_corr: false
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv
         p1_reference: mendocino_gorda_v2/p1_reference
+    # D-B033 (proposed 2026-11-23): other tiles. <tile> = first build (B1b data, old statics, no forward fixes);
+    # <tile>_v2 = forward fixes as mendocino_gorda_v2 (P-1 reference from <tile>, per-tile OBS S statics).
+    blanco:
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+
+    blanco_v2:
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv
+        p1_reference: blanco_v2/p1_reference
+    oregon:
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+
+    oregon_v2:
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv
+        p1_reference: oregon_v2/p1_reference
+    washington:
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins:                                # MAXOBS 140 build (max 109 stations per event, +20%, notes/tomodd_build.md)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140          # md5 e1ed7683ccde80ceef012533f3f8cf64 (src tomoDD_opt/O3nofs_o140)
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_o140  # md5 825472157d4fea77e41b9d3a18d53003 (syn_o140)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140       # md5 803f90d72ba49030a7e9d38487d6946d (chk_o140)
+      limits: {MAXOBS: 140}
+    washington_v2:
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins:                                # MAXOBS 140 build (max 109 stations per event, +20%, notes/tomodd_build.md)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_o140          # md5 e1ed7683ccde80ceef012533f3f8cf64 (src tomoDD_opt/O3nofs_o140)
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_o140  # md5 825472157d4fea77e41b9d3a18d53003 (syn_o140)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_o140       # md5 803f90d72ba49030a7e9d38487d6946d (chk_o140)
+      limits: {MAXOBS: 140}
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv
+        p1_reference: washington_v2/p1_reference
+    ridges_north:
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+
+    ridges_north_v2:
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv
+        p1_reference: ridges_north_v2/p1_reference
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -198,3 +285,32 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       loc_h_from_68: 1.515         # 1-sigma per horizontal component = h_max / this (h_max = 68% semi-major axis)
       window_cells: 1.5            # local correlation / amplitude window (square, side = window_cells x cell)
       resolved: {corr: 0.7, amp: 0.5}   # D-B018
+    sections:                      # cross-sections of the resolution figures: name -> [[lat0, lon0], [lat1, lon1]]
+      "A: N-S through MTJ (124.4 W)": [[39.5, -124.4], [43.1, -124.4]]
+      "B: E-W across Gorda plate (41.3 N)": [[41.3, -127.5], [41.3, -122.5]]
+    highlight_box: {lat: [40.0, 40.6], lon: [-125.2, -124.0]}   # MTJ shallow-anomaly box (b2_mtj_common.MTJ)
+    regions:                       # D-B033: per-tile overrides, selected with TOMO_RES_REGION=<tile>_v2 (default: region above)
+      blanco_v2:
+        spike: {lon: [-130.35, -129.35, -128.35, -127.35, -126.35], lat: [42.8, 43.6, 44.4]}
+        sections:
+          "A: along the Blanco transform": [[43.0, -126.6], [44.4, -130.3]]
+          "B: N-S at 128.0 W": [[42.6, -128.0], [45.2, -128.0]]
+        highlight_box: null
+      oregon_v2:
+        spike: {lon: [-125.95, -124.95, -123.95, -122.95, -121.95], lat: [42.8, 43.6, 44.4, 45.2, 46.0]}
+        sections:
+          "A: E-W at 44.5 N": [[44.5, -126.2], [44.5, -121.0]]
+          "B: N-S at 123.5 W": [[42.6, -123.5], [46.4, -123.5]]
+        highlight_box: null
+      washington_v2:
+        spike: {lon: [-126.15, -125.15, -124.15, -123.15, -122.15], lat: [46.0, 46.8, 47.6, 48.4, 49.2]}
+        sections:
+          "A: E-W at 47.5 N": [[47.5, -126.4], [47.5, -121.0]]
+          "B: N-S at 122.5 W": [[45.8, -122.5], [49.8, -122.5]]
+        highlight_box: null
+      ridges_north_v2:
+        spike: {lon: [-130.75, -129.75, -128.75, -127.75], lat: [44.6, 45.4, 46.2, 47.0, 47.8, 48.6, 49.4]}
+        sections:
+          "A: N-S at 130.0 W (Axial)": [[44.4, -130.0], [50.0, -130.0]]
+          "B: E-W at 46.0 N": [[46.0, -131.0], [46.0, -126.6]]
+        highlight_box: null

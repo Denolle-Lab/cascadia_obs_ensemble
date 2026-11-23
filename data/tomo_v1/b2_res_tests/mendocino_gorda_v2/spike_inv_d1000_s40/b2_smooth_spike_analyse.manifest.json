@@ -1,16 +1,16 @@
 {
  "name": "b2_smooth_spike_analyse",
- "script": "/home/mdenolle/cascadia_obs_ensemble/workflow/10_tomography/b2_smooth_spike_analyse.py",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_smooth_spike_analyse.py",
  "argv": [
   "--cfg",
   "res_tests",
   "--inv",
   "inv_d1000_s40"
  ],
- "utc": "2026-11-23T14:18:55.615389+00:00",
- "git_commit": "0e626250153f69aa52f6e35d305c975c30c572bd",
+ "utc": "2026-11-23T14:29:07.497295+00:00",
+ "git_commit": "a3b4b7ea85c98a283a548f1cebc1c8a96e836b8e",
  "git_dirty": true,
- "params_md5": "b880c997a86a3857616d4b27877ab803",
+ "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
  "params": {
   "min_rec": 0.5,
   "amp": 0.05,
@@ -99,27 +99,27 @@
  ],
  "outputs": [
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/spike_inv_d1000_s40/spikes.csv",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/spikes.csv",
    "size": 24103,
-   "mtime": "2026-11-23T14:18:55.152976+00:00",
+   "mtime": "2026-11-23T14:29:07.041802+00:00",
    "md5": "5ff359c443fbadbbebdfeffe835d7aa6"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/spike_inv_d1000_s40/by_depth.csv",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/by_depth.csv",
    "size": 457,
-   "mtime": "2026-11-23T14:18:55.158976+00:00",
+   "mtime": "2026-11-23T14:29:07.045802+00:00",
    "md5": "c7ada88792640b0d9030207f61ff6425"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/spike_inv_d1000_s40/layers.csv",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/layers.csv",
    "size": 1020,
-   "mtime": "2026-11-23T14:18:55.202976+00:00",
+   "mtime": "2026-11-23T14:29:07.087802+00:00",
    "md5": "169d6ceca00ad3442aefd19ebddbb36f"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/tomo_v1/b2_res_tests/spike_inv_d1000_s40/psf.png",
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/psf.png",
    "size": 131507,
-   "mtime": "2026-11-23T14:18:55.613973+00:00",
+   "mtime": "2026-11-23T14:29:07.495799+00:00",
    "md5": "5b8d1b205bb045fe09854e220e206c94"
   }
  ],

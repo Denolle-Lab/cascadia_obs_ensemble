@@ -40,13 +40,13 @@ import b2_smooth_spike_test as sp  # noqa: E402
 from b2_tomodd_backtransform import inverse  # noqa: E402
 
 T = load_params()["tomodd"]
-R = T["res_tests"]
+R = sp.res_cfg()                 # tile from env TOMO_RES_REGION (default res_tests.region)
 C = R["checker"]
 sp.use("res_tests")
 BASE = Path(T["runs"]) / R["region"]
 INP = BASE / "inputs"
 TEST = BASE / R["subdir"]
-OUT = REPO / "data" / "tomo_v1" / "b2_res_tests"
+OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / R["region"]
 KM = 111.195
 VARIANTS = ("clean", "noise", "noise_ploc")
 
@@ -340,8 +340,7 @@ def summary_table(df, masks, area, in_box, lon, lat, z):
 
 # ---------------------------------------------------------------- figures
 SLICES = [3, 7, 12, 21, 34]
-XS = {"A: N-S through MTJ (124.4 W)": ((39.5, -124.4), (43.1, -124.4)),
-      "B: E-W across Gorda plate (41.3 N)": ((41.3, -127.5), (41.3, -122.5))}
+XS = {k: tuple(map(tuple, v)) for k, v in R["sections"].items()}   # params res_tests(.regions.<tile>).sections
 
 
 def coast():
@@ -350,7 +349,9 @@ def coast():
         import subprocess
         import tempfile
         with tempfile.TemporaryDirectory() as td:          # gmt writes gmt.history in its cwd
-            txt = subprocess.run([str(REPO / ".pixi/envs/default/bin/gmt"), "coast", "-R-129/-121/38.5/44", "-Di", "-W", "-M"],
+            reg = T["regions"][R["region"]]
+            rr = f"-R{reg['node_lon'][0] - 1}/{reg['node_lon'][1] + 1}/{reg['node_lat'][0] - 0.5}/{reg['node_lat'][1] + 0.5}"
+            txt = subprocess.run([str(Path(sys.executable).parent / "gmt"), "coast", rr, "-Di", "-W", "-M"],
                                  capture_output=True, text=True, cwd=td).stdout
         f.write_text(txt)
     segs, cur = [], []
@@ -378,7 +379,7 @@ def section(field, lon, lat, z, p0, p1, n=200, method="linear"):
     return dist, zz, v
 
 
-MTJ_BOX = dict(lat=(40.0, 40.6), lon=(-125.2, -124.0))     # b2_mtj_common.MTJ (shallow-anomaly box, z < 5 km)
+MTJ_BOX = R.get("highlight_box")   # Mendocino-Gorda: MTJ shallow-anomaly box (b2_mtj_common.MTJ); other tiles none
 
 
 def category(f):
@@ -404,15 +405,16 @@ def plot_all(fields, masks, mask_smooth, lon, lat, z):
             a.plot(sg[:, 0], sg[:, 1], color="k", lw=0.4)
         bx, by = reg["events_lon"], reg["events_lat"]
         a.plot([bx[0], bx[1], bx[1], bx[0], bx[0]], [by[0], by[0], by[1], by[1], by[0]], color=ink2, lw=0.5, ls="--")
-        bx, by = MTJ_BOX["lon"], MTJ_BOX["lat"]
-        a.plot([bx[0], bx[1], bx[1], bx[0], bx[0]], [by[0], by[0], by[1], by[1], by[0]], color="#e0a500", lw=0.8)
+        if MTJ_BOX:
+            bx, by = MTJ_BOX["lon"], MTJ_BOX["lat"]
+            a.plot([bx[0], bx[1], bx[1], bx[0], bx[0]], [by[0], by[0], by[1], by[1], by[0]], color="#e0a500", lw=0.8)
         if xs:
             for name, (p0, p1) in XS.items():
                 a.plot([p0[1], p1[1]], [p0[0], p1[0]], color="#7a3fb0", lw=0.6)
                 a.text(p0[1], p0[0], name[0], color="#7a3fb0", fontsize=6, va="top")
         a.set_xlim(ext[0], ext[1])
         a.set_ylim(ext[2], ext[3])
-        a.set_aspect(1 / np.cos(np.radians(41.3)))
+        a.set_aspect(1 / np.cos(np.radians(np.mean(reg["events_lat"]))))
 
     # 1. recovered checkerboards (noise, p0) at the mask smoothing: per wave, rows = depth, cols = L
     Ls = C["cell_km"]
@@ -439,7 +441,7 @@ def plot_all(fields, masks, mask_smooth, lon, lat, z):
         if im is not None:
             fig.colorbar(im, ax=ax, shrink=0.35, label=f"recovered dln{'Vp' if wave == 'P' else 'Vs'} (%), true +-8%")
         fig.suptitle(f"Checkerboard {'Vp' if wave == 'P' else 'Vs'}, damp {R['damp']}, smooth {mask_smooth}, pick noise. "
-                     "Black: resolved (corr >= 0.7, amp >= 0.5); dotted: true cell edges; yellow: MTJ box", fontsize=6.5)
+                     "Black: resolved (corr >= 0.7, amp >= 0.5); dotted: true cell edges" + ("; yellow: MTJ box" if MTJ_BOX else ""), fontsize=6.5)
         fig.savefig(OUT / f"checker_maps_{wave.lower()}_s{mask_smooth}.png", dpi=200)
         plt.close(fig)
 

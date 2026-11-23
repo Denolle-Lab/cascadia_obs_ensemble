@@ -269,3 +269,30 @@ baseline 1000 (CND ~60, Mendocino-Gorda v2 scan); smoothing chosen from spike/ch
 ### D-B032 Ensemble size 100 members (adopted, 2026-11-22, PI; amends D-B030)
 100 members per region for both the synthetic calibration and the real-data ensembles (D-B030 had 200 for real data).
 
+
+### D-B033 Four more tiles for tomoDD (adopted, 2026-11-23, PI request "set up the other regions"; implements D-B025)
+Tiles beside Mendocino-Gorda (events box; interior nodes 0.125 deg x 0.1 deg as Mendocino-Gorda, 0.75 deg / 0.5 deg
+beyond the box; node_z unchanged). Counts are B1b events inside the box and stations within the box + 0.5 / 0.7 deg:
+
+| tile | events lat | events lon | events | stations | max stations per event | B1b regions |
+|---|---|---|---|---|---|---|
+| mendocino_gorda (existing) | 39.5-43.1 | -127.5 to -122.5 | 9,334 | 153 | 57 | Mendocino, Gorda, south forearc and onshore |
+| blanco | 42.6-45.2 | -130.6 to -125.6 | 4,294 | 81 | 28 | Blanco |
+| oregon | 42.6-46.4 | -126.2 to -121.0 | 3,061 | 156 | 88 | Oregon onshore, Cascades, forearc |
+| washington | 45.8-49.8 | -126.4 to -121.0 | 7,968 | 189 | 109 | Puget/Georgia, Washington onshore, Cascades, forearc |
+| ridges_north | 44.4-50.0 | -131.0 to -126.6 | 1,489 | 78 | 14 | JdF ridge/plate, Axial, Explorer, north Blanco |
+
+Overlaps (for the D-B025 comparison): 1,980 events fall in two tiles; 83 B1b events fall in none (57 Gorda west of
+127.5 W, 16 Mendocino, 10 onshore). Oregon's eastern node column stops at 120.375 W, where the v4-NLL3D model ends
+(x = +457 km at 42 N). ridges_north is 620 km north-south, above the ~400 km guide of D-B025; with tomoDD-SE's
+spherical geometry the limit is memory and run time (D-B026), and this tile is the smallest in data.
+Washington needs MAXOBS 140 (109 stations per event + 20 %, notes/tomodd_build.md): builds O3nofs_o140, syn_o140 and
+chk_o140 (sources copied from O3nofs_big, syn_big, chk_big, MAXOBS only changed), selected per region by
+`tomodd.regions.<tile>.bins` (manifest.tomodd_bin).
+Each tile is built as Mendocino-Gorda: <tile> first build, P-1 reference from its picks, per-tile OBS S statics
+(obs_near_station_S_terms_p1_<tile>.csv), <tile>_v2 with the D-B028/D-B031 forward fixes, check01 bounds run.
+Resolution tests per tile (D-B018) at damping 1000: the Mendocino-Gorda v2 set (spikes at 7 depths and
+checkerboards 40/60/100 km at smoothing 10/20/40; pick noise, both pattern phases and perturbed locations at
+smoothing 20) on a spike lattice 8 nodes apart inside each events box, plus the real-data damping/smoothing scan
+(d500/1000/2000 at s20, s10/s40 at d1000). Driver: b2_res_pipeline.sh (detached, resumable, publishes to GitHub).
+Damping and smoothing per tile are chosen after these runs, as for Mendocino-Gorda.

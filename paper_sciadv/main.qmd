@@ -88,9 +88,13 @@ relocation (tomoDD) in overlapping regions, starting with Mendocino–Gorda, on 
 balanced across stations and regions (Materials and Methods; Fig. 7). This region has been imaged
 before: P-wave local-earthquake tomography at Cape Mendocino [@Verdonck1994] and Vp/Vs of the southern Cascadia
 megathrust from double-difference tomography with land and ocean-bottom stations [@Guo2021] [TO CHECK
-method and data of Guo et al. 2021, and the 2025 Mendocino Vp/Vs model of the same group]. The new
-model must be compared with these, and the text must say what the 2010–2016 catalog adds (more events,
-ocean-bottom coverage beyond the triple junction, uncertainty from an ensemble). Placeholder for: the main
+method and data of Guo et al. 2021, and the 2025 Mendocino Vp/Vs model of the same group]. Local-earthquake
+tomography has so far covered parts of the plate system (Mendocino, the ridges); plate-wide models exist
+only from teleseismic body waves, P and S, at mantle scale [TO CITE: Byrnes et al. 2017 G-cubed;
+VanderBeek et al. 2020 G-cubed] and from surface waves and ambient noise (Vs only). Intended claim, to
+check against the literature before submission: the first plate-wide local-earthquake Vp and Vs model of
+the Juan de Fuca plate system, at crustal and uppermost-mantle scale, with uncertainties. The new model
+must be compared with all of these. Placeholder for: the main
 velocity anomalies, their resolution, and how relocating every event in the new model changes the
 faults and depths of the previous sections.
 

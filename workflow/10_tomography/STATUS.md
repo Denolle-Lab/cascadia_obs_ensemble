@@ -51,6 +51,9 @@ s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at
 3. Whether ridges_north is reported as a model (masked, amplitudes ~25 % of true) or used for relocation only.
 4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
 5. Merge order: PR #32, then PR #33, into `tomo/track-b`.
+6. Science framing (notes/science_framing.md, 2026-11-23): novelty wording (plate-wide local-earthquake Pn
+   tomography already exists, VanderBeek & Toomey 2019), questions that join sources and structure, steps after
+   the tomography; proposals P-F1..P-F7. References for it: PR #34 (bibliography, base main).
 
 ## Done
 

@@ -200,3 +200,26 @@ binaries stay out of git and Zenodo. Input rules: weights rescaled into (0, 3]; 
 limit); OBS statics applied to the picks; top grid edge at or above -4 km; air-quake depth about -2.2 km.
 Amends D-B025: ray tracing is spherical, so the sub-region size is set by memory and run time, not by curvature.
 
+### D-B027 D-B026 adopted (adopted, 2026-11-22, PI)
+The PI approved D-B026 as written (tomoDD-SE USTC 2020 package, gfortran 8.5, shipped flags minus -ffloat-store,
+array sizes, parallel serial jobs, input rules). Note: the D-B026 header had been edited in place to "adopted";
+restored to its original wording so the log stays append-only, and the adoption recorded here.
+
+### D-B028 Forward-model consistency fixes (adopted, 2026-11-22, PI; source notes/forward_accuracy.md)
+Finding: in the same nominal model, the production NLL time grids (v4-NLL3D, reloc_v5/time_vpvs176) are too slow by
++0.21 s P / +0.37 s S median (1.5-2% of travel time): half-cell shift of node-sampled velocities in Podvin-Lecomte
+cells (+0.08/+0.15), 1 km FD error (+0.10/+0.16), no Earth-flattening (+0.03/+0.05). tomoDD-SE in its MOD is close
+to exact (+0.016/+0.033 s). Reference: Grid2Time at 0.5 and 0.25 km extrapolated to zero cell size, checked against
+TauP in 1D (median 0.000 s). Adopted, the agent's proposals P-1..P-7:
+P-1 NLL grids for B4 (and any v4-NLL3D rerun): cell-centred velocities, Earth-flattening, T = T0.5 - 1.33 (T1 - T0.5)
+on 1 km nodes (+0.014 / +0.022 s). P-2 tomoDD coordinates rescaled so sphere distances equal WGS-84 distances
+(inputs only), outputs transformed back. P-3 MOD from the nearest NLL rock column, depth nodes 1 km to 9 km then 2 km
+to 49 km (42 interior depth nodes), bounds-checked run before use. P-4 per-station, per-phase tomoDD forward
+correction (median tomoDD - reference in the starting model) subtracted from absolute times. P-5 final model to NLL
+by sampling tomoDD's field at cell centres, grids per P-1. P-6 recompute the D-B020 OBS S statics with the P-1
+forward (current ones carry ~0.26 s of the NLL error). P-7 relocate one or two tiles with P-1 grids to measure the
+v4-NLL3D depth and origin-time bias.
+Consequences: the v4-NLL3D catalog (atlas layer "preliminary") was located with times 1.5-2% too slow; the
+Mendocino-Gorda L-curve (summary_runs.csv, damping 100-3000) used the old MOD and statics and is superseded
+except as a guide for damping (~1000, CND ~60). The Bayesian ensemble design becomes D-B029.
+

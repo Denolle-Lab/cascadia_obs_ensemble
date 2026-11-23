@@ -78,3 +78,49 @@ balance:                         # D-B022 (B1b): balanced dataset of well-record
     post_max_gap_deg: 300
   post_min_picks: 10             # events: picks at core stations
   post_max_gap_deg: 200
+
+tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first region D-B025)
+  bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k      # md5 de59a74b0fac82c743cffd400559f721
+  bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k   # -fcheck=bounds, one run per new grid
+  bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e10k  # md5 523d5ac6f2d02f3dc43533dacc7f7fe9 (rebuilt 11-22 19:31 from src/tomoDD_opt/syn_big; first copy had MAXEVE 1650)
+  limits: {MAXEVE: 10000, MAXSTA: 200, MAXOBS: 100, MAXDATA: 3000000}   # compiled sizes of bin
+  runs: /wd1/mdenolle_data/tomo_v1/b2_tomodd
+  regions:
+    mendocino_gorda:
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]       # lat, lon added to the event box for stations
+      node_lon: [-128.25, -121.75, 0.125]  # interior nodes: start, stop, step (deg)
+      node_lat: [39.0, 43.6, 0.1]
+  node_z: [-3, -1, 1, 3, 5, 7, 9, 12, 15, 18, 21, 25, 29, 34, 40, 47, 55, 65, 80, 100, 125]  # interior, km bsl
+  edge_z: [-6, 400]                # top / bottom boundary nodes (top <= -4 km, D-B026)
+  edge_deg: 8.0                    # lateral boundary nodes this far outside the interior
+  model_box_avg_km: 11             # start model: average rock velocity over this horizontal box at each node
+  deep_vp: {100: 8.05, 125: 8.10, 400: 8.90}   # below the 80 km model bottom; Vp/Vs from the 80 km level
+  weights:
+    quality: "(0.05/sigma)^2"      # D-B008 sigma, S already 2x P sigma
+    normalise_by: max              # w = 3 * q / max(q), q = w_bal * quality (median P would push best picks to 9.6)
+    clip_max: 3.0                  # tomoDD drops weights outside [0, 3] (D-B026)
+  obs_S_static: data/tomo_v1/obs_check/obs_near_station_S_terms.csv   # D-B020 column S_static_proposed
+  dt:                              # catalog differential times from the absolute picks
+    max_neighbours: 10
+    max_sep_km: 10.0
+    min_common: 8
+  air_dep_margin_km: 0.05          # Air_dep = -(highest station elevation + margin)
+  inp:
+    stepl_km: 1
+    smooth: [20, 20, 10]           # weight1-3 (lon, lat, depth); scanned in the L-curve
+    damp: 100                      # scanned in the L-curve
+    thres: 0.2
+    # NITER WTCTP WTCTS WRCT WDCT WTCD (hierarchical: absolute first, then differential)
+    sets:
+      - [3, 1.0, 1.0, -9, -9, 10.0]
+      - [3, 1.0, 1.0,  8, -9, 10.0]
+      - [3, 1.0, 1.0,  6, 10,  1.0]
+      - [3, 1.0, 1.0,  6, 10,  0.1]
+  smooth_test:                     # B2 spike test of smoothing vs uneven node spacing (b2_smooth_spike_test.py)
+    region: mendocino_gorda
+    amp: 0.05                      # +5% Vp at each spike node, Vp/Vs unchanged
+    depths_km: [-1, 3, 7, 12, 21, 34, 55]   # one run per depth (must be nodes of node_z)
+    lon: [-127.25, -126.25, -125.25, -124.25, -123.25]   # 8 nodes (~85 km) apart
+    lat: [39.7, 40.5, 41.3, 42.1, 42.9]                  # 8 nodes (~89 km) apart

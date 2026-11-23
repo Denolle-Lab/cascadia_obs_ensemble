@@ -90,3 +90,27 @@ Outputs: catalogs `/wd1/mdenolle_data/reloc_v5/frame_transfer/catalog_xfer_{dept
 How to choose R: the largest radius that keeps most tier A-B transfers within the NLL uncertainty
 (`consistency.csv`, `in_1sig_z`, `in_hmax`) while thickness and depth IQR still drop (`metrics.csv`).
 Tighter is not automatically better: the final test is the fit to cross-correlation differential times.
+
+Radius test results (2026-11-23, iter1; ALL = 157,267 NLL-located events):
+
+| catalog | thickness km | depth IQR 1 km cols | above surface | tier A / B within 1 sig_z | transferred |
+|---|---|---|---|---|---|
+| v4 (GraphDD) | 0.53 | 3.85 | 23.0% | - | - |
+| NLL 3D `depth` | 0.50 | 2.58 | 0.4% | - | - |
+| xfer `depth` R=2 | 0.40 | 1.46 | 0.3% | 0.86 / 0.88 | 58% |
+| xfer `depth` R=3 | 0.43 | 1.59 | 0.4% | 0.85 / 0.86 | 70% |
+| xfer `depth` R=5 | 0.46 | 1.83 | 0.7% | 0.83 / 0.84 | 83% |
+| xfer `depth` R=10 | 0.48 | 1.87 | 1.0% | 0.82 / 0.83 | 94% |
+| xfer `exp_depth` R=3 | 0.43 | 1.78 | 0.0% | 0.84 / 0.88 | 70% |
+
+* Tightest at R = 2-3 km; larger radii smooth out real changes of the shift and drift away from NLL. R = 1 km
+  covers only a third of the events. In every case more than 68% of tier A-B transfers fall within 1 sig_z
+  of NLL, so the transfer is consistent with the NLL data.
+* Grid-node pile-up is a property of the NLL maximum-likelihood depth (`depth`: Axial 10%, JdF 13%, Blanco 4%
+  of events in one 0.01 km bin); the expectation depth (`exp_depth`) has none (<1%) but is ~4 km deeper
+  (median 16.1 vs 11.8 km), pulled by deep PDF tails of poorly constrained events. The `depth` transfer keeps
+  the JdF pile-up (9-11%).
+* By region (R = 3, `depth`): Gorda depth IQR 4.86 (NLL) -> 1.87 (v4 3.62); offshore forearc 3.60 -> 2.16
+  (v4 1.86); Blanco 5.42 -> 2.44 (v4 7.64); Mendocino 5.40 -> 4.36 (v4 3.54), only partly recovered.
+* Next: adaptive radius (smallest R in 2-10 km with >= 10 neighbours) so coverage is ~95% at the R = 2-3 km
+  tightness; decide `depth` vs `exp_depth` (or ML depth with pinned events flagged); then a catalog for the atlas.

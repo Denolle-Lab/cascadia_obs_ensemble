@@ -1,0 +1,103 @@
+07:17:29 start ridges_north_v2 d100_s10
+07:17:31 start ridges_north_v2 d100_s20
+07:17:33 start ridges_north_v2 d100_s40
+07:17:35 start ridges_north_v2/res_tests/spike_null inv_d100_s20
+07:17:37 start ridges_north_v2/res_tests/spike_zm001 inv_d100_s20
+07:17:39 start ridges_north_v2/res_tests/spike_zp003 inv_d100_s20
+07:17:41 start ridges_north_v2/res_tests/spike_zp007 inv_d100_s20
+07:17:43 start ridges_north_v2/res_tests/spike_zp012 inv_d100_s20
+07:20:11 done rc=0 ridges_north_v2/res_tests/spike_zp003 inv_d100_s20
+07:20:14 done rc=0 ridges_north_v2/res_tests/spike_null inv_d100_s20
+07:20:15 done rc=0 ridges_north_v2/res_tests/spike_zp012 inv_d100_s20
+07:20:15 start ridges_north_v2/res_tests/spike_zp021 inv_d100_s20
+07:20:16 done rc=0 ridges_north_v2/res_tests/spike_zp007 inv_d100_s20
+07:20:17 start ridges_north_v2/res_tests/spike_zp034 inv_d100_s20
+07:20:19 done rc=0 ridges_north_v2/res_tests/spike_zm001 inv_d100_s20
+07:20:19 start ridges_north_v2/res_tests/spike_zp055 inv_d100_s20
+07:20:21 start ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s20
+07:20:23 start ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s20
+07:21:15 done rc=0 ridges_north_v2 d100_s20
+07:21:25 start ridges_north_v2/res_tests/chk_L060_p1_noise inv_d100_s20
+07:21:26 done rc=0 ridges_north_v2 d100_s40
+07:21:27 start ridges_north_v2/res_tests/chk_L060_p0_noise_ploc inv_d100_s20
+07:21:34 done rc=0 ridges_north_v2 d100_s10
+07:21:44 start ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s20
+07:23:01 done rc=0 ridges_north_v2/res_tests/spike_zp021 inv_d100_s20
+07:23:01 start ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s20
+07:23:04 done rc=0 ridges_north_v2/res_tests/spike_zp034 inv_d100_s20
+07:23:05 done rc=0 ridges_north_v2/res_tests/spike_zp055 inv_d100_s20
+07:23:07 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s20
+07:23:18 start ridges_north_v2/res_tests/chk_L040_p1_noise inv_d100_s20
+07:23:20 start ridges_north_v2/res_tests/chk_L040_p0_noise_ploc inv_d100_s20
+07:23:23 start ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s20
+07:24:05 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s20
+07:24:10 start ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s20
+07:25:13 done rc=0 ridges_north_v2/res_tests/chk_L060_p1_noise inv_d100_s20
+07:25:25 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s20
+07:25:27 start ridges_north_v2/res_tests/chk_L100_p1_noise inv_d100_s20
+07:25:29 start ridges_north_v2/res_tests/chk_L100_p0_noise_ploc inv_d100_s20
+07:25:53 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s20
+07:26:01 start ridges_north_v2/res_tests/spike_null inv_d100_s10
+07:26:10 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_noise_ploc inv_d100_s20
+07:26:18 start ridges_north_v2/res_tests/spike_zm001 inv_d100_s10
+07:26:52 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s20
+07:27:04 done rc=0 ridges_north_v2/res_tests/chk_L040_p1_noise inv_d100_s20
+07:27:05 start ridges_north_v2/res_tests/spike_zp003 inv_d100_s10
+07:27:07 start ridges_north_v2/res_tests/spike_zp007 inv_d100_s10
+07:27:32 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s20
+07:27:39 start ridges_north_v2/res_tests/spike_zp012 inv_d100_s10
+07:27:56 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_noise_ploc inv_d100_s20
+07:28:11 start ridges_north_v2/res_tests/spike_zp021 inv_d100_s10
+07:28:36 done rc=0 ridges_north_v2/res_tests/spike_null inv_d100_s10
+07:28:43 start ridges_north_v2/res_tests/spike_zp034 inv_d100_s10
+07:28:54 done rc=0 ridges_north_v2/res_tests/spike_zm001 inv_d100_s10
+07:29:00 start ridges_north_v2/res_tests/spike_zp055 inv_d100_s10
+07:29:08 done rc=0 ridges_north_v2/res_tests/chk_L100_p1_noise inv_d100_s20
+07:29:17 start ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s10
+07:29:37 done rc=0 ridges_north_v2/res_tests/spike_zp003 inv_d100_s10
+07:29:49 start ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s10
+07:29:51 done rc=0 ridges_north_v2/res_tests/spike_zp007 inv_d100_s10
+07:30:00 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_noise_ploc inv_d100_s20
+07:30:06 start ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s10
+07:30:08 start ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s10
+07:30:23 done rc=0 ridges_north_v2/res_tests/spike_zp012 inv_d100_s10
+07:30:25 start ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s10
+07:30:57 done rc=0 ridges_north_v2/res_tests/spike_zp021 inv_d100_s10
+07:30:57 start ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s10
+07:31:30 done rc=0 ridges_north_v2/res_tests/spike_zp034 inv_d100_s10
+07:31:44 start ridges_north_v2/res_tests/spike_null inv_d100_s40
+07:31:49 done rc=0 ridges_north_v2/res_tests/spike_zp055 inv_d100_s10
+07:32:01 start ridges_north_v2/res_tests/spike_zm001 inv_d100_s40
+07:32:34 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s10
+07:32:48 start ridges_north_v2/res_tests/spike_zp003 inv_d100_s40
+07:33:00 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s10
+07:33:05 start ridges_north_v2/res_tests/spike_zp007 inv_d100_s40
+07:33:16 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s10
+07:33:22 start ridges_north_v2/res_tests/spike_zp012 inv_d100_s40
+07:33:43 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s10
+07:33:54 start ridges_north_v2/res_tests/spike_zp021 inv_d100_s40
+07:33:58 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s10
+07:34:11 start ridges_north_v2/res_tests/spike_zp034 inv_d100_s40
+07:34:30 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s10
+07:34:34 done rc=0 ridges_north_v2/res_tests/spike_null inv_d100_s40
+07:34:43 start ridges_north_v2/res_tests/spike_zp055 inv_d100_s40
+07:34:45 start ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s40
+07:34:51 done rc=0 ridges_north_v2/res_tests/spike_zm001 inv_d100_s40
+07:35:02 start ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s40
+07:35:35 done rc=0 ridges_north_v2/res_tests/spike_zp003 inv_d100_s40
+07:35:49 start ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s40
+07:35:52 done rc=0 ridges_north_v2/res_tests/spike_zp007 inv_d100_s40
+07:36:06 start ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s40
+07:36:08 done rc=0 ridges_north_v2/res_tests/spike_zp012 inv_d100_s40
+07:36:08 start ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s40
+07:36:41 done rc=0 ridges_north_v2/res_tests/spike_zp021 inv_d100_s40
+07:36:55 start ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s40
+07:36:57 done rc=0 ridges_north_v2/res_tests/spike_zp034 inv_d100_s40
+07:37:29 done rc=0 ridges_north_v2/res_tests/spike_zp055 inv_d100_s40
+07:37:40 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_clean inv_d100_s40
+07:38:19 done rc=0 ridges_north_v2/res_tests/chk_L060_p0_noise inv_d100_s40
+07:38:38 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_clean inv_d100_s40
+07:39:11 done rc=0 ridges_north_v2/res_tests/chk_L040_p0_noise inv_d100_s40
+07:39:19 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_clean inv_d100_s40
+07:39:37 done rc=0 ridges_north_v2/res_tests/chk_L100_p0_noise inv_d100_s40
+ALL DONE 07:39:37

@@ -236,3 +236,23 @@ at the smoothing and damping finally selected and on every new region grid; if b
 exceeds ~1.5, move to more even spacing in 0-40 km. Report upper-crust structure only where spike/checkerboard
 tests show recovery. The Bayesian ensemble design becomes D-B030.
 
+### D-B031 Forward fixes implemented for Mendocino-Gorda v2; P-4 sign corrected (adopted, 2026-11-22, coordinator; amends D-B028)
+(D-B030 is reserved for the Bayesian ensemble design.) Implementation in notes/forward_accuracy.md section 7.
+* P-4 sign: D-B028 said "subtracted"; the correction c = median(tomoDD time - P-1 reference) per station and phase is
+  ADDED to the absolute times (tomoDD residual obs - t_tdd = (obs + c) - t_tdd for t_tdd = t_ref + c). The end-to-end
+  check caught the wrong sign (P bias doubled to -0.095 s). With +c: median tomoDD - reference residual within
+  +-0.02 s (P) and +-0.035 s (S) in every station-type and distance bin; p95 0.067 (land) / 0.119 (OBS) s for P,
+  0.111 / 0.234 s for S (path-dependent node-scale error).
+* P-4 corrections kept uncapped, including +0.54 to +0.82 s (S) at five shelf/slope OBS (G22D, FS07D, FS02B, BB660,
+  BB200): they hold sub-node seafloor structure the 10 km grid cannot represent, the same physics as the D-B020
+  statics; a cap would push the remainder into neighbouring nodes. Revisit if those stations stand out in residuals.
+* P-6 statics recomputed with the P-1 forward for the 110 Mendocino-Gorda OBS (108 with a static):
+  data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv (old file kept). Every static increases (median +0.27 s,
+  r = 0.94 with the old NLL error); only 1 static below -0.5 s (was 8): with a correct forward, near-station OBS S is
+  ~0.3 s late, consistent with sediment. Other regions: run b2_fwd_p1.py and b2_fwd_statics.py per region.
+* P-2 coordinate rescaling and nearest-column MOD (D-B029 node_z) in inputs <runs>/mendocino_gorda_v2/inputs; the
+  builder defaults reproduce the first build byte for byte. Bounds-checked run clean through rays, G and LSQR
+  (36.2 M derivatives, 44 per datum of MAXND 100); the debug binary then stops on a malformed FORMAT in a log write
+  (debug build only). Production 1-iteration run: 284 s, 2.65 GB. P-1 1 km region grids kept (4.8 GB); they are
+  region-limited and not the B4 grids.
+

@@ -1,8 +1,8 @@
 # Forward accuracy: tomoDD-SE vs NonLinLoc (Mendocino-Gorda)
 
 Date: 2026-11-22. Scripts: `b2_fwd_*.py` (this folder). Data and grids:
-`/wd1/mdenolle_data/tomo_v1/b2_tomodd/fwd_test/` (the 0.25 km time grids were deleted after use; their
-times are kept in `nll/*_c025_eft.csv`). Tables in full: `fwd_test/compare/{decomposition,options}_tables.md`.
+`/wd1/mdenolle_data/tomo_v1/b2_tomodd/fwd_test/` (all subset time grids were deleted after use; the sampled
+times are kept in `nll/*.csv`, 735 MB in all). Tables in full: `fwd_test/compare/{decomposition,options}_tables.md`.
 
 ## 1. The finding and the short answer
 
@@ -193,14 +193,15 @@ The large S p95 values come from FS07D (MOD near the shelf edge, section 3.3) an
   (`tomoDD.reloc`, `Vp_model.dat`/`Vs_model.dat` node coordinates). Input-side only, no source change.
   Removes -0.045 s (P) / -0.07 s (S) at 150-200 km.
 * **P-3 MOD build:** nearest NLL rock column at each node (no box average), depth nodes -3, -1, 0, 1, ..., 9,
-  then every 2 km to 49 km, 52, 56, 60, 65, 70, 80, 100, 125 (42 interior depth nodes; tomoDD limit 50).
+  then every 2 km to 49 km, 52, 56, 60, 65, 70, 80, 100, 125 (40 interior depth nodes, 42 with the edge nodes; tomoDD limit 50) [**not adopted**, PI 2026-11-22: section 7].
   Sampling error +0.012 s P / +0.017 S (from +0.027 / +0.046). Cost: about twice the inversion parameters
   and more non-zero derivatives per ray: re-run the bounds-checked binary (MAXNODE 400, MAXND) on this grid
   before use, and redo the D-B026 memory check. If that is too expensive keep the current depth nodes but
   still drop the box average (nearest column: +0.018 / +0.031).
 * **P-4 tomoDD forward correction per station and phase:** c(sta, phase) = median over picks of
   [tomoDD time - reference time] in the starting model (reference = P-1 NLL grids, which agree with the
-  exact times to ~0.01-0.02 s), subtracted from the observed times when writing `absolute.dat` (like the
+  exact times to ~0.01-0.02 s), **added** to the observed times when writing `absolute.dat` (a slow tomoDD
+  needs a later observation for the same residual; equivalently, (reference - tomoDD) is subtracted) (like the
   D-B020 statics; differential times unchanged). Corrects the 10 km minimum-segment error at stations:
   -0.04 to +0.12 s P, -0.04 to +0.28 s S here. Residual after correction: P median 0.000, p95 0.049 s.
   Frozen at the starting model (the error depends on the near-station gradient, which the inversion changes
@@ -230,3 +231,117 @@ avoid the PL gradient error; tomoDD with a smaller `mins` (source change, not al
 | b2_fwd_taup.py | TauP 1D spherical reference |
 | b2_fwd_pltest.py | Grid2Time vs analytic times |
 | b2_fwd_compare.py | references (Richardson), decomposition and option tables |
+| b2_fwd_p1.py | P-1 reference times for a region (section 7.1) |
+| b2_fwd_statics.py | P-6 OBS S statics from the P-1 times (7.2) |
+| b2_tomodd_backtransform.py | P-2 outputs back to geographic coordinates (7.3) |
+| b2_fwd_v2check.py | end-to-end residual check of a build (7.5) |
+
+## 7. Implementation (Mendocino-Gorda v2)
+
+Built 2026-11-22 after D-B028. Region `mendocino_gorda_v2` in params (same event box, picks and nodes in lon/lat as
+`mendocino_gorda`; block `forward`), runs in `/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/`.
+**PI change:** the finer depth nodes of P-3 are not used (coverage-limited upper crust, notes/smoothing_test.md);
+v2 keeps `tomodd.node_z` (21 interior depth nodes) with nearest-column sampling. The 40-level build is kept aside in
+`inputs_z42/` (+ `check01_z42`, `check01_prod_z42`); its absolute.dat has the P-4 correction with the wrong sign
+(see below) and must not be used as is.
+
+### 7.1 P-1 reference times (`b2_fwd_p1.py mendocino_gorda --out-region mendocino_gorda_v2 --keep-grids`)
+
+All 153 stations, P and S (303 station-phases): continuous v4-NLL3D model (trilinear between NLL nodes), cell-centred
+velocities, EFT, Grid2Time at 1 km and 0.5 km on a box around each station's points (+4 km), z -5 to >= 70 km,
+T = T0.5 - k (T1 - T0.5), k = 1.33 (P), 1.28 (S) (params `tomodd.p1`). Sampled at the 228,454 region picks (B1b
+hypocentres) and at 124,973 iter1 OBS S phases within 100 km (for P-6); no NaN. 0.5 km grids deleted after sampling;
+the combined 1 km grids are kept: `p1_reference/grids/<sta>/p1.<ph>.<sta>.time.*`, **4.8 GB** (17 MB per grid; z is the
+flattened depth, region-limited boxes, so B4 will still need full ±250 km grids built the same way). Wall time ~70 min
+on 16 processes. Check: P-1 agrees with the subset study's Richardson times to <= 0.011 s; production NLL minus P-1
+over all region picks: P +0.19 s, S +0.34 s median (subset: +0.21 / +0.37).
+Outputs: `p1_reference/region_picks_p1.parquet`, `p1_reference/obs_S_iter1_p1.parquet`.
+
+### 7.2 P-6 OBS S statics (`b2_fwd_statics.py mendocino_gorda_v2`)
+
+D-B020 rule unchanged (median no-term S residual within 60 km, n >= 10; else 100 km; else none) with residual = (iter1
+pick - iter1 origin time) - P-1 time. New file `data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv` (the 110 region
+OBS with S picks; old file untouched). Checks: the old statics are reproduced from the same picks to 0.0005 s.
+
+| old static class | n | old median | new median | change median (range) |
+|---|---|---|---|---|
+| < -0.5 s | 8 | -0.641 | -0.417 | +0.229 (+0.15..+0.34) |
+| -0.5..0 s | 37 | -0.150 | +0.043 | +0.255 (+0.07..+0.46) |
+| 0..0.3 s | 33 | +0.098 | +0.410 | +0.292 (+0.14..+0.67) |
+| > 0.3 s | 30 | +0.597 | +0.885 | +0.283 (+0.19..+0.60) |
+
+All 108 statics increase (median +0.274 s, 5-95 % +0.15..+0.46); the change follows the P-1 minus production
+prediction of the picks used (r = 0.94; change + (P-1 - production) median 0.012 s). Same 108 stations have a static
+(101 near60, 7 near100, as before: no source changes), FS12B.7D and J10B.7D none. Statics < -0.5 s: 1 (was 8).
+Reading: with a correct forward, near-station OBS S is late by +0.3 s on average (sediment, as D-B019 expected);
+the old near-zero statics were the NLL slowness cancelling it.
+
+### 7.3 Input builder (`b2_tomodd_inputs.py`, params `tomodd.regions.<region>.forward`)
+
+Options (defaults = first build; re-running `mendocino_gorda` reproduces event.dat, station.dat, absolute.dat,
+dt.ct and MOD byte for byte): `coords` ellipsoid|sphere (P-2), `mod` nearest|box (P-3), `station_corr` (P-4),
+`statics_file` (P-6), `p1_reference`. v2 writes `inputs/forward.json` (mapping constants: centre 41.3, -125.0;
+M/R 0.998784, N/R 1.002583), `station_corr.csv`, `forward_start_model.parquet` (tomoDD and P-1 time per pick).
+
+* P-2: coordinates rescaled; round trip <= 5e-7 deg (stations), 5e-5 deg on MOD nodes (4-decimal MOD format, ~5 m);
+  a 318 km station pair: WGS-84 317.852 km, sphere with geographic coordinates 317.070, with scaled ones 317.828.
+* P-4 sign: c = median(tomoDD - P-1) is **added** to the absolute times. (D-B028 and my first note said
+  "subtracted"; that is the sign of reference - tomoDD. A first v2 build with the minus sign doubled the bias, which
+  the end-to-end check caught: P -0.095 s.) c, from a 1-iteration production run on the uncorrected inputs:
+
+| | n | 5 % | median | 95 % | min | max |
+|---|---|---|---|---|---|---|
+| P land | 42 | -0.008 | +0.044 | +0.105 | -0.026 | +0.134 |
+| P OBS | 110 | -0.025 | +0.062 | +0.184 | -0.128 | +0.336 |
+| S land | 41 | -0.046 | +0.072 | +0.170 | -0.115 | +0.176 |
+| S OBS | 110 | +0.013 | +0.145 | +0.467 | -0.131 | +0.819 |
+
+  Median within-station MAD 0.020 s (P), 0.042 s (S). The largest (S at G22D +0.82, FS07D +0.63, FS02B +0.60,
+  BB660 +0.59, BB200 +0.54) are shelf/slope OBS where the 10 km MOD cannot hold the seafloor-referenced near-station
+  structure: c holds MOD sampling as well as ray-tracer error there.
+* Back-transform: `b2_tomodd_backtransform.py REGION TAG` writes `Output_Files/tomoDD.reloc_geo`, `tomoDD.loc_geo`,
+  `tomoDD.sta_geo` (lat/lon mapped back, other columns unchanged) and `model_geo.npz` (geographic node lon/lat/z with
+  Vp, Vs from Vp_model.dat/Vs_model.dat). Tested on `fwd1`. `b2_tomodd_run.py mendocino_gorda_v2 TAG` works unchanged
+  (the centre is a fixed point of the map).
+
+### 7.4 Bounds-checked run (`b2_tomodd_run.py mendocino_gorda_v2 check01 --check`)
+
+Ray tracing of all 228,454 rays, G assembly (36.2 M non-zero model derivatives after smoothing, 44 per datum, MAXND
+100) and LSQR (CND ~1200) completed with **no bounds error** (MAXNODE, MAXOBS 57 of 100, MAXDATA 827,894 of 3 M fine).
+The bounds-checked binary then stops (exit 2) at a malformed FORMAT in the "Location summary" write after LSQR
+(tomoDD-SE.f line 2324, `f7.3")"`, gfortran "Missing comma between descriptors"); the production binary does not stop
+there. tomoDD-SE.res.ini was written before. 178 s, peak RSS 2.66 GB. Production binary, same inputs, one
+iteration (`fwd1`): exit 0, 284 s, 2.65 GB. For reference the 40-level grid: 52.2 M derivatives (63 per datum),
+production 341 s, 3.73 GB, also no bounds error.
+
+### 7.5 End to end (`b2_fwd_v2check.py mendocino_gorda_v2 fwd1`)
+
+tomoDD initial residual minus P-1 reference residual (same 228,454 picks); medians, s
+(tables per bin in `fwd1/v2check_tables.md`):
+
+| | P land 0-25 | P land 50-100 | P land 150-200 | P OBS 0-25 | P OBS 50-100 | P OBS 150-200 | P all | P p95 |
+|---|---|---|---|---|---|---|---|---|
+| v2 | +0.006 | -0.001 | -0.002 | -0.004 | -0.000 | -0.002 | 0.000 | 0.085 |
+| first build | -0.015 | -0.024 | -0.036 | -0.085 | -0.085 | -0.030 | -0.032 | 0.187 |
+
+| | S land 0-25 | S land 50-100 | S land 150-200 | S OBS 0-25 | S OBS 50-100 | S OBS 150-200 | S all | S p95 |
+|---|---|---|---|---|---|---|---|---|
+| v2 | +0.009 | -0.004 | -0.003 | -0.010 | +0.001 | +0.002 | -0.000 | 0.187 |
+| first build | -0.021 | -0.036 | -0.071 | -0.200 | -0.187 | -0.108 | -0.076 | 0.461 |
+
+The overall medians are zero by construction (c is a per-station median over the same picks); what P-4 cannot remove
+shows in the bins: P within ±0.02 s in every bin (worst 100-150 km land -0.019), S within ±0.035 s; p95 |d| P 0.067
+land / 0.119 OBS, S 0.111 / 0.234. So the median target (<= 0.02 s P) is met; the D-B015-like p95 <= 0.05 s is not
+(path-dependent MOD sampling with 10 km nodes and the nearest-column choice, largest near shelf OBS). These are
+within the pick sigma (P 0.05-0.15 s) but are not random noise; the inversion will see them as structure near the
+stations.
+
+### 7.6 Points to decide
+
+* Wording of D-B028 P-4: "added" (c = tomoDD - reference), not "subtracted".
+* P-4 corrections up to +0.6-0.8 s S at five shelf/slope OBS mix MOD-sampling and tracer error with what the
+  inversion could fit; keep as is, cap (e.g. |c| <= 0.3 s), or limit P-4 to the tracer part (would need a MOD-specific
+  reference per station; ~1 h compute).
+* The new statics are larger by +0.27 s; they apply to all OBS. Only the 110 Mendocino-Gorda OBS are recomputed;
+  other regions need `b2_fwd_p1.py` + `b2_fwd_statics.py` for their stations.
+* Keep the 4.8 GB P-1 1 km grids (region boxes, flattened z) or delete; they are not the B4 grids.

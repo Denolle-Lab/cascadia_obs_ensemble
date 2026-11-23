@@ -23,11 +23,27 @@ Starting model (MOD, simul2000 format, lon/lat/depth nodes)
   ground), the velocity of the shallowest rock level below in the same box is used. Below 80 km: deep_vp
   with the 80 km Vp/Vs. Boundary nodes copy the nearest interior node.
 
+Forward-model fixes (D-B028), per region in params `tomodd.regions.<region>.forward` (absent = first build):
+* coords: ellipsoid (P-2) writes station, event and MOD-node coordinates rescaled about the region centre so
+  tomoDD's 6371 km sphere has WGS-84 distances (b2_fwd_mods.ellipsoid_coords; inputs/forward.json holds the
+  mapping; b2_tomodd_backtransform.py maps outputs back). sphere = geographic coordinates as given.
+* mod: nearest (P-3) = the NLL rock column nearest to the node (no box average); box = model_box_avg_km mean.
+  Depth nodes: region `node_z` if given (P-3: 1 km to 9 km, 2 km to 49 km), else `tomodd.node_z`.
+* statics_file (P-6): OBS S statics recomputed with the P-1 reference (b2_fwd_statics.py).
+* station_corr (P-4): c(station, phase) = median over the region's picks of [tomoDD forward time in this MOD -
+  P-1 reference time] (b2_fwd_p1.py), from a 1-iteration tomoDD run on the uncorrected inputs; ADDED to the
+  absolute times, so that tomoDD's residual (obs + c - t_tomoDD) equals the reference residual (obs - t_ref)
+  in the median (D-B028 text says "subtracted": that is the sign of (reference - tomoDD)); dt.ct unchanged
+  (the correction cancels in differences). inputs/station_corr.csv.
+
 Checks: compiled limits (MAXEVE, MAXSTA, MAXOBS = stations per event, MAXDATA) -> stop if exceeded.
 
 Run: LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \
-        workflow/10_tomography/b2_tomodd_inputs.py mendocino_gorda
+        workflow/10_tomography/b2_tomodd_inputs.py mendocino_gorda      (first build)
+        ... b2_tomodd_inputs.py mendocino_gorda_v2                        (D-B028; needs b2_fwd_p1.py, b2_fwd_statics.py)
 """
+import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -39,6 +55,8 @@ from scipy.spatial import cKDTree
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
+from b2_fwd_common import RE, tomodd_forward  # noqa: E402
+from b2_fwd_mods import ellipsoid_coords, radii  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
@@ -73,8 +91,8 @@ def select(R):
     return e, p
 
 
-def obs_statics(p):
-    st = pd.read_csv(REPO / T["obs_S_static"]).set_index("station").S_static_proposed
+def obs_statics(p, F):
+    st = pd.read_csv(REPO / F["statics_file"]).set_index("station").S_static_proposed
     m = p.is_obs & (p.phase == "S")
     s = p.loc[m, "station"].map(st)
     p["static_s"] = 0.0
@@ -131,7 +149,7 @@ def load_nll(phase):
     return dx / s, (x0, y0, z0, dx)
 
 
-def sample_model(xn, yn, zn_int):
+def sample_model(xn, yn, zn_int, box_km):
     vp, g = load_nll("P")
     vs, _ = load_nll("S")
     x0, y0, z0, dx = g
@@ -141,7 +159,7 @@ def sample_model(xn, yn, zn_int):
     X, Y = PROJ(LON, LAT)
     ix = np.rint((X / 1e3 - x0) / dx).astype(int)
     iy = np.rint((Y / 1e3 - y0) / dx).astype(int)
-    h = int(T["model_box_avg_km"] // 2)
+    h = int(box_km // 2)
     VP = np.full((len(xn), len(yn), len(zn_int)), np.nan)
     VS = np.full_like(VP, np.nan)
     zlev = z0 + dx * np.arange(nz)
@@ -173,11 +191,12 @@ def sample_model(xn, yn, zn_int):
     return VP, VS
 
 
-def write_mod(path, R):
+def write_mod(path, R, F, center):
     xi, yi = nodes(R["node_lon"]), nodes(R["node_lat"])
-    zi = np.array(T["node_z"], float)
+    zi = np.array(R.get("node_z", T["node_z"]), float)
     z_model = zi[zi <= 80]
-    VP, VS = sample_model(xi, yi, z_model)
+    box = 1 if F["mod"] == "nearest" else T["model_box_avg_km"]
+    VP, VS = sample_model(xi, yi, z_model, box)
     # fill any interior column outside the NLL grid with the nearest valid column
     bad = np.isnan(VP[:, :, 0])
     if bad.any():
@@ -194,6 +213,8 @@ def write_mod(path, R):
     yn = np.r_[yi[0] - E, yi, yi[-1] + E]
     zt, zb = T["edge_z"]
     zn = np.r_[zt, zi, zb]
+    if F["coords"] == "ellipsoid":                   # P-2: node coordinates in the rescaled frame (values unchanged)
+        yn, xn = ellipsoid_coords(yn, xn, *center)
     vp_full = np.pad(vp_full, ((1, 1), (1, 1), (0, 0)), mode="edge")
     r_full = np.pad(r_full, ((1, 1), (1, 1), (0, 0)), mode="edge")
     vp_full = np.concatenate([vp_full[:, :, :1], vp_full, np.full(vp_full.shape[:2] + (1,), T["deep_vp"][int(zb)])], axis=2)
@@ -211,20 +232,50 @@ def write_mod(path, R):
         f"Vp/Vs {r_full.min():.3f}-{r_full.max():.3f}")
     np.savez_compressed(path.with_name("start_model.npz"), lon=xi, lat=yi, z=zi, vp=vp_full[1:-1, 1:-1, 1:-1],
                         vpvs=r_full[1:-1, 1:-1, 1:-1])
-    lim = P["tomodd"]
     return dict(nx=len(xn), ny=len(yn), nz=len(zn), npar=npar)
+
+
+# ---------------------------------------------------------------- forward fixes (D-B028)
+FORWARD_DEFAULT = {"coords": "sphere", "mod": "box", "station_corr": False, "statics_file": T["obs_S_static"]}
+
+
+def station_corr(out, p, e, st, summ_air, center, F):
+    """P-4: 1-iteration tomoDD forward run on the uncorrected inputs; c = median(tomoDD - P-1) per station-phase."""
+    ref = pd.read_parquet(Path(T["runs"]) / F["p1_reference"] / "region_picks_p1.parquet")
+    wd = out.parent / "station_corr_run"
+    if wd.exists():
+        shutil.rmtree(wd)
+    pred = tomodd_forward(wd, p[["event_ID", "code", "phase", "tt"]], e, st, out / "MOD", center=center,
+                          air_dep=summ_air)
+    d = pred.merge(p[["event_ID", "code", "phase", "station", "is_obs"]], on=["event_ID", "code", "phase"])
+    d = d.merge(ref[["event_ID", "station", "phase", "t_p1"]], on=["event_ID", "station", "phase"], how="left")
+    d["diff"] = d.t_tomodd - d.t_p1
+    c = d.groupby(["station", "phase"]).agg(corr_s=("diff", "median"), n=("diff", "size"),
+                                            mad_s=("diff", lambda x: float(np.median(np.abs(x - np.median(x))))),
+                                            is_obs=("is_obs", "first")).reset_index()
+    c["code"] = c.station.map(dict(zip(st.station, st.code)))
+    c.round(4).to_csv(out / "station_corr.csv", index=False)
+    d[["event_ID", "station", "phase", "t_tomodd", "t_p1"]].to_parquet(out / "forward_start_model.parquet")
+    (wd / "tomoDD-SE.res.ini").unlink(missing_ok=True)
+    log(f"P-4 station correction: {len(c)} station-phases, missing P-1 times {int(d.t_p1.isna().sum())}; "
+        f"median corr P {c.corr_s[c.phase == 'P'].median():+.3f} s, S {c.corr_s[c.phase == 'S'].median():+.3f} s; "
+        f"range {c.corr_s.min():+.3f} to {c.corr_s.max():+.3f}")
+    return c
 
 
 # ---------------------------------------------------------------- main
 def main():
     region = sys.argv[1]
     R = T["regions"][region]
+    F = {**FORWARD_DEFAULT, **R.get("forward", {})}
     out = Path(T["runs"]) / region / "inputs"
     out.mkdir(parents=True, exist_ok=True)
     L = T["limits"]
+    center = (round(float(np.mean(R["events_lat"])), 3), round(float(np.mean(R["events_lon"])), 3))
+    log(f"forward settings (D-B028): {F}")
 
     e, p = select(R)
-    p = obs_statics(p)
+    p = obs_statics(p, F)
     p = weights(p)
     st = p.groupby("station")[["network", "sta_lat", "sta_lon", "sta_elev_km", "is_obs"]].first().reset_index()
     st["code"] = [f"S{i:04d}" for i in range(len(st))]
@@ -240,41 +291,55 @@ def main():
         if v > lim:
             raise SystemExit(f"{k} exceeded ({v} > {lim}): rebuild tomoDD with a larger {k} or shrink the region")
 
+    # coordinates as written for tomoDD (P-2)
+    st_w, e_w = st.copy(), e.copy()
+    nd = 6 if F["coords"] == "ellipsoid" else 5      # first build wrote 5 decimals (kept for reproducibility)
+    if F["coords"] == "ellipsoid":
+        st_w["sta_lat"], st_w["sta_lon"] = ellipsoid_coords(st.sta_lat.values, st.sta_lon.values, *center)
+        e_w["lat"], e_w["lon"] = ellipsoid_coords(e.lat.values, e.lon.values, *center)
     with open(out / "station.dat", "w") as f:
-        for r in st.itertuples():
-            f.write(f"{r.code} {r.sta_lat:.5f} {r.sta_lon:.5f} {r.sta_elev_km * 1000.0:.1f}\n")
+        for r in st_w.itertuples():
+            f.write(f"{r.code} {r.sta_lat:.{nd}f} {r.sta_lon:.{nd}f} {r.sta_elev_km * 1000.0:.1f}\n")
     with open(out / "event.dat", "w") as f:
-        for r in e.itertuples():
+        for r in e_w.itertuples():
             t = pd.Timestamp(r.origin_time)
             cs = int(round((t.second + t.microsecond / 1e6) * 100))
-            f.write(f"{t.strftime('%Y%m%d')}  {t.hour:02d}{t.minute:02d}{cs:04d} {r.lat:10.5f} {r.lon:11.5f} "
+            f.write(f"{t.strftime('%Y%m%d')}  {t.hour:02d}{t.minute:02d}{cs:04d} {r.lat:10.{nd}f} {r.lon:11.{nd}f} "
                     f"{r.depth_bsl_km:8.3f} 1.0 0.0 0.0 0.0 {r.ID:10d} 0\n")
+    (out / "dt.ct").write_text("\n".join(dt_lines) + "\n")
+    mod = write_mod(out / "MOD", R, F, center)
+    elev_max = float(st.sta_elev_km.max())
+    air_dep = round(-(elev_max + T["air_dep_margin_km"]), 3)
+    p["station_corr_s"] = 0.0
+    if F["station_corr"]:
+        c = station_corr(out, p, e_w, st_w, air_dep, center, F).set_index(["station", "phase"]).corr_s
+        p["station_corr_s"] = pd.MultiIndex.from_frame(p[["station", "phase"]]).map(c).fillna(0.0).values
+    p["tt_abs"] = p.tt + p.station_corr_s           # absolute times only (tomoDD slow -> obs later); dt.ct from tt
     with open(out / "absolute.dat", "w") as f:
         for eid, d in p.groupby("event_ID"):
             f.write(f"#  {eid}\n")
             for r in d.itertuples():
-                f.write(f"{r.code:<7s} {r.tt:9.4f} {r.w:6.3f} {r.phase}\n")
-    (out / "dt.ct").write_text("\n".join(dt_lines) + "\n")
-    mod = write_mod(out / "MOD", R)
+                f.write(f"{r.code:<7s} {r.tt_abs:9.4f} {r.w:6.3f} {r.phase}\n")
     st.to_csv(out / "station_codes.csv", index=False)
     e.to_csv(out / "events.csv", index=False)
-    p[["event_ID", "station", "code", "phase", "travel_time_s", "static_s", "tt", "sigma_s", "w_bal", "w_raw", "w",
-       "is_obs", "epi_dist_km"]].to_csv(out / "picks_used.csv", index=False)
-
-    elev_max = float(st.sta_elev_km.max())
+    p[["event_ID", "station", "code", "phase", "travel_time_s", "static_s", "tt", "station_corr_s", "tt_abs",
+       "sigma_s", "w_bal", "w_raw", "w", "is_obs", "epi_dist_km"]].to_csv(out / "picks_used.csv", index=False)
+    M, N = radii(center[0])
+    (out / "forward.json").write_text(json.dumps({**F, "center": center, "lat_scale_M_over_R": M / RE,
+                                                  "lon_scale_N_over_R": N / RE, "R_km": RE}, indent=1))
     summ = dict(region=region, events=len(e), stations=len(st), obs_stations=int(st.is_obs.sum()),
                 picks=len(p), P=int((p.phase == "P").sum()), S=int((p.phase == "S").sum()),
                 dt_pairs=n_pairs, dt_data=n_dt, max_sta_per_event=int(nsta_ev.max()),
-                air_dep_km=round(-(elev_max + T["air_dep_margin_km"]), 3),
-                center_lat=round(float(np.mean(R["events_lat"])), 3), center_lon=round(float(np.mean(R["events_lon"])), 3),
+                air_dep_km=air_dep, center_lat=center[0], center_lon=center[1], forward=F,
                 **mod)
     pd.Series(summ).to_json(out / "summary.json", indent=1)
     (out / "build.log").write_text("\n".join(LOG) + "\n")
     log(summ)
     files = [out / f for f in ("event.dat", "station.dat", "absolute.dat", "dt.ct", "MOD", "station_codes.csv",
-                               "events.csv", "picks_used.csv", "summary.json")]
+                               "events.csv", "picks_used.csv", "summary.json", "forward.json", "station_corr.csv")
+             if (out / f).exists()]
     write_manifest(f"b2_tomodd_inputs_{region}", out,
-                   inputs=[B1B / "events.csv", B1B / "picks.csv", REPO / T["obs_S_static"],
+                   inputs=[B1B / "events.csv", B1B / "picks.csv", REPO / F["statics_file"],
                            MODEL / "cascadia3d.P.mod.buf", MODEL / "cascadia3d.S.mod.buf"],
                    outputs=files, params={"tomodd": T, "region": region}, counts=summ)
 

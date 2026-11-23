@@ -27,6 +27,9 @@ Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting mo
 
 ## Next, in order
 
+0. **Forward fixes per region (D-B028, D-B031).** For each region: b2_fwd_p1.py (P-1 reference times),
+   b2_fwd_statics.py (P-6 OBS S statics), then the builder with the `forward` block (P-2, P-4, nearest-column MOD).
+   Done: Mendocino-Gorda (mendocino_gorda_v2).
 1. **Input builder (B2a).** From B1b to tomoDD files for one region: absolute times with weight
    w_bal x pick-quality weight rescaled into (0, 3]; catalog differential times; numeric station codes;
    OBS S statics applied to the picks (D-B020); events and stations inside the region. Script

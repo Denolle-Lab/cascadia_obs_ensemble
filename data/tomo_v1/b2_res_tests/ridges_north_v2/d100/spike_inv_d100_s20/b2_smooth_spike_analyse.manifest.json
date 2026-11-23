@@ -7,10 +7,10 @@
   "--inv",
   "inv_d100_s20"
  ],
- "utc": "2026-11-23T15:39:47.570123+00:00",
- "git_commit": "83043eeee40dbf6bedb366cac3e6a5a0e03f0f3e",
- "git_dirty": false,
- "params_md5": "f0981d0cef332098450ffed517172425",
+ "utc": "2026-11-23T15:51:12.655507+00:00",
+ "git_commit": "f48fe5d95fa3ed38166bd42ca7cd4513ed903575",
+ "git_dirty": true,
+ "params_md5": "8de1272f412743dc234ef0d7d2d99210",
  "params": {
   "min_rec": 0.5,
   "amp": 0.05,
@@ -38,6 +38,10 @@
    48.6,
    49.4
   ],
+  "cluster": {
+   "min_sep_nodes": 4,
+   "max_spikes": 15
+  },
   "region": "ridges_north_v2",
   "smooth": [
    20.0,
@@ -101,26 +105,26 @@
  "outputs": [
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d100/spike_inv_d100_s20/spikes.csv",
-   "size": 26301,
-   "mtime": "2026-11-23T15:39:47.083517+00:00",
-   "md5": "36bb8de1d0ce53806b7a71a41da5bfd0"
+   "size": 29677,
+   "mtime": "2026-11-23T15:51:12.158857+00:00",
+   "md5": "87a1d20e992d744c51a109a5c1061a52"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d100/spike_inv_d100_s20/by_depth.csv",
-   "size": 384,
-   "mtime": "2026-11-23T15:39:47.089517+00:00",
-   "md5": "e19e568f1c51bd2fb1984b987a566ec9"
+   "size": 634,
+   "mtime": "2026-11-23T15:51:12.176857+00:00",
+   "md5": "0969efd9c613a1b038172b442cf33ea6"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d100/spike_inv_d100_s20/layers.csv",
    "size": 1013,
-   "mtime": "2026-11-23T15:39:47.107517+00:00",
+   "mtime": "2026-11-23T15:51:12.192857+00:00",
    "md5": "513abb6b7ee7dc18688a6fcf3e134c23"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d100/spike_inv_d100_s20/psf.png",
    "size": 124981,
-   "mtime": "2026-11-23T15:39:47.568515+00:00",
+   "mtime": "2026-11-23T15:51:12.653854+00:00",
    "md5": "5d34a0f2fd71139a3ab6bb5bd8022fd1"
   }
  ],

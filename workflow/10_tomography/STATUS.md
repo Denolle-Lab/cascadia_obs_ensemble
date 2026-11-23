@@ -68,7 +68,9 @@ v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
 6. Science framing (notes/science_framing.md, 2026-11-23): novelty wording (plate-wide local-earthquake Pn
    tomography already exists, VanderBeek & Toomey 2019), questions that join sources and structure, steps after
    the tomography. Adopted 2026-11-23 as D-B036..D-B042; references merged to main (PR #34, cbaf5efc).
-7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23): P-M1..P-M8 proposed.
+7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23, revised after a literature review):
+   P-M1..P-M10 proposed. Main choices: coarse whole-margin inversion as common start (P-M2, as Lin et al. 2010),
+   resolution-window weights without inverse variance (P-M4), joint-vs-stitched test on blanco + oregon (T6).
 
 ## Done
 

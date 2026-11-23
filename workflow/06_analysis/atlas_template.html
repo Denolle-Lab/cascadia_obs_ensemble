@@ -31,6 +31,22 @@
   header .stats div { display: flex; flex-direction: column; gap: 2px; }
   header .stats b { font-size: 16px; font-weight: 500; }
   header .stats span { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  header.panel { max-height: calc(100vh - 32px); overflow-y: auto; }
+  .catcard { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--hairline); font-size: 11.5px; line-height: 1.45; color: var(--text-secondary); }
+  .catcard .k { color: var(--text-muted); }
+  .catcard .ci + .ci { margin-top: 6px; }
+  .catcard table { width: 100%; border-collapse: collapse; margin-top: 7px; table-layout: fixed; }
+  .catcard th { color: var(--text-muted); font-weight: 500; text-align: right; font-size: 11px; padding: 0 0 2px 4px; }
+  .catcard td { padding: 1px 0; vertical-align: top; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .catcard td.n { text-align: right; font-family: "IBM Plex Mono", ui-monospace, monospace; font-feature-settings: "tnum"; font-size: 11px; color: var(--text-primary); padding-left: 4px; }
+  .catcard details summary { cursor: pointer; color: var(--text-muted); font-size: 11px; list-style: none; margin-top: 4px; }
+  .catcard details summary::-webkit-details-marker { display: none; }
+  .catcard details summary::before { content: "▸ "; } .catcard details[open] summary::before { content: "▾ "; }
+  .catcard .note { margin-top: 6px; color: var(--text-muted); font-size: 10.5px; line-height: 1.4; }
+  .pill { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--hairline-strong); border-radius: 3px; padding: 0 4px; color: var(--text-secondary); }
+  .pill.pre { color: #d9b26b; border-color: rgba(217,178,107,0.5); }
+  .seg button sup { font-size: 9px; color: #d9b26b; margin-left: 2px; }
+  .seg button.on sup { color: #8a5a12; }
 
   .controls.panel { top: 16px; right: 16px; padding: 10px 12px; width: 268px; max-height: calc(100vh - 32px - 260px);
     overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
@@ -116,6 +132,7 @@
     header .stats { margin: 0; padding: 0; border: 0; gap: 12px; }
     header .stats b { font-size: 13px; } header .stats span { font-size: 10px; }
     header .stats div:nth-child(n+2) { display: none; }
+    header .catcard { display: none; }
     .toolbar { top: auto; transform: none; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
       left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); justify-content: space-between; }
     .toolbar button { flex: 1; padding: 9px 4px; font-size: 13px; }
@@ -148,16 +165,25 @@
     <div><b id="nAll">–</b><span>events</span></div>
     <div><b id="nSta">–</b><span>stations</span></div>
   </div>
+  <div class="catcard" id="catCard"></div>
 </header>
 
 <div class="toolbar" id="toolbar">
   <button data-p="controls">Controls</button><button data-p="regions">Places</button><button data-p="timeline">Time</button><button data-p="legend">Legend</button>
 </div>
 <div class="controls panel" id="controls">
-  <div class="ctl-row" id="catRow"><span class="lab">Catalog</span>
-    <div class="seg" id="segCat"><button data-v="0" class="on">v4</button><button data-v="1">v4-NLL3D (preliminary)</button></div></div>
+  <div class="ctl-row" id="catRow" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Catalog</span>
+    <div class="seg" id="segCat"></div></div>
+  <div id="cmpBox" style="display:none;flex-direction:column;gap:9px">
+    <div class="ctl-row"><span class="lab">A (from)</span><select id="cmpA" style="max-width:160px"></select></div>
+    <div class="ctl-row"><span class="lab">B (to)</span><select id="cmpB" style="max-width:160px"></select></div>
+    <div class="ctl-row"><span class="lab">Color</span><div class="seg" id="segCmp"><button data-v="5" class="on" title="Depth change B − A">Δ depth</button><button data-v="6" title="Horizontal shift A → B">Δ horiz.</button><button data-v="-1" title="Use the Color by choice below">Color by</button></div></div>
+    <div class="ctl-row"><span class="lab">Scale</span><input type="range" id="cmpS" min="1" max="20" step="1" value="8"><span class="val mono" id="cmpSV">±8 km</span></div>
+    <div class="ctl-row"><span class="lab">Shift lines</span><div class="seg" id="segSegs"><button data-v="0" class="on">Off</button><button data-v="1" title="The largest shifts among the events shown">Largest</button><button data-v="2" title="A fixed random subset of the events shown">Random</button></div></div>
+    <div class="ctl-row"><span class="lab">Max lines</span><input type="range" id="segN" min="250" max="20000" step="250" value="3000"><span class="val mono" id="segNV">3,000</span></div>
+  </div>
   <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Color by</span>
-    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier of v4-NLL3D (A-D, U)">Tier</button></div></div>
+    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier (A-D, U) of the catalog shown, or of the latest catalog with tiers">Tier</button></div></div>
   <div class="ctl-row"><span class="lab">Vertical ×</span><input type="range" id="exag" min="1" max="10" step="0.5" value="3"><span class="val mono" id="exagV">3×</span></div>
   <div class="ctl-row"><span class="lab">Ground</span><input type="range" id="ground" min="0" max="1" step="0.05" value="0.55"><span class="val mono" id="groundV">solid</span></div>
   <div class="ctl-row"><span class="lab">Point size</span><input type="range" id="psize" min="0.3" max="3" step="0.1" value="1"><span class="val mono" id="psizeV">1.0</span></div>
@@ -171,7 +197,7 @@
   <div class="ctl-row"><span class="lab">Max σ loc</span><input type="range" id="sig" min="1" max="30" step="0.5" value="30"><span class="val mono" id="sigV">all</span></div>
   <div class="ctl-row"><span class="lab">Depth datum</span><div class="seg" id="segDatum"><button data-v="0" class="on">Sea level</button><button data-v="1">Local surface</button></div></div>
   <div class="ctl-row"><span class="lab">Above ground</span><div class="seg" id="segAir"><button data-v="0">Show</button><button data-v="1" class="on">Grey</button><button data-v="2">Hide</button></div></div>
-  <div class="ctl-row" id="datumNote" style="display:none"><span class="lab"></span><span class="val" style="width:auto;text-align:left">v4-NLL3D depths are below sea level</span></div>
+  <div class="ctl-row" id="datumNote" style="display:none"><span class="lab"></span><span class="val" id="datumNoteT" style="width:auto;text-align:left">depths below sea level for this catalog</span></div>
   <div class="ctl-row"><span class="lab"></span><span class="val mono" id="airV" style="width:auto;text-align:left"></span></div>
   <div class="ctl-row"><span class="lab">Depth from</span><input type="range" id="d0" min="-5" max="80" step="1" value="-5"><span class="val mono" id="d0V">−5 km</span></div>
   <div class="ctl-row"><span class="lab">Depth to</span><input type="range" id="d1" min="-5" max="80" step="1" value="80"><span class="val mono" id="d1V">80 km</span></div>
@@ -346,22 +372,31 @@ const elevAt = (lon, lat) => { for (const k of patchKeys) { const v = grids[k].s
 
 // ---------- events ----------
 const N = EV.lon.length;
-// Two catalogs, one event set (same IDs, same order): elon/elat/ecat hold the positions and catalog depth
-// (km) of the catalog shown; everything else per event (time, magnitude, picks, fault) is shared.
-const NLL = !!EV.n_tier;                     // v4-NLL3D (preliminary) layer present
-const TIERS = "ABCDU";
-const elon = Float32Array.from(EV.lon), elat = Float32Array.from(EV.lat), ecat = Float32Array.from(EV.dep);
-const etier = new Float32Array(N).fill(4);   // 0-4 = A-D, U (v4 location kept)
-let nlon = null, nlat = null, ndep = null;   // v4-NLL3D positions (NaN = v4 location kept), from the stored offsets
-if (NLL) {
-  nlon = new Float32Array(N); nlat = new Float32Array(N); ndep = new Float32Array(N);
+// Catalogs of the registry (workflow/11_compare/catalogs.yaml, atlas: true), one event set (the reference catalog's
+// events, same order). CATS[0] is the reference (positions EV.lon/lat/dep); the others are stored as offsets from it
+// (c<k>_dlon/dlat/ddep, -32768 = not located in that catalog). elon/elat/ecat hold the positions and catalog depth
+// (km) of the catalog shown (catalog B in Compare mode); everything else per event (time, magnitude, picks, fault) is shared.
+const CATS = (M.events.cats && M.events.cats.length) ? M.events.cats
+  : [{ id: "v4", label: "Catalog v4", ref: true, key: null, has_tiers: false, status: "final", num: {} }];
+const NC = CATS.length;
+const TIERS = "ABCDU";                       // tier codes 0-4; 5 = located, catalog without tier classes
+const TIER_LAB = k => k === 5 ? "–" : TIERS[k];
+const CP = CATS.map(c => {
+  if (!c.key) return { lon: EV.lon, lat: EV.lat, dep: EV.dep, tier: null };
+  const dl = EV[c.key + "_dlon"], da = EV[c.key + "_dlat"], dz = EV[c.key + "_ddep"];
+  const lon = new Float32Array(N), lat = new Float32Array(N), dep = new Float32Array(N);
   for (let i = 0; i < N; i++) {
-    etier[i] = EV.n_tier[i] === 255 ? 4 : EV.n_tier[i];
-    const k = EV.n_dlon[i] === -32768;
-    nlon[i] = k ? NaN : EV.lon[i] + EV.n_dlon[i] * 1e-4; nlat[i] = k ? NaN : EV.lat[i] + EV.n_dlat[i] * 1e-4;
-    ndep[i] = k ? NaN : EV.dep[i] + EV.n_ddep[i] / 100;
+    const k = dl[i] === -32768;
+    lon[i] = k ? NaN : EV.lon[i] + dl[i] * 1e-4; lat[i] = k ? NaN : EV.lat[i] + da[i] * 1e-4; dep[i] = k ? NaN : EV.dep[i] + dz[i] / 100;
   }
-}
+  return { lon, lat, dep, tier: EV[c.key + "_tier"], nph: EV[c.key + "_nph"], gap: EV[c.key + "_gap"], rms: EV[c.key + "_rms"] };
+});
+const ANY_TIERS = CATS.some(c => c.has_tiers);
+const isLoc = (k, i) => !Number.isNaN(CP[k].lon[i]);
+const elon = Float32Array.from(EV.lon), elat = Float32Array.from(EV.lat), ecat = Float32Array.from(EV.dep);
+const etier = new Float32Array(N).fill(5);   // tier of the catalog shown (or of the latest catalog with tiers)
+const cdz = new Float32Array(N).fill(NaN), cdh = new Float32Array(N).fill(NaN);   // Compare: B − A depth, A → B horizontal (km)
+const cdv = new Float32Array(N).fill(-9999); // value coloured in Compare mode; -9999 = not located in both
 const eflt = new Float32Array(N);            // fault index of each event (-1 = none)
 const esurf = new Float32Array(N), edep = new Float32Array(N), eair = new Float32Array(N);   // surface elev (km, up), displayed depth (km bsl), above-ground flag
 const ex = new Float32Array(N), ez = new Float32Array(N), emag = new Float32Array(N), eflag = new Float32Array(N), esig = new Float32Array(N), enew = new Float32Array(N);
@@ -374,7 +409,12 @@ for (let i = 0; i < N; i++) {
   eflt[i] = EV.flt && EV.flt[i] !== 65535 ? EV.flt[i] : -1;
   esurf[i] = elevAt(elon[i], elat[i]) / 1000;
 }
-const esurf4 = esurf.slice(); let esurfN = null;   // surface under each epicentre, per catalog (NLL3D on first use)
+const esurf4 = esurf.slice();                       // surface under each epicentre, per catalog (computed on first use)
+const esurfC = [esurf4];
+function catSurf(k) {
+  if (!esurfC[k]) { const a = esurf4.slice(), P = CP[k]; for (let i = 0; i < N; i++) if (isLoc(k, i)) a[i] = elevAt(P.lon[i], P.lat[i]) / 1000; esurfC[k] = a; }
+  return esurfC[k];
+}
 const evGeo = new THREE.BufferGeometry();
 const evPos = new Float32Array(N * 3);
 for (let i = 0; i < N; i++) { evPos[i * 3] = ex[i]; evPos[i * 3 + 1] = 0; evPos[i * 3 + 2] = ez[i]; }
@@ -400,12 +440,14 @@ evGeo.setAttribute("qc", new THREE.BufferAttribute(eflag, 1));
 evGeo.setAttribute("sig", new THREE.BufferAttribute(esig, 1));
 evGeo.setAttribute("nw", new THREE.BufferAttribute(enew, 1));
 evGeo.setAttribute("flt", new THREE.BufferAttribute(eflt, 1));
-evGeo.setAttribute("tier", new THREE.BufferAttribute(etier, 1));
-const F = { cat: 0, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
+const tierAttr = new THREE.BufferAttribute(etier, 1), dvAttr = new THREE.BufferAttribute(cdv, 1);
+evGeo.setAttribute("tier", tierAttr);
+evGeo.setAttribute("dv", dvAttr);
+const F = { cat: 0, cmp: false, ca: 0, cb: NC - 1, cq: 5, cs: 8, segs: 0, segN: 3000, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
 const EU = { uExag: U.exag, uT0: { value: F.t0 }, uT1: { value: F.t1 }, uMmin: { value: -9 }, uSig: { value: 999 }, uQC: { value: 0 },
   uD0: { value: -99 }, uD1: { value: 999 }, uBox: { value: new THREE.Vector4() }, uBoxOn: { value: 0 }, uMode: { value: 0 },
   uSize: { value: 1 }, uAir: { value: 1 }, uFault: { value: -1 }, uOnF: { value: 0 }, uPix: { value: renderer.getPixelRatio() }, uTmax: { value: M.events.days_max },
-  uCat: { value: 0 }, uTierMax: { value: 4 } };
+  uRing: { value: 0 }, uTierMax: { value: 4 }, uCmp: { value: 0 }, uDvS: { value: 8 } };
 const ramps = `
   vec3 rampDepth(float d) {   // shallow pale gold -> deep violet, all readable on dark
     float t = clamp(d / 45.0, 0.0, 1.0);
@@ -424,19 +466,30 @@ const ramps = `
     vec3 c = clamp(vec3(abs(h - 3.0) - 1.0, 2.0 - abs(h - 2.0), 2.0 - abs(h - 4.0)), 0.0, 1.0);
     return mix(vec3(1.0), c, 0.75 + 0.25 * fract(f * 0.37));
   }
-  vec3 tierCol(float t) {      // A green, B blue, C yellow, D red, U grey (not relocated)
+  vec3 tierCol(float t) {      // A green, B blue, C yellow, D red, U grey (not relocated), no tier class pale
     if (t < 0.5) return vec3(0.31,0.75,0.55); if (t < 1.5) return vec3(0.34,0.66,0.90);
-    if (t < 2.5) return vec3(0.91,0.77,0.28); if (t < 3.5) return vec3(0.88,0.36,0.36); return vec3(0.62,0.61,0.58);
+    if (t < 2.5) return vec3(0.91,0.77,0.28); if (t < 3.5) return vec3(0.88,0.36,0.36); if (t < 4.5) return vec3(0.62,0.61,0.58); return vec3(0.85,0.84,0.80);
+  }
+  vec3 rampDz(float t) {       // Compare, depth change B − A, t in [-1, 1]: shallower blue, deeper warm
+    t = clamp(t, -1.0, 1.0);
+    vec3 a = vec3(0.25,0.40,0.85), b = vec3(0.42,0.68,0.95), c = vec3(0.86,0.85,0.80), d = vec3(0.96,0.62,0.33), e = vec3(0.86,0.30,0.32);
+    if (t < -0.5) return mix(a, b, (t + 1.0) / 0.5); if (t < 0.0) return mix(b, c, (t + 0.5) / 0.5);
+    if (t < 0.5) return mix(c, d, t / 0.5); return mix(d, e, (t - 0.5) / 0.5);
+  }
+  vec3 rampDh(float t) {       // Compare, horizontal shift, t in [0, 1]
+    t = clamp(t, 0.0, 1.0);
+    vec3 a = vec3(0.45,0.47,0.50), b = vec3(0.40,0.70,0.80), c = vec3(0.96,0.75,0.35), d = vec3(0.95,0.36,0.36);
+    if (t < 0.33) return mix(a, b, t / 0.33); if (t < 0.66) return mix(b, c, (t - 0.33) / 0.33); return mix(c, d, (t - 0.66) / 0.34);
   }`;
 const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthWrite: true,
   vertexShader: `
-    attribute float dep, day, mag, qc, sig, nw, air, flt, tier;
-    uniform float uCat, uTierMax, uFault, uOnF, uAir, uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
+    attribute float dep, day, mag, qc, sig, nw, air, flt, tier, dv;
+    uniform float uRing, uCmp, uDvS, uTierMax, uFault, uOnF, uAir, uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
     varying vec3 vCol; varying float vFade, vRing;
     ${ramps}
     void main() {
       bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1 && !(uAir > 1.5 && air > 0.5)
-        && tier <= uTierMax + 0.5 && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
+        && (tier <= uTierMax + 0.5 || tier > 4.5) && (uCmp < 0.5 || dv > -9000.0) && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
       if (uBoxOn > 0.5) keep = keep && position.x >= uBox.x && position.x <= uBox.y && position.z >= uBox.z && position.z <= uBox.w;
       if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
       vec4 mv = modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0);
@@ -444,8 +497,9 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
       float m = mag < -8.0 ? 0.5 : mag;
       float s = 0.8 + 0.9 * pow(1.85, clamp(m, -1.0, 3.0) + 1.0) * pow(1.25, max(m - 3.0, 0.0));
       gl_PointSize = clamp(s * uSize * uPix * clamp(pow(320.0 / -mv.z, 0.45), 0.35, 1.6), 1.2 * uPix, 30.0 * uPix);
-      vCol = uMode < 0.5 ? rampDepth(dep) : (uMode < 1.5 ? rampTime(day / uTmax) : (uMode < 2.5 ? rampNew(nw) : (uMode < 3.5 ? faultCol(flt) : tierCol(tier))));
-      vRing = tier > 3.5 && (uCat > 0.5 || uMode > 3.5) ? 1.0 : 0.0;   // tier U: ring = v4 location, not relocated
+      vCol = uMode < 0.5 ? rampDepth(dep) : (uMode < 1.5 ? rampTime(day / uTmax) : (uMode < 2.5 ? rampNew(nw) : (uMode < 3.5 ? faultCol(flt)
+        : (uMode < 4.5 ? tierCol(tier) : (uMode < 5.5 ? rampDz(dv / uDvS) : rampDh(dv / uDvS))))));
+      vRing = tier > 3.5 && tier < 4.5 && (uRing > 0.5 || (uMode > 3.5 && uMode < 4.5)) ? 1.0 : 0.0;   // tier U: ring = reference location, not relocated
       vFade = qc > 0.5 ? 1.0 : 0.7;
       if (uAir > 0.5 && uAir < 1.5 && air > 0.5) { vCol = vec3(0.55); vFade *= 0.45; }
     }`,
@@ -459,10 +513,45 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
     }` });
 const evPoints = new THREE.Points(evGeo, evMat); evPoints.frustumCulled = false; evPoints.renderOrder = 3;
 scene.add(evPoints);
+// Compare mode: shift lines from the catalog A location (faint end) to the catalog B location (bright end)
+const segGeo = new THREE.BufferGeometry();
+const segLines = new THREE.LineSegments(segGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uExag: U.exag },
+  vertexShader: `attribute float dep; attribute vec4 col; uniform float uExag; varying vec4 vC;
+    void main() { vC = col; gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0); }`,
+  fragmentShader: `varying vec4 vC; void main() { gl_FragColor = vC; }` }));
+segLines.frustumCulled = false; segLines.renderOrder = 3; segLines.visible = false;
+const segGroup = new THREE.Group(); segGroup.add(segLines); scene.add(segGroup);
+let segSet = new Set();
+const hashI = i => Math.imul(i + 1, 2654435761) >>> 0;    // fixed pseudo-random order of the events
+function buildSegs() {
+  segSet = new Set();
+  if (!F.cmp || !F.segs) { segLines.visible = false; return; }
+  const cand = []; for (let i = 0; i < N; i++) if (passes(i)) cand.push(i);
+  const m = effMode();
+  const w = m === 5 ? (i => Math.abs(cdz[i])) : m === 6 ? (i => cdh[i]) : (i => Math.hypot(cdh[i], cdz[i]));
+  if (cand.length > F.segN) {
+    if (F.segs === 1) { const wv = new Float32Array(N); for (const i of cand) wv[i] = w(i); cand.sort((p, q) => wv[q] - wv[p]); }
+    else cand.sort((p, q) => hashI(p) - hashI(q));
+    cand.length = F.segN;
+  }
+  const n = cand.length, pos = new Float32Array(n * 6), dep = new Float32Array(n * 2), col = new Float32Array(n * 8), A = CP[F.ca];
+  cand.forEach((i, k) => {
+    pos[k * 6] = toX(A.lon[i]); pos[k * 6 + 2] = toZ(A.lat[i]); dep[k * 2] = A.dep[i];
+    pos[k * 6 + 3] = ex[i]; pos[k * 6 + 5] = ez[i]; dep[k * 2 + 1] = edep[i];
+    const c = rgbOf(m, colVal(i, m));
+    col.set([c[0], c[1], c[2], 0.12, c[0], c[1], c[2], 0.85], k * 8);
+    segSet.add(i);
+  });
+  segGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  segGeo.setAttribute("dep", new THREE.BufferAttribute(dep, 1));
+  segGeo.setAttribute("col", new THREE.BufferAttribute(col, 4));
+  segLines.visible = n > 0;
+}
 function passes(i) {
   const d = edep[i];
   if (F.air === 2 && eair[i]) return false;
-  if (etier[i] > F.tmax) return false;
+  if (etier[i] > F.tmax && etier[i] < 5) return false;
+  if (F.cmp && !(cdv[i] > -9000)) return false;
   if (F.fault >= 0 && eflt[i] !== F.fault) return false;
   if (F.onf === 1 && eflt[i] < 0 || F.onf === 2 && eflt[i] >= 0) return false;
   if (EV.day[i] < F.t0 || EV.day[i] > F.t1 || emag[i] < F.mmin || esig[i] > F.sig || eflag[i] < F.qc || d < F.d0 || d > F.d1) return false;
@@ -677,7 +766,7 @@ function placeTensors() {
 
 // ---------- layers ----------
 const LAYERS = [
-  { key: "events", label: "Events", color: "#f2a65a", obj: [evPoints], on: true },
+  { key: "events", label: "Events", color: "#f2a65a", obj: [evPoints, segGroup], on: true },
   { key: "ground", label: "Bathymetry", color: "#62908f", obj: [terrainGroup], on: true },
   { key: "slab", label: "Slab2", color: "#9fb3cc", obj: [slabMesh], on: false },
   { key: "casie", label: "CASIE21", color: "#5fb3a6", obj: [casMesh].filter(Boolean), on: false },
@@ -707,14 +796,20 @@ mcSel.onchange = () => { setMc(mcSel.value); if (!layer("mc").on) layer("mc").se
 lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend(); }; });
 
 // ---------- controls ----------
-let refreshT = 0;                                                  // debounce timer of refresh()
+let refreshT = 0, segT = 0;                                        // debounce timers of refresh() and the shift lines
 const SEC = { on: false, a: null, b: null, w: 10, scale: 1 };       // cross-section state (used by control handlers)
 const secCurtain = new THREE.Group(); scene.add(secCurtain);
 function seg(id, cb) {
   const el = $(id);
   el.querySelectorAll("button").forEach(b => b.onclick = () => { el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); cb(+b.dataset.v); });
 }
-seg("segColor", v => { F.mode = v; EU.uMode.value = v; drawLegend(); drawSection(); });
+const effMode = () => F.cmp && F.cq >= 0 ? F.cq : F.mode;   // colour mode in use (Compare: Δ depth 5, Δ horiz. 6)
+function setMode() { EU.uMode.value = effMode(); drawLegend(); drawSection(); buildSegs(); }
+seg("segColor", v => {
+  F.mode = v;
+  if (F.cmp && F.cq >= 0) { F.cq = -1; $("segCmp").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "-1")); }
+  setMode();
+});
 seg("segQC", v => { F.qc = v; EU.uQC.value = v; refresh(); });
 const airText = () => $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / N).toFixed(1)}%) above ground`;
 airText();
@@ -722,34 +817,87 @@ seg("segDatum", v => { F.datum = v; applyDatum(v); depAttr.needsUpdate = true; a
 seg("segAir", v => { F.air = v; EU.uAir.value = v; refresh(); });
 seg("segOnF", v => { F.onf = v; EU.uOnF.value = v; refresh(); });
 seg("segTier", v => { F.tmax = v; EU.uTierMax.value = v; refresh(); });
-// Catalog switch: same events, positions and depths from v4 or v4-NLL3D (tier U keeps the v4 location).
-// v4-NLL3D depths are km below sea level by construction, so the datum switch only applies to v4.
+// Catalog switch: same events, positions and depths from the catalog shown (tier U / not located: reference location,
+// drawn as a ring). Only the reference (v4) depths have an unconfirmed datum; the other catalogs are km below sea level,
+// so the datum switch applies to the reference view only. Compare: events at their B location, coloured by B − A.
 const SUB4 = $("sub").textContent;
-function setCatalog(c) {
-  if (!NLL) return;
-  F.cat = c; EU.uCat.value = c;
-  if (c && !esurfN) {
-    esurfN = esurf4.slice();
-    for (let i = 0; i < N; i++) if (!Number.isNaN(nlon[i])) esurfN[i] = elevAt(nlon[i], nlat[i]) / 1000;
-  }
-  for (let i = 0; i < N; i++) {
-    const nl = c && !Number.isNaN(nlon[i]);
-    elon[i] = nl ? nlon[i] : EV.lon[i]; elat[i] = nl ? nlat[i] : EV.lat[i]; ecat[i] = nl ? ndep[i] : EV.dep[i];
-    ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]); evPos[i * 3] = ex[i]; evPos[i * 3 + 2] = ez[i];
-  }
-  esurf.set(c ? esurfN : esurf4);
-  evGeo.attributes.position.needsUpdate = true;
-  const dbtn = $("segDatum").querySelectorAll("button");
-  if (c) F.datum4 = F.datum;
-  F.datum = c ? 0 : F.datum4;
-  dbtn.forEach(b => { b.disabled = !!c; b.classList.toggle("on", +b.dataset.v === F.datum); });
-  $("datumNote").style.display = c ? "" : "none";
-  applyDatum(F.datum); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText();
-  $("sub").textContent = c ? "Catalog v4 events relocated with NonLinLoc in a 3D velocity model (preliminary). Depths in km below sea level." : SUB4;
-  drawLegend(); refresh(); drawSection();
+const catName = k => CATS[k].id + (CATS[k].status === "preliminary" ? " (preliminary)" : "");
+const viewCat = () => F.cmp ? F.cb : F.cat;
+function tierSrc() {                         // catalog whose tiers are shown / filtered
+  const c = viewCat(); if (CATS[c].has_tiers) return c;
+  if (F.cmp && CATS[F.ca].has_tiers) return F.ca;
+  let t = -1; CATS.forEach((x, k) => { if (x.has_tiers) t = k; }); return t;
 }
-seg("segCat", v => setCatalog(v));
-if (!NLL) ["catRow", "tierRow", "btnTier"].forEach(id => $(id).style.display = "none");
+const TIER_N = [0, 0, 0, 0, 0, 0];
+const CMPQ = { n: 0, dh: [], dz: [] };       // B − A over all events located in both (quantiles)
+const quant = (a, ps) => { if (!a.length) return ps.map(() => null); const s = Float32Array.from(a).sort(); return ps.map(p => s[Math.min(s.length - 1, Math.floor(p * (s.length - 1) + 0.5))]); };
+function applyView() {
+  const c = viewCat(), P = CP[c], R = CP[0], S = catSurf(c), ts = tierSrc();
+  for (let i = 0; i < N; i++) {
+    const ok = isLoc(c, i);
+    elon[i] = ok ? P.lon[i] : R.lon[i]; elat[i] = ok ? P.lat[i] : R.lat[i]; ecat[i] = ok ? P.dep[i] : R.dep[i];
+    ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]); evPos[i * 3] = ex[i]; evPos[i * 3 + 2] = ez[i];
+    esurf[i] = S[i];
+    etier[i] = ts < 0 ? 5 : CP[ts].tier[i];
+  }
+  TIER_N.fill(0); for (let i = 0; i < N; i++) TIER_N[etier[i]]++;
+  cdz.fill(NaN); cdh.fill(NaN); cdv.fill(-9999);
+  if (F.cmp) {
+    const A = CP[F.ca], B = CP[F.cb], dh = [], dz = [];
+    for (let i = 0; i < N; i++) {
+      if (!isLoc(F.ca, i) || !isLoc(F.cb, i)) continue;
+      cdz[i] = B.dep[i] - A.dep[i];
+      cdh[i] = Math.hypot((B.lon[i] - A.lon[i]) * 111.195 * Math.cos((A.lat[i] + B.lat[i]) * Math.PI / 360), (B.lat[i] - A.lat[i]) * 111.195);
+      dh.push(cdh[i]); dz.push(cdz[i]);
+    }
+    CMPQ.n = dh.length; CMPQ.dh = quant(dh, [0.5, 0.9]); CMPQ.dz = quant(dz, [0.1, 0.5, 0.9]);
+  }
+  setDv();
+  evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true;
+  const refView = !F.cmp && c === 0, dbtn = $("segDatum").querySelectorAll("button");
+  if (!refView && !F.datumLocked) { F.datum4 = F.datum; F.datumLocked = true; }
+  if (refView && F.datumLocked) { F.datum = F.datum4; F.datumLocked = false; }
+  if (!refView) F.datum = 0;
+  dbtn.forEach(b => { b.disabled = !refView; b.classList.toggle("on", +b.dataset.v === F.datum); });
+  $("datumNote").style.display = refView ? "none" : "";
+  applyDatum(F.datum); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText();
+  EU.uRing.value = !F.cmp && c !== 0 ? 1 : 0; EU.uCmp.value = F.cmp ? 1 : 0; EU.uMode.value = effMode();
+  $("btnTier").disabled = ts < 0;
+  $("sub").textContent = F.cmp ? `Compare ${catName(F.ca)} (A) and ${catName(F.cb)} (B): the same events, shown at their B location. Depths in km below sea level.`
+    : c === 0 ? SUB4 : `${CATS[c].label}${CATS[c].status === "preliminary" ? " (preliminary)" : ""}: catalog v4 events relocated. Depths in km below sea level.`;
+  drawCatCard(); drawLegend(); refresh(); drawSection();
+}
+function setDv() {
+  const m = effMode();
+  for (let i = 0; i < N; i++) cdv[i] = Number.isNaN(cdz[i]) ? -9999 : (m === 6 ? cdh[i] : cdz[i]);
+  dvAttr.needsUpdate = true;
+}
+function setCatalog(k) {
+  if (k === "cmp") { setCompare(F.ca, F.cb); return; }
+  F.cmp = false; F.cat = +k; $("cmpBox").style.display = "none";
+  $("segCat").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === String(k)));
+  applyView();
+}
+function setCompare(a, b) {
+  F.cmp = true; F.ca = +a; F.cb = +b; $("cmpA").value = F.ca; $("cmpB").value = F.cb;
+  $("cmpBox").style.display = "flex";
+  $("segCat").querySelectorAll("button").forEach(x => x.classList.toggle("on", x.dataset.v === "cmp"));
+  applyView();
+}
+{
+  const sc_ = $("segCat");
+  sc_.innerHTML = CATS.map((c, k) => `<button data-v="${k}"${k === 0 ? ' class="on"' : ""} title="${c.label.replace(/"/g, "&quot;")} · ${c.status}">${c.id}${c.status === "preliminary" ? "<sup>prelim.</sup>" : ""}</button>`).join("")
+    + (NC > 1 ? `<button data-v="cmp" title="Compare two catalogs: colour by the change B − A, lines from A to B">Compare</button>` : "");
+  sc_.querySelectorAll("button").forEach(b => b.onclick = () => setCatalog(b.dataset.v === "cmp" ? "cmp" : +b.dataset.v));
+  const opts = CATS.map((c, k) => `<option value="${k}">${c.id}${c.status === "preliminary" ? " (prelim.)" : ""}</option>`).join("");
+  $("cmpA").innerHTML = opts; $("cmpB").innerHTML = opts; $("cmpA").value = F.ca; $("cmpB").value = F.cb;
+  $("cmpA").onchange = () => setCompare($("cmpA").value, $("cmpB").value);
+  $("cmpB").onchange = () => setCompare($("cmpA").value, $("cmpB").value);
+}
+seg("segCmp", v => { F.cq = v; setDv(); setMode(); });
+seg("segSegs", v => { F.segs = v; buildSegs(); drawLegend(); drawSection(); });
+if (NC < 2) ["catRow"].forEach(id => $(id).style.display = "none");
+if (!ANY_TIERS) ["tierRow", "btnTier"].forEach(id => $(id).style.display = "none");
 
 // ---------- event <-> fault: pick a fault to see its events ----------
 const faultSel = $("faultSel");
@@ -801,6 +949,8 @@ bind("mmin", v => v <= -1 ? "all" : "M " + v.toFixed(1), v => { F.mmin = v <= -1
 bind("sig", v => v >= 30 ? "all" : v + " km", v => { F.sig = v >= 30 ? 999 : v; EU.uSig.value = F.sig; refresh(); });
 bind("d0", v => v + " km", v => { F.d0 = v <= -5 ? -99 : v; EU.uD0.value = F.d0; refresh(); });
 bind("d1", v => v + " km", v => { F.d1 = v >= 80 ? 999 : v; EU.uD1.value = F.d1; refresh(); });
+bind("cmpS", v => "±" + v + " km", v => { F.cs = v; EU.uDvS.value = v; if (typeof drawLegend === "function" && F.cmp) { drawLegend(); drawSection(); buildSegs(); } });
+bind("segN", v => v.toLocaleString(), v => { F.segN = v; if (F.cmp && F.segs) { clearTimeout(segT); segT = setTimeout(() => { buildSegs(); drawSection(); }, 120); } });
 
 // ---------- regions ----------
 const regNav = $("regions");
@@ -884,7 +1034,7 @@ function refresh() {
   clearTimeout(refreshT);
   refreshT = setTimeout(() => {
     let n = 0; for (let i = 0; i < N; i++) if (passes(i)) n++;
-    $("nShown").textContent = n.toLocaleString(); drawHist(); drawSection();
+    $("nShown").textContent = n.toLocaleString(); drawHist(); buildSegs(); drawSection(); cmpShown();
   }, 40);
 }
 
@@ -892,22 +1042,67 @@ function refresh() {
 function layoutPanels() {   // keep panels from overlapping
   const lg = $("legend"), rg = $("regions");
   if (innerWidth <= 700) return;           // phones: the CSS sheet layout applies
+  document.querySelector("header").style.maxHeight = Math.max(140, innerHeight - (rg.classList.contains("closed") ? 0 : rg.offsetHeight) - 48) + "px";
   $("controls").style.maxHeight = Math.max(160, innerHeight - lg.offsetHeight - 48) + "px";
   if (innerWidth > 900) { const l = rg.offsetWidth + 32, r = lg.offsetWidth + 32;
     for (const id of ["section"]) { $(id).style.left = l + "px"; $(id).style.right = r + "px"; }
     document.querySelector(".timeline").style.left = l + "px"; document.querySelector(".timeline").style.right = r + "px"; }
 }
-const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94"];
-const TIER_N = [0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) TIER_N[etier[i]]++;
+const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94", "#d9d6cc"];
+const fx = (v, d = 1) => v == null ? "–" : (+v).toFixed(d);
+const sg = (v, d = 1) => { if (v == null || Number.isNaN(v)) return "–"; const r = Math.abs(v) < 0.5 * 10 ** -d ? 0 : v; return (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(d); };
+const fi = v => v == null ? "–" : Math.round(v).toLocaleString();
+// Registry metadata and whole-catalog numbers (workflow/11_compare: summary.csv, anss.csv, faults_summary.csv), next to the map
+function drawCatCard() {
+  const ks = F.cmp ? [F.ca, F.cb] : [F.cat], lab = F.cmp ? ["A", "B"] : [""];
+  const head = ks.map((k, j) => { const c = CATS[k];
+    return `<div class="ci">${lab[j] ? `<span class="k">${lab[j]}</span> ` : ""}<b style="color:var(--text-primary)" title="${esc(c.label)}">${esc(c.id)}</b> <span class="pill${c.status === "preliminary" ? " pre" : ""}">${esc(c.status || "")}</span> <span class="k mono">${esc(c.date || "")}</span>${c.ref ? ' <span class="k">· reference</span>' : ""}</div>`; }).join("");
+  const det = `<details${CAT_OPEN ? " open" : ""} id="catDet"><summary>velocity model and method</summary>${ks.map((k, j) => { const c = CATS[k];
+    return `<div class="ci">${lab[j] ? `<span class="k">${lab[j]}</span> ` : ""}${esc(c.label)}<br><span class="k">velocity</span> ${esc(c.velocity || "–")}<br><span class="k">method</span> ${esc(c.method || "–")}${c.parent ? `<br><span class="k">parent</span> ${esc(c.parent)}` : ""}</div>`; }).join("")}</details>`;
+  const nu = k => CATS[k].num || {};
+  const rows = [
+    ["Located", k => fi(nu(k).n_located ?? CATS[k].n_loc), ""],
+    ["Median depth (km)", k => fx(nu(k).depth_p50), k => `p10 ${fx(nu(k).depth_p10)}, p90 ${fx(nu(k).depth_p90)} km`],
+    ["Above surface", k => nu(k).pct_above_surface == null ? "–" : fx(nu(k).pct_above_surface) + "%", ""],
+    ["ANSS Δz near (km)", k => { const a = nu(k).anss_near; return a ? `${sg(a.dz_p50)} ± ${fx(a.dz_mad)}` : "–"; }, k => `${fi((nu(k).anss_near || {}).n)} ComCat events with a station within max(depth, 5 km)`],
+    ["ANSS Δz all (km)", k => { const a = nu(k).anss_all; return a ? `${sg(a.dz_p50)} ± ${fx(a.dz_mad)}` : "–"; }, k => `${fi((nu(k).anss_all || {}).n)} matched ComCat events`],
+    [`Δh from ${CATS[0].id} p50/90`, k => CATS[k].ref ? "–" : `${fx(nu(k).dh_ref_p50)}/${fx(nu(k).dh_ref_p90)}`, k => `median depth change from ${CATS[0].id}: ${sg(nu(k).dz_ref_p50)} km`],
+    ["Fault-plane RMS (km)", k => fx(nu(k).fault_rms, 2), k => `median over ${nu(k).fault_n ?? "–"} fault surfaces`],
+  ];
+  const tb = `<table><colgroup><col style="width:${F.cmp ? 46 : 62}%">${ks.map(() => "<col>").join("")}</colgroup>${F.cmp ? `<tr><th></th><th>A</th><th>B</th></tr>` : ""}${rows.map(([l, f, t]) => `<tr><td title="${l}">${l}</td>${ks.map(k => `<td class="n"${t ? ` title="${esc(t(k))}"` : ""}>${f(k)}</td>`).join("")}</tr>`).join("")}</table>`;
+  const cmp = F.cmp ? `<table><colgroup><col style="width:46%"><col></colgroup>
+      <tr><td class="k" colspan="2">B − A, ${fi(CMPQ.n)} events located in both</td></tr>
+      <tr><td>Δh p50 / p90</td><td class="n">${fx(CMPQ.dh[0])} / ${fx(CMPQ.dh[1])} km</td></tr>
+      <tr><td>Δz p10/p50/p90</td><td class="n">${sg(CMPQ.dz[0])} / ${sg(CMPQ.dz[1])} / ${sg(CMPQ.dz[2])}</td></tr>
+      <tr><td>Shown: Δh · Δz p50</td><td class="n" id="cmpShownV">–</td></tr></table>` : "";
+  $("catCard").innerHTML = head + det + tb + cmp + `<div class="note">Whole catalog, depths km below sea level (workflow/11_compare). ANSS Δz: catalog − ComCat depth, median ± MAD.${ks.some(k => CATS[k].status === "preliminary") ? ' <span class="caveat">Preliminary catalogs will change.</span>' : ""}</div>`;
+  $("catDet").ontoggle = () => { CAT_OPEN = $("catDet").open; layoutPanels(); };
+  layoutPanels();
+}
+let CAT_OPEN = false;
+function cmpShown() {                         // B − A medians over the events passing the filters
+  const el = $("cmpShownV"); if (!F.cmp || !el) return;
+  const dh = [], dz = []; for (let i = 0; i < N; i++) if (passes(i)) { dh.push(cdh[i]); dz.push(cdz[i]); }
+  el.textContent = dh.length ? `${fx(quant(dh, [0.5])[0])} · ${sg(quant(dz, [0.5])[0])} (${dh.length.toLocaleString()})` : "–";
+}
+function catNote() {
+  const st = k => `<b style="color:var(--text-secondary)">${esc(CATS[k].id)}</b>${CATS[k].status === "preliminary" ? " (preliminary)" : ""}`;
+  if (F.cmp) return `<div class="attribution" style="border-top:0;padding-top:0">Compare: ${CMPQ.n.toLocaleString()} events located in both ${st(F.ca)} (A) and ${st(F.cb)} (B), drawn at B.${F.segs ? ` Lines join A (faint end) to B for at most ${F.segN.toLocaleString()} of the events shown (${F.segs === 1 ? "largest shifts" : "random subset"}).` : ""}</div>`;
+  if (!F.cat) return "";
+  const nU = CATS.length > F.cat && CATS[F.cat].has_tiers ? TIER_N[4] : N - (CATS[F.cat].n_loc ?? N);
+  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(CATS[F.cat].label)}. Depths below sea level. Rings mark the ${nU.toLocaleString()} events not located in this catalog, at their ${esc(CATS[0].id)} location.</div>`;
+}
 function drawLegend() {
   const modes = [
     { t: "Depth (km)", g: "linear-gradient(90deg,#fae59e,#f59e54,#e05c5c,#b3458c,#7854cc)", l: ["0", "11", "22", "34", "≥45"] },
     { t: "Origin time", g: "linear-gradient(90deg,#4d8cf2,#40c7b8,#dbdb6b,#fa8f3d)", l: ["2010", "2012", "2014", "2016"] },
     { t: "Share of the event's picks added after ver3", g: "linear-gradient(90deg,#8c9eb8,#ff8033)", l: ["0% (all in ver3)", "100%"] },
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] },
-    { t: "v4-NLL3D location tier", tiers: true }][F.mode];
-  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${TIERS.split("").map((t, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${t} <span class="mono" style="color:var(--text-muted)">${TIER_N[k].toLocaleString()}</span></div>`).join("")}</div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the v4 location</div>`;
+    { t: `${tierSrc() >= 0 ? CATS[tierSrc()].id : ""} location tier`, tiers: true },
+    { t: `Depth change B − A (km), ${CATS[F.cb].id} − ${CATS[F.ca].id}`, g: "linear-gradient(90deg,#4066d9,#6badf2,#dbd9cc,#f59e54,#db4d52)", l: [`−${F.cs} B shallower`, "0", `+${F.cs} deeper`] },
+    { t: `Horizontal shift A → B (km)`, g: "linear-gradient(90deg,#737880,#66b3cc,#f5bf59,#f25c5c)", l: ["0", String(F.cs / 2), `≥${F.cs}`] }][effMode()];
+  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${[0, 1, 2, 3, 4, 5].filter(k => k < 5 || TIER_N[5]).map(k => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${k === 5 ? "no tier" : TIERS[k]} <span class="mono" style="color:var(--text-muted)">${TIER_N[k].toLocaleString()}</span></div>`).join("")}</div>
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the reference (${CATS[0].id}) location</div>`;
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
     ? `<div><h4>Slab2 coloured by coupling (${sc.value})</h4><div class="ramp" style="background:linear-gradient(90deg,#4578b3,#d9d9d1,#cc4038)"></div><div class="ramp-labels"><span>0 creeping</span><span>0.5</span><span>1 locked</span></div></div>` : "";
   const mcL = MCM && layer("mc") && layer("mc").on ? MCM.layers.find(L => L.key === mcKey) : null;
@@ -925,8 +1120,8 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
-    ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">v4-NLL3D (preliminary)</b>: the v4 events relocated with NonLinLoc in a 3D velocity model, depths below sea level. A first pass, to be replaced by locations in the tomography model.${F.cat ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}</div>` : ""}
-    <div class="attribution">${F.cat ? "" : `<span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>`}
+    ${catNote()}
+    <div class="attribution">${F.cmp || F.cat ? "" : `<span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>`}
       Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div>`;
@@ -939,22 +1134,33 @@ let mouse = null;
 function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px"; tip.style.top = Math.min(innerHeight - 160, y + 12) + "px"; }
 const hideTip = () => tip.style.opacity = 0;
 const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][EV.mtype[i]] ?? ""}`;
-const nllHtml = i => {
-  if (!NLL) return "";
-  const t = etier[i], T = TIERS[t];
-  if (t === 4) return `<br><span class="k">v4-NLL3D</span> tier <b>U</b> · <span class="caveat">not relocated, v4 location</span>`;
+const locTxt = (k, i) => isLoc(k, i) ? `${CP[k].lat[i].toFixed(3)}°N ${(-CP[k].lon[i]).toFixed(3)}°W · ${CP[k].dep[i].toFixed(1)} km` : `<span class="caveat">not located</span>`;
+const tierTxt = (k, i) => CP[k].tier ? (CP[k].tier[i] < 5 ? ` · tier <b style="color:${TIER_RGB[CP[k].tier[i]]}">${TIERS[CP[k].tier[i]]}</b>` : "") : "";
+const qualTxt = (k, i) => { const P = CP[k]; if (!P.nph || !isLoc(k, i)) return "";
   const f = (v, s, d) => v === 255 ? "–" : (v * s).toFixed(d);
-  const dh = Math.hypot((nlon[i] - EV.lon[i]) * 111.195 * Math.cos((nlat[i] + EV.lat[i]) * Math.PI / 360), (nlat[i] - EV.lat[i]) * 111.195);
-  const dz = ndep[i] - EV.dep[i];
-  return `<br><span class="k">v4-NLL3D</span> tier <b style="color:${TIER_RGB[t]}">${T}</b> · <span class="k">shift from v4</span> ${dh.toFixed(1)} km horiz., ${dz >= 0 ? "+" : "−"}${Math.abs(dz).toFixed(1)} km depth<br>
-    <span class="k">nphs</span> ${EV.n_nph[i]} · <span class="k">gap</span> ${f(EV.n_gap[i], 2, 0)}° · <span class="k">rms</span> ${f(EV.n_rms[i], 0.01, 2)} s`;
+  return `<br><span class="k">${esc(CATS[k].id)}</span> nphs ${P.nph[i]} · <span class="k">gap</span> ${f(P.gap[i], 2, 0)}° · <span class="k">rms</span> ${f(P.rms[i], 0.01, 2)} s`; };
+const shiftTxt = (a, b, i) => { const A = CP[a], B = CP[b];
+  const dh = Math.hypot((B.lon[i] - A.lon[i]) * 111.195 * Math.cos((B.lat[i] + A.lat[i]) * Math.PI / 360), (B.lat[i] - A.lat[i]) * 111.195), dz = B.dep[i] - A.dep[i];
+  return `${dh.toFixed(1)} km horiz., ${dz >= 0 ? "+" : "−"}${Math.abs(dz).toFixed(1)} km depth`; };
+const catLines = i => {                       // single view: every other catalog's tier and shift from the reference
+  let h = "";
+  for (let k = 1; k < NC; k++) {
+    if (!isLoc(k, i)) { h += `<br><span class="k">${esc(CATS[k].id)}</span>${tierTxt(k, i)} · <span class="caveat">not located${k === F.cat ? `, ${esc(CATS[0].id)} location` : ""}</span>`; continue; }
+    h += `<br><span class="k">${esc(CATS[k].id)}</span>${tierTxt(k, i)} · <span class="k">shift from ${esc(CATS[0].id)}</span> ${shiftTxt(0, k, i)}`;
+  }
+  return h + (F.cat ? qualTxt(F.cat, i) : "");
 };
-const evHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">${F.cat ? "v4-NLL3D (preliminary)" : "v4"} · ${eflag[i] ? "QC" : "below QC"}</span><br>
+const cmpHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">Compare · ${eflag[i] ? "QC" : "below QC"}</span><br>
+  <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span> · M ${fmtM(i)}<br>
+  <span class="k">A ${esc(CATS[F.ca].id)}</span> ${locTxt(F.ca, i)}${tierTxt(F.ca, i)}<br>
+  <span class="k">B ${esc(CATS[F.cb].id)}</span> ${locTxt(F.cb, i)}${tierTxt(F.cb, i)}<br>
+  <b>Δh ${fx(cdh[i])} km · Δz ${sg(cdz[i])} km</b> <span class="k">(B − A)</span>${qualTxt(F.cb, i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
+const evHtml = i => F.cmp ? cmpHtml(i) : `<b>Event ${EV.id[i]}</b> <span class="k">${esc(catName(F.cat))} · ${eflag[i] ? "QC" : "below QC"}</span><br>
   <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span><br>
   ${elat[i].toFixed(3)}°N ${(-elon[i]).toFixed(3)}°W · <b>${edep[i].toFixed(1)} km</b> bsl${F.datum ? ` <span class="k">(catalog ${ecat[i].toFixed(1)})</span>` : ""}<br>
   <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above ground</span>' : ""}<br>
   M ${fmtM(i)} · ${EV.np[i]} P, ${EV.ns[i]} S<br>
-  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${nllHtml(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
+  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${catLines(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
 function pickEvent(mx, my) {
   if (!layer("events").on) return -1;
   const e = U.exag.value; let best = -1, bd = 81, bz = 1e9;
@@ -1077,15 +1283,21 @@ const faultColJS = f => {
   const c = [cl(Math.abs(h - 3) - 1), cl(2 - Math.abs(h - 2)), cl(2 - Math.abs(h - 4))].map(x => 1 + (x - 1) * w);
   return `rgb(${c.map(x => Math.round(x * 255)).join(",")})`;
 };
-const rampJS = (mode, v) => {   // same ramps as the shader, for the 2D section
-  if (mode === 3) return faultColJS(v);
-  if (mode === 4) return TIER_RGB[v];
+const hexRGB = h => [1, 3, 5].map(j => parseInt(h.slice(j, j + 2), 16) / 255);
+const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
+  if (mode === 3) return faultColJS(v).match(/\d+/g).map(x => x / 255);
+  if (mode === 4) return hexRGB(TIER_RGB[v] || TIER_RGB[5]);
   const lerp = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
   const pick = (stops, t) => { t = Math.max(0, Math.min(1, t)); const k = Math.min(stops.length - 2, Math.floor(t * (stops.length - 1))); return lerp(stops[k], stops[k + 1], t * (stops.length - 1) - k); };
-  const c = mode === 0 ? pick([[.98, .90, .62], [.96, .62, .33], [.88, .36, .36], [.70, .27, .55], [.47, .33, .80]], v / 45)
+  if (mode === 5) return pick([[.25, .40, .85], [.42, .68, .95], [.86, .85, .80], [.96, .62, .33], [.86, .30, .32]], (v + 1) / 2);
+  if (mode === 6) { const t = Math.max(0, Math.min(1, v)), S = [[.45, .47, .50], [.40, .70, .80], [.96, .75, .35], [.95, .36, .36]];
+    return t < 0.33 ? lerp(S[0], S[1], t / 0.33) : t < 0.66 ? lerp(S[1], S[2], (t - 0.33) / 0.33) : lerp(S[2], S[3], (t - 0.66) / 0.34); }
+  return mode === 0 ? pick([[.98, .90, .62], [.96, .62, .33], [.88, .36, .36], [.70, .27, .55], [.47, .33, .80]], v / 45)
     : mode === 1 ? pick([[.30, .55, .95], [.25, .78, .72], [.86, .86, .42], [.98, .56, .24]], v) : lerp([.55, .62, .72], [1, .5, .2], v);
-  return `rgb(${c.map(x => Math.round(x * 255)).join(",")})`;
 };
+const rampJS = (mode, v) => mode === 3 ? faultColJS(v) : `rgb(${rgbOf(mode, v).map(x => Math.round(x * 255)).join(",")})`;
+const colVal = (i, m) => m === 0 ? edep[i] : m === 1 ? EV.day[i] / M.events.days_max : m === 2 ? enew[i] : m === 3 ? eflt[i] : m === 4 ? etier[i]
+  : m === 5 ? cdz[i] / F.cs : cdh[i] / F.cs;
 function drawSection() {
   if (!SEC.on) return;
   const W = secCv.clientWidth, H = secCv.clientHeight, pr = devicePixelRatio; secCv.width = W * pr; secCv.height = H * pr;
@@ -1144,9 +1356,14 @@ function drawSection() {
     const r = Math.max(1.3, 1.2 + 0.9 * Math.pow(1.7, Math.min(m, 3)) * Math.pow(1.2, Math.max(m - 3, 0)));
     const px = X(s), py = Y(edep[i]);
     sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
-    const col = rampJS(F.mode, F.mode === 0 ? edep[i] : F.mode === 1 ? EV.day[i] / M.events.days_max : F.mode === 3 ? eflt[i] : F.mode === 4 ? etier[i] : enew[i]);
+    const em = effMode(), col = rampJS(em, colVal(i, em));
+    if (F.cmp && segSet.has(i)) {               // shift line from the A location, projected on the section
+      const A = CP[F.ca], s0 = (toX(A.lon[i]) - a.x) * ux + (toZ(A.lat[i]) - a.z) * uz;
+      sctx.globalAlpha = 0.5; sctx.strokeStyle = col; sctx.lineWidth = 1; sctx.beginPath(); sctx.moveTo(X(s0), Y(A.dep[i])); sctx.lineTo(px, py); sctx.stroke();
+      sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
+    }
     sctx.beginPath(); sctx.arc(px, py, r, 0, 2 * Math.PI);
-    if (etier[i] === 4 && NLL && (F.cat || F.mode === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U: ring
+    if (etier[i] === 4 && (EU.uRing.value > 0.5 || em === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U: ring
     else { sctx.fillStyle = col; sctx.fill(); }
     secPts.push([px, py, i]);
   }
@@ -1191,11 +1408,11 @@ function setPanel(id, open) {
 }
 PANELS.forEach(id => setPanel(id, !PHONE));
 document.querySelectorAll("#toolbar button").forEach(b => b.onclick = () => setPanel(b.dataset.p, $(b.dataset.p).classList.contains("closed")));
-drawLegend(); layoutPanels(); refresh();
+applyView(); layoutPanels();
 camera.position.set(0, 900, 900); controls.target.set(0, 0, 0);
 flyTo(location.hash.slice(1) || "full");
 $("loading").remove();
-window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, ex, ez, edep, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; } };   // for scripted checks
+window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, CATS, segCount: () => segSet.size, ex, ez, edep, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; } };   // for scripted checks
 let last = performance.now(), playAcc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;

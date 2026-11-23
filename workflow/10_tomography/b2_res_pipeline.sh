@@ -25,6 +25,12 @@
 #
 # Code and outputs live in this worktree (CODE); the main checkout is never touched. Large files stay on /wd1.
 set -uo pipefail
+# bash reads a script while running it: run from a private copy so the repo file can be edited during a run
+if [ -z "${B2_PIPELINE_COPY:-}" ]; then
+  mkdir -p /wd1/mdenolle_data/tomo_v1/b2_tomodd/${1:?tile}
+  cp "$0" /wd1/mdenolle_data/tomo_v1/b2_tomodd/$1/.pipeline_running.sh
+  B2_PIPELINE_COPY=1 CODE=${CODE:-$(cd "$(dirname "$0")/../.." && pwd)} exec bash /wd1/mdenolle_data/tomo_v1/b2_tomodd/$1/.pipeline_running.sh "$@"
+fi
 
 REGION=${1:?tile, e.g. blanco_v2}
 STAGES=${2:-"build prep queue run analyse publish"}
@@ -60,9 +66,20 @@ stage_build() {
   if [ ! -s $CODE/$sf ]; then log "OBS S statics -> $sf"; py $W/b2_fwd_statics.py $REGION || return 1; fi
   if [ ! -s $RUNS/$REGION/inputs/summary.json ]; then
     log "inputs $REGION (forward fixes)"; py $W/b2_tomodd_inputs.py $REGION || return 1; fi
-  if ! grep -q "exit 0" $RUNS/$REGION/check01.log 2>/dev/null; then
+  if ! check01_ok; then
     rm -rf $RUNS/$REGION/check01
-    log "bounds-checked run check01"; py $W/b2_tomodd_run.py $REGION check01 --check > $RUNS/$REGION/check01.log 2>&1 || return 1; fi
+    log "bounds-checked run check01"; py $W/b2_tomodd_run.py $REGION check01 --check > $RUNS/$REGION/check01.log 2>&1
+    check01_ok || { log "check01 failed (see $RUNS/$REGION/check01/stdout.txt)"; return 1; }
+    log "check01 passed: no bounds error through ray tracing and LSQR"; fi
+}
+
+check01_ok() {   # notes/forward_accuracy.md 7.4: the -fcheck=bounds build stops after LSQR at the malformed FORMAT of
+  # tomoDD-SE.f line 2324 (production builds do not); pass = exit 0, or that stop with no array-bound error before it
+  local d=$RUNS/$REGION/check01
+  grep -q "exit 0" $RUNS/$REGION/check01.log 2>/dev/null && return 0
+  grep -q "At line 2324 of file tomoDD-SE.f" $d/stdout.txt 2>/dev/null &&
+    grep -q "Missing comma between descriptors" $d/stdout.txt && grep -q "~ lsqr" $d/stdout.txt &&
+    ! grep -qi "out of bounds\|Index '" $d/stdout.txt
 }
 
 parallel_py() {   # run "args" lines (one python call each) with at most $1 at a time

@@ -5,7 +5,7 @@ could not learn before?"). Written for the PI and for whoever writes the tomogra
 paper. It places Track B against published work, states the claim the data can carry, lists the questions that
 need sources and structure from the same dataset, and orders the steps after the tomography. Numbers come from
 the files named in each paragraph; literature is listed at the end with DOIs (or URLs where no DOI exists).
-Nothing here is adopted: the proposals at the end become D-B entries only when the PI accepts them.
+The PI adopted all seven proposals on 2026-11-23 as D-B036 to D-B042 (DECISIONS.md is the record).
 
 ## 1. The claim
 
@@ -141,20 +141,20 @@ group, with more data since 2016, has not already shown, except as an independen
 7. **Focal mechanisms: future work.** Polarity extraction is paused until the deep-learning models are fixed
    (workflow/09_polarity/STATUS.md); until then the 112 matched ComCat moment tensors are the reference.
 
-## Proposed decisions
+## Decisions (proposed as P-F1..P-F7, adopted 2026-11-23 as D-B036..D-B042)
 
-* **P-F1 Novelty wording.** Use the wording in section 1. Never "first plate-wide local-earthquake tomography"
+* **P-F1 = D-B036. Novelty wording.** Use the wording in section 1. Never "first plate-wide local-earthquake tomography"
   (VanderBeek & Toomey 2019). Fix the placeholder citation on Overleaf: "VanderBeek et al. 2020 G-cubed" ->
   `Bodmer2020`, and add `VanderBeek2019`.
-* **P-F2 Fault-zone properties as the main product for interpretation.** Vp, Vs and Vp/Vs averaged in a volume
+* **P-F2 = D-B037. Fault-zone properties as the main product for interpretation.** Vp, Vs and Vp/Vs averaged in a volume
   around each fault surface, with the posterior over ensemble members; node maps shown only inside the masks.
   Volume width from the spike half-widths of each tile.
-* **P-F3 Ridges tiles for relocation only** (answers open question 3 of the STATUS handoff), unless damping 100
+* **P-F3 = D-B038. Ridges tiles for relocation only** (answers open question 3 of the STATUS handoff), unless damping 100
   with cluster spikes shows recovery of at least 50 % somewhere.
-* **P-F4 Location uncertainty from 10-20 ensemble members**, not all 100 (172,342 events per member).
-* **P-F5 Waveform cross-correlation for clustered families only** before the final DD relocation.
-* **P-F6 b-value comparisons between settings only after the ML-Mw check by region.**
-* **P-F7 Add the Zhang & Niksejel catalog to the comparison registry** when it is released.
+* **P-F4 = D-B039. Location uncertainty from 10-20 ensemble members**, not all 100 (172,342 events per member).
+* **P-F5 = D-B040. Waveform cross-correlation for clustered families only** before the final DD relocation.
+* **P-F6 = D-B041. b-value comparisons between settings only after the ML-Mw check by region.**
+* **P-F7 = D-B042. Add the Zhang & Niksejel catalog to the comparison registry** when it is released.
 
 ## References
 

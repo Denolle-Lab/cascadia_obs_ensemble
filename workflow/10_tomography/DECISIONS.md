@@ -336,3 +336,54 @@ chk_w_fmt (MAXSTA 260, MAXOBS 140) for washington. The tile runs started under D
 and deleted before any result (logs in b2_tomodd/_superseded_pre_DB035/).
 Not done here: CASIE21 (2021 active-source survey off Washington and Oregon) as a constraint on the shallow offshore
 starting model / prior; to be taken up with the starting-model items (D-B005, D-B030).
+
+### D-B036 Novelty wording for the tomography (adopted, 2026-11-23, PI; P-F1 of notes/science_framing.md)
+Claim: the first local-earthquake Vp and Vs model of the crust and seismogenic volumes across the whole Juan de
+Fuca plate system, from the ridges to the arc, onshore and offshore, with ensemble uncertainty and in the same frame
+as the earthquake locations, magnitudes and fault surfaces. Never "first plate-wide local-earthquake tomography":
+VanderBeek & Toomey 2019 (JGR, doi:10.1029/2019JB017707) inverted Pn times from local earthquakes for 3D P velocity of
+the uppermost mantle across the whole Juan de Fuca and Gorda plates. Plate-wide teleseismic P and S (Byrnes et al.
+2017; Bodmer et al. 2020) and Rayleigh-wave Vs (Bell et al. 2016) models also exist. The manuscript placeholder cited
+"VanderBeek et al. 2020 G-cubed", which does not exist; it is Bodmer et al. 2020. References in
+paper_sciadv/references.bib since PR #34 (merged cbaf5efc).
+
+### D-B037 Fault-zone properties as the main tomography product for interpretation (adopted, 2026-11-23, PI; P-F2)
+For the joint interpretation of sources and structure, report Vp, Vs and Vp/Vs averaged in a volume around each
+fault surface (workflow/07_faults), with the posterior over the ensemble members (D-B030, D-B032). Node maps are shown
+only inside the resolution masks. Volume width from the spike half-widths of each tile (8-9 km laterally where the
+Oregon spikes are resolved). Reason: Vs at single nodes is resolved over 16-26 % of the Vp area at the Blanco and
+67-78 % in Oregon and Mendocino-Gorda (15 km, damping 1000), so volume averages are what the data support. Width and
+averaging set in params.yaml when the step is implemented.
+
+### D-B038 ridges_north used for relocation only, with one exception (adopted, 2026-11-23, PI; P-F3)
+ridges_north resolves nothing on the checkerboard lattice at any damping (1000, 300, 200, 100). It is used to relocate
+events, not interpreted as structure (answers open question 3 of the STATUS handoff). Exception written into P-F3
+(cluster spikes at damping 100 recovering >= 50 % somewhere) is met: at damping 100, smoothing 20, 3 P and 2 S
+cluster spikes with DWS > 1000 recover 50-64 %, all at 12 km between the northern Blanco and Axial (44.4-45.4 N,
+130.0-130.3 W; data/tomo_v1/b2_res_tests/ridges_north_v2/d100/). That volume may be reported from the damping-100
+model inside its mask, and compared with the blanco tile where they overlap (D-B025). The ridges_north damping itself
+(open question 1) stays open.
+
+### D-B039 Location uncertainty from 10-20 ensemble members (adopted, 2026-11-23, PI; P-F4)
+The relocation of all 172,342 events in the final model (B4, B5) is repeated in 10 to 20 members of the real-data
+ensemble, not all 100, to give location uncertainty. Reason: 100 x 172,342 relocations is heavy, and 10-20 members
+sample the model spread for locations. Exact number and member choice set in params.yaml when B4 is implemented.
+
+### D-B040 Waveform cross-correlation for clustered families only (adopted, 2026-11-23, PI; P-F5)
+Before the final double-difference relocation (B5), compute waveform cross-correlation differential times within
+the clustered families of the catalog (catalog v4 nearest-neighbour clustering: 177 swarms and 822 multiplets among
+1,944 families; redone on the relocated catalog), and add them to the catalog differential times for those events.
+Reason: catalog times from picks cannot separate the Blanco strand pairs about 2 km apart or confirm repeating
+earthquakes; correlation for every event pair of 172,342 events is not needed.
+
+### D-B041 b-value comparisons between settings only after an ML-Mw check by region (adopted, 2026-11-23, PI; P-F6)
+After the magnitudes are recomputed with the new hypocentres (STATUS step 9), compare ML with Mw by region using the
+112 matched ComCat moment tensors. b-values are compared between settings (v4: 0.77 Axial to 1.33 Puget Lowland) only
+where that check shows no regional ML bias, or after correcting it. Reason: attenuation differs between hot ridge and
+transform crust and the forearc, and ComCat anchors are sparse offshore.
+
+### D-B042 Zhang & Niksejel catalog in the comparison registry (adopted, 2026-11-23, PI; P-F7)
+When the offshore deep-learning catalog of Zhang & Niksejel (SSA 2025 poster; about 24,000 events, Mc 1.5; no paper
+or data release yet) is published, add it to the catalog comparison registry (workflow/11_compare, catalogs.yaml) and
+compare event counts, completeness and locations offshore. It is the closest competing catalog; we do not claim the
+first deep-learning offshore catalog. Listed in paper_sciadv/references_no_doi.md until it has a DOI.

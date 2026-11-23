@@ -48,12 +48,13 @@ s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at
 1. ridges_north damping: 100 or 200 (not 1000); log as a decision and set in params.
 2. Damping scan for the other tiles once their damping-1000 runs are in (ridges shows 1000 can be far too strong
    for a small tile): rerun with `DAMP=` as for ridges.
-3. Whether ridges_north is reported as a model (masked, amplitudes ~25 % of true) or used for relocation only.
+3. Resolved 2026-11-23 (D-B038): ridges_north for relocation only, except the 12 km volume between northern Blanco
+   and Axial where cluster spikes recover 50-64 % at damping 100.
 4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
 5. Merge order: PR #32, then PR #33, into `tomo/track-b`.
 6. Science framing (notes/science_framing.md, 2026-11-23): novelty wording (plate-wide local-earthquake Pn
    tomography already exists, VanderBeek & Toomey 2019), questions that join sources and structure, steps after
-   the tomography; proposals P-F1..P-F7. References for it: PR #34 (bibliography, base main).
+   the tomography. Adopted 2026-11-23 as D-B036..D-B042; references merged to main (PR #34, cbaf5efc).
 
 ## Done
 

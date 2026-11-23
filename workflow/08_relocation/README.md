@@ -114,3 +114,14 @@ Radius test results (2026-11-23, iter1; ALL = 157,267 NLL-located events):
   (v4 1.86); Blanco 5.42 -> 2.44 (v4 7.64); Mendocino 5.40 -> 4.36 (v4 3.54), only partly recovered.
 * Next: adaptive radius (smallest R in 2-10 km with >= 10 neighbours) so coverage is ~95% at the R = 2-3 km
   tightness; decide `depth` vs `exp_depth` (or ML depth with pinned events flagged); then a catalog for the atlas.
+
+**What A3a is and is not (PI discussion 2026-11-23).** It is an empirical shift of the v4 locations by the
+local median of the NLL-minus-v4 differences, not a relocation: no travel times are recomputed and no picks
+are re-fit. It assumes (1) the GraphDD relative positions, solved in 1D, are right, and (2) the 1D -> 3D
+effect varies slowly over R. Its tightness numbers partly improve by construction (smoothing removes NLL
+scatter whether real or not; shallow v4 events pushed down more than deep ones compress the depth range).
+The radius test shows self-consistency only (tighter, and inside the NLL error bars), not accuracy.
+**Required validation before any use:** double-difference residuals of v4, NLL 3D and the transfer computed
+with the NLL 3D travel-time grids (v4 pick-time differences). If the transfer does not fit the
+differential times in 3D as well as NLL, it is cosmetic and we wait for B5 (GrowClust3D or GraphDD in the 3D
+model). Optional: cross-section figure of one cluster (Gorda or Blanco), v4 / NLL / transfer side by side.

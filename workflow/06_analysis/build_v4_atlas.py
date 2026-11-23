@@ -7,6 +7,8 @@ Layers packed here (gzip + base64 blobs, decoded in the browser with Decompressi
   events     catalog v4 (data/catalog_v4/), magnitudes from data/magnitude_v4/ when present
              (our Route A ML / preferred M), else Ian's magnitude column (flagged), the share of
              each event's picks added after ver3 (via ver6 pick_id), and Ian's spatial_sigma
+             + v4-NLL3D (preliminary): the same events relocated with NonLinLoc in the 3D starting model
+             (NLL3D below): lon/lat/depth offsets from v4, location tier A-D/U, nphs, gap, rms
   terrain    GMT earth_relief 01m for the whole margin + the GMRT patches in data/gmrt/
   slab       Slab2 (data/slab2/cas_slab2_dep.xyz) with the coupling models in data/coupling/
              sampled onto its nodes
@@ -37,6 +39,10 @@ LON0, LAT0 = -125.25, 45.0                      # projection centre (1 unit = 1 
 T0 = pd.Timestamp("2010-01-01", tz="UTC")
 VER3_N = 39_597_551                              # pick_id < VER3_N: pick already in ver3
 STATIONS = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
+# v4-NLL3D (preliminary): the v4 events relocated with NonLinLoc in the 3D starting model (workflow/08_relocation
+# on branch reloc/track-a, a2_build_catalog.py). Depth km below sea level; tier U keeps the v4 location.
+NLL3D = Path("/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv")
+TIERS = "ABCDU"
 
 # Named views (same boxes as phase5_pygmt_map.py REGIONS)
 REGIONS = [
@@ -174,10 +180,35 @@ def events():
         flt = np.where(k.notna(), k.fillna(0), 65535).astype("<u2")
         print(f"  events on a fault: {(flt < 65535).sum():,}")
     arr["flt"] = flt
+    nll = nll3d(c["ID"])
+    if nll:
+        arr.update(nll)
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
     arr = {k: v[order] for k, v in arr.items()}
     print(f"  events: {len(c):,}; magnitudes: {msrc}")
-    return arr, dict(n=len(c), msrc=msrc, t0="2010-01-01", days_max=float(np.nanmax(days)))
+    return arr, dict(n=len(c), msrc=msrc, t0="2010-01-01", days_max=float(np.nanmax(days)),
+                     nll3d=dict(file=NLL3D.name, tiers=TIERS) if nll else None)
+
+
+def nll3d(ids: pd.Series) -> dict | None:
+    """v4-NLL3D locations aligned on the v4 event IDs, stored as offsets from the v4 location: int16 lon/lat in
+    1e-4 deg (the precision of the v4 csv) and depth in 10 m; -32768 where the v4 location is kept (tier U).
+    Tier 0-4 = A-D, U (255 = ID missing); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none).
+    The atlas recomputes the shift from v4 from the two positions (matches shift_h_km to < 2 m)."""
+    if not NLL3D.exists():
+        print(f"  v4-NLL3D: {NLL3D} missing, layer skipped")
+        return None
+    n = pd.read_csv(NLL3D).set_index("ID").reindex(ids)
+    kept = (n["loc_source"] != "nll3d").to_numpy()
+    d = lambda col, ref, s: np.where(kept, -32768, np.clip(np.round((n[col] - n[ref]).to_numpy(float) * s), -32767, 32767)).astype("<i2")
+    u1 = lambda v, s: np.where(np.isfinite(v) & ~kept, np.clip(np.round(v * s), 0, 254), 255).astype("u1")
+    tier = n["tier"].map({t: k for k, t in enumerate(TIERS)}).fillna(255).to_numpy().astype("u1")
+    out = {"n_dlon": d("lon", "v4_lon", 1e4), "n_dlat": d("lat", "v4_lat", 1e4), "n_ddep": d("depth", "v4_depth", 100),
+           "n_tier": tier, "n_nph": n["nphs"].fillna(0).clip(0, 255).to_numpy().astype("u1"),
+           "n_gap": u1(n["gap"].to_numpy(float), 0.5), "n_rms": u1(n["rms"].to_numpy(float), 100)}
+    cnt = pd.Series(tier).map(dict(enumerate(TIERS))).value_counts().reindex(list(TIERS)).fillna(0).astype(int)
+    print(f"  v4-NLL3D: {(~kept).sum():,} relocated, {kept.sum():,} keep v4; tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
+    return out
 
 
 def stations():

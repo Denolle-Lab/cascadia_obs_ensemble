@@ -1,0 +1,4 @@
+ID,raw_ID,datetime,latitude,longitude,depth(km),magnitude,Num_p_picks,Num_s_picks,spatial_sigma(m),detection_value,location_source
+900001,,2016-12-08T14:49:45.910000Z,40.4535,-126.1936,8.45,6.6,146,54,26216.3,,ComCat us20007z6r (Mww 6.6); NLLoc 1D epicentre 26.2 km away
+900002,,2016-01-30T00:28:41.960000Z,40.9167,-127.2074,10.0,5.1,42,29,9444.8,,ComCat us20004vq3 (Mww 5.1); NLLoc 1D epicentre 9.4 km away
+900003,,2016-01-30T00:30:52.570000Z,41.0363,-127.3842,10.0,5.0,11,1,20195.7,,ComCat us20004vq9 (Mww 5.0); NLLoc 1D epicentre 20.2 km away

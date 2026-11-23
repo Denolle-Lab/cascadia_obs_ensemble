@@ -118,6 +118,9 @@ def main():
                              bup=r["hw_up"] / (r["dz_up"] / 2), bdn=r["hw_dn"] / (r["dz_dn"] / 2))
                 rows.append(r)
     sp_df = pd.DataFrame(rows)
+    for c in ("hw_x", "hw_y", "hw_up", "hw_dn", "bx", "by", "bup", "bdn"):   # no spike above MIN_REC (e.g. ridges_north)
+        if c not in sp_df:
+            sp_df[c] = np.nan
     OUT.mkdir(parents=True, exist_ok=True)
     sp_df.to_csv(OUT / "spikes.csv", index=False, float_format="%.4g")
 

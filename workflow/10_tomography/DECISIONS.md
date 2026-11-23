@@ -266,3 +266,6 @@ data per region. Gate: synthetic calibration (68/95% interval coverage on resolv
 before any real-data ensemble. B4 relocates all events in 20 ensemble models for location uncertainty. Damping
 baseline 1000 (CND ~60, Mendocino-Gorda v2 scan); smoothing chosen from spike/checkerboard tests (D-B029 repeat).
 
+### D-B032 Ensemble size 100 members (adopted, 2026-11-22, PI; amends D-B030)
+100 members per region for both the synthetic calibration and the real-data ensembles (D-B030 had 200 for real data).
+

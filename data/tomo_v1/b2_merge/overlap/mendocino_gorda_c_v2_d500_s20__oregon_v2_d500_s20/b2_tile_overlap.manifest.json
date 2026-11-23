@@ -1,0 +1,154 @@
+{
+ "name": "b2_tile_overlap",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_tile_overlap.py",
+ "argv": [],
+ "utc": "2026-11-23T19:53:41.292232+00:00",
+ "git_commit": "74f82db1d19b52df04cacb5ffb5a913a407e7987",
+ "git_dirty": true,
+ "params_md5": "b63affba4736d492d78838e5096646a0",
+ "params": {
+  "merge": {
+   "grid": {
+    "lon_step": 0.125,
+    "lat_step": 0.1
+   },
+   "max_depth_km": 55,
+   "mask_default_damp": 1000,
+   "pairs": [
+    [
+     "blanco_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d300_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "blanco_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "blanco_v2",
+     "ridges_north_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d200_s20"
+      ],
+      [
+       "d1000_s20",
+       "d200_s20"
+      ]
+     ]
+    ],
+    [
+     "oregon_v2",
+     "washington_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ]
+     ]
+    ]
+   ]
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/d500_s20/Output_Files/model_geo.npz",
+   "size": 178537,
+   "mtime": "2026-11-23T16:01:58.291412+00:00",
+   "md5": "a8fa5e00a2b8f54d87ce5f5ea559bec1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/d500_s20/Output_Files/model_geo.npz",
+   "size": 196545,
+   "mtime": "2026-11-23T15:19:34.999050+00:00",
+   "md5": "7137979e5c0e810f0bdf86cc4847d8d9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/d500_s20/MOD",
+   "size": 806920,
+   "mtime": "2026-11-23T15:19:08.469200+00:00",
+   "md5": "ef5f83c2a78122676d00fd04fa021450"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/d500_s20/MOD",
+   "size": 855085,
+   "mtime": "2026-11-23T15:03:45.571036+00:00",
+   "md5": "f5a80a98a002df1eaed0c8a4c8a6a9cd"
+  }
+ ],
+ "outputs": [],
+ "counts": {
+  "grid_points": 3060
+ },
+ "notes": null
+}

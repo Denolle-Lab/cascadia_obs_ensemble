@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 (handoff section below).
+Last update: 2026-11-23 12:30 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -34,6 +34,16 @@ from `~/wt_tomo_res`; finished pieces are skipped:
 number at s20: 11 and 14, against ~60 for Mendocino-Gorda v2; no lattice spike recovered >= 50 %). PI asked for
 damping 200 and 300 on both: `DAMP=200` and `DAMP=300` pipelines launched 09:05 (51 runs each, results in
 `data/tomo_v1/b2_res_tests/<tile>/d200|d300/`). washington and mendocino_gorda_c still running at damping 1000.
+*Correction (12:30):* the 11 and 14 are last-iteration condition numbers; the Mendocino-Gorda ~60 is first-iteration
+(its last-iteration value is 19). Like for like, Blanco and Oregon at damping 1000 have 35 and 39, and damping 300
+gives 170 and 200 (notes/merge_design.md section 2).
+
+**Update 12:30.** Done and on PR #33: blanco and oregon at damping 200 and 300, mendocino_gorda_c at 1000.
+washington at 1000 still running (real-data scan done: first-iteration CND 68 at damping 1000, like Mendocino-Gorda).
+PI chose damping 200 for ridges_north (D-B043). Merge design and tile-vs-tile tests proposed
+(notes/merge_design.md, P-M1..P-M8; `b2_tile_overlap.py`, results in data/tomo_v1/b2_merge/overlap/): no overlap
+is resolved by both tiles; mixing dampings does not make a worse seam than either damping alone; the same events
+relocated in two tiles differ by 0.2-1.0 km horizontally (median).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
@@ -42,12 +52,15 @@ the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, 
 (1000, 300, 200, 100). Spikes at the event clusters with DWS >= 100 (52 of 105 P spikes sampled): median recovery
 22 % (damping 100), 21 % (200), 19 % (300), 10 % (1000); only 3 spikes >= 50 %, all at 12 km between northern Blanco
 and Axial (44.4-45.4 N, 130.0-130.3 W, DWS 1,165-7,203, smearing about one node). Real-data condition number at
-s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at CND ~60).
+s20, last iteration: 87 (d100), 33 (d200), 21 (d300), 6 (d1000); first iteration: 290, 119, 69, 15 (Mendocino-Gorda
+v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
 
 **Open, for the PI.**
-1. ridges_north damping: 100 or 200 (not 1000); log as a decision and set in params.
-2. Damping scan for the other tiles once their damping-1000 runs are in (ridges shows 1000 can be far too strong
-   for a small tile): rerun with `DAMP=` as for ridges.
+1. Resolved 2026-11-23 (D-B043): ridges_north damping 200. The D-B038 exception volume is not recovered at 200 and
+   stays on the damping-100 model unless dropped.
+2. Damping for blanco, oregon, washington, mendocino_gorda_c: one rule for all tiles (notes/merge_design.md P-M1).
+   Like-for-like first-iteration CND ~60 gives blanco ~660, oregon ~730, washington and mendocino_gorda_c
+   ~1000-1100; resolution tests exist at 200, 300 and 1000 (blanco, oregon) and 1000 (others).
 3. Resolved 2026-11-23 (D-B038): ridges_north for relocation only, except the 12 km volume between northern Blanco
    and Axial where cluster spikes recover 50-64 % at damping 100.
 4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
@@ -55,6 +68,7 @@ s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at
 6. Science framing (notes/science_framing.md, 2026-11-23): novelty wording (plate-wide local-earthquake Pn
    tomography already exists, VanderBeek & Toomey 2019), questions that join sources and structure, steps after
    the tomography. Adopted 2026-11-23 as D-B036..D-B042; references merged to main (PR #34, cbaf5efc).
+7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23): P-M1..P-M8 proposed.
 
 ## Done
 
@@ -97,7 +111,8 @@ s20: 87 (d100), 33 (d200), 21 (d300), 6 (d1000; Mendocino-Gorda v2 chose 1000 at
 5. **Synthetic calibration.** Known model with station delays through the full ensemble; credible
    intervals must cover the truth at the stated rate; checkerboard and spike tests as figures (D-B018).
    Compare balanced vs unweighted B1b here (notes/balanced.md).
-6. **Real-data ensemble, region by region,** then overlap comparison and merge.
+6. **Real-data ensemble, region by region,** then overlap comparison and merge (notes/merge_design.md: one
+   reference model, common grid, taper x resolution x 1/variance weights, member-by-member merge, tests T1-T5).
 7. **B4.** Relocate all 172,340 events in the final model (NonLinLoc, new station terms, tiers),
    with location uncertainty from the ensemble.
 8. **B5.** GrowClust on the B4 locations (D-B002).

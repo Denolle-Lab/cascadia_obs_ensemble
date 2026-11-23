@@ -262,6 +262,7 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       station_margin_deg: [0.5, 0.7]
       node_lon: [-131.75, -125.85, 0.125]
       node_lat: [43.9, 50.5, 0.1]
+      damp: 200                            # D-B043 (PI 2026-11-23); smoothing not yet chosen (tests at 20)
       forward:
         coords: ellipsoid
         mod: nearest
@@ -378,3 +379,13 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
           "A: N-S at 130.0 W (Axial)": [[44.4, -130.0], [50.0, -130.0]]
           "B: E-W at 46.0 N": [[46.0, -131.0], [46.0, -126.6]]
         highlight_box: null
+  merge:                           # notes/merge_design.md (proposed 2026-11-23): tiles onto one volume; tile-vs-tile tests
+    grid: {lon_step: 0.125, lat_step: 0.1}   # common geographic lattice (multiples of the step); depth = node_z interior
+    max_depth_km: 55               # deepest depth compared (deeper nodes carry no events)
+    mask_default_damp: 1000        # masks for this damping sit in b2_res_tests/<tile>/ (others in <tile>/d<D>/)
+    pairs:                         # T1/T2 overlap tests: tile A, tile B, list of [tag A, tag B] (real-data runs)
+      - [blanco_v2, oregon_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d300_s20], [d300_s20, d1000_s20], [d1000_s20, d300_s20]]]
+      - [mendocino_gorda_c_v2, blanco_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d1000_s20, d300_s20]]]
+      - [mendocino_gorda_c_v2, oregon_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d1000_s20, d300_s20]]]
+      - [blanco_v2, ridges_north_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d200_s20], [d1000_s20, d200_s20]]]
+      - [oregon_v2, washington_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d1000_s20]]]

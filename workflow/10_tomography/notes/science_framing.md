@@ -114,8 +114,10 @@ Mendocino-Gorda resolves Vp over 32,000-52,000 km2 at 15-18 km and 46,000 km2 at
 15-18 km only. Ridges resolve nothing on the lattice. In every tile the checkerboard mask is empty at 12, 21 and
 25 km while neighbouring depths are resolved; this probably comes from where the vertical checker sign changes
 fall relative to the depth nodes, not from coverage, and must be checked before the masks enter the ensemble.
-Damping 1000 is too strong for the smaller tiles (real-data condition number 11-14 at Blanco and Oregon against
-about 60 for Mendocino-Gorda v2); damping 200 and 300 are running for Blanco and Oregon. The ensemble calibration
+Damping 1000 regularises the smaller tiles more than Mendocino-Gorda (first-iteration condition number at smoothing
+20: 35 at Blanco, 39 at Oregon, 60 for Mendocino-Gorda v2; corrected 2026-11-23, the first version of this sentence
+compared last-iteration values with the first-iteration 60, see notes/merge_design.md section 2); damping 200 and
+300 have been run for Blanco and Oregon. The ensemble calibration
 (notes/ensemble_calibration.md) has no results yet.
 
 What we cannot claim: structure at the ridges; Vs or Vp/Vs at single nodes outside the volumes resolved for both

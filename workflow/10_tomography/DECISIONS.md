@@ -387,3 +387,13 @@ When the offshore deep-learning catalog of Zhang & Niksejel (SSA 2025 poster; ab
 or data release yet) is published, add it to the catalog comparison registry (workflow/11_compare, catalogs.yaml) and
 compare event counts, completeness and locations offshore. It is the closest competing catalog; we do not claim the
 first deep-learning offshore catalog. Listed in paper_sciadv/references_no_doi.md until it has a DOI.
+
+### D-B043 ridges_north damping 200 (adopted, 2026-11-23, PI)
+ridges_north is run at damping 200 (answers STATUS open question 1, "100 or 200"); smoothing not yet chosen (tests
+at 20). Numbers at smoothing 20, real data: first-iteration condition number 119, last-iteration 33 (Mendocino-Gorda
+v2 at its damping 1000: 60 and 19; like-for-like comparison in notes/merge_design.md section 2); weighted RMS 0.060
+(0.054 at damping 100, 0.087 at 1000). Cluster spikes with DWS >= 100 (104 P and S): median recovery 16 % (17 % at
+damping 100); one spike >= 50 % (21 km, 49.2 N, 128.0 W, DWS 271). None of the five spikes at 12 km between the
+northern Blanco and Axial that pass at damping 100 passes at 200, so the D-B038 exception volume stays as written
+there (reported from the damping-100 model inside its mask) unless the PI drops it. Set in params
+tomodd.regions.ridges_north_v2.damp.

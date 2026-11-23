@@ -49,12 +49,19 @@ Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting mo
 7. **B4.** Relocate all 172,340 events in the final model (NonLinLoc, new station terms, tiers),
    with location uncertainty from the ensemble.
 8. **B5.** GrowClust on the B4 locations (D-B002).
-9. **Products.** Model NetCDF with mean, std and resolution mask; catalog; report; private Zenodo draft
+9. **Magnitudes (PI request 2026-11-22).** Recompute the Route A local magnitudes (ML; workflow/05_magnitude,
+   scale/run_magnitude_v4.sh, data/magnitude_v4) with the B4/B5 hypocentres: hypocentral distances change, so
+   ML changes. Compare with the v4 magnitudes (offset by region, ComCat anchors) and update the catalog columns,
+   Mc maps and atlas. If v4-NLL3D is rerun after D-B028 P-7, decide whether an interim recomputation is needed.
+10. **Products.** Model NetCDF with mean, std and resolution mask; catalog; report; private Zenodo draft
    23084158 only (never publish without the PI).
 
 ## Open questions for the PI
 
 * D-B028 (proposed): keep current node_z; repeat the spike test at the L-curve weights and per new grid (notes/smoothing_test.md).
+  Coordinator note: the number D-B028 is already used in DECISIONS.md (forward-model fixes, adopted by the PI),
+  whose P-3 adopts finer depth nodes (1 km to 9 km, 2 km to 49 km). This smoothing proposal needs its own number
+  and has to be reconciled with P-3 before the v2 inputs are used.
 
 * Ridges weight held at the clip of 3 (7.5% of the misfit weight instead of 12.5%): keep? (notes/balanced.md)
 * Far-station picks (D-B012) re-admitted after a forward check in the starting model: still wanted with tomoDD?

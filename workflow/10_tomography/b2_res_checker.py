@@ -27,6 +27,7 @@ Run from the repo root with LD_LIBRARY_PATH=.pixi/envs/default/lib.
 """
 import json
 import shutil
+import os
 import sys
 from pathlib import Path
 
@@ -47,6 +48,8 @@ BASE = Path(T["runs"]) / R["region"]
 INP = BASE / "inputs"
 TEST = BASE / R["subdir"]
 OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / R["region"]
+if os.environ.get("TOMO_RES_DAMP"):          # damping override: results in <tile>/d<damp>/
+    OUT = OUT / f"d{R['damp']:g}"
 KM = 111.195
 VARIANTS = ("clean", "noise", "noise_ploc")
 
@@ -214,7 +217,7 @@ def analyse(mask_smooth):
     in_box[np.ix_(jj, ii)] = True
     area = dx * dy * np.cos(np.radians(lat))[:, None] / np.cos(np.radians(clat)) * np.ones((1, nx))
     rows, fields = [], {}
-    runs = sorted(TEST.glob("chk_L*_p*_*/inv_*"))
+    runs = sorted(TEST.glob(f"chk_L*_p*_*/inv_d{R['damp']:g}_s*"))   # this damping only
     for run in runs:
         o = run / "Output_Files"
         if not (o / "Vs_model.dat").exists():

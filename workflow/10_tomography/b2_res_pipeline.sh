@@ -48,11 +48,18 @@ OUT=$CODE/data/tomo_v1/b2_res_tests/$REGION
 STATE=$RUNS/$REGION/pipeline.state
 LOCK=/wd1/mdenolle_data/tomo_v1/publish.lock
 BASE_BRANCH=${BASE_BRANCH:-tomo/res-tests-mg_v2}
+# DAMP=<d>: resolution tests (and real-data runs at smoothing 10/20/40) at damping d instead of res_tests.damp;
+# own queue (queue_d<d>), own stage records (queue_d<d> ...), results in data/tomo_v1/b2_res_tests/<tile>/d<d>/
+DAMP=${DAMP:-}
+TAGD=${DAMP:+_d$DAMP}
+DTEST=${DAMP:-$(cd $W && $PY -c "import yaml; print(yaml.safe_load(open('params.yaml'))['tomodd']['res_tests']['damp'])")}
+if [ -n "$DAMP" ]; then export TOMO_RES_DAMP=$DAMP; Q=$RT/queue$TAGD; OUT=$OUT/d$DAMP; fi
 mkdir -p $RUNS/$REGION
 
 log() { echo "$(date '+%F %T') [$REGION] $*"; }
-done_stage() { grep -qx "$1" "$STATE" 2>/dev/null; }
-mark() { echo "$1" >> "$STATE"; log "stage $1 done"; }
+skey() { case $1 in build|prep) echo $1 ;; *) echo "$1$TAGD" ;; esac; }   # build/prep shared by all dampings
+done_stage() { grep -qx "$(skey $1)" "$STATE" 2>/dev/null; }
+mark() { skey $1 >> "$STATE"; log "stage $(skey $1) done"; }
 py() { (cd $CODE && $PY "$@"); }
 finished() { grep -q "exit 0" "$RUNS/$1/$2.log" 2>/dev/null && [ -s "$RUNS/$1/$2/Output_Files/Vp_model.dat" ]; }
 param() { (cd $W && $PY -c "import yaml; T=yaml.safe_load(open('params.yaml'))['tomodd']; print($1)"); }
@@ -112,12 +119,15 @@ stage_queue() {
   mkdir -p $Q; [ -s $Q/queue.txt ] && { log "queue exists"; return 0; }
   local R=$REGION/res_tests
   {
-    for ds in "500 20 20 10" "1000 10 10 5" "1000 20 20 10" "1000 40 40 20" "2000 20 20 10"; do set -- $ds
+    if [ -n "$DAMP" ]; then scan="$DAMP 10 10 5|$DAMP 20 20 10|$DAMP 40 40 20"
+    else scan="500 20 20 10|1000 10 10 5|1000 20 20 10|1000 40 40 20|2000 20 20 10"; fi
+    local IFS_OLD=$IFS; IFS='|'; set -f; local scans=($scan); IFS=$IFS_OLD; set +f
+    for ds in "${scans[@]}"; do set -- $ds
       echo "$REGION d$1_s$2 $1 $2 $3 $4"; done
     for sm in "20 20 10" "10 10 5" "40 40 20"; do set -- $sm
-      for d in $RT/spike_*/; do echo "$R/$(basename $d) inv_d1000_s$1 1000 $1 $2 $3"; done
+      for d in $RT/spike_*/; do echo "$R/$(basename $d) inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done
       for L in 060 040 100; do
-        for v in p0_noise p0_clean $( [ $1 = 20 ] && echo p1_noise p0_noise_ploc ); do echo "$R/chk_L${L}_$v inv_d1000_s$1 1000 $1 $2 $3"; done; done
+        for v in p0_noise p0_clean $( [ $1 = 20 ] && echo p1_noise p0_noise_ploc ); do echo "$R/chk_L${L}_$v inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done; done
     done
     echo END
   } > $Q/queue.txt
@@ -149,7 +159,7 @@ stage_analyse() {
   log "checkerboard analysis"; py $W/b2_res_checker.py analyse || return 1
   local w
   for w in $(param "' '.join(str(s[0]) for s in T['res_tests']['smooth'])"); do
-    log "spike analysis, smoothing $w"; py $W/b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d1000_s$w || return 1; done
+    log "spike analysis, damping $DTEST, smoothing $w"; py $W/b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d${DTEST}_s$w || return 1; done
   log "damping/smoothing scan summary"; py $W/b2_tomodd_summary.py $REGION 'd*_s*' || return 1
   mkdir -p $OUT; cp $RUNS/$REGION/summary_runs.csv $OUT/scan_summary.csv 2>/dev/null || true
 }
@@ -164,7 +174,7 @@ stage_publish() {
   git add $(cd $OUT && find . -type f -size -5M -printf "${OUT#$CODE/}/%P\n")
   if git diff --cached --quiet; then log "nothing new to commit"; else
     git commit -q -F - <<EOF || return 1
-Track B B2: $REGION resolution tests analysed $(date +%F) (checkerboards + spikes, D-B018; damping/smoothing scan)
+Track B B2: $REGION resolution tests${DAMP:+ at damping $DAMP} analysed $(date +%F) (checkerboards + spikes, D-B018; damping/smoothing scan)
 
 $(grep -c ' done rc=0' $Q/runner.log) inversions done (queue and log in data/tomo_v1/b2_res_tests/$REGION/run_log/).
 Inversion directories stay on $RUNS/$REGION.
@@ -174,7 +184,7 @@ EOF
   fi
   git push -q -u origin $br || return 1
   local summ; summ=$(sed -n '1,/^## Vs/p' $OUT/summary_tables.md | head -n -1)
-  local note="**$REGION**: resolution tests analysed $(date '+%F %H:%M'), $(grep -c ' done rc=0' $Q/runner.log) inversions. Results in \`data/tomo_v1/b2_res_tests/$REGION/\`.${big:+ Files over 5 MB not in git: see \`run_log/not_in_git.txt\`.}
+  local note="**$REGION${DAMP:+, damping $DAMP}**: resolution tests analysed $(date '+%F %H:%M'), $(grep -c ' done rc=0' $Q/runner.log) inversions. Results in \`data/tomo_v1/b2_res_tests/$REGION/\`.${big:+ Files over 5 MB not in git: see \`run_log/not_in_git.txt\`.}
 
 $summ"
   if gh pr view $br > /dev/null 2>&1; then

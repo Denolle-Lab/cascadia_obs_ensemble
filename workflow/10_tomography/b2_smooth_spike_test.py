@@ -42,6 +42,9 @@ def res_cfg():
     for k, v in (T["res_tests"].get("regions") or {}).get(region, {}).items():
         base[k] = {**base[k], **v} if k in ("spike", "checker") else v
     base["region"] = region
+    if os.environ.get("TOMO_RES_DAMP"):        # damping override for the tests (e.g. ridges_north at 100-300)
+        d = float(os.environ["TOMO_RES_DAMP"])
+        base["damp"] = int(d) if d.is_integer() else d
     return base
 
 

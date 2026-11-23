@@ -15,6 +15,7 @@ smoothing ratio (w3 dz)/(w1 dx), and the mean P DWS inside the event box from th
                                       ->  data/tomo_v1/b2_res_tests/spike_inv_d1000_s20/{same files}
   (damping and smoothing of the run are read from its tomoDD-SE.inp)
 """
+import os
 import sys
 from pathlib import Path
 
@@ -195,5 +196,6 @@ if __name__ == "__main__":
         st.use(a[a.index("--cfg") + 1])
         if st.CFG["name"] != "smooth_test":
             INV = a[a.index("--inv") + 1] if "--inv" in a else st.CFG["inv_tags"][0]
-            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / st.REG / f"spike_{INV}"
+            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / st.REG / \
+                (f"d{st.CFG['damp']:g}" if os.environ.get("TOMO_RES_DAMP") else "") / f"spike_{INV}"
     main()

@@ -26,9 +26,13 @@ Pooled over 1-34 km. dlnV = change from each tile's own starting model. 'both' =
 | blanco_v2 d300_s20 | ridges_north_v2 d200_s20 | neither | 3435 | 3.71 | 3.21 | -0.10 | 3.46 | 0.48 | 0.44 | 0.01 / 29.99 |
 | blanco_v2 d1000_s20 | ridges_north_v2 d200_s20 | one | 14 | 4.14 | 7.88 | +2.28 | 5.53 | 0.72 | 1.42 | 0.01 / 0.06 |
 | blanco_v2 d1000_s20 | ridges_north_v2 d200_s20 | neither | 3442 | 2.82 | 3.21 | +0.00 | 2.97 | 0.49 | 0.59 | 0.01 / 29.99 |
-| oregon_v2 d1000_s20 | washington_v2 d1000_s20 | no mask | 3528 | 3.60 | 4.97 | -0.19 | 4.28 | 0.53 | 0.75 | 0.05 / 4.15 |
+| oregon_v2 d1000_s20 | washington_v2 d1000_s20 | both | 220 | 4.83 | 6.18 | -0.17 | 4.01 | 0.74 | 0.97 | 0.06 / 0.34 |
+| oregon_v2 d1000_s20 | washington_v2 d1000_s20 | one | 230 | 6.15 | 7.42 | -0.24 | 5.70 | 0.62 | 0.80 | 0.05 / 0.85 |
+| oregon_v2 d1000_s20 | washington_v2 d1000_s20 | neither | 3078 | 3.22 | 4.63 | -0.19 | 4.17 | 0.48 | 0.70 | 0.05 / 4.15 |
 | oregon_v2 d500_s20 | washington_v2 d500_s20 | no mask | 3528 | 4.42 | 6.04 | -0.13 | 5.59 | 0.46 | 0.64 | 0.05 / 4.15 |
-| oregon_v2 d300_s20 | washington_v2 d1000_s20 | no mask | 3528 | 5.03 | 4.97 | -0.15 | 5.20 | 0.45 | 0.45 | 0.05 / 4.15 |
+| oregon_v2 d300_s20 | washington_v2 d1000_s20 | both | 158 | 5.52 | 5.05 | +0.16 | 3.36 | 0.78 | 0.73 | 0.06 / 0.34 |
+| oregon_v2 d300_s20 | washington_v2 d1000_s20 | one | 214 | 7.26 | 7.18 | +0.70 | 6.83 | 0.53 | 0.55 | 0.05 / 0.59 |
+| oregon_v2 d300_s20 | washington_v2 d1000_s20 | neither | 3156 | 4.82 | 4.78 | -0.22 | 5.14 | 0.42 | 0.42 | 0.05 / 4.15 |
 
 ## Same events relocated in two tiles (events inside the overlap box)
 

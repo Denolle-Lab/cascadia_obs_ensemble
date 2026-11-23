@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 12:30 (handoff section below).
+Last update: 2026-11-23 14:15 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -45,6 +45,23 @@ PI chose damping 200 for ridges_north (D-B043). Merge design and tile-vs-tile te
 is resolved by both tiles; mixing dampings does not make a worse seam than either damping alone; the same events
 relocated in two tiles differ by 0.2-1.0 km horizontally (median).
 
+**Update 14:15.** washington_v2 at damping 1000 finished 12:05 (on PR #33): the best-resolved tile so far (18 P
+spikes recover >= 50 %, 14 of them at DWS > 1,000; checkerboards resolve about 30 % of the box at 15-18 km for
+40-60 km cells; Vs as well as Vp). PI decisions: M0 coarse whole-margin start (D-B044) and one small damping for
+all tiles, 200 (D-B045). Implementing D-B045 showed that pick weights were scaled per tile (Oregon and Washington
+picks weighed 3 times Blanco's, Mendocino-Gorda 1.8 times), which changes what one damping number does in tomoDD;
+from now on all builds use one weight scale for the whole dataset. Launched 14:03, detached:
+`b2_t6_m0.sh` = T6 joint blanco + oregon against the stitched pair at damping 200, and M0 (margin_m0_v2, 6,943
+declustered events, 518 stations, new 560-station tomoDD build) at damping 200 and 1000. Log
+`/wd1/mdenolle_data/tomo_v1/b2_tomodd/t6_m0.log`; it commits to `tomo/tiles` and comments on PR #33 when done.
+Resume after a stop with the same command (finished stages are skipped):
+
+    setsid nohup bash workflow/10_tomography/b2_t6_m0.sh \
+        >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/t6_m0.log 2>&1 < /dev/null &
+
+Next after review of M0: rebuild every tile from the M0 model (builder option still to write) and rerun the
+damping-200 run and resolution tests per tile.
+
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
 
@@ -58,9 +75,8 @@ v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
 **Open, for the PI.**
 1. Resolved 2026-11-23 (D-B043): ridges_north damping 200. The D-B038 exception volume is not recovered at 200 and
    stays on the damping-100 model unless dropped.
-2. Damping for blanco, oregon, washington, mendocino_gorda_c: one rule for all tiles (notes/merge_design.md P-M1).
-   Like-for-like first-iteration CND ~60 gives blanco ~660, oregon ~730, washington and mendocino_gorda_c
-   ~1000-1100; resolution tests exist at 200, 300 and 1000 (blanco, oregon) and 1000 (others).
+2. Resolved 2026-11-23 (D-B045): damping 200 and smoothing 20 in every tile and in M0, pick weights on one scale
+   for the whole dataset.
 3. Resolved 2026-11-23 (D-B038): ridges_north for relocation only, except the 12 km volume between northern Blanco
    and Axial where cluster spikes recover 50-64 % at damping 100.
 4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
@@ -71,6 +87,7 @@ v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
 7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23, revised after a literature review):
    P-M1..P-M10 proposed. Main choices: coarse whole-margin inversion as common start (P-M2, as Lin et al. 2010),
    resolution-window weights without inverse variance (P-M4), joint-vs-stitched test on blanco + oregon (T6).
+   P-M1 and P-M2 adopted (D-B045, D-B044); T6 and M0 running. Open: P-M3..P-M10.
 
 ## Done
 

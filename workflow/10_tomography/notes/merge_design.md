@@ -3,9 +3,9 @@
 Proposal, 2026-11-23 (PI questions: "how do we tile them together if they have different damping parameters, how
 will we merge the models into a consistent volume?"; "revisit the merging strategies, there's literature on fusing
 velocity models of various resolutions"). Implements the part of D-B025 left open ("how the overlap zones are
-compared or merged"). Nothing here is adopted; decisions to take are P-M1..P-M10 in section 7. Revised the same
-day after a literature review (section 3), which changed the reference model (M0), the weights (M3), the
-uncertainty (M4) and added two tests (T6, T7).
+compared or merged"). Decisions to take are P-M1..P-M10 in section 7; P-M1 and P-M2 were adopted the same day
+(D-B045, D-B044). Revised the same day after a literature review (section 3), which changed the reference model
+(M0), the weights (M3), the uncertainty (M4) and added two tests (T6, T7).
 Code: `b2_tile_overlap.py` (tests T1, T2, T5 on the deterministic runs), params `tomodd.merge`. Results:
 `data/tomo_v1/b2_merge/overlap/` (summary.md, one folder per pair with depth_stats.csv, events.csv,
 summary.json, overlap.png).
@@ -141,7 +141,7 @@ with M0.
 
 T6. **Joint against stitched (new; Lin et al. 2010).** Invert two neighbouring tiles as one tile and compare with
 the merged model of the two, in the overlap and up to one overlap width on each side. blanco + oregon fits the
-compiled limits (7,355 events, at most 88 stations per event); later mendocino_gorda_c + blanco or oregon +
+compiled limits (7,691 events, 242 stations: the 260-station build; at most 88 stations per event; corrected from 7,355 on 2026-11-23); later mendocino_gorda_c + blanco or oregon +
 washington with declustering or a larger build. Pass: differences inside the T3-calibrated uncertainty on resolved
 nodes, and the same event locations within T2's tolerance. This is the direct check that tiling and different
 damping do not change the answer.
@@ -193,11 +193,13 @@ Same events relocated in two tiles (events in the overlap box):
 
 What this says:
 
-1. **No overlap is resolved by both tiles.** At most 2 nodes (mendocino_gorda_c / blanco) are inside both masks
-   in any pair; oregon / washington waits for the washington mask (pipeline still running). The boxes were cut
-   where events are few, so the overlaps sit where coverage is poor. The merge is therefore in practice a choice
-   of the resolving tile with a taper, not an average of two resolved estimates, and T1's pass rule cannot be
-   applied yet. T3 carries the test of the merge.
+1. **Only the Oregon / Washington overlap is resolved by both tiles.** In the other pairs at most 2 nodes
+   (mendocino_gorda_c / blanco) are inside both masks: the boxes were cut where events are few, so those overlaps
+   sit where coverage is poor, the merge there is a choice of the resolving tile with a taper, and T3 carries the
+   test. *Added 14:15, with the washington mask:* oregon / washington at damping 1000 share 220 nodes (Vp, 1-34 km)
+   resolved in both. There the two tiles agree: correlation 0.74, amplitude ratio 0.97, mean difference -0.17 %,
+   rms difference 4.0 % against rms changes of 4.8 % and 6.2 %. On the 3,078 nodes neither resolves, correlation
+   0.48 and amplitude 0.70. The 1,568 events relocated in both differ by 0.21 km horizontally (median).
 2. **Mixing dampings does not make a worse seam.** In every pair the mixed-damping difference lies between the two
    matched cases (blanco / oregon: 2.0 % at 1000/1000, 3.0 % at 300/300, 2.4-2.7 % mixed). What sets the
    disagreement is how far each tile moves unresolved nodes, which grows as damping weakens.
@@ -218,8 +220,14 @@ What this says:
 * P-M1 One rule for damping in every tile, stated once: (a) first-iteration CND ~60 as Mendocino-Gorda (blanco
   ~660, oregon ~730, washington and mendocino_gorda_c ~1000-1100); (b) the weakest damping at which T1, T2 and T7
   stay within tolerance; (c) per-tile choice with the section 2 numbers recorded (as D-B043).
+  **Adopted 2026-11-23 as D-B045** (PI: one rule, small damping for all): damping 200 and smoothing 20 in every
+  tile and in M0, with pick weights on one scale for the whole dataset. Found while implementing it: the weights
+  were scaled per tile (largest pick weight 3 in each), and tomoDD-SE adds the smoothing rows before it scales
+  the G columns, so the per-tile scale changed the data/smoothing/damping balance by up to a factor 3 between
+  tiles (Oregon and Washington picks weighed 3 times Blanco's). Section 2's condition numbers were computed with
+  those per-tile scales.
 * P-M2 Reference: (a) coarse whole-margin inversion as common start for all tiles (M0, recommended; reruns the tile
-  scans) or (b) the D-B005 model sampled once (M1).
+  scans) or (b) the D-B005 model sampled once (M1). **Adopted 2026-11-23: (a), D-B044** (region margin_m0_v2).
 * P-M3 Common geographic grid 0.125 x 0.1 deg on the shared depth nodes, tomoDD trilinear lookup (M2).
 * P-M4 Weights = box taper x resolution window, normalised; no inverse-variance factor (M3).
 * P-M5 Ensemble draws shared across tiles, member-by-member blend, disagreement added to the variance in overlaps
@@ -234,6 +242,13 @@ What this says:
 
 First steps that need no decision on P-M2: run T6 on blanco + oregon at the damping rule chosen in P-M1, and write
 the T7 forward check on the current tiles.
+
+**Running since 2026-11-23 14:03** (`b2_t6_m0.sh`, log `<runs>/t6_m0.log`): T6 = joint tile blanco_oregon_v2
+(7,691 events, 242 stations, interior nodes 88 x 49 on the Blanco lattice) against blanco_v2 + oregon_v2g (Oregon
+rebuilt on the dataset weight scale), all at damping 200, smoothing 20, on the D-B005 start; comparison
+`b2_t6_joint.py` (zones: each tile alone, near the seam, overlap; yardsticks: damping 200 against 300 in each tile,
+and Oregon on the two weight scales). M0 = margin_m0_v2 at damping 200 and 1000; maps `b2_m0_report.py`.
+Results go to `data/tomo_v1/b2_merge/t6/` and `m0/` and PR #33.
 
 ## 8. References (DOIs checked against Crossref / DataCite on 2026-11-23)
 

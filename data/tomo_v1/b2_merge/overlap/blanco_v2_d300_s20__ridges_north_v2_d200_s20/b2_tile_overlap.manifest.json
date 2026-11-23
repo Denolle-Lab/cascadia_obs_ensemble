@@ -2,10 +2,10 @@
  "name": "b2_tile_overlap",
  "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_tile_overlap.py",
  "argv": [],
- "utc": "2026-11-23T19:53:42.614694+00:00",
- "git_commit": "74f82db1d19b52df04cacb5ffb5a913a407e7987",
- "git_dirty": true,
- "params_md5": "b63affba4736d492d78838e5096646a0",
+ "utc": "2026-11-23T22:05:04.702113+00:00",
+ "git_commit": "ea0aaa7c57cc249967af5622331d14a8ad1677d4",
+ "git_dirty": false,
+ "params_md5": "b87ce46555ee7b78ac20502412e0e504",
  "params": {
   "merge": {
    "grid": {
@@ -117,7 +117,47 @@
       ]
      ]
     ]
-   ]
+   ],
+   "t6": {
+    "joint": [
+     "blanco_oregon_v2",
+     "d200_s20"
+    ],
+    "tile_a": [
+     "blanco_v2",
+     "d200_s20"
+    ],
+    "tile_b": [
+     "oregon_v2g",
+     "d200_s20"
+    ],
+    "mask_tiles": [
+     "blanco_v2",
+     "oregon_v2"
+    ],
+    "taper_km": 15,
+    "floor": 0.1,
+    "yardsticks": {
+     "damp200_vs_300_A": [
+      "blanco_v2",
+      "d200_s20",
+      "blanco_v2",
+      "d300_s20"
+     ],
+     "damp200_vs_300_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2",
+      "d300_s20"
+     ],
+     "weightscale_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2g",
+      "d200_s20"
+     ]
+    }
+   }
   }
  },
  "inputs": [

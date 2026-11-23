@@ -52,9 +52,17 @@ def fetch_gmrt(region, res):
     return p
 
 
+COMPACT = False      # --compact-sizes: gentler growth above M3, so large events do not mask the rest
+
+
 def ml_to_size_cm(ml, scale=1.0):
     """Marker diameter (cm) growing strongly with magnitude (exaggerated so large
-    events stand out); tiny for small events. `scale` enlarges markers on zooms."""
+    events stand out); tiny for small events. `scale` enlarges markers on zooms.
+    COMPACT: same sizes up to M3, then x1.6 per magnitude unit, capped lower."""
+    ml = np.asarray(ml, dtype=float)
+    if COMPACT:
+        d = 0.015 * 2.6 ** (np.minimum(ml, 3.0) - 1.0) * 1.6 ** np.maximum(ml - 3.0, 0.0)
+        return np.clip(scale * d, 0.006 * scale, 0.45 * max(scale, 1.0))
     return np.clip(scale * 0.015 * 2.6 ** (ml - 1.0), 0.006 * scale, 1.0 * max(scale, 1.0))
 
 
@@ -93,6 +101,10 @@ REGIONS = {
     "wa_margin": [-127.6, -123.2, 46.2, 49.2],   # offshore Washington forearc
     "or_margin": [-126.8, -123.2, 42.8, 46.4],   # offshore Oregon forearc
     "puget":     [-123.6, -121.4, 46.6, 48.6],   # Puget Sound (deep slab-arch seismicity)
+    # tight zooms of the ridge-transform report (catalog v4)
+    "axial":     [-130.35, -129.75, 45.75, 46.2],  # Axial Seamount caldera and rift zones
+    "endeavour_north": [-129.7, -127.9, 48.55, 49.4],  # Endeavour-Explorer junction, Sovanco, Nootka
+    "blanco_central": [-129.3, -127.3, 43.3, 44.6],    # central Blanco transform
 }
 
 # Tectonic context per map: plate-motion arrows (moving plate, fixed plate, lat, lon, label
@@ -134,6 +146,12 @@ CONTEXT = {
                       mw_in=4.0, mw_out=4.5, n_label=3, km_per_mm=1.5),
     "puget":     dict(arrows=[], mw_in=4.0, mw_out=4.5, n_label=3, n_label_other=2,
                       label_side="L", label_top=46.82, km_per_mm=1.0),
+    "axial":     dict(arrows=[], mw_in=4.0, mw_out=5.0, n_label=0, label_side="R",
+                      label_top=46.15, km_per_mm=0.5),
+    "endeavour_north": dict(arrows=[], mw_in=4.5, mw_out=5.5, n_label=2, label_side="R",
+                            label_top=49.35, km_per_mm=1.0),
+    "blanco_central": dict(arrows=[], mw_in=4.5, mw_out=5.5, n_label=3, label_side="R",
+                           label_top=44.5, km_per_mm=1.0),
 }
 
 
@@ -157,12 +175,17 @@ def main(argv=None):
                         "offshore than SRTM15/GEBCO); med~240 m, high~120 m, max~100 m")
     p.add_argument("--slab-contours", action="store_true",
                    help="overlay Slab2 interface depth contours (10 km interval)")
+    p.add_argument("--compact-sizes", action="store_true",
+                   help="gentler marker growth above M3 (large events do not mask the catalog)")
     p.add_argument("--size-scale", type=float, default=None,
                    help="marker size multiplier (default: auto, larger on zooms)")
     p.add_argument("--coupling", default="auto",
                    choices=["auto", "none"] + list(mc.COUPLING),
                    help="slip-deficit model drawn under the events (auto: Pollitz 2025 "
                         "on the WA/OR forearc zooms, none elsewhere)")
+    p.add_argument("--coupling-transparency", type=float, default=30,
+                   help="transparency (%%) of the slip-deficit grid; higher keeps it a "
+                        "muted background under the events")
     p.add_argument("--layer", choices=["catalog", "context"], default="catalog",
                    help="full margin only: 'catalog' = the catalog map (plate boundaries "
                         "only); 'context' = faint seismicity + slip deficit, moment tensors "
@@ -180,6 +203,8 @@ def main(argv=None):
     p.add_argument("--out", default=None,
                    help="output PNG (default: cascadia_ML_map_<region>.png)")
     args = p.parse_args(argv)
+    global COMPACT
+    COMPACT = args.compact_sizes
 
     region = REGIONS[args.region]
     xmin, xmax, ymin, ymax = region
@@ -259,8 +284,10 @@ def main(argv=None):
         sd, sd_cite = mc.load_slip_deficit(coupling, region)
         pygmt.makecpt(cmap="lapaz", series=[0, 40, 5], reverse=True)
         fig.grdimage(sd, region=region, projection=proj, cmap=True, nan_transparent=True,
-                     transparency=30)
-        fig.grdcontour(sd, levels=10, pen="0.3p,0/50/100", region=region, projection=proj)
+                     transparency=args.coupling_transparency)
+        muted = args.coupling_transparency > 30
+        fig.grdcontour(sd, levels=10, pen="0.25p,0/50/100" if muted else "0.3p,0/50/100",
+                       region=region, projection=proj, transparency=50 if muted else 0)
         print(f"slip deficit: {sd_cite}")
     if not args.no_context:
         mc.draw_boundaries(fig, region, pen_scale=0.8 if args.region == "full" else 1.0)

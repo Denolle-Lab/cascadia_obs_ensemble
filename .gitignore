@@ -72,3 +72,13 @@ data/magnitude_hp05/
 # built catalog tables (utils/build_anss_tables.py) and the Zenodo package
 data/catalog_v3/
 data/picks_v4/
+
+# Catalog v4 (I. McBrearty, 2026-11-21): too big for git, shared on Zenodo
+data/Cascadia_relocated_file_ver_1.csv
+data/Cascadia_picks_ver_1.csv
+data/catalog_v4/*.csv
+data/catalog_v4/*.csv.gz
+
+# Catalog v4 report outputs (workflow/06_analysis/catalog_v4_report.py)
+data/catalog_v4/report/
+data/catalog_v4/ridge_report/

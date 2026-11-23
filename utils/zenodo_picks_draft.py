@@ -63,6 +63,11 @@ The new picks are in <code>ver6_added_picks_part1-3.csv.gz</code>, their amplitu
 <code>ver6_amps_NET_partNN.parquet</code> (98.8% with an amplitude). 1,846 station-days with
 fragmented data (1.15 M artifact picks) were left out (<code>ver6_dropped_station_days.csv</code>).
 See <code>ver6_README.md</code>.</li>
+<li><b>Catalog v4</b> (2026-11-21): GENIE + GraphDD catalog of the ver6 picks (I. McBrearty),
+172,340 events and 2,503,189 associated picks, 2010-2016
+(<code>Cascadia_relocated_catalog_v4.csv</code>, <code>Cascadia_picks_catalog_v4.csv.gz</code>), with
+21 events moved one day later (<code>catalog_v4_FIXES.md</code>). Not yet in the published-record
+format; see <code>catalog_v4_README.md</code>.</li>
 <li><b>Stations</b> (<code>stations_ver5_v6.csv</code>): coordinates and epochs of the 728
 stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 </ul>
@@ -70,7 +75,7 @@ stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 dropped by its pick_id ranges.</p>"""
 
 
-VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2 working copy"
+VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2+catalog v4 working copy"
 TRIES = 4
 
 

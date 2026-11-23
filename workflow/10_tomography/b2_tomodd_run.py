@@ -94,6 +94,7 @@ def main():
     ap.add_argument("--smooth", type=float, nargs=3, default=T["inp"]["smooth"])
     ap.add_argument("--thres", type=float, default=T["inp"]["thres"])
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--bin", help="binary to run instead of tomodd.bin (e.g. a larger-array build)")
     a = ap.parse_args()
 
     base = Path(T["runs"]) / a.region
@@ -124,7 +125,7 @@ def main():
         region=a.region, tag=a.tag, air=summ["air_dep_km"], nset=len(rows), stepl=T["inp"]["stepl_km"],
         clat=summ["center_lat"], clon=summ["center_lon"], w1=w1, w2=w2, w3=w3, sets="\n".join(rows)))
 
-    binary = T["bin_check"] if a.check else T["bin"]
+    binary = a.bin or (T["bin_check"] if a.check else T["bin"])
     t0 = time.time()
     with open(run / "stdout.txt", "w") as so, open(run / "time.txt", "w") as se:
         rc = subprocess.run(["/usr/bin/time", "-f", "%e s %U user %M KB", binary, "tomoDD-SE.inp"],

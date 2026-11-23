@@ -8,9 +8,13 @@ geometry, the real pick list, pairs and weights; inversion with the production s
 `tomodd.inp` from the background model and the true locations (b2_tomodd_run.py). Analysis:
 b2_smooth_spike_analyse.py.
 
-  python b2_smooth_spike_test.py prep            # build <runs>/<region>/smooth_test/z<depth>/{syn,inputs}
-  python b2_smooth_spike_test.py syn  ZTAG       # run the forward code for one depth and write inputs
-Inversions: python b2_tomodd_run.py <region>/smooth_test/<ZTAG> inv
+  python b2_smooth_spike_test.py [--cfg CFG] prep        # build the per-depth {syn,inputs} dirs (+ null)
+  python b2_smooth_spike_test.py [--cfg CFG] syn  ZTAG   # run the forward code for one depth and write inputs
+CFG = smooth_test (default; params tomodd.smooth_test, first test: <runs>/<region>/smooth_test/<ZTAG>, inversion
+tag `inv`) or res_tests (params tomodd.res_tests: region, damping and smoothing candidates of the resolution tests;
+dirs <runs>/<region>/res_tests/spike_<ZTAG>, inversion tags inv_d<damp>_s<w1>, notes/resolution_tests.md).
+Inversions: python b2_tomodd_run.py <region>/smooth_test/<ZTAG> inv                       (smooth_test)
+            python b2_tomodd_run.py <region>/res_tests/spike_<ZTAG> inv_d1000_s20 --damp 1000 --smooth 20 20 10
 Run from the repo root with LD_LIBRARY_PATH=.pixi/envs/default/lib.
 """
 import json
@@ -27,11 +31,43 @@ from manifest import load_params, write_manifest  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
-S = T["smooth_test"]
-REG = S["region"]
-BASE = Path(T["runs"]) / REG
-INP = BASE / "inputs"
-TEST = BASE / "smooth_test"
+
+
+def config(name="smooth_test"):
+    """Spike-test configuration. smooth_test: first test (unchanged behaviour); res_tests: resolution tests."""
+    if name == "smooth_test":
+        s = dict(T["smooth_test"])
+        test = Path(T["runs"]) / s["region"] / "smooth_test"
+        return dict(name=name, S=s, region=s["region"], test=test, prefix="", exact_mod=False,
+                    inv_tags=["inv"], damp=T["inp"]["damp"], smooth=[T["inp"]["smooth"]])
+    if name == "res_tests":
+        r = T["res_tests"]
+        s = dict(r["spike"], region=r["region"])
+        test = Path(T["runs"]) / r["region"] / r["subdir"]
+        return dict(name=name, S=s, region=r["region"], test=test, prefix="spike_", exact_mod=True,
+                    inv_tags=[inv_tag(r["damp"], w) for w in r["smooth"]], damp=r["damp"], smooth=r["smooth"])
+    raise SystemExit(f"unknown cfg {name}")
+
+
+def inv_tag(damp, smooth):
+    return f"inv_d{damp:g}_s{smooth[0]:g}"
+
+
+def use(name):
+    """Set the module globals (S, REG, BASE, INP, TEST, CFG) for one configuration."""
+    global S, REG, BASE, INP, TEST, CFG
+    CFG = config(name)
+    S, REG = CFG["S"], CFG["region"]
+    BASE = Path(T["runs"]) / REG
+    INP = BASE / "inputs"
+    TEST = CFG["test"]
+
+
+def zdir(ztag):
+    return TEST / f"{CFG['prefix']}{ztag}"
+
+
+use("smooth_test")
 
 SYN_INP = """* tomoDD-SE_syn.inp written by b2_smooth_spike_test.py
 *catalog diff times:
@@ -91,15 +127,30 @@ def read_mod(path):
     rows = [np.array(l.split(), float) for l in lines[4:4 + 2 * ny * nz]]
     vp = np.array(rows[:ny * nz]).reshape(nz, ny, nx)
     vpvs = np.array(rows[ny * nz:]).reshape(nz, ny, nx)
-    return dict(head=lines[0], x=x, y=y, z=z, vp=vp, vpvs=vpvs, xyz_lines=lines[1:4])
+    return dict(head=lines[0], x=x, y=y, z=z, vp=vp, vpvs=vpvs, xyz_lines=lines[1:4],
+                vpvs_lines=lines[4 + ny * nz:4 + 2 * ny * nz])
 
 
-def write_mod(path, m, vp):
+def write_mod(path, m, vp, exact=False):
+    """exact=False: first-test format (Vp/Vs rounded to 3 decimals, as in smooth_test); exact=True: Vp/Vs lines
+    copied verbatim from the source MOD, so only Vp (3 decimals, as in the source) differs from the background."""
     nz, ny, nx = vp.shape
     out = [m["head"], *m["xyz_lines"]]
     out += [" ".join(f"{v:.3f}" for v in vp[k, j]) for k in range(nz) for j in range(ny)]
-    out += [" ".join(f"{v:.3f}" for v in m["vpvs"][k, j]) for k in range(nz) for j in range(ny)]
+    if exact:
+        out += m["vpvs_lines"]
+    else:
+        out += [" ".join(f"{v:.3f}" for v in m["vpvs"][k, j]) for k in range(nz) for j in range(ny)]
     Path(path).write_text("\n".join(out) + "\n")
+
+
+def geo_to_mod(lat, lon):
+    """Geographic -> MOD coordinates (D-B028 P-2 rescaling if the region inputs have forward.json)."""
+    f = INP / "forward.json"
+    if not f.exists():
+        return lat, lon
+    from b2_tomodd_backtransform import forward
+    return forward(lat, lon, json.loads(f.read_text()))
 
 
 def spikes():
@@ -109,43 +160,58 @@ def spikes():
     for zd in S["depths_km"]:
         k = int(np.argmin(np.abs(m["z"] - zd)))
         assert abs(m["z"][k] - zd) < 1e-6, f"{zd} km is not a node"
-        ii = [int(np.argmin(np.abs(m["x"] - v))) for v in S["lon"]]
-        jj = [int(np.argmin(np.abs(m["y"] - v))) for v in S["lat"]]
+        lat_m, lon_m = geo_to_mod(np.array(S["lat"], float), np.array(S["lon"], float))
+        ii = [int(np.argmin(np.abs(m["x"] - v))) for v in lon_m]
+        jj = [int(np.argmin(np.abs(m["y"] - v))) for v in lat_m]
         out.append((f"z{zd:+04.0f}".replace("+", "p").replace("-", "m"), k, [(j, i) for j in jj for i in ii]))
     return m, out
 
 
+def prep_syn_dir(d, mod_writer, inp=None):
+    """Forward-run directory d/syn (MOD written by mod_writer(path), real geometry) and d/inputs (background MOD)."""
+    inp = INP if inp is None else inp
+    summ = json.loads((inp / "summary.json").read_text())
+    (d / "syn" / "Input_Files").mkdir(parents=True, exist_ok=True)
+    (d / "inputs").mkdir(parents=True, exist_ok=True)
+    mod_writer(d / "syn" / "MOD")
+    for f in ("event.dat", "station.dat", "absolute.dat", "dt.ct"):
+        dst = d / "syn" / "Input_Files" / f
+        if not dst.exists():
+            dst.symlink_to(inp / f)
+    bindir = Path(T["bin"]).parent
+    for f in ("ak135.15.SKS", "layer-16.dat"):
+        shutil.copy(bindir / f, d / "syn" / f)
+    (d / "syn" / "tomoDD-SE_syn.inp").write_text(SYN_INP.format(
+        air=summ["air_dep_km"], stepl=T["inp"]["stepl_km"], clat=summ["center_lat"], clon=summ["center_lon"]))
+    # inversion inputs: background model, real geometry; synthetic times are added by `syn`
+    shutil.copy(inp / "MOD", d / "inputs" / "MOD")
+    for f in ("summary.json", "forward.json"):
+        if (inp / f).exists():
+            shutil.copy(inp / f, d / "inputs" / f)
+    for f in ("event.dat", "station.dat"):
+        dst = d / "inputs" / f
+        if not dst.exists():
+            dst.symlink_to(inp / f)
+
+
 def prep():
     m, sp = spikes()
-    summ = json.loads((INP / "summary.json").read_text())
-    for ztag, k, nodes in sp:
-        d = TEST / ztag
-        (d / "syn" / "Input_Files").mkdir(parents=True, exist_ok=True)
-        (d / "inputs").mkdir(parents=True, exist_ok=True)
+    ex = CFG["exact_mod"]
+    for ztag, k, nodes in sp + [("null", None, [])]:
+        d = zdir(ztag)
         vp = m["vp"].copy()
         for j, i in nodes:
             vp[k, j, i] *= 1 + S["amp"]
-        write_mod(d / "syn" / "MOD", m, vp)
+        if ex:
+            vp = np.round(vp, 3)          # the true model is what the MOD file holds
+        if ztag == "null" and (d / "syn" / "MOD").exists():
+            continue                      # first test: null was set up by hand with the background MOD
+        prep_syn_dir(d, lambda path: write_mod(path, m, vp, exact=ex))
         np.save(d / "true_dvp.npy", vp / m["vp"] - 1)
-        for f in ("event.dat", "station.dat", "absolute.dat", "dt.ct"):
-            dst = d / "syn" / "Input_Files" / f
-            if not dst.exists():
-                dst.symlink_to(INP / f)
-        bindir = Path(T["bin"]).parent
-        for f in ("ak135.15.SKS", "layer-16.dat"):
-            shutil.copy(bindir / f, d / "syn" / f)
-        (d / "syn" / "tomoDD-SE_syn.inp").write_text(SYN_INP.format(
-            air=summ["air_dep_km"], stepl=T["inp"]["stepl_km"], clat=summ["center_lat"], clon=summ["center_lon"]))
-        # inversion inputs: background model, real geometry; synthetic times are added by `syn`
-        shutil.copy(INP / "MOD", d / "inputs" / "MOD")
-        shutil.copy(INP / "summary.json", d / "inputs" / "summary.json")
-        for f in ("event.dat", "station.dat"):
-            dst = d / "inputs" / f
-            if not dst.exists():
-                dst.symlink_to(INP / f)
-        print(ztag, f"z={m['z'][k]:g} km (k={k})", len(nodes), "spikes")
-    write_manifest("b2_smooth_spike_prep", TEST, inputs=[INP / "MOD", INP / "summary.json"],
-                   outputs=[TEST / t / "syn" / "MOD" for t, _, _ in sp], params=S,
+        print(ztag, "" if k is None else f"z={m['z'][k]:g} km (k={k})", len(nodes), "spikes")
+    write_manifest(f"b2_smooth_spike_prep{'' if CFG['name'] == 'smooth_test' else '_' + CFG['name']}", TEST,
+                   inputs=[INP / "MOD", INP / "summary.json"],
+                   outputs=[zdir(t) / "syn" / "MOD" for t, _, _ in sp], params=S,
                    counts={"runs": len(sp), "spikes_per_run": len(sp[0][2])})
 
 
@@ -161,17 +227,34 @@ def read_weights_abs(path):
     return w
 
 
-def syn(ztag):
-    d = TEST / ztag
-    sd = d / "syn"
+def run_syn(sd, label):
     with open(sd / "stdout.txt", "w") as so:
         rc = subprocess.run([T["bin_syn"], "tomoDD-SE_syn.inp"], cwd=sd, stdout=so, stderr=subprocess.STDOUT).returncode
     if rc:
-        raise SystemExit(f"{ztag}: tomoDD-SE_syn exit {rc}")
+        raise SystemExit(f"{label}: tomoDD-SE_syn exit {rc}")
+
+
+def syn(ztag):
+    d = zdir(ztag)
+    sd = d / "syn"
+    run_syn(sd, ztag)
+    counts = syn_to_inputs(sd, d / "inputs")
+    print(ztag, counts)
+    write_manifest(f"b2_smooth_spike_syn_{ztag}", d, inputs=[sd / "MOD", T["bin_syn"], INP / "absolute.dat", INP / "dt.ct"],
+                   outputs=[d / "inputs" / "absolute.dat", d / "inputs" / "dt.ct", sd / "absolute.syn", sd / "dt.syn"],
+                   params={"ztag": ztag, "cfg": CFG["name"], **S}, counts=counts)
+
+
+def syn_to_inputs(sd, out, inp=None, noise=None):
+    """Synthetic times of forward dir sd -> out/absolute.dat, out/dt.ct with the real pick list, pairs and weights.
+    noise: optional dict (event, station code, phase) -> added time error (s); the same draw enters the absolute
+    pick and every differential time built from it, so absolute and differential data stay consistent."""
+    inp = INP if inp is None else inp
+    nz = (lambda key: 0.0) if noise is None else (lambda key: noise[key])
     # absolute: keep real weights, synthetic times (absolute.syn: ev sta t wt phase)
-    wabs = read_weights_abs(INP / "absolute.dat")
+    wabs = read_weights_abs(inp / "absolute.dat")
     n_abs = miss = 0
-    with open(d / "inputs" / "absolute.dat", "w") as f:
+    with open(out / "absolute.dat", "w") as f:
         last = None
         for line in open(sd / "absolute.syn"):
             ev, sta, t, _, ph = line.split()
@@ -183,19 +266,19 @@ def syn(ztag):
             if ev != last:
                 f.write(f"#  {ev}\n")
                 last = ev
-            f.write(f"{sta} {float(t):11.4f} {wt} {ph}\n")
+            f.write(f"{sta} {float(t) + nz((ev, sta, ph)):11.4f} {wt} {ph}\n")
             n_abs += 1
     # differential: real pair list and weights from dt.ct, synthetic times (dt.syn: ev1 ev2 sta t1 t2 wt phase)
     wdt = {}
     pair = None
-    for line in open(INP / "dt.ct"):
+    for line in open(inp / "dt.ct"):
         if line.startswith("#"):
             pair = tuple(int(v) for v in line.split()[1:3])
             continue
         sta, _, _, wt, ph = line.split()
         wdt[(*pair, sta, ph)] = wt
     n_dt = miss_dt = 0
-    with open(d / "inputs" / "dt.ct", "w") as f:
+    with open(out / "dt.ct", "w") as f:
         last = None
         for line in open(sd / "dt.syn"):
             e1, e2, sta, t1, t2, _, ph = line.split()
@@ -207,18 +290,20 @@ def syn(ztag):
             if key[:2] != last:
                 f.write(f"#  {key[0]}  {key[1]}\n")
                 last = key[:2]
-            f.write(f"{sta} {float(t1):11.4f} {float(t2):11.4f} {wt} {ph}\n")
+            t1 = float(t1) + nz((key[0], sta, ph))
+            t2 = float(t2) + nz((key[1], sta, ph))
+            f.write(f"{sta} {t1:11.4f} {t2:11.4f} {wt} {ph}\n")
             n_dt += 1
-    counts = {"abs": n_abs, "abs_unmatched": miss, "dt": n_dt, "dt_unmatched": miss_dt,
-              "abs_real": len(wabs), "dt_real": len(wdt)}
-    print(ztag, counts)
-    write_manifest(f"b2_smooth_spike_syn_{ztag}", d, inputs=[sd / "MOD", T["bin_syn"], INP / "absolute.dat", INP / "dt.ct"],
-                   outputs=[d / "inputs" / "absolute.dat", d / "inputs" / "dt.ct", sd / "absolute.syn", sd / "dt.syn"],
-                   params={"ztag": ztag, **S}, counts=counts)
+    return {"abs": n_abs, "abs_unmatched": miss, "dt": n_dt, "dt_unmatched": miss_dt,
+            "abs_real": len(wabs), "dt_real": len(wdt)}
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "prep":
+    args = sys.argv[1:]
+    if args[0] == "--cfg":
+        use(args[1])
+        args = args[2:]
+    if args[0] == "prep":
         prep()
-    elif sys.argv[1] == "syn":
-        syn(sys.argv[2])
+    elif args[0] == "syn":
+        syn(args[1])

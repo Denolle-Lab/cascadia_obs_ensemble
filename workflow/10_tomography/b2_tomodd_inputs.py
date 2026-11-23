@@ -81,6 +81,12 @@ def nodes(spec):
 def select(R):
     ev = pd.read_csv(B1B / "events.csv")
     pk = pd.read_csv(B1B / "picks.csv")
+    if R.get("extra_b1b"):                            # extra events/picks in B1b format (b2_shallow_events.py)
+        X = Path(P["paths"]["base"]) / R["extra_b1b"]
+        xe, xp = pd.read_csv(X / "events.csv"), pd.read_csv(X / "picks.csv")
+        assert not xe.ID.isin(ev.ID).any(), "extra events overlap B1b"
+        log(f"extra_b1b {X}: {len(xe)} events, {len(xp)} picks appended")
+        ev, pk = pd.concat([ev, xe], ignore_index=True), pd.concat([pk, xp], ignore_index=True)
     (la0, la1), (lo0, lo1) = R["events_lat"], R["events_lon"]
     mla, mlo = R["station_margin_deg"]
     e = ev[ev.lat.between(la0, la1) & ev.lon.between(lo0, lo1)].copy()
@@ -270,7 +276,7 @@ def main():
     F = {**FORWARD_DEFAULT, **R.get("forward", {})}
     out = Path(T["runs"]) / region / "inputs"
     out.mkdir(parents=True, exist_ok=True)
-    L = T["limits"]
+    L = {**T["limits"], **R.get("limits", {})}
     center = (round(float(np.mean(R["events_lat"])), 3), round(float(np.mean(R["events_lon"])), 3))
     log(f"forward settings (D-B028): {F}")
 

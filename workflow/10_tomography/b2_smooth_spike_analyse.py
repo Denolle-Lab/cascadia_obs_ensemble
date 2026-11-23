@@ -11,6 +11,9 @@ Also writes the per-layer spacing table: dz, lateral spacing, the gradient-equiv
 smoothing ratio (w3 dz)/(w1 dx), and the mean P DWS inside the event box from the check01 run.
 
   python b2_smooth_spike_analyse.py   ->  data/tomo_v1/b2_smooth_test/{spikes.csv, by_depth.csv, layers.csv, psf.png}
+  python b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d1000_s20
+                                      ->  data/tomo_v1/b2_res_tests/spike_inv_d1000_s20/{same files}
+  (damping and smoothing of the run are read from its tomoDD-SE.inp)
 """
 import sys
 from pathlib import Path
@@ -21,9 +24,11 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
-from b2_smooth_spike_test import BASE, INP, S, T, TEST, read_mod, spikes  # noqa: E402
+import b2_smooth_spike_test as st  # noqa: E402
+from b2_smooth_spike_test import T, read_mod  # noqa: E402
 
 OUT = REPO / "data" / "tomo_v1" / "b2_smooth_test"
+INV = "inv"
 MIN_REC = 0.5
 KM_DEG = 111.195
 
@@ -51,30 +56,46 @@ def hwhm_1d(vals, pos, c):
 
 
 def dws_by_layer(m):
-    vel = BASE / "check01" / "Output_Files" / "tomoDD.vel"
-    lines = vel.read_text().split("\n")
-    i0 = next(i for i, l in enumerate(lines) if "DWS for P-wave" in l)
+    # DWS of the first iteration (background-model rays): check01 when it has it, else this test's null run
+    # (same events, stations and settings; mendocino_gorda_v2/check01 was written without the DWS block)
+    for vel in (st.BASE / "check01" / "Output_Files" / "tomoDD.vel", st.zdir("null") / INV / "Output_Files" / "tomoDD.vel"):
+        lines = vel.read_text().split("\n") if vel.exists() else []
+        i0 = next((i for i, l in enumerate(lines) if "DWS for P-wave" in l), None)
+        if i0 is not None:
+            break
+    else:
+        raise SystemExit("no DWS block in check01 or the null run")
     nz, ny, nx = m["vp"].shape
     d = np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
-    lo, la = T["regions"][S["region"]]["events_lon"], T["regions"][S["region"]]["events_lat"]
+    lo, la = T["regions"][st.REG]["events_lon"], T["regions"][st.REG]["events_lat"]
     ii = (m["x"] >= lo[0]) & (m["x"] <= lo[1])
     jj = (m["y"] >= la[0]) & (m["y"] <= la[1])
     return d[:, jj][:, :, ii]
 
 
+def run_settings():
+    """(damp, [w1, w2, w3]) of the null inversion (tomoDD-SE.inp)."""
+    lines = (st.zdir("null") / INV / "tomoDD-SE.inp").read_text().split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("* weight1")][0]
+    sm = [float(v) for v in lines[i + 1].split()[:3]]
+    j = [k for k, l in enumerate(lines) if l.startswith("* NITER")][0]
+    return float(lines[j + 1].split()[10]), sm
+
+
 def main():
-    P = load_params()
-    w1, w2, w3 = T["inp"]["smooth"]
-    m, sp = spikes()
+    S = st.S
+    damp, smooth = run_settings()
+    w1, w2, w3 = smooth
+    m, sp = st.spikes()
     nz, ny, nx = m["vp"].shape
     x, y, z = m["x"], m["y"], m["z"]
     vs0 = m["vp"] / m["vpvs"]
-    null = TEST / "null" / "inv" / "Output_Files"
+    null = st.zdir("null") / INV / "Output_Files"
     nvp = read_model(null / "Vp_model.dat", (nz, ny, nx)) / m["vp"] - 1
     nvs = read_model(null / "Vs_model.dat", (nz, ny, nx)) / vs0 - 1
     rows = []
     for ztag, k, nodes in sp:
-        o = TEST / ztag / "inv" / "Output_Files"
+        o = st.zdir(ztag) / INV / "Output_Files"
         if not (o / "Vp_model.dat").exists():
             print("missing", ztag)
             continue
@@ -123,15 +144,15 @@ def main():
     pd.set_option("display.width", 200)
     print(lay.to_string(index=False))
     print(by.round(2).to_string())
-    plot(by, OUT / "psf.png")
+    plot(by, OUT / "psf.png", damp, smooth)
     write_manifest("b2_smooth_spike_analyse", OUT,
-                   inputs=[TEST / t / "inv" / "Output_Files" / "Vp_model.dat" for t, _, _ in sp] + [null / "Vp_model.dat"],
+                   inputs=[st.zdir(t) / INV / "Output_Files" / "Vp_model.dat" for t, _, _ in sp] + [null / "Vp_model.dat"],
                    outputs=[OUT / f for f in ("spikes.csv", "by_depth.csv", "layers.csv", "psf.png")],
-                   params={"min_rec": MIN_REC, **S, "smooth": T["inp"]["smooth"], "damp": T["inp"]["damp"]},
+                   params={"min_rec": MIN_REC, **S, "smooth": smooth, "damp": damp, "cfg": st.CFG["name"], "inv": INV},
                    counts={"spikes": len(sp_df)})
 
 
-def plot(by, path):
+def plot(by, path, damp, smooth):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -160,10 +181,16 @@ def plot(by, path):
             aa.grid(color=grid, lw=0.6)
             aa.set_axisbelow(True)
     ax[0, 0].invert_yaxis()
-    fig.suptitle(f"tomoDD spike test, Mendocino-Gorda grid, smooth {T['inp']['smooth']}, damp {T['inp']['damp']}",
+    fig.suptitle(f"tomoDD spike test, {st.REG} grid, smooth {[f'{v:g}' for v in smooth]}, damp {damp:g}",
                  fontsize=9, color=ink)
     fig.savefig(path, dpi=200)
 
 
 if __name__ == "__main__":
+    a = sys.argv[1:]
+    if "--cfg" in a:
+        st.use(a[a.index("--cfg") + 1])
+        if st.CFG["name"] != "smooth_test":
+            INV = a[a.index("--inv") + 1] if "--inv" in a else st.CFG["inv_tags"][0]
+            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / f"spike_{INV}"
     main()

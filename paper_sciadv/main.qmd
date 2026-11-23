@@ -85,7 +85,12 @@ numbers will change with the locations in the tomography model [TO UPDATE].
 
 [TO UPDATE when the tomography model is final.] Joint Vp and Vs tomography with double-difference
 relocation (tomoDD) in overlapping regions, starting with Mendocino–Gorda, on a travel-time dataset
-balanced across stations and regions (Materials and Methods; Fig. 7). Placeholder for: the main
+balanced across stations and regions (Materials and Methods; Fig. 7). This region has been imaged
+before: P-wave local-earthquake tomography at Cape Mendocino [@Verdonck1994] and Vp/Vs of the southern Cascadia
+megathrust from double-difference tomography with land and ocean-bottom stations [@Guo2021] [TO CHECK
+method and data of Guo et al. 2021, and the 2025 Mendocino Vp/Vs model of the same group]. The new
+model must be compared with these, and the text must say what the 2010–2016 catalog adds (more events,
+ocean-bottom coverage beyond the triple junction, uncertainty from an ensemble). Placeholder for: the main
 velocity anomalies, their resolution, and how relocating every event in the new model changes the
 faults and depths of the previous sections.
 

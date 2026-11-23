@@ -312,11 +312,11 @@ def fig_tomography(run_dir, region_name=None, dws_min=50.0, depths=None, n_depth
     rlo, rhi = (np.percentile(vals["vpvs"], [2, 98]) if vals["vpvs"].size > 10 else (1.6, 2.0))
     rlo, rhi = np.floor(rlo * 20) / 20, max(np.ceil(rhi * 20) / 20, np.floor(rlo * 20) / 20 + 0.1)
     cpt = {"dvp": f"{tmp}/dvp.cpt", "dvs": f"{tmp}/dvs.cpt", "vpvs": f"{tmp}/vpvs.cpt", "res": f"{tmp}/res.cpt"}
-    pygmt.makecpt(cmap="roma", series=[-lp, lp], output=cpt["dvp"], background=True)
-    pygmt.makecpt(cmap="roma", series=[-ls, ls], output=cpt["dvs"], background=True)
+    pygmt.makecpt(cmap="vik", series=[-lp, lp], output=cpt["dvp"], background=True, reverse=True)
+    pygmt.makecpt(cmap="vik", series=[-ls, ls], output=cpt["dvs"], background=True, reverse=True)
     pygmt.makecpt(cmap="batlow", series=[rlo, rhi], output=cpt["vpvs"], background=True)
     amp = max((np.abs(r["true"]).max() for r in res), default=5.0)
-    pygmt.makecpt(cmap="vik", series=[-amp, amp], output=cpt["res"], background=True, reverse=True)
+    pygmt.makecpt(cmap="broc", series=[-amp, amp], output=cpt["res"], background=True, reverse=True)
     lab = {"dvp": "@~d@~V@-P@- (%)", "dvs": "@~d@~V@-S@- (%)", "vpvs": "V@-P@-/V@-S@-", "res": "recovered @~d@~V@-P@- (%)"}
 
     # layout (cm)

@@ -30,6 +30,11 @@ from `~/wt_tomo_res`; finished pieces are skipped:
     setsid nohup bash workflow/10_tomography/b2_res_pipeline.sh blanco_v2 \
         >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/pipeline.log 2>&1 < /dev/null &
 
+**Update 09:05.** blanco and oregon finished at damping 1000 (on PR #33): over-damped like ridges (real-data condition
+number at s20: 11 and 14, against ~60 for Mendocino-Gorda v2; no lattice spike recovered >= 50 %). PI asked for
+damping 200 and 300 on both: `DAMP=200` and `DAMP=300` pipelines launched 09:05 (51 runs each, results in
+`data/tomo_v1/b2_res_tests/<tile>/d200|d300/`). washington and mendocino_gorda_c still running at damping 1000.
+
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
 

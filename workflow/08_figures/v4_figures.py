@@ -62,7 +62,7 @@ CFM_PEN, PLATE_PEN = "0.35p,#b8860b", "0.6p,gray15"
 
 
 def config():
-    pygmt.config(FONT_ANNOT_PRIMARY="6p,Helvetica,black", FONT_LABEL="6.5p,Helvetica,black", FONT_TAG="8p,Helvetica-Bold,black",
+    pygmt.config(FONT_ANNOT_PRIMARY="6p,Helvetica,black", FONT_ANNOT_SECONDARY="6.5p,Helvetica,black", FONT_LABEL="6.5p,Helvetica,black", FONT_TAG="8p,Helvetica-Bold,black",
                  FONT_TITLE="7p,Helvetica-Bold,black", MAP_FRAME_TYPE="plain", MAP_FRAME_PEN="0.5p,gray20",
                  MAP_TICK_LENGTH_PRIMARY="2p", MAP_TICK_PEN_PRIMARY="0.4p,gray20", MAP_ANNOT_OFFSET_PRIMARY="1.5p",
                  MAP_LABEL_OFFSET="3p", MAP_GRID_PEN_PRIMARY="0.2p,gray80", FORMAT_GEO_MAP="dddF", PS_CHAR_ENCODING="ISOLatin1+",
@@ -481,7 +481,7 @@ def fig_faults(a):
     ev, faults = events(), fault_surfaces()
     tmp = tempfile.mkdtemp(); config()
     fig = pygmt.Figure()
-    cur = [0.0, 0.0]
+    cur = [-0.5, -2.0]                                  # start 2 cm up: PyGMT layouts begin at page y = 0
     def goto(x, y):                                     # absolute placement of the next panel's origin (cm)
         fig.shift_origin(xshift=f"{x - cur[0]:.3f}c", yshift=f"{y - cur[1]:.3f}c"); cur[:] = [x, y]
     X0, WA = 0.9, 6.0
@@ -540,10 +540,240 @@ def fig_faults(a):
     save(fig, "fig3_fault_surfaces")
 
 
+# ------------------------------------------------------------------ Fig. 5: clustering
+CL = D / "catalog_v4" / "clusters_zbz"
+RNAME = {"AX": "Axial", "EN": "Endeavour", "BL": "Blanco", "GO": "Gorda", "MT": "Mendocino TJ", "WA": "WA forearc",
+         "OR": "OR forearc", "PU": "Puget", "ON": "onshore"}
+SETTINGS = [("Ridges and transforms", ["AX", "EN", "BL", "GO"], "#D55E00"), ("Mendocino triple junction", ["MT"], "#0072B2"),
+            ("Forearc and onshore", ["WA", "OR", "PU", "ON"], "#009E73")]
+TYPES = [("pct_background", "background", "#d9d9d9"), ("pct_MA", "mainshock-aftershock", "#0072B2"),
+         ("pct_swarm", "swarm", "#D55E00"), ("pct_multiplet", "multiplet", "#CC79A7")]
+
+
+LABPOS = {"AX": ("TC", "0c/-0.45c"), "BL": ("LM", "0.42c/0.12c"), "GO": ("BC", "0c/0.3c"), "ON": ("TC", "0c/-0.32c"),
+          "PU": ("BC", "0c/0.3c"), "EN": ("LM", "0.22c/0c"), "MT": ("RM", "-0.42c/0c"), "WA": ("RM", "-0.2c/0c"), "OR": ("RM", "-0.2c/0c")}
+
+
+def fig_clusters(a):
+    """A-C: rescaled time T and distance R to the nearest-neighbour parent, by setting, with each region's threshold;
+    D: share of events per class and region; E: swarm share of families (>= 5 events) against aftershock productivity."""
+    tmp = tempfile.mkdtemp(); config()
+    ev = pd.read_csv(CL / "events_zbz.csv.gz", usecols=["region", "in_analysis", "log_T", "log_R", "log_eta"])
+    ev = ev[ev.in_analysis & ev.log_T.notna() & ev.log_R.notna()]
+    reg = pd.read_csv(CL / "regions_zbz.csv").set_index("region")
+    st = pd.read_csv(CL / "setting_stats.csv").set_index("region")
+    fig = pygmt.Figure()
+    cur = [-0.5, -2.0]                                  # start 2 cm up: PyGMT layouts begin at page y = 0
+    def goto(x, y):
+        fig.shift_origin(xshift=f"{x - cur[0]:.3f}c", yshift=f"{y - cur[1]:.3f}c"); cur[:] = [x, y]
+    tx, rx = (-9.0, 0.5), (-4.5, 2.5)
+    pw, ph, y0 = 5.2, 4.2, 6.4
+    pygmt.makecpt(cmap="lapaz", series=[0, 1], reverse=True, output=f"{tmp}/dens.cpt", background=True)
+    for i, (name, regs, col) in enumerate(SETTINGS):
+        goto(1.0 + i * (pw + 0.7), y0)
+        e = ev[ev.region.isin(regs)]
+        H, xe, ye = np.histogram2d(e.log_T, e.log_R, bins=[np.arange(tx[0], tx[1] + 0.1, 0.1), np.arange(rx[0], rx[1] + 0.1, 0.1)])
+        from scipy.ndimage import gaussian_filter
+        H = gaussian_filter(H, 1.2)
+        g = xr.DataArray((H / H.max()).T, coords={"y": (ye[:-1] + ye[1:]) / 2, "x": (xe[:-1] + xe[1:]) / 2}, dims=("y", "x"))
+        fr = ["WSne" if i == 0 else "wSne", "xa2f1+lrescaled time, log@-10@- T", "ya1f0.5" + ("+lrescaled distance, log@-10@- R" if i == 0 else "")]
+        fig.grdimage(g, region=[*tx, *rx], projection=f"X{pw}c/{ph}c", cmap=f"{tmp}/dens.cpt", nan_transparent=True, frame=fr)
+        fig.grdcontour(g, levels=0.2, pen="0.25p,white@30")
+        for j, r in enumerate(sorted(regs, key=lambda r: reg.loc[r, "log_eta0"])):
+            e0 = reg.loc[r, "log_eta0"]
+            xx = np.array(tx)
+            fig.plot(x=xx, y=e0 - xx, pen="0.6p,black,4_2")
+            yl = rx[0] + 0.35 + 0.55 * j                      # labels staggered down the lower-right ends of the lines
+            fig.text(x=e0 - yl, y=yl, text=r, font="5p,Helvetica-Bold,black", justify="CM", fill="white@10", clearance="0.02c/0.01c")
+        n_cl = (e.log_eta < e.region.map(reg.log_eta0)).mean() * 100
+        fig.text(position="TR", offset="-0.1c/-0.1c", justify="TR", font="6p,Helvetica-Bold," + col, text=name, fill="white@15")
+        fig.text(x=tx[0] + 0.3, y=rx[0] + 0.3, text="clustered", font="5p,Helvetica-Oblique,gray20", justify="BL")
+        fig.text(x=tx[1] - 0.3, y=rx[1] - 1.3, text="background", font="5p,Helvetica-Oblique,gray20", justify="TR")
+        fig.text(position="TR", offset="-0.1c/-0.45c", justify="TR", font="5.5p,Helvetica,black", fill="white@15",
+                 text=f"{len(e):,} events, {n_cl:.0f}% clustered")
+        fig.text(position="TL", text="ABC"[i], font="8p,Helvetica-Bold,black", justify="TR", offset="-0.25c/0c", no_clip=True)
+    fig.colorbar(cmap=f"{tmp}/dens.cpt", position=f"JMR+o0.3c/0c+w{ph * 0.8:.1f}c/0.15c", frame=["xa0.5+lrelative density"])
+    # D: class shares per region
+    order = [r for _, regs, _ in SETTINGS for r in regs]
+    goto(1.0 + 1.3, 0)
+    bw, bh = 7.0, 5.0
+    fig.basemap(region=[0, 100, -0.6, len(order) - 0.4], projection=f"X{bw}c/-{bh}c",
+                frame=["WSne", "xa20f10+lshare of events above Mc (%)", "y+0"])
+    base = np.zeros(len(order))
+    for col, lab, colr in TYPES:
+        v = reg.loc[order, col].to_numpy()
+        fig.plot(data=np.c_[base + v, np.arange(len(order)), base], style="B0.42c+b", fill=colr, pen="0.2p,white")
+        base += v
+    for k, r in enumerate(order):
+        sc = next(c for _, regs, c in SETTINGS if r in regs)
+        fig.text(x=-1.5, y=k, text=RNAME[r], font=f"6p,Helvetica,{sc}", justify="RM", no_clip=True)
+        fig.text(x=101.5, y=k, text=f"{int(reg.loc[r, 'n_analysis']):,}", font="5p,Helvetica,gray25", justify="LM", no_clip=True)
+    leg = Path(tmp) / "cls.txt"
+    leg.write_text("N 1 1.7 0.8 0.9\n" + "\n".join(f"S 0.2c s 0.28c {c} 0.2p,white 0.45c {l}" for _, l, c in TYPES) + "\n")
+    with pygmt.config(FONT_ANNOT_PRIMARY="6p,Helvetica,black"):
+        fig.legend(spec=str(leg), position=f"JBC+o0c/1.05c+w{bw}c", box=False)
+    fig.text(position="TL", text="D", font="8p,Helvetica-Bold,black", justify="TR", offset="-2.0c/0c", no_clip=True)
+    # E: swarms vs productivity
+    goto(1.0 + 1.3 + bw + 2.2, 0)
+    ew = FULL - cur[0] - 0.4
+    fig.basemap(region=[45, 90, -6, 106], projection=f"X{ew}c/{bh}c",
+                frame=["WSne", "xa10f5+levents 1-2 units above Mc with no aftershock (%)", "ya20f10+lswarms among families of @~\\263@~5 events (%)"])
+    for name, regs, col in SETTINGS:
+        for r in regs:
+            x, y, n = st.loc[r, "pct_Mc1to2_no_offspring"], st.loc[r, "pct_swarm_of_ge5"], st.loc[r, "n_fam_ge5"]
+            fig.plot(x=[x], y=[y], style=f"c{0.12 + 0.05 * np.sqrt(n):.2f}c", fill=col + "@15", pen="0.4p,gray15")
+            j, o = LABPOS.get(r, ("LM", "0.28c/0c"))
+            fig.text(x=x, y=y, text=f"{RNAME[r]} ({n})", font="5.5p,Helvetica,black", justify=j, offset=o)
+    fig.text(position="BL", offset="0.1c/0.1c", justify="BL", font="5p,Helvetica,gray25", text="symbol area ~ number of families of @~\\263@~5 events")
+    fig.text(position="TL", text="E", font="8p,Helvetica-Bold,black", justify="TR", offset="-1.0c/0c", no_clip=True)
+    save(fig, "fig5_clustering")
+
+
+# ------------------------------------------------------------------ Fig. 6: short-lived processes
+def _obs_near(st, lon, lat, km, days):
+    s = st[st.sea]
+    d = np.hypot((s.lon - lon) * 111.2 * np.cos(np.radians(lat)), (s.lat - lat) * 111.2)
+    s = s[d < km]
+    return np.array([((s.epoch_start <= t) & (s.epoch_end >= t)).sum() for t in days])
+
+
+def fig_short(a):
+    """A: Axial before the April 2015 eruption; B: the May 2013 Escanaba swarm; C: the persistent Gorda source near
+    41.85 N, 126.1 W; D: the western Mendocino transform, 2012-2016, with the ocean-bottom stations nearby."""
+    tmp = tempfile.mkdtemp(); config()
+    ez = pd.read_csv(CL / "events_zbz.csv.gz", parse_dates=["time"])
+    fam = pd.read_csv(CL / "families_zbz.csv", parse_dates=["start", "end"])
+    reg = pd.read_csv(CL / "regions_zbz.csv").set_index("region")
+    ev, faults, st = events(), fault_surfaces(), stations()
+    fig = pygmt.Figure()
+    cur = [-0.5, -2.0]                                  # start 2 cm up: PyGMT layouts begin at page y = 0
+    def goto(x, y):
+        fig.shift_origin(xshift=f"{x - cur[0]:.3f}c", yshift=f"{y - cur[1]:.3f}c"); cur[:] = [x, y]
+    W2, H2, Y1 = 7.6, 4.6, 6.6
+    # ---- A: Axial
+    goto(1.1, Y1)
+    t0, t1 = pd.Timestamp("2014-10-01", tz="UTC"), pd.Timestamp("2015-07-01", tz="UTC")   # Axial is in the catalog from Oct 2014 (OBS)
+    ax = ez[(ez.region == "AX") & ez.in_analysis & ez.time.between(t0, t1)]
+    wk = ax.set_index("time").resample("7D").size()
+    sw = fam[(fam.region == "AX") & (fam.type == "swarm")]
+    sw = sw[sw.start.dt.tz_localize("UTC").between(t0, t1)] if sw.start.dt.tz is None else sw[sw.start.between(t0, t1)]
+    mo = sw.groupby(sw.start.dt.to_period("M")).size()
+    T = lambda t: pd.Timestamp(t).strftime("%Y-%m-%dT")
+    with pygmt.config(FORMAT_DATE_MAP="o", FORMAT_TIME_PRIMARY_MAP="abbreviated"):
+        fig.basemap(region=[T(t0), T(t1), 0, wk.max() * 1.15], projection=f"X{W2}c/{H2}c",
+                frame=["WSn", "pxa1Of1o", "sxa1Y", f"ya{_tick(wk.max())}+levents @~\\263@~ M@-c@- ({reg.loc['AX', 'Mc']}) per week"])  # noqa
+    xs = [T(t) for t in wk.index]
+    fig.plot(x=xs + xs[::-1], y=list(wk.values) + [0] * len(xs), fill="gray80", close=True)
+    fig.plot(x=xs, y=wk.values, pen="0.5p,gray35")
+    erupt = "2015-04-24T08:00"
+    fig.plot(x=[erupt, erupt], y=[0, wk.max() * 1.15], pen="0.8p,#D55E00,4_2")
+    fig.text(x=erupt, y=wk.max() * 1.08, text="eruption 24 Apr 2015", font="5.5p,Helvetica,#D55E00", justify="RM", offset="-0.08c/0c")
+    fig.basemap(region=[T(t0), T(t1), 0, max(18, mo.max() * 1.15)], projection=f"X{W2}c/{H2}c", frame=["E", "ya4f2+lswarm families per month"])
+    mx = [T(p.to_timestamp() + pd.Timedelta(days=15)) for p in mo.index]
+    fig.plot(x=mx, y=mo.values, style="c0.14c", fill="#D55E00", pen="0.3p,white")
+    fig.plot(x=mx, y=mo.values, pen="0.6p,#D55E00")
+    fig.text(position="TL", offset="0.1c/-0.1c", justify="TL", font="6p,Helvetica-Bold,black", text="Axial Seamount", fill="white@15")
+    tagxy = [(cur[0] - 1.0, cur[1] + H2, "A")]
+    # ---- B: West Blanco swarm of June 2015, distance along the transform against time
+    goto(1.1 + W2 + 1.9, Y1)
+    fr0 = fam[(fam.region == "BL") & (fam.start.dt.strftime("%Y-%m") == "2015-06")].sort_values("n_all").iloc[-1]
+    e = ez[ez.family_id == int(fr0.family_id)].sort_values("time")
+    az = 111.0                                                             # Blanco strike
+    x = (e.lon - e.lon.mean()) * 111.2 * np.cos(np.radians(e.lat.mean())); y = (e.lat - e.lat.mean()) * 111.2
+    dist = (x * np.sin(np.radians(az)) + y * np.cos(np.radians(az))).to_numpy()
+    days = ((e.time - e.time.iloc[0]).dt.total_seconds() / 86400).to_numpy()
+    dmax = 12.0
+    keep = days <= dmax
+    pygmt.makecpt(cmap="lajolla", series=[1.5, 5.0], reverse=True, output=f"{tmp}/m.cpt", background=True)
+    fig.basemap(region=[-0.3, dmax, dist.min() - 2, dist.max() + 2], projection=f"X{W2}c/{H2}c",
+                frame=["WSne", f"xa2f1+ldays since {e.time.iloc[0]:%d %b %Y %H:%M} UTC", "ya10f5+ldistance along 111@. (km), ESE positive"])
+    ek = e[keep]; o = np.argsort(ek.M.fillna(0).to_numpy())
+    fig.plot(x=days[keep][o], y=dist[keep][o], size=np.minimum(msize(ek.M.to_numpy()[o], 1.8), 0.4), style="c", fill=ek.M.fillna(1.5).to_numpy()[o],
+             cmap=f"{tmp}/m.cpt", pen="0.15p,gray20")
+    big = ek.M.to_numpy() >= 5.0
+    fig.plot(x=days[keep][big], y=dist[keep][big], style="a0.32c", fill="white", pen="0.5p,black")
+    for dd, yy, mm in zip(days[keep][big], dist[keep][big], ek.M.to_numpy()[big]):
+        fig.text(x=dd, y=yy, text=f"M {mm:.1f}", font="5.5p,Helvetica-Bold,black", justify="LM", offset="0.22c/0c")
+    fig.text(position="BR", offset="-0.1c/0.1c", justify="BR", font="5.5p,Helvetica,black", fill="white@15",
+             text=f"{keep.sum()} events in {dmax:g} days ({len(e)} in the family, {fr0.duration_days:.0f} days)")
+    fig.text(position="TL", offset="0.1c/-0.1c", justify="TL", font="6p,Helvetica-Bold,black", fill="white@15", text="West Blanco swarm, June 2015")
+    fig.colorbar(cmap=f"{tmp}/m.cpt", position=f"JMR+o0.2c/0c+w{H2 * 0.7:.1f}c/0.12c", frame=["xa1+lM"])
+    tagxy.append((cur[0] - 1.0, cur[1] + H2, "B"))
+    # ---- C: Gorda source, map
+    goto(1.1, 0)
+    rc = [-126.45, -125.6, 41.68, 42.05]
+    wc = W2 - 0.6
+    proj = f"M{wc}c"
+    with pygmt.config(FORMAT_GEO_MAP="ddd.xF"):
+        basemap(fig, rc, proj, tmp, frame=["WSne", "xa0.2f0.1", "ya0.1f0.05"])
+    q = ev[ev.qc & ev.lon.between(*rc[:2]) & ev.lat.between(*rc[2:])].sort_values("M", na_position="first")
+    pygmt.makecpt(cmap="batlow", series=[2010, 2017], output=f"{tmp}/yr.cpt", background=True)
+    fig.plot(x=q.lon, y=q.lat, size=msize(q.M, 2.0), style="c", fill=q.time.dt.year + q.time.dt.dayofyear / 366, cmap=f"{tmp}/yr.cpt",
+             pen="0.15p,gray20", transparency=10)
+    for f in faults:
+        if f["id"] in ("GO010", "GO011", "GO014", "GO017"):
+            fig.plot(x=f["top"][:, 0], y=f["top"][:, 1], pen=f"1.2p,{f['color']}")
+            iN = int(np.argmax(f["top"][:, 1]))
+            fig.text(x=f["top"][iN, 0], y=f["top"][iN, 1], text=f["id"], font=f"5p,Helvetica-Bold,{f['color']}",
+                     justify="BR" if f["top"][iN, 0] > rc[1] - 0.12 else "BC", offset="0c/0.08c", fill="white@30")
+    mt = mctx.load_mt(rc, None)
+    if mt is not None and len(mt):
+        inw = mt.time.between(pd.Timestamp("2010-01-01", tz="UTC"), pd.Timestamp("2017-01-01", tz="UTC"))
+        mctx.draw_mechanisms(fig, mt[~inw], 0.32, fill="gray60", pen="0.2p,gray30")
+        mctx.draw_mechanisms(fig, mt[inw], 0.32, fill="gray15", pen="0.2p,black")
+        for _, r in mt.iterrows():
+            fig.text(x=r.lon, y=r.lat, text=f"{r.time:%Y}", font="4.5p,Helvetica,black", offset="0c/-0.3c")
+    fig.colorbar(cmap=f"{tmp}/yr.cpt", position=f"JMR+o0.25c/0c+w{map_height(rc, wc) * 0.7:.1f}c/0.12c", frame=["xa1+lyear"])
+    fig.text(position="TL", offset="0.1c/-0.1c", justify="TL", font="6p,Helvetica-Bold,black", fill="white@15", text="Gorda plate, 41.85@.N 126.1@.W")
+    tagxy.append((cur[0] - 1.0, cur[1] + map_height(rc, wc), "C"))
+    # ---- D: western Mendocino transform, longitude against time
+    goto(1.1 + W2 + 1.9, 0)
+    t0, t1 = pd.Timestamp("2012-01-01", tz="UTC"), pd.Timestamp("2017-01-01", tz="UTC")
+    lon0, lon1 = -127.6, -124.9
+    m = ev[ev.qc & ev.lat.between(40.25, 40.62) & ev.lon.between(lon0, lon1) & ev.time.between(t0, t1)].sort_values("M", na_position="first")
+    days = pd.date_range("2012-01-01", "2017-01-01", freq="7D")
+    nobs = _obs_near(st, -126.2, 40.45, 120, days)
+    fig.basemap(region=[T(t0), T(t1), lon0, lon1], projection=f"X{W2}c/{H2}c", frame=["WSne", "xa1Yf3o", "ya0.5f0.25+llongitude (@.E)"])
+    on = nobs > 0
+    for i0 in np.flatnonzero(on & ~np.r_[False, on[:-1]]):
+        i1 = i0
+        while i1 + 1 < len(on) and on[i1 + 1]:
+            i1 += 1
+        fig.plot(x=[T(days[i0]), T(days[i1]), T(days[i1]), T(days[i0])], y=[lon0, lon0, lon1, lon1], fill="#56B4E9@80", close=True)
+    fig.plot(x=[T(t) for t in m.time], y=m.lon, size=np.minimum(msize(m.M, 1.6), 0.4), style="c", fill="gray30", pen="0.1p,white", transparency=20)
+    big = mctx.load_mt([lon0, lon1, 40.25, 40.62], None)
+    if big is not None:
+        big = big[big.time.between(t0, t1) & (big.Mw >= 5.0)]
+        fig.plot(x=[T(t) for t in big.time], y=big.lon, style="a0.22c", fill="#D55E00", pen="0.25p,black")
+        for _, r in big.iterrows():
+            late = r.time > pd.Timestamp("2016-07-01", tz="UTC")
+            fig.text(x=T(r.time), y=r.lon, text=f"{r.Mw:.1f}", font="5p,Helvetica-Bold,#D55E00", justify="RM" if late else "LM",
+                     offset="-0.15c/0c" if late else "0.15c/0c",
+                     fill="white@30", clearance="0.02c/0.01c")
+    fig.text(position="TL", offset="0.1c/-0.1c", justify="TL", font="6p,Helvetica-Bold,black", fill="white@15",
+             text="Mendocino transform, 40.25-40.62@.N")
+    fig.text(position="BL", offset="0.1c/0.1c", justify="BL", font="5p,Helvetica,#1f77b4", fill="white@15",
+             text="blue: ocean-bottom stations within 120 km; stars: ComCat M@-w@- @~\\263@~ 5")
+    tagxy.append((cur[0] - 1.0, cur[1] + H2, "D"))
+    goto(0, 0)
+    Htot = Y1 + H2
+    fig.basemap(region=[0, FULL, 0, Htot], projection=f"X{FULL}c/{Htot}c", frame="+n")
+    for xx, yy, t in tagxy:
+        fig.text(x=xx, y=yy, text=t, font="8p,Helvetica-Bold,black", justify="TL", no_clip=True)
+    save(fig, "fig6_short_lived")
+
+
+def _tick(v):
+    for t in (5, 10, 20, 50, 100, 200, 500, 1000):
+        if v / t <= 6:
+            return t
+    return 2000
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("overview"); sub.add_parser("faults"); sub.add_parser("all")
+    sub.add_parser("overview"); sub.add_parser("faults"); sub.add_parser("clusters"); sub.add_parser("short"); sub.add_parser("all")
     z = sub.add_parser("zoom"); z.add_argument("region", choices=list(REGIONS)); z.add_argument("--width", type=float, default=TWO3)
     z.add_argument("--color", choices=["fault", "depth", "time"], default="fault")
     p = sub.add_parser("perspective"); p.add_argument("region", choices=list(REGIONS)); p.add_argument("--width", type=float, default=TWO3)
@@ -555,6 +785,10 @@ def main(argv=None):
         fig_overview(a)
     if a.cmd in ("faults", "all"):
         fig_faults(a)
+    if a.cmd in ("clusters", "all"):
+        fig_clusters(a)
+    if a.cmd in ("short", "all"):
+        fig_short(a)
     if a.cmd == "zoom":
         fig_zoom(a)
     if a.cmd == "perspective":

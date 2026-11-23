@@ -85,7 +85,11 @@ earthquakes, never to build them. Table S4: `fault_surfaces_v0_literature.csv` a
 [TO ADAPT from the catalog draft, `paper/main.qmd`: data and stations; ensemble picking and pick
 completion (ver3 to ver6); association and location; quality control; known data issues; Route A
 magnitudes (window selection by phase and distance, inversion, ComCat anchoring, Mw above 4.5); offshore
-location check against bathymetry (Gorda Ridge axial valley).] Depth limitations: 23.5% of events above
+location check against bathymetry (Gorda Ridge axial valley).] Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
+including the 8 December 2016 Mw 6.6 on the Mendocino transform (10 at the northern edge, 3 offshore in
+2016 without ocean-bottom stations, 1 in the 2016 northern California pick gap, 1 on the Blanco in 2011;
+script in the figure notes). [TO ASK Ian: association of the 2016 Mw 6.6 (event 172113 at 14:51:18, 4 P
+and 1 S, placed near Mount St. Helens).] Depth limitations: 23.5% of events above
 the surface with depths read below sea level, 16.2% below the local surface; 3D relocation in progress.
 
 # Text S6. Clustering: validation and sensitivity

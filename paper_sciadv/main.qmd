@@ -148,16 +148,45 @@ patches [@McGuire2005; @Roland2009; @Boettcher2009; @Kuna2019].
 
 ## Short-lived processes caught by the moving array
 
-[TO WRITE with Fig. 6.] Candidates, each with its evidence so far:
-(i) at Axial, swarm families rise from 1 per month in November 2014 to 16 in March 2015 before the April
-2015 eruption, in a catalog independent of the cabled array [@Wilcock2016];
-(ii) on the Gorda Ridge, a May 2013 swarm in the northern Escanaba Trough migrates at about 10 km/day,
-a dike-like rate;
-(iii) in the Gorda plate near 41.85°N, 126.1°W, a WNW-striking right-lateral source with repeated
-M 4–5.7 events and no named fault;
-(iv) a swarm off Brookings, Oregon, in August–November 2012 with no published counterpart;
-(v) the Mendocino transform segment that ruptured in the 2016 Mw 6.6 earthquake was active in 2015,
-before it.
+The catalog resolves processes that last hours to months wherever stations were close (Fig. 6). At
+Axial Seamount, where the catalog uses the cabled observatory stations from November 2014, the weekly
+number of events above Mc rose from about 60 in November 2014 to about 300 in mid-March 2015, and swarm
+families from 1 per month to 16 in March and 13 in April (Fig. 6A). The eruption week of 24 April holds
+1,021 events; within four weeks the rate fell below 15 per week and then to almost none above Mc 0.75.
+This is the build-up and shutdown described from the cabled array and from deformation
+[@Wilcock2016; @Nooner2016]; it is not an independent detection, and its value here is to show that the
+nearest-neighbor classification sees the precursory swarms as swarms.
+
+On the West Blanco transform, the swarm of 1 June 2015 began with an M 5.8 at 06:52 UTC, followed by an
+M 5.4 four hours later about 5 km to the east and an M 5.9 thirteen hours after the first, 17 km to the
+west (Fig. 6B). Within six hours, events spanned 23 km of the transform; within one day, 41 km, the
+length the family kept for the next 64 days (755 events). Seismicity spreading to 40 km in a day, with
+the largest events in sequence rather than as mainshock and aftershocks, matches swarms on oceanic
+transforms that are driven by aseismic slip [@McGuire2005; @Roland2009].
+
+In the Gorda plate near 41.85°N, 126.1°W, one source has produced strike-slip earthquakes of M 4–5.9
+in 1996, 1997, 2006, 2014, 2016, 2019, 2020 and 2026 (ComCat moment tensors), and 272 well-recorded
+events in our catalog (Fig. 6C). The tensors have one plane striking NW–WNW and the other NE. Our
+surfaces there include both orientations (two striking 114–124°, one striking 34°), and the epicenters
+are only weakly elongated (aspect ratio 1.7), so the v4 locations cannot tell a WNW right-lateral fault
+from a NE left-lateral one like the fault of the 1991 Mw 7.1 nearby. The relocation and focal mechanisms
+from our picks are the tests.
+
+The moving array also shows where the catalog is blind. Along the western Mendocino transform,
+seismicity appears along the whole segment when ocean-bottom stations were within 120 km, and only
+events near the coast or above M 4 remain when they were not (Fig. 6D). The Mw 6.6 of 8 December 2016,
+after the array left, is missing from the catalog; only its M 4.7 aftershock is there, and an event
+mislocated near Mount St. Helens 93 s after the origin time is probably part of its wavefield wrongly
+associated. Of the 61 ComCat earthquakes of M ≥ 5 in 2010–2016 inside the catalog area, 46 are in the
+catalog; 10 of the 15 missing lie north of 49.3°N at the edge of the network, 3 are offshore in 2016
+(the Mw 6.6 and an M 5.1–5.0 pair in the Gorda plate), 1 is in northern California in 2016, where picks
+are missing (Text S5), and 1 is on the Blanco in 2011. Rates over years offshore cannot be read from this
+catalog; changes over hours to months within one deployment can.
+
+[TO CHECK, not in Fig. 6: a swarm off Brookings, Oregon, July–September 2012 (family 346, 28 events,
+GO020). Dropped after checking: a "dike-like" migration in the May 2013 Escanaba swarm (the events
+scatter by ±5 km with no trend and depths at or above sea level; it is a 15-hour burst); a 2015
+precursor on the Mendocino transform (2015 looks like 2013–2014 while stations were present).]
 
 # Discussion
 
@@ -173,7 +202,8 @@ before it.
 3. **Thermal control of seismic behavior at plate scale.** Swarm-dominated ridges and transforms versus
    productive sequences at the triple junction and isolated forearc events, in one catalog.
 4. **What a moving array can and cannot do.** Spatial structure and processes of hours to months, yes;
-   rates over years, no. Completeness maps (Fig. 2) bound every comparison.
+   rates over years, no. Completeness maps (Fig. 2) and the Mendocino transform record (Fig. 6D) bound
+   every comparison.
 5. **Limits.** Absolute depths and dips await the 3D relocation; the per-region Mc keeps 27,555 events
    for clustering, so microswarms at the volcanoes are below it; focal mechanisms from our picks will test
    the fault surfaces.
@@ -254,6 +284,13 @@ https://denolle-lab.github.io/cascadia_obs_ensemble/; code: https://github.com/D
   events on faults by region.
 - **Fig. 4.** Blanco strands: events by strand, separation tests (Ashman's D overall and per year),
   published strands and step-overs.
-- **Fig. 5.** Clustering: rescaled time–distance densities by setting; background share, swarm share and
+- **Fig. 5.** Clustering (`figures/fig5_clustering`): rescaled time–distance densities by setting with each
+  region's threshold; share of each class by region; swarm share against aftershock productivity. Was:
+  rescaled time–distance densities by setting; background share, swarm share and
   tree depth by region.
-- **Fig. 6.** Short-lived processes: Axial pre-eruption swarms, Escanaba migration, the Gorda WNW source.
+- **Fig. 6.** Short-lived processes (`figures/fig6_short_lived`): (A) Axial events per week above Mc and swarm
+  families per month before and after the April 2015 eruption; (B) the West Blanco swarm of June 2015,
+  distance along the transform against time; (C) the persistent Gorda plate source near 41.85°N, 126.1°W,
+  events by year with fault surfaces and ComCat moment tensors (1996–2026, dark: 2010–2016); (D) the
+  western Mendocino transform, longitude against time, with periods when ocean-bottom stations were
+  within 120 km (blue) and ComCat Mw ≥ 5 (stars).

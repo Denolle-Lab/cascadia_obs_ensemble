@@ -270,7 +270,10 @@ def main():
         f = path(e["file"])
         cache = BIG / f"{cid}.parquet"
         if a.only is not None and cid not in a.only and cid != ref_id and cache.exists():
-            tables[cid] = pd.read_parquet(cache); continue
+            tables[cid] = pd.read_parquet(cache)
+            # keep registry.json complete whether a catalog was recomputed or read from the cache
+            e["_rows"], e["_md5"] = len(tables[cid]), (md5(f) if f.exists() else None)
+            continue
         if not f.exists():
             print(f"{cid}: {f} missing, skipped"); continue
         c = READERS[e["adapter"]](f)[COLS].reset_index(drop=True)

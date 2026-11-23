@@ -91,12 +91,16 @@ def main():
     t = pd.read_parquet(BIG / f"{latest}.parquet")
     r0 = pd.read_parquet(BIG / f"{ref}.parquet").drop_duplicates("v4_id").set_index("v4_id")
     m = t[t.located].dropna(subset=["v4_id"]).join(r0[["lat", "lon", "depth"]], on="v4_id", rsuffix="_r").dropna(subset=["lat_r"])
+    m = m[np.isfinite(m.depth) & np.isfinite(m.depth_r)]
+    if m.empty:
+        raise SystemExit(f"fig_compare: no located events of {latest} linked to {ref}; panels D and E cannot be drawn")
     dz = (m.depth - m.depth_r).clip(-20, 20)
     from compare_catalogs import dist_km
     dh = dist_km(m.lat.to_numpy(), m.lon.to_numpy(), m.lat_r.to_numpy(), m.lon_r.to_numpy()).clip(0, 20)
+    dh = dh[np.isfinite(dh)]
     hw = 2 * W + 0.35
     fig.shift_origin(xshift=f"{-2 * (W + 0.35)}c", yshift="-4.3c")
-    ymz = 1.15 * 100 * np.histogram(dz, np.arange(-20, 20.5, 0.5))[0].max() / len(dz)
+    ymz = max(1.0, 1.15 * 100 * np.histogram(dz, np.arange(-20, 20.5, 0.5))[0].max() / len(dz))
     fig.histogram(data=dz, region=[-20, 20, 0, ymz], projection=f"X{hw}c/3c", series=0.5, fill="#0072B2", pen="0.1p,white",
                   histtype=1, frame=["WSne", "xa5f1+l" + f"depth {latest} - {ref} (km; + = deeper)", "yaf+lshare (%)"])
     fig.text(position="TL", text="D", font="8p,Helvetica-Bold", offset="-0.35c/0.35c", no_clip=True, justify="TL")
@@ -104,7 +108,7 @@ def main():
     fig.text(position="BL", text=f"<= -20: {100 * np.mean(m.depth - m.depth_r <= -20):.1f}%", font="5.5p", offset="0.05c/0.6c", justify="BL")
     fig.text(position="BR", text=f">= 20: {100 * np.mean(m.depth - m.depth_r >= 20):.1f}%", font="5.5p", offset="-0.05c/0.6c", justify="BR")
     fig.shift_origin(xshift=f"{hw + 0.9}c")
-    ymh = 1.15 * 100 * np.histogram(dh, np.arange(0, 20.25, 0.25))[0].max() / len(dh)
+    ymh = max(1.0, 1.15 * 100 * np.histogram(dh, np.arange(0, 20.25, 0.25))[0].max() / max(len(dh), 1))
     fig.histogram(data=dh, region=[0, 20, 0, ymh], projection=f"X{W}c/3c", series=0.25, fill="#D55E00", pen="0.1p,white",
                   histtype=1, frame=["WSne", "xa5f1+lhorizontal shift (km)", "yaf"])
     fig.text(position="TL", text="E", font="8p,Helvetica-Bold", offset="-0.35c/0.35c", no_clip=True, justify="TL")

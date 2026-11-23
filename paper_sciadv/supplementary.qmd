@@ -82,10 +82,47 @@ earthquakes, never to build them. Table S4: `fault_surfaces_v0_literature.csv` a
 
 # Text S5. Building the catalog
 
-[TO ADAPT from the catalog draft, `paper/main.qmd`: data and stations; ensemble picking and pick
-completion (ver3 to ver6); association and location; quality control; known data issues; Route A
-magnitudes (window selection by phase and distance, inversion, ComCat anchoring, Mw above 4.5); offshore
-location check against bathymetry (Gorda Ridge axial valley).] Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
+(Adapted from the catalog draft, `paper/main.qmd`, Data and Methods.)
+
+**Data.** Continuous data from 2010 to 2016 were retrieved with ROVER into a day-file archive read through
+an indexed client (pnwstore); the `NC` and `BK` networks were requested from the NCEDC FDSN service.
+Picks of catalog v4 come from 696 stations of 24 networks (`7A`, `7D`, `BK`, `C8`, `CC`, `CN`, `GS`,
+`NC`, `NV`, `OO`, `PB`, `TA`, `UO`, `UW`, `X4`, `X9`, `XD`, `XG`, `XU`, `YG`, `YH`, `YW`, `Z5`, `ZZ`),
+among them the Cascadia Initiative ocean-bottom stations [@Stone2018] and the cabled stations of the
+Ocean Observatories Initiative at Axial Seamount.
+
+**Picking.** ELEP [@Yuan2023] combines five EQTransformer models [@Mousavi2020] distributed by
+SeisBench [@Woollam2022] (original, ETHZ, INSTANCE, SCEDC, STEAD) by second-order semblance over 0.5 s,
+on 60 s windows stepped by 30 s, after a 4–15 Hz band-pass; a pick is the semblance maximum of each
+segment above 0.05. Two region passes (2011–2015, 123–127°W; 2010–2015, 122–129°W) produced the ver3
+table (39.6 million picks). Three fills completed it: ver4 adds region-run station-days left out of ver3
+(9.9 million picks); ver5 adds ocean-bottom station-days without picks, including the Axial cabled
+stations (11.4 million); ver6 adds the land strip 122–123°W (12.7 million), for 73.6 million picks on
+509,249 station-days. Every pick keeps its identifier across versions.
+
+**Association and location.** GENIE [@McBrearty2023], trained for 38–51°N, 119–132°W on synthetic
+events in a 3D model, associated the ver6 picks day by day on the stations available each day; events
+with at least five stations were kept and located, then relocated with GraphDD [@McBrearty2025] on
+catalog and cross-correlation differential times. Catalog v4 (I. McBrearty) has 172,340 events and
+2,503,189 arrivals. Quality metrics are the numbers of P and S picks, stations, the azimuthal gap and the
+RMS residual; the "QC" subset used for fault surfaces requires at least 4 P and 4 S picks.
+
+**Magnitudes (Route A).** Wood–Anderson amplitudes are measured once per station-day for every pick, in
+windows that grow with distance after association (P: up to 1 + 0.03r s, S: up to 2 + 0.06r s); 99.6% of
+v4 arrivals have one. Station magnitudes with the Hutton–Boore distance term are inverted for event and
+station terms (separate for each deployment epoch) within 150 km, anchored to 3,416 ComCat local
+magnitudes (scatter 0.21), and replaced by regional moment magnitudes above M 4.5. 130,767 events have a
+magnitude.
+
+**Known data issues.** Ocean-bottom records carry ship noise, short-duration events, T-phases and high
+microseism noise on the shelf [@Hilmo2020]; fragmented station-days produce picks at every data join
+(1,846 station-days removed in ver6, 6,073 flagged in ver5); `NC` and `BK` picks are missing in 2016 and
+parts of 2010–2011 (Text S7). Depth limitations: see below.
+
+**Offshore location check.** On the Gorda Ridge, catalog epicenters fall on the axial valley, while ComCat
+epicenters of the same events lie 10–20 km east.
+
+Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
 including the 8 December 2016 Mw 6.6 on the Mendocino transform (10 at the northern edge, 3 offshore in
 2016 without ocean-bottom stations, 1 in the 2016 northern California pick gap, 1 on the Blanco in 2011;
 script in the figure notes). [TO ASK Ian: association of the 2016 Mw 6.6 (event 172113 at 14:51:18, 4 P

@@ -540,6 +540,119 @@ def fig_faults(a):
     save(fig, "fig3_fault_surfaces")
 
 
+# ------------------------------------------------------------------ Fig. 4: Blanco strands
+BL_REF, BL_AZ = (-130.55, 44.52), 111.0          # NW end near the Juan de Fuca ridge-transform intersection; transform strike
+BL_BASINS = [(12, "WBD"), (95, "SD"), (150, "CAS"), (215, "Blanco Ridge"), (300, "GD")]
+
+
+_BL_TRACE = None
+
+
+def _blanco_trace():
+    """PB2002 Blanco transform as one polyline (km, local), NW to SE; ridge segments at its ends excluded."""
+    global _BL_TRACE
+    if _BL_TRACE is None:
+        pb = mctx.plate_boundaries([-130.8, -126.4, 42.7, 44.8])
+        segs = [L for L in pb["TF"] if L[:, 0].min() < -126.4 and L[:, 0].max() > -130.8]
+        L = max(segs, key=len)
+        L = L[np.argsort(L[:, 0])]
+        L = L[(L[:, 0] >= -130.7) & (L[:, 0] <= -126.5)]
+        x = (L[:, 0] - BL_REF[0]) * 111.2 * np.cos(np.radians(44.0)); y = (L[:, 1] - BL_REF[1]) * 111.2
+        _BL_TRACE = np.c_[x, y]
+    return _BL_TRACE
+
+
+def _blanco_xy(lon, lat):
+    """lon, lat -> km along the PB2002 Blanco trace (arc length from its NW end) and across it (positive to the NE side)."""
+    T = _blanco_trace()
+    P = np.c_[(np.asarray(lon, float) - BL_REF[0]) * 111.2 * np.cos(np.radians(44.0)), (np.asarray(lat, float) - BL_REF[1]) * 111.2]
+    A, B = T[:-1], T[1:]; AB = B - A; L2 = (AB ** 2).sum(1); cum = np.r_[0, np.cumsum(np.sqrt(L2))]
+    t = np.clip(((P[:, None, :] - A[None]) * AB[None]).sum(2) / L2[None], 0, 1)
+    Q = A[None] + t[..., None] * AB[None]
+    d2 = ((P[:, None, :] - Q) ** 2).sum(2); k = d2.argmin(1); i = np.arange(len(P))
+    along = cum[k] + t[i, k] * np.sqrt(L2[k])
+    cross = AB[k, 0] * (P[i, 1] - A[k, 1]) - AB[k, 1] * (P[i, 0] - A[k, 0])
+    return along, np.sign(cross) * np.sqrt(d2[i, k])
+
+
+def fig_blanco(a):
+    """A: Blanco events in a transform-aligned frame, coloured by strand, with strand top edges and published basins;
+    B: separation of overlapping parallel strands (Ashman's D, overall and per year); C: dip needed if a pair were one fault."""
+    tmp = tempfile.mkdtemp(); config()
+    ev, faults = events(), fault_surfaces()
+    V0 = D / "faults" / "v0"
+    sep = pd.read_csv(V0 / "fault_surfaces_v0_strand_separation.csv")
+    lit = pd.read_csv(V0 / "fault_surfaces_v0_literature.csv").set_index("surface_id")
+    bl = [f for f in faults if f["id"].startswith("BL")]
+    fig = pygmt.Figure()
+    cur = [-0.5, -2.0]
+    def goto(x, y):
+        fig.shift_origin(xshift=f"{x - cur[0]:.3f}c", yshift=f"{y - cur[1]:.3f}c"); cur[:] = [x, y]
+    # ---- A: strip view
+    W, H, Y1 = FULL - 1.6, 5.2, 6.6
+    goto(1.2, Y1)
+    q = ev[ev.qc & ev.lon.between(-130.8, -126.4) & ev.lat.between(42.7, 44.8)].copy()
+    q["u"], q["v"] = _blanco_xy(q.lon, q.lat)
+    umax = float(np.ceil(_blanco_xy(*_blanco_trace()[-1:].T * 0 + np.array([[-126.5], [43.0]]))[0][0] / 10) * 10) if False else 370
+    q = q[q.u.between(-5, umax) & q.v.between(-15, 15)]
+    reg = [-5, umax, -15, 15]
+    fig.basemap(region=reg, projection=f"X{W}c/{H}c", frame=["WSne", "xa50f10+ldistance along the PB2002 Blanco trace from the Juan de Fuca ridge (km)",
+                                                             "ya5f1+ldistance from the trace (km, NE positive)"])
+    off = q[q.fault.isna() | ~q.fault.fillna("").str.startswith("BL")]
+    fig.plot(x=off.u, y=off.v, style="c0.03c", fill="gray65", transparency=40)
+    col = {f["id"]: f["color"] for f in bl}
+    on = q[q.fault.fillna("").str.startswith("BL")]
+    for c_, g in on.groupby(on.fault.map(col)):
+        fig.plot(x=g.u, y=g.v, style="c0.035c", fill=c_, transparency=20)
+    for f in bl:
+        u, v = _blanco_xy(f["top"][:, 0], f["top"][:, 1])
+        fig.plot(x=u, y=v, pen=f"1.6p,{f['color']}"); fig.plot(x=u, y=v, pen="0.3p,white")
+        fig.text(x=u.mean(), y=v.mean(), text=f["id"], font=f"4.5p,Helvetica-Bold,{f['color']}", offset="0c/0.18c", fill="white@30",
+                 clearance="0.02c/0.01c")
+    for uu, name in BL_BASINS:
+        fig.text(x=uu, y=14.3, text=name, font="6p,Helvetica-Bold,gray20", justify="TC")
+    fig.text(position="BR", offset="-0.1c/0.1c", justify="BR", font="5.5p,Helvetica,black", fill="white@15",
+             text=f"{len(on):,} QC events on {len(bl)} Blanco strands; vertical exaggeration {(H / 30) / (W / (umax + 5)):.1f}:1")
+    tags = [(0.0, Y1 + H + 0.1, "A")]
+    # ---- B: Ashman's D
+    sep = sep.copy()
+    sep["u"] = [np.mean(_blanco_xy(*np.r_[[next(f for f in bl if f["id"] == s_)["top"].mean(0)[:2] for s_ in (r.a, r.b)]].T)[0])
+                if all(any(f["id"] == s_ for f in bl) for s_ in (r.a, r.b)) else np.nan for r in sep.itertuples()]
+    sep = sep.dropna(subset=["u", "D"]).sort_values("u").reset_index(drop=True)
+    WB, HB = 9.6, 4.4
+    goto(1.2, 0)
+    fig.basemap(region=[0.6, 20, -0.7, len(sep) - 0.3], projection=f"X{WB}cl/-{HB}c",
+                frame=["WSne", "xa3f2+lAshman's D (separation of the two strands)", "y+0"])
+    fig.plot(x=[2, 2], y=[-0.7, len(sep) - 0.3], pen="0.6p,#D55E00,4_2")
+    for k, r in sep.iterrows():
+        if np.isfinite(r.D_per_year_min):
+            fig.plot(x=[r.D_per_year_min, max(r.D, r.D_per_year_median)], y=[k, k], pen="1.4p,gray70")
+        fig.plot(x=[r.D], y=[k], style="c0.14c", fill="#0072B2" if r.separation_justified else "white", pen="0.4p,#0072B2")
+        fig.text(x=0.63, y=k, text=f"{r.a}/{r.b}  {r.sep_km:.1f} km", font="4.5p,Helvetica,black", justify="LM")
+    fig.text(x=2.05, y=-0.45, text="D = 2", font="5p,Helvetica,#D55E00", justify="LM")
+    fig.text(position="BR", offset="-0.1c/0.1c", justify="BR", font="5p,Helvetica,gray25", fill="white@15",
+             text="dot: all years; grey: smallest per-year D to the median")
+    tags.append((0.0, HB + 0.1, "B"))
+    # ---- C: dip needed if the pair were one fault
+    goto(1.2 + WB + 1.6, 0)
+    WC = FULL - cur[0] - 0.4
+    dd = sep.dip_if_single_fault.clip(0, 90)
+    fig.basemap(region=[0, 4, 0, 90], projection=f"X{WC}c/{HB}c",
+                frame=["WSne", "xa1f0.5+lseparation of the strands (km)", "ya15f5+ldip needed for one fault (@.)"])
+    fig.plot(x=[0, 4, 4, 0], y=[70, 70, 90, 90], fill="gray92", close=True)
+    fig.text(x=0.1, y=88, text="transform-like dips (70-90@.)", font="5p,Helvetica,gray30", justify="TL")
+    fig.plot(x=sep.sep_km, y=dd, style="c0.16c", fill=np.where(sep.separation_justified, "#0072B2", "white").tolist() if False else "#0072B2",
+             pen="0.4p,gray15")
+    fig.text(x=0.1, y=66, text="below: one fault would need a shallow dip", font="5p,Helvetica,gray30", justify="TL")
+    tags.append((cur[0] - 1.1, HB + 0.1, "C"))
+    goto(0, 0)
+    Ht = Y1 + H + 0.4
+    fig.basemap(region=[0, FULL, 0, Ht], projection=f"X{FULL}c/{Ht}c", frame="+n")
+    for x, y, t in tags:
+        fig.text(x=x, y=y, text=t, font="8p,Helvetica-Bold,black", justify="TL", no_clip=True)
+    save(fig, "fig4_blanco_strands")
+
+
 # ------------------------------------------------------------------ Fig. 5: clustering
 CL = D / "catalog_v4" / "clusters_zbz"
 RNAME = {"AX": "Axial", "EN": "Endeavour", "BL": "Blanco", "GO": "Gorda", "MT": "Mendocino TJ", "WA": "WA forearc",
@@ -773,7 +886,7 @@ def _tick(v):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("overview"); sub.add_parser("faults"); sub.add_parser("clusters"); sub.add_parser("short"); sub.add_parser("all")
+    sub.add_parser("overview"); sub.add_parser("faults"); sub.add_parser("blanco"); sub.add_parser("clusters"); sub.add_parser("short"); sub.add_parser("all")
     z = sub.add_parser("zoom"); z.add_argument("region", choices=list(REGIONS)); z.add_argument("--width", type=float, default=TWO3)
     z.add_argument("--color", choices=["fault", "depth", "time"], default="fault")
     p = sub.add_parser("perspective"); p.add_argument("region", choices=list(REGIONS)); p.add_argument("--width", type=float, default=TWO3)
@@ -785,6 +898,8 @@ def main(argv=None):
         fig_overview(a)
     if a.cmd in ("faults", "all"):
         fig_faults(a)
+    if a.cmd in ("blanco", "all"):
+        fig_blanco(a)
     if a.cmd in ("clusters", "all"):
         fig_clusters(a)
     if a.cmd in ("short", "all"):

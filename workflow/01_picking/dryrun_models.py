@@ -131,68 +131,78 @@ def picks_for(pred, members, dt, npts, nseg, tr0, semb=semblance_vec):
     return pd.concat(out, ignore_index=True)
 
 
+def pick_day(net, sta, day, rec, check=False):
+    """Picks of one station-day for every ensemble in CONFIGS (column ``config``), or None
+    when the day has no vertical or flat data (``rec["status"]`` says which). Fills the
+    timing and count fields of ``rec``."""
+    t0 = time.time()
+    t1 = UTCDateTime(day)
+    raw = get_waveforms(network=net, station=sta, channel="?H?", starttime=t1,
+                        endtime=t1 + 86400, source="pnwstore")
+    sdata, band = select_v5(raw)
+    rec["band"] = band
+    if not sdata:
+        rec["status"] = "no_vertical"
+        return None
+    if np.abs(np.mean(np.diff(sdata.select(channel=f"??{VERTICAL}")[0].data))) <= 1e-8:
+        rec["status"] = "constant"
+        return None
+    sdata.filter(type="bandpass", freqmin=4, freqmax=15)
+    sdata.resample(100)
+    sdata.merge(fill_value="interpolate")
+    a = max(tr.stats.starttime for tr in sdata)
+    b = min(tr.stats.endtime for tr in sdata)
+    for tr in sdata:
+        tr.trim(starttime=a, endtime=b, nearest_sample=True)
+    has_h = [bool(sdata.select(channel=f"??{c}")) for c in ("[1E]", "[2N]")]
+    if all(has_h):
+        sdata = ep.order_components(sdata, raw, "hh_bh_eh", VERTICAL)
+    else:
+        z = sdata.select(channel=f"??{VERTICAL}")[0]
+        sdata = Stream([z, z.copy(), z.copy()])
+    rec["z_copied"] = not all(has_h)
+    n = min(len(tr.data) for tr in sdata[:3])     # trim can leave one-sample differences
+    arr = np.array([tr.data[:n] for tr in sdata[:3]])
+    dt = sdata[0].stats.delta
+    rec["t_pre"] = round(time.time() - t0, 1)
+
+    t = time.time()
+    w_std, w_max, nseg, npts = windows(arr)
+    pred = predict(w_std, w_max, nseg)
+    del w_std, w_max
+    rec["t_infer"] = round(time.time() - t, 1)
+
+    t = time.time()
+    dfs = []
+    for cfg, members in CONFIGS.items():
+        d = picks_for(pred, members, dt, npts, nseg, sdata[0])
+        d["config"] = cfg
+        dfs.append(d)
+        rec[f"n_{cfg}"] = len(d)
+    rec["t_semb"] = round(time.time() - t, 1)
+    if check:
+        t = time.time()
+        ref = picks_for(pred, CONFIGS["a"], dt, npts, nseg, sdata[0], semb=semblance_elep)
+        mine = dfs[0]
+        same = (len(ref) == len(mine) and
+                (ref.pick_time.astype(str).values == mine.pick_time.astype(str).values).all())
+        rec["elep_check"] = "same" if same else f"differ {len(ref)} vs {len(mine)}"
+        rec["t_elep"] = round(time.time() - t, 1)
+    return pd.concat(dfs, ignore_index=True)
+
+
 def run_one(task):
     net, sta, day, outdir, check = task
     fn = os.path.join(outdir, "picks", f"{net}.{sta}.{day}.csv")
     rec = {"network": net, "station": sta, "day": day, "status": "ok"}
     t0 = time.time()
     try:
-        t1 = UTCDateTime(day)
-        raw = get_waveforms(network=net, station=sta, channel="?H?", starttime=t1,
-                            endtime=t1 + 86400, source="pnwstore")
-        sdata, band = select_v5(raw)
-        rec["band"] = band
-        if not sdata:
-            rec["status"] = "no_vertical"
+        df = pick_day(net, sta, day, rec, check)
+        if df is None:
             rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
             return rec
-        if np.abs(np.mean(np.diff(sdata.select(channel=f"??{VERTICAL}")[0].data))) <= 1e-8:
-            rec["status"] = "constant"
-            rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-            return rec
-        sdata.filter(type="bandpass", freqmin=4, freqmax=15)
-        sdata.resample(100)
-        sdata.merge(fill_value="interpolate")
-        a = max(tr.stats.starttime for tr in sdata)
-        b = min(tr.stats.endtime for tr in sdata)
-        for tr in sdata:
-            tr.trim(starttime=a, endtime=b, nearest_sample=True)
-        has_h = [bool(sdata.select(channel=f"??{c}")) for c in ("[1E]", "[2N]")]
-        if all(has_h):
-            sdata = ep.order_components(sdata, raw, "hh_bh_eh", VERTICAL)
-        else:
-            z = sdata.select(channel=f"??{VERTICAL}")[0]
-            sdata = Stream([z, z.copy(), z.copy()])
-        rec["z_copied"] = not all(has_h)
-        n = min(len(tr.data) for tr in sdata[:3])     # trim can leave one-sample differences
-        arr = np.array([tr.data[:n] for tr in sdata[:3]])
-        dt = sdata[0].stats.delta
-        rec["t_pre"] = round(time.time() - t0, 1)
-
-        t = time.time()
-        w_std, w_max, nseg, npts = windows(arr)
-        pred = predict(w_std, w_max, nseg)
-        del w_std, w_max
-        rec["t_infer"] = round(time.time() - t, 1)
-
-        t = time.time()
-        dfs = []
-        for cfg, members in CONFIGS.items():
-            d = picks_for(pred, members, dt, npts, nseg, sdata[0])
-            d["config"] = cfg
-            dfs.append(d)
-            rec[f"n_{cfg}"] = len(d)
-        rec["t_semb"] = round(time.time() - t, 1)
-        if check:
-            t = time.time()
-            ref = picks_for(pred, CONFIGS["a"], dt, npts, nseg, sdata[0], semb=semblance_elep)
-            mine = dfs[0]
-            same = (len(ref) == len(mine) and
-                    (ref.pick_time.astype(str).values == mine.pick_time.astype(str).values).all())
-            rec["elep_check"] = "same" if same else f"differ {len(ref)} vs {len(mine)}"
-            rec["t_elep"] = round(time.time() - t, 1)
         os.makedirs(os.path.dirname(fn), exist_ok=True)
-        pd.concat(dfs, ignore_index=True).to_csv(fn + ".tmp", index=False)
+        df.to_csv(fn + ".tmp", index=False)
         os.replace(fn + ".tmp", fn)
     except Exception as e:  # keep going; the log records why
         rec["status"] = f"error: {type(e).__name__}: {e}"[:300]

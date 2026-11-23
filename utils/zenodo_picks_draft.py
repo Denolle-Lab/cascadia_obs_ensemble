@@ -23,8 +23,8 @@ from pathlib import Path
 
 import requests
 
-TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2016 (ver3, ver4, ver5) and PickBlue "
-         "picks on the same OBS stations, with Route A amplitudes for every ver5 pick (working copy "
+TITLE = ("Cascadia OBS ensemble: ELEP phase picks 2010-2016 (ver3 to ver6) and PickBlue "
+         "picks on the same OBS stations, with Route A amplitudes for every ver5 and ver6 pick (working copy "
          "for the GENIE and GraphDD rerun)")
 DESCRIPTION = """<p>ELEP ensemble phase picks (five EQTransformer models, SeisBench) on
 the Cascadia Initiative ocean-bottom and nearby land stations, 40-50&deg;N, 131-122&deg;W,
@@ -56,12 +56,21 @@ before association. 57.9 M of the 60.9 M picks (95%) have an amplitude; <code>st
 why the others do not. The amplitude columns are stored log-encoded; read them with
 <code>read_amps_v5.py</code>. See <code>ver5_amps_README.md</code>, which lists the changes
 since r1.</li>
+<li><b>ver6</b> (2026-10-26): 73,636,558 picks, ver5 byte for byte followed by 12,717,711 picks
+on the land strip 122-123&deg;W, 40-50&deg;N, 2010-2016 (137,469 station-days, 199 stations,
+128 of them new), picked and measured (Route A amplitudes, same settings as r2) in one pass.
+The new picks are in <code>ver6_added_picks_part1-3.csv.gz</code>, their amplitudes in
+<code>ver6_amps_NET_partNN.parquet</code> (98.8% with an amplitude). 1,846 station-days with
+fragmented data (1.15 M artifact picks) were left out (<code>ver6_dropped_station_days.csv</code>).
+See <code>ver6_README.md</code>.</li>
+<li><b>Stations</b> (<code>stations_ver5_v6.csv</code>): coordinates and epochs of the 728
+stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 </ul>
 <p>All ver4 categories are kept (decision of the PI, 2026-10-05). Any category can still be
 dropped by its pick_id ranges.</p>"""
 
 
-VERSION = "ver3+ver4+ver5+PickBlue+amps r2 working copy"
+VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2 working copy"
 TRIES = 4
 
 

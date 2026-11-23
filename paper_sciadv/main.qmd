@@ -310,7 +310,7 @@ https://denolle-lab.github.io/cascadia_obs_ensemble/; code: https://github.com/D
 # Figures (planned)
 
 - **Fig. 1.** Tectonic setting, stations by deployment year, and the catalog (map and depth sections).
-- **Fig. 2.** Magnitude of completeness: three methods and the change with the moving array.
+- **Fig. 2.** Magnitude of completeness (`figures/fig2a_mc_three_methods`, `fig2b_mc_periods`, from `v4_mc_maps.py`): three methods and the change with the moving array.
 - **Fig. 3.** The 141 fault surfaces: map and 3D views, colored by depth and by uncertainty; share of
   events on faults by region.
 - **Fig. 4.** Blanco strands (`figures/fig4_blanco_strands`): events by strand, separation tests (Ashman's D overall and per year),

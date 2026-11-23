@@ -4,24 +4,27 @@
 
 | step | events |
 |---|---|
-| catalog v5 Track A | 172340 |
-| tier A-C | 129589 |
-| + nphs >= 12 | 60588 |
-| + gap <= 200 | 47668 |
-| + rms <= 0.5 | 47605 |
-| decluster | 23549 |
+| catalog v4-NLL3D (all) | 172340 |
+| outside the ridge regions ['Axial', 'Explorer', 'JdF ridge/plate'] | 141235 |
+| tier A-C | 106659 |
+| + nphs >= 12 | 53854 |
+| + gap <= 200 | 44323 |
+| + rms <= 0.5 | 44260 |
+| decluster (main rule) | 23439 |
+| ridge regions: 31105 events, ridge rule (D-B023) | 16723 |
+| ridge, decluster | 1314 |
 
 ## Pick QC (applied in order; first reason wins)
 
 | filter | picks | P | S | OBS_S | events_lost |
 |---|---|---|---|---|---|
 | no_nll | 344 | 136 | 208 | 166 | 0 |
-| w0 | 72868 | 42349 | 30519 | 12097 | 0 |
+| w0 | 75608 | 43797 | 31811 | 12690 | 0 |
 | duplicate | 0 | 0 | 0 | 0 | 0 |
-| res | 4917 | 4917 | 0 | 0 | 0 |
-| res | 1448 | 0 | 1448 | 847 | 0 |
-| sp | 713 | 0 | 713 | 253 | 0 |
-| event below D-B003 after QC (dropped) | 2374 | 1170 | 1204 | 277 | 121 |
+| res | 5060 | 5060 | 0 | 0 | 0 |
+| res | 1575 | 0 | 1575 | 968 | 0 |
+| sp | 925 | 0 | 925 | 463 | 0 |
+| event below D-B003 after QC (dropped) | 2453 | 1218 | 1235 | 300 | 132 |
 
 ## Thresholds
 
@@ -29,99 +32,101 @@
 |---|---|---|---|---|---|---|
 | P | 0.014 | 0.207 | 0.826 |  |  |  |
 | S | -0.101 | 0.45 | 1.8 |  |  |  |
-| SP | 0.0 | 0.246 | 1.232 | 258699.0 | 104.0 | 713.0 |
+| SP | 0.0 | 0.247 | 1.234 | 262936.0 | 301.0 | 925.0 |
 
 ## Residual threshold alternatives (used picks, w>0)
 
 | phase | sigma_from | applied_to | k | threshold_s | drop_pct | drop_obs_pct | drop_land_pct |
 |---|---|---|---|---|---|---|---|
-| P | iter0 | iter0 | 4 | 0.83 | 3.04 | 4.81 | 2.49 |
-| P | iter0 | iter0 | 5 | 1.03 | 1.38 | 2.66 | 0.98 |
-| P | iter0 | iter0 | 6 | 1.24 | 0.66 | 1.47 | 0.41 |
-| P | iter0 | iter1 | 4 | 0.83 | 1.41 | 2.74 | 1.0 |
-| P | iter0 | iter1 | 5 | 1.03 | 0.58 | 1.44 | 0.32 |
-| P | iter0 | iter1 | 6 | 1.24 | 0.24 | 0.71 | 0.1 |
-| P | iter1 | iter0 | 4 | 0.68 | 5.33 | 7.39 | 4.7 |
-| P | iter1 | iter0 | 5 | 0.86 | 2.7 | 4.42 | 2.18 |
-| P | iter1 | iter0 | 6 | 1.03 | 1.4 | 2.71 | 1.0 |
-| P | iter1 | iter1 | 4 | 0.68 | 2.75 | 4.64 | 2.17 |
-| P | iter1 | iter1 | 5 | 0.86 | 1.23 | 2.51 | 0.84 |
-| P | iter1 | iter1 | 6 | 1.03 | 0.6 | 1.47 | 0.33 |
-| S | iter0 | iter0 | 4 | 1.8 | 1.94 | 3.31 | 1.34 |
-| S | iter0 | iter0 | 5 | 2.25 | 0.66 | 1.29 | 0.39 |
-| S | iter0 | iter0 | 6 | 2.7 | 0.23 | 0.45 | 0.13 |
-| S | iter0 | iter1 | 4 | 1.8 | 0.41 | 0.78 | 0.25 |
-| S | iter0 | iter1 | 5 | 2.25 | 0.12 | 0.23 | 0.07 |
-| S | iter0 | iter1 | 6 | 2.7 | 0.04 | 0.08 | 0.02 |
-| S | iter1 | iter0 | 4 | 1.26 | 6.55 | 9.61 | 5.19 |
-| S | iter1 | iter0 | 5 | 1.58 | 3.31 | 5.09 | 2.52 |
-| S | iter1 | iter0 | 6 | 1.89 | 1.6 | 2.64 | 1.13 |
-| S | iter1 | iter1 | 4 | 1.26 | 1.93 | 3.06 | 1.42 |
-| S | iter1 | iter1 | 5 | 1.58 | 0.81 | 1.39 | 0.56 |
-| S | iter1 | iter1 | 6 | 1.89 | 0.34 | 0.63 | 0.22 |
+| P | iter0 | iter0 | 4 | 0.82 | 3.18 | 4.89 | 2.62 |
+| P | iter0 | iter0 | 5 | 1.02 | 1.45 | 2.73 | 1.03 |
+| P | iter0 | iter0 | 6 | 1.22 | 0.71 | 1.53 | 0.44 |
+| P | iter0 | iter1 | 4 | 0.82 | 1.49 | 2.81 | 1.06 |
+| P | iter0 | iter1 | 5 | 1.02 | 0.63 | 1.49 | 0.35 |
+| P | iter0 | iter1 | 6 | 1.22 | 0.27 | 0.76 | 0.11 |
+| P | iter1 | iter0 | 4 | 0.68 | 5.48 | 7.44 | 4.84 |
+| P | iter1 | iter0 | 5 | 0.85 | 2.82 | 4.47 | 2.28 |
+| P | iter1 | iter0 | 6 | 1.02 | 1.47 | 2.77 | 1.05 |
+| P | iter1 | iter1 | 4 | 0.68 | 2.86 | 4.67 | 2.26 |
+| P | iter1 | iter1 | 5 | 0.85 | 1.3 | 2.55 | 0.89 |
+| P | iter1 | iter1 | 6 | 1.02 | 0.64 | 1.52 | 0.35 |
+| S | iter0 | iter0 | 4 | 1.78 | 2.04 | 3.42 | 1.4 |
+| S | iter0 | iter0 | 5 | 2.23 | 0.72 | 1.38 | 0.42 |
+| S | iter0 | iter0 | 6 | 2.68 | 0.26 | 0.53 | 0.13 |
+| S | iter0 | iter1 | 4 | 1.78 | 0.46 | 0.89 | 0.26 |
+| S | iter0 | iter1 | 5 | 2.23 | 0.14 | 0.27 | 0.07 |
+| S | iter0 | iter1 | 6 | 2.68 | 0.05 | 0.1 | 0.03 |
+| S | iter1 | iter0 | 4 | 1.25 | 6.71 | 9.67 | 5.34 |
+| S | iter1 | iter0 | 5 | 1.56 | 3.44 | 5.2 | 2.62 |
+| S | iter1 | iter0 | 6 | 1.88 | 1.69 | 2.76 | 1.19 |
+| S | iter1 | iter1 | 4 | 1.25 | 2.02 | 3.18 | 1.48 |
+| S | iter1 | iter1 | 5 | 1.56 | 0.87 | 1.49 | 0.59 |
+| S | iter1 | iter1 | 6 | 1.88 | 0.38 | 0.72 | 0.23 |
 
 ## Events by S-pick count after QC
 
 | index | events |
 |---|---|
-| 0 | 30 |
-| 1 | 40 |
-| 2 | 66 |
-| 3 | 141 |
-| 4 | 345 |
-| 5 | 787 |
-| 6 | 1628 |
-| 7 | 2085 |
-| 8 | 2123 |
-| 9 | 1875 |
-| >=10 | 14308 |
+| 0 | 42 |
+| 1 | 74 |
+| 2 | 159 |
+| 3 | 376 |
+| 4 | 721 |
+| 5 | 1002 |
+| 6 | 1750 |
+| 7 | 2182 |
+| 8 | 2127 |
+| 9 | 1878 |
+| >=10 | 14310 |
 
 ## Events below D-B003 after pick QC
 
 | reason | decision | events |
 |---|---|---|
-| gap>200 | drop | 93 |
-| npick<12 | drop | 6 |
-| npick<12 | keep | 284 |
-| npick<12 gap>200 | drop | 22 |
+| gap>max | drop | 97 |
+| gap>max | keep | 3 |
+| npick<min | drop | 6 |
+| npick<min | keep | 421 |
+| npick<min gap>max | drop | 29 |
+| npick<min gap>max | keep | 1 |
 
 ## Events by region and tier
 
-| region | A | B | C | All |
-|---|---|---|---|---|
-| Axial | 10 | 18 | 1 | 29 |
-| Blanco | 158 | 778 | 3280 | 4216 |
-| Cascades | 943 | 454 | 421 | 1818 |
-| Explorer | 0 | 0 | 71 | 71 |
-| Gorda | 94 | 1101 | 1358 | 2553 |
-| JdF ridge/plate | 0 | 0 | 9 | 9 |
-| Mendocino | 2137 | 1250 | 664 | 4051 |
-| Offshore forearc | 675 | 1039 | 599 | 2313 |
-| Other onshore | 1599 | 1370 | 1144 | 4113 |
-| Puget/Georgia | 1444 | 1719 | 1092 | 4255 |
-| All | 7060 | 7729 | 8639 | 23428 |
+| region | A | B | C | D | All |
+|---|---|---|---|---|---|
+| Axial | 89 | 194 | 133 | 12 | 428 |
+| Blanco | 158 | 778 | 3280 | 0 | 4216 |
+| Cascades | 943 | 454 | 421 | 0 | 1818 |
+| Explorer | 0 | 3 | 377 | 23 | 403 |
+| Gorda | 94 | 1101 | 1358 | 0 | 2553 |
+| JdF ridge/plate | 0 | 1 | 393 | 77 | 471 |
+| Mendocino | 2137 | 1250 | 664 | 0 | 4051 |
+| Offshore forearc | 675 | 1039 | 599 | 0 | 2313 |
+| Other onshore | 1599 | 1370 | 1144 | 0 | 4113 |
+| Puget/Georgia | 1444 | 1719 | 1092 | 0 | 4255 |
+| All | 7139 | 7909 | 9461 | 112 | 24621 |
 
 ## Kept picks by region
 
 | region | P | S |
 |---|---|---|
-| Axial | 212 | 174 |
+| Axial | 2683 | 2139 |
 | Blanco | 41524 | 43377 |
 | Cascades | 41740 | 42362 |
-| Explorer | 508 | 443 |
-| Gorda | 22895 | 31215 |
-| JdF ridge/plate | 56 | 44 |
-| Mendocino | 53383 | 55858 |
-| Offshore forearc | 28739 | 29298 |
+| Explorer | 2085 | 1842 |
+| Gorda | 22895 | 31216 |
+| JdF ridge/plate | 2326 | 1676 |
+| Mendocino | 53383 | 55857 |
+| Offshore forearc | 28739 | 29297 |
 | Other onshore | 69736 | 63079 |
 | Puget/Georgia | 84751 | 82852 |
 
-## OBS vs land: Track A station terms (iter1 cumulative) and iter0 mean residuals
+## OBS vs land: v4-NLL3D station terms (iter1 cumulative) and iter0 mean residuals
 
 | group | stations | with_P_term | with_S_term | i0_meanres_P_median | i0_meanres_S_median | term_P_median | term_S_median | term_P_p5_p95 | term_S_p5_p95 | abs_S_term_gt_0.5 | abs_S_term_gt_1.0 | corr_P_S_terms | slope_S_on_P | S_picks_in_dataset | P_picks_in_dataset |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| land | 363 | 351 | 333 | 0.028 | -0.113 | 0.04 | -0.132 | -0.24 / 0.42 | -0.73 / 0.47 | 56 | 8 | 0.65 | 1.41 | 241683 | 264014 |
-| OBS | 333 | 236 | 255 | 0.014 | -0.03 | 0.007 | 0.012 | -0.28 / 0.46 | -1.26 / 0.99 | 85 | 29 | 0.53 | 1.23 | 107019 | 79530 |
+| land | 363 | 351 | 333 | 0.028 | -0.113 | 0.04 | -0.132 | -0.24 / 0.42 | -0.73 / 0.47 | 56 | 8 | 0.65 | 1.41 | 241987 | 264688 |
+| OBS | 333 | 236 | 255 | 0.014 | -0.03 | 0.007 | 0.012 | -0.28 / 0.46 | -1.26 / 0.99 | 85 | 29 | 0.53 | 1.23 | 111710 | 85174 |
 
 ## Stations with |S term| > 0.5 s (141)
 
@@ -272,8 +277,8 @@
 ## Log
 
 ```
-catalog 172340; passing tier/nphs/gap/rms: 47605
-decluster 3.0 km x 3: 14831 occupied cells, kept 23549
+catalog 172340; passing tier/nphs/gap/rms: main 44260 (outside ['Axial', 'Explorer', 'JdF ridge/plate']), ridge 16723
+decluster main 3.0 km x 3, ridge 1.0 km x 3: 15739 occupied cells, kept 24753 (ridge 1314)
 stations: 696 in GTSRCE, OBS 333 (seafloor flag); flag vs zSrce>0.1 km disagree for 2
-v4 picks of selected events: 774910; dropped (station not in Track A list): 0
+v4 picks of selected events: 789524; dropped (station not in v4-NLL3D list): 0
 ```

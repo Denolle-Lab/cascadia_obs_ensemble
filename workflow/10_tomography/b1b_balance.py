@@ -20,6 +20,10 @@ re-measured; B1b only selects stations and assigns weights. Parameters: params.y
    (D-B008: (0.05/sigma)^2) when the tomoDD phase file is written.
 5. Events: an event is kept if it still has >= post_min_picks picks and gap <= post_max_gap_deg on
    core stations.
+6. Ridge regions (D-B023; events selected in B1 by the softer ridge rule, events.csv `rule`): a station
+   with >= ridge.min_picks picks of ridge events is kept for those picks only, with no coverage test;
+   ridge events need ridge.post_min_picks picks and gap <= ridge.post_max_gap_deg; the three ridge regions
+   share one weight group (`region_groups`).
 
 Outputs in <base>/b1b_balanced: picks.csv (B1 columns + baz_deg, w_bin, w_region, w_bal), events.csv,
 stations_core.csv (all B1 stations with coverage numbers and keep flag), picks_dropped.csv,
@@ -45,6 +49,7 @@ IN = BASE / "b1_dataset"
 OUT = BASE / "b1b_balanced"
 FIG = REPO / "data/tomo_v1/b1b_balanced"
 LOG = []
+GROUP = {r: g for g, rs in B["region_groups"].items() for r in rs}   # region -> weight group (D-B023)
 
 
 def log(*a):
@@ -71,7 +76,10 @@ def load():
     pk = pd.read_csv(IN / "picks.csv")
     ev = pd.read_csv(IN / "events.csv")
     st = pd.read_csv(IN / "stations.csv")
-    pk = pk.merge(ev[["ID", "lat", "lon", "region"]], left_on="event_ID", right_on="ID", how="left")
+    if "rule" not in ev:                                  # B1 built before D-B023
+        ev["rule"] = "main"
+    pk = pk.merge(ev[["ID", "lat", "lon", "region", "rule"]], left_on="event_ID", right_on="ID", how="left")
+    pk["group"] = pk.region.map(GROUP).fillna(pk.region)
     assert pk.ID.notna().all()
     pk["sta"] = pk.network + "." + pk.station
     st["sta"] = st.network + "." + st.station
@@ -80,12 +88,15 @@ def load():
 
 
 def core_stations(pk, st):
-    """Coverage test per phase; a station is core if its P picks or its S picks pass."""
+    """Coverage test per phase on main-rule picks; a station is core if its P picks or its S picks pass.
+    n_P / n_S are overwritten with main-rule counts."""
     reg = pk.groupby(["sta", "region"]).size().unstack(fill_value=0)
     s = st.set_index("sta")
     ok = {}
+    pm = pk[pk.rule == "main"]                           # main test on main-rule picks only (D-B023)
     for ph, n_col in (("P", "n_P"), ("S", "n_S")):
-        p = pk[pk.phase == ph]
+        p = pm[pm.phase == ph]
+        s[n_col] = p.groupby("sta").size().reindex(s.index).fillna(0).astype(int)
         sec = (p.baz_deg // B["sector_deg"]).astype(int)
         dbin = np.digitize(p.epi_dist_km, B["dist_edges_km"])
         s[f"n_sectors_{ph}"] = (p.groupby(["sta", sec]).size() >= B["min_per_bin"]).groupby(level=0).sum() \
@@ -110,6 +121,11 @@ def core_stations(pk, st):
     # stations kept only because of the lower OBS bar (would fail the land bar)
     s["obs_bar_only"] = s.core & s.is_obs & (np.maximum(s.n_P, s.n_S) < B["min_P_land"])
     s["S_only"] = s.core & ~s.pass_P
+    # D-B023: softer bar on ridge-event picks only; a station that passes only this keeps only its ridge picks
+    nr = pk[pk.rule == "ridge"].groupby("sta").size().reindex(s.index).fillna(0).astype(int)
+    s["n_ridge_picks"] = nr
+    s["ridge_core"] = nr >= B["ridge"]["min_picks"]
+    s["ridge_only"] = s.ridge_core & ~s.core
     return s.reset_index()
 
 
@@ -120,15 +136,16 @@ def weights(k):
     n = k.groupby(["sta", "phase", "rbin", "abin"]).ID.transform("size")
     k["n_bin"] = n
     k["w_bin"] = np.minimum(1.0, B["K_per_bin"] / n)
-    share = k.groupby("region").w_bin.sum() / k.w_bin.sum()
-    tgt = 1.0 / len(B["regions"])
+    share = k.groupby("group").w_bin.sum() / k.w_bin.sum()
+    groups = list(B["regions"]) + list(B["region_groups"])
+    tgt = 1.0 / len(groups)
     wr = pd.Series(1.0, index=share.index)
-    for r in B["regions"]:
+    for r in groups:
         if r in share.index:
             wr[r] = tgt / share[r]
     lo, hi = B["region_w_clip"]
     wr = wr.clip(lo, hi)
-    k["w_region"] = k.region.map(wr)
+    k["w_region"] = k.group.map(wr)
     k["w_bal"] = k.w_bin * k.w_region
     k["w_bal"] /= k.w_bal.mean()
     return k.drop(columns=["rbin", "abin"]), wr
@@ -136,7 +153,7 @@ def weights(k):
 
 def metrics(name, d, w):
     c = d.assign(w=w).groupby("sta").w.sum()
-    r = d.assign(w=w).groupby("region").w.sum() / w.sum() * 100
+    r = d.assign(w=w).groupby("group").w.sum() / w.sum() * 100
     row = {"set": name, "picks": len(d), "kish_n_eff": round(float(w.sum() ** 2 / (w ** 2).sum())),
            "stations": d.sta.nunique(), "events": d.ID.nunique(),
            "gini_station": round(gini(c), 3), "top50_station_share": round(c.nlargest(50).sum() / c.sum(), 3),
@@ -155,7 +172,9 @@ def event_table(ev, k):
     e["gap_b"] = pd.Series({i: gap_deg(e.at[i, "lat"], e.at[i, "lon"], d.sta_lat.values, d.sta_lon.values)
                             for i, d in g}).reindex(e.index).fillna(360.0)
     e["w_event"] = g.w_bal.sum().reindex(e.index).fillna(0).round(3)
-    e["keep"] = ((e.nP_b + e.nS_b) >= B["post_min_picks"]) & (e.gap_b <= B["post_max_gap_deg"])
+    rr = e.rule == "ridge"
+    e["keep"] = ((e.nP_b + e.nS_b) >= np.where(rr, B["ridge"]["post_min_picks"], B["post_min_picks"])) & \
+        (e.gap_b <= np.where(rr, B["ridge"]["post_max_gap_deg"], B["post_max_gap_deg"]))
     return e.reset_index()
 
 
@@ -207,9 +226,10 @@ def figures(st, k0, k, ev):
     plt.close(fig)
 
     # 3. region shares
-    regs = [r for r in B["regions"]] + ["other"]
+    groups = list(B["regions"]) + list(B["region_groups"])
+    regs = groups + ["other"]
     def shares(d, w):
-        s = d.assign(w=w, r=d.region.where(d.region.isin(B["regions"]), "other")).groupby("r").w.sum()
+        s = d.assign(w=w, r=d.group.where(d.group.isin(groups), "other")).groupby("r").w.sum()
         return (s / s.sum() * 100).reindex(regs).fillna(0)
     sets = {"B1": shares(k0, np.ones(len(k0))), "core": shares(k, np.ones(len(k))),
             "w_bin": shares(k, k.w_bin), "w_bal": shares(k, k.w_bal)}
@@ -217,7 +237,7 @@ def figures(st, k0, k, ev):
     x = np.arange(len(regs))
     for i, (lab, s) in enumerate(sets.items()):
         ax.bar(x + (i - 1.5) * 0.2, s.values, width=0.2, label=lab)
-    ax.axhline(100 / len(B["regions"]), c="k", lw=0.6, ls=":")
+    ax.axhline(100 / len(groups), c="k", lw=0.6, ls=":")
     ax.set_xticks(x)
     ax.set_xticklabels(regs, fontsize=7, rotation=20)
     ax.set_ylabel("% of picks / weight")
@@ -232,11 +252,14 @@ def main():
     log(f"B1 input: {len(pk)} picks, {pk.ID.nunique()} events, {pk.sta.nunique()} stations")
     s = core_stations(pk, st)
     core = set(s.loc[s.core, "sta"])
+    rcore = set(s.loc[s.ridge_only, "sta"])
     log(f"core stations: {len(core)} of {len(s)} (OBS {int((s.core & s.is_obs).sum())}, "
         f"land {int((s.core & ~s.is_obs).sum())}); admitted only by the OBS bar: {int(s.obs_bar_only.sum())}; "
         f"only by the S test: {int(s.S_only.sum())}")
-    k = pk[pk.sta.isin(core)]
-    dropped = pk[~pk.sta.isin(core)].assign(reason="station")
+    use = pk.sta.isin(core) | (pk.sta.isin(rcore) & (pk.rule == "ridge"))
+    log(f"ridge-only stations (>= {B['ridge']['min_picks']} ridge picks, no coverage test): {len(rcore)}")
+    k = pk[use]
+    dropped = pk[~use].assign(reason="station")
     k, wr = weights(k)
     log("region weights:", {r: round(v, 3) for r, v in wr.items()})
     e = event_table(ev, k)
@@ -257,7 +280,7 @@ def main():
     fails = s[~s.core].groupby(["is_obs", "fail"]).size().rename("stations")
     lost = s[~s.core].groupby("main_region").agg(stations=("sta", "size"), P=("n_P", "sum"), S=("n_S", "sum"))
     # events by region
-    er = e.groupby("region").agg(B1=("ID", "size"), kept=("keep", "sum"))
+    er = e.groupby(["region", "rule"]).agg(B1=("ID", "size"), kept=("keep", "sum"))
     log(md_table(m, index=False))
 
     OUT.mkdir(parents=True, exist_ok=True)

@@ -164,3 +164,25 @@ picks; region shares unchanged), P-only coverage test (drops S-rich Mendocino/Go
 OBS (drops the Blanco arrays, linear geometry). Evidence: notes/balanced.md, data/tomo_v1/b1b_balanced/.
 Params: params.yaml `balance`.
 
+### D-B023 Ridge regions back in with softer criteria (adopted, 2026-11-22, PI request; amends D-B003, D-B022)
+Axial, Explorer and JdF ridge/plate had dropped to 109 events in B1 (Axial: 3 km declustering of a caldera a
+few km across; Explorer/JdF: stations 30-55 km away, nphs < 12) and to ~0 in B1b (station test). New rule for
+these regions only: tiers A-D, nphs >= 8, gap <= 270, RMS <= 0.5, 1 km cells x 3; after QC >= 6 picks, gap <= 300;
+stations with >= 10 ridge-event picks kept for those picks only, no coverage test; the three regions are one
+weight group ("Ridges", weight clipped at 3, 7.5% of w_bal). Pick-QC spreads come from main-rule events only, so
+the main set is unchanged (23,319 events; 2 of 690,809 picks differ). Result: +1,294 events (Axial 428, Explorer
+403, JdF 463), +12,663 picks, 80 stations (57 ridge-only). Evidence: notes/balanced.md section "Ridge regions";
+params `selection.ridge`, `balance.ridge`, `balance.region_groups`.
+
+### D-B024 "Track A" renamed v4-NLL3D (adopted, 2026-11-22, PI)
+The catalog v4 relocated with NonLinLoc in the 3D starting model (D-B004/D-B005; Track A run iter1_vpvs176) is
+called **v4-NLL3D** in text, figures and the atlas ("v4-NLL3D (preliminary)" until B4 replaces it). File and
+variable names stay (params `trackA_*`, /wd1/.../reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv); alias
+symlink catalog_v4-NLL3D_iter1.csv in the same folder. Earlier decision entries keep the old name (log not edited);
+notes and script messages updated.
+
+### D-B025 Overlapping regional inversions (adopted, 2026-11-22, PI)
+tomoDD runs on overlapping sub-regions of up to ~400 km (flat-earth/Cartesian grid and compile-time array sizes;
+earth curvature ~38 km over 700 km). First region Mendocino-Gorda. Region boundaries, overlaps and how the overlap
+zones are compared or merged: proposed with the tomoDD audit (notes/tomodd_build.md) and the regional design note.
+

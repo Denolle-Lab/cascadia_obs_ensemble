@@ -1,23 +1,23 @@
 """Track B, step B1: tomography event set, picks and stations (code-agnostic; TomoATT conversion comes later).
 
-1. Events (D-B003, params.yaml `selection`): Track A iter1 catalog, tiers A-C, nphs >= 12, gap <= 200 deg,
+1. Events (D-B003, params.yaml `selection`): v4-NLL3D iter1 catalog, tiers A-C, nphs >= 12, gap <= 200 deg,
    RMS <= 0.5 s. Declustering in cubic cells of `decluster_cell_km` in the NLL Lambert frame (LCC WGS-84,
    lat_0 45, lon_0 -125.8, standard parallels 41 and 49; x, y in km) and depth below sea level (km); in each
    cell keep the `decluster_keep_per_cell` events with the most phases (NLLoc nphs), ties broken by lower
    RMS, then lower ID.
-2. Picks of those events from catalog v4 (stations in the Track A GTSRCE list only), sigma per D-B008.
+2. Picks of those events from catalog v4 (stations in the v4-NLL3D GTSRCE list only), sigma per D-B008.
    Pick QC (params.yaml `pick_qc`, proposed in notes/dataset.md), applied in this order, first reason wins:
      no_nll      pick not found among the iter1 NLLoc phases of the event (matched on event, station, phase,
                  pick time to 0.1 ms)
      w0          NLLoc EDT weight 0 in iter1 (station outside the tile's time grids, >~150-175 km)
      duplicate   same event/station/phase more than once (keep the highest pick_prob, then earliest)
-     res         |iter1 residual (with Track A station terms) - median| > k * 1.4826 MAD, where median and MAD
+     res         |iter1 residual (with v4-NLL3D station terms) - median| > k * 1.4826 MAD, where median and MAD
                  come from the iter0 residuals (no station terms) of the same phase, used picks only
      sp          S pick of an event-station pair whose S/P travel-time ratio is outside sp_ratio_range, or whose
                  S-P differential residual (iter1 location, no terms) minus the station median differs from
                  zero by more than sp_k_mad * 1.4826 MAD (MAD over all pairs). The S pick is dropped.
    Events then below nphs/gap of D-B003 are listed with a decision (pick_qc.post_qc_*).
-3. Station analysis for D-B006 (OBS vs land residuals and Track A station terms).
+3. Station analysis for D-B006 (OBS vs land residuals and v4-NLL3D station terms).
 4. Outputs in <base>/b1_dataset: events.csv, picks.csv, stations.csv, picks_rejected.csv,
    events_below_threshold.csv, station_terms_analysis.csv; QC figures and tables in data/tomo_v1/b1_dataset.
 
@@ -88,26 +88,40 @@ def select_events():
     m = cat.loc_source == "nll3d"
     for c in ("time", "lat", "lon", "depth"):
         cat.loc[m, c] = cat.loc[m, "ID"].map(loc[c]).values
-    s = cat[cat.tier.isin(S["tiers"]) & (cat.nphs >= S["min_nphs"]) & (cat.gap <= S["max_gap_deg"])
+    R = S["ridge"]                                       # D-B023: softer rule for the ridge regions
+    is_r = cat.region.isin(R["regions"])
+    s = cat[~is_r & cat.tier.isin(S["tiers"]) & (cat.nphs >= S["min_nphs"]) & (cat.gap <= S["max_gap_deg"])
             & (cat.rms <= S["max_rms_s"])].copy()
-    log(f"catalog {len(cat)}; passing tier/nphs/gap/rms: {len(s)}")
+    s["cell_km"], s["keep_n"], s["rule"] = S["decluster_cell_km"], S["decluster_keep_per_cell"], "main"
+    sr = cat[is_r & cat.tier.isin(R["tiers"]) & (cat.nphs >= R["min_nphs"]) & (cat.gap <= R["max_gap_deg"])
+             & (cat.rms <= R["max_rms_s"])].copy()
+    sr["cell_km"], sr["keep_n"], sr["rule"] = R["decluster_cell_km"], R["decluster_keep_per_cell"], "ridge"
+    log(f"catalog {len(cat)}; passing tier/nphs/gap/rms: main {len(s)} (outside {R['regions']}), ridge {len(sr)}")
+    s = pd.concat([s, sr])
     x, y = PROJ(s.lon.values, s.lat.values)
-    c = S["decluster_cell_km"]
     s["x_km"], s["y_km"] = x / 1e3, y / 1e3
-    s["cell"] = list(zip(np.floor(s.x_km / c).astype(int), np.floor(s.y_km / c).astype(int),
+    c = s.cell_km
+    s["cell"] = list(zip(s.rule, np.floor(s.x_km / c).astype(int), np.floor(s.y_km / c).astype(int),
                          np.floor(s.depth / c).astype(int)))
     s = s.sort_values(["nphs", "rms", "ID"], ascending=[False, True, True])
     s["cell_rank"] = s.groupby("cell").cumcount()
     s["cell_n"] = s.groupby("cell").ID.transform("size")
-    k = s[s.cell_rank < S["decluster_keep_per_cell"]].sort_values("ID").copy()
-    log(f"decluster {c} km x {S['decluster_keep_per_cell']}: {s.cell.nunique()} occupied cells, kept {len(k)}")
+    k = s[s.cell_rank < s.keep_n].sort_values("ID").copy()
+    c = S["decluster_cell_km"]
+    log(f"decluster main {c} km x {S['decluster_keep_per_cell']}, ridge {R['decluster_cell_km']} km x "
+        f"{R['decluster_keep_per_cell']}: {s.cell.nunique()} occupied cells, kept {len(k)} "
+        f"(ridge {int((k.rule == 'ridge').sum())})")
+    cm = cat[~is_r]
+    t = cm.tier.isin(S["tiers"])
     funnel = pd.DataFrame({
-        "step": ["catalog v5 Track A", "tier A-C", "+ nphs >= %d" % S["min_nphs"], "+ gap <= %d" % S["max_gap_deg"],
-                 "+ rms <= %.1f" % S["max_rms_s"], "decluster"],
-        "events": [len(cat), cat.tier.isin(S["tiers"]).sum(),
-                   (cat.tier.isin(S["tiers"]) & (cat.nphs >= S["min_nphs"])).sum(),
-                   (cat.tier.isin(S["tiers"]) & (cat.nphs >= S["min_nphs"]) & (cat.gap <= S["max_gap_deg"])).sum(),
-                   len(s), len(k)]})
+        "step": ["catalog v4-NLL3D (all)", f"outside the ridge regions {R['regions']}", "tier A-C",
+                 "+ nphs >= %d" % S["min_nphs"], "+ gap <= %d" % S["max_gap_deg"], "+ rms <= %.1f" % S["max_rms_s"],
+                 "decluster (main rule)", f"ridge regions: {len(cat[is_r])} events, ridge rule (D-B023)",
+                 "ridge, decluster"],
+        "events": [len(cat), len(cm), int(t.sum()), int((t & (cm.nphs >= S["min_nphs"])).sum()),
+                   int((t & (cm.nphs >= S["min_nphs"]) & (cm.gap <= S["max_gap_deg"])).sum()),
+                   int((s.rule == "main").sum()), int((k.rule == "main").sum()), int((s.rule == "ridge").sum()),
+                   int((k.rule == "ridge").sum())]})
     return cat, s, k, funnel
 
 
@@ -138,7 +152,7 @@ def load_picks(k, st):
     pk = pk[pk.ID.isin(k.ID)].copy()
     n0 = len(pk)
     pk = pk[pk.station.isin(st.station)]
-    log(f"v4 picks of selected events: {n0}; dropped (station not in Track A list): {n0 - len(pk)}")
+    log(f"v4 picks of selected events: {n0}; dropped (station not in v4-NLL3D list): {n0 - len(pk)}")
     pk["pick_time"] = pd.to_datetime(pk.pick_datetime.str.rstrip("Z"), format="ISO8601")
     pk["key"] = np.round(pk.pick_time.astype("int64") / 1e5).astype("int64")
     E = P["pick_errors"]
@@ -159,6 +173,7 @@ def load_picks(k, st):
     ot = pd.to_datetime(k.set_index("ID").time)
     pk["tt"] = (pk.pick_time - pk.ID.map(ot)).dt.total_seconds()
     pk["res_noterm_i1"] = pk.res_i1 + pk.tcorr_i1        # residual without station term, iter1 location
+    pk["rule"] = pk.ID.map(k.set_index("ID").rule)
     pk = pk.merge(st[["station", "network", "lat", "lon", "elev_km", "is_obs"]].rename(
         columns={"lat": "sta_lat", "lon": "sta_lon", "elev_km": "sta_elev_km"}), on="station", how="left")
     return pk
@@ -188,7 +203,7 @@ def pick_qc(pk):
     # residual outliers: reference distribution = iter0 residuals of used picks (w>0) of these events
     thr = {}
     for ph in ("P", "S"):
-        ref = pk.loc[(pk.phase == ph) & (pk.w_i0 > 0), "res_i0"]
+        ref = pk.loc[(pk.phase == ph) & (pk.w_i0 > 0) & (pk.rule == "main"), "res_i0"]  # D-B023: main set sets the spread
         m, sd = robust(ref)
         thr[ph] = dict(median=m, sigma_mad=sd, threshold=Q["res_k_mad"] * sd)
         col = {"iter1": "res_i1", "iter0": "res_i0", "iter1_noterm": "res_noterm_i1"}[Q["res_applied_to"]]
@@ -202,7 +217,7 @@ def pick_qc(pk):
     pv["ratio"] = pv.tt_S / pv.tt_P
     pv["dres"] = pv.res_noterm_i1_S - pv.res_noterm_i1_P
     pv["dres_c"] = pv.dres - pv.groupby("station").dres.transform("median")
-    m, sd = robust(pv.dres_c)
+    m, sd = robust(pv.loc[pv.ID.map(pk.drop_duplicates("ID").set_index("ID").rule) == "main", "dres_c"])
     lo, hi = Q["sp_ratio_range"]
     bad = pv[(pv.ratio < lo) | (pv.ratio > hi) | ((pv.dres_c - m).abs() > Q["sp_k_mad"] * sd)]
     thr["SP"] = dict(median=m, sigma_mad=sd, threshold=Q["sp_k_mad"] * sd, pairs=len(pv),
@@ -252,18 +267,25 @@ def event_check(k, kept):
     g = kept.groupby("ID")
     gaps = {i: gap_deg(ev.at[i, "lat"], ev.at[i, "lon"], d.sta_lat.values, d.sta_lon.values) for i, d in g}
     ev["gap_qc"] = pd.Series(gaps).reindex(ev.index).fillna(360.0)
-    below = ev[(ev.npick_qc < S["min_nphs"]) | (ev.gap_qc > S["max_gap_deg"])].copy()
-    keep = (below.npick_qc >= Q["post_qc_min_picks"]) & (below.gap_qc <= Q["post_qc_max_gap_deg"])
+    R = S["ridge"]
+    r = ev.rule == "ridge"
+    mn = np.where(r, R["min_nphs"], S["min_nphs"])
+    mg = np.where(r, R["max_gap_deg"], S["max_gap_deg"])
+    below = ev[(ev.npick_qc < mn) | (ev.gap_qc > mg)].copy()
+    rb = below.rule == "ridge"
+    keep = (below.npick_qc >= np.where(rb, R["post_qc_min_picks"], Q["post_qc_min_picks"])) & \
+        (below.gap_qc <= np.where(rb, R["post_qc_max_gap_deg"], Q["post_qc_max_gap_deg"]))
     below["decision"] = np.where(keep, "keep", "drop")
-    below["reason"] = (pd.Series(np.where(below.npick_qc < S["min_nphs"], f"npick<{S['min_nphs']}", ""), index=below.index)
-                       + np.where(below.gap_qc > S["max_gap_deg"], f" gap>{S['max_gap_deg']}", "")).str.strip()
+    mnb, mgb = mn[(ev.npick_qc < mn) | (ev.gap_qc > mg)], mg[(ev.npick_qc < mn) | (ev.gap_qc > mg)]
+    below["reason"] = (pd.Series(np.where(below.npick_qc < mnb, "npick<min", ""), index=below.index)
+                       + np.where(below.gap_qc > mgb, " gap>max", "")).str.strip()
     return ev.reset_index(), below.reset_index()
 
 
 # ---------------------------------------------------------------- 3. stations / OBS
 def station_analysis(st):
     """Per-station mean/median iter0 residuals (no terms; used picks of well-located events, as in
-    a2_station_terms.py) and the cumulative Track A terms after iter1 (runs/iter1/station_terms.csv)."""
+    a2_station_terms.py) and the cumulative v4-NLL3D terms after iter1 (runs/iter1/station_terms.csv)."""
     rd = Path(P["paths"]["reloc_v5"]) / "runs"
     run0 = P["pick_qc"]["res_ref_run"]
     loc = pd.read_csv(rd / run0 / "locations.csv")
@@ -407,10 +429,10 @@ def figures(ev, kept, stations, sa):
         axs[1].hist(d.term_S.dropna(), bins=np.arange(-2.5, 2.6, 0.1), histtype="step", color=c,
                     label="OBS" if ob else "land")
     axs[0].plot([-1, 1], [-1.73, 1.73], "b--", lw=0.7, label="S = 1.73 P")
-    axs[0].set_xlabel("Track A P term (s)"); axs[0].set_ylabel("Track A S term (s)")
+    axs[0].set_xlabel("v4-NLL3D P term (s)"); axs[0].set_ylabel("v4-NLL3D S term (s)")
     axs[0].axhline(0, c="0.7", lw=0.5); axs[0].axvline(0, c="0.7", lw=0.5)
     axs[0].legend(fontsize=7)
-    axs[1].set_xlabel("Track A S term (s)"); axs[1].set_ylabel("stations"); axs[1].legend(fontsize=7)
+    axs[1].set_xlabel("v4-NLL3D S term (s)"); axs[1].set_ylabel("stations"); axs[1].legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(FIG / "b1_station_terms_obs_land.png", dpi=150)
     plt.close(fig)
@@ -456,7 +478,7 @@ def main():
     # ---- write data
     evo = ev.rename(columns={"time": "origin_time", "depth": "depth_bsl_km"})
     evo = evo[["ID", "origin_time", "lat", "lon", "depth_bsl_km", "tier", "nphs", "gap", "rms", "h_max", "sig_z",
-               "region", "nP", "nS", "gap_qc", "below_DB003_after_qc", "dist_min", "x_km", "y_km", "cell_n"]]
+               "region", "rule", "nP", "nS", "gap_qc", "below_DB003_after_qc", "dist_min", "x_km", "y_km", "cell_n"]]
     evo["nphs"] = evo.nphs.astype(int)
     rounded(evo).to_csv(OUT / "events.csv", index=False)
     cols = ["ID", "station", "network", "phase", "pick_time", "tt", "sigma_s", "pick_prob", "res_i1", "w_i1",
@@ -493,7 +515,7 @@ def main():
              md_table(below.groupby(["reason", "decision"]).size().rename("events").to_frame()), "",
              "## Events by region and tier", "", md_table(tier_region), "",
              "## Kept picks by region", "", md_table(picks_region), "",
-             "## OBS vs land: Track A station terms (iter1 cumulative) and iter0 mean residuals", "",
+             "## OBS vs land: v4-NLL3D station terms (iter1 cumulative) and iter0 mean residuals", "",
              md_table(osum, index=False), "",
              f"## Stations with |S term| > 0.5 s ({len(big)})", "", md_table(big, index=False), "",
              "## Log", "", "```", *LOG, "```"]

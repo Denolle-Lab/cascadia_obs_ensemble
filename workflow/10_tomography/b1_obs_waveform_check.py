@@ -1,12 +1,12 @@
-"""Waveform check of OBS S picks with large Track A S station terms (D-B010 follow-up).
+"""Waveform check of OBS S picks with large v4-NLL3D S station terms (D-B010 follow-up).
 
 Question: at deep-water OBS whose S term is strongly negative (S observed 0.5-2.4 s earlier than the
 3D model predicts), is the deep-learning S pick the S wave, or a P-to-S conversion at the sediment-basement
 contact (Ps, a near-constant delay after P)? At shelf OBS with large positive terms, is the S delay of the
 size expected from slow sediments?
 
-Inputs: Track A iter1 NLLoc phases (cache of b1_hyp_phases.py: observed pick, TTpred, residual, Tcorr,
-epicentral distance), Track A iter1 locations, b1 station table and station-term analysis.
+Inputs: v4-NLL3D iter1 NLLoc phases (cache of b1_hyp_phases.py: observed pick, TTpred, residual, Tcorr,
+epicentral distance), v4-NLL3D iter1 locations, b1 station table and station-term analysis.
 Waveforms: UW pnwstore archive read directly through its sqlite index (no pnwstore package needed),
 EarthScope FDSN as fallback. Raw windows saved under <base>/obs_check/raw (not in git).
 
@@ -15,7 +15,7 @@ Per station:
     predicted P (tS - tP_pred) vs predicted S-P. Ps picked as S would give tS - tP_pred ~ constant
     (0.5-2 s) with zero slope on predicted S-P; a true S gives slope ~1 and intercept ~ (S term - P term).
   * record section of up to N_EV events (Z, H1, H2; 2-12 Hz), marks: P pick, S pick, predicted P and S
-    (3D model, no term), predicted S + Track A S term.
+    (3D model, no term), predicted S + v4-NLL3D S term.
 
 Outputs: data/tomo_v1/obs_check/*.png, obs_check_station_stats.csv, obs_check_events.csv, manifest.
 Usage: python b1_obs_waveform_check.py [--no-download]
@@ -35,7 +35,7 @@ import pandas as pd  # noqa: E402
 sys.path.insert(0, str(Path(__file__).parent))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
 
-VPVS_MODEL = 1.76          # Track A run iter1_vpvs176: Vs = Vp / 1.76 everywhere -> tP_pred = tS_pred / 1.76
+VPVS_MODEL = 1.76          # v4-NLL3D run iter1_vpvs176: Vs = Vp / 1.76 everywhere -> tP_pred = tS_pred / 1.76
 N_EV = 8                   # events plotted per station
 N_MEAS = 25                # events measured per station (onset test)
 BAND = (2.0, 12.0)
@@ -334,7 +334,7 @@ def plot_summary(allS, stats, outdir):
 
 def near_terms(f_ph, terms_df, f_b1picks, dists=(40, 60, 100), nmin=10):
     """Distance-limited S statics at all OBS: median no-term iter1 S residual of picks within D km
-    (n >= nmin), next to the Track A term (all distances). Also the proposed D-B010 revision."""
+    (n >= nmin), next to the v4-NLL3D term (all distances). Also the proposed D-B010 revision."""
     ph = pd.read_parquet(f_ph, columns=["sta", "phase", "res", "tcorr", "w", "dist"])
     ph = ph[(ph.w > 0) & (ph.phase.astype(str) == "S")]
     ph = ph.assign(sta=ph.sta.astype(str), res0=ph.res + ph.tcorr)

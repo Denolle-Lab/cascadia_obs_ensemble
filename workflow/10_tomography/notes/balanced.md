@@ -2,7 +2,9 @@
 
 Agent: Claude (coordinator session), 2026-11-22. PI asked for a balanced dataset of travel times at
 well-recorded stations, for the tomoDD tomography (D-B021) and the B4 relocation. Status: built;
-D-B022 adopted on PI approval of the plan.
+D-B022 adopted on PI approval of the plan; ridge regions brought back with softer criteria (D-B023,
+PI request, section "Ridge regions" below). Starting locations are the v4-NLL3D catalog (catalog v4
+relocated with NonLinLoc in the 3D starting model; formerly "Track A", D-B024).
 
 Script `workflow/10_tomography/b1b_balance.py`, parameters `params.yaml` block `balance`, input the B1
 dataset (`/wd1/mdenolle_data/tomo_v1/b1_dataset`). Outputs in `/wd1/mdenolle_data/tomo_v1/b1b_balanced`
@@ -47,7 +49,7 @@ by onshore paths and by many near-identical paths at a few stations.
   7D.G05D, ...): each sees the linear transform from 2 sectors only. That is fault geometry, not poor
   recording; OBS bar set to 2 sectors.
 
-## Result
+## Result (main rule, before the ridge supplement)
 
 | set | picks | Kish n_eff | stations | events | Gini (station) | top-50 share | OBS share | S share |
 |---|---|---|---|---|---|---|---|---|
@@ -63,8 +65,60 @@ third: the price of balance, to be weighed in the resolution tests.
 
 Dropped: 221 stations (15,011 picks: 9,029 at dropped stations, 5,982 of 452 events left below 10 picks or
 gap > 200). Most dropped stations are sparse mid-margin OBS of the offshore forearc (64 stations, 1,462
-picks); 2,179 of 2,313 forearc events stay. Axial (29 events), Explorer (71) and JdF ridge/plate (9) lose
-almost all events: out of the tomography target (Axial has its own literature models, D-B005).
+picks); 2,179 of 2,313 forearc events stay. In this first version Axial (29 events), Explorer (71) and
+JdF ridge/plate (9) lost almost all events; the PI asked to bring them back (next section).
+
+## Ridge regions: Axial, Explorer, JdF ridge/plate (D-B023)
+
+Why they were lost. Two separate filters. (i) B1 event selection: Axial passes the main rule (3,264
+events) but the caldera is a few km across, so 3 km cells x 3 events left 29; Explorer and JdF events
+are recorded from 30-55 km away (median nphs 7, sig_z 12 km), so nphs >= 12 and gap <= 200 left 71 and 9.
+(ii) B1b station test: the OOI Axial stations and the Explorer/JdF OBS have few picks after declustering
+and see the events from one or two directions.
+
+Softer rule, ridge regions only (params `selection.ridge`, `balance.ridge`, `balance.region_groups`):
+
+| step | main rule | ridge rule |
+|---|---|---|
+| tiers | A-C | A-D |
+| nphs | >= 12 | >= 8 |
+| gap | <= 200 deg | <= 270 deg |
+| RMS | <= 0.5 s | <= 0.5 s |
+| decluster | 3 km cells x 3 | 1 km cells x 3 |
+| after pick QC | >= 10 picks, gap <= 200 | >= 6 picks, gap <= 300 |
+| station | coverage test (above), main-rule picks only | >= 10 picks of ridge events, no coverage test; such a station keeps only its ridge picks |
+| region weight | one group per region | the three regions are one group, "Ridges" |
+
+Pick QC thresholds (residual and S-P spreads) are computed from main-rule events only, so the main set
+does not change: B1 main events identical (23,319), main picks 690,808 vs 690,809 before (2 picks differ
+because the 109 old ridge-region events no longer enter the spread). B1 copy before the change:
+`/wd1/mdenolle_data/tomo_v1/b1_dataset_pre_DB023/`. Declustering options tested (events Axial / Explorer /
+JdF): 1 km x 3: 435 / 407 / 472; 1.5 km x 3: 236 / 406 / 437; 3 km x 3: 121 / 398 / 362.
+
+Ridge events in B1 by tier: Axial A 89, B 194, C 133, D 12; Explorer B 3, C 377, D 23; JdF B 1, C 393,
+D 77. Median 5 P and 4 S picks, gap median 177 deg.
+
+## Result with the ridge supplement (current dataset)
+
+| set | picks | Kish n_eff | stations | events | Gini (station) | top-50 share | OBS share | S share |
+|---|---|---|---|---|---|---|---|---|
+| B1 | 703,559 | 703,559 | 658 | 24,621 | 0.65 | 0.36 | 0.28 | 0.50 |
+| B1b core, unweighted | 689,602 | 689,602 | 475 | 24,249 | 0.53 | 0.37 | 0.28 | 0.50 |
+| B1b w_bin | 689,602 | 557,761 | 475 | 24,249 | 0.45 | 0.29 | 0.27 | 0.50 |
+| B1b w_bal | 689,602 | 431,050 | 475 | 24,249 | 0.40 | 0.27 | 0.43 | 0.51 |
+
+| rule | events | picks | stations | OBS share of picks |
+|---|---|---|---|---|
+| main | 22,955 | 676,939 | 418 core | 0.27 |
+| ridge | 1,294 (Axial 428, Explorer 403, JdF 463) | 12,663 | 80 (57 ridge-only: Explorer 26, JdF 19, Axial 8, other 4) | 0.90 |
+
+Main part vs the first version: 418 core stations (was 424; the 6 others had passed only thanks to the
+109 old ridge-region events and are now ridge-only), 22,955 events (22,973).
+
+Region weights (w_bal shares): seven main regions 12.7-13.4%, Ridges 7.5%. The Ridges weight hits the
+clip of 3 (mean ridge pick weight 4.1 vs 0.94 for main picks after rescaling); an equal share (12.5%)
+would need ~5x and let ~12k picks of 10-pick events with depth uncertainties of ~12 km steer the misfit.
+Kept at the clip. In the regional inversions (D-B025) the ridge sub-region is weighted on its own anyway.
 
 ## Open for B2
 
@@ -77,5 +131,6 @@ almost all events: out of the tomography target (Axial has its own literature mo
 
 ## Proposed decisions
 
-* D-B021 tomoDD replaces TomoATT (PI).
-* D-B022 B1b balanced dataset as above.
+* D-B021 tomoDD replaces TomoATT (PI). Logged.
+* D-B022 B1b balanced dataset as above. Logged.
+* D-B023 ridge supplement. Logged.

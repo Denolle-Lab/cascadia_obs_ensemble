@@ -1,4 +1,4 @@
-"""Read the PHASE lines of all per-event NLLoc hyp files of a Track A run into one table (cached as parquet).
+"""Read the PHASE lines of all per-event NLLoc hyp files of a v4-NLL3D run into one table (cached as parquet).
 
 Per-event files: <reloc_v5>/runs/<run>/<tile>[_cNN]/loc.2*.grid0.loc.hyp (NLL_FORMAT_VER_2). PHASE line tokens:
 0 station, 4 phase, 6 date, 7 hhmm, 8 sec (observed pick time), 10 pick error (s), 16 TTpred, 17 residual,

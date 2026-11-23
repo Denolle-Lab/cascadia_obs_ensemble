@@ -1,10 +1,15 @@
 # B1 tomography dataset (events, picks, stations)
 
+> Update 2026-11-22 (D-B023): B1 now also selects the ridge regions (Axial, Explorer, JdF ridge/plate) with a
+> softer rule; current totals 24,621 events / 703,559 picks / 658 stations (main rule unchanged: 23,319 events,
+> 690,808 picks). The numbers below describe the main-rule build; see notes/balanced.md and
+> data/tomo_v1/b1_dataset/b1_tables.md for the current ones.
+
 Agent: Claude (B1 subagent), 2026-11-22. Status: dataset built; pick QC, post-QC event rule and OBS handling
 are **proposed** (D-B009, D-B010 to be written by the coordinating session).
 
 Scripts: `workflow/10_tomography/b1_hyp_phases.py` (reads PHASE lines of every per-event NLLoc hyp file of a
-Track A run into a parquet cache) and `workflow/10_tomography/b1_select_events.py` (everything else). Parameters:
+v4-NLL3D run into a parquet cache) and `workflow/10_tomography/b1_select_events.py` (everything else). Parameters:
 `params.yaml` blocks `selection` (D-B003, unchanged), `pick_errors` (D-B008), and the new `pick_qc` and `obs`
 blocks (marked "proposed"). Run manifest: `/wd1/mdenolle_data/tomo_v1/b1_dataset/b1_select_events.manifest.json`.
 All numbers below come from `data/tomo_v1/b1_dataset/b1_tables.md`, which the script writes.
@@ -28,14 +33,14 @@ LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python workflow/10
 
 Outputs in `/wd1/mdenolle_data/tomo_v1/b1_dataset/`:
 
-* `events.csv`: ID, origin_time (Track A iter1 maximum likelihood), lat, lon, depth_bsl_km, tier, nphs, gap, rms,
+* `events.csv`: ID, origin_time (v4-NLL3D iter1 maximum likelihood), lat, lon, depth_bsl_km, tier, nphs, gap, rms,
   h_max, sig_z, region, nP, nS (after QC), gap_qc (recomputed from kept picks), below_DB003_after_qc, dist_min,
   x_km, y_km (Lambert frame), cell_n (events in its 3 km cell before declustering).
-* `picks.csv`: event_ID, station, network, phase, pick_time (UTC, absolute), travel_time_s (pick minus Track A
+* `picks.csv`: event_ID, station, network, phase, pick_time (UTC, absolute), travel_time_s (pick minus v4-NLL3D
   origin time), sigma_s, pick_prob, iter1_res_s, iter1_weight, iter1_station_term_s, iter0_res_s, epi_dist_km,
   sta_lat, sta_lon, sta_elev_km (+up), is_obs.
 * `stations.csv`: station, network, lat, lon, elevation_km (+up, from the station table), zsrce_km (GTSRCE depth,
-  +down, as used for the Track A time grids), is_obs, n_P, n_S.
+  +down, as used for the v4-NLL3D time grids), is_obs, n_P, n_S.
 * `picks_rejected.csv` (same columns + `qc` reason), `events_below_threshold.csv` (with decision),
   `station_terms_analysis.csv`, `residual_threshold_alternatives.csv`, `cache/phases_iter{0,1}_vpvs176.parquet`.
 
@@ -57,7 +62,7 @@ are kept. This is deterministic.
 
 | step | events |
 |---|---|
-| catalog v5 Track A | 172,340 |
+| catalog v5 v4-NLL3D | 172,340 |
 | tier A-C | 129,589 |
 | + nphs >= 12 | 60,588 |
 | + gap <= 200 | 47,668 |
@@ -86,13 +91,13 @@ Depth: 5/50/95th percentiles 4.1 / 20.2 / 38.0 km bsl. Things to keep in mind fo
 * Axial (29 events) and the JdF plate interior (9) are almost absent: Axial events are mostly tier D or have gaps
   > 200 deg. The Axial/Endeavour 1D models of the starting model will not be updated by data there.
 * Blanco is 78% tier C (no station within 2 focal depths) and its depth histogram reaches 30 km, which is deeper
-  than expected for an oceanic transform. Those depths come from the Track A model; B2 relocates them, but they
+  than expected for an oceanic transform. Those depths come from the v4-NLL3D model; B2 relocates them, but they
   add depth-velocity trade-off offshore. A test inversion without Blanco tier C (3,280 events) would show how much.
 
 ## 2. Picks and pick QC
 
 Source: `data/catalog_v4/Cascadia_picks_catalog_v4.csv`, 774,910 picks for the 23,549 declustered events. All 696
-Track A stations are in the GTSRCE list, so no pick is lost to the station filter. Each pick is matched to its
+v4-NLL3D stations are in the GTSRCE list, so no pick is lost to the station filter. Each pick is matched to its
 iter1 and iter0 NLLoc PHASE line on (event, station, phase, pick time rounded to 0.1 ms).
 
 Sigma (D-B008): P 0.05 / 0.10 / 0.15 s for pick_prob >= 0.6 / 0.3-0.6 or missing / < 0.3; S twice P.
@@ -114,9 +119,9 @@ Filters, applied in this order (first reason wins; each pick removed once):
 
 ### 2a. Weight 0 and residual outliers
 
-**Weight 0.** In Track A each 25 km tile is located in its own box (tile +- 75 km); stations whose ±250 km time
+**Weight 0.** In v4-NLL3D each 25 km tile is located in its own box (tile +- 75 km); stations whose ±250 km time
 grid does not cover that box get weight 0 and no residual (distance column 0). They are far stations: epicentral
-distance 5/25/50/75/95th percentiles 167 / 188 / 216 / 268 / 534 km, 31% beyond the 250 km Track A cap, 66 picks
+distance 5/25/50/75/95th percentiles 167 / 188 / 216 / 268 / 534 km, 31% beyond the 250 km v4-NLL3D cap, 66 picks
 closer than 150 km. They are 9.4% of the picks. They are dropped here because nothing has checked them. They are
 kept in `picks_rejected.csv` (qc = w0): B2 can re-admit the ones within ~250 km after checking them against the
 TomoATT forward times of the starting model, which would add long, deep rays (the current kept set has 95% of
@@ -125,7 +130,7 @@ picks within 152 km).
 **Residual outliers.** Reference distribution: iter0 residuals (no station terms) of the used picks (w > 0) of the
 selected events. Robust centre and spread per phase: P median 0.014 s, sigma_MAD = 1.4826 MAD = 0.207 s;
 S median -0.101 s, sigma_MAD = 0.450 s. Rule: drop when |iter1 residual - median| > 4 sigma_MAD, that is
-0.83 s for P and 1.80 s for S. The tested residual is the iter1 one, which includes the Track A station terms and
+0.83 s for P and 1.80 s for S. The tested residual is the iter1 one, which includes the v4-NLL3D station terms and
 the iter1 location.
 
 Why test the iter1 residual (with terms) against the iter0 spread: the tomography sees no station terms
@@ -163,7 +168,7 @@ The check (keep highest pick_prob, then earliest) stays in the script.
 For each event-station pair with both P and S still kept (258,699 pairs) two tests; when either fails the S pick is
 dropped (the P pick is the more reliable one):
 
-* tS/tP outside [1.4, 2.5] with tS, tP measured from the Track A origin: 104 pairs. The 0.1/50/99.9th percentiles
+* tS/tP outside [1.4, 2.5] with tS, tP measured from the v4-NLL3D origin: 104 pairs. The 0.1/50/99.9th percentiles
   of tS/tP are 1.52 / 1.74 / 2.19, so the window only catches mislabelled phases. No pair has S at or before P.
 * S-P differential residual (iter1 location, no terms: res_S - res_P) minus the station median of that quantity,
   beyond 5 sigma_MAD (sigma_MAD = 0.246 s, threshold 1.23 s). The station median absorbs a station's sediment
@@ -186,7 +191,7 @@ changes little; keeping them avoids a rule that has no clear benefit.
 
 Pick QC moves 405 events below nphs >= 12 or gap <= 200 deg (gap recomputed from the kept picks' stations;
 it agrees with NLLoc's gap to a median 0.06 deg, std 5 deg). Proposed rule: keep the event if it still has
->= 10 picks (the Track A tier A minimum) and gap <= 200 deg; otherwise drop it.
+>= 10 picks (the v4-NLL3D tier A minimum) and gap <= 200 deg; otherwise drop it.
 
 | reason | decision | events |
 |---|---|---|
@@ -205,11 +210,11 @@ replaced by the 4th-ranked event of their cell (would change D-B003's rule; the 
 OBS are identified by the `seafloor` flag of `picks_share/stations/stations_ver5_v6.csv`, the table
 `a1_build_model.py` built the GTSRCE file from. The GTSRCE elevation column is 0.0 for all stations; the depth
 column zSrce (+down) is -elevation, or 50 m below the grid surface where the 1-arcmin surface is lower than the
-station. zSrce > 0.1 km gives the same set except 2 coastal stations. 333 OBS among the 696 Track A stations,
+station. zSrce > 0.1 km gives the same set except 2 coastal stations. 333 OBS among the 696 v4-NLL3D stations,
 286 of them with picks in this dataset.
 
 Data: iter0 residuals of used picks of well-located events (LOCATED, nphs >= 8, gap <= 270, RMS <= 0.6, the
-a2_station_terms.py criteria), and the Track A cumulative terms after iter1 (`runs/iter1_vpvs176/station_terms.csv`,
+a2_station_terms.py criteria), and the v4-NLL3D cumulative terms after iter1 (`runs/iter1_vpvs176/station_terms.csv`,
 delay = iter0 term + iter1 median residual; n >= 10).
 
 | group | stations | with S term | median P term | median S term | P term p5/p95 | S term p5/p95 | abs(S term) > 0.5 | > 1.0 | corr(P, S terms) | slope S on P |
@@ -256,8 +261,8 @@ Options:
 
 | option | effect | numbers |
 |---|---|---|
-| (i-a) fixed per-station S correction from Track A, OBS only: subtract the iter1 cumulative S term from OBS S travel times; land and all P uncorrected | removes the sub-grid sediment/shallow signal; keeps all OBS S | 243 OBS in the dataset with a term, 106,927 S picks corrected; 92 S picks at stations without a term (drop or leave uncorrected) |
-| (i-b) per-station S static solved jointly in B2 (damped, started at the Track A value) | lets the correction follow the model update; trades off with shallow Vs under the station | requires station-static support in TomoATT (to check in notes/tomoatt_build.md); 255 extra unknowns |
+| (i-a) fixed per-station S correction from v4-NLL3D, OBS only: subtract the iter1 cumulative S term from OBS S travel times; land and all P uncorrected | removes the sub-grid sediment/shallow signal; keeps all OBS S | 243 OBS in the dataset with a term, 106,927 S picks corrected; 92 S picks at stations without a term (drop or leave uncorrected) |
+| (i-b) per-station S static solved jointly in B2 (damped, started at the v4-NLL3D value) | lets the correction follow the model update; trades off with shallow Vs under the station | requires station-static support in TomoATT (to check in notes/tomoatt_build.md); 255 extra unknowns |
 | (ii) sediment layer in the starting model | physically right for the shelf, but needs a thickness map (e.g. GlobSed) and Vs/Vp of sediments, and a grid of ~100 m near the seafloor; does not explain the negative deep-water terms (41 stations) | 0.1-2 km layer below a several-km grid: not resolvable |
 | (iii) drop OBS S | loses 107,019 S picks (31% of S) and nearly all Vs information offshore, where half of the events are | 51% of events have OBS picks |
 
@@ -288,7 +293,7 @@ event of the cell (changes the D-B003 rule).
 **Evidence.** Section 2e.
 
 ### D-B010 (proposed) OBS S correction (exception to D-B006)
-**Recommendation.** Option (i-a) for B2 iteration 1: subtract the Track A iter1 S term from OBS S travel times
+**Recommendation.** Option (i-a) for B2 iteration 1: subtract the v4-NLL3D iter1 S term from OBS S travel times
 (OBS only, S only); land stations and all P picks stay uncorrected as D-B006 says. Move to (i-b), joint damped
 station statics starting at these values, if TomoATT supports them. Drop the 92 OBS S picks at stations without
 an S term. Before B2, look at waveforms of the strongest negative-term deep-water OBS (W01.7A, J35A.7D, M03C.7D,

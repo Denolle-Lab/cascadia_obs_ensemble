@@ -1,16 +1,16 @@
 # Track B design memo: joint Vp/Vs local-earthquake tomography with TomoATT
 
 Status: proposal for PI review (2026-11-22). Agent: Claude (Track B design subagent).
-Context: `../DECISIONS.md` (D-B001..008), `../params.yaml`, Track A model in `../../08_relocation/README.md`.
+Context: `../DECISIONS.md` (D-B001..008), `../params.yaml`, v4-NLL3D model in `../../08_relocation/README.md`.
 Every citation below was opened or resolved through doi.org on 2026-11-22. Where I could not read
 the methods (paywall, supplement only), the text says so. Numbers that come from our own files are
 marked "(ours)".
 
 Our problem in one paragraph. Domain 39.5-51.5 N, 121-131 W (1,334 km N-S, 692-858 km E-W),
--3 to 80 km below sea level. 696 stations in the Track A station file (ours): 337 sit below sea
+-3 to 80 km below sea level. 696 stations in the v4-NLL3D station file (ours): 337 sit below sea
 level, 270 deeper than 0.5 km, 204 deeper than 2 km (median OBS depth 2.65 km, max 4.79 km); the
 highest land station is at 2.19 km elevation. About 23k declustered events and 0.70 M P and S picks
-(D-B003). Pick sigma 0.05/0.10/0.15 s for P, twice that for S (D-B008). Track A iter0 static terms
+(D-B003). Pick sigma 0.05/0.10/0.15 s for P, twice that for S (D-B008). v4-NLL3D iter0 static terms
 (ours, stations with >= 20 picks): OBS S terms span -0.76 to +0.59 s (5th-95th percentile, max 2.15 s),
 land S terms -0.58 to +0.49 s; OBS P terms -0.16 to +0.33 s. The OBS S terms are centred near zero
 because the locations absorb the common part of the sediment delay, which is itself a warning (section 6).
@@ -102,15 +102,15 @@ run (1,378 CPU-h for 40 iterations, 555 sources, ~1.8 M nodes) gives ~1.2e-4. Fo
 
 Accuracy test before adoption (proposed acceptance criterion). For 20 stations (10 OBS on the
 slope and shelf, 10 land incl. Cascades), compute times on the 0.02/0.025/1 km grid and on a
-0.01/0.0125/0.5 km reference grid in the Track A model; also run `stencil_order` 3. Accept the grid
+0.01/0.0125/0.5 km reference grid in the v4-NLL3D model; also run `stencil_order` 3. Accept the grid
 if median |dt| <= 0.02 s and 95th percentile <= 0.05 s for P within 250 km (and 0.04/0.10 s for S).
 If OBS on steep bathymetry fail, use stencil order 3 or drop to 0.5 km vertical in the top 10 km
 (not possible on a uniform TomoATT grid; would mean 0.5 km throughout, 40 M nodes, still fits).
-Also compare against the Track A NonLinLoc grids to catch datum or sign errors.
+Also compare against the v4-NLL3D NonLinLoc grids to catch datum or sign errors.
 
 Vertical extent. Top at -3 km covers all stations (highest 2.19 km). Water nodes: Vp 1.5 km/s;
 S model water and air at the shallowest solid Vs capped at 0.4 km/s (slower than any rock below, so
-no first arrival uses it; Track A used the same idea). Bottom at 80 km covers slab events beneath
+no first arrival uses it; v4-NLL3D used the same idea). Bottom at 80 km covers slab events beneath
 Puget Sound (to ~60-70 km).
 
 ### 2.2 Inversion grid: 5 staggered grids, two stages, depth-dependent lateral spacing
@@ -157,7 +157,7 @@ outer loop k = 1..3
      which makes the S run fit S-P and keeps origin-time and location errors out of Vs
   c. relocate all ~23k events with P and S in the new pair of models
      (export station traveltime fields with output_source_field, locate with NonLinLoc/our own
-     grid-search locator on those fields), keep Track A conventions; update origin times
+     grid-search locator on those fields), keep v4-NLL3D conventions; update origin times
 ```
 
 Stop the outer loop when the median hypocentre change is < 0.5 km horizontal and < 1 km vertical,
@@ -267,12 +267,12 @@ Recommendation for us (to become D-B009 or a D-B006 amendment):
    profiles; our own Ps-P delays from teleseismic receiver functions on shelf OBS (a one-day job with
    our data); GlobSed thickness with the Ruan et al. Vs-depth law where nothing else exists. Expected
    size: S 0.5-2 s, P <= 0.2 s.
-2. Check the corrections against the Track A terms: after correction, the OBS S term distribution
+2. Check the corrections against the v4-NLL3D terms: after correction, the OBS S term distribution
    should match the land one (5-95 % range ~ +-0.5 s). Large remaining terms flag bad sediment
    estimates or polarity/horizontal-orientation issues in S picks.
 3. Do not add a sediment layer to the 3D starting model in this pass; it would be smeared over 1-2
    grid cells and bias Vs in the top 2-3 km of crust. Revisit if we move to a finer near-surface grid.
-4. Sensitivity test: run the S stage with (a) a priori corrections, (b) no corrections, (c) Track A
+4. Sensitivity test: run the S stage with (a) a priori corrections, (b) no corrections, (c) v4-NLL3D
    iter1 S terms. Report the Vs and Vp/Vs differences in the top 10 km under the shelf.
 
 ---
@@ -308,7 +308,7 @@ Recovery metrics and what goes in the paper:
   and amplitude ratio. Define "resolved" as correlation >= 0.7 and amplitude ratio >= 0.5; draw that
   contour on every model figure, P and S separately; Vp/Vs only where both are resolved.
 * Hypocentre recovery: median and 90th percentile of horizontal/vertical/origin-time error by
-  region and Track A tier.
+  region and v4-NLL3D tier.
 * Paper: one checkerboard figure (map slices at 6, 15, 30 km, one cross-section per region, P and S),
   the spike figure with smearing lengths, a table of recovery statistics by region, and the noise/
   location-error settings in the methods. Supplement: all depths, restoring test, OBS test.
@@ -362,7 +362,7 @@ depth mean (absolute values differ by method), and report correlation in the res
    section 4 measures the bias; report depth shifts by tier.
 2. The common sediment S delay at OBS. If not removed, offshore events recorded mainly by OBS absorb it
    in origin time and depth (S late everywhere -> event deeper or later), and the residual goes into
-   low Vs at 0-5 km under every OBS. Track A OBS S terms centred near zero (section intro) show this
+   low Vs at 0-5 km under every OBS. v4-NLL3D OBS S terms centred near zero (section intro) show this
    absorption already happens. Mitigation: section 3.
 3. One-sided geometry: OBS only 2011-2015 (Cascadia Initiative) plus permanent sites at Axial,
    Endeavour and NEPTUNE; most offshore events outside 2011-2015 have only land stations to the east.
@@ -382,7 +382,7 @@ depth mean (absolute values differ by method), and report correlation in the res
 9. Water and air nodes updated through the multigrid basis functions: check and reset (2.3).
 10. Over-fitting with no explicit damping: chi^2 stopping rule (2.7) and identical iteration counts in
     synthetics.
-11. Starting model gaps: Gen0 has no coverage west of ~128.5 W; Track A uses 1D regional models there.
+11. Starting model gaps: Gen0 has no coverage west of ~128.5 W; v4-NLL3D uses 1D regional models there.
     The 1D-start inversion (section 4) shows how much those choices matter.
 12. DL S picks at OBS (horizontals with tilt noise) have heavier tails than land picks: residual weights
     (2.5); compare residual distributions OBS vs land after iteration 1, and if OBS S tails are wider,
@@ -426,9 +426,9 @@ checkerboards. Evidence: Wu et al. 2025 (doi:10.1016/j.epsl.2025.119362); Bai et
 **OBS sediment (amends D-B006).** Recommendation: a priori per-OBS vertical sediment corrections for S
 (and P) subtracted from the observed times; sources Rychert et al. 2018 Table S1, Ruan et al. 2014,
 Bell et al. 2016, our own RF Ps delays, GlobSed as fallback; no sediment layer in the 1 km grid; three-way
-sensitivity test. Alternatives: Track A iter1 S terms; no correction; sediment layer in the model.
+sensitivity test. Alternatives: v4-NLL3D iter1 S terms; no correction; sediment layer in the model.
 Evidence: TomoATT cannot invert static terms for local absolute times (code); S delays 0.5-2 s
-(Ruan et al. 2014, doi:10.1002/2014JB011162); Track A OBS S terms (ours).
+(Ruan et al. 2014, doi:10.1002/2014JB011162); v4-NLL3D OBS S terms (ours).
 
 **Resolution tests.** Recommendation: depth-dependent checkerboards (40/60/100 km, +-8 %, two phases),
 6 spike targets, restoring test, per-pick noise, perturbed hypocentres with the full outer loop;
@@ -437,4 +437,4 @@ Evidence: TomoATT cannot invert static terms for local absolute times (code); S 
 
 **Model independence.** Recommendation: 1D-start inversion (1D first, as in Zhang et al. 2025), Delph 2018
 start onshore, 5 x 70 % jackknife, no-OBS run; interpret only features stable to 2 % (Vp) / 3 % (Vs).
-Alternative: Track A start only. Evidence: Wang et al. 2024 (three starts); Wu et al. 2025 (70 % subsets).
+Alternative: v4-NLL3D start only. Evidence: Wang et al. 2024 (three starts); Wu et al. 2025 (70 % subsets).

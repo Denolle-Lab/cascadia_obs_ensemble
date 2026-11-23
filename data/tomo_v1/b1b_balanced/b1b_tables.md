@@ -4,93 +4,92 @@ Written by workflow/10_tomography/b1b_balance.py.
 
 ## Metrics
 
-| set | picks | kish_n_eff | stations | events | gini_station | top50_station_share | obs_share | S_share | pct_Axial | pct_Blanco | pct_Cascades | pct_Explorer | pct_Gorda | pct_JdF ridge/plate | pct_Mendocino | pct_Offshore forearc | pct_Other onshore | pct_Puget/Georgia |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| B1 | 692246 | 692246 | 646 | 23428 | 0.653 | 0.369 | 0.269 | 0.504 | 0.1 | 12.3 | 12.1 | 0.1 | 7.8 | 0.0 | 15.8 | 8.4 | 19.2 | 24.2 |
-| B1b core, unweighted | 677235 | 677235 | 424 | 22976 | 0.496 | 0.375 | 0.269 | 0.504 |  | 12.2 | 12.2 | 0.0 | 7.9 | 0.0 | 16.0 | 8.1 | 19.2 | 24.4 |
-| B1b w_bin | 677235 | 546111 | 424 | 22976 | 0.416 | 0.296 | 0.253 | 0.501 |  | 8.9 | 14.3 | 0.0 | 8.0 | 0.0 | 11.7 | 8.2 | 23.2 | 25.8 |
-| B1b w_bal | 677235 | 461804 | 424 | 22976 | 0.389 | 0.286 | 0.393 | 0.512 |  | 14.4 | 14.3 | 0.0 | 14.4 | 0.0 | 14.4 | 13.8 | 14.3 | 14.4 |
+| set | picks | kish_n_eff | stations | events | gini_station | top50_station_share | obs_share | S_share | pct_Blanco | pct_Cascades | pct_Gorda | pct_Mendocino | pct_Offshore forearc | pct_Other onshore | pct_Puget/Georgia | pct_Ridges |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| B1 | 703559 | 703559 | 658 | 24621 | 0.645 | 0.363 | 0.28 | 0.503 | 12.1 | 12.0 | 7.7 | 15.5 | 8.2 | 18.9 | 23.8 | 1.8 |
+| B1b core, unweighted | 689602 | 689602 | 475 | 24249 | 0.529 | 0.368 | 0.281 | 0.503 | 12.0 | 12.0 | 7.8 | 15.7 | 7.9 | 18.9 | 23.9 | 1.8 |
+| B1b w_bin | 689602 | 557761 | 475 | 24249 | 0.453 | 0.289 | 0.268 | 0.5 | 8.7 | 14.0 | 7.8 | 11.4 | 7.9 | 22.6 | 25.2 | 2.4 |
+| B1b w_bal | 689602 | 431050 | 475 | 24249 | 0.401 | 0.267 | 0.431 | 0.508 | 13.3 | 13.2 | 13.3 | 13.4 | 12.7 | 13.3 | 13.3 | 7.5 |
 
 ## Region weights
 
-| region | w_region |
+| group | w_region |
 |---|---|
-| Blanco | 1.62 |
-| Cascades | 0.995 |
-| Explorer | 1.0 |
-| Gorda | 1.799 |
-| JdF ridge/plate | 1.0 |
-| Mendocino | 1.23 |
-| Offshore forearc | 1.684 |
-| Other onshore | 0.619 |
-| Puget/Georgia | 0.558 |
+| Blanco | 1.45 |
+| Cascades | 0.89 |
+| Gorda | 1.61 |
+| Mendocino | 1.101 |
+| Offshore forearc | 1.51 |
+| Other onshore | 0.554 |
+| Puget/Georgia | 0.499 |
+| Ridges | 3.0 |
 
 ## Stations admitted only by the OBS bar (main region of their picks)
 
 | main_region | stations | P | S |
 |---|---|---|---|
 | Blanco | 1 | 7 | 83 |
-| Explorer | 6 | 228 | 207 |
 | Gorda | 7 | 335 | 486 |
 | Mendocino | 1 | 71 | 10 |
-| Offshore forearc | 6 | 178 | 333 |
+| Offshore forearc | 5 | 173 | 302 |
 
 ## Dropped stations by reason
 
 | is_obs | fail | stations |
 |---|---|---|
-| False | nP | 35 |
-| False | nP azimuth | 34 |
-| False | nP azimuth distance | 38 |
+| False | nP | 33 |
+| False | nP azimuth | 33 |
+| False | nP azimuth distance | 41 |
 | False | nP distance | 2 |
 | True | azimuth | 1 |
 | True | distance | 4 |
-| True | nP | 2 |
-| True | nP azimuth | 4 |
-| True | nP azimuth distance | 91 |
-| True | nP distance | 10 |
+| True | nP | 1 |
+| True | nP azimuth | 3 |
+| True | nP azimuth distance | 119 |
+| True | nP distance | 3 |
 
 ## Dropped stations by main region
 
 | main_region | stations | P | S |
 |---|---|---|---|
-| Axial | 8 | 212 | 174 |
-| Blanco | 8 | 673 | 1148 |
+| Axial | 8 | 0 | 0 |
+| Blanco | 7 | 657 | 1145 |
 | Cascades | 14 | 305 | 287 |
-| Explorer | 16 | 338 | 274 |
+| Explorer | 29 | 131 | 128 |
 | Gorda | 9 | 67 | 146 |
-| JdF ridge/plate | 11 | 18 | 19 |
+| JdF ridge/plate | 28 | 16 | 13 |
 | Mendocino | 7 | 116 | 42 |
-| Offshore forearc | 64 | 712 | 750 |
+| Offshore forearc | 54 | 650 | 674 |
 | Other onshore | 37 | 894 | 644 |
 | Puget/Georgia | 47 | 1293 | 917 |
 
 ## Events by region
 
-| region | B1 | kept |
-|---|---|---|
-| Axial | 29 | 0 |
-| Blanco | 4216 | 4192 |
-| Cascades | 1818 | 1758 |
-| Explorer | 71 | 1 |
-| Gorda | 2553 | 2526 |
-| JdF ridge/plate | 9 | 2 |
-| Mendocino | 4051 | 4032 |
-| Offshore forearc | 2313 | 2179 |
-| Other onshore | 4113 | 4056 |
-| Puget/Georgia | 4255 | 4230 |
+| region | rule | B1 | kept |
+|---|---|---|---|
+| Axial | ridge | 428 | 428 |
+| Blanco | main | 4216 | 4192 |
+| Cascades | main | 1818 | 1758 |
+| Explorer | ridge | 403 | 403 |
+| Gorda | main | 2553 | 2526 |
+| JdF ridge/plate | ridge | 471 | 463 |
+| Mendocino | main | 4051 | 4032 |
+| Offshore forearc | main | 2313 | 2161 |
+| Other onshore | main | 4113 | 4056 |
+| Puget/Georgia | main | 4255 | 4230 |
 
 ## Log
 
 ```
-B1 input: 692246 picks, 23428 events, 646 stations
-core stations: 425 of 646 (OBS 174, land 251); admitted only by the OBS bar: 21; only by the S test: 15
-region weights: {'Blanco': 1.62, 'Cascades': 0.995, 'Explorer': 1.0, 'Gorda': 1.799, 'JdF ridge/plate': 1.0, 'Mendocino': 1.23, 'Offshore forearc': 1.684, 'Other onshore': 0.619, 'Puget/Georgia': 0.558}
-events kept: 22976 of 23428; picks kept 677235; dropped 15011 (station 9029, event 5982)
-| set | picks | kish_n_eff | stations | events | gini_station | top50_station_share | obs_share | S_share | pct_Axial | pct_Blanco | pct_Cascades | pct_Explorer | pct_Gorda | pct_JdF ridge/plate | pct_Mendocino | pct_Offshore forearc | pct_Other onshore | pct_Puget/Georgia |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| B1 | 692246 | 692246 | 646 | 23428 | 0.653 | 0.369 | 0.269 | 0.504 | 0.1 | 12.3 | 12.1 | 0.1 | 7.8 | 0.0 | 15.8 | 8.4 | 19.2 | 24.2 |
-| B1b core, unweighted | 677235 | 677235 | 424 | 22976 | 0.496 | 0.375 | 0.269 | 0.504 |  | 12.2 | 12.2 | 0.0 | 7.9 | 0.0 | 16.0 | 8.1 | 19.2 | 24.4 |
-| B1b w_bin | 677235 | 546111 | 424 | 22976 | 0.416 | 0.296 | 0.253 | 0.501 |  | 8.9 | 14.3 | 0.0 | 8.0 | 0.0 | 11.7 | 8.2 | 23.2 | 25.8 |
-| B1b w_bal | 677235 | 461804 | 424 | 22976 | 0.389 | 0.286 | 0.393 | 0.512 |  | 14.4 | 14.3 | 0.0 | 14.4 | 0.0 | 14.4 | 13.8 | 14.3 | 14.4 |
+B1 input: 703559 picks, 24621 events, 658 stations
+core stations: 418 of 658 (OBS 167, land 251); admitted only by the OBS bar: 14; only by the S test: 13
+ridge-only stations (>= 10 ridge picks, no coverage test): 57
+region weights: {'Blanco': 1.45, 'Cascades': 0.89, 'Gorda': 1.61, 'Mendocino': 1.101, 'Offshore forearc': 1.51, 'Other onshore': 0.554, 'Puget/Georgia': 0.499, 'Ridges': 3.0}
+events kept: 24249 of 24621; picks kept 689602; dropped 13957 (station 8180, event 5777)
+| set | picks | kish_n_eff | stations | events | gini_station | top50_station_share | obs_share | S_share | pct_Blanco | pct_Cascades | pct_Gorda | pct_Mendocino | pct_Offshore forearc | pct_Other onshore | pct_Puget/Georgia | pct_Ridges |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| B1 | 703559 | 703559 | 658 | 24621 | 0.645 | 0.363 | 0.28 | 0.503 | 12.1 | 12.0 | 7.7 | 15.5 | 8.2 | 18.9 | 23.8 | 1.8 |
+| B1b core, unweighted | 689602 | 689602 | 475 | 24249 | 0.529 | 0.368 | 0.281 | 0.503 | 12.0 | 12.0 | 7.8 | 15.7 | 7.9 | 18.9 | 23.9 | 1.8 |
+| B1b w_bin | 689602 | 557761 | 475 | 24249 | 0.453 | 0.289 | 0.268 | 0.5 | 8.7 | 14.0 | 7.8 | 11.4 | 7.9 | 22.6 | 25.2 | 2.4 |
+| B1b w_bal | 689602 | 431050 | 475 | 24249 | 0.401 | 0.267 | 0.431 | 0.508 | 13.3 | 13.2 | 13.3 | 13.4 | 12.7 | 13.3 | 13.3 | 7.5 |
 ```

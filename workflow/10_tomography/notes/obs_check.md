@@ -7,14 +7,14 @@ Raw windows (699 miniSEED, 20 MB): `/wd1/mdenolle_data/tomo_v1/obs_check/raw/` (
 
 ## Question
 
-At deep-water OBS with strongly negative Track A S terms (S observed 0.8-2.4 s before the 3D-model time),
+At deep-water OBS with strongly negative v4-NLL3D S terms (S observed 0.8-2.4 s before the 3D-model time),
 is the deep-learning S pick the S wave, or a P-to-S conversion at the sediment-basement contact (Ps,
 0.3-2.5 s after P) or another phase? At shelf OBS with large positive S terms, is the delay the size
 expected from slow sediments?
 
 ## Data and method
 
-* Picks: all weighted (EDT w > 0) iter1 picks of the Track A run `iter1_vpvs176`, from the B1 phase cache
+* Picks: all weighted (EDT w > 0) iter1 picks of the v4-NLL3D run `iter1_vpvs176`, from the B1 phase cache
   (`b1_dataset/cache/phases_iter1_vpvs176.parquet`), not only the B1 subset, because the stations with the
   most negative terms have 5-50 S picks. `res0` = NLLoc residual + applied station delay = residual against
   the 3D model without station term. Predicted P = predicted S / 1.76 (the run's constant Vp/Vs).
@@ -26,7 +26,7 @@ expected from slow sediments?
   from the local pnwstore archive through its sqlite index (EarthScope FDSN as fallback), 2-12 Hz.
   Horizontal orientation of the OBS is not known, so H1/H2 are plotted unrotated and the horizontal
   modulus is used. Eight events per station are plotted with the P pick, S pick, model P and S, and model
-  S + Track A term.
+  S + v4-NLL3D term.
 * Tests:
   1. Moveout. Picked S minus predicted P against predicted S-P. A conversion picked as S sits at a constant
      0.3-2.5 s with slope 0; a true S follows slope ~1 with intercept ~ the S term.
@@ -34,7 +34,7 @@ expected from slow sediments?
      RMS ratio in the first second after the pick. An S-to-P conversion (Sp) picked as S would show a Z
      onset at the pick, the horizontal onset later, and H/Z < 1.
   3. Residual against distance, and a station static from near events only (epicentral distance <= 60 km,
-     n >= 10), compared with the Track A term (all distances).
+     n >= 10), compared with the v4-NLL3D term (all distances).
 
 ## Results
 
@@ -99,14 +99,14 @@ included). H/Z: horizontal/vertical RMS ratio in the first second after the pick
   S -1.0 to -2.4 s), so the 3D model's Vs (Vp/1.76) is too slow along long paths in the oceanic plate, or
   Vp/Vs there is below 1.76, or the far offshore events are biased. That is structure for B2, not a
   station correction.
-* Where near events exist, the deep-water static is much smaller than the Track A term: G20D -0.65 (term
+* Where near events exist, the deep-water static is much smaller than the v4-NLL3D term: G20D -0.65 (term
   -1.00), GB281 -0.49 (-0.85), GB220 -0.78 (-1.25), J11B -0.90 within 100 km (-1.31), J20D -0.65 within 100 km
   (-0.92). A near-60 km static is below -0.5 s at 6 OBS in > 1.5 km of water (G19B, G20D, G35B, J11D,
-  GB220 off southern Oregon / Gorda, and NC27.NV), against 41 with the Track A term, and no lower than
+  GB220 off southern Oregon / Gorda, and NC27.NV), against 41 with the v4-NLL3D term, and no lower than
   -0.78 s. Those -0.5 to -0.8 s statics may be local structure (fast shallow crust) or a location bias of the
   nearby events; they are small enough to keep as statics.
 * Shelf OBS: true S, delayed by slow sediment. Picks are on the horizontal S onset, the delay is a station
-  constant (near-60 km static equals the Track A term within 0.05 s at FS08D, FS14D, FS15D, FS18B, FS42D,
+  constant (near-60 km static equals the v4-NLL3D term within 0.05 s at FS08D, FS14D, FS15D, FS18B, FS42D,
   FC03D; M01C, M08A differ by 0.2 s), P terms are near zero (median +0.06 s), and the S delay is 0.6-1.8 s.
   A delay dt = h (1/Vs_sed - 1/Vs_model) with Vs_sed 0.3-0.6 km/s and Vs_model ~2-3 km/s gives
   h ~ 0.2-0.4 km for 0.7 s and ~0.5-0.9 km for 1.6 s, the sediment thickness range of the northern California
@@ -127,14 +127,14 @@ included). H/Z: horizontal/vertical RMS ratio in the first second after the pick
 
 1. Keep all OBS S picks. Dropping deep-water OBS S is not supported: the picks are S.
 2. Revise D-B010: the station term is right for the shelf but wrong in kind for the deep-water stations
-   whose term comes from far events. Use a near-event S static instead of the Track A term:
+   whose term comes from far events. Use a near-event S static instead of the v4-NLL3D term:
    * static = median no-term iter1 S residual of picks with epicentral distance <= 60 km (n >= 10);
      if fewer, the same within 100 km (n >= 10); if fewer, no static (S pick kept, uncorrected).
    * Counts on the B1 dataset: 95,804 OBS S picks get a near-60 static (172 OBS), 8,336 a near-100 static
      (31 OBS), 2,879 none (70 OBS, 47 of them in > 1.5 km of water, with only far picks). OBS with static
      < -0.5 s: 13 instead of 45 (none below -0.91 s; the -1.3 to -2.4 s terms all drop out). Table: `data/tomo_v1/obs_check/obs_near_station_S_terms.csv`
      (columns near40/60/100, n40/60/100, S_static_proposed, static_source).
-   * The 92 OBS S picks without any Track A term stay dropped (unchanged).
+   * The 92 OBS S picks without any v4-NLL3D term stay dropped (unchanged).
 3. Leave the far-path S misfit (-1 to -2.4 s at > 100 km offshore) to the inversion. It is the main Vs signal
    offshore. Check the B2 starting model: Vp/Vs = 1.76 offshore may be too high in the oceanic plate; a
    forward run with Vp/Vs 1.70-1.73 west of the trench would tell. If the B2 residual QC (D-B012, 4 sigma_MAD on
@@ -142,11 +142,11 @@ included). H/Z: horizontal/vertical RMS ratio in the first second after the pick
 4. Shelf statics (water < 0.5 km, median +0.57 s) are unchanged by the rule, because the near and all-distance
    terms agree there.
 5. Optional for the station-static option (i-b): start the damped statics from the near-event value, not from
-   the Track A term.
+   the v4-NLL3D term.
 
 ## Caveats
 
-* The Track A locations of the far offshore events depend on the OBS picks; a location bias of those events
+* The v4-NLL3D locations of the far offshore events depend on the OBS picks; a location bias of those events
   would also project into distance-dependent S residuals. The near-event static avoids that.
 * OBS horizontal orientation unknown; no R/T rotation. The onset test uses the horizontal modulus.
 * 25 events per station at most; at W01, W02, FN13C, J35C, J35A all S picks are measured (15-21).

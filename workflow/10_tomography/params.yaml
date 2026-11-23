@@ -7,7 +7,7 @@ paths:
   base: /wd1/mdenolle_data/tomo_v1                       # large files (not in git)
   reloc_v5: /wd1/mdenolle_data/reloc_v5                  # Track A outputs
   trackA_run: iter1_vpvs176                              # D-B004: starting locations
-  trackA_catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv
+  trackA_catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv  # = v4-NLL3D (D-B024); alias catalog_v4-NLL3D_iter1.csv
   picks_v4: data/catalog_v4/Cascadia_picks_catalog_v4.csv
   start_model: /wd1/mdenolle_data/reloc_v5/model_vpvs176  # D-B005: Track A 3D model (NLL grid)
   stations: /wd1/mdenolle_data/reloc_v5/model_vpvs176/stations_GTSRCE.in
@@ -19,6 +19,16 @@ selection:                       # D-B003
   max_rms_s: 0.5
   decluster_cell_km: 3.0         # cubic cells, lat/lon/depth
   decluster_keep_per_cell: 3     # keep the most-picked events
+  ridge:                         # D-B023: softer rule for the ridge regions (replaces the main rule there)
+    regions: [Axial, Explorer, JdF ridge/plate]
+    tiers: [A, B, C, D]          # Explorer/JdF: nearest station 30-55 km, mostly tier C/D
+    min_nphs: 8
+    max_gap_deg: 270
+    max_rms_s: 0.5
+    decluster_cell_km: 1.0       # Axial caldera is a few km across (3 km x 3 left 29 events)
+    decluster_keep_per_cell: 3
+    post_qc_min_picks: 6
+    post_qc_max_gap_deg: 300
   # pick-level QC and S requirements: see notes/dataset.md (to be fixed in D-B009)
 
 pick_errors:                     # D-B008, inherited from Track A (a2_make_obs.py)
@@ -59,6 +69,12 @@ balance:                         # D-B022 (B1b): balanced dataset of well-record
   bin_az_deg: 30
   K_per_bin: 40                  # w_bin = min(1, K / n_bin)
   regions: [Puget/Georgia, Other onshore, Cascades, Mendocino, Gorda, Blanco, Offshore forearc]
+  region_groups:                 # D-B023: regions weighted as one group (target share like a region)
+    Ridges: [Axial, Explorer, JdF ridge/plate]
   region_w_clip: [0.33, 3.0]
+  ridge:                         # D-B023: softer criteria for ridge-rule events
+    min_picks: 10                # ridge-event picks for a station to count, no azimuth/distance test
+    post_min_picks: 6
+    post_max_gap_deg: 300
   post_min_picks: 10             # events: picks at core stations
   post_max_gap_deg: 200

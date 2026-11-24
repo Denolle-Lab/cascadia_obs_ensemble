@@ -37,8 +37,8 @@ def main():
     L = [f"# B5 run {a.run} against the D-B048 test (tomoDD dd) on the Blanco cases", "",
          f"Catalog {cf}. Common set = events relocated by both. Differences in km; 'c.r.' = each solution's centroid "
          "removed.", "",
-         "| case | test relocated | B5 relocated (of the case) | common | B5 clusters | h diff c.r. med (p90) | "
-         "z diff c.r. med (p90) | pair-distance diff med | centroid B5 - test h / z | test shift from B4 h / z |",
+         "| case | test relocated | B5 relocated (of the case) | common | B5 clusters | pair | h diff c.r. med (p90) | "
+         "z diff c.r. med (p90) | pair-distance diff med | centroid shift h / z |",
          "|---|---|---|---|---|---|---|---|---|---|"]
     shapes, inputs = [], [cf]
     for case in a.cases:
@@ -59,19 +59,20 @@ def main():
         xt = enu(T_.lat, T_.lon, T_.depth, lat0, lon0)
         xs = enu(S_.lat, S_.lon, S_.depth, lat0, lon0)
         x4 = enu(B4.b4_lat, B4.b4_lon, B4.b4_depth, lat0, lon0)
-        ct, cs, c4 = xt.mean(0), xs.mean(0), x4.mean(0)
-        r = (xs - cs) - (xt - ct)
-        dh, dz = np.hypot(r[:, 0], r[:, 1]), np.abs(r[:, 2])
         i, j = np.triu_indices(len(com), 1)
         if len(i) > 2_000_000:
             k = np.random.default_rng(0).choice(len(i), 2_000_000, replace=False)
             i, j = i[k], j[k]
-        pdif = np.abs(np.linalg.norm(xs[i] - xs[j], axis=1) - np.linalg.norm(xt[i] - xt[j], axis=1))
-        L.append(f"| {case} | {len(t)} | {len(b5r)} of {len(ids_case)} | {len(com)} | "
-                 f"{b5r.b5_cluster.nunique()} | {np.median(dh):.3f} ({np.quantile(dh, 0.9):.3f}) | "
-                 f"{np.median(dz):.3f} ({np.quantile(dz, 0.9):.3f}) | {np.median(pdif):.3f} | "
-                 f"{np.hypot(*(cs - ct)[:2]):.3f} / {(cs - ct)[2]:+.3f} | {np.hypot(*(ct - c4)[:2]):.3f} / "
-                 f"{(ct - c4)[2]:+.3f} |")
+        head = f"| {case} | {len(t)} | {len(b5r)} of {len(ids_case)} | {len(com)} | {b5r.b5_cluster.nunique()} |"
+        for name, X1, X0 in (("B5 - test", xs, xt), ("B5 - B4", xs, x4), ("test - B4", xt, x4)):
+            c1, c0 = X1.mean(0), X0.mean(0)
+            r = (X1 - c1) - (X0 - c0)
+            dh, dz = np.hypot(r[:, 0], r[:, 1]), np.abs(r[:, 2])
+            pdif = np.abs(np.linalg.norm(X1[i] - X1[j], axis=1) - np.linalg.norm(X0[i] - X0[j], axis=1))
+            L.append(f"{head} {name} | {np.median(dh):.3f} ({np.quantile(dh, 0.9):.3f}) | "
+                     f"{np.median(dz):.3f} ({np.quantile(dz, 0.9):.3f}) | {np.median(pdif):.3f} | "
+                     f"{np.hypot(*(c1 - c0)[:2]):.3f} / {(c1 - c0)[2]:+.3f} |")
+            head = "| | | | | |"
         for name, X in (("B4", x4), ("test dd", xt), ("B5", xs)):
             s, _, strike, dip = pca(X)
             shapes.append(f"| {case} | {name} | {s[0]:.2f} / {s[1]:.2f} / {s[2]:.2f} | {strike:.0f} / {dip:.0f} | "

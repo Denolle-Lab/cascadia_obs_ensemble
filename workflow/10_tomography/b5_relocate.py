@@ -692,8 +692,7 @@ def write_inputs(rdir, cid, boot=0):
                     np.r_[ev.lon.values[e], st.lon.values[sta]], center)
     air = round(float(st.zsrc_km.values[sta].min()) - B["tomodd"]["air_dep_margin_km"], 3)
     return dict(center=list(center), min_dist_centre_km=dmin, air_dep_km=air, mod=mod, n_events=len(e),
-                n_sta=len(sta), n_abs=len(pp), n_dt=len(rows), picks_missing_term=n_noterm,
-                t_written_ns=None), tcs
+                n_sta=len(sta), n_abs=len(pp), n_dt=len(rows), picks_missing_term=n_noterm), tcs
 
 
 def parse_stdout(text):
@@ -777,22 +776,36 @@ def read_reloc(path, center, e_ids):
 
 
 def do_cluster(task):
+    """One tomoDD run. Returns its run.json record; status ok / skipped (tomoDD: < 2 events left) / failed (tomoDD
+    exit != 0 or no output; recorded, not retried) / error (exception here; no run.json, retried by a rerun) / busy."""
     cid, boot = task
     C = _W["C"]
     rdir = run_dir(C, cid, boot)
-    out = rdir / "reloc.csv"
     if (rdir / "run.json").exists():
         return json.loads((rdir / "run.json").read_text())
-    pidf = rdir / "running.pid"
-    if pidf.exists():                             # another driver runs this cluster now: leave it alone
-        try:
-            os.kill(int(pidf.read_text()), 0)
-            return dict(cid=cid, boot=boot, status="busy")
-        except (ProcessLookupError, ValueError):
-            pass
+    lockf = C["dir"] / "locks" / (cid + (f"_b{boot:03d}" if boot else "") + ".lock")
+    if not acquire(lockf):                        # another driver runs it now: leave it alone
+        return dict(cid=cid, boot=boot, status="busy")
+    if alive_pid(rdir / "running.pid"):           # (a driver of the first version: no lock file)
+        lockf.unlink(missing_ok=True)
+        return dict(cid=cid, boot=boot, status="busy")
+    try:
+        if (rdir / "run.json").exists():          # finished by another driver meanwhile
+            return json.loads((rdir / "run.json").read_text())
+        return _do_cluster(cid, boot, rdir)
+    except Exception as e:                        # noqa: BLE001 (reported, retried by a rerun of the stage)
+        return dict(cid=cid, boot=boot, status="error", error=f"{type(e).__name__}: {e}")
+    finally:
+        lockf.unlink(missing_ok=True)
+
+
+def _do_cluster(cid, boot, rdir):
+    from manifest import _md5
+    out = rdir / "reloc.csv"
     if rdir.exists():
         shutil.rmtree(rdir)
     rdir.mkdir(parents=True)
+    pidf = rdir / "running.pid"
     pidf.write_text(str(os.getpid()))
     t0 = time.time()
     info, tcs = write_inputs(rdir, cid, boot)
@@ -813,14 +826,14 @@ def do_cluster(task):
     else:
         res["relocated"] = 0
         res["status"] = "skipped" if res["skipped"] else "failed"
-    res.update(cid=cid, boot=boot, inputs_s=round(t_in, 1), **{k: v for k, v in info.items() if k != "t_written_ns"})
+    res.update(cid=cid, boot=boot, inputs_s=round(t_in, 1), **info)
     (rdir / "iterations.json").write_text(json.dumps(it))
-    write_manifest(f"b5_tomodd_{cid}" + (f"_b{boot:03d}" if boot else ""), rdir,
-                   inputs=[rdir / "MOD", rdir / "Input_Files" / "dt.ct", rdir / "Input_Files" / "event.dat",
-                           res["bin"]],
-                   outputs=[out, rel, rdir / "tomoDD-SE.inp", rdir / "stdout.txt"],
-                   params={"sets": B["tomodd"]["sets"], "damp": B["tomodd"]["damp"], "joint": 0, "boot": boot},
-                   counts=res)
+    # per-run record with checksums (local; the stage writes one manifest for all runs)
+    (rdir / "files.json").write_text(json.dumps(
+        {"inputs": [_md5(f) for f in (rdir / "MOD", rdir / "Input_Files" / "dt.ct", rdir / "Input_Files" / "event.dat",
+                                      rdir / "Input_Files" / "absolute.dat", rdir / "Input_Files" / "station.dat",
+                                      res["bin"])],
+         "outputs": [_md5(f) for f in (out, rel, rdir / "tomoDD-SE.inp", rdir / "stdout.txt")]}, indent=1))
     # large and not used: initial residuals; velocity outputs (relocation only: the input model unchanged)
     for f in ("tomoDD-SE.res.ini", "Output_Files/tomoDD.vel", "Output_Files/Vp_model.dat", "Output_Files/Vs_model.dat"):
         if (rdir / f).exists():
@@ -830,16 +843,43 @@ def do_cluster(task):
     return res
 
 
+def alive_pid(f):
+    try:
+        os.kill(int(Path(f).read_text()), 0)
+        return True
+    except (FileNotFoundError, ProcessLookupError, ValueError):
+        return False
+
+
+def acquire(lockf):
+    """Atomic per-run lock (O_EXCL) holding the owner's PID; a lock whose owner is gone is taken over."""
+    lockf.parent.mkdir(exist_ok=True)
+    for _ in range(3):
+        try:
+            fd = os.open(lockf, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            return True
+        except FileExistsError:
+            if alive_pid(lockf):
+                return False
+            try:
+                os.unlink(lockf)
+            except FileNotFoundError:
+                pass
+    return False
+
+
 def run_dir(C, cid, boot=0):
     """clusters/<cid> (main run) or boot/<cid>/bNNN (bootstrap member k)."""
     return C["dir"] / "clusters" / cid if boot == 0 else C["dir"] / "boot" / cid / f"b{boot:03d}"
 
 
-def stage_run(C, nproc, only=None, nboot=0):
+def stage_run(C, nproc, only=None, nboot=0, reverse=False):
     import multiprocessing as mp
     load_shared(C)
     cl = _W["cl"]
-    cids = list(cl.sort_values("n_data", ascending=False).index)
+    cids = list(cl.sort_values("n_data", ascending=reverse).index)     # largest first (reverse: a helper driver)
     if only:
         cids = [c for c in cids if c in only]
     tasks = [(c, 0) for c in cids] + [(c, k) for c in cids for k in range(1, nboot + 1)]
@@ -847,25 +887,43 @@ def stage_run(C, nproc, only=None, nboot=0):
     log(f"run: {len(tasks)} tomoDD runs ({len(cids)} clusters, nboot {nboot}), {len(todo)} to do, {nproc} processes, "
         f"free memory {mem_available_gb():.0f} GB")
     t0 = time.time()
-    n_ok = n_bad = n_skip = 0
+    n_ok = n_bad = n_skip = n_fail = 0
+    recs = []
     ctx = mp.get_context("fork")
     with ctx.Pool(nproc, maxtasksperchild=200) as pool:
         for i, r in enumerate(pool.imap_unordered(do_cluster, todo, chunksize=1)):
+            recs.append({k: r.get(k) for k in ("cid", "boot", "status", "cls", "wall_s", "rss_gb", "n_events",
+                                                "relocated", "airquakes", "cnd_first", "cnd_last")})
             if r.get("status") == "ok":
                 n_ok += 1
             elif r.get("status") == "skipped":     # tomoDD: fewer than 2 events left (air quakes); events keep B4
                 n_skip += 1
                 log(f"{r.get('cid')} boot {r.get('boot')}: skipped by tomoDD ({r.get('airquakes')} air quakes)")
+            elif r.get("status") == "failed":      # tomoDD exit != 0: recorded (events keep B4), not retried
+                n_fail += 1
+                log(f"{r.get('cid')} boot {r.get('boot')}: tomoDD FAILED (exit {r.get('exit')}), see its stdout.txt")
             else:
                 n_bad += 1
-                log(f"{r.get('cid')} boot {r.get('boot')}: {r.get('status')} (exit {r.get('exit')})")
+                log(f"{r.get('cid')} boot {r.get('boot')}: {r.get('status')} {r.get('error', '')}")
             if (i + 1) % 200 == 0 or r.get("n_events", 0) >= 1000:
                 log(f"{i + 1}/{len(todo)} done ({n_bad} not ok), last {r.get('cid')} {r.get('n_events')} events "
                     f"{r.get('wall_s')} s rss {r.get('rss_gb')} GB; elapsed {(time.time() - t0) / 60:.1f} min, "
                     f"free {mem_available_gb():.0f} GB")
-    log(f"run done: {n_ok} ok, {n_skip} skipped by tomoDD, {n_bad} failed or busy, {(time.time() - t0) / 60:.1f} min")
+    wall = (time.time() - t0) / 60
+    log(f"run done: {n_ok} ok, {n_skip} skipped by tomoDD, {n_fail} tomoDD failures, {n_bad} errors or busy, "
+        f"{wall:.1f} min")
+    if not only:
+        (C["dir"] / "run_stage.json").write_text(json.dumps(recs, default=float))
+        write_manifest("b5_run", C["dir"], inputs=[C["dir"] / "prep" / f for f in ("events.parquet", "picks.parquet",
+                                                                                   "dt.parquet")]
+                       + [C["dir"] / "split" / "members.parquet", C["model"], C["station_terms"]]
+                       + [Path(B["tomodd"]["bin_dir"]) / f"tomoDD-SE_{c}" for c in B["tomodd"]["classes"]],
+                       outputs=[C["dir"] / "run_stage.json"],
+                       params={"tomodd": B["tomodd"], "nproc": nproc, "nboot": nboot},
+                       counts=dict(runs=len(tasks), done_now=len(todo), ok=n_ok, skipped=n_skip, failed=n_fail,
+                                   errors_or_busy=n_bad, wall_min=round(wall, 1)))
     if n_bad:
-        raise SystemExit(f"{n_bad} tomoDD runs not ok (see the log); rerun the stage to retry failures")
+        raise SystemExit(f"{n_bad} runs with an error or busy in another driver (see the log); rerun the stage")
 
 
 # ------------------------------------------------------------------------------------------------ collect
@@ -960,7 +1018,11 @@ def stage_collect(C, nproc, partial=False):
             missing.append(cid)
             continue
         rj = json.loads(f.read_text())
-        aq |= set(rj.get("airquake_ids", []))
+        if "airquake_ids" not in rj:              # run.json of a first test version: take them from the log
+            lg = (f.parent / "tomoDD-SE.log").read_text(errors="replace").splitlines()
+            rj["airquake_ids"] = sorted({int(l.split("-")[-1]) for l in lg if "negative depth" in l})
+            rj["airquakes"] = len(rj["airquake_ids"])
+        aq |= set(rj["airquake_ids"])
         g = mem[mem.cid == cid]
         core = set(g.ID[g.core])
         rf = d / "clusters" / cid / "reloc.csv"
@@ -1259,6 +1321,7 @@ def main():
     ap.add_argument("--only", help="comma-separated cluster ids (run stage, tests)")
     ap.add_argument("--nboot", type=int, default=B["nboot"])
     ap.add_argument("--partial", action="store_true", help="collect: allow clusters without a run")
+    ap.add_argument("--reverse", action="store_true", help="run: smallest clusters first (a second, helper driver)")
     a = ap.parse_args()
     C = config(a)
     log(f"stage {a.stage}: {C['run']} (model v{C['version']}, B4 {C['b4_run']}, grids {C['time_grids']})")
@@ -1267,7 +1330,7 @@ def main():
     elif a.stage == "split":
         stage_split(C)
     elif a.stage == "run":
-        stage_run(C, a.nproc, set(a.only.split(",")) if a.only else None, a.nboot)
+        stage_run(C, a.nproc, set(a.only.split(",")) if a.only else None, a.nboot, a.reverse)
     else:
         stage_collect(C, min(a.nproc, 32), a.partial)
 

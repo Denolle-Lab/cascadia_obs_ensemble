@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 19:25 (handoff section below).
+Last update: 2026-11-23 19:45 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -114,6 +114,17 @@ outdated. To do, in order:
    the gate.
 3. B4 relocation (automatic after the gate; grids ~2 h, NLLoc two passes), stop before GrowClust.
 4. 2026-11-24: split PR #33 into code + decisions and generated results.
+
+**Update 19:45.** PI chose a *private* preview for the model layer (gh-pages atlas stays unchanged). Atlas code:
+branch `atlas/model-layer` (worktree ~/wt_atlas_model, commit 49c64544), `build_v4_atlas.py --model <netCDF>` adds a
+"Velocity model" layer (one depth slice of dVp, dVs, Vp/Vs, Vp, Vs; DWS mask 0/10/100/1000). Private page:
+https://claude.ai/artifact/9tH3U7Se35ds5h6yoBo8dj (now M0 v0.1.0; republish the same page with v0.3.0, from another
+session pass that URL). Steps once `[b4] stage gate` appears in b4_relocate.log:
+  1. `cd ~/wt_atlas_model && LD_LIBRARY_PATH=$ENV/lib $ENV/bin/python workflow/06_analysis/build_v4_atlas.py --model
+     /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.0.nc --out <scratch>/atlas_preview.html`
+     ($ENV = ~/cascadia_obs_ensemble/.pixi/envs/default; missing untracked inputs are symlinked from ~/wt_atlas/data)
+  2. strip the document wrapper tags, title "Cascadia Atlas Model Preview", publish to the URL above
+  3. `echo "model v0.3.0 on the private atlas preview <date>" > /wd1/mdenolle_data/tomo_v1/b4_gate_v0.3.0.release`
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

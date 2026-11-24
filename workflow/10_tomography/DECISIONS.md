@@ -656,3 +656,30 @@ are flagged. Events seen only by distant stations, which the same trigger would 
 Under 725 v5.0 events the GMRT multibeam seafloor is lower than earth_relief 01m (median 41 m, up to 0.5 km). From
 v5.1 one merged surface (GMRT patches where available, earth_relief 01m elsewhere) defines the NLLoc topography floor
 (conservative node minimum as in D-B056), the D-B055 above-surface test, and the water/rock boundary of the model.
+
+### D-B069 NLLoc model error: constant 0.2 s, no LOCGAU2 (adopted, 2026-11-24, PI; result of the D-B065 test)
+Test on 2,397 events of b4_iter1_v0.3.1 (/wd1/mdenolle_data/tomo_v1/above_surface/check_misfit/, README and
+out/s06_table.md): with LOCGAU 0.2 0.0 and no LOCGAU2 (variant C02), Blanco minus Lange 2026 goes from +1.80 to +1.08 km
+(bootstrap change -0.73 [-0.99, -0.48]; West Blanco +4.00 -> +1.74; Cascadia Depression -1.32 -> -1.98), Mount St Helens
+is unchanged (+0.45 -> +0.47), 28 % of floor-held events leave the floor, Axial stays at 28-31 % within 2 km of the
+seafloor. Costs: tier A-B 1,094 -> 1,045 in the samples; sigma_z at Axial 1.25 -> 1.63 km and at MSH 0.97 -> 1.29 km
+(production used 0.05 s on short paths); 42 events (all tier C/D) more than 10 km deeper. NLLoc's EDT_OT_WT RMS is
+weighted by the EDT probabilities, so compare fits with the unweighted RMS. v5.1 template: LOCGAU 0.2 0.0, LOCGAU2
+removed; station terms recomputed with it in iter0.
+
+### D-B070 Test a slower offshore S before v5.1 (adopted, 2026-11-24, PI; from the D-B065 waveform check)
+Waveform check (/wd1/mdenolle_data/tomo_v1/above_surface/check_spicks/report.html): the S picks of floor-held events are
+on the S onsets (bad picks explain 8 %, at most 22 %, of the S excess); confirmed S-P is a median 0.51 s longer than the
+model's; implied path Vp/Vs offshore beyond 20 km 1.79-1.83 against 1.73-1.74 in the model; 84 % of the checked S nodes
+are reverted to the start model (D-B051); the excess is mostly constant per event (+0.2 s), pointing to slow S near the
+source (young ridge crust) or to epicentres on one-sided networks. Before v5.1: rebuild S grids for test stations with
+offshore S about 4 % slower and with a high Vp/Vs shallow crust, and score as in D-B065; if it works, the fix goes into
+the model as a new version before the v5.1 relocation.
+
+### D-B071 Flag ANSS explosions and quarry blasts (adopted, 2026-11-24, PI)
+326 of 1,700 onshore floor-held events (19 %, against 3.1 % of other onshore events) match ANSS explosions or quarry
+blasts, for which a surface depth is right. v5.1 sets event_flag for events matched to an ANSS event of those types
+(time and distance match), next to the Texada quarry flag; floor_limited is computed as before.
+
+Also 2026-11-24 (PI): a separate check of the UW short-period stations TDL, ELK, LO2, SOS, whose P and S residuals drop
+together by 0.1-0.3 s from November 2013 (timing or filter delay), before the v5.1 station terms.

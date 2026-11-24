@@ -44,6 +44,13 @@ station reach (tile box drops 6.1 % of arrivals), 80 km floor, tier U (5-pick ev
 `<scratchpad>/above_surface2`; resume with resumeFromRunId and the same args). T aims for a tested station-reach fix
 before v0.3.1 iter0 (~11:00): if ready, apply to a2_run_nlloc.py before iter0 starts, else rerun iter0/iter1 after.
 
+**Surface definition (from session -18, 10:50).** In v5.0, 725 located events are below the earth_relief 01m surface
+(D-B055 test, D-B056 floor) but above the atlas GMRT multibeam terrain, which is lower there (median -41 m, down to
+-0.5 km): median 17 m, max 354 m above it (Axial 267, Blanco 191, JdF 65, ...). They are the floor-held (upward-pull)
+events. List: /wd1/mdenolle_data/tomo_v1/above_surface/v5.0_atlas_gmrt_air_rows.json. For the round-2 synthesis: build
+the floor and the D-B055 test from the best bathymetry (GMRT where available, earth_relief elsewhere) and check that the
+3D model's seafloor/water boundary uses the same surface.
+
 **Next, in order.** (1) Read the workflow results; implement the tested NLLoc mask fix (Track A template in
 ~/wt_reloc, used by b4 iter0/iter1); rerun iter0/iter1/catalog of v0.3.1 with new run names. (2) Acceptance tests of
 v0.3.1 (Axial >= 85 % of A-B events above 2 km bsf vs Waldhauser 2020; Mt St Helens within ~0.5 km of Hirao 2025;

@@ -8,7 +8,9 @@ back-transform, interior nodes only), written as
   * optionally NonLinLoc SLOW_LEN grids (P and S) on the D-B005 Lambert grid for relocation (--nll): the model where it
     is defined, D-B005 elsewhere, and D-B005's water and air cells kept (bathymetry, topography)
 and registered in data/tomo_v1/models/registry.csv (append-only; one row per version, sha256 of every file) with a
-provenance JSON next to the netCDF. Versions are immutable: the exporter refuses to overwrite an existing version.
+provenance JSON next to the netCDF. The registry copy in the store (<store>/<name>/registry.csv, shipped in the
+bundle) and the git copy are merged before each new row, and both are written with the union. Versions are
+immutable: the exporter refuses to overwrite an existing version.
 
 Variables (CRESCENT CVM names, EMC/CF attributes): Vp, Vs (km/s), VpVs, Vp_start, Vs_start (the run's starting
 model), Vp_perturbation, Vs_perturbation (% from the start), dws_p, dws_s (last-iteration derivative weight sum;
@@ -252,6 +254,22 @@ def nll_grids(ds, out):
     return files
 
 
+def read_registry():
+    """Union of the store copy and this worktree's git copy, one row per (model, version), store row first. Either can
+    be missing or behind (a worktree without data/tomo_v1/models/, or registered elsewhere since): writing one of them
+    back alone would drop the other's rows. None when neither exists."""
+    fs = [f for f in (STORE / X["name"] / "registry.csv", REGISTRY) if f.exists()]
+    if not fs:
+        return None
+    reg = pd.concat([pd.read_csv(f, dtype={"version": str}) for f in fs], ignore_index=True)
+    return reg.drop_duplicates(["model", "version"]).sort_values("created", kind="stable").reset_index(drop=True)
+
+
+def check_new(reg, version):
+    if reg is not None and ((reg.model == X["name"]) & (reg.version == version)).any():
+        raise SystemExit(f"{X['name']} v{version} already registered: versions are immutable, use a new number")
+
+
 def register(ds, version, description, files, status):
     GIT_DIR.mkdir(parents=True, exist_ok=True)
     name = X["name"]
@@ -274,11 +292,10 @@ def register(ds, version, description, files, status):
                zarr=str(files["zarr"]), zarr_sha256=prov["files"]["zarr"]["sha256"],
                netcdf=str(files["netcdf"]), netcdf_sha256=prov["files"]["netcdf"]["sha256"],
                netcdf_git=prov["netcdf_in_git"] or "", nll=str(files.get("nll_P", "")).rsplit("/", 1)[0] if "nll_P" in files else "")
-    reg = pd.read_csv(REGISTRY) if REGISTRY.exists() else pd.DataFrame(columns=list(row))
-    if ((reg.model == name) & (reg.version.astype(str) == version)).any():
-        raise SystemExit(f"{name} v{version} already registered")
-    reg = pd.concat([reg, pd.DataFrame([row])], ignore_index=True)
-    reg.to_csv(REGISTRY, index=False)
+    reg = read_registry()
+    check_new(reg, version)
+    reg = pd.DataFrame([row]) if reg is None else pd.concat([reg, pd.DataFrame([row])], ignore_index=True)
+    reg.to_csv(REGISTRY, index=False)                               # the union goes to both copies
     reg.to_csv(STORE / name / "registry.csv", index=False)          # a copy next to the stores (tutorial, bundle)
     (STORE / name / f"v{version}.provenance.json").write_text(pj.read_text())
     return pj
@@ -303,6 +320,7 @@ def export(ds, version, description, nll=False, status="intermediate"):
     hard = [i for i in issues if not i.startswith("pending")]
     if hard:
         raise SystemExit(f"EMC metadata problems: {hard}")
+    check_new(read_registry(), version)                             # before any file is written
     files = write(ds, version, nll)
     pj = register(ds, version, description, files, status)
     back = xr.open_zarr(files["zarr"], consolidated=True)          # read-back check

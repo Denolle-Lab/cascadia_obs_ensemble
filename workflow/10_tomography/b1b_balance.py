@@ -21,7 +21,8 @@ re-measured; B1b only selects stations and assigns weights. Parameters: params.y
 5. Events: an event is kept if it still has >= post_min_picks picks and gap <= post_max_gap_deg on
    core stations.
 6. Ridge regions (D-B023; events selected in B1 by the softer ridge rule, events.csv `rule`): a station
-   with >= ridge.min_picks picks of ridge events is kept for those picks only, with no coverage test;
+   with >= ridge.min_picks picks of ridge events is kept for those picks only (an OBS for all its picks if
+   ridge.obs_keep_all, D-B035), with no coverage test;
    ridge events need ridge.post_min_picks picks and gap <= ridge.post_max_gap_deg; the three ridge regions
    share one weight group (`region_groups`).
 
@@ -184,21 +185,27 @@ def figures(st, k0, k, ev):
     import matplotlib.pyplot as plt
     FIG.mkdir(parents=True, exist_ok=True)
 
-    # 1. map of stations: core / dropped, sized by effective picks
+    # 1. map of stations: core / soft (ridge) bar / dropped, sized by effective picks. Dropped = no pick left in
+    # the dataset; ~core alone also counted the soft-bar stations, which keep picks (all of them for OBS, D-B035)
     eff = k.groupby("sta").w_bal.sum()
+    kept = st.sta.isin(k.sta)
     fig, ax = plt.subplots(figsize=(6.5, 7.5))
     ax.scatter(ev.lon, ev.lat, s=0.3, c="0.75", rasterized=True, label="B1 events")
-    d = st[~st.core]
-    ax.scatter(d.lon, d.lat, s=12, marker="x", c="tab:red", lw=0.8, label=f"dropped ({len(d)})")
-    for ob, m, col in ((False, "^", "tab:blue"), (True, "v", "tab:green")):
-        c = st[st.core & (st.is_obs == ob)]
+    d = st[~kept]
+    ax.scatter(d.lon, d.lat, s=12, marker="x", c="tab:red", lw=0.8, label=f"dropped, no picks ({len(d)})")
+    obs_soft = "all picks" if B["ridge"].get("obs_keep_all") else "ridge picks"
+    for cls, ob, m, col, lab in (("core", False, "^", "tab:blue", "core land"),
+                                 ("core", True, "v", "tab:green", "core OBS"),
+                                 ("ridge_only", False, "^", "tab:purple", "soft bar land (ridge picks)"),
+                                 ("ridge_only", True, "v", "tab:orange", f"soft bar OBS ({obs_soft})")):
+        c = st[st[cls] & kept & (st.is_obs == ob)]
         ax.scatter(c.lon, c.lat, s=4 + 60 * np.sqrt(eff.reindex(c.sta).fillna(0) / eff.max()), marker=m,
-                   c=col, ec="k", lw=0.3, label=f"core {'OBS' if ob else 'land'} ({len(c)})")
+                   c=col, ec="k", lw=0.3, label=f"{lab} ({len(c)})")
     ax.set_aspect(1 / np.cos(np.radians(45)))
     ax.set_xlabel("longitude")
     ax.set_ylabel("latitude")
     ax.legend(fontsize=7, loc="lower left")
-    ax.set_title("B1b core stations (size: effective picks after weighting)", fontsize=9)
+    ax.set_title("B1b stations (size: effective picks after weighting)", fontsize=9)
     fig.tight_layout()
     fig.savefig(FIG / "b1b_stations.png", dpi=150)
     plt.close(fig)
@@ -281,8 +288,12 @@ def main():
 
     # what the lower OBS bar admits
     ob = s[s.obs_bar_only].groupby("main_region").agg(stations=("sta", "size"), P=("n_P", "sum"), S=("n_S", "sum"))
-    fails = s[~s.core].groupby(["is_obs", "fail"]).size().rename("stations")
-    lost = s[~s.core].groupby("main_region").agg(stations=("sta", "size"), P=("n_P", "sum"), S=("n_S", "sum"))
+    # dropped = no pick left in the dataset (~core also counted the soft-bar stations, which keep picks)
+    kept = s.sta.isin(k.sta)
+    soft = s[s.ridge_only & kept].assign(picks=lambda d: d.sta.map(k.sta.value_counts()))
+    soft = soft.groupby(["main_region", "is_obs"]).agg(stations=("sta", "size"), picks_kept=("picks", "sum"))
+    fails = s[~kept].groupby(["is_obs", "fail"]).size().rename("stations")
+    lost = s[~kept].groupby("main_region").agg(stations=("sta", "size"), P=("n_P", "sum"), S=("n_S", "sum"))
     # events by region
     er = e.groupby(["region", "rule"]).agg(B1=("ID", "size"), kept=("keep", "sum"))
     log(md_table(m, index=False))
@@ -300,8 +311,10 @@ def main():
           "## Metrics", "", md_table(m, index=False), "",
           "## Region weights", "", md_table(wr.round(3).rename("w_region").to_frame()), "",
           "## Stations admitted only by the OBS bar (main region of their picks)", "", md_table(ob), "",
-          "## Dropped stations by reason", "", md_table(fails.to_frame()), "",
-          "## Dropped stations by main region", "", md_table(lost), "",
+          "## Stations kept by the soft (ridge) bar only (OBS: all picks if balance.ridge.obs_keep_all, D-B035)", "",
+          md_table(soft), "",
+          "## Dropped stations (no picks in the dataset) by reason", "", md_table(fails.to_frame()), "",
+          "## Dropped stations (no picks in the dataset) by main region", "", md_table(lost), "",
           "## Events by region", "", md_table(er), "", "## Log", "", "```", *LOG, "```"]
     (FIG / "b1b_tables.md").write_text("\n".join(md))
     write_manifest("b1b_balance", OUT,

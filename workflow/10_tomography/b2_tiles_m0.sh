@@ -12,7 +12,8 @@
 #            station corrections recomputed in it, bounds-checked check01); five tiles in parallel
 #   scan     5 tiles x 5 smoothings at damping 200, all in parallel, each followed by the back-transform
 #   analyse  b2_tomodd_summary.py per tile, b2_tiles_m0_choose.py (rule), b2_m0_report.py maps per tile
-#   publish  commit data/tomo_v1/b2_merge/tiles_m0, push, comment on PR #33
+#   publish  commit data/tomo_v1/b2_merge/tiles_m0 (files < 5 MB, larger ones listed in its not_in_git.txt; only these
+#            files, whatever else is staged), push, comment on PR #33
 set -uo pipefail
 if [ -z "${B2_TM0_COPY:-}" ]; then
   cp "$0" /wd1/mdenolle_data/tomo_v1/b2_tomodd/.tiles_m0_running.sh
@@ -84,9 +85,17 @@ stage_publish() {
   exec 9> $LOCK; flock 9
   cd $CODE || return 1
   local br; br=$(git branch --show-current)
-  git add $(find data/tomo_v1/b2_merge/tiles_m0 -type f -size -5M)
-  if git diff --cached --quiet; then log "nothing new to commit"; else
-    git commit -q -F - <<EOF || return 1
+  # 5 MB limit in bytes: find rounds -size 5M up to whole MiB, so files of 4-5 MiB were in neither list
+  local big files rel=${OUT#$CODE/}
+  big=$(cd $OUT && find . -type f ! -size -5242880c -printf '%p (%s B)\n')
+  (cd $OUT && find . -type f ! -size -5242880c -printf "$rel/%P\n") > $OUT/not_in_git.txt
+  mapfile -t files < <(cd $OUT && find . -type f -size -5242880c -printf "$rel/%P\n")
+  [ ${#files[@]} -gt 0 ] || { log "no file to publish in $OUT"; return 1; }
+  # stop if git add fails (e.g. index.lock held by a session in this worktree), and commit only these files, not
+  # whatever else is staged
+  git add -- "${files[@]}" || return 1
+  if git diff --cached --quiet -- "${files[@]}"; then log "nothing new to commit"; else
+    git commit -q -F - -- "${files[@]}" <<EOF || return 1
 Track B: tiles restarted from M0 (D-B046), smoothing scan at damping 200 and smoothing chosen by rule
 
 Runs on $RUNS/<tile>_m0/d200_s*. Choice in data/tomo_v1/b2_merge/tiles_m0/choice.csv.
@@ -101,7 +110,7 @@ Chosen smoothing per tile (largest within $(cd $W && $PY -c "import yaml; print(
 \`\`\`
 $(cat $OUT/choice.csv)
 \`\`\`
-Full scans: data/tomo_v1/b2_merge/tiles_m0/summary.md; maps per tile in data/tomo_v1/b2_merge/tiles_m0/<tile>/. Not yet reviewed by Claude in the session; resolution tests (phase 2) not started." > /dev/null && log "commented on PR #33"
+Full scans: data/tomo_v1/b2_merge/tiles_m0/summary.md; maps per tile in data/tomo_v1/b2_merge/tiles_m0/<tile>/.${big:+ Files over 5 MB not in git: see \`$rel/not_in_git.txt\`.} Not yet reviewed by Claude in the session; resolution tests (phase 2) not started." > /dev/null && log "commented on PR #33"
 }
 
 log "start (code $CODE)"

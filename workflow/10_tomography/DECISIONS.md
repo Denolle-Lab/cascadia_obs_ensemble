@@ -481,3 +481,59 @@ double-difference least squares in the 3D model, velocity frozen; 10,000-13,000 
   through both codes.
 - Outcome: if GrowClust3D matches tomoDD within the uncertainties, B5 uses GrowClust3D for the whole catalog;
   otherwise report where and by how much they differ before choosing.
+
+### D-B049 Resolution-gated merge, for lightly smoothed tiles only (adopted, 2026-11-24, PI; amended the same day)
+Context: the literature comparison of depths (data/tomo_v1/depth_literature/depth_literature.html) found B4 too deep at
+Axial, Endeavour, Explorer and the JdF ridge (the tomography moved them away from published depths) and on the
+shallow Blanco, from unresolved tile structure entering the merged model v0.3.0. Rule: per phase, V = R V_tiles +
+(1 - R) V_ref, with R = max over the covering tiles of the resolution window without its floor (1 on the tile's
+checkerboard-resolved nodes, cosine taper to 0 over taper_km), so unresolved nodes fall back to the whole-margin
+reference (M0). As first implemented it sent 98.7 % (P) and 99.5 % (S) of covered nodes to M0, because checkerboards
+at smoothing 480 (mendocino_gorda_c, oregon, washington) barely recover (median amplitude 0.005-0.13 against 0.5)
+although those tiles' changes are small and smooth (< 1 % rms Vp) and are what moved Gorda depths toward the
+literature. Amended (PI): only tiles merged at smoothing W1 <= tomodd.merge.gate_max_smooth = 100 are gated (blanco,
+s20); s480 tiles count fully in their box. Dry run: 16.0 % of covered nodes on the reference (unresolved Blanco).
+Variables tile_weight_p / tile_weight_s (R) and attributes gated_tiles, gate_max_smooth record it.
+
+### D-B050 ridges_north left out of the merge (adopted, 2026-11-24, PI)
+D-B038 approved the ridges tile for relocation only. Its velocities (smoothing 60, Vp/Vs 1.35-1.40 under the Axial
+caldera, 1.47 at Endeavour) put Axial events 2-2.5 km too deep against Waldhauser et al. (2020), while v4-NLL3D
+agreed. tomodd.merge.exclude_tiles: [ridges_north]; the ridges sit in M0 (dry run: Axial Vp/Vs 1.70-1.71 at 3-5 km).
+
+### D-B051 Vs reverted where Vp/Vs < 1.6 or S coverage is low (adopted, 2026-11-24, PI; replaces the drafted floor 1.5)
+Where the merged Vp/Vs < tomodd.merge.vpvs_min = 1.6 or the S-ray DWS of the covering tiles < dws_s_min = 10, Vs is set to
+the reference Vs; if Vp/Vs is still below 1.6 (Vp changed), Vs = Vp / 1.6. Flag variable vs_reverted (0 unchanged,
+1 reverted, 2 reverted and capped; int8, netCDF-4 Classic has no unsigned type) and node counts in attributes. v0.3.0
+had 3,228 nodes below 1.65 and 168 below 1.5 (minimum 1.275), inherited from poorly resolved tile nodes. Dry run:
+minimum 1.60; the 87,565 low-coverage reverts change Vs by a median 0.01 % (no S rays there), the 258 capped nodes by
+a median 1.5 %.
+
+### D-B052 Near-station travel times; no whole-grid fallback (adopted, 2026-11-24, PI)
+PR #35 review finding 14: the Richardson combination T = T0.5 - k (T1 - T0.5) is wrong next to the station, where
+the 1 km grid's error comes from the source-cell start-up and does not scale like h^p (101 of 1,392 v0.3.0 grids had
+negative times next to the station, down to -0.16 s; 2,581 B4 events within 2 km of a station, Axial's cabled array
+among them). Fix in b4_time_grids.py: T0.5 within 2 km of the station, linear taper to the combination at 5 km, times
+asserted >= 0. Beyond 5 km the start-up error is carried along the rays (median 0.014 s P / 0.024 s S, up to 0.08 /
+0.17 s at a few 7D OBS); it is recorded per grid in the manifest. A whole-grid T0.5 fallback for the outliers (median
++ 3 x 1.4826 MAD: P 0.044, S 0.075 s) was tested and rejected: against co-located stations it fixed NED.CC, J17D.7D,
+BS58.XG, CL60.XG and HYS11.OO but worsened FN08C.7D, G30B.7D and J25C.7D, and T0.5 is itself late with distance. The
+remaining offset is close to a constant shift per station, which the B4 station terms absorb (params
+b4.grid_fallback.enabled: false).
+
+### D-B053 B5 relative relocation with tomoDD-SE in relocation-only mode (adopted, 2026-11-24, PI)
+D-B048 test (branch tomo/b5-blanco-test, notes/b5_blanco_test.md): on three Blanco swarms and three synthetic planar
+swarms, with catalog differential times only, GrowClust3D was not more accurate than tomoDD: neither improved the B4
+locations or resolved swarm depth (a 5 km tall plane spread over 6-29 km), GrowClust3D made good starts worse and
+changed with small input changes (90 m shift, rounded start), and its bootstrap spread was 4-7 times tomoDD's.
+tomoDD relocation-only (JOINT = 0, differential times, velocity frozen) was stable. B5 uses it, with each cluster's
+centroid put back on its B4 location (tomoDD's centroid is free: 0.6 km down in f0399) and events kept at least 50 m
+from the frame centre (tomoDD segfaults otherwise). Waveform cross-correlation times (D-B040) remain to be tested.
+
+### D-B054 tomoDD-SE FORMAT fixes approved; patched version frozen for future use (adopted, 2026-11-24, PI)
+The relocation-only path stops at a malformed FORMAT string in lsfitHFDD_lsqr_lm5.f (line ~504, a missing comma
+before a string literal), the same kind as D-B034 (tomoDD-SE.f / tomoDD-SE_syn.f line ~2324). PI approved the fix (a
+comma only) and asked to keep this tomoDD version. Frozen, private on /wd1 only (WARF licence: no posting, never in
+git or on Zenodo): /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24 (pristine USTC 2020 source with every
+malformed FORMAT string fixed by a comma, PATCH.diff, build_variants.sh, README), binaries for every size class in
+/wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24 (main, syn, chk), archive in /wd1/mdenolle_data/tomo_v1/archive.
+Licence caveat: the WARF licence forbids modification; the request to Haijiang Zhang for permission is still open.

@@ -12,6 +12,7 @@
 # Run as a script or open as a notebook (VS Code and JupyterLab with jupytext read the `# %%` cells).
 
 # %%
+import re
 import sys
 from pathlib import Path
 
@@ -24,10 +25,15 @@ if not hasattr(sys, "ps1") and "ipykernel" not in sys.modules:
     matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# Folder with registry.csv and the v<version>.zarr / .nc files: the unzipped Zenodo bundle, or the model store.
-ROOT = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else \
-    Path("/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo")
-FIGS = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")
+# Folder with the v<version>.zarr / .nc files (registry.csv there or one level up): the unzipped Zenodo bundle's
+# velocity_models/ (or its cascadia_obs_tomo/), the model store, or data/tomo_v1/models/cascadia_obs_tomo in git.
+# Command-line arguments are read only in a script: a Jupyter kernel's argv is "-f <connection file>".
+# In a notebook, set ROOT and FIGS here.
+args = [] if "ipykernel" in sys.modules else [a for a in sys.argv[1:] if not a.startswith("-")]
+ROOT = Path(args[0]) if args else Path("/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo")
+FIGS = Path(args[1]) if len(args) > 1 else Path(".")
+if not any(ROOT.glob("v*.zarr")) and not any(ROOT.glob("v*.nc")) and (ROOT / "cascadia_obs_tomo").is_dir():
+    ROOT = ROOT / "cascadia_obs_tomo"                # the bundle's top folder
 
 # %% [markdown]
 # ## 1. Which versions exist
@@ -35,9 +41,13 @@ FIGS = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")
 # %%
 reg_file = ROOT / "registry.csv" if (ROOT / "registry.csv").exists() else ROOT.parent / "registry.csv"
 if reg_file.exists():
-    reg = pd.read_csv(reg_file)
+    reg = pd.read_csv(reg_file, dtype={"version": str})
     print(reg[["model", "version", "status", "created", "description"]].to_string(index=False))
-version = sorted(p.name[1:-5] for p in ROOT.glob("v*.zarr"))[-1]      # newest version; or set e.g. "0.1.0"
+versions = {m.group(1) for p in ROOT.glob("v*") if (m := re.fullmatch(r"v(\d+(?:\.\d+)*)\.(?:zarr|nc)", p.name))}
+if not versions:
+    sys.exit(f"no v<version>.zarr or v<version>.nc in {ROOT}: pass the folder that holds them "
+             "(e.g. velocity_models/cascadia_obs_tomo)")
+version = max(versions, key=lambda v: tuple(map(int, v.split("."))))   # newest, by number; or set e.g. "0.1.0"
 print("using version", version)
 
 # %% [markdown]
@@ -48,7 +58,8 @@ print("using version", version)
 # The netCDF file opens the same way with `xr.open_dataset("v0.1.0.nc")`.
 
 # %%
-ds = xr.open_zarr(ROOT / f"v{version}.zarr")
+zp = ROOT / f"v{version}.zarr"
+ds = xr.open_zarr(zp) if zp.exists() else xr.open_dataset(ROOT / f"v{version}.nc")   # git keeps only the netCDF
 print(ds)
 print("\n", ds.attrs["title"])
 print("source run:", ds.attrs["provenance_run"], "| git commit:", ds.attrs["provenance_git_commit"])
@@ -63,6 +74,15 @@ print("source run:", ds.attrs["provenance_run"], "| git commit:", ds.attrs["prov
 #   `Vp_perturbation`, `Vs_perturbation` = change from that start in %.
 # * `dws_p`, `dws_s` = derivative weight sum (ray density) of the last iteration. **0 means no ray reached the
 #   node: its value is the starting model, not data.** Where resolution tests exist, later versions add a mask.
+# * Merged versions (0.3.x) add `resolution_p`, `resolution_s` (finest resolved checkerboard cell in km; 0 = not
+#   resolved, do not interpret) and `n_tiles`. From the first version after 0.3.0 (D-B049, D-B051) they also add
+#   * `tile_weight_p`, `tile_weight_s` = R, the share of the tiles in Vp and Vs (1 on nodes the tiles' checkerboard
+#     tests resolve, tapering to 0 around them). **0 means the node holds the whole-margin reference model M0, not
+#     tile data: do not interpret it as a tile result.**
+#   * `vs_reverted` (int8 flag): 0 = Vs unchanged, 1 = Vs set back to the reference Vs because Vp/Vs < `vpvs_min` or
+#     `dws_s` < `dws_s_min`, 2 = set back and then lowered to Vp / `vpvs_min` (Vp/Vs was still too low).
+#   * global attributes `vpvs_min`, `dws_s_min`, the node counts `vs_check_nodes`, `vs_reverted_nodes`,
+#     `vs_reverted_vpvs_nodes`, `vs_reverted_dws_s_nodes`, `vs_capped_nodes`, and `excluded_tiles`.
 
 # %%
 for v in ds.data_vars:
@@ -70,16 +90,22 @@ for v in ds.data_vars:
 
 # %% [markdown]
 # ## 4. A depth slice, with the unsampled nodes greyed out
+#
+# In merged versions with `tile_weight_p`, nodes where it is 0 hold the reference model M0, not tile data: they are
+# greyed out too.
 
 # %%
 z = 15.0
 sl = ds.sel(depth=z, method="nearest")
+ok = sl.dws_p > 0
+if "tile_weight_p" in sl:
+    ok = ok & (sl.tile_weight_p > 0)
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 for a, var, cmap in ((ax[0], "Vp", "RdBu"), (ax[1], "VpVs", "RdBu_r")):
-    da = sl[var].where(sl.dws_p > 0)
+    da = sl[var].where(ok)
     da.plot(ax=a, cmap=cmap, robust=True)
     a.set_aspect(1 / np.cos(np.radians(45)))
-    a.set_title(f"{var} at {float(sl.depth):g} km (grey: no ray)")
+    a.set_title(f"{var} at {float(sl.depth):g} km (grey: no ray" + (" or M0)" if "tile_weight_p" in sl else ")"))
     a.set_facecolor("0.85")
 fig.tight_layout()
 fig.savefig(FIGS / f"tutorial_slice_{version}.png", dpi=120)
@@ -150,7 +176,9 @@ else:
 # %%
 import hashlib  # noqa: E402
 
-if reg_file.exists():
-    row = reg[reg.version.astype(str) == version].iloc[0]
+row = reg[reg.version == version] if reg_file.exists() else []
+if len(row) and (ROOT / f"v{version}.nc").exists():
     h = hashlib.sha256((ROOT / f"v{version}.nc").read_bytes()).hexdigest()
-    print("netCDF sha256 matches the registry:", h == row.netcdf_sha256)
+    print("netCDF sha256 matches the registry:", h == row.netcdf_sha256.iloc[0])
+else:
+    print(f"v{version}: no registry row or no netCDF file to check")

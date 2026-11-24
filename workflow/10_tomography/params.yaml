@@ -119,6 +119,13 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       node_lat: [39.0, 43.6, 0.1]
       extra_b1b: b1b_shallow_mg            # under paths.base; appended to the B1b events/picks (b2_tomodd_inputs.select)
       limits: {MAXEVE: 13000, MAXDATA: 2000000}   # compiled sizes of bin_e13k
+      bins:                                # builds that match `limits` (11,721 events). Without this block tomodd_bin gave
+                                           # the e10k builds, which stop at MAXEVE with exit 0 and no model. bin, bin_syn =
+                                           # the original builds the shallow_test runs used (D-B034 keeps v2s on them);
+                                           # bin_check = the only e13k check build (the unfixed one always hits the FORMAT bug)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k          # md5 44a7176ec0689be781584d2165f8bb96 (= bin_e13k)
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k  # md5 dba037c9be83605181f71c88cac71755 (= bin_syn_e13k)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt   # md5 550fd6ce229592beaf75cb666233fa3c
       forward:                             # as v2, except P-4 off (needs a 1-iteration forward with > 10000 events;
         coords: ellipsoid                  #   irrelevant for synthetic tests, which replace the absolute times)
         mod: nearest
@@ -593,12 +600,17 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       - [240, 240, 120]
       - [480, 480, 240]
     smooth_rule_tol: 0.015         # chosen smoothing = the largest whose weighted RMS <= (1 + tol) x the scan's best
+    exclude_tiles: [ridges_north]  # D-B050: tiles left out of b2_merge.py (ridges_north: relocation only, D-B038)
+    vpvs_min: 1.6                  # D-B051: merged Vp/Vs below this -> Vs = reference Vs, then Vs = Vp / 1.6 if still below
+    dws_s_min: 10                  # D-B051: merged S-ray DWS below this -> Vs = reference Vs (flag vs_reverted)
     product:                       # b2_merge.py: the merged model (D-B047 versions 0.3.x; Zenodo product, PI 2026-11-23)
       choice: data/tomo_v1/b2_merge/tiles_m0/choice.csv   # tile runs (phase 1); masks from phase 2 (<tile>_m0/d200)
       reference: margin_m0_v2/d200_s480                    # M0 (D-B046); V_ref = D-B005 x (1 + M0 change)
       grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}   # the M0 extent; depth = tomodd.node_z
-      taper_km: 15                 # resolution-window taper (M3)
+      taper_km: 15                 # resolution-window taper (M3; also R of D-B049 = the window without the floor)
       floor: 0.1                   # resolution-window floor outside the mask (M3 placeholder until T3)
+    gate_max_smooth: 100         # D-B049 as amended (PI 2026-11-24): only tiles merged at smoothing W1 <= this are gated by
+                                 #   their checkerboard mask (blanco s20); s480 tiles count fully in their box
   models:                          # D-B047 (proposed 2026-11-23): versioned model export (b2_model_export.py, env models)
     name: cascadia_obs_tomo        # internal model name (store path, ids); public name for EMC / CVM: PI to choose
     store: /wd1/mdenolle_data/tomo_v1/models   # canonical Zarr + netCDF per version (immutable); netCDF < 5 MB also in git
@@ -621,3 +633,18 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       reference_pid: TO FILL (paper DOI)
       model_type: 3D velocity model
       model_subtype: local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs
+
+b4:                                # B4 NonLinLoc relocation in the merged model and its catalog (PI 2026-11-24)
+  grid_fallback: {enabled: false, P: 0.044, S: 0.075}   # D-B052 (PI 2026-11-24): whole-grid T0.5 fallback rejected (it
+                                        #   worsened FN08C/G30B/J25C against co-located stations); station terms absorb the
+                                        #   constant start-up offset. Thresholds kept for reference (median + 3 x 1.4826 MAD)
+  depth_flags:                     # catalog depth_quality (D-B049..D-B051 approval, rule 4): ok, unconstrained, biased_deep
+    unconstrained_regions: [Endeavour, Explorer, JdF ridge/plate]   # D-B049..D-B051, rule 4: all events here -> unconstrained
+    blanco_window: ["2012-09-20", "2013-10-05"]   # D-B049..D-B051, rule 4: Blanco events outside this OBS deployment -> unconstrained
+    gorda_biased_dist_km: 15       # D-B049..D-B051, rule 4: Gorda events with nearest station dist_min > 15 km -> biased_deep
+  quarry:                          # catalog event_flag quarry_blast_likely (D-B049..D-B051 approval, rule 4)
+    name: Texada Island            # D-B049..D-B051, rule 4: quarry area name
+    lat: [49.40, 49.85]            # D-B049..D-B051, rule 4: box latitude range
+    lon: [-124.75, -124.25]        # D-B049..D-B051, rule 4: box longitude range
+    weekday_hours_local: [7, 19]   # D-B049..D-B051, rule 4: Monday-Friday, 07:00-19:00 local
+    tz: America/Vancouver          # D-B049..D-B051, rule 4: time zone of the local hours

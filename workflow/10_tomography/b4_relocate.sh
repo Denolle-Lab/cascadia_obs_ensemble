@@ -5,7 +5,14 @@
 #   cd ~/wt_tomo_res
 #   setsid nohup bash workflow/10_tomography/b4_relocate.sh 9>&- >> /wd1/mdenolle_data/tomo_v1/b4_relocate.log 2>&1 < /dev/null &
 #
-# Stages (recorded in /wd1/mdenolle_data/tomo_v1/b4_relocate.state; rerun the same command to resume):
+# VERSION=x.y.z (default 0.3.0) names the merged model and everything built from it: state file, time grids, runs,
+# gate file. Set it in front of the command above for a new model version (e.g. VERSION=0.3.1 setsid nohup ...).
+# MERGE_NOTE="..." is the description of the merged model (b2_merge.py: registry and attributes); required for any
+# VERSION but 0.3.0 (which keeps its own text) until the merge stage is done. TIME, R0, R1 override the time-grid
+# folder and the iter0/iter1 run names (default time_b4_v$VERSION, b4_iter0_v$VERSION, b4_iter1_v$VERSION).
+#
+# Stages (recorded in /wd1/mdenolle_data/tomo_v1/b4_relocate_v$VERSION.state, b4_relocate.state for v0.3.0; rerun the
+# same command to resume):
 #   wait     the five phase-2 resolution-test pipelines (<tile>_m0, publish_d200_s<W> in their pipeline.state)
 #   merge    b2_merge.py: merged model -> v$VERSION (Zarr, netCDF, NonLinLoc velocity grids at cell centres), registry
 #   grids    b4_time_grids.py: travel-time grids of the 696 stations (D-B028 P-1/P-5) -> reloc_v5/$TIME
@@ -22,15 +29,19 @@
 #   publish  commit, push, PR #33 comment. Stops here: no GrowClust (B5).
 # Stage order: wait merge bundle commit_model gate grids iter0 terms iter1 catalog publish
 set -uo pipefail
+VERSION=${VERSION:-0.3.0}
+# private copy per version: bash reads the script while running it, and two versions may run at once
 if [ -z "${B4_COPY:-}" ]; then
-  cp "$0" /wd1/mdenolle_data/tomo_v1/.b4_relocate_running.sh
-  B4_COPY=1 CODE=${CODE:-$(cd "$(dirname "$0")/../.." && pwd)} exec bash /wd1/mdenolle_data/tomo_v1/.b4_relocate_running.sh "$@"
+  cp "$0" /wd1/mdenolle_data/tomo_v1/.b4_relocate_running_v$VERSION.sh
+  B4_COPY=1 VERSION=$VERSION CODE=${CODE:-$(cd "$(dirname "$0")/../.." && pwd)} exec bash /wd1/mdenolle_data/tomo_v1/.b4_relocate_running_v$VERSION.sh "$@"
 fi
 CODE=${CODE:?}
-VERSION=${VERSION:-0.3.0}
-TIME=time_b4_v$VERSION
-R0=b4_iter0_v$VERSION
-R1=b4_iter1_v$VERSION
+TIME=${TIME:-time_b4_v$VERSION}
+R0=${R0:-b4_iter0_v$VERSION}
+R1=${R1:-b4_iter1_v$VERSION}
+MERGE_NOTE=${MERGE_NOTE:-}
+[ -z "$MERGE_NOTE" ] && [ "$VERSION" = 0.3.0 ] &&
+  MERGE_NOTE="merged model: the five tiles restarted from M0 (damping 200, smoothing by tile), blended with box taper x resolution window on the M0 reference (D-B046, merge_design M1-M3)"
 ENV=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default
 PY=$ENV/bin/python
 export LD_LIBRARY_PATH=$ENV/lib
@@ -39,7 +50,10 @@ W=$CODE/workflow/10_tomography
 TA=/home/mdenolle/wt_reloc/workflow/08_relocation          # Track A scripts (reloc/track-a worktree)
 RUNS=/wd1/mdenolle_data/tomo_v1/b2_tomodd
 RELOC=/wd1/mdenolle_data/reloc_v5
-STATE=/wd1/mdenolle_data/tomo_v1/b4_relocate.state
+# one state file per model version, or a new VERSION would find every stage done and build nothing; v0.3.0 was run
+# before the state file had a version and keeps its unversioned file
+STATE=/wd1/mdenolle_data/tomo_v1/b4_relocate_v$VERSION.state
+[ "$VERSION" = 0.3.0 ] && [ ! -e $STATE ] && STATE=/wd1/mdenolle_data/tomo_v1/b4_relocate.state
 LOCK=/wd1/mdenolle_data/tomo_v1/publish.lock
 TILES="mendocino_gorda_c blanco oregon washington ridges_north"
 
@@ -53,8 +67,11 @@ stage_wait() {
     local left=0
     for t in $TILES; do
       grep -q "^publish_d200_s" $RUNS/${t}_m0/pipeline.state 2>/dev/null && continue
-      grep -q "stage prep FAILED\|stage [a-z]*_d200_s[0-9]* FAILED" $RUNS/${t}_m0/pipeline.log 2>/dev/null &&
-        { log "${t}_m0 phase 2 FAILED (see $RUNS/${t}_m0/pipeline.log)"; return 1; }
+      # any stage FAILED after the last start of b2_res_pipeline.sh: pipeline.log is append-only, so a failure that
+      # was resumed since does not count (older logs name the stage, e.g. "run", newer ones its key "run_d200_s480",
+      # or "setup" for an exit before the stages, e.g. a rejected SMOOTH)
+      awk '/\] start, stages:/ {f = 0} / stage [^ ]+ FAILED/ {f = 1} END {exit !f}' $RUNS/${t}_m0/pipeline.log 2>/dev/null &&
+        { log "${t}_m0 pipeline FAILED (see $RUNS/${t}_m0/pipeline.log)"; return 1; }
       left=$((left + 1))
     done
     [ $left -eq 0 ] && return 0
@@ -63,7 +80,7 @@ stage_wait() {
 }
 
 stage_merge() {
-  (cd $CODE && $MPY $W/b2_merge.py $VERSION "merged model: the five tiles restarted from M0 (damping 200, smoothing by tile), blended with box taper x resolution window on the M0 reference (D-B046, merge_design M1-M3)" --nll --status candidate)
+  (cd $CODE && $MPY $W/b2_merge.py $VERSION "$MERGE_NOTE" --nll --status candidate)
 }
 
 stage_grids() { (cd $CODE && $MPY $W/b4_time_grids.py $VERSION $TIME --nproc ${NPROC_GRIDS:-48}); }
@@ -97,9 +114,12 @@ stage_bundle() {
 stage_commit_model() {
   ( flock 9
     cd $CODE || exit 1
-    git add data/tomo_v1/models && git commit -q -m "Track B: merged model v$VERSION built (b2_merge.py) and uploaded to the private Zenodo draft 23084158
+    # a failed add must stop the stage; commit only these paths, since a session may have other files staged here
+    git add -- data/tomo_v1/models || exit 1
+    if git diff --cached --quiet -- data/tomo_v1/models; then log "model: nothing new to commit"
+    else git commit -q -m "Track B: merged model v$VERSION built (b2_merge.py) and uploaded to the private Zenodo draft 23084158
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" || true
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" -- data/tomo_v1/models || exit 1; fi
     git push -q origin $(git branch --show-current) || exit 1
     gh pr comment 33 --body "**Merged model v$VERSION built** ($(date '+%F %H:%M')) and uploaded to the private Zenodo draft (velocity_models.zip). Registry: data/tomo_v1/models/registry.csv. The relocation waits until the model is on the atlas/dashboard (gate file b4_gate_v$VERSION.release)." > /dev/null
   ) 9> $LOCK
@@ -115,8 +135,11 @@ stage_gate() {
 stage_publish() {
   exec 9> $LOCK; flock 9
   cd $CODE || return 1
-  git add data/tomo_v1/models data/tomo_v1/b4 2>/dev/null
-  git commit -q -F - <<EOF || true
+  # same as commit_model: stop on a failed add, commit only the model registry and this run's B4 folder
+  local paths="data/tomo_v1/models data/tomo_v1/b4/$R1"
+  git add -- $paths || return 1
+  if git diff --cached --quiet -- $paths; then log "nothing new to commit"; else
+    git commit -q -F - -- $paths <<EOF || return 1
 Track B: merged model v$VERSION (Zenodo product) and B4 NLLoc relocation of the catalog in it (stops before GrowClust)
 
 Model store /wd1/mdenolle_data/tomo_v1/models; time grids $RELOC/$TIME; runs $RELOC/runs/$R0, $R1; catalog
@@ -124,14 +147,18 @@ $RELOC/catalog/catalog_b4_$R1.csv.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 EOF
+  fi
   git push -q origin $(git branch --show-current) || return 1
   gh pr comment 33 --body "**Merged model v$VERSION and B4 relocation done** ($(date '+%F %H:%M')). Stopped before GrowClust.
 
-$(sed -n '1,40p' data/tomo_v1/b4/$R1/compare.md)
+$(cat data/tomo_v1/b4/$R1/compare.md)
 
 Model: data/tomo_v1/models/registry.csv (v$VERSION); Zenodo private draft 23084158 velocity_models.zip updated. Not yet reviewed by Claude in the session." > /dev/null && log "commented on PR #33"
 }
 
+# checked before the wait stage, which can wait hours: the v0.3.0 text would describe a new model wrongly
+[ -n "$MERGE_NOTE" ] || done_stage merge ||
+  { log "MERGE_NOTE not set: VERSION $VERSION needs a description of the merged model (MERGE_NOTE=\"...\" VERSION=$VERSION setsid nohup bash workflow/10_tomography/b4_relocate.sh ...), stopping"; exit 1; }
 log "start (code $CODE, version $VERSION)"
 for s in wait merge bundle commit_model gate grids iter0 terms iter1 catalog publish; do
   done_stage $s && { log "stage $s already done"; continue; }

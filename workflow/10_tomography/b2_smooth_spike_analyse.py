@@ -15,6 +15,7 @@ smoothing ratio (w3 dz)/(w1 dx), and the mean P DWS inside the event box from th
                                       ->  data/tomo_v1/b2_res_tests/spike_inv_d1000_s20/{same files}
   (damping and smoothing of the run are read from its tomoDD-SE.inp)
 """
+import json
 import os
 import sys
 from pathlib import Path
@@ -57,12 +58,12 @@ def hwhm_1d(vals, pos, c):
 
 
 def dws_grid(m):
-    """First-iteration P DWS on the full MOD grid (nz, ny, nx)."""
+    """First-iteration DWS on the full MOD grid, {"P": (nz, ny, nx), "S": (nz, ny, nx)}."""
     return _dws(m)
 
 
 def dws_by_layer(m):
-    d = _dws(m)
+    d = _dws(m)["P"]
     lo, la = T["regions"][st.REG]["events_lon"], T["regions"][st.REG]["events_lat"]
     ii = (m["x"] >= lo[0]) & (m["x"] <= lo[1])
     jj = (m["y"] >= la[0]) & (m["y"] <= la[1])
@@ -71,16 +72,19 @@ def dws_by_layer(m):
 
 def _dws(m):
     # DWS of the first iteration (background-model rays): check01 when it has it, else this test's null run
-    # (same events, stations and settings; mendocino_gorda_v2/check01 was written without the DWS block)
+    # (same events, stations and settings; mendocino_gorda_v2/check01 was written without the DWS block).
+    # P and S blocks both: S rays reach fewer nodes than P rays, so S spikes need the S DWS. First block of
+    # each kind = first iteration when the file holds several (null runs).
     for vel in (st.BASE / "check01" / "Output_Files" / "tomoDD.vel", st.zdir("null") / INV / "Output_Files" / "tomoDD.vel"):
         lines = vel.read_text().split("\n") if vel.exists() else []
-        i0 = next((i for i, l in enumerate(lines) if "DWS for P-wave" in l), None)
-        if i0 is not None:
+        i0 = {w: next((i for i, l in enumerate(lines) if f"DWS for {w}-wave" in l), None) for w in "PS"}
+        if None not in i0.values():
             break
     else:
-        raise SystemExit("no DWS block in check01 or the null run")
+        raise SystemExit("no P and S DWS blocks in check01 or the null run")
     nz, ny, nx = m["vp"].shape
-    return np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
+    return {w: np.array([lines[i + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
+            for w, i in i0.items()}
 
 
 def run_settings():
@@ -121,7 +125,7 @@ def main():
                          rec_max_win=win.max() / S["amp"], peak_at_node=bool(pk >= win.max() - 1e-9),
                          dz_up=z[k] - z[k - 1], dz_dn=z[k + 1] - z[k], dx_km=0.125 * kx, dy_km=0.1 * KM_DEG,
                          nul_rms=float(np.sqrt(np.mean(nul[k, j - 2:j + 3, i - 2:i + 3] ** 2))) / S["amp"],
-                         dws=float(dwsg[k, j, i]), sampled=bool(dwsg[k, j, i] >= dws_min))
+                         dws=float(dwsg[wave][k, j, i]), sampled=bool(dwsg[wave][k, j, i] >= dws_min))
                 if pk / S["amp"] >= MIN_REC:
                     hx = hwhm_1d(dv[k, j, :], x * kx, i)
                     hy = hwhm_1d(dv[k, :, i], y * KM_DEG, j)
@@ -144,7 +148,8 @@ def main():
     by = res.groupby(["wave", "z"]).agg(agg).reindex(sp_df.groupby(["wave", "z"]).size().index)
     by["n_resolved"] = res.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
     by["n"] = sp_df.groupby(["wave", "z"]).size()
-    # DWS mask (PI 2026-11-23): statistics over sampled spikes only (first-iteration P DWS >= dws_min)
+    # DWS mask (PI 2026-11-23): statistics over sampled spikes only (first-iteration DWS >= dws_min of the
+    # spike's own wave: P DWS for P rows, S DWS for S rows; until 2026-11-24 the S rows used the P DWS)
     smp = sp_df[sp_df.sampled]
     by["n_sampled"] = smp.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
     by["rec_median_sampled"] = smp.groupby(["wave", "z"]).rec.median().reindex(by.index)
@@ -158,7 +163,9 @@ def main():
 
     # per-layer spacing table
     dws = dws_by_layer(m)
-    dx = 0.125 * np.cos(np.radians(41.3)) * KM_DEG
+    # lateral spacing at the tile centre (the centre tomoDD projects about); was fixed at Mendocino's 41.3 N,
+    # 4-12 % too wide for the Blanco to Washington tiles
+    dx = 0.125 * np.cos(np.radians(json.loads((st.INP / "summary.json").read_text())["center_lat"])) * KM_DEG
     lay = []
     for k in range(1, nz - 1):
         dzu, dzd = z[k] - z[k - 1], z[k + 1] - z[k]
@@ -170,7 +177,7 @@ def main():
     pd.set_option("display.width", 200)
     print(lay.to_string(index=False))
     print(by.round(2).to_string())
-    plot(by, OUT / "psf.png", damp, smooth)
+    plot(by, OUT / "psf.png", damp, smooth, dx)
     write_manifest("b2_smooth_spike_analyse", OUT,
                    inputs=[st.zdir(t) / INV / "Output_Files" / "Vp_model.dat" for t, _, _ in sp] + [null / "Vp_model.dat"],
                    outputs=[OUT / f for f in ("spikes.csv", "by_depth.csv", "layers.csv", "psf.png")],
@@ -178,7 +185,7 @@ def main():
                    counts={"spikes": len(sp_df)})
 
 
-def plot(by, path, damp, smooth):
+def plot(by, path, damp, smooth, dx):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -193,14 +200,16 @@ def plot(by, path, damp, smooth):
         a.plot(100 * d["n_resolved"] / d["n"], d["z"], "-o", color=orange, lw=2, ms=5, label="spikes resolved (peak >= 50%)")
         a.axvline(100, color=ink2, lw=0.8, ls=":")
         a.legend(frameon=False, loc="lower left")
-        a.set_xlabel(f"% ({'Vp' if wave == 'P' else 'Vs'}, 25 spikes per depth)")
+        ns = sorted(set(d["n"].astype(int)))     # spikes per depth differ by tile (15, 25, 28; clusters 15)
+        nlab = f"{ns[0]}" if len(ns) == 1 else f"{ns[0]}-{ns[-1]}"
+        a.set_xlabel(f"% ({'Vp' if wave == 'P' else 'Vs'}, {nlab} spikes per depth)")
         a.set_ylabel("spike depth (km)")
         a.set_xlim(0, 110)
         a = ax[r, 1]
         a.plot(d["hw_x"], d["z"], "-o", color=blue, lw=2, ms=5, label="lateral (x)")
         a.plot((d["hw_up"] + d["hw_dn"]) / 2, d["z"], "-o", color=orange, lw=2, ms=5, label="vertical (mean up/down)")
         a.plot((d["dz_up"] + d["dz_dn"]) / 4, d["z"], "--", color=orange, lw=1, alpha=0.7)
-        a.axvline(0.125 * np.cos(np.radians(41.3)) * KM_DEG / 2, color=blue, lw=1, ls="--", alpha=0.7)
+        a.axvline(dx / 2, color=blue, lw=1, ls="--", alpha=0.7)
         a.set_xlabel("half-width at half max (km); dashed = true spike")
         a.legend(frameon=False, loc="lower right")
         for aa in ax[r]:

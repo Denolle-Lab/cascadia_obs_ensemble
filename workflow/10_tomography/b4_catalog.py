@@ -2,10 +2,20 @@
 frame, and a comparison with v4-NLL3D (Track A iter1).
 
 Input: Track A's catalog of the run (a2_build_catalog.py RUN -> /wd1/mdenolle_data/reloc_v5/catalog/
-catalog_v5_trackA_<RUN>.csv: every v4 event, NLLoc location or v4 kept (tier U), tiers A-D/U). The time grids of
+catalog_v5_trackA_<RUN>.csv: every v4 event, NLLoc location or v4 kept (tier U), tiers A-D/U). That file is written
+with '%.5g' (lon to 0.01 deg, up to 0.4 km; a2_build_catalog.py of the reloc/track-a worktree), so lat, lon, depth and
+exp_depth of the located events are taken again from runs/<RUN>/locations.csv, and the v4 coordinates (tier U and
+v4_*) from the v4.0 catalog, both at full precision; the output is written with '%.8g' (D-B013). The time grids of
 b4_time_grids.py use flattened depth z'; here depth, exp_depth and shift_z_km of the located events (loc_source
 nll3d) are mapped back with z = Re (1 - exp(-z' / Re)) (0.07 km at 30 km, 0.2 km at 50 km). Tiers are kept (their
 depth conditions move by less than the change).
+Flags (rule 4 of D-B049..D-B051, PI 2026-11-24; /wd1/mdenolle_data/tomo_v1/depth_literature/depth_literature.html),
+parameters in params b4.depth_flags and b4.quarry:
+* depth_quality: "unconstrained" for every event of the Endeavour, Explorer and JdF ridge/plate regions and for Blanco
+  events outside the 2012-09-20 to 2013-10-05 OBS deployment (UTC dates, inclusive); "biased_deep" for Gorda events
+  with dist_min > 15 km; "ok" otherwise (tier U has no dist_min, so the Gorda rule does not apply to it);
+* event_flag: "quarry_blast_likely" for events in the Texada Island box (lat 49.40-49.85, lon -124.75 to -124.25)
+  on a weekday between 07:00 and 19:00 America/Vancouver time, "" otherwise.
 Outputs: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_<RUN>.csv, and data/tomo_v1/b4/<RUN>/ (compare.md,
 compare_by_region.csv, depth_hist.png).
 
@@ -20,10 +30,24 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from manifest import REPO, write_manifest  # noqa: E402
+from manifest import REPO, load_params, write_manifest  # noqa: E402
 
+B4 = load_params().get("b4") or {}
+# defaults = the values agreed with the PI (2026-11-24); params b4.depth_flags / b4.quarry override them key by key
+DF = {"unconstrained_regions": ["Endeavour", "Explorer", "JdF ridge/plate"],
+      "blanco_window": ["2012-09-20", "2013-10-05"], "gorda_biased_dist_km": 15.0}
+QB = {"name": "Texada Island", "lat": [49.40, 49.85], "lon": [-124.75, -124.25], "weekday_hours_local": [7, 19],
+      "tz": "America/Vancouver"}
+for _d, _k in ((DF, "depth_flags"), (QB, "quarry")):
+    assert set(B4.get(_k) or {}) <= set(_d), f"params b4.{_k}: unknown keys {set(B4[_k]) - set(_d)}"   # else ignored
+    _d.update(B4.get(_k) or {})
 RE = 6371.0
 CAT = Path("/wd1/mdenolle_data/reloc_v5/catalog")
+RUNS = Path("/wd1/mdenolle_data/reloc_v5/runs")
+# a2_build_catalog.py reads the symlink ~/wt_reloc/data/catalog_v4/Cascadia_relocated_catalog_v4.csv, which points
+# here (11-23). If it is repointed (e.g. to v4.1), change V4 too: the check in main() stops the run only when the
+# coordinates differ beyond the 5th digit
+V4 = Path("/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv")
 
 
 def unflatten(z):
@@ -36,6 +60,20 @@ def km_h(a, b):
     return np.hypot(x, y)
 
 
+def flags(c):
+    """depth_quality and event_flag of catalog c (docstring; final lat, lon, time in UTC, region, dist_min)."""
+    t = pd.to_datetime(c.time.str.rstrip("Z"), format="ISO8601").dt.tz_localize("UTC")
+    w0, w1 = (pd.Timestamp(d, tz="UTC") for d in DF["blanco_window"])
+    q = np.full(len(c), "ok", dtype=object)
+    q[(c.region == "Gorda").to_numpy() & (c.dist_min > DF["gorda_biased_dist_km"]).to_numpy()] = "biased_deep"
+    q[c.region.isin(DF["unconstrained_regions"]).to_numpy()] = "unconstrained"
+    q[((c.region == "Blanco") & ((t < w0) | (t >= w1 + pd.Timedelta(days=1)))).to_numpy()] = "unconstrained"
+    tl = t.dt.tz_convert(QB["tz"])
+    qb = (c.lat.between(*QB["lat"]) & c.lon.between(*QB["lon"]) & (tl.dt.weekday < 5)
+          & (tl.dt.hour >= QB["weekday_hours_local"][0]) & (tl.dt.hour < QB["weekday_hours_local"][1]))
+    return q, np.where(qb, "quarry_blast_likely", "")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
@@ -43,12 +81,26 @@ def main():
     a = ap.parse_args()
     c = pd.read_csv(CAT / f"catalog_v5_trackA_{a.run}.csv")
     nll = c.loc_source == "nll3d"
+    # full-precision coordinates in place of the '%.5g' ones (selection as in a2_build_catalog.py)
+    loc = pd.read_csv(RUNS / a.run / "locations.csv")
+    loc = loc[loc.status == "LOCATED"].drop_duplicates("ID").set_index("ID")
+    assert set(loc.index) == set(c.ID[nll]), "locations.csv and the Track A catalog disagree on the located events"
+    v4 = pd.read_csv(V4, skipinitialspace=True).set_index("ID")
+    V = (("lat", "latitude"), ("lon", "longitude"), ("depth", "depth(km)"))
+    for m, col, src in ([(nll, k, loc[k]) for k in ("lat", "lon", "depth", "exp_depth")] +
+                        [(np.ones(len(c), bool), f"v4_{k}", v4[s]) for k, s in V] +
+                        [(c.loc_source == "v4", k, v4[s]) for k, s in V]):
+        new, old = src.reindex(c.ID[m]).to_numpy(float), c.loc[m, col].to_numpy(float)
+        # more than the 5th digit apart (or missing) = run and catalog do not belong together, not rounding
+        assert np.all(np.abs(new - old) <= 1e-4 * np.abs(old) + 1e-6), (col, np.nanmax(np.abs(new - old)))
+        c.loc[m, col] = new
     for col in ("depth", "exp_depth"):
         c.loc[nll, col] = unflatten(c.loc[nll, col])
     c.loc[nll, "shift_z_km"] = c.loc[nll, "depth"] - c.loc[nll, "v4_depth"]
     c["depth_frame"] = np.where(nll, "true depth (EFT undone, b4_catalog.py)", "v4")
+    c["depth_quality"], c["event_flag"] = flags(c)
     out = CAT / f"catalog_b4_{a.run}.csv"
-    c.to_csv(out, index=False, float_format="%.5g")
+    c.to_csv(out, index=False, float_format="%.8g")   # D-B013: %.5g keeps lon to 0.01 deg (0.4 km)
     r = pd.read_csv(CAT / f"catalog_v5_trackA_{a.ref}.csv").set_index("ID")
     c = c.set_index("ID")
     both = c.index[(c.loc_source == "nll3d")].intersection(r.index[r.loc_source == "nll3d"])
@@ -78,6 +130,13 @@ def main():
           f"{v.dh_p90:.2f} | {v.dt_med:+.3f} | {v.rms_b4:.3f} / {v.rms_ref:.3f} |" for k, v in g.iterrows()]
     L += ["", f"Above the surface: B4 {100 * d.above_b4.mean():.1f} %, reference {100 * d.above_ref.mean():.1f} %.",
           "The ANSS check per tier is in the tier summary of a2_build_catalog.py (copied next to this file)."]
+    fq = pd.crosstab(c.region, c.depth_quality, margins=True, margins_name="all")
+    nq = int((c.event_flag == "quarry_blast_likely").sum())
+    L += ["", "## Flags (rule 4 of D-B049..D-B051)", "", "| region | " + " | ".join(fq.columns) + " |",
+          "|---" * (len(fq.columns) + 1) + "|"]
+    L += [f"| {k} | " + " | ".join(str(v) for v in row) + " |" for k, row in fq.iterrows()]
+    L += ["", f"event_flag quarry_blast_likely: {nq} events ({QB['name']} box, weekdays "
+          f"{QB['weekday_hours_local'][0]:02d}:00-{QB['weekday_hours_local'][1]:02d}:00 {QB['tz']})."]
     (od / "compare.md").write_text("\n".join(L) + "\n")
     import matplotlib
     matplotlib.use("Agg")
@@ -97,9 +156,13 @@ def main():
     fig.tight_layout()
     fig.savefig(od / "depth_hist.png", dpi=130)
     write_manifest(f"b4_catalog_{a.run}", od, inputs=[CAT / f"catalog_v5_trackA_{a.run}.csv",
-                                                      CAT / f"catalog_v5_trackA_{a.ref}.csv"],
+                                                      CAT / f"catalog_v5_trackA_{a.ref}.csv",
+                                                      RUNS / a.run / "locations.csv", V4],
                    outputs=[out, od / "compare.md", od / "compare_by_region.csv", od / "depth_hist.png"],
-                   counts={"events": len(c), "nll3d": int(nll.sum()), "both": len(both)})
+                   params={"depth_flags": DF, "quarry": QB},
+                   counts={"events": len(c), "nll3d": int(nll.sum()), "both": len(both),
+                           "depth_quality": {k: int(v) for k, v in c.depth_quality.value_counts().items()},
+                           "quarry_blast_likely": nq})
     print((od / "compare.md").read_text())
 
 

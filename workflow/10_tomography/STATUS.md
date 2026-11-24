@@ -2,10 +2,29 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 11:00 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 12:30 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## Update 2026-11-24 12:30: B5 whole-catalog tomoDD run b5_v0.3.1 done, NOT a catalog version (session -18)
+
+Branch tomo/b5 (pushed, 4d894f31; worktree ~/wt_b5_full): b5_relocate.py/.sh (prep, split, run, collect; resumable;
+crash retry with frame centre moved 0.5 km for NaN rays in RaySPDR2.f), params b5, notes/b5_relocation.md (proposed
+decisions, not in DECISIONS.md). Catalog /wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/catalog_b5_b5_v0.3.1.csv;
+summaries data/tomo_v1/b5/b5_v0.3.1/compare.md (on tomo/b5). 2,125 dt components (3 split in 2 with a 2-hop halo,
+0 pairs lost), 2,128 frozen-binary runs, 20 min wall at 40 processes.
+* Relocated 97,619 of 157,269; 54,548 unlinked, 3,607 air quakes removed by tomoDD (3,039 Axial), 1,480 dropped, 15
+  skipped: all keep B4 positions. Shift from B4 median 0.59 km h / 0.52 km |z|; centroid shift removed (D-B053).
+* **Does not improve the catalog:** dt residual rms in the B4 grids P 0.147 -> 0.148 s, S 0.181 -> 0.232 s (worse in
+  every region); cluster thickness B5/B4 median 1.00. As in D-B048: catalog dt add little to B4.
+* **D-B055: 869 relocated events above the surface** (median 0.25 km, max 5.2 km; all below it at B4). Cause: the
+  same floor-held events as the upward pull (36 % of events < 0.1 km below the surface at B4 end above it) + tomoDD has
+  no topography (Air_dep = one flat level at the highest station). Damping 400 (CND ~40) halves Axial's count.
+* **Open (PI):** root-cause the S worsening (tomoDD S times vs the B4 NLL S grids: two forward models); run B5 only
+  after v5.1 (round-2 upward-pull fix); per-cluster damping to CND 40-80; whether waveform CC dt (D-B060 second pass)
+  comes first, since catalog dt do not sharpen clusters; air-quake and two-event-component handling; bootstrap not run
+  (2 CPU-h per member; tomoDD bootstrap 2-11x too small in D-B048).
 
 ## Update 2026-11-24 11:00: catalog v5.0, Zenodo, atlas, B5 (session cascadia-obs-ensemble-18)
 

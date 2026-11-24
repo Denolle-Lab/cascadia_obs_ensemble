@@ -70,12 +70,13 @@ stage_grids() { (cd $CODE && $MPY $W/b4_time_grids.py $VERSION $TIME --nproc ${N
 
 stage_iter0() { (cd $TA && $PY a2_run_nlloc.py $R0 --time $TIME --nproc ${NPROC_NLL:-100}); }
 
-stage_terms() { (cd $TA && $PY a2_station_terms.py $R0) && [ -s $RELOC/runs/$R0/station_terms.in ]; }
+stage_terms() {   # a2_parse_hyp.py writes runs/<run>/locations.csv, which the station terms read
+  (cd $TA && $PY a2_parse_hyp.py $R0 && $PY a2_station_terms.py $R0) && [ -s $RELOC/runs/$R0/station_terms.in ]; }
 
 stage_iter1() { (cd $TA && $PY a2_run_nlloc.py $R1 --time $TIME --nproc ${NPROC_NLL:-100} --stat $RELOC/runs/$R0/station_terms.in); }
 
 stage_catalog() {
-  (cd $TA && $PY a2_build_catalog.py $R1) || return 1
+  (cd $TA && $PY a2_parse_hyp.py $R1 && $PY a2_build_catalog.py $R1) || return 1
   mkdir -p $CODE/data/tomo_v1/b4/$R1
   cp /home/mdenolle/wt_reloc/data/reloc_v5/catalog_v5_trackA_${R1}_tiers.md $CODE/data/tomo_v1/b4/$R1/ 2>/dev/null || true
   (cd $CODE && $PY $W/b4_catalog.py $R1)

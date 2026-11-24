@@ -414,6 +414,9 @@ def tomo_model(path):
            "vpvs": u8(a("VpVs"), 200, 1.4), "vp": u8(a("Vp"), 32, 1.5), "vs": u8(a("Vs"), 50, 0.5),
            "dwsp": np.clip(np.round(50 * np.log10(1 + np.nan_to_num(a("dws_p")))), 0, 254).astype("u1"),
            "dwss": np.clip(np.round(50 * np.log10(1 + np.nan_to_num(a("dws_s")))), 0, 254).astype("u1")}
+    if "resolution_p" in d:                                # merged models: finest resolved checkerboard cell (km), 0 = none
+        out["resp"] = np.clip(np.nan_to_num(a("resolution_p")), 0, 254).astype("u1")
+        out["ress"] = np.clip(np.nan_to_num(a("resolution_s")), 0, 254).astype("u1")
     lon, lat = d.longitude.to_numpy().astype(float), d.latitude.to_numpy().astype(float)
     ver = d.attrs.get("version") or d.attrs.get("model_version") or Path(path).stem
     status = d.attrs.get("status", "")

@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 23:10 (handoff section below).
+Last update: 2026-11-24 05:10 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -146,6 +146,14 @@ drop in A-B tiers. Cause: v0.3.0 at Axial comes from ridges_north (relocation on
 ridge crust. **Open for the PI:** (1) keep v4-NLL3D locations at Axial, flagged (recommended now); (2) leave
 ridges_north out of the merge near Axial and relocate Axial again (~1 h); (3) accept B4. Also open: B4 vs tomoDD final
 locations check; v4.1 additions and spurious 172113 in the B4 catalog; D-B048 test (after the Axial choice).
+
+**Update 2026-11-24 05:10.** PI: the velocity model and the catalog can be public. Public atlas
+https://denolle-lab.github.io/cascadia_obs_ensemble/ (gh-pages 2b24559a, from atlas/model-layer b34a9abf) now has
+model v0.3.0 as 3D textures, as in the mt-rainier-digital-model viewer (horizontal slice at any depth, the model on
+the cross-section plane and behind the events in the 2D section, nothing above the ground or seafloor; DWS >= 10 mask
+by default, checkerboard-resolved option) and the B4 relocation as the second catalog ("Relocated in model v0.3.0
+(preliminary)", Axial caveat in the legend). Checked headless (Chromium + SwiftShader): no console or shader errors.
+The Zenodo draft stays private (publishing the record is a separate PI decision). Axial choice still open.
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

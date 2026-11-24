@@ -2,12 +2,12 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 12:30 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 11:35 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
-## Update 2026-11-24 12:30: B5 whole-catalog tomoDD run b5_v0.3.1 done, NOT a catalog version (session -18)
+## Update 2026-11-24 11:35: B5 whole-catalog tomoDD run b5_v0.3.1 done, NOT a catalog version (session -18)
 
 Branch tomo/b5 (pushed, 4d894f31; worktree ~/wt_b5_full): b5_relocate.py/.sh (prep, split, run, collect; resumable;
 crash retry with frame centre moved 0.5 km for NaN rays in RaySPDR2.f), params b5, notes/b5_relocation.md (proposed

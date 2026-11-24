@@ -498,3 +498,10 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         damp200_vs_300_A: [blanco_v2, d200_s20, blanco_v2, d300_s20]
         damp200_vs_300_B: [oregon_v2, d200_s20, oregon_v2, d300_s20]
         weightscale_B: [oregon_v2, d200_s20, oregon_v2g, d200_s20]
+    m0_smooth_scan:                # M0 smoothing from its own trade-off (D-B044 text), damping 200 (D-B045): weight1-3
+      - [60, 60, 30]
+      - [120, 120, 60]
+      - [240, 240, 120]
+      - [480, 480, 240]            # extended 15:50: weighted RMS flat from 20 to 240, no corner yet
+      - [960, 960, 480]
+      - [1920, 1920, 960]

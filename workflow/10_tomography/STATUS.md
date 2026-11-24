@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 14:15 (handoff section below).
+Last update: 2026-11-23 16:15 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -59,8 +59,18 @@ Resume after a stop with the same command (finished stages are skipped):
     setsid nohup bash workflow/10_tomography/b2_t6_m0.sh \
         >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/t6_m0.log 2>&1 < /dev/null &
 
-Next after review of M0: rebuild every tile from the M0 model (builder option still to write) and rerun the
+Next after review of M0: rebuild every tile from the M0 model (builder option start_model, written) and rerun the
 damping-200 run and resolution tests per tile.
+
+**Update 16:15.** T6 and M0 done (data/tomo_v1/b2_merge/t6/, m0/; notes/merge_design.md section 6 item 7 and the
+M0 paragraph after section 7). T6 passes in the tile interiors: joint and stitched differ by 1.7-2.0 % rms in Vp
+(correlation 0.86-0.94), the same as one tile moved from damping 200 to 300; the joint model is about 15 % stronger
+(more data rows, so damping weighs less); in the overlap, which neither tile resolves, the stitched model has half
+the joint amplitude; overlap events differ by about 1 km between joint and tile runs. M0 at smoothing 20 was
+node-scale noise (7 % rms Vp); a smoothing scan (20-1920, damping 200) has a flat weighted fit up to 480 and a
+coherent model there (slow ridge crust at 7-15 km, fast 40 km under Washington). Proposed P-M11: M0 = d200_s480,
+then tiles restart from it with a smoothing scan each (builder option `start_model` written, bc73862d). Waiting
+for the PI before the tile reruns (about one day of the machine).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
@@ -87,7 +97,8 @@ v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
 7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23, revised after a literature review):
    P-M1..P-M10 proposed. Main choices: coarse whole-margin inversion as common start (P-M2, as Lin et al. 2010),
    resolution-window weights without inverse variance (P-M4), joint-vs-stitched test on blanco + oregon (T6).
-   P-M1 and P-M2 adopted (D-B045, D-B044); T6 and M0 running. Open: P-M3..P-M10.
+   P-M1 and P-M2 adopted (D-B045, D-B044); T6 and M0 done (update 16:15). Open: P-M3..P-M11 (P-M11 = M0
+   smoothing 480 and a smoothing scan per tile).
 
 ## Done
 

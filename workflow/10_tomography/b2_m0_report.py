@@ -36,7 +36,7 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     OUT.mkdir(parents=True, exist_ok=True)
-    tags = sorted(p.name for p in (RUNS / REG).glob("d*_s20") if (p / "Output_Files" / "model_geo.npz").exists())
+    tags = sorted(p.name for p in (RUNS / REG).glob("d*_s*") if "partial" not in p.name and (p / "Output_Files" / "model_geo.npz").exists())
     lines = [f"# M0 coarse whole-margin inversion ({REG})", "",
              "dlnV = change from the start (D-B005 model averaged over 31 km boxes), interior nodes; % of nodes "
              "changed by more than 0.5 %; rms over nodes changed.", "",

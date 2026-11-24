@@ -214,6 +214,27 @@ What this says:
 6. **Starting models differ** by up to 30 % at single shallow nodes (T5; blanco / ridges_north at 5 km, 11.9 % at
    -3 to 3 km; oregon / washington 17 % at -3 / -1 km; mendocino_gorda_c / oregon 20 %), median < 0.4 %; below
    9 km at most 3 %. Removed by M0 (common start), or handled by M1.
+7. **T6, joint against stitched (2026-11-23 15:26; data/tomo_v1/b2_merge/t6/blanco_oregon_v2_d200_s20/).**
+   blanco_oregon_v2 (7,649 of 7,691 events relocated) against blanco_v2 + oregon_v2g, damping 200, smoothing 20,
+   one weight scale, the D-B005 start. Vp, 1-34 km:
+   * Tile interiors (25,000 grid points): correlation 0.86-0.94 (Vs 0.95-0.98), mean difference <= 0.1 %, rms
+     difference 1.7-2.0 % (Vs 0.8 %). That is the size of moving one tile from damping 200 to 300 (1.7 % Blanco,
+     2.3 % Oregon) and smaller than changing Oregon's weight scale (3.0 %). Tiling does not change the interiors
+     by more than one damping step.
+   * The joint model's anomalies are about 15 % stronger (amplitude ratio stitched/joint 0.77-0.89). Expected:
+     tomoDD scales each column to the number of data rows, so damping weighs less in the joint system (0.81 M
+     data against 0.39 M and 0.42 M). One damping number still regularises a larger tile less (D-B045).
+   * Overlap (no node resolved by either tile at damping 200): correlation 0.76, stitched amplitude 0.56 of the
+     joint. Averaging two tiles that partly disagree halves the anomalies there; rms difference 1.9 %, above the
+     damping yardstick (0.7-1.1 %).
+   * Events: in the interiors the same event differs by 0.24-0.27 km horizontally and 0.34-0.46 km in depth
+     (median), a quarter of each tile's own shift from the start. Events in the overlap differ by 0.8-1.1 km and
+     1.1-1.7 km, as much as the tiles move them: a tile sees an overlap event from one side. This supports M6
+     (relocate every event in the merged model with all stations; tile relocations are intermediate).
+   * Seen on the maps (maps.png): at 12 and 21 km both the joint and the tile models alternate in sign from node
+     to node; damping 200 lets node-scale noise through.
+   Verdict at the deterministic stage: pass in the interiors; in the overlap the stitched model is weaker than the
+   joint one, which matters only for relocation (no resolved nodes there).
 
 ## 7. Proposed decisions (for the PI)
 
@@ -239,16 +260,45 @@ What this says:
 * P-M9 Restore fixed nodes in tomoDD-SE and hold outside nodes at the reference (M8): only with permission to
   modify the code.
 * P-M10 Consistency pass (M7) only if T6 or T7 fail.
+* P-M11 (2026-11-23 16:10) M0 = margin_m0_v2 d200_s480 (smoothing 480/480/240): the smoothest model whose weighted
+  RMS stays within 1.5 % of the best of the scan. Tiles then restart from it (`start_model: margin_m0_v2/d200_s480`)
+  and each tile's rerun scans smoothing 20-480 at damping 200 and takes its smoothing by the same rule, before
+  its resolution tests. Alternative: 240 (best fit, rougher Vp) or 960 (smoother, fit 3.9 % worse).
 
 First steps that need no decision on P-M2: run T6 on blanco + oregon at the damping rule chosen in P-M1, and write
 the T7 forward check on the current tiles.
 
-**Running since 2026-11-23 14:03** (`b2_t6_m0.sh`, log `<runs>/t6_m0.log`): T6 = joint tile blanco_oregon_v2
-(7,691 events, 242 stations, interior nodes 88 x 49 on the Blanco lattice) against blanco_v2 + oregon_v2g (Oregon
-rebuilt on the dataset weight scale), all at damping 200, smoothing 20, on the D-B005 start; comparison
-`b2_t6_joint.py` (zones: each tile alone, near the seam, overlap; yardsticks: damping 200 against 300 in each tile,
-and Oregon on the two weight scales). M0 = margin_m0_v2 at damping 200 and 1000; maps `b2_m0_report.py`.
-Results go to `data/tomo_v1/b2_merge/t6/` and `m0/` and PR #33.
+**Ran 2026-11-23 14:03-16:06** (`b2_t6_m0.sh`, log `<runs>/t6_m0.log`; smoothing scan `<runs>/m0_smooth.log`):
+T6 = joint tile blanco_oregon_v2 (7,691 events, 242 stations, interior nodes 88 x 49 on the Blanco lattice) against
+blanco_v2 + oregon_v2g (Oregon rebuilt on the dataset weight scale), all at damping 200, smoothing 20, on the D-B005
+start; comparison `b2_t6_joint.py`; result in section 6 item 7. M0 = margin_m0_v2; maps `b2_m0_report.py`. Results
+in `data/tomo_v1/b2_merge/t6/` and `m0/`.
+
+**M0 result and its smoothing (2026-11-23 16:10; data/tomo_v1/b2_merge/m0/).** At damping 200 and smoothing 20,
+M0 changes the start by 7.0 % rms in Vp (max 79 %) and alternates in sign from one 30 km node to the next: on the
+coarse grid each node is crossed by many rays, so the data dominate each scaled column and the same smoothing
+weight does much less than on the tiles. M0's smoothing was then taken from its own trade-off, as D-B044 says
+(damping 200, weights 20 to 1920 laterally, half vertically):
+
+| smoothing | weighted RMS | rms dlnVp / dlnVs % | max abs dlnVp % | first-iteration CND | events kept |
+|---|---|---|---|---|---|
+| 20 | 0.2010 | 7.0 / 4.0 | 79 | 338 | 6,899 |
+| 60 | 0.1997 | 4.6 / 2.3 | 65 | 299 | 6,897 |
+| 120 | 0.1997 | 3.2 / 1.6 | 59 | 264 | 6,878 |
+| 240 | 0.1984 | 2.2 / 1.1 | 28 | 212 | 6,869 |
+| 480 | 0.2012 | 1.5 / 0.7 | 26 | 164 | 6,856 |
+| 960 | 0.2062 | 0.9 / 0.4 | 18 | 120 | 6,848 |
+| 1920 | 0.2114 | 0.5 / 0.2 | 8 | 93 | 6,840 |
+| (damping 1000, smoothing 20) | 0.2230 | 4.2 / 2.2 | 67 | 39 | 6,925 |
+
+The weighted fit is flat from 20 to 480 (within 1.5 % of its best) and worsens beyond (+3.9 % at 960, +6.6 % at
+1920). At 480 the change is coherent: Vp 3-6 % slower than the start along the Juan de Fuca and Endeavour ridges at
+7-15 km, Vp and Vs about 4 % faster at 40 km under Washington and Puget Sound, a few isolated nodes left in
+Washington and Mendocino-Gorda. Unweighted absolute RMS rises with smoothing (0.246 at 20, 0.288 at 480): the
+low-weight picks fit less well. Events still move 1.5-1.8 km horizontally and about 2 km in depth (median) at
+damping 200, against 0.9 and 0.8 km at damping 1000, whatever the smoothing. Proposed: P-M11 below.
+The same effect is visible in the tiles at damping 200 and smoothing 20 (section 6 item 7, node-to-node sign
+changes at 12 and 21 km): the tile reruns from M0 should scan smoothing at damping 200 with the same rule.
 
 ## 8. References (DOIs checked against Crossref / DataCite on 2026-11-23)
 

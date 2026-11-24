@@ -180,6 +180,9 @@
   <div class="layers" id="layers"></div>
   <div class="ctl-row"><span class="lab">Slab color</span><select id="slabColor"></select></div>
   <div class="ctl-row" id="mcRow"><span class="lab">Mc map</span><select id="mcSel"></select></div>
+  <div class="ctl-row tomoRow"><span class="lab">Model</span><select id="tomoVar"></select></div>
+  <div class="ctl-row tomoRow"><span class="lab">Model depth</span><select id="tomoDep"></select></div>
+  <div class="ctl-row tomoRow"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
   <div class="sep"></div>
   <div class="ctl-row"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
   <div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div>
@@ -229,8 +232,9 @@ async function unblob(b) {
   for (const [k, t] of Object.entries(b.table)) out[k] = new T[t.dtype](buf, t.off, t.n);
   return out;
 }
-const [EV, TER, SLAB, FLT, MCG] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
-  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null), ATLAS.mc ? unblob(ATLAS.mc) : Promise.resolve(null)]);
+const [EV, TER, SLAB, FLT, MCG, TMG] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
+  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null), ATLAS.mc ? unblob(ATLAS.mc) : Promise.resolve(null),
+  ATLAS.tomo ? unblob(ATLAS.tomo) : Promise.resolve(null)]);
 
 // ---------- projection: local equirectangular, 1 unit = 1 km; y up, depth down ----------
 const LON0 = M.lon0, LAT0 = M.lat0;
@@ -575,6 +579,61 @@ function setMc(key) {
 }
 placeMc(); setMc("best");
 
+// ---------- velocity model (Track B, private preview): one horizontal slice at a time ----------
+const TMM = M.tomo;
+const RAMP_DIV = [[-1, 178, 24, 43], [-0.5, 239, 138, 98], [0, 247, 247, 247], [0.5, 103, 169, 207], [1, 33, 102, 172]];   // red slow, blue fast
+const RAMP_SEQ = [[0, 68, 1, 84], [0.25, 59, 82, 139], [0.5, 33, 145, 140], [0.75, 94, 201, 98], [1, 253, 231, 37]];
+const TVARS = [
+  { key: "dvp", label: "Vp change from the start model", unit: "%", wave: "p", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_DIV },
+  { key: "dvs", label: "Vs change from the start model", unit: "%", wave: "s", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_DIV },
+  { key: "vpvs", label: "Vp/Vs", unit: "", wave: "s", dec: c => 1.4 + c / 200, lo: 1.65, hi: 1.95, ramp: RAMP_SEQ },
+  { key: "vp", label: "Vp", unit: "km/s", wave: "p", dec: c => 1.5 + c / 32, lo: 4.5, hi: 8.2, ramp: RAMP_SEQ },
+  { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_SEQ }];
+const TMASK = [[0, "all cells"], [10, "DWS ≥ 10"], [100, "DWS ≥ 100"], [1000, "DWS ≥ 1,000"]];
+const TS = { v: "dvp", k: 0, mask: 100 };
+const rampCol = (R, t) => { t = Math.max(-1, Math.min(1, t)); if (t <= R[0][0]) return R[0].slice(1);
+  for (let j = 1; j < R.length; j++) if (t <= R[j][0]) { const f = (t - R[j - 1][0]) / (R[j][0] - R[j - 1][0]);
+    return [1, 2, 3].map(c => R[j - 1][c] + f * (R[j][c] - R[j - 1][c])); }
+  return R[R.length - 1].slice(1); };
+const tvarT = (V, x) => V.ramp === RAMP_DIV ? x / V.hi : (x - V.lo) / (V.hi - V.lo);   // diverging: -1..1, sequential: 0..1
+let tomoMesh = null;
+if (TMG) {
+  TS.k = Math.max(0, TMM.depths.findIndex(z => z >= 12));
+  const nc = TMM.nx * TMM.ny, hx = TMM.dx / 2, hy = TMM.dy / 2, pos = new Float32Array(nc * 12), col = new Float32Array(nc * 12);
+  for (let i = 0; i < nc; i++) {
+    const lon = TMM.west + (i % TMM.nx) * TMM.dx, lat = TMM.south + Math.floor(i / TMM.nx) * TMM.dy;
+    [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].forEach(([a, b], j) => {
+      pos[(i * 4 + j) * 3] = toX(lon + a); pos[(i * 4 + j) * 3 + 2] = toZ(lat + b); });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  tomoMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85,
+    side: THREE.DoubleSide, depthWrite: false }));
+  tomoMesh.renderOrder = 21; scene.add(tomoMesh);
+}
+function placeTomo() {                                 // the slice sits at its depth, with the vertical exaggeration
+  if (!tomoMesh) return;
+  const p = tomoMesh.geometry.attributes.position, y = -TMM.depths[TS.k] * U.exag.value;
+  for (let i = 1; i < p.array.length; i += 3) p.array[i] = y;
+  p.needsUpdate = true; tomoMesh.geometry.computeBoundingSphere();
+}
+function setTomo() {
+  if (!tomoMesh) return;
+  const V = TVARS.find(t => t.key === TS.v), a = TMG[V.key], w = TMG[V.wave === "p" ? "dwsp" : "dwss"];
+  const thr = TS.mask > 0 ? Math.round(50 * Math.log10(1 + TS.mask)) : -1, n = TMM.nx * TMM.ny, off = TS.k * n;
+  const g = tomoMesh.geometry, c = g.attributes.color.array, idx = [];
+  for (let i = 0; i < n; i++) {
+    const code = a[off + i];
+    if (code === 255 || w[off + i] < thr) continue;
+    const rgb = rampCol(V.ramp, tvarT(V, V.dec(code))).map(v => (v / 255) ** 2.2);
+    for (let j = 0; j < 4; j++) c.set(rgb, (i * 4 + j) * 3);
+    const v = i * 4; idx.push(v, v + 1, v + 2, v, v + 2, v + 3);
+  }
+  g.attributes.color.needsUpdate = true; g.setIndex(idx); placeTomo();
+}
+setTomo();
+
 // ---------- faults: CRESCENT CFM crustal meshes + CASIE21 megathrust ----------
 const FM = M.faults || {};
 function triMesh(lon, lat, dep, color, opacity) {
@@ -687,6 +746,7 @@ const LAYERS = [
   { key: "stations", label: "Stations", color: "#66ccf2", obj: [stPoints], on: true },
   { key: "tensors", label: "Tensors", color: "#e8a33d", obj: [tensorGroup], on: true },
   { key: "mc", label: "Mc map", color: "#6f9f6b", obj: [mcMesh].filter(Boolean), on: false },
+  { key: "tomo", label: "Velocity model", color: "#c06cd8", obj: [tomoMesh].filter(Boolean), on: false },
 ];
 const lay = $("layers");
 for (const L of LAYERS) {
@@ -704,6 +764,14 @@ if (MCM) mcSel.innerHTML = MCM.layers.map(L => `<option value="${L.key}">${L.lab
 else $("mcRow").style.display = "none";
 mcSel.onchange = () => { setMc(mcSel.value); if (!layer("mc").on) layer("mc").set(true); drawLegend(); };
 { const L = layer("mc"); if (L && L.set) { const s0 = L.set; L.set = on => { s0(on); drawLegend(); }; } }
+if (TMM) {
+  const tv = $("tomoVar"), td = $("tomoDep"), tk = $("tomoMask");
+  tv.innerHTML = TVARS.map(V => `<option value="${V.key}">${V.label}</option>`).join("");
+  td.innerHTML = TMM.depths.map((z, k) => `<option value="${k}">${z} km</option>`).join(""); td.value = TS.k;
+  tk.innerHTML = TMASK.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); tk.value = TS.mask;
+  const go = () => { TS.v = tv.value; TS.k = +td.value; TS.mask = +tk.value; setTomo(); if (!layer("tomo").on) layer("tomo").set(true); drawLegend(); };
+  tv.onchange = td.onchange = tk.onchange = go;
+} else document.querySelectorAll(".tomoRow").forEach(r => r.style.display = "none");
 lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend(); }; });
 
 // ---------- controls ----------
@@ -792,7 +860,7 @@ function showFaultCard(k) {
   $("fcClose").onclick = () => selectFault(-1);
 }
 const bind = (id, fmt, cb) => { const el = $(id), out = $(id + "V"); const f = () => { out.textContent = fmt(+el.value); cb(+el.value); }; el.oninput = f; f(); };
-bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); placeMc(); drawSection3D(); });
+bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); placeMc(); placeTomo(); drawSection3D(); });
 bind("ground", v => v >= 0.99 ? "solid" : v <= 0.01 ? "cut" : Math.round(v * 100) + "%", v => {
   terrainOpacity.value = v; terrainGroup.visible = v > 0.01 && layer("ground").on;
   });
@@ -915,9 +983,14 @@ function drawLegend() {
     [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(v => `rgb(${mcCol(v).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
+  const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
+  const tomoLeg = tV ? `<div><h4>${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, ${TMM.depths[TS.k]} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
+    [0, 0.25, 0.5, 0.75, 1].map(f => `rgb(${rampCol(tV.ramp, tV.ramp === RAMP_DIV ? 2 * f - 1 : f).map(Math.round).join(",")})`).join(",")})"></div>
+    <div class="ramp-labels"><span>${tV.ramp === RAMP_DIV ? -tV.hi : tV.lo}${tV.ramp === RAMP_DIV ? " slow" : ""}</span><span>${tV.ramp === RAMP_DIV ? 0 : ((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>${tV.hi}${tV.ramp === RAMP_DIV ? " fast" : ""}</span></div>
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}, tomoDD tiles merged on the whole-margin start model. ${TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."} <span class="caveat">Private preview, not for distribution.</span></div></div>` : "";
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
-    ${slab}${mcLeg}
+    ${slab}${mcLeg}${tomoLeg}
     <div><h4>Symbols</h4>
       <div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#f2a65a"/></svg>Event, size by magnitude; non-QC fainter</div>
       <div class="row"><svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#66ccf2"/></svg>Ocean-bottom station · <svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#f2f2eb"/></svg>land</div>

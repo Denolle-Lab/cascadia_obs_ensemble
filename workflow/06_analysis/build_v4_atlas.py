@@ -400,10 +400,41 @@ def mc_grids():
     return out, meta
 
 
+def tomo_model(path):
+    """Velocity model (Track B, netCDF of b2_model_export.py) for the atlas: one uint8 per node and variable,
+    255 = no value. dVp, dVs in % from the starting model (code = %*4 + 127, 0.25 % steps, +-31.75 %), Vp/Vs
+    (1.4 + code/200), Vp (1.5 + code/32 km/s), Vs (0.5 + code/50 km/s); DWS of P and S rays as round(50 log10(1 + DWS))
+    so the page can mask sparsely sampled cells at any threshold."""
+    import xarray as xr
+    d = xr.open_dataset(path)
+    u8 = lambda v, scale, off: np.where(np.isfinite(v), np.clip(np.round((v - off) * scale), 0, 254), 255).astype("u1")
+    a = lambda k: d[k].transpose("depth", "latitude", "longitude").to_numpy().astype(float)
+    out = {"dvp": np.where(np.isfinite(a("Vp_perturbation")), np.clip(np.round(a("Vp_perturbation") * 4) + 127, 0, 254), 255).astype("u1"),
+           "dvs": np.where(np.isfinite(a("Vs_perturbation")), np.clip(np.round(a("Vs_perturbation") * 4) + 127, 0, 254), 255).astype("u1"),
+           "vpvs": u8(a("VpVs"), 200, 1.4), "vp": u8(a("Vp"), 32, 1.5), "vs": u8(a("Vs"), 50, 0.5),
+           "dwsp": np.clip(np.round(50 * np.log10(1 + np.nan_to_num(a("dws_p")))), 0, 254).astype("u1"),
+           "dwss": np.clip(np.round(50 * np.log10(1 + np.nan_to_num(a("dws_s")))), 0, 254).astype("u1")}
+    lon, lat = d.longitude.to_numpy().astype(float), d.latitude.to_numpy().astype(float)
+    ver = d.attrs.get("version") or d.attrs.get("model_version") or Path(path).stem
+    status = d.attrs.get("status", "")
+    reg = Path(path).parent / "registry.csv"                # status lives in the model registry (b2_model_export.py)
+    if not status and reg.exists():
+        r = pd.read_csv(reg, dtype=str)
+        r = r[r.version.str.lstrip("v") == str(ver).lstrip("v")]
+        status = r.status.iloc[-1] if len(r) else ""
+    meta = dict(nx=len(lon), ny=len(lat), nz=d.sizes["depth"], west=float(lon[0]), south=float(lat[0]),
+                dx=float(np.round(np.diff(lon).mean(), 5)), dy=float(np.round(np.diff(lat).mean(), 5)),
+                depths=[float(z) for z in d.depth.values], version=str(ver), status=str(status),
+                title=str(d.attrs.get("title", "")))
+    print(f"  velocity model {ver}: {meta['nx']} x {meta['ny']} x {meta['nz']} nodes")
+    return out, meta
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
     ap.add_argument("--out", default=str(D / "catalog_v4" / "atlas" / "cascadia_v4_atlas.html"))
+    ap.add_argument("--model", help="Track B velocity model netCDF to add as a layer (private preview builds only)")
     a = ap.parse_args(argv)
     print("building atlas data")
     ev, ev_meta = events()
@@ -411,12 +442,13 @@ def main(argv=None):
     sl, sl_meta = slab_and_coupling()
     fa, fa_meta = faults()
     mc, mc_meta = mc_grids()
+    tm, tm_meta = tomo_model(a.model) if a.model else (None, None)
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],
-                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta,
+                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
                      built=pd.Timestamp.now().strftime("%Y-%m-%d")),
         "events": blob(ev), "terrain": blob(ter), "slab": blob(sl), "faults": blob(fa) if fa else None,
-        "mc": blob(mc) if mc else None,
+        "mc": blob(mc) if mc else None, "tomo": blob(tm) if tm else None,
         "stations": stations(), "plates": plates(), "tensors": tensors(),
     }
     html = Path(a.template).read_text().replace("/*__ATLAS_DATA__*/null", json.dumps(payload, separators=(",", ":")))

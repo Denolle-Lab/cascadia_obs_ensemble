@@ -43,6 +43,15 @@
   .seg button.on { background: var(--text-primary); color: var(--surface-0); }
   .seg button:disabled { opacity: 0.4; cursor: default; }
   .sep { border-top: 1px solid var(--hairline); margin: 2px 0; }
+  details.grp { border-top: 1px solid var(--hairline); padding-top: 7px; }
+  details.grp:first-child { border-top: 0; padding-top: 0; }
+  details.grp > summary { list-style: none; cursor: pointer; color: var(--text-secondary); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
+  details.grp > summary::-webkit-details-marker { display: none; }
+  details.grp > summary::after { content: "+"; color: var(--text-muted); font-size: 13px; }
+  details.grp[open] > summary::after { content: "−"; }
+  details.grp > summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  .grp-body { display: flex; flex-direction: column; gap: 9px; margin-top: 8px; }
   input[type=range] { width: 108px; accent-color: #d9d6cc; }
   select { background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--hairline-strong); border-radius: 4px; font: inherit; font-size: 12px; padding: 3px 4px; }
   .layers { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
@@ -154,6 +163,7 @@
   <button data-p="controls">Controls</button><button data-p="regions">Places</button><button data-p="timeline">Time</button><button data-p="legend">Legend</button>
 </div>
 <div class="controls panel" id="controls">
+  <details class="grp" open><summary>View</summary><div class="grp-body">
   <div class="ctl-row" id="catRow"><span class="lab">Catalog</span>
     <div class="seg" id="segCat"><button data-v="0" class="on">v4</button><button data-v="1">v4-NLL3D (preliminary)</button></div></div>
   <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Color by</span>
@@ -161,8 +171,8 @@
   <div class="ctl-row"><span class="lab">Vertical ×</span><input type="range" id="exag" min="1" max="10" step="0.5" value="3"><span class="val mono" id="exagV">3×</span></div>
   <div class="ctl-row"><span class="lab">Ground</span><input type="range" id="ground" min="0" max="1" step="0.05" value="0.55"><span class="val mono" id="groundV">solid</span></div>
   <div class="ctl-row"><span class="lab">Point size</span><input type="range" id="psize" min="0.3" max="3" step="0.1" value="1"><span class="val mono" id="psizeV">1.0</span></div>
-  <div class="sep"></div>
-  <h4>Filter events</h4>
+  </div></details>
+  <details class="grp"><summary>Filter events</summary><div class="grp-body">
   <div class="ctl-row"><span class="lab">Fault</span><select id="faultSel" style="max-width:170px"><option value="-1">All faults</option></select></div>
   <div class="ctl-row"><span class="lab">Events</span><div class="seg" id="segOnF"><button data-v="0" class="on">All</button><button data-v="1">On a fault</button><button data-v="2">Off</button></div></div>
   <div class="ctl-row"><span class="lab">QC only</span><div class="seg" id="segQC"><button data-v="0" class="on">All</button><button data-v="1">≥4 P &amp; ≥4 S</button></div></div>
@@ -175,17 +185,17 @@
   <div class="ctl-row"><span class="lab"></span><span class="val mono" id="airV" style="width:auto;text-align:left"></span></div>
   <div class="ctl-row"><span class="lab">Depth from</span><input type="range" id="d0" min="-5" max="80" step="1" value="-5"><span class="val mono" id="d0V">−5 km</span></div>
   <div class="ctl-row"><span class="lab">Depth to</span><input type="range" id="d1" min="-5" max="80" step="1" value="80"><span class="val mono" id="d1V">80 km</span></div>
-  <div class="sep"></div>
-  <h4>Layers</h4>
+  </div></details>
+  <details class="grp" open><summary>Layers</summary><div class="grp-body">
   <div class="layers" id="layers"></div>
-  <div class="ctl-row"><span class="lab">Slab color</span><select id="slabColor"></select></div>
-  <div class="ctl-row" id="mcRow"><span class="lab">Mc map</span><select id="mcSel"></select></div>
-  <div class="ctl-row tomoRow"><span class="lab">Model</span><select id="tomoVar"></select></div>
-  <div class="ctl-row tomoRow"><span class="lab">Model depth</span><select id="tomoDep"></select></div>
-  <div class="ctl-row tomoRow"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
-  <div class="sep"></div>
-  <div class="ctl-row"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
-  <div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div>
+  <div class="ctl-row optRow" data-layer="slab"><span class="lab">Slab color</span><select id="slabColor"></select></div>
+  <div class="ctl-row optRow" id="mcRow" data-layer="mc"><span class="lab">Mc map</span><select id="mcSel"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model</span><select id="tomoVar"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model depth</span><select id="tomoDep"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
+  </div></details>
+  <div class="ctl-row" style="border-top:1px solid var(--hairline);padding-top:9px"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
+  <details class="grp"><summary>Help</summary><div class="grp-body"><div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div></div></details>
 </div>
 
 <nav class="regions panel" id="regions"><div class="title"><span>Go to</span><span>QC events</span></div></nav>
@@ -752,10 +762,14 @@ const lay = $("layers");
 for (const L of LAYERS) {
   if (!L.obj.length) continue;
   const b = document.createElement("button"); b.innerHTML = `<span class="sw" style="background:${L.color}"></span>${L.label}`;
-  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); };
+  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); syncOptRows(); };
   b.onclick = () => set(!L.on); set(L.on); L.set = set; lay.appendChild(b);
 }
 const layer = k => LAYERS.find(L => L.key === k);
+function syncOptRows() {                               // a layer's options show only while the layer is on
+  document.querySelectorAll(".optRow").forEach(r => { const L = LAYERS.find(x => x.key === r.dataset.layer); r.hidden = !(L && L.on); });
+}
+syncOptRows();
 const sc = $("slabColor");
 sc.innerHTML = `<option value="depth">Depth (10 km contours)</option>` + SM.models.map(m => `<option value="${m}">Coupling: ${m}</option>`).join("");
 sc.onchange = () => { setSlabColor(sc.value); if (!layer("slab").on) layer("slab").set(true); drawLegend(); };
@@ -967,6 +981,7 @@ function layoutPanels() {   // keep panels from overlapping
 }
 const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94"];
 const TIER_N = [0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) TIER_N[etier[i]]++;
+const LEG_SRC = { open: false };                       // "Symbols and sources" folded unless opened
 function drawLegend() {
   const modes = [
     { t: "Depth (km)", g: "linear-gradient(90deg,#fae59e,#f59e54,#e05c5c,#b3458c,#7854cc)", l: ["0", "11", "22", "34", "≥45"] },
@@ -991,6 +1006,8 @@ function drawLegend() {
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
     ${slab}${mcLeg}${tomoLeg}
+    ${F.cat ? "" : `<div class="attribution" style="border-top:0;padding-top:0"><span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them.</span></div>`}
+    <details class="grp" id="legSrc" ${LEG_SRC.open ? "open" : ""}><summary>Symbols and sources</summary><div class="grp-body">
     <div><h4>Symbols</h4>
       <div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#f2a65a"/></svg>Event, size by magnitude; non-QC fainter</div>
       <div class="row"><svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#66ccf2"/></svg>Ocean-bottom station · <svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#f2f2eb"/></svg>land</div>
@@ -999,10 +1016,10 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
     ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">v4-NLL3D (preliminary)</b>: the v4 events relocated with NonLinLoc in a 3D velocity model, depths below sea level. A first pass, to be replaced by locations in the tomography model.${F.cat ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}</div>` : ""}
-    <div class="attribution">${F.cat ? "" : `<span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>`}
-      Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
+    <div class="attribution">Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
-      Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div>`;
+      Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;
+  $("legSrc").ontoggle = () => { LEG_SRC.open = $("legSrc").open; layoutPanels(); };
   layoutPanels();
 }
 
@@ -1253,7 +1270,7 @@ addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; cam
 
 // ---------- loop ----------
 $("nAll").textContent = N.toLocaleString(); $("nSta").textContent = ST.length.toLocaleString();
-// ---------- panel toolbar: all panels open on desktop; on phones all closed, one open at a time ----------
+// ---------- panel toolbar: on desktop Controls and Legend open, Places and Time closed; on phones one at a time ----------
 const PANELS = ["controls", "regions", "timeline", "legend"];
 function setPanel(id, open) {
   $(id).classList.toggle("closed", !open);
@@ -1262,7 +1279,7 @@ function setPanel(id, open) {
   if (id === "timeline" && open) drawHist();
   layoutPanels();
 }
-PANELS.forEach(id => setPanel(id, !PHONE));
+PANELS.forEach(id => setPanel(id, !PHONE && (id === "controls" || id === "legend")));   // Places and Time from the toolbar
 document.querySelectorAll("#toolbar button").forEach(b => b.onclick = () => setPanel(b.dataset.p, $(b.dataset.p).classList.contains("closed")));
 drawLegend(); layoutPanels(); refresh();
 camera.position.set(0, 900, 900); controls.target.set(0, 0, 0);

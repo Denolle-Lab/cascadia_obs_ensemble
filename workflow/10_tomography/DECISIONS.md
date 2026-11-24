@@ -556,3 +556,19 @@ events above (median 0.03 km, max 0.41 km; Track A 594), tier U (v4 position kep
 above-surface-root-cause, 11-24): v4 GENIE/GraphDD depth datum, velocity model top and search domain; NLLoc
 LOCTOPO_SURFACE read by node lookup (velmod.c get_surface_z) instead of the bilinear surface; why tier U events are not
 located. The atlas shows catalog positions as they are and flags the events above the surface.
+
+### D-B056 NLLoc topography floor that NLLoc's nearest-node lookup cannot get above (adopted 2026-11-24, implementation of D-B055)
+Root cause (above-surface root-cause workflow, 11-24, confirmed by an independent verifier): NLLoc reads
+LOCTOPO_SURFACE by nearest node (velmod.c get_surface_z, pix_shift 0.5), while the surface is defined by bilinear
+interpolation; reproducing the lookup explains 1,079 of 1,079 B4 v0.3.0 and 594 of 594 Track A located events above
+the surface (plus, in B4, a flattened-vs-true term of at most 1.5 m, 4 events). Fix, no code change: each node of a
+15 s grid holds the minimum of the bilinear earth_relief 01m surface over the area NLLoc assigns to it, minus 1 m,
+Earth-flattened (h' = Re ln(1 + h/Re), never above h, so one file serves both frames):
+/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_eft.bin, built by workflow/08_relocation/a2_make_topo_surface_cons.py
+(reloc/track-a 85cc3dae; md5 identical to the tested files), used by nlloc_template.in from v0.3.1 iter0 on. Tests:
+0 of 500 sampled, 0 of 1,078 B4 and 0 of 594 Track A affected events above; 197 of 200 random controls unchanged
+(3 moved one oct-tree cell); +50 MB per NLLoc process. Not a root-cause fix for everything: for about 4 % of B4 events
+(29.5 % of JdF ridge, 18.9 % Endeavour, 7 % Axial) the travel-time likelihood peaks 0.3-1.7 km above the surface
+(verifier's no-topography reruns), so their depth is set by the floor, not the data. That upward pull is the open
+computation error (candidates: stations placed 50 m below the surface by a1_build_model.py line 253, near-surface
+velocities, Vp/Vs, station terms); under investigation.

@@ -1,0 +1,60 @@
+{
+ "name": "b5_summary",
+ "script": "/home/mdenolle/wt_b5/workflow/10_tomography/b5_summary.py",
+ "argv": [],
+ "utc": "2026-11-24T14:23:54.364442+00:00",
+ "git_commit": "9249dfb7266b70efe38604b2b0d031321944c190",
+ "git_dirty": true,
+ "params_md5": "eb2fe1d673224107434fefcd3ccd5831",
+ "params": null,
+ "inputs": [
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f0399/metrics.json",
+   "size": 9669,
+   "mtime": "2026-11-24T14:10:27.598104+00:00",
+   "md5": "e2c7927c11fdb69b8c1834a275832bcc"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/metrics.json",
+   "size": 9654,
+   "mtime": "2026-11-24T14:23:33.929405+00:00",
+   "md5": "1612b595ea6c80e89055b1bd340dd379"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1803/metrics.json",
+   "size": 9656,
+   "mtime": "2026-11-24T14:01:11.853410+00:00",
+   "md5": "f5fe833d85ed0ee2efc35b8bd13db4db"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth/metrics.json",
+   "size": 16978,
+   "mtime": "2026-11-24T14:03:32.912559+00:00",
+   "md5": "39024142633f96867eae59b312f70c19"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/metrics.json",
+   "size": 16960,
+   "mtime": "2026-11-24T14:08:03.857922+00:00",
+   "md5": "de315213ac6ee8bcb5306127fd8ffba6"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_tdd/metrics.json",
+   "size": 16980,
+   "mtime": "2026-11-24T14:05:45.402755+00:00",
+   "md5": "871d7df94887ac430bef295d987bad4b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/summary.md",
+   "size": 17903,
+   "mtime": "2026-11-24T14:23:54.364255+00:00",
+   "md5": "0b4d363367bf9f074cdf6be163da3993"
+  }
+ ],
+ "counts": {
+  "cases": 6
+ },
+ "notes": null
+}

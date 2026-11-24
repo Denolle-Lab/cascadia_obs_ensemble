@@ -15,7 +15,12 @@
 #   catalog  a2_build_catalog.py (tiers, ANSS check) and b4_catalog.py (depths back from the EFT frame, comparison
 #            with v4-NLL3D iter1)
 #   bundle   b2_model_bundle.py $VERSION -> velocity_models.zip, upload to the private Zenodo draft 23084158
+#            (PI 2026-11-23 19:30: upload the model as soon as it is built, before relocating)
+#   commit_model  commit + push the model registry, PR #33 note
+#   gate     waits for /wd1/mdenolle_data/tomo_v1/b4_gate_v$VERSION.release (PI: model on the atlas/dashboard before
+#            the next step); create the file (one line saying why) to let the relocation start
 #   publish  commit, push, PR #33 comment. Stops here: no GrowClust (B5).
+# Stage order: wait merge bundle commit_model gate grids iter0 terms iter1 catalog publish
 set -uo pipefail
 if [ -z "${B4_COPY:-}" ]; then
   cp "$0" /wd1/mdenolle_data/tomo_v1/.b4_relocate_running.sh
@@ -88,6 +93,24 @@ stage_bundle() {
     "$VERSION" >> $CODE/data/tomo_v1/models/zenodo_uploads.csv
 }
 
+stage_commit_model() {
+  ( flock 9
+    cd $CODE || exit 1
+    git add data/tomo_v1/models && git commit -q -m "Track B: merged model v$VERSION built (b2_merge.py) and uploaded to the private Zenodo draft 23084158
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" || true
+    git push -q origin $(git branch --show-current) || exit 1
+    gh pr comment 33 --body "**Merged model v$VERSION built** ($(date '+%F %H:%M')) and uploaded to the private Zenodo draft (velocity_models.zip). Registry: data/tomo_v1/models/registry.csv. The relocation waits until the model is on the atlas/dashboard (gate file b4_gate_v$VERSION.release)." > /dev/null
+  ) 9> $LOCK
+}
+
+stage_gate() {
+  local f=/wd1/mdenolle_data/tomo_v1/b4_gate_v$VERSION.release
+  log "model v$VERSION built and uploaded; relocation waits for $f (created once the model is on the atlas/dashboard)"
+  until [ -e $f ]; do sleep 60; done
+  log "gate released: $(head -1 $f)"
+}
+
 stage_publish() {
   exec 9> $LOCK; flock 9
   cd $CODE || return 1
@@ -109,7 +132,7 @@ Model: data/tomo_v1/models/registry.csv (v$VERSION); Zenodo private draft 230841
 }
 
 log "start (code $CODE, version $VERSION)"
-for s in wait merge grids iter0 terms iter1 catalog bundle publish; do
+for s in wait merge bundle commit_model gate grids iter0 terms iter1 catalog publish; do
   done_stage $s && { log "stage $s already done"; continue; }
   log "stage $s"
   stage_$s || { log "stage $s FAILED"; exit 1; }

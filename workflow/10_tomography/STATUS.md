@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 16:15 (handoff section below).
+Last update: 2026-11-23 16:25 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -71,6 +71,15 @@ node-scale noise (7 % rms Vp); a smoothing scan (20-1920, damping 200) has a fla
 coherent model there (slow ridge crust at 7-15 km, fast 40 km under Washington). Proposed P-M11: M0 = d200_s480,
 then tiles restart from it with a smoothing scan each (builder option `start_model` written, bc73862d). Waiting
 for the PI before the tile reruns (about one day of the machine).
+
+**Update 16:25.** PI adopted M0 = margin_m0_v2 d200_s480 (D-B046). Figures of the M0 model itself:
+data/tomo_v1/b2_merge/m0/model_maps_d200_s480.png and model_sections_d200_s480.png (b2_m0_model_figs.py). Launched
+16:24, detached: `b2_tiles_m0.sh` = the five tiles restarted from M0 (regions <tile>_m0: start = D-B005 x M0 change,
+P-4 from <tile>_v2, Vp/Vs floor 1.65), smoothing scan 20-480 at damping 200, smoothing chosen by rule, published to
+PR #33. Log `/wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log`; resume with
+`setsid nohup bash workflow/10_tomography/b2_tiles_m0.sh >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log 2>&1 < /dev/null &`.
+Next (phase 2): resolution tests of each <tile>_m0 at damping 200 and its chosen smoothing (b2_res_pipeline.sh
+needs a smoothing option and res_tests.regions entries for the _m0 names).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

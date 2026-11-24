@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 09:15 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 09:40 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -52,8 +52,10 @@ publishable as they are). (4) Atlas with the v0.3.1 catalog. (5) PR #35: Copilot
 posted); merge into tomo/track-b after a final look, then the part-2 results PR, close #32/#33.
 
 **PI answers (09:15).** Fix 6 kept; no email to Haijiang Zhang (do not contact him); paper hypocentres = final NLLoc
-relocation (D-B057). Round 2 is still running in the earlier Claude Code process (PID 475557); its results land in
-the journal of run wf_2c163670-389; do not relaunch it while that process lives.
+relocation (D-B057). Round 2's first run died with the earlier Claude Code process (~09:30, no results); relaunched 09:40 as run
+wf_991a6f87-ddc (script ..._v2.js; reuses the partial files in the scratch folder; large files in
+/wd1/mdenolle_data/tomo_v1/above_surface/round2_scratch/). v0.3.1 iter0 started 09:26 with the D-B056 floor: first
+24,000 located events, 0 above the surface. PR #35 merged into tomo/track-b (bda52686).
 
 ## Handoff 2026-11-23 08:10
 

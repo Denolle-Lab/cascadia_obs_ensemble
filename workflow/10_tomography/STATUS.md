@@ -2,12 +2,49 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 07:00 (handoff section below).
+Last update: 2026-11-24 07:55 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
-## Handoff 2026-11-23 08:10 (read first)
+## Handoff 2026-11-24 07:55 (read first)
+
+**Running (detached, survives logout).** `b4_relocate.sh` VERSION=0.3.1, process group 811130, private copy
+`/wd1/mdenolle_data/tomo_v1/.b4_relocate_running_v0.3.1.sh`, log `/wd1/mdenolle_data/tomo_v1/b4_relocate_v0.3.1.log`,
+state `b4_relocate_v0.3.1.state`. Done: merge (v0.3.1 = D-B049 gate on tiles smoothed <= 100, D-B050 ridges_north
+out, D-B051 Vs revert), bundle (velocity_models.zip on the private Zenodo draft 23084158, remote md5 OK), commit_model,
+gate (model v0.3.1 on the public atlas first: gh-pages c4d55588). Now: grids (started 07:29, ~2 h), then iter0,
+terms, iter1, catalog, publish (git + PR comment only; nothing goes to Zenodo). PI chose (07:50) to let it run with the
+current NLLoc topography mask; iter0/iter1 rerun once the mask fix is tested (~1.5 h). If it stopped, resume from
+`~/wt_tomo_res` with `VERSION=0.3.1 setsid nohup bash workflow/10_tomography/b4_relocate.sh 9>&- >> <log>`.
+
+**PI rule D-B055 (11-24).** No event above the ground or seafloor in a published catalog; such events are computation
+errors to fix at the root, never moved (a clamp was tried and reverted: bf69f95c, atlas a69a22ab). b4_catalog.py now
+writes surface_km / above_surface and "publishable" (false while any event is above). Counts: B4 v0.3.0 1,079 located
+events above (median 30 m, max 0.41 km), tier U 4,080 of 15,070 (v4 positions), catalog v4 40,553 of 172,340 (23.5 %,
+median 2.1 km above; 71 % of Axial).
+
+**Root-cause workflow `above-surface-root-cause` (run wf_5c33d6dc-211, task wv14l12u2).** Four investigators, each
+followed by an adversarial verifier: A GENIE/GraphDD conventions and Ian's inputs (data/vel_*.csv start at depth 0, no
+water layer), B v4 depth forensics (datum hypotheses vs ANSS, NLL, Axial literature), C NLLoc LOCTOPO mask (suspected:
+velmod.c get_surface_z reads the 01m grid by node lookup, the check is bilinear; fix + scratch test on ~400 events),
+D tier U (why 15,070 events are not located; relaxed-settings test). Scratch outputs:
+`/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/above_surface/`.
+If the session died, resume (finished agents come from cache): Workflow scriptPath
+`~/.claude/projects/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/workflows/scripts/above-surface-root-cause-wf_5c33d6dc-211.js`,
+resumeFromRunId wf_5c33d6dc-211, same args {"scratch": "<scratchpad>/above_surface"}.
+
+**Next, in order.** (1) Read the workflow results; implement the tested NLLoc mask fix (Track A template in
+~/wt_reloc, used by b4 iter0/iter1); rerun iter0/iter1/catalog of v0.3.1 with new run names. (2) Acceptance tests of
+v0.3.1 (Axial >= 85 % of A-B events above 2 km bsf vs Waldhauser 2020; Mt St Helens within ~0.5 km of Hirao 2025;
+Blanco within 1 km of Lange 2026; Puget unchanged). (3) Tier U and catalog v4 plan for the PI (v4 depths are not
+publishable as they are). (4) Atlas with the v0.3.1 catalog. (5) PR #35: Copilot's last issue fixed (9936f8bd, reply
+posted); merge into tomo/track-b after a final look, then the part-2 results PR, close #32/#33.
+
+**Questions for the PI.** Fix 6 of the frozen tomoDD (getinpSPDR.f 215, extra comma, no output change): accept? Was
+the permission email to Haijiang Zhang sent? What to do with catalog v4/v4.1 depths and tier U (after the workflow).
+
+## Handoff 2026-11-23 08:10
 
 **Where the work is.** Worktree `~/wt_tomo_res`, branch `tomo/tiles` = PR #33, stacked on `tomo/res-tests-mg_v2` = PR #32
 (Mendocino-Gorda v2 resolution tests), stacked on `tomo/track-b`. PR #32 also holds a snapshot of the code that was

@@ -25,7 +25,8 @@ summaries data/tomo_v1/b5/b5_v0.3.1/compare.md (on tomo/b5). 2,125 dt components
   grids agree on dt to MAD 2-5 ms; S misfit grows in tomoDD's own model too). Cause: S dt weighted 1/4 of P (D-B008 sigma
   S = 2 x P) + MAD re-weighting, so B5 fits P at S's cost. Equal weights without MAD cuts: S improves (Blanco 0.269 -> 0.234 s,
   onshore 0.166 -> 0.154 s), P unchanged or better. Measured S/P noise ratio 1.16-1.51 (catalog 1.23), not 2. Proposed P-S1..P-S3.
-* **Open (PI):** S weighting rule (P-S1) and B5 acceptance rule (P-S2); run B5 only
+* **Weighting test (12:45, tomo/b5 e1f14107, notes/b5_weighting_test.md):** 26 clusters (all regions), 18 variants (S weight 0.25/0.5/meas/1/1.5/2 x MAD cuts prod/loose/none), station cross-validation + synthetics. S weight = P (1.0) with production MAD cuts: held-out P -6 %, S -11 % vs production (24/26 clusters both), synthetic error -10 %; optimum flat 1.0-2.0; measured-ratio weights worse than equal; no MAD cuts worse. Above-surface count unchanged by weights. Proposed P-W1..P-W4.
+* **Open (PI):** adopt P-W1..P-W4 (S weight 1.0, keep MAD cuts, CV acceptance); run B5 only
   after v5.1 (round-2 upward-pull fix); per-cluster damping to CND 40-80; whether waveform CC dt (D-B060 second pass)
   comes first, since catalog dt do not sharpen clusters; air-quake and two-event-component handling; bootstrap not run
   (2 CPU-h per member; tomoDD bootstrap 2-11x too small in D-B048).

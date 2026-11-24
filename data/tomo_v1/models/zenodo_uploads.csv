@@ -1,0 +1,2 @@
+date,zenodo_draft,file,md5,size_bytes,versions,note
+2026-11-23,23084158,velocity_models.zip,22c233fbbd4edb47bef8af74975d8a46,604138132,0.1.0,"private draft (not submitted); README, read_velocity_model.py, registry, v0.1.0 Zarr+netCDF+NonLinLoc grids; replaced at each new version"

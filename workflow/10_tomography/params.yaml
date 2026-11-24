@@ -671,7 +671,7 @@ b4:                                # B4 NonLinLoc relocation in the merged model
       cache: earth_relief_01m_g.nc                 # under dir; written by install with pygmt (GMT server cache)
       values_md5: fba0fa3df82fd1b39069850540f55a8f # md5 of the float64 values, lat ascending (pygmt 0.13, 2026-11-24)
     floor:                         # NLLoc LOCTOPO_SURFACE built from the merged surface (b4_surface.py floor)
-      spacing_s: 15                # node spacing (arcsec)
+      spacing_s: 15                # node spacing (arcsec). 15 s, not 7.5 s (v51_build/surface 2026-11-24): same NLLoc result for 507 of 725 + 199 of 200 rerun events; lowering under iter1 epicentres median 17 m (7.5 s: 9 m); 7.5 s costs +158 MB RSS and +0.5 s per NLLoc process
       margin_m: 1.0                # subtracted from the exact cell minimum (float32 storage, coordinate rounding)
       file: /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin   # + topo_15s_cons_merged.bin (true frame)
 catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); D-B059 tier U kept with v4 hypocentres in v5.0

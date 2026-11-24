@@ -147,6 +147,9 @@ CAT2 = {"path": None, "label": "v4-NLL3D (preliminary)",
                 "to be replaced by locations in the tomography model."}
 
 
+CATB = {"path": None, "label": ""}     # "before" catalog for the moves layer (before -> second catalog)
+
+
 def events():
     c = pd.read_csv(D / "catalog_v4" / "Cascadia_relocated_catalog_v4.csv", skipinitialspace=True)
     c.columns = [x.strip() for x in c.columns]
@@ -188,6 +191,10 @@ def events():
     nll = nll3d(c["ID"], CAT2["path"])
     if nll:
         arr.update(nll)
+    if nll and CATB["path"]:                     # positions before (moves layer): offsets from v4 as for the second catalog
+        nb = nll3d(c["ID"], CATB["path"])
+        if nb:
+            arr.update({"b_" + k[2:]: nb[k] for k in ("n_dlon", "n_dlat", "n_ddep", "n_tier")})
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
     arr = {k: v[order] for k, v in arr.items()}
     print(f"  events: {len(c):,}; magnitudes: {msrc}")
@@ -447,10 +454,14 @@ def main(argv=None):
     ap.add_argument("--catalog2", help="second catalog (same IDs as v4, columns as the Track A catalogue); default v4-NLL3D")
     ap.add_argument("--catalog2-label", help="its short name in the catalog switch")
     ap.add_argument("--catalog2-note", help="one or two sentences for the legend")
+    ap.add_argument("--catalog-before", help="catalog the moves layer starts from (same format; e.g. v4-NLL3D iter1)")
+    ap.add_argument("--catalog-before-label", help="its short name")
     a = ap.parse_args(argv)
     print("building atlas data")
     if a.catalog2:
         CAT2.update(path=a.catalog2, label=a.catalog2_label or Path(a.catalog2).stem, note=a.catalog2_note or "")
+    if a.catalog_before:
+        CATB.update(path=a.catalog_before, label=a.catalog_before_label or Path(a.catalog_before).stem)
     ev, ev_meta = events()
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()
@@ -459,7 +470,7 @@ def main(argv=None):
     tm, tm_meta = tomo_model(a.model) if a.model else (None, None)
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],
-                     events=ev_meta, cat2=dict(label=CAT2["label"], note=CAT2["note"]), terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
+                     events=ev_meta, cat2=dict(label=CAT2["label"], note=CAT2["note"]), catb=dict(label=CATB["label"]) if CATB["path"] else None, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
                      built=pd.Timestamp.now().strftime("%Y-%m-%d")),
         "events": blob(ev), "terrain": blob(ter), "slab": blob(sl), "faults": blob(fa) if fa else None,
         "mc": blob(mc) if mc else None, "tomo": blob(tm) if tm else None,

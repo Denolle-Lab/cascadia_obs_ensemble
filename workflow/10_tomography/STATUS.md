@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 06:00 (handoff section below).
+Last update: 2026-11-24 07:00 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -164,6 +164,23 @@ depths by region is needed (not started). PR split: part 1 = PR #35 (tomo/b2-cod
 pixi models env, OBS statics; Copilot review requested); part 2 (results) after #35 merges. D-B048 test running in a
 background agent on branch tomo/b5-blanco-test (worktree ~/wt_b5; Julia + GrowClust3D install under
 /wd1/mdenolle_data/b5_test).
+
+**Update 2026-11-24 07:00.** (1) Literature comparison of depths by region done:
+data/tomo_v1/depth_literature/depth_literature.html (95 verified studies, 7 unverified listed apart; AI-checked, not yet
+re-read by a person). B4 consistent within about 1 km in Puget/Georgia, Oregon/SW Washington, the offshore forearc and at
+Mount St Helens (Hirao et al. 2025, +0.5 km); too deep at Axial (+2 to +2.5 km, against Waldhauser et al. 2020; v4-NLL3D
+agreed), Endeavour/Explorer/JdF ridge (depth unconstrained), Blanco (+2.2 to +2.4 km against Lange et al. 2026), Gorda
+interior (+8 to +12 km) and Mendocino (+2 to +4 km against NCSN, already in v4-NLL3D). (2) D-B048 done (branch
+tomo/b5-blanco-test, notes/b5_blanco_test.md): with catalog differential times GrowClust3D is not more accurate than
+tomoDD; neither resolves swarm depth; GrowClust3D unstable from good starts; tomoDD relocation-only needs a second FORMAT
+fix (lsfitHFDD_lsqr_lm5.f line 504, build tomoDD-SE_O3nofs_e10k_fmt2, PI approval pending). (3) PR #35 review: 24 of 26
+findings confirmed, fixes made and verified (uncommitted in ~/wt_split); among them B4 near-station travel times (negative
+within 2 km of 101 grids) and 0.01 deg rounding of the B4 catalog. (4) PI approved for v0.3.1: resolution-gated merge
+(D-B049), ridges_north out of the merge (D-B050), Vs reverted where Vp/Vs < 1.6 or dws_s < 10 (D-B051), 0.5 km grid
+for start-up-offset outlier grids (D-B052), catalog depth-quality and quarry flags; implementation running.
+(5) Incident: a fix agent's test rewrote blanco_m0/inputs and 71 P-1 grids on /wd1 at 06:01 (contents identical to the
+record, 11/11 md5 match); timestamps and manifest restored from manifests.jsonl line 1425, the 3.5 GB work folder deleted
+(PI approved).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

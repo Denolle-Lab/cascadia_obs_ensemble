@@ -631,3 +631,28 @@ Every B5 run is checked by station cross-validation on sample clusters of every 
 held-out dt rms of the adopted weighting must not exceed that of the D-B008 weighting (S weight 0.25) in either phase,
 by region (median over the region's clusters). Misfit against B4 in-sample is not a criterion (B4 fitted the same
 picks). Events above the surface are reported, never moved (D-B055). B5 for the catalog (v5.2) runs on v5.1.
+
+### D-B065 Two checks before the v5.1 NLLoc relocation (adopted, 2026-11-24, PI)
+Round 2 (data/tomo_v1/above_surface/above_surface_round2.html) found that the template's LOCGAU2 0.02 0.05 2.0
+(model error growing with travel time) inside EDT_OT_WT acts as a pull toward short travel times (7 of 50 perfect-data
+events above the surface with it, 1 without), and that the S arrivals of floor-held events are late relative to P, more
+so with distance. Before v5.1: (1) rerun floor-held events, controls and the Hirao/Lange/Axial reference events with
+LOCGAU2 off and with a constant model error, and choose the setting by those scores; (2) check the S picks of a few
+pulled events on the waveforms (wrong picks or associations vs a Vp/Vs bias).
+
+### D-B066 Five-pick events located with a 5-phase minimum, published as tier D (adopted, 2026-11-24, PI)
+The 12,108 events with exactly 5 picks (the v4 minimum) were skipped by LOCMETH's 6-phase minimum and kept v4 positions.
+From v5.1 the template's minimum is 5: round 2 located 12,044 of 12,089 tested, none above the surface, nearly all
+tier D (one degree of freedom, sigma_z ~13 km, horizontal error ~27 km); events with 6 or more phases are unchanged.
+
+### D-B067 Deep pass below 80 km with ak135 outside the tomography box (adopted, 2026-11-24, PI)
+The model, time grids and LOCGRID stop at z' = 80 km, so well-recorded intraslab events at 66-107 km are rejected or
+pinned at the floor. From v5.1, wide grids extend to z' ~121 km and events rejected at the bottom face or located at
+z' >= 78 km get a deep second pass (round 2: 16 of 17 located at 78-107 km, controls within 0.35 km). Below 80 km and
+outside the tomography box the velocities come from ak135, blended under the deepest model layer; deep-pass locations
+are flagged. Events seen only by distant stations, which the same trigger would select, are flagged separately.
+
+### D-B068 Solid surface from GMRT where available, earth_relief 01m elsewhere (adopted, 2026-11-24, PI)
+Under 725 v5.0 events the GMRT multibeam seafloor is lower than earth_relief 01m (median 41 m, up to 0.5 km). From
+v5.1 one merged surface (GMRT patches where available, earth_relief 01m elsewhere) defines the NLLoc topography floor
+(conservative node minimum as in D-B056), the D-B055 above-surface test, and the water/rock boundary of the model.

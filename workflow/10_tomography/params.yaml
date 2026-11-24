@@ -625,7 +625,10 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
 b5_test:                           # D-B048: relative relocation tested before B5, tomoDD-SE (velocity frozen) vs GrowClust3D
   out: /wd1/mdenolle_data/b5_test  # large files; scripts b5_*.py, note notes/b5_blanco_test.md
   model_version: 0.3.0             # D-B047 registry; tomoDD MOD from the netCDF nodes, GrowClust3D from the B4 grids
-  catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv   # B4 start (true depth, EFT undone)
+  catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv   # B4 catalog: tiers, IDs (rounded %.5g)
+  # B4 start hypocentres: the same NLLoc solutions written by a2_build_catalog.py with 8 significant digits (depth z');
+  # b5_prep.py undoes the EFT as b4_catalog.py. catalog_b4_*.csv is written with %.5g: longitude to 0.01 deg (0.8 km).
+  catalog_full: /wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_b4_iter1_v0.3.0.csv
   picks: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv    # v4.0 picks (= B4 input)
   time_grids: /wd1/mdenolle_data/reloc_v5/time_b4_v0.3.0       # B4 NLL grids: Lambert x, y; depth axis EFT z'
   grid_prefix: cascadia3d

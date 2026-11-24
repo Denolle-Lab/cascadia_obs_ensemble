@@ -83,7 +83,9 @@ def build_inputs(case):
     if (out / "done.json").exists():
         return out, json.loads((out / "done.json").read_text())
     out.mkdir(parents=True, exist_ok=True)
-    center = (round(float(ev.lat.median()), 3), round(float(ev.lon.median()), 3))
+    # frame centre between 0.001-deg values: an event exactly at tomoDD's Cartesian origin makes the ray tracer
+    # return NaN (seen in f0399 with rounded coordinates)
+    center = (round(float(ev.lat.median()), 3) + 0.0005, round(float(ev.lon.median()), 3) + 0.0005)
     code = dict(zip(st.station, st.code))
     la, lo = ellipsoid_coords(st.lat.values, st.lon.values, *center)
     with open(out / "station.dat", "w") as f:

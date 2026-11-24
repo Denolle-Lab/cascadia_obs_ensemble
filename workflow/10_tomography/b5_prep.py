@@ -1,7 +1,9 @@
 """D-B048: data of one Blanco swarm case for both relocation codes (b5_common.py describes the format).
 
 Events: members of the case's zbz families (events_zbz.csv.gz family_id; event_id = catalog ID, checked against the
-v4 origin time) located in 3D by B4 (loc_source nll3d); start = B4 hypocentre and origin time (model v0.3.0).
+v4 origin time) located in 3D by B4 (loc_source nll3d); start = B4 hypocentre and origin time (model v0.3.0), read
+with 8 significant digits from b5_test.catalog_full (EFT undone here as in b4_catalog.py) because catalog_b4_*.csv
+rounds longitude to 0.01 deg; the two are checked to agree within that rounding.
 Picks: catalog v4.0 picks of those events (the B4 input), travel time = pick - B4 origin time, kept where the event
 lies inside the station's B4 time grid with grid_margin_km to spare (GrowClust3D can only use those; B4 dropped the
 same far stations). Weight (0.05 / sigma)^2 with the D-B008 sigma of the pick_prob class.
@@ -14,8 +16,8 @@ import sys
 import numpy as np
 import pandas as pd
 
-from b5_common import B5, Grids, diff_times, eft_depth, grid_stations, lambert_km, pick_class, pick_sigma, weight, \
-    write_case
+from b5_common import B5, Grids, diff_times, eft_depth, grid_stations, lambert_km, pick_class, pick_sigma, unflatten, \
+    weight, write_case
 
 
 def main():
@@ -31,6 +33,13 @@ def main():
     assert np.abs(dt_check).max() < 1e-3, "zbz event_id does not match the catalog ID"
     n_all = len(c)
     c = c[c.loc_source == B5["loc_source"]].copy()
+    full = pd.read_csv(B5["catalog_full"]).set_index("ID").loc[c.index]
+    assert (full.loc_source == "nll3d").all()
+    full["depth"] = unflatten(full.depth)
+    for col, tol in (("lat", 6e-4), ("lon", 6e-3), ("depth", 6e-3)):
+        assert (full[col] - c[col]).abs().max() < tol, f"{col}: full-precision B4 differs from catalog_b4"
+        c[col] = full[col]
+    assert (full.time == c.time).all()
     print(f"{case}: families {fams} ({fam.n_all.sum()} events), {len(c)} located by B4 in 3D, "
           f"{n_all - len(c)} kept their v4 hypocentre (tier U) and are left out")
     x, y = lambert_km(c.lon.values, c.lat.values)
@@ -70,7 +79,7 @@ def main():
     summ = write_case(case, ev, pk, st, dt,
                       extra=dict(families=fams, family_events=int(fam.n_all.sum()), b4_not_3d=n_all - len(c),
                                  picks_v4=n0, picks_no_grid=n_nogrid, picks_outside_grid=n_out, dt_candidates=n_cand),
-                      inputs=[B5["catalog"], B5["picks"], B5["members"], B5["families"]], params={"b5_test": B5})
+                      inputs=[B5["catalog"], B5["catalog_full"], B5["picks"], B5["members"], B5["families"]], params={"b5_test": B5})
     print(summ)
 
 

@@ -113,13 +113,13 @@ def read_cat(path):
 def read_boot(path):
     with open(path) as f:
         nq, nb = map(int, f.readline().split())
-        rows, boot = [], np.zeros((nq, nb, 3))
+        rows, boot = [], np.zeros((nq, nb, 4))
         for i in range(nq):
             t = f.readline().split()
             rows.append((int(t[1]), float(t[16]), float(t[18])))   # ID, std_h, std_z (madH madZ madT stdH stdT stdZ)
             for k in range(nb):
                 b = f.readline().split()
-                boot[i, k] = float(b[0]), float(b[1]), float(b[2])
+                boot[i, k] = float(b[0]), float(b[1]), float(b[2]), float(b[3])   # lat, lon, z', nbranch
     return pd.DataFrame(rows, columns=["ID", "std_h", "std_zf"]), boot
 
 
@@ -153,7 +153,7 @@ def main():
         boot[:, :, 2] = unflatten(boot[:, :, 2])
         r = r.merge(sd.rename(columns={"std_h": "boot_std_h", "std_zf": "boot_std_z"}), on="ID", how="left")
         np.savez_compressed(run / "boot.npz", ID=sd.ID.values, lat=boot[:, :, 0], lon=boot[:, :, 1],
-                            depth=boot[:, :, 2])
+                            depth=boot[:, :, 2], nb=boot[:, :, 3].astype(int))
     r["relocated"] = r.nb >= G["inp"]["nbranch_min"]
     r = ev[["ID"]].merge(r, on="ID", how="left")
     r.to_csv(run / "reloc.csv", index=False, float_format="%.6f")

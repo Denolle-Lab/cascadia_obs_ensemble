@@ -15,7 +15,10 @@ times in the v0.3.0 MOD (initial residuals of a 1-iteration relocation-only run)
 tomoDD has no forward error and GrowClust3D (B4 grids) has tomoDD's; the swap shows how much each code gains from
 fitting data made with its own forward model.
 
-  python b5_synth.py [--case synth] [--source grids|tomodd]
+--start-scale f (case synth_s025: f = 0.25): the start perturbation sigmas times f (well-recorded events), the
+truth, picks and noise unchanged; it separates what the codes do from what the B4-sized start errors allow.
+
+  python b5_synth.py [--case synth] [--source grids|tomodd] [--start-scale 1.0]
 """
 import argparse
 from pathlib import Path
@@ -89,6 +92,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--case", default="synth")
     ap.add_argument("--source", default="grids", choices=["grids", "tomodd"])
+    ap.add_argument("--start-scale", type=float, default=1.0)
     a = ap.parse_args()
     rng = np.random.default_rng(S["seed"])
     ev0, pk0, st0, _ = load_case(S["centre"])
@@ -135,11 +139,11 @@ def main():
     # start hypocentres: B4 uncertainty of a random real event
     e0 = ev0.set_index("ID").loc[rng.choice(ev0.ID.values, n)]
     az = rng.uniform(0, 2 * np.pi, n)
-    a1 = rng.normal(0, e0.h_max.values / 1.515)
-    a2 = rng.normal(0, e0.h_min.values / 1.515)
+    a1 = rng.normal(0, a.start_scale * e0.h_max.values / 1.515)
+    a2 = rng.normal(0, a.start_scale * e0.h_min.values / 1.515)
     de = a1 * np.sin(az) + a2 * np.cos(az)
     dn = a1 * np.cos(az) - a2 * np.sin(az)
-    dz = rng.normal(0, e0.sig_z.values)
+    dz = rng.normal(0, a.start_scale * e0.sig_z.values)
     s_lat = lat + dn / KM_DEG
     s_lon = lon + de / (KM_DEG * np.cos(np.radians(lat0)))
     s_dep = np.clip(depth + dz, S["start_depth_min_km"], 60.0)
@@ -167,7 +171,7 @@ def main():
                                                                  float_format="%.5f")
     pert = pd.DataFrame({"ID": ids, "dh": np.hypot(de, dn), "dz": s_dep - depth})
     summ = write_case(a.case, ev, pk[["event_ID", "station", "phase", "tt", "cls", "sigma", "w"]], st, dt,
-                      extra=dict(synthetic=True, source={"grids": "b4_grids", "tomodd": "tomodd_forward"}[a.source], centre=[lat0, lon0, z0], donor_case=S["centre"],
+                      extra=dict(synthetic=True, source={"grids": "b4_grids", "tomodd": "tomodd_forward"}[a.source], centre=[lat0, lon0, z0], donor_case=S["centre"], start_scale=a.start_scale,
                                  start_dh_med_km=float(pert.dh.median()), start_dz_absmed_km=float(pert.dz.abs().median()),
                                  start_depth_clipped=int((depth + dz < S["start_depth_min_km"]).sum()),
                                  dt_candidates=n_cand, synth=S),

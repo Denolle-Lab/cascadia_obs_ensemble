@@ -32,16 +32,22 @@ COLOR = {"tomodd/hier": "#1f5fa8", "tomodd/dd": "#6aa6e0", "growclust/catalog": 
          "growclust/default": "#f59e0b", "b4": "#9ca3af", "truth": "#111827"}
 
 
-def boot_std(case, code, var, ids):
-    """Per-event std (h, z) of bootstrap positions; tomoDD from its _bNNN runs, GrowClust from boot.npz."""
-    lat0 = None
+def boot_std(case, code, var, ids, relocated_only=False):
+    """Per-event std (h, z) of bootstrap positions; tomoDD from its _bNNN runs (events without data in a member
+    are missing there), GrowClust3D from out.boot (members where the event stayed unclustered keep the start
+    position, as in GrowClust3D's own statistics; relocated_only=True drops those members)."""
     if code == "growclust":
-        f = case_dir(case) / "growclust" / var / "boot.npz"
+        f = case_dir(case) / "growclust" / var / "out" / "out.boot"
         if not f.exists():
             return None
-        b = np.load(f)
-        idx = pd.Index(b["ID"]).get_indexer(ids)
-        la, lo, z = b["lat"][idx], b["lon"][idx], b["depth"][idx]
+        from b5_growclust import read_boot
+        from b5_common import unflatten
+        sd, b = read_boot(f)
+        idx = pd.Index(sd.ID).get_indexer(ids)
+        la, lo, z, nbr = b[idx, :, 0], b[idx, :, 1], unflatten(b[idx, :, 2]), b[idx, :, 3]
+        if relocated_only:
+            bad = nbr < 2
+            la, lo, z = (np.where(bad, np.nan, v) for v in (la, lo, z))
     else:
         runs = sorted((case_dir(case) / "tomodd").glob(f"{var}_b[0-9][0-9][0-9]/reloc.csv"))
         if len(runs) < 5:
@@ -168,6 +174,10 @@ def main():
         else:
             u.update(lsqr_eh_med=np.hypot(r.ex, r.ey).median(), lsqr_ez_med=r.ez.median())
         bs = boot_std(case, code, var, pos[k].index)
+        if code == "growclust" and bs is not None:
+            br = boot_std(case, code, var, pos[k].index, relocated_only=True)
+            u.update(boot_rel_sh_med=br.boot_sh.median(), boot_rel_sz_med=br.boot_sz.median(),
+                     boot_rel_frac=float((br.boot_n / bs.boot_n).median()))
         if bs is not None:
             u.update(boot_sh_med=bs.boot_sh.median(), boot_sz_med=bs.boot_sz.median(),
                      boot_sh_p90=bs.boot_sh.quantile(0.9), boot_sz_p90=bs.boot_sz.quantile(0.9))

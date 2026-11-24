@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 19:15 (handoff section below).
+Last update: 2026-11-23 19:25 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -102,6 +102,18 @@ Oregon and Washington at smoothing 480 (scan edge), Blanco 20, ridges 60. Whethe
 is judged from the B4 relocation (misfits, depths against v4-NLL3D). Session handover: the session that ran the chain
 since 09:00 lost its sign-in at 18:55; this one took over, no job affected (all detached). At 19:09 Mendocino-Gorda
 and Washington phase-2 tests 16/20, the others done; b4_relocate.sh waiting on them.
+
+**Update 19:25.** PI: once v0.3.0 is built, upload it to Zenodo and put it on the atlas/dashboard *before* the
+relocation. `b4_relocate.sh` relaunched 19:19 with the order wait -> merge -> bundle (Zenodo upload) -> commit_model
+-> **gate** -> grids -> iter0 -> terms -> iter1 -> catalog -> publish. The gate waits for
+`/wd1/mdenolle_data/tomo_v1/b4_gate_v0.3.0.release`; create it (one line saying why) once the model is on the atlas.
+PR #33: description rewritten as a reading guide; the 16 automatic comments of the superseded `_v2` runs hidden as
+outdated. To do, in order:
+1. v0.3.0 built and uploaded (automatic, after washington_m0 phase 2, ~20:00).
+2. Model layer on the atlas/dashboard (workflow/06_analysis/build_v4_atlas.py, branch atlas/v4-nll3d), then release
+   the gate.
+3. B4 relocation (automatic after the gate; grids ~2 h, NLLoc two passes), stop before GrowClust.
+4. 2026-11-24: split PR #33 into code + decisions and generated results.
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

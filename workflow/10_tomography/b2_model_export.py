@@ -215,8 +215,10 @@ def write(ds, version, nll):
 
 
 def nll_grids(ds, out):
-    """NonLinLoc SLOW_LEN grids on the D-B005 grid (header copied): the model (tomoDD trilinear lookup) inside its
-    node box, D-B005 outside and in D-B005's water (Vp 1.5) and air (0.3) cells."""
+    """NonLinLoc SLOW_LEN grids on the D-B005 grid (header copied), sampled at the cell centres (D-B028 P-1/P-5:
+    Podvin-Lecomte applies the value stored at node (i, j, k) to the cell [i, i+1] x [j, j+1] x [k, k+1]): the model
+    (tomoDD trilinear lookup) inside its node box, D-B005 outside and in D-B005's water (Vp 1.5) and air (0.3)
+    cells. True depth (no Earth-flattening): for long paths use the B4 travel-time grids (b4_time_grids.py)."""
     from pyproj import Proj
     out.mkdir(parents=True, exist_ok=False)
     model = Path(P["paths"]["start_model"])
@@ -226,7 +228,8 @@ def nll_grids(ds, out):
     x0, y0, z0, dx = map(float, h[3:7])
     keep = dx / np.fromfile(model / "cascadia3d.P.mod.buf", dtype="<f4").reshape(nx, ny, nz) < 1.6   # water, air
     proj = Proj(proj="lcc", lat_0=45.0, lon_0=-125.8, lat_1=41.0, lat_2=49.0, ellps="WGS84")   # = the NLL grid
-    X_, Y_ = np.meshgrid(1e3 * (x0 + dx * np.arange(nx)), 1e3 * (y0 + dx * np.arange(ny)), indexing="ij")
+    h2 = dx / 2                                       # cell centres
+    X_, Y_ = np.meshgrid(1e3 * (x0 + h2 + dx * np.arange(nx)), 1e3 * (y0 + h2 + dx * np.arange(ny)), indexing="ij")
     lon, lat = proj(X_, Y_, inverse=True)
     for ph, var in (("P", "Vp"), ("S", "Vs")):
         hdr = (model / f"cascadia3d.{ph}.mod.hdr").read_text()
@@ -236,7 +239,7 @@ def nll_grids(ds, out):
         inside = ((lon >= m["lon"][0]) & (lon <= m["lon"][-1]) & (lat >= m["lat"][0]) & (lat <= m["lat"][-1]))
         v = vbg.copy()
         for k in range(nz):
-            zk = z0 + dx * k
+            zk = z0 + dx * k + h2                        # cell centre
             if zk < m["z"][0] or zk > m["z"][-1]:
                 continue
             sel = inside & ~keep[:, :, k]

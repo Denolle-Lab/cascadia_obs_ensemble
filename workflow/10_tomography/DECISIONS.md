@@ -606,3 +606,28 @@ The whole-catalog B5 run (tomoDD-SE relocation-only, D-B053; frozen binaries D-B
 uses catalog differential times (tomodd.dt rules) now, as in the D-B048 test, where they moved the B4 locations
 little. Waveform cross-correlation times (D-B040) are a second pass once waveforms are fetched. Driver on branch
 tomo/b5 (worktree ~/wt_b5_full), notes/b5_relocation.md.
+
+### D-B061 B5 weights S differential times like P (S weight 1.0) (adopted, 2026-11-24, PI; P-W1)
+Root cause of the S misfit growth in the B5 run b5_v0.3.1 (notes/b5_s_mismatch.md): not a tomoDD vs NLLoc forward
+difference (the two agree on differential times to a MAD of 2-5 ms) but the weights: dt.ct S weights carried the
+D-B008 factor 1/4 (sigma S = 2 x P) and B5 fitted P at S's cost. Weighting test (notes/b5_weighting_test.md; 26
+clusters in every region, 18 variants, station cross-validation and synthetics): S weight equal to P of the same
+pick class gives held-out dt rms -6 % (P) and -11 % (S) against the 1/4 weighting (both phases better in 24 of 26
+clusters, every region) and ~10 % smaller synthetic relative errors; 1.5 and 2.0 are equal within 1 %; 1.0 is the
+rule. Implementation: params b5.tomodd.s_weight = 1.0 (WTCTS = s_weight / 0.25 with the present dt.ct weights).
+D-B008 is unchanged for absolute locations (B4).
+
+### D-B062 B5 keeps the production MAD re-weighting (adopted, 2026-11-24, PI; P-W2)
+WRCT 8 then 6 x MAD, WDCT 10 km in sets 3-4 (params b5.tomodd.sets). Without the cuts held-out dt rms is 2 % worse
+at every S weight; the looser 12/10 cut is 0.6 % worse (notes/b5_weighting_test.md).
+
+### D-B063 S weights from the measured S/P residual ratio are not used (adopted, 2026-11-24, PI; P-W3)
+Inverse-variance weights from the S/P MAD ratio of B4 dt residuals (1.02-1.69 by region) were worse than equal weights
+on held-out data (+2.5 %) and synthetics (+1.8 % horizontal): the measured ratio includes B4 location error, which
+moves S times about Vp/Vs times more than P.
+
+### D-B064 B5 acceptance by station cross-validation (adopted, 2026-11-24, PI; P-W4; replaces the proposed P-S2)
+Every B5 run is checked by station cross-validation on sample clusters of every region (b5_wtest.py accept RUN):
+held-out dt rms of the adopted weighting must not exceed that of the D-B008 weighting (S weight 0.25) in either phase,
+by region (median over the region's clusters). Misfit against B4 in-sample is not a criterion (B4 fitted the same
+picks). Events above the surface are reported, never moved (D-B055). B5 for the catalog (v5.2) runs on v5.1.

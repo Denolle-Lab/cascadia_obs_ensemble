@@ -22,6 +22,19 @@ def load_params():
     return yaml.safe_load(PARAMS.read_text())
 
 
+def tomodd_bin(kind, where):
+    """tomoDD binary of `kind` ('bin', 'bin_syn', 'bin_check') for the region of `where` (a region name, a run
+    path relative to tomodd.runs, or an absolute path under it). tomodd.regions.<region>.bins overrides the
+    global entry (e.g. a build with larger MAXOBS for one region)."""
+    T = load_params()["tomodd"]
+    p, runs = Path(where), Path(T["runs"])
+    try:
+        region = p.relative_to(runs).parts[0] if p.is_absolute() else p.parts[0]
+    except ValueError:
+        region = None
+    return str(T["regions"].get(region, {}).get("bins", {}).get(kind, T[kind]))
+
+
 def _md5(path, limit=2 * 1024**3):
     p = Path(path)
     if not p.exists():

@@ -55,12 +55,12 @@ from scipy.spatial import cKDTree
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
-from b2_fwd_common import RE, tomodd_forward  # noqa: E402
+from b2_fwd_common import RE, mod_velocity, read_mod, tomodd_forward  # noqa: E402
 from b2_fwd_mods import ellipsoid_coords, radii  # noqa: E402
 
 P = load_params()
 T = P["tomodd"]
-B1B = Path(P["paths"]["base"]) / "b1b_balanced"
+B1B_DEFAULT = Path(P["paths"]["base"]) / "b1b_balanced"   # a region's `b1b` key selects another version (D-B035: b1b_balanced_c)
 MODEL = Path(P["paths"]["start_model"])
 PROJ = Proj(proj="lcc", lat_0=45.0, lon_0=-125.8, lat_1=41.0, lat_2=49.0, ellps="WGS84")  # = NLL grid
 LOG = []
@@ -78,17 +78,59 @@ def nodes(spec):
 
 
 # ---------------------------------------------------------------- data
+def b1b_dir(R):
+    return Path(P["paths"]["base"]) / R["b1b"] if R.get("b1b") else B1B_DEFAULT
+
+
 def select(R):
+    B1B = b1b_dir(R)
+    log(f"dataset {B1B}")
     ev = pd.read_csv(B1B / "events.csv")
     pk = pd.read_csv(B1B / "picks.csv")
-    (la0, la1), (lo0, lo1) = R["events_lat"], R["events_lon"]
+    if R.get("extra_b1b"):                            # extra events/picks in B1b format (b2_shallow_events.py)
+        X = Path(P["paths"]["base"]) / R["extra_b1b"]
+        xe, xp = pd.read_csv(X / "events.csv"), pd.read_csv(X / "picks.csv")
+        assert not xe.ID.isin(ev.ID).any(), "extra events overlap B1b"
+        log(f"extra_b1b {X}: {len(xe)} events, {len(xp)} picks appended")
+        ev, pk = pd.concat([ev, xe], ignore_index=True), pd.concat([pk, xp], ignore_index=True)
     mla, mlo = R["station_margin_deg"]
-    e = ev[ev.lat.between(la0, la1) & ev.lon.between(lo0, lo1)].copy()
-    p = pk[pk.event_ID.isin(e.ID) & pk.sta_lat.between(la0 - mla, la1 + mla)
-           & pk.sta_lon.between(lo0 - mlo, lo1 + mlo)].copy()
-    log(f"events in box {len(e)}; picks {len(p)} (of {int(pk.event_ID.isin(e.ID).sum())} for these events; "
-        f"the rest are at stations outside the box + margin)")
-    return e, p
+    # events_boxes (joint tiles, whole-margin M0): union of [lat0, lat1, lon0, lon1] boxes, stations in the union of
+    # the boxes + margin; else the single events_lat/events_lon box
+    boxes = R.get("events_boxes") or [[*R["events_lat"], *R["events_lon"]]]
+    in_e = np.zeros(len(ev), bool)
+    in_s = np.zeros(len(pk), bool)
+    for la0, la1, lo0, lo1 in boxes:
+        in_e |= (ev.lat.between(la0, la1) & ev.lon.between(lo0, lo1)).values
+        in_s |= (pk.sta_lat.between(la0 - mla, la1 + mla) & pk.sta_lon.between(lo0 - mlo, lo1 + mlo)).values
+    e = ev[in_e].copy()
+    p = pk[pk.event_ID.isin(e.ID).values & in_s].copy()
+    log(f"events in {len(boxes)} box(es) {len(e)}; picks {len(p)} (of {int(pk.event_ID.isin(e.ID).sum())} for "
+        f"these events; the rest are at stations outside the box + margin)")
+    if R.get("decluster"):
+        e, p = decluster(e, p, R["decluster"])
+    return e, p, q_of(pk).max()
+
+
+def q_of(p):
+    return p.w_bal * (0.05 / p.sigma_s) ** 2
+
+
+def decluster(e, p, D):
+    """Keep the keep_per_cell best-recorded events (most picks kept, then most S picks) per
+    cell_km x cell_km x depth_cell_km cell (B1b Lambert x_km, y_km; depth below sea level)."""
+    n = p.groupby("event_ID").size().rename("n_pk")
+    ns = p[p.phase == "S"].groupby("event_ID").size().rename("n_s")
+    d = e.set_index("ID").join(n).join(ns).fillna({"n_pk": 0, "n_s": 0})
+    c, cz = float(D["cell_km"]), float(D["depth_cell_km"])
+    d["cell"] = list(zip(np.floor(d.x_km / c).astype(int), np.floor(d.y_km / c).astype(int),
+                         np.floor(d.depth_bsl_km / cz).astype(int)))
+    d = d.sort_values(["n_pk", "n_s"], ascending=False, kind="mergesort")
+    keep = d.groupby("cell", sort=False).head(int(D["keep_per_cell"])).index
+    e2 = e[e.ID.isin(keep)].copy()
+    p2 = p[p.event_ID.isin(keep)].copy()
+    log(f"declustered ({D}): {len(e2)} of {len(e)} events kept in {d.cell.nunique()} cells; "
+        f"picks {len(p2)} of {len(p)}")
+    return e2, p2
 
 
 def obs_statics(p, F):
@@ -103,14 +145,20 @@ def obs_statics(p, F):
     return p
 
 
-def weights(p):
+def weights(p, R, q_dataset_max):
+    """w = clip_max * q / q_ref. q_ref = largest q of the region's picks (default, builds before D-B045), or of
+    the whole dataset (region key weights_scale: dataset), so that one pick has one weight in every tile. tomoDD
+    scales the G columns after adding the smoothing rows, so the weight scale sets the data/smoothing balance."""
     W = T["weights"]
-    q = p.w_bal * (0.05 / p.sigma_s) ** 2
-    q = W["clip_max"] * q / q.max()                   # best pick -> clip_max; relative weights unchanged
+    q = q_of(p)
+    scale = R.get("weights_scale", "region")
+    q_ref = {"region": q.max(), "dataset": q_dataset_max}[scale]
+    q = W["clip_max"] * q / q_ref                     # best pick -> clip_max; relative weights unchanged
     p["w_raw"] = q
     p["w"] = np.clip(q, 0.0, W["clip_max"])
-    log(f"weights: median P {p.w[p.phase == 'P'].median():.3f}, S {p.w[p.phase == 'S'].median():.3f}; "
-        f"clipped at {W['clip_max']}: {int((q > W['clip_max']).sum())} picks ({100 * (q > W['clip_max']).mean():.2f}%)")
+    log(f"weights (scale {scale}, q_ref {q_ref:.4f}): median P {p.w[p.phase == 'P'].median():.3f}, "
+        f"S {p.w[p.phase == 'S'].median():.3f}; clipped at {W['clip_max']}: {int((q > W['clip_max']).sum())} "
+        f"picks ({100 * (q > W['clip_max']).mean():.2f}%)")
     return p
 
 
@@ -191,12 +239,45 @@ def sample_model(xn, yn, zn_int, box_km):
     return VP, VS
 
 
+def sample_run(spec, xn, yn, zn_int, which="final"):
+    """Vp, Vs of a finished run at these nodes, with tomoDD's trilinear lookup (b2_fwd_common.mod_velocity).
+    which = final: Output_Files/model_geo.npz (geographic nodes after the D-B028 back-transform); start: the run's
+    MOD values on the same geographic nodes (MOD itself carries the rescaled node coordinates)."""
+    run = Path(T["runs"]) / spec
+    g = np.load(run / "Output_Files" / "model_geo.npz")
+    if which == "start":
+        s = read_mod(run / "MOD")
+        m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=s["vp"], vs=s["vs"])
+    else:
+        m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=g["vp"], vs=g["vs"])
+    LON, LAT, Z = np.meshgrid(xn, yn, zn_int, indexing="ij")
+    VP = mod_velocity(m, "P", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
+    VS = mod_velocity(m, "S", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
+    log(f"{which} model of {run}: {len(xn)} x {len(yn)} x {len(zn_int)} nodes, Vp {VP.min():.2f}-{VP.max():.2f} km/s")
+    return VP, VS
+
+
 def write_mod(path, R, F, center):
     xi, yi = nodes(R["node_lon"]), nodes(R["node_lat"])
     zi = np.array(R.get("node_z", T["node_z"]), float)
     z_model = zi[zi <= 80]
-    box = 1 if F["mod"] == "nearest" else T["model_box_avg_km"]
+    box = 1 if F["mod"] == "nearest" else R.get("model_box_avg_km", T["model_box_avg_km"])   # M0: ~node spacing
     VP, VS = sample_model(xi, yi, z_model, box)
+    if R.get("start_model"):                         # D-B046: a finished run (M0), "<region>/<tag>"
+        mode = R.get("start_model_mode", "change")
+        fp, fs = sample_run(R["start_model"], xi, yi, z_model)
+        if mode == "change":                         # D-B005 at this tile's nodes x (1 + M0's change from its start):
+            sp, ss = sample_run(R["start_model"], xi, yi, z_model, which="start")   # keeps the fine D-B005 detail
+            VP, VS = VP * fp / sp, VS * fs / ss      # (near-surface, OBS statics, P-4) and adds M0's long wavelengths
+            fl = float(T.get("start_vpvs_min", 0))   # M0 has isolated nodes with Vp/Vs < 1.6 (Vp and Vs moved apart)
+            low = VP / VS < fl
+            VS = np.where(low, VP / fl, VS)
+            log(f"start Vp/Vs floor {fl}: Vs lowered at {int(low.sum())} of {low.size} nodes")
+            log(f"start = D-B005 x M0 change ({R['start_model']}): dlnVp {100 * np.nanmin(fp / sp - 1):+.1f} to "
+                f"{100 * np.nanmax(fp / sp - 1):+.1f} %, dlnVs {100 * np.nanmin(fs / ss - 1):+.1f} to "
+                f"{100 * np.nanmax(fs / ss - 1):+.1f} %")
+        else:                                        # absolute: the run's velocities as they are
+            VP, VS = fp, fs
     # fill any interior column outside the NLL grid with the nearest valid column
     bad = np.isnan(VP[:, :, 0])
     if bad.any():
@@ -270,13 +351,13 @@ def main():
     F = {**FORWARD_DEFAULT, **R.get("forward", {})}
     out = Path(T["runs"]) / region / "inputs"
     out.mkdir(parents=True, exist_ok=True)
-    L = T["limits"]
+    L = {**T["limits"], **R.get("limits", {})}
     center = (round(float(np.mean(R["events_lat"])), 3), round(float(np.mean(R["events_lon"])), 3))
     log(f"forward settings (D-B028): {F}")
 
-    e, p = select(R)
+    e, p, q_dataset_max = select(R)
     p = obs_statics(p, F)
-    p = weights(p)
+    p = weights(p, R, q_dataset_max)
     st = p.groupby("station")[["network", "sta_lat", "sta_lon", "sta_elev_km", "is_obs"]].first().reset_index()
     st["code"] = [f"S{i:04d}" for i in range(len(st))]
     p["code"] = p.station.map(dict(zip(st.station, st.code)))
@@ -311,7 +392,17 @@ def main():
     elev_max = float(st.sta_elev_km.max())
     air_dep = round(-(elev_max + T["air_dep_margin_km"]), 3)
     p["station_corr_s"] = 0.0
-    if F["station_corr"]:
+    if F["station_corr"] and F.get("station_corr_from"):   # D-B046: P-4 of the same tile on the D-B005 start.
+        # Recomputing P-4 in a start model that differs from D-B005 would put that difference (here M0's change) into
+        # per-station constants; P-4 is meant to correct tomoDD's forward error only, which the start barely changes.
+        src = Path(T["runs"]) / F["station_corr_from"] / "inputs" / "station_corr.csv"
+        cc = pd.read_csv(src)
+        cc.to_csv(out / "station_corr.csv", index=False)
+        c = cc.set_index(["station", "phase"]).corr_s
+        log(f"P-4 station correction reused from {src}: {len(cc)} station-phases, median P "
+            f"{cc.corr_s[cc.phase == 'P'].median():+.3f} s, S {cc.corr_s[cc.phase == 'S'].median():+.3f} s")
+        p["station_corr_s"] = pd.MultiIndex.from_frame(p[["station", "phase"]]).map(c).fillna(0.0).values
+    elif F["station_corr"]:
         c = station_corr(out, p, e_w, st_w, air_dep, center, F).set_index(["station", "phase"]).corr_s
         p["station_corr_s"] = pd.MultiIndex.from_frame(p[["station", "phase"]]).map(c).fillna(0.0).values
     p["tt_abs"] = p.tt + p.station_corr_s           # absolute times only (tomoDD slow -> obs later); dt.ct from tt
@@ -339,7 +430,7 @@ def main():
                                "events.csv", "picks_used.csv", "summary.json", "forward.json", "station_corr.csv")
              if (out / f).exists()]
     write_manifest(f"b2_tomodd_inputs_{region}", out,
-                   inputs=[B1B / "events.csv", B1B / "picks.csv", REPO / F["statics_file"],
+                   inputs=[b1b_dir(R) / "events.csv", b1b_dir(R) / "picks.csv", REPO / F["statics_file"],
                            MODEL / "cascadia3d.P.mod.buf", MODEL / "cascadia3d.S.mod.buf"],
                    outputs=files, params={"tomodd": T, "region": region}, counts=summ)
 

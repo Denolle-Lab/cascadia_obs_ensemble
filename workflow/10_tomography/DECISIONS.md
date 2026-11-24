@@ -269,3 +269,271 @@ baseline 1000 (CND ~60, Mendocino-Gorda v2 scan); smoothing chosen from spike/ch
 ### D-B032 Ensemble size 100 members (adopted, 2026-11-22, PI; amends D-B030)
 100 members per region for both the synthetic calibration and the real-data ensembles (D-B030 had 200 for real data).
 
+
+### D-B033 Four more tiles for tomoDD (adopted, 2026-11-23, PI request "set up the other regions"; implements D-B025)
+Tiles beside Mendocino-Gorda (events box; interior nodes 0.125 deg x 0.1 deg as Mendocino-Gorda, 0.75 deg / 0.5 deg
+beyond the box; node_z unchanged). Counts are B1b events inside the box and stations within the box + 0.5 / 0.7 deg:
+
+| tile | events lat | events lon | events | stations | max stations per event | B1b regions |
+|---|---|---|---|---|---|---|
+| mendocino_gorda (existing) | 39.5-43.1 | -127.5 to -122.5 | 9,334 | 153 | 57 | Mendocino, Gorda, south forearc and onshore |
+| blanco | 42.6-45.2 | -130.6 to -125.6 | 4,294 | 81 | 28 | Blanco |
+| oregon | 42.6-46.4 | -126.2 to -121.0 | 3,061 | 156 | 88 | Oregon onshore, Cascades, forearc |
+| washington | 45.8-49.8 | -126.4 to -121.0 | 7,968 | 189 | 109 | Puget/Georgia, Washington onshore, Cascades, forearc |
+| ridges_north | 44.4-50.0 | -131.0 to -126.6 | 1,489 | 78 | 14 | JdF ridge/plate, Axial, Explorer, north Blanco |
+
+Overlaps (for the D-B025 comparison): 1,980 events fall in two tiles; 83 B1b events fall in none (57 Gorda west of
+127.5 W, 16 Mendocino, 10 onshore). Oregon's eastern node column stops at 120.375 W, where the v4-NLL3D model ends
+(x = +457 km at 42 N). ridges_north is 620 km north-south, above the ~400 km guide of D-B025; with tomoDD-SE's
+spherical geometry the limit is memory and run time (D-B026), and this tile is the smallest in data.
+Washington needs MAXOBS 140 (109 stations per event + 20 %, notes/tomodd_build.md): builds O3nofs_o140, syn_o140 and
+chk_o140 (sources copied from O3nofs_big, syn_big, chk_big, MAXOBS only changed), selected per region by
+`tomodd.regions.<tile>.bins` (manifest.tomodd_bin).
+Each tile is built as Mendocino-Gorda: <tile> first build, P-1 reference from its picks, per-tile OBS S statics
+(obs_near_station_S_terms_p1_<tile>.csv), <tile>_v2 with the D-B028/D-B031 forward fixes, check01 bounds run.
+Resolution tests per tile (D-B018) at damping 1000: the Mendocino-Gorda v2 set (spikes at 7 depths and
+checkerboards 40/60/100 km at smoothing 10/20/40; pick noise, both pattern phases and perturbed locations at
+smoothing 20) on a spike lattice 8 nodes apart inside each events box, plus the real-data damping/smoothing scan
+(d500/1000/2000 at s20, s10/s40 at d1000). Driver: b2_res_pipeline.sh (detached, resumable, publishes to GitHub).
+Damping and smoothing per tile are chosen after these runs, as for Mendocino-Gorda.
+
+### D-B034 FORMAT-fixed tomoDD builds for the new tiles (adopted, 2026-11-23, agent; bug fix)
+tomoDD-SE.f line 2324 (and tomoDD-SE_syn.f) writes the "Location summary" with `f7.3")"`, a missing comma that
+gfortran's runtime rejects ("Missing comma between descriptors") in some runs: always in the -fcheck=bounds build
+(notes/forward_accuracy.md 7.4), never in the Mendocino-Gorda production runs, and in every ridges_north run after the
+first LSQR (exit 2, no model written). Fix: `f7.3,")"` in both writes; nothing else changed. Builds O3nofs_fmt,
+chk_fmt, O3nofs_o140_fmt, chk_o140_fmt (binaries *_fmt in tomo_v1/bin), selected per tile with `bins`. A ridges_north
+test (d1000, s20) with the fixed build ran to the end (exit 0, 12 location summaries). Mendocino-Gorda v2 and v2s keep
+the original builds, so their results stay reproducible; the forward (syn) builds are unchanged.
+
+### D-B035 Offshore forearc kept: soft selection rule and OBS keep all picks (adopted, 2026-11-23, PI)
+PI: offshore Washington is hard to image but should be in the model, poorly constrained if need be, with the
+bootstrap ensemble grading it; balancing should not remove regions from the map. Before this change the D-B003
+selection kept 371 of 2,196 v4-NLL3D events off Washington (west of 124.6 W) and 123 of 761 off Oregon (west of
+124.3 W), mostly losing events to nphs >= 12 and gap <= 200; B1b then dropped all 223 OBS picks of Washington-tile
+events, because the 17 OBS there passed only the ridge bar and kept only ridge-event picks.
+Changes: (1) the region `Offshore forearc` uses the D-B023 soft rule (tiers A-D, nphs >= 8, gap <= 270, rms <= 0.5,
+1 km declustering; after B1b >= 6 picks, gap <= 300); (2) `balance.ridge.obs_keep_all`: an OBS admitted by the soft
+station bar keeps all its picks, not only soft-rule ones (88 OBS, +3,346 picks). Weights unchanged (w_bin, region
+targets), so dense regions stay down-weighted. Outputs versioned: b1_dataset_c, b1b_balanced_c (B1 inputs identical,
+picks file = catalog v4.0, md5 17b7d0bced600f8c83e4e1a8c5881e38); b1_dataset / b1b_balanced are kept and
+mendocino_gorda_v2 / v2s (ensemble work) stay on them.
+Result: 28,986 events (was 24,249), 754,710 picks (689,602), 521 stations (475); weighted region shares 13.2-13.3 %
+each (ridges group 7.1 %, weight clipped at 3).
+
+| tile (events box as D-B033) | events old -> c | stations | OBS stations | OBS picks | offshore forearc events |
+|---|---|---|---|---|---|
+| mendocino_gorda (-> mendocino_gorda_c) | 9,334 -> 12,191 | 153 -> 161 | 111 -> 113 | 97,823 -> 102,789 | 1,471 -> 4,296 |
+| blanco | 4,294 -> 4,378 | 81 -> 87 | 81 -> 87 | 83,640 -> 85,293 | 25 -> 87 |
+| oregon | 3,061 -> 3,390 | 156 -> 181 | 21 -> 39 | 771 -> 2,005 | 138 -> 470 |
+| washington | 7,968 -> 9,332 | 189 -> 225 | 0 -> 22 | 0 -> 297 | 556 -> 1,921 |
+| ridges_north | 1,489 -> 1,592 | 78 -> 82 | 73 -> 76 | 14,153 -> 14,537 | 0 -> 91 |
+
+Offshore Washington stays recorded mostly by land stations (297 OBS picks over 22 OBS), so expect poor resolution
+there; the checkerboards and the ensemble will say how poor. New builds for the sizes (FORMAT-fixed, D-B034):
+O3nofs_e13k_fmt / chk_e13k_fmt (MAXEVE 13000, MAXDATA 2e6) for mendocino_gorda_c, O3nofs_w_fmt / syn_w_fmt /
+chk_w_fmt (MAXSTA 260, MAXOBS 140) for washington. The tile runs started under D-B033 on the old dataset were stopped
+and deleted before any result (logs in b2_tomodd/_superseded_pre_DB035/).
+Not done here: CASIE21 (2021 active-source survey off Washington and Oregon) as a constraint on the shallow offshore
+starting model / prior; to be taken up with the starting-model items (D-B005, D-B030).
+
+### D-B036 Novelty wording for the tomography (adopted, 2026-11-23, PI; P-F1 of notes/science_framing.md)
+Claim: the first local-earthquake Vp and Vs model of the crust and seismogenic volumes across the whole Juan de
+Fuca plate system, from the ridges to the arc, onshore and offshore, with ensemble uncertainty and in the same frame
+as the earthquake locations, magnitudes and fault surfaces. Never "first plate-wide local-earthquake tomography":
+VanderBeek & Toomey 2019 (JGR, doi:10.1029/2019JB017707) inverted Pn times from local earthquakes for 3D P velocity of
+the uppermost mantle across the whole Juan de Fuca and Gorda plates. Plate-wide teleseismic P and S (Byrnes et al.
+2017; Bodmer et al. 2020) and Rayleigh-wave Vs (Bell et al. 2016) models also exist. The manuscript placeholder cited
+"VanderBeek et al. 2020 G-cubed", which does not exist; it is Bodmer et al. 2020. References in
+paper_sciadv/references.bib since PR #34 (merged cbaf5efc).
+
+### D-B037 Fault-zone properties as the main tomography product for interpretation (adopted, 2026-11-23, PI; P-F2)
+For the joint interpretation of sources and structure, report Vp, Vs and Vp/Vs averaged in a volume around each
+fault surface (workflow/07_faults), with the posterior over the ensemble members (D-B030, D-B032). Node maps are shown
+only inside the resolution masks. Volume width from the spike half-widths of each tile (8-9 km laterally where the
+Oregon spikes are resolved). Reason: Vs at single nodes is resolved over 16-26 % of the Vp area at the Blanco and
+67-78 % in Oregon and Mendocino-Gorda (15 km, damping 1000), so volume averages are what the data support. Width and
+averaging set in params.yaml when the step is implemented.
+
+### D-B038 ridges_north used for relocation only, with one exception (adopted, 2026-11-23, PI; P-F3)
+ridges_north resolves nothing on the checkerboard lattice at any damping (1000, 300, 200, 100). It is used to relocate
+events, not interpreted as structure (answers open question 3 of the STATUS handoff). Exception written into P-F3
+(cluster spikes at damping 100 recovering >= 50 % somewhere) is met: at damping 100, smoothing 20, 3 P and 2 S
+cluster spikes with DWS > 1000 recover 50-64 %, all at 12 km between the northern Blanco and Axial (44.4-45.4 N,
+130.0-130.3 W; data/tomo_v1/b2_res_tests/ridges_north_v2/d100/). That volume may be reported from the damping-100
+model inside its mask, and compared with the blanco tile where they overlap (D-B025). The ridges_north damping itself
+(open question 1) stays open.
+
+### D-B039 Location uncertainty from 10-20 ensemble members (adopted, 2026-11-23, PI; P-F4)
+The relocation of all 172,342 events in the final model (B4, B5) is repeated in 10 to 20 members of the real-data
+ensemble, not all 100, to give location uncertainty. Reason: 100 x 172,342 relocations is heavy, and 10-20 members
+sample the model spread for locations. Exact number and member choice set in params.yaml when B4 is implemented.
+
+### D-B040 Waveform cross-correlation for clustered families only (adopted, 2026-11-23, PI; P-F5)
+Before the final double-difference relocation (B5), compute waveform cross-correlation differential times within
+the clustered families of the catalog (catalog v4 nearest-neighbour clustering: 177 swarms and 822 multiplets among
+1,944 families; redone on the relocated catalog), and add them to the catalog differential times for those events.
+Reason: catalog times from picks cannot separate the Blanco strand pairs about 2 km apart or confirm repeating
+earthquakes; correlation for every event pair of 172,342 events is not needed.
+
+### D-B041 b-value comparisons between settings only after an ML-Mw check by region (adopted, 2026-11-23, PI; P-F6)
+After the magnitudes are recomputed with the new hypocentres (STATUS step 9), compare ML with Mw by region using the
+112 matched ComCat moment tensors. b-values are compared between settings (v4: 0.77 Axial to 1.33 Puget Lowland) only
+where that check shows no regional ML bias, or after correcting it. Reason: attenuation differs between hot ridge and
+transform crust and the forearc, and ComCat anchors are sparse offshore.
+
+### D-B042 Zhang & Niksejel catalog in the comparison registry (adopted, 2026-11-23, PI; P-F7)
+When the offshore deep-learning catalog of Zhang & Niksejel (SSA 2025 poster; about 24,000 events, Mc 1.5; no paper
+or data release yet) is published, add it to the catalog comparison registry (workflow/11_compare, catalogs.yaml) and
+compare event counts, completeness and locations offshore. It is the closest competing catalog; we do not claim the
+first deep-learning offshore catalog. Listed in paper_sciadv/references_no_doi.md until it has a DOI.
+
+### D-B043 ridges_north damping 200 (adopted, 2026-11-23, PI)
+ridges_north is run at damping 200 (answers STATUS open question 1, "100 or 200"); smoothing not yet chosen (tests
+at 20). Numbers at smoothing 20, real data: first-iteration condition number 119, last-iteration 33 (Mendocino-Gorda
+v2 at its damping 1000: 60 and 19; like-for-like comparison in notes/merge_design.md section 2); weighted RMS 0.060
+(0.054 at damping 100, 0.087 at 1000). Cluster spikes with DWS >= 100 (104 P and S): median recovery 16 % (17 % at
+damping 100); one spike >= 50 % (21 km, 49.2 N, 128.0 W, DWS 271). None of the five spikes at 12 km between the
+northern Blanco and Axial that pass at damping 100 passes at 200, so the D-B038 exception volume stays as written
+there (reported from the damping-100 model inside its mask) unless the PI drops it. Set in params
+tomodd.regions.ridges_north_v2.damp.
+
+### D-B044 Common starting model from a coarse whole-margin inversion, M0 (adopted, 2026-11-23, PI; P-M2 (a))
+One coarse tomoDD inversion of the whole margin (region margin_m0_v2) becomes the starting model of every tile, as
+in the California statewide model (Lin et al. 2010; notes/merge_design.md M0). Set-up: events of the five tile boxes
+declustered to the two best-recorded events (most picks, then most S picks) per 10 x 10 x 10 km cell (6,943 of
+28,816 events, 229,308 picks, 518 stations); interior nodes 0.375 x 0.3 deg (32 x 40) on the shared depth nodes;
+start = the D-B005 model averaged over a 31 km box at each node (the node spacing; a single nearest column would
+alias at 30 km spacing); forward fixes as the tiles (D-B028 P-1, P-2, P-4, P-6); weights on the dataset scale
+(D-B045); damping 200, with a damping-1000 run for the condition-number record; smoothing 20. New tomoDD build for
+518 stations (MAXSTA 560, MAXOBS 130; array sizes only, tomoDD_opt/O3nofs_m_fmt and chk_m_fmt). After review of M0,
+each tile's damping run and resolution tests are rerun from it (about one day of the machine). Fallback if M0 fails
+review: the D-B005 model sampled once (M1).
+
+### D-B045 One damping for all tiles: 200, on one weight scale (adopted, 2026-11-23, PI; P-M1)
+The PI asked for one small damping in every tile. Chosen: damping 200, smoothing 20 in every tile and in M0 (the
+value already set for ridges_north, D-B043). At 200 against 300 the resolved area is the same (Blanco Vp at 15 km:
+19,558 against 19,783 km2) and Oregon's weighted RMS is the same (0.1505 against 0.1511), with more air quakes
+(Oregon: 10 against 4 repeats, 24 events of 3,382 lost against 10); Mendocino-Gorda and Washington have not been run
+below 500. Condition numbers (first iteration) will be higher than the Mendocino-Gorda benchmark (Blanco 284, Oregon
+347, ridges_north 119 at 200) and are recorded, not used to choose.
+Weight scale: pick weights were scaled per tile (w = 3 q / max q of the tile's picks), so one pick had a different
+weight in each tile (largest q: Blanco and ridges_north 4.941, Mendocino-Gorda 2.788, Oregon and Washington 1.646).
+tomoDD-SE adds the smoothing rows before it scales the G columns to unit norm (tomoDD-SE.f lines 1694-2064), so the
+weight scale sets the balance of data against smoothing and damping: the same damping number was a different
+regularisation in each tile. From now on every build uses one scale, the largest q of the whole dataset (4.941;
+region key weights_scale: dataset). Blanco and ridges_north inputs are unchanged by this; Oregon and Washington
+weights drop to a third, Mendocino-Gorda to 0.56. The column scaling also divides by the number of data rows, so
+the same damping still weighs less in a tile with more data; that part is left as is (it is what the condition
+number shows). Applies to M0, the T6 test and the tile reruns from M0.
+
+### D-B046 M0 = margin_m0_v2 d200_s480; every tile restarts from it (adopted, 2026-11-23, PI; P-M11)
+M0 is the whole-margin run at damping 200 and smoothing 480/480/240, the smoothest of the scan 20-1920 whose weighted
+RMS stays within 1.5 % of the best (0.2012 against 0.1984; notes/merge_design.md, M0 paragraph). Each tile
+(mendocino_gorda_c, blanco, oregon, washington, ridges_north; regions <tile>_m0) restarts from it at damping 200 on
+the dataset weight scale, scans smoothing 20-480 (params merge.tile_smooth_scan) and takes the largest smoothing
+whose weighted RMS is within 1.5 % of the scan's best (merge.smooth_rule_tol), then runs its resolution tests at that
+smoothing. Implementation choices made while building it (Claude, 2026-11-23; tell the PI):
+* Start = the D-B005 model at the tile's own nodes (nearest column, as <tile>_v2) multiplied by (1 + M0's change
+  from its own start), not M0's velocities as they are. M0 started from a 31 km box average, so taking its values
+  directly would replace the fine near-surface structure that the OBS S statics and the P-4 corrections were derived
+  in; M0's change carries what it learned (the long wavelengths).
+* P-4 station corrections reused from <tile>_v2. Recomputed in the new start they differ by +0.10 s (P) and -0.15 s
+  (S) median, up to 1 s, at ridges_north: that is M0's change, which P-4 would turn into per-station constants.
+  P-4 is meant to correct tomoDD's forward error, which the start model barely changes.
+* Vp/Vs floor 1.65 on the start (params start_vpvs_min; Vs lowered): M0 has isolated nodes with Vp/Vs down to 1.49
+  where Vp and Vs moved apart (48 nodes < 1.6); in the ridges_north start the floor changes 1.0 % of the nodes.
+Iteration: tomoDD solves locations and velocities together in every run (12 iterations, rays retraced each time);
+there is no separate outer tomography-location loop. After the merge, B4 relocates all 172,340 events in the merged
+model; a second tomography pass (M7) only if T4/T7 show seams or misfit the tiles cannot explain.
+
+### D-B047 Velocity models are versioned and exported cloud-native (adopted, 2026-11-23, PI request)
+PI: "version control all of the velocity model ... reusable for relocation and dissemination as a standard earth
+model, maybe on EarthScope EMC"; "being cloud native is good"; "upload to Zenodo and add a tutorial on how to read
+it". Every model that is adopted or handed on (M0, tiles, merged, ensemble) gets a semantic version, written by
+b2_model_export.py (pixi environment `models`: Python 3.12, zarr 3, xarray, netCDF4) as
+* Zarr v3 with consolidated metadata (canonical, cloud-native) and netCDF-4 Classic (compressed) holding the same
+  Dataset: Vp, Vs, VpVs, starting model, perturbations in %, DWS (0 = no ray); interior tomoDD nodes, depth km below
+  sea level positive down; EMC header attributes (checked against the EMC inspector's required list; authors, paper
+  reference and DOIs stay "TO FILL" until release) and CRESCENT CVM variable names;
+* NonLinLoc SLOW_LEN grids on the D-B005 1 km Lambert grid for relocation (--nll; model inside its volume, D-B005
+  outside and in water/air cells);
+* registered in data/tomo_v1/models/registry.csv (append-only, sha256 of every file, git commit of the code) with a
+  provenance JSON; versions are immutable; netCDF < 5 MB also kept in git; stores in /wd1/mdenolle_data/tomo_v1/models.
+Distribution: one bundle `velocity_models.zip` (README, tutorial read_velocity_model.py, registry, all versions) in the
+private Zenodo draft 23084158, replaced at each new version (the draft is at 99 of 100 files). Public release
+(EMC submission, CRESCENT CVM, a DOI) only after the peer-reviewed paper and only when the PI says so.
+v0.1.0 = M0 (margin_m0_v2 d200_s480).
+
+### D-B048 Relative-relocation method tested before B5: tomoDD (fixed velocity) vs GrowClust3D on the Blanco swarms (adopted, 2026-11-23, PI)
+PI doubts that GrowClust is more accurate than HypoDD; HypoDD does not scale to this catalog and uses a 1D layered
+model. In the 3D model the alternatives are GrowClust3D (Trugman et al. 2023; 3D travel-time tables, hierarchical
+cluster merging, L1 misfit, bootstrap uncertainty; Trugman & Shearer 2017 found relative accuracy comparable to
+HypoDD in synthetic tests, with fewer pathological solutions) and tomoDD-SE in relocation-only mode (HypoDD-type
+double-difference least squares in the 3D model, velocity frozen; 10,000-13,000 events per tile). Test, once B4
+(NonLinLoc of all events in v0.3.0) has landed and before the B5 GrowClust3D run:
+- Events: the Blanco swarms, starting with the June 2015 West Blanco swarm (755 events over 64 days, family 1803),
+  from their B4 locations.
+- Same model (v0.3.0), same stations, same differential times for both codes (catalog differential times, plus
+  waveform cross-correlation times where D-B040 gives them).
+- Compare: relative positions (event-pair distances), cluster spread and orientation, depth distribution, shift of
+  the cluster centroid from B4, bootstrap uncertainty; one synthetic case with a known geometry (planar swarm)
+  through both codes.
+- Outcome: if GrowClust3D matches tomoDD within the uncertainties, B5 uses GrowClust3D for the whole catalog;
+  otherwise report where and by how much they differ before choosing.
+
+### D-B049 Resolution-gated merge, for lightly smoothed tiles only (adopted, 2026-11-24, PI; amended the same day)
+Context: the literature comparison of depths (data/tomo_v1/depth_literature/depth_literature.html) found B4 too deep at
+Axial, Endeavour, Explorer and the JdF ridge (the tomography moved them away from published depths) and on the
+shallow Blanco, from unresolved tile structure entering the merged model v0.3.0. Rule: per phase, V = R V_tiles +
+(1 - R) V_ref, with R = max over the covering tiles of the resolution window without its floor (1 on the tile's
+checkerboard-resolved nodes, cosine taper to 0 over taper_km), so unresolved nodes fall back to the whole-margin
+reference (M0). As first implemented it sent 98.7 % (P) and 99.5 % (S) of covered nodes to M0, because checkerboards
+at smoothing 480 (mendocino_gorda_c, oregon, washington) barely recover (median amplitude 0.005-0.13 against 0.5)
+although those tiles' changes are small and smooth (< 1 % rms Vp) and are what moved Gorda depths toward the
+literature. Amended (PI): only tiles merged at smoothing W1 <= tomodd.merge.gate_max_smooth = 100 are gated (blanco,
+s20); s480 tiles count fully in their box. Dry run: 16.0 % of covered nodes on the reference (unresolved Blanco).
+Variables tile_weight_p / tile_weight_s (R) and attributes gated_tiles, gate_max_smooth record it.
+
+### D-B050 ridges_north left out of the merge (adopted, 2026-11-24, PI)
+D-B038 approved the ridges tile for relocation only. Its velocities (smoothing 60, Vp/Vs 1.35-1.40 under the Axial
+caldera, 1.47 at Endeavour) put Axial events 2-2.5 km too deep against Waldhauser et al. (2020), while v4-NLL3D
+agreed. tomodd.merge.exclude_tiles: [ridges_north]; the ridges sit in M0 (dry run: Axial Vp/Vs 1.70-1.71 at 3-5 km).
+
+### D-B051 Vs reverted where Vp/Vs < 1.6 or S coverage is low (adopted, 2026-11-24, PI; replaces the drafted floor 1.5)
+Where the merged Vp/Vs < tomodd.merge.vpvs_min = 1.6 or the S-ray DWS of the covering tiles < dws_s_min = 10, Vs is set to
+the reference Vs; if Vp/Vs is still below 1.6 (Vp changed), Vs = Vp / 1.6. Flag variable vs_reverted (0 unchanged,
+1 reverted, 2 reverted and capped; int8, netCDF-4 Classic has no unsigned type) and node counts in attributes. v0.3.0
+had 3,228 nodes below 1.65 and 168 below 1.5 (minimum 1.275), inherited from poorly resolved tile nodes. Dry run:
+minimum 1.60; the 87,565 low-coverage reverts change Vs by a median 0.01 % (no S rays there), the 258 capped nodes by
+a median 1.5 %.
+
+### D-B052 Near-station travel times; no whole-grid fallback (adopted, 2026-11-24, PI)
+PR #35 review finding 14: the Richardson combination T = T0.5 - k (T1 - T0.5) is wrong next to the station, where
+the 1 km grid's error comes from the source-cell start-up and does not scale like h^p (101 of 1,392 v0.3.0 grids had
+negative times next to the station, down to -0.16 s; 2,581 B4 events within 2 km of a station, Axial's cabled array
+among them). Fix in b4_time_grids.py: T0.5 within 2 km of the station, linear taper to the combination at 5 km, times
+asserted >= 0. Beyond 5 km the start-up error is carried along the rays (median 0.014 s P / 0.024 s S, up to 0.08 /
+0.17 s at a few 7D OBS); it is recorded per grid in the manifest. A whole-grid T0.5 fallback for the outliers (median
++ 3 x 1.4826 MAD: P 0.044, S 0.075 s) was tested and rejected: against co-located stations it fixed NED.CC, J17D.7D,
+BS58.XG, CL60.XG and HYS11.OO but worsened FN08C.7D, G30B.7D and J25C.7D, and T0.5 is itself late with distance. The
+remaining offset is close to a constant shift per station, which the B4 station terms absorb (params
+b4.grid_fallback.enabled: false).
+
+### D-B053 B5 relative relocation with tomoDD-SE in relocation-only mode (adopted, 2026-11-24, PI)
+D-B048 test (branch tomo/b5-blanco-test, notes/b5_blanco_test.md): on three Blanco swarms and three synthetic planar
+swarms, with catalog differential times only, GrowClust3D was not more accurate than tomoDD: neither improved the B4
+locations or resolved swarm depth (a 5 km tall plane spread over 6-29 km), GrowClust3D made good starts worse and
+changed with small input changes (90 m shift, rounded start), and its bootstrap spread was 4-7 times tomoDD's.
+tomoDD relocation-only (JOINT = 0, differential times, velocity frozen) was stable. B5 uses it, with each cluster's
+centroid put back on its B4 location (tomoDD's centroid is free: 0.6 km down in f0399) and events kept at least 50 m
+from the frame centre (tomoDD segfaults otherwise). Waveform cross-correlation times (D-B040) remain to be tested.
+
+### D-B054 tomoDD-SE FORMAT fixes approved; patched version frozen for future use (adopted, 2026-11-24, PI)
+The relocation-only path stops at a malformed FORMAT string in lsfitHFDD_lsqr_lm5.f (line ~504, a missing comma
+before a string literal), the same kind as D-B034 (tomoDD-SE.f / tomoDD-SE_syn.f line ~2324). PI approved the fix (a
+comma only) and asked to keep this tomoDD version. Frozen, private on /wd1 only (WARF licence: no posting, never in
+git or on Zenodo): /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24 (pristine USTC 2020 source with every
+malformed FORMAT string fixed by a comma, PATCH.diff, build_variants.sh, README), binaries for every size class in
+/wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24 (main, syn, chk), archive in /wd1/mdenolle_data/tomo_v1/archive.
+Licence caveat: the WARF licence forbids modification; the request to Haijiang Zhang for permission is still open.

@@ -1,0 +1,57 @@
+{
+ "name": "b2_fwd_statics_mendocino_gorda_c_v2",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_fwd_statics.py",
+ "argv": [
+  "mendocino_gorda_c_v2"
+ ],
+ "utc": "2026-11-23T15:03:41.414433+00:00",
+ "git_commit": "1bee7f1f34ad5d0090ff3652e4aa164d1d98d99f",
+ "git_dirty": false,
+ "params_md5": "f0981d0cef332098450ffed517172425",
+ "params": {
+  "forward": {
+   "coords": "ellipsoid",
+   "mod": "nearest",
+   "station_corr": true,
+   "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv",
+   "p1_reference": "mendocino_gorda_c_v2/p1_reference"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/p1_reference/obs_S_iter1_p1.parquet",
+   "size": 7686857,
+   "mtime": "2026-11-23T15:03:38.657067+00:00",
+   "md5": "d29d70dbecd1df37b13bed61ba3086ef"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
+   "size": 22192,
+   "mtime": "2026-11-23T14:16:13.586080+00:00",
+   "md5": "272837c1eb6b1a52a61d1e8f8bff998a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv",
+   "size": 10508,
+   "mtime": "2026-11-23T15:03:41.405055+00:00",
+   "md5": "2392443efba7dbcacb4f97d7f079415e"
+  }
+ ],
+ "counts": {
+  "stations": 111,
+  "with_static": 108,
+  "with_static_old": 108,
+  "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,
+  "old_recomputed_vs_file_maxabs": 0.0005,
+  "change_median": 0.274,
+  "change_p5_p95": [
+   0.146,
+   0.462
+  ],
+  "below_minus_0p5_new": 1,
+  "below_minus_0p5_old": 8
+ },
+ "notes": null
+}

@@ -70,7 +70,7 @@ Vs is similar where resolved (broadening 1.04-1.12 at 12-34 km).
 * Same geometry and starting model for synthetics and inversion: no ray-tracer or starting-model error.
   The synthetic calibration (STATUS step 5) covers those.
 
-## Proposed decision (D-B028)
+## Decision (proposed here as D-B028; adopted by the PI as D-B029, see DECISIONS.md)
 
 Keep the current node_z for the Mendocino-Gorda grid: at smooth 20/20/10 the spike broadening in the
 resolved crust (12-34 km) is <= 1.1, so uneven spacing does not need a fix now. Repeat this spike test
@@ -79,3 +79,15 @@ in the resolved crust then exceeds ~1.5, move to more even spacing in 0-40 km (l
 spacing-scaled smoothing row would be a source change). Report upper-crust (< 12 km) structure only where
 the spike/checkerboard tests show recovery; node-scale features there are mostly unresolved with this
 event set.
+
+## Correction (2026-11-23): shallow resolution is placement-limited, not absent
+
+The lattice put spikes on a fixed 85 km grid regardless of station positions. At 3 km, 15 of 25 spike nodes
+have DWS < 30 (no rays) and sit 12-50 km from the nearest station. Where a station is close, shallow spikes
+are recovered: at 3 km, 69% (station 0.7 km away) and 39% (8 km); at 7 km, 96% (8 km). So "upper crust
+mostly unresolved" overstates it: the shallow crust is resolved in cones under the stations. Within those
+cones depth is poorly resolved, because only 8% of events are shallower than 12 km (median 27 km) and the rays
+arrive near-vertical: the 7 km spike 0.7 km from a station is 27% at the node but 58% summed over the column
+(vertical smearing). tomoDD has no station terms, so these near-station nodes also absorb station-constant
+delays (OBS sediment). A station-centred spike test (spikes at active nodes under stations, -1 to 12 km) would
+measure the shallow resolution that exists. D-B029 (keep depth nodes) is unaffected.

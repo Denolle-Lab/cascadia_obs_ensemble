@@ -76,6 +76,7 @@ def dws(run, shape):
 
 
 def build(run_spec, version, description):
+    """Dataset of one finished tomoDD run, with the EMC and provenance attributes."""
     run = RUNS / run_spec
     region, tag = run_spec.split("/")
     R = T["regions"][region]
@@ -111,23 +112,38 @@ def build(run_spec, version, description):
                 source="tomoDD.vel; 0 = no ray: the node keeps the starting model"))
     ds = xr.Dataset(
         {k: (dims, a, at) for k, (a, at) in v.items()},
-        coords={"depth": ("depth", z.astype("float64"), dict(long_name="depth below sea level", units="km",
-                                                             positive="down", standard_name="depth")),
-                "latitude": ("latitude", lat.astype("float64"), dict(long_name="latitude", units="degrees_north",
-                                                                     standard_name="latitude")),
-                "longitude": ("longitude", lon.astype("float64"), dict(long_name="longitude", units="degrees_east",
-                                                                       standard_name="longitude"))})
+        coords=coords(z, lat, lon))
+    inp = (run / "tomoDD-SE.inp").read_text() if (run / "tomoDD-SE.inp").exists() else ""
+    return add_attrs(ds, version, description, dict(
+        run=str(run), region=region, tag=tag,
+        start_model=str(R.get("start_model", P["paths"]["start_model"])),
+        region_json=json.dumps(R, sort_keys=True), tomodd_inp=inp,
+        model_geo_sha256=sha256(run / "Output_Files" / "model_geo.npz")), source=run_spec)
+
+
+def coords(z, lat, lon):
+    return {"depth": ("depth", np.asarray(z, "float64"), dict(long_name="depth below sea level", units="km",
+                                                              positive="down", standard_name="depth")),
+            "latitude": ("latitude", np.asarray(lat, "float64"), dict(long_name="latitude", units="degrees_north",
+                                                                      standard_name="latitude")),
+            "longitude": ("longitude", np.asarray(lon, "float64"), dict(long_name="longitude", units="degrees_east",
+                                                                        standard_name="longitude"))}
+
+
+def add_attrs(ds, version, description, prov, source):
+    """EMC global attributes (params tomodd.models.attributes), bounds from the coordinates, and provenance_<key>
+    attributes from prov (must include run)."""
+    lat, lon, z = ds.latitude.values, ds.longitude.values, ds.depth.values
     commit = git("rev-parse", "HEAD")
     dirty = bool(git("status", "--porcelain", "--", "workflow/10_tomography"))
-    inp = (run / "tomoDD-SE.inp").read_text() if (run / "tomoDD-SE.inp").exists() else ""
-    A = dict(X["attributes"])                        # EMC global attributes (params tomodd.models.attributes)
+    A = dict(X["attributes"])
     A.update(
         title=f"{X['name']} v{version}: {description}",
         id=f"{X['name']}.v{version}",
         model=X["name"], version=f"v{version}", data_revision=f"r{version}", grid_dim="3D",
         summary=f"{description}. {X['summary']}",
         year=datetime.now(timezone.utc).year,
-        history=f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} b2_model_export.py from {run_spec}",
+        history=f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} b2_model_export.py from {source}",
         grid_ref="latitude_longitude", data_layout="vertex",
         geospatial_lat_units="degrees_north", geospatial_lon_units="degrees_east",
         geospatial_lat_min=float(lat.min()), geospatial_lat_max=float(lat.max()),
@@ -136,12 +152,8 @@ def build(run_spec, version, description):
         geospatial_lon_resolution=float(np.round(np.median(np.diff(lon)), 6)),
         geospatial_vertical_units="km", geospatial_vertical_positive="down",
         geospatial_vertical_min=float(z.min()), geospatial_vertical_max=float(z.max()),
-        provenance_run=str(run), provenance_region=region, provenance_tag=tag,
         provenance_git_commit=commit + ("-dirty" if dirty else ""),
-        provenance_start_model=str(R.get("start_model", P["paths"]["start_model"])),
-        provenance_region_json=json.dumps(R, sort_keys=True),
-        provenance_tomodd_inp=inp,
-        provenance_model_geo_sha256=sha256(run / "Output_Files" / "model_geo.npz"),
+        **{f"provenance_{k}": v for k, v in prov.items()},
     )
     ds.attrs = {k: (json.dumps(val) if isinstance(val, (list, dict)) else val) for k, val in A.items()}
     return ds
@@ -277,19 +289,24 @@ def main():
     ap.add_argument("--nll", action="store_true", help="also write NonLinLoc grids on the D-B005 grid")
     ap.add_argument("--status", default="intermediate", help="intermediate | candidate | release")
     a = ap.parse_args()
-    ds = build(a.run, a.version, a.description)
+    export(build(a.run, a.version, a.description), a.version, a.description, a.nll, a.status)
+
+
+def export(ds, version, description, nll=False, status="intermediate"):
+    """EMC check, write (Zarr, netCDF, optional NonLinLoc grids), register; read-back test. Returns the files."""
     issues = emc_check(ds)
     ds.attrs["emc_check"] = "; ".join(issues) if issues else "passes the EMC inspector's required-attribute rules"
     print("EMC check:", ds.attrs["emc_check"])
     hard = [i for i in issues if not i.startswith("pending")]
     if hard:
         raise SystemExit(f"EMC metadata problems: {hard}")
-    files = write(ds, a.version, a.nll)
-    pj = register(ds, a.version, a.description, files, a.status)
+    files = write(ds, version, nll)
+    pj = register(ds, version, description, files, status)
     back = xr.open_zarr(files["zarr"], consolidated=True)          # read-back check
-    assert np.allclose(back.Vp.values, ds.Vp.values) and back.attrs["id"] == ds.attrs["id"]
+    assert np.allclose(back.Vp.values, ds.Vp.values, equal_nan=True) and back.attrs["id"] == ds.attrs["id"]
     print(json.dumps({k: str(p) for k, p in files.items()}, indent=1))
-    print(f"registered {X['name']} v{a.version} -> {REGISTRY}; provenance {pj}")
+    print(f"registered {X['name']} v{version} -> {REGISTRY}; provenance {pj}")
+    return files
 
 
 if __name__ == "__main__":

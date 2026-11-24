@@ -593,6 +593,12 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       - [240, 240, 120]
       - [480, 480, 240]
     smooth_rule_tol: 0.015         # chosen smoothing = the largest whose weighted RMS <= (1 + tol) x the scan's best
+    product:                       # b2_merge.py: the merged model (D-B047 versions 0.3.x; Zenodo product, PI 2026-11-23)
+      choice: data/tomo_v1/b2_merge/tiles_m0/choice.csv   # tile runs (phase 1); masks from phase 2 (<tile>_m0/d200)
+      reference: margin_m0_v2/d200_s480                    # M0 (D-B046); V_ref = D-B005 x (1 + M0 change)
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}   # the M0 extent; depth = tomodd.node_z
+      taper_km: 15                 # resolution-window taper (M3)
+      floor: 0.1                   # resolution-window floor outside the mask (M3 placeholder until T3)
   models:                          # D-B047 (proposed 2026-11-23): versioned model export (b2_model_export.py, env models)
     name: cascadia_obs_tomo        # internal model name (store path, ids); public name for EMC / CVM: PI to choose
     store: /wd1/mdenolle_data/tomo_v1/models   # canonical Zarr + netCDF per version (immutable); netCDF < 5 MB also in git

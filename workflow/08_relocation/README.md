@@ -13,7 +13,10 @@ Large files go to `/wd1/mdenolle_data/reloc_v5/`. QC outputs that fit in git go 
   under a station is lower than the station, the source goes 50 m below the grid surface instead
   (368 of 696 stations, at most 0.5 km). Station terms absorb the time difference.
 * Picks: `data/catalog_v4/Cascadia_picks_catalog_v4.csv` (2.50 M picks, 696 stations). No repicking.
-  Distance cap for location: 250 km (95% of picks are within 200 km).
+  Runs up to v5.0: stations beyond ~150-175 km of the event dropped out (search box vs ±250 km grids).
+  From v5.1: no distance cap (wide fallback grids, see "A2 runner for catalog v5.1"); 95% of picks are within 200 km.
+  Catalog v4.1 (main repo `data/catalog_v4/`, 172,342 events) adds 246 picks at 105 stations without time grids
+  (events 172114, 900001-900003); `a2_make_obs.py` drops and lists them (`picks_dropped.csv`).
 
 ## A1. Velocity model and travel-time grids
 
@@ -55,6 +58,58 @@ grid, so events are located in 25 km tiles with a tile ±75 km search box (`a2_m
 
 Catalog with all v4 events and location-quality tiers A-D, U: `a2_build_catalog.py`; summary
 `data/reloc_v5/catalog_v5_trackA_iter1_vpvs176_tiers.md`. Use tiers A-B (`depth_constrained`) for depth work.
+
+## A2 runner for catalog v5.1 (2026-11-24, branch v51/runner)
+
+Round-2 fixes (D-B055..D-B068; `data/tomo_v1/above_surface/above_surface_round2.html`), in `a2_run_nlloc.py`,
+`nlloc_template.in`, `a2_make_obs.py`, `a2_station_terms.py`:
+
+* **Station reach.** NLLoc drops an arrival whose time grid does not contain the search box, so with the ±250 km
+  grids and the tile ±75 km box a station counted only within ~150-175 km of the event (x or y): every run up to
+  v5.0 (B4 iter0/iter1 v0.3.1: 169,011 of 2,503,189 arrivals, 25,054 events). `--time-wide <folder>` lists the wide
+  2 km grids of the whole lattice (`workflow/10_tomography/b4_wide_grids.py`, with a manifest naming the fine folder)
+  after the fine root in LOCFILES; NLLoc takes, per arrival, the first root whose grid contains the box.
+* **Arrival accounting** (every run): per event, the arrivals of `events.obs` against NLLoc's "N observations read,
+  M will be used" and its logged box rejections, and per arrival the grid that served it (header rule: first root
+  whose grid contains the box). Writes `runs/<run>/arrivals_used.csv` (ID, n_obs, n_used, n_fine, n_wide, pass) and
+  `arrival_drops.csv`; any drop other than a box rejection (missing grid file, distance cut, duplicate pick, log not
+  matching the obs) goes to `arrival_problems.csv` and the runner exits 3.
+* **Guards** (exit 2 before running): a fine grid missing or incomplete for a picked station-phase (NLLoc would fall
+  back to the wide grid or drop the arrival silently); a needed wide grid missing, or a wide folder without a manifest
+  for this fine folder; resume into a run folder whose `run_config.json` (grid roots, obs folder, template, LOCGAU,
+  LOCGAU2, topography file and md5, station-terms file and md5, NLLoc binary) or any workdir's `nlloc.in` /
+  `events.obs` differs from this invocation. Use a new run name for any change.
+* **Template** (`nlloc_template.in`): LOCMETH minimum 5 phases (D-B066, the five-pick events, tier D). LOCGAU, LOCGAU2
+  (`off` removes it) and the LOCTOPO_SURFACE file are runner options (`--locgau`, `--locgau2`, `--topo`) whose
+  defaults are the v0.3.1 production values; `--template` takes another template (the 85cc3dae template reproduces
+  v0.3.1 production).
+* **Obs** (`a2_make_obs.py --picks --events --out [--time]`): any picks/events file into a new folder (refuses a
+  non-empty one, so `reloc_v5/obs_tiles` of v5.0 is never overwritten); `obs_meta.json` records the inputs (md5).
+* **Deep pass** (D-B067): `a2_run_nlloc.py <deep run> --deep-from <iter1 run>` reruns the events REJECTED at the
+  bottom face (boundary 31) or located at ML z' >= 78 km, unless no used arrival came from a fine grid (far_only:
+  flagged, not pushed deeper), with the same x/y box and LOCGRID z' -5..120 km; every arrival then needs the wide
+  grid (to z' ~121 km). `deep_selection.csv`; `arrivals_used.csv` pass = deep.
+* **Station terms** use only arrivals served by fine grids (same header rule); wide-grid times differ from the fine
+  ones by per-station offsets (-0.36..+0.62 s, round-2 verifier). Unchanged for runs without wide grids.
+
+Tests (`/wd1/mdenolle_data/tomo_v1/v51_build/runner/`, scripts in `scripts/`, logs in `logs/`): with the 85cc3dae
+template and no wide grids the runner reproduces production tile t20_08 of b4_iter1_v0.3.1 file by file (707 files;
+hyp files identical but for the run-time SIGNATURE). Note: NLLoc draws the PDF samples from one random sequence per
+run, so an event's expectation, covariance and sig_z (not its ML hypocentre) depend on the events located before it in
+the same job (median 0.1 km, p90 0.4 km in the tests); only identical jobs reproduce them exactly.
+
+Production (v5.1; names of interface I5), in workflow/08_relocation of a reloc/track-a tree with this runner:
+
+    ENV=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default; export LD_LIBRARY_PATH=$ENV/lib; PY=$ENV/bin/python
+    D=/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4; RUNS=/wd1/mdenolle_data/reloc_v5/runs
+    TIME=time_b4_v0.3.1m; WIDE=wide_time_b4_v0.3.1m; OBS=/wd1/mdenolle_data/reloc_v5/obs_v51
+    TOPO=/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin
+    LIK=()   # D-B065 choice, e.g. LIK=(--locgau2 off) or LIK=(--locgau2 "0.0 0.1 0.1"); empty = v0.3.1 production
+    $PY a2_make_obs.py --picks $D/Cascadia_picks_catalog_v4.csv --events $D/Cascadia_relocated_catalog_v4.csv --out $OBS --time $TIME
+    $PY a2_run_nlloc.py b4_v51_iter0 --obs-dir $OBS --time $TIME --time-wide $WIDE --topo $TOPO "${LIK[@]}" --nproc 100
+    $PY a2_parse_hyp.py b4_v51_iter0 && $PY a2_station_terms.py b4_v51_iter0
+    $PY a2_run_nlloc.py b4_v51_iter1 --obs-dir $OBS --time $TIME --time-wide $WIDE --topo $TOPO "${LIK[@]}" --nproc 100 --stat $RUNS/b4_v51_iter0/station_terms.in
+    $PY a2_run_nlloc.py b4_v51_deep --deep-from b4_v51_iter1 --time $TIME --time-wide $WIDE --topo $TOPO "${LIK[@]}" --nproc 100 --stat $RUNS/b4_v51_iter0/station_terms.in
 
 Mount Hood test (`a2_model_1d_test.py`, tile t33_30, 269 events, nearest station 29 km): Ian's 1D
 `pnsn_wa` gives median depth -1.0 km, `pnsn_nor` 8.1 km, the 3D model 16.7 km, all at RMS 0.26-0.29 s;

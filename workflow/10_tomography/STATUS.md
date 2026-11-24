@@ -21,7 +21,11 @@ summaries data/tomo_v1/b5/b5_v0.3.1/compare.md (on tomo/b5). 2,125 dt components
 * **D-B055: 869 relocated events above the surface** (median 0.25 km, max 5.2 km; all below it at B4). Cause: the
   same floor-held events as the upward pull (36 % of events < 0.1 km below the surface at B4 end above it) + tomoDD has
   no topography (Air_dep = one flat level at the highest station). Damping 400 (CND ~40) halves Axial's count.
-* **Open (PI):** root-cause the S worsening (tomoDD S times vs the B4 NLL S grids: two forward models); run B5 only
+* **S worsening, root cause found (11:55, tomo/b5 99c488ed, notes/b5_s_mismatch.md):** NOT two forward models (tomoDD and the B4
+  grids agree on dt to MAD 2-5 ms; S misfit grows in tomoDD's own model too). Cause: S dt weighted 1/4 of P (D-B008 sigma
+  S = 2 x P) + MAD re-weighting, so B5 fits P at S's cost. Equal weights without MAD cuts: S improves (Blanco 0.269 -> 0.234 s,
+  onshore 0.166 -> 0.154 s), P unchanged or better. Measured S/P noise ratio 1.16-1.51 (catalog 1.23), not 2. Proposed P-S1..P-S3.
+* **Open (PI):** S weighting rule (P-S1) and B5 acceptance rule (P-S2); run B5 only
   after v5.1 (round-2 upward-pull fix); per-cluster damping to CND 40-80; whether waveform CC dt (D-B060 second pass)
   comes first, since catalog dt do not sharpen clusters; air-quake and two-event-component handling; bootstrap not run
   (2 CPU-h per member; tomoDD bootstrap 2-11x too small in D-B048).

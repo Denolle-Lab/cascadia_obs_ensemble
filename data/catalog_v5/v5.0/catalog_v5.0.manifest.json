@@ -1,0 +1,106 @@
+{
+ "name": "catalog_v5.0",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/catalog_version.py",
+ "argv": [
+  "5.0"
+ ],
+ "utc": "2026-11-24T18:46:20.757488+00:00",
+ "git_commit": "1464b4f8284ab5f85cd8d4b8147a1d2c0ae920c0",
+ "git_dirty": true,
+ "params_md5": "b6577a18337b9cc6ceb40c931ce59986",
+ "params": {
+  "version": "5.0",
+  "b4_run": "b4_iter1_v0.3.1",
+  "terms_run": "b4_iter0_v0.3.1",
+  "model": "0.3.1",
+  "note": "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059).",
+  "v4_1_removed": [
+   172113
+  ],
+  "v4_1_added": [
+   900001,
+   900002,
+   900003
+  ]
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+   "size": 18155178,
+   "mtime": "2026-11-23T04:30:00.638894+00:00",
+   "md5": "722975b82ac5f3e6761c7f1f57cd346d"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv",
+   "size": 14901482,
+   "mtime": "2026-11-23T04:30:01.534888+00:00",
+   "md5": "78a445098dd76ccf8c08085cb86f67ca"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter0_v0.3.1/station_terms.in",
+   "size": 35900,
+   "mtime": "2026-11-24T18:04:14.926661+00:00",
+   "md5": "5fc0e1d7ad9ea2c32802e1f40c7c1fe5"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv",
+   "size": 59340878,
+   "mtime": "2026-11-24T18:46:17.794646+00:00",
+   "md5": "23781b52d42370f2a49e1d3ee3192876"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/v5.0/README_v5.0.md",
+   "size": 4868,
+   "mtime": "2026-11-24T18:46:17.837646+00:00",
+   "md5": "e5fb510162dcca014c1bb70555f806d1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/v5.0/MD5SUMS",
+   "size": 344,
+   "mtime": "2026-11-24T18:46:17.918645+00:00",
+   "md5": "1a988f98c6d06b6735baf0d22d79ed97"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/catalog_v5.zip",
+   "size": 19689021,
+   "mtime": "2026-11-24T18:46:20.668631+00:00",
+   "md5": "5965b11b032a8baf63091815c06463c1"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/catalog_v5/registry.csv",
+   "size": 393,
+   "mtime": "2026-11-24T18:46:18.003645+00:00",
+   "md5": "d6ace26063e7eaee8504e1ba119f65d5"
+  }
+ ],
+ "counts": {
+  "events": 172342,
+  "loc_source": {
+   "nll3d": 157269,
+   "v4": 15070,
+   "comcat": 3
+  },
+  "tiers": {
+   "A": 18274,
+   "B": 27011,
+   "C": 76687,
+   "D": 35297,
+   "U": 15073
+  },
+  "above_surface": 4077,
+  "above_surface_by_source": {
+   "v4": 4077
+  },
+  "with_magnitude": 130769,
+  "publishable": false
+ },
+ "notes": null
+}

@@ -94,7 +94,7 @@ def build(version):
     terms = RUNS / V["terms_run"] / "station_terms.in"
     shutil.copy(terms, vd / f"station_terms_v{version}.in")
     b4d = REPO / "data" / "tomo_v1" / "b4" / run
-    for f in ("compare.md", f"catalog_v5_trackA_{run}_tiers.md"):
+    for f in ("compare.md", "acceptance.md", f"catalog_v5_trackA_{run}_tiers.md"):
         if (b4d / f).exists():
             shutil.copy(b4d / f, vd / f"b4_{f}")
 
@@ -105,6 +105,10 @@ def build(version):
     dq = c.depth_quality.value_counts().to_dict()
     ab_src = ab.loc_source.value_counts().to_dict()
     nm = int(c.M.notna().sum())
+    ax = c[(c.loc_source == "nll3d") & (c.region == "Axial") & c.tier.isin(["A", "B"])]
+    axz = ax.depth + ax.surface_km
+    axial = (f"{100 * (axz <= 2.0).mean():.0f} % of the {len(ax):,} tier A-B Axial events are within 2 km of the seafloor "
+             f"(median {axz.median():.1f} km below it), against 90 % in Waldhauser et al. (2020)")
     readme = f"""# Cascadia OBS ensemble earthquake catalog v{version}
 
 {V['note']}
@@ -173,7 +177,8 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
   them at the surface (D-B056), so their depth is set by the floor, not by the data.
 * Event 172114: located with its v4.0 picks; v4.1 added 160 picks to it that this run did not use.
 * Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local
-  studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html).
+  studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: {axial}.
+  Region medians against the previous relocations: b4_acceptance.md.
 """
     (vd / f"README_v{version}.md").write_text(readme)
     files = sorted(p for p in vd.iterdir() if p.is_file() and p.name != "MD5SUMS")

@@ -1,0 +1,2 @@
+version,date,b4_run,model,events,nll3d,v4,comcat,above_surface,publishable,csv_md5,note
+5.0,2026-11-24,b4_iter1_v0.3.1,0.3.1,172342,157269,15070,3,4077,False,23781b52d42370f2a49e1d3ee3192876,"Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059)."

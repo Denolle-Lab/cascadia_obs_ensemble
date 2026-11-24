@@ -179,6 +179,20 @@ def pca(xyz):
     return np.sqrt(np.maximum(w, 0)), v, strike, dip
 
 
+def frame_centre(lat, lon, clear_km=0.05):
+    """tomoDD frame centre (wlat, wlon): the median epicentre rounded to 0.001 deg plus 0.0005 deg, moved by
+    0.003 deg steps until no event lies within clear_km. An event at or within metres of tomoDD's Cartesian origin
+    gives NaN ray coordinates and a segfault (f0399: event exactly at the centre; synth_tdd: 3 m)."""
+    lat, lon = np.asarray(lat, float), np.asarray(lon, float)
+    c = [round(float(np.median(lat)), 3) + 0.0005, round(float(np.median(lon)), 3) + 0.0005]
+    for _ in range(100):
+        d = np.hypot((lat - c[0]) * KM_DEG, (lon - c[1]) * KM_DEG * np.cos(np.radians(c[0])))
+        if d.min() >= clear_km:
+            break
+        c = [c[0] + 0.003, c[1] + 0.003]
+    return round(c[0], 4), round(c[1], 4)
+
+
 def enu(lat, lon, depth, lat0, lon0):
     """Local east, north (km) about (lat0, lon0) and depth (km)."""
     return np.c_[(np.asarray(lon) - lon0) * KM_DEG * np.cos(np.radians(lat0)), (np.asarray(lat) - lat0) * KM_DEG,

@@ -2,8 +2,8 @@
 
 Events: members of the case's zbz families (events_zbz.csv.gz family_id; event_id = catalog ID, checked against the
 v4 origin time) located in 3D by B4 (loc_source nll3d); start = B4 hypocentre and origin time (model v0.3.0), read
-with 8 significant digits from b5_test.catalog_full (EFT undone here as in b4_catalog.py) because catalog_b4_*.csv
-rounds longitude to 0.01 deg; the two are checked to agree within that rounding.
+at full precision from the run's NLLoc solutions (b5_test.catalog_full, status LOCATED; EFT undone here as in
+b4_catalog.py) because the catalog CSVs round longitude to 0.01 deg; the two agree within that rounding (checked).
 Picks: catalog v4.0 picks of those events (the B4 input), travel time = pick - B4 origin time, kept where the event
 lies inside the station's B4 time grid with grid_margin_km to spare (GrowClust3D can only use those; B4 dropped the
 same far stations). Weight (0.05 / sigma)^2 with the D-B008 sigma of the pick_prob class.
@@ -33,8 +33,8 @@ def main():
     assert np.abs(dt_check).max() < 1e-3, "zbz event_id does not match the catalog ID"
     n_all = len(c)
     c = c[c.loc_source == B5["loc_source"]].copy()
-    full = pd.read_csv(B5["catalog_full"]).set_index("ID").loc[c.index]
-    assert (full.loc_source == "nll3d").all()
+    full = pd.read_csv(B5["catalog_full"])
+    full = full[full.status == "LOCATED"].set_index("ID").loc[c.index]
     full["depth"] = unflatten(full.depth)
     for col, tol in (("lat", 6e-4), ("lon", 6e-3), ("depth", 6e-3)):
         assert (full[col] - c[col]).abs().max() < tol, f"{col}: full-precision B4 differs from catalog_b4"

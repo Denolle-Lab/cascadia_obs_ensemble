@@ -29,8 +29,8 @@ import pandas as pd
 import shutil
 import subprocess
 
-from b5_common import B5, P, Grids, KM_DEG, case_dir, data_dir, diff_times, eft_depth, lambert_km, load_case, \
-    pick_sigma, weight, write_case
+from b5_common import B5, P, Grids, KM_DEG, case_dir, data_dir, diff_times, eft_depth, frame_centre, lambert_km, \
+    load_case, pick_sigma, weight, write_case
 
 S = B5["synth"]
 
@@ -47,7 +47,7 @@ def tomodd_times(case, truth, pk, st):
         shutil.rmtree(wd)
     (wd / "Input_Files").mkdir(parents=True)
     (wd / "Output_Files").mkdir()
-    center = (round(float(truth.lat.median()), 3), round(float(truth.lon.median()), 3))
+    center = frame_centre(truth.lat, truth.lon)          # no event at tomoDD's Cartesian origin (NaN rays)
     code = {s_: f"S{i:04d}" for i, s_ in enumerate(st.station)}
     la, lo = ellipsoid_coords(st.lat.values, st.lon.values, *center)
     (wd / "Input_Files/station.dat").write_text("".join(f"{code[s_]} {a:.6f} {b:.6f} {-z * 1000.0:.1f}\n" for s_, a, b, z

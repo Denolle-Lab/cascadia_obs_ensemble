@@ -7,6 +7,20 @@ Last update: 2026-11-24 11:35 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## Update 2026-11-24 15:30: v5.1 build (round-2 session)
+
+PI (14:58): D-B065 checks first (misfit LOCGAU2 test -> /wd1/mdenolle_data/tomo_v1/above_surface/check_misfit/; S-pick
+waveform check -> .../check_spicks/; both background agents), D-B066 five-pick events as tier D, D-B067 deep pass with
+ak135, D-B068 merged GMRT/earth_relief surface. PI chose a build workflow (run wf_ce50cf7f-723): pieces surface, field
+(after surface), wide, runner, catalog, each on its own branch v51/<key> (worktrees ~/wt_v51_<key>; catalog in
+~/wt_v51_catalog_a and _b), tests in /wd1/mdenolle_data/tomo_v1/v51_build/<key>/, each with a verifier. Integration by
+the round-2 session. Decision blocks: D-B065..D-B079 round-2 session, D-B080+ session -18.
+Integration checklist from session -18 (catalog_version.py 503a11e5): five_phase in versions."5.1".flags with
+floor_limited, far_only, deep_pass; region of 'none' rows goes in the existing columns key "tile, region" (not a new
+"region" key); events 900001-3 stay out of catalog_b4_* if NLLoc does not locate them (catalog_version.py adds ComCat
+rows only for absent events); keep b4_catalog.flags(df) -> (depth_quality, event_flag) and surface_km(lat, lon)
+signatures (or wrappers). Run `catalog_version.py 5.1 --test <dir>` and tell -18 when the columns are on a branch.
+
 ## Update 2026-11-24 11:35: B5 whole-catalog tomoDD run b5_v0.3.1 done, NOT a catalog version (session -18)
 
 Branch tomo/b5 (pushed, 4d894f31; worktree ~/wt_b5_full): b5_relocate.py/.sh (prep, split, run, collect; resumable;

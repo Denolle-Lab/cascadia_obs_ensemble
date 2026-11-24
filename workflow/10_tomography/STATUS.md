@@ -35,8 +35,16 @@ summaries data/tomo_v1/b5/b5_v0.3.1/compare.md (on tomo/b5). 2,125 dt components
 ## Update 2026-11-24 11:00: catalog v5.0, Zenodo, atlas, B5 (session cascadia-obs-ensemble-18)
 
 Split with the round-2 session (agreed by message): this session owns catalog versions, Zenodo, atlas and B5; the
-round-2 session owns the NLLoc fixes and the iter0/iter1 rerun for v5.1. Decision numbers: D-B058..D-B060 here,
-D-B061+ there.
+round-2 session owns the NLLoc fixes and the iter0/iter1 rerun for v5.1. Decision numbers: D-B058..D-B064 here,
+D-B065..D-B079 the round-2 session, D-B080+ here (agreed 15:00).
+
+* **catalog_version.py ready for v5.1 (15:05):** per-version tier U mode (params `tier_u`: v4 for 5.0, D-B059; none
+  afterwards: no hypocentre, u_reason), surface check only on rows with a hypocentre, every B4 catalog column carried but
+  the build stops on a column without a README description (params `columns`, filled by the round-2 session for
+  floor_limited, far_only, deep_pass, u_reason), flag counts (params `flags`), `--test DIR` dry build. v5.0 known limits
+  moved to params, with the round-2 numbers (floor-limited ~6 %, arrivals beyond ~160 km); they enter the v5.0 README at
+  its next rebuild. Checks: v5.0 rebuilt in scratch gives the published CSV (md5 23781b52) and files; README differs only in
+  the known limits; a mock v5.1 catalog builds and stops on undocumented columns and on a tier U mode mismatch.
 
 * **PI (10:10):** D-B058 catalog versions v5.0 (now) / v5.1 (after round 2) / v5.2 (B5 tomoDD); D-B059 tier U keeps
   its v4 hypocentre in v5.0, flagged (exception to D-B055); D-B060 B5 with catalog dt now, waveform CC dt later.

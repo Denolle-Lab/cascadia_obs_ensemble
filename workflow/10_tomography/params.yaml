@@ -661,8 +661,15 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       terms_run: b4_iter0_v0.3.1   # station_terms.in used by b4_run
       model: 0.3.1
       note: "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059)."
+      tier_u: v4                   # D-B059: tier U keeps the v4 hypocentre (v5.0 only); later versions: none (no hypocentre)
+      decisions: [D-B058, D-B059]  # README header
       extra_files:                 # copied into the version folder (repository paths)
         - data/tomo_v1/depth_literature/paired_v0.3.1.md
-      known_limits:                # README lines; numbers from data/tomo_v1/depth_literature/paired_v0.3.1.md (b4_lit_paired.py, 1a7a6a3b)
+      known_limits:                # README lines ({axial}: computed Axial seafloor sentence); floor/reach numbers from the round-2 report (above_surface_round2.html, 0a195bdf); literature numbers from data/tomo_v1/depth_literature/paired_v0.3.1.md (b4_lit_paired.py, 1a7a6a3b)
+        - "Interim (D-B058): the NonLinLoc workflow fixes of round 2 (station reach, upward pull towards the surface, the 80 km grid floor, tier U) are not in it; v5.1 will be the rerun with them, v5.2 the tomoDD relative relocation."
+        - "About 6 % of the located events (44 % in the JdF ridge and Endeavour regions) have depths set by NonLinLoc's topography floor (D-B056), not by the data (round-2 report, data/tomo_v1/above_surface/above_surface_round2.html)."
+        - "Arrivals at stations beyond about 160 km were not used (station reach of the location grids): 6.75 % of the arrivals; 25,054 events lost at least one."
+        - "Event 172114: located with its v4.0 picks; v4.1 added 160 picks to it that this run did not use."
+        - "Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: {axial}. Region medians against the previous relocations: b4_acceptance.md."
         - "Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km)."
         - "Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md)."

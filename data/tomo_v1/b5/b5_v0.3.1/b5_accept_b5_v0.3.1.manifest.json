@@ -1,0 +1,45 @@
+{
+ "name": "b5_accept_b5_v0.3.1",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_wtest.py",
+ "argv": [
+  "accept",
+  "b5_v0.3.1"
+ ],
+ "utc": "2026-11-24T21:17:50.885600+00:00",
+ "git_commit": "ea682f494c0a0ded98a86e610b1f6fc4b05696b6",
+ "git_dirty": false,
+ "params_md5": "4a1e217be920a5891eae7649f4ae3c95",
+ "params": {
+  "reference_s_weight": 0.25,
+  "clusters_per_region": 3,
+  "size_range": [
+   80,
+   1500
+  ],
+  "subset_events": 1200,
+  "folds": 3,
+  "nproc": 40,
+  "reference": "s0.25_prod",
+  "adopted": "s1.0_prod"
+ },
+ "inputs": [],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/accept.md",
+   "size": 726,
+   "mtime": "2026-11-24T21:17:50.883509+00:00",
+   "md5": "0866bbd6cc06ea388437f751dc936fda"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/accept_per_cluster.csv",
+   "size": 936,
+   "mtime": "2026-11-24T21:17:50.884509+00:00",
+   "md5": "a7952f1d69dec2b631c9987e246b4df9"
+  }
+ ],
+ "counts": {
+  "pass": true,
+  "clusters": 26
+ },
+ "notes": null
+}

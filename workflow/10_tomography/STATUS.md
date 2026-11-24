@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 16:25 (handoff section below).
+Last update: 2026-11-23 17:10 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -80,6 +80,22 @@ PR #33. Log `/wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log`; resume with
 `setsid nohup bash workflow/10_tomography/b2_tiles_m0.sh >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log 2>&1 < /dev/null &`.
 Next (phase 2): resolution tests of each <tile>_m0 at damping 200 and its chosen smoothing (b2_res_pipeline.sh
 needs a smoothing option and res_tests.regions entries for the _m0 names).
+
+**Update 17:10.** PI: version and export the models (D-B047: Zarr + netCDF-4 Classic with EMC/CVM attributes +
+NonLinLoc grids, registry data/tomo_v1/models/registry.csv, Zenodo bundle velocity_models.zip in draft 23084158;
+tutorial read_velocity_model.py); the merged model is the Zenodo product; go on to relocation and stop before
+GrowClust. v0.1.0 = M0 registered and uploaded. Three detached jobs now chain to the end (each resumable with the
+same command from ~/wt_tomo_res; logs under /wd1/mdenolle_data/tomo_v1/):
+1. `b2_tiles_m0.sh` (b2_tomodd/tiles_m0.log): tiles from M0, smoothing scan, choice by rule.
+2. `b2_tiles_m0_phase2.sh` (b2_tomodd/tiles_m0_phase2.log): waits for 1, then the resolution tests of the five
+   tiles at damping 200 and the chosen smoothing (b2_res_pipeline.sh SMOOTH= DAMP=200).
+3. `b4_relocate.sh` (b4_relocate.log, state b4_relocate.state): waits for 2, then b2_merge.py -> v0.3.0 (registered,
+   NonLinLoc grids at cell centres), b4_time_grids.py (696 stations, D-B028 P-1/P-5: cell-centred, EFT, Richardson
+   1/0.5 km) -> reloc_v5/time_b4_v0.3.0, Track A NLLoc iter0 -> station terms -> iter1 (runs b4_iter0/iter1_v0.3.0),
+   catalog (a2_build_catalog.py, b4_catalog.py: EFT depths back, comparison with v4-NLL3D iter1), Zenodo bundle
+   with the merged model as product, commit and PR comment. Stops before GrowClust.
+Resume any of them with `setsid nohup bash workflow/10_tomography/<script> 9>&- >> <its log> 2>&1 < /dev/null &`
+(close fd 9: a launch from a shell that holds the publish lock passes the lock to every child).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

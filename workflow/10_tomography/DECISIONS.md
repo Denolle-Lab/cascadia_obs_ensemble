@@ -446,3 +446,21 @@ smoothing. Implementation choices made while building it (Claude, 2026-11-23; te
 Iteration: tomoDD solves locations and velocities together in every run (12 iterations, rays retraced each time);
 there is no separate outer tomography-location loop. After the merge, B4 relocates all 172,340 events in the merged
 model; a second tomography pass (M7) only if T4/T7 show seams or misfit the tiles cannot explain.
+
+### D-B047 Velocity models are versioned and exported cloud-native (adopted, 2026-11-23, PI request)
+PI: "version control all of the velocity model ... reusable for relocation and dissemination as a standard earth
+model, maybe on EarthScope EMC"; "being cloud native is good"; "upload to Zenodo and add a tutorial on how to read
+it". Every model that is adopted or handed on (M0, tiles, merged, ensemble) gets a semantic version, written by
+b2_model_export.py (pixi environment `models`: Python 3.12, zarr 3, xarray, netCDF4) as
+* Zarr v3 with consolidated metadata (canonical, cloud-native) and netCDF-4 Classic (compressed) holding the same
+  Dataset: Vp, Vs, VpVs, starting model, perturbations in %, DWS (0 = no ray); interior tomoDD nodes, depth km below
+  sea level positive down; EMC header attributes (checked against the EMC inspector's required list; authors, paper
+  reference and DOIs stay "TO FILL" until release) and CRESCENT CVM variable names;
+* NonLinLoc SLOW_LEN grids on the D-B005 1 km Lambert grid for relocation (--nll; model inside its volume, D-B005
+  outside and in water/air cells);
+* registered in data/tomo_v1/models/registry.csv (append-only, sha256 of every file, git commit of the code) with a
+  provenance JSON; versions are immutable; netCDF < 5 MB also kept in git; stores in /wd1/mdenolle_data/tomo_v1/models.
+Distribution: one bundle `velocity_models.zip` (README, tutorial read_velocity_model.py, registry, all versions) in the
+private Zenodo draft 23084158, replaced at each new version (the draft is at 99 of 100 files). Public release
+(EMC submission, CRESCENT CVM, a DOI) only after the peer-reviewed paper and only when the PI says so.
+v0.1.0 = M0 (margin_m0_v2 d200_s480).

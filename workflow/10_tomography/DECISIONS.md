@@ -464,3 +464,20 @@ Distribution: one bundle `velocity_models.zip` (README, tutorial read_velocity_m
 private Zenodo draft 23084158, replaced at each new version (the draft is at 99 of 100 files). Public release
 (EMC submission, CRESCENT CVM, a DOI) only after the peer-reviewed paper and only when the PI says so.
 v0.1.0 = M0 (margin_m0_v2 d200_s480).
+
+### D-B048 Relative-relocation method tested before B5: tomoDD (fixed velocity) vs GrowClust3D on the Blanco swarms (adopted, 2026-11-23, PI)
+PI doubts that GrowClust is more accurate than HypoDD; HypoDD does not scale to this catalog and uses a 1D layered
+model. In the 3D model the alternatives are GrowClust3D (Trugman et al. 2023; 3D travel-time tables, hierarchical
+cluster merging, L1 misfit, bootstrap uncertainty; Trugman & Shearer 2017 found relative accuracy comparable to
+HypoDD in synthetic tests, with fewer pathological solutions) and tomoDD-SE in relocation-only mode (HypoDD-type
+double-difference least squares in the 3D model, velocity frozen; 10,000-13,000 events per tile). Test, once B4
+(NonLinLoc of all events in v0.3.0) has landed and before the B5 GrowClust3D run:
+- Events: the Blanco swarms, starting with the June 2015 West Blanco swarm (755 events over 64 days, family 1803),
+  from their B4 locations.
+- Same model (v0.3.0), same stations, same differential times for both codes (catalog differential times, plus
+  waveform cross-correlation times where D-B040 gives them).
+- Compare: relative positions (event-pair distances), cluster spread and orientation, depth distribution, shift of
+  the cluster centroid from B4, bootstrap uncertainty; one synthetic case with a known geometry (planar swarm)
+  through both codes.
+- Outcome: if GrowClust3D matches tomoDD within the uncertainties, B5 uses GrowClust3D for the whole catalog;
+  otherwise report where and by how much they differ before choosing.

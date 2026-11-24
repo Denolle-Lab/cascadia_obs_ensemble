@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 19:45 (handoff section below).
+Last update: 2026-11-23 20:20 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -125,6 +125,15 @@ session pass that URL). Steps once `[b4] stage gate` appears in b4_relocate.log:
      ($ENV = ~/cascadia_obs_ensemble/.pixi/envs/default; missing untracked inputs are symlinked from ~/wt_atlas/data)
   2. strip the document wrapper tags, title "Cascadia Atlas Model Preview", publish to the URL above
   3. `echo "model v0.3.0 on the private atlas preview <date>" > /wd1/mdenolle_data/tomo_v1/b4_gate_v0.3.0.release`
+
+**Update 20:20.** v0.3.0 built 19:45, uploaded to the private Zenodo draft (velocity_models.zip 0.64 GB, remote md5
+ac93e555fe2affa8796c38c8840c9305 OK), committed, on the private atlas preview (default ray mask DWS >= 10, option
+"resolved in checkerboard tests"); gate released 19:57; B4 travel-time grids running (all 172,340 v4.0 events are
+relocated, not only the tomography subset; v4.1's three added events keep their ComCat hypocentres and 172113 is
+spurious, to handle when the B4 catalog is assembled). Added (D-B048): after B4, test tomoDD (fixed velocity) against
+GrowClust3D on the Blanco swarms before B5. Proposed, not yet agreed: compare B4 NonLinLoc locations of the ~29k
+tomography events with their tomoDD final locations (decides whether one more tomography-location iteration is needed:
+median difference < 0.5 km and no depth offset -> none).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

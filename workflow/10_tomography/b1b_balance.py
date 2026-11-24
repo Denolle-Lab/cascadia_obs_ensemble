@@ -45,9 +45,9 @@ from b1_select_events import gap_deg, md_table, rounded  # noqa: E402
 P = load_params()
 B = P["balance"]
 BASE = Path(P["paths"]["base"])
-IN = BASE / "b1_dataset"
-OUT = BASE / "b1b_balanced"
-FIG = REPO / "data/tomo_v1/b1b_balanced"
+IN = BASE / P["paths"].get("b1_dir", "b1_dataset")           # D-B035: versioned (b1_dataset_c, b1b_balanced_c)
+OUT = BASE / P["paths"].get("b1b_dir", "b1b_balanced")
+FIG = REPO / "data/tomo_v1" / P["paths"].get("b1b_dir", "b1b_balanced")
 LOG = []
 GROUP = {r: g for g, rs in B["region_groups"].items() for r in rs}   # region -> weight group (D-B023)
 
@@ -257,6 +257,10 @@ def main():
         f"land {int((s.core & ~s.is_obs).sum())}); admitted only by the OBS bar: {int(s.obs_bar_only.sum())}; "
         f"only by the S test: {int(s.S_only.sum())}")
     use = pk.sta.isin(core) | (pk.sta.isin(rcore) & (pk.rule == "ridge"))
+    if B["ridge"].get("obs_keep_all"):   # D-B035: an OBS admitted by the soft bar keeps all its picks, not only soft-rule ones
+        robs = set(s.loc[s.ridge_only & s.is_obs, "sta"])
+        use |= pk.sta.isin(robs)
+        log(f"D-B035: {len(robs)} soft-bar OBS keep all their picks (+{int((pk.sta.isin(robs) & (pk.rule != 'ridge')).sum())})")
     log(f"ridge-only stations (>= {B['ridge']['min_picks']} ridge picks, no coverage test): {len(rcore)}")
     k = pk[use]
     dropped = pk[~use].assign(reason="station")

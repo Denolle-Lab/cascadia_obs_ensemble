@@ -39,8 +39,8 @@ from b1_hyp_phases import load_phases  # noqa: E402
 warnings.filterwarnings("ignore", category=FutureWarning)
 P = load_params()
 BASE = Path(P["paths"]["base"])
-OUT = BASE / "b1_dataset"
-FIG = REPO / "data/tomo_v1/b1_dataset"
+OUT = BASE / P["paths"].get("b1_dir", "b1_dataset")          # D-B035: versioned output (b1_dataset_c)
+FIG = REPO / "data/tomo_v1" / P["paths"].get("b1_dir", "b1_dataset")
 STATIONS_META = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")  # same table as a1_build_model.py
 PROJ = Proj(proj="lcc", lat_0=45.0, lon_0=-125.8, lat_1=41.0, lat_2=49.0, ellps="WGS84")
 MADK = 1.4826

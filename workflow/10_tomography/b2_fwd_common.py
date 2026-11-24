@@ -15,6 +15,10 @@ import numpy as np
 import pandas as pd
 from pyproj import Proj
 
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from manifest import tomodd_bin  # noqa: E402
+
 REGION = Path("/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda")
 INPUTS = REGION / "inputs"
 CHECK01 = REGION / "check01"
@@ -219,7 +223,7 @@ def tomodd_forward(wd, picks, events, stations, mod_path, center=(41.3, -125.0),
             lines[i + 1] = f"  {center[0]}  {center[1]}   0"
     (wd / "tomoDD-SE.inp").write_text("\n".join(lines) + "\n")
     with open(wd / "stdout.txt", "w") as so:
-        subprocess.run([str(TOMODD_BIN), "tomoDD-SE.inp"], cwd=wd, stdout=so, stderr=subprocess.STDOUT)
+        subprocess.run([tomodd_bin("bin", wd), "tomoDD-SE.inp"], cwd=wd, stdout=so, stderr=subprocess.STDOUT)
     res = pd.read_csv(wd / "tomoDD-SE.res.ini", sep=r"\s+")
     res = res[res.C1 == res.C2]
     res = res.rename(columns={"STA": "code", "C1": "event_ID", "DT": "tt_res"})

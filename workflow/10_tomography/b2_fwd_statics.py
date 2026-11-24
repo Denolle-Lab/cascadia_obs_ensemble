@@ -58,10 +58,10 @@ def main():
     has = o.S_static_proposed.notna() & o.S_static_old.notna()
     counts = dict(stations=len(o), with_static=int(o.S_static_proposed.notna().sum()),
                   with_static_old=int(o.S_static_old.notna().sum()),
-                  check_obs_minus_ttpred_minus_res0_maxabs=round(float(chk.abs().max()), 4),
-                  old_recomputed_vs_file_maxabs=round(float((o.S_static_old_recomputed - o.S_static_old).abs().max()), 4),
-                  change_median=round(float(o.change[has].median()), 3),
-                  change_p5_p95=[round(float(x), 3) for x in np.percentile(o.change[has], [5, 95])],
+                  check_obs_minus_ttpred_minus_res0_maxabs=round(float(chk.abs().max()), 4) if len(chk) else None,
+                  old_recomputed_vs_file_maxabs=round(float((o.S_static_old_recomputed - o.S_static_old).abs().max()), 4) if has.any() else None,
+                  change_median=round(float(o.change[has].median()), 3) if has.any() else None,   # none: tile without OBS
+                  change_p5_p95=[round(float(x), 3) for x in np.percentile(o.change[has], [5, 95])] if has.any() else None,
                   below_minus_0p5_new=int((o.S_static_proposed < -0.5).sum()),
                   below_minus_0p5_old=int((o.S_static_old < -0.5).sum()))
     print(counts)

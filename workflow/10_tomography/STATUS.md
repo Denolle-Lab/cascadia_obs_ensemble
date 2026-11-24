@@ -2,10 +2,186 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-22.
+Last update: 2026-11-24 05:10 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## Handoff 2026-11-23 08:10 (read first)
+
+**Where the work is.** Worktree `~/wt_tomo_res`, branch `tomo/tiles` = PR #33, stacked on `tomo/res-tests-mg_v2` = PR #32
+(Mendocino-Gorda v2 resolution tests), stacked on `tomo/track-b`. PR #32 also holds a snapshot of the code that was
+uncommitted in the main checkout (the main checkout has not changed since; it still sits on `tomo/track-b` with that
+work uncommitted). The main checkout is not used for this work.
+
+**What was decided today.** D-B033 tiles (blanco, oregon, washington, ridges_north beside Mendocino-Gorda); D-B034
+FORMAT-fixed tomoDD builds (missing comma at tomoDD-SE.f line 2324 stopped some runs); D-B035 offshore forearc kept
+(soft selection rule, soft-bar OBS keep all picks; datasets `b1_dataset_c`, `b1b_balanced_c`; 28,986 events).
+mendocino_gorda_v2 / v2s and the ensemble work stay on the old dataset; `mendocino_gorda_c` is Mendocino-Gorda on
+the new one.
+
+**Running (detached, survive logout; not a reboot).** `b2_res_pipeline.sh <tile>_v2` for mendocino_gorda_c, blanco,
+oregon, washington at damping 1000 (53 inversions each: 5 real-data scan runs + checkerboards + lattice spikes).
+At 08:10: blanco 40/53, oregon 32/53, mendocino_gorda_c 8/53, washington 3/53. Each tile commits its results to
+`tomo/tiles` and comments on PR #33 when done. Progress: `res_tests/queue/runner.log` and `pipeline.log` under
+`/wd1/mdenolle_data/tomo_v1/b2_tomodd/<tile>_v2/`. If a run stopped (reboot, kill), resume with the same command
+from `~/wt_tomo_res`; finished pieces are skipped:
+
+    setsid nohup bash workflow/10_tomography/b2_res_pipeline.sh blanco_v2 \
+        >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/pipeline.log 2>&1 < /dev/null &
+
+**Update 09:05.** blanco and oregon finished at damping 1000 (on PR #33): over-damped like ridges (real-data condition
+number at s20: 11 and 14, against ~60 for Mendocino-Gorda v2; no lattice spike recovered >= 50 %). PI asked for
+damping 200 and 300 on both: `DAMP=200` and `DAMP=300` pipelines launched 09:05 (51 runs each, results in
+`data/tomo_v1/b2_res_tests/<tile>/d200|d300/`). washington and mendocino_gorda_c still running at damping 1000.
+*Correction (12:30):* the 11 and 14 are last-iteration condition numbers; the Mendocino-Gorda ~60 is first-iteration
+(its last-iteration value is 19). Like for like, Blanco and Oregon at damping 1000 have 35 and 39, and damping 300
+gives 170 and 200 (notes/merge_design.md section 2).
+
+**Update 12:30.** Done and on PR #33: blanco and oregon at damping 200 and 300, mendocino_gorda_c at 1000.
+washington at 1000 still running (real-data scan done: first-iteration CND 68 at damping 1000, like Mendocino-Gorda).
+PI chose damping 200 for ridges_north (D-B043). Merge design and tile-vs-tile tests proposed
+(notes/merge_design.md, P-M1..P-M8; `b2_tile_overlap.py`, results in data/tomo_v1/b2_merge/overlap/): no overlap
+is resolved by both tiles; mixing dampings does not make a worse seam than either damping alone; the same events
+relocated in two tiles differ by 0.2-1.0 km horizontally (median).
+
+**Update 14:15.** washington_v2 at damping 1000 finished 12:05 (on PR #33): the best-resolved tile so far (18 P
+spikes recover >= 50 %, 14 of them at DWS > 1,000; checkerboards resolve about 30 % of the box at 15-18 km for
+40-60 km cells; Vs as well as Vp). PI decisions: M0 coarse whole-margin start (D-B044) and one small damping for
+all tiles, 200 (D-B045). Implementing D-B045 showed that pick weights were scaled per tile (Oregon and Washington
+picks weighed 3 times Blanco's, Mendocino-Gorda 1.8 times), which changes what one damping number does in tomoDD;
+from now on all builds use one weight scale for the whole dataset. Launched 14:03, detached:
+`b2_t6_m0.sh` = T6 joint blanco + oregon against the stitched pair at damping 200, and M0 (margin_m0_v2, 6,943
+declustered events, 518 stations, new 560-station tomoDD build) at damping 200 and 1000. Log
+`/wd1/mdenolle_data/tomo_v1/b2_tomodd/t6_m0.log`; it commits to `tomo/tiles` and comments on PR #33 when done.
+Resume after a stop with the same command (finished stages are skipped):
+
+    setsid nohup bash workflow/10_tomography/b2_t6_m0.sh \
+        >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/t6_m0.log 2>&1 < /dev/null &
+
+Next after review of M0: rebuild every tile from the M0 model (builder option start_model, written) and rerun the
+damping-200 run and resolution tests per tile.
+
+**Update 16:15.** T6 and M0 done (data/tomo_v1/b2_merge/t6/, m0/; notes/merge_design.md section 6 item 7 and the
+M0 paragraph after section 7). T6 passes in the tile interiors: joint and stitched differ by 1.7-2.0 % rms in Vp
+(correlation 0.86-0.94), the same as one tile moved from damping 200 to 300; the joint model is about 15 % stronger
+(more data rows, so damping weighs less); in the overlap, which neither tile resolves, the stitched model has half
+the joint amplitude; overlap events differ by about 1 km between joint and tile runs. M0 at smoothing 20 was
+node-scale noise (7 % rms Vp); a smoothing scan (20-1920, damping 200) has a flat weighted fit up to 480 and a
+coherent model there (slow ridge crust at 7-15 km, fast 40 km under Washington). Proposed P-M11: M0 = d200_s480,
+then tiles restart from it with a smoothing scan each (builder option `start_model` written, bc73862d). Waiting
+for the PI before the tile reruns (about one day of the machine).
+
+**Update 16:25.** PI adopted M0 = margin_m0_v2 d200_s480 (D-B046). Figures of the M0 model itself:
+data/tomo_v1/b2_merge/m0/model_maps_d200_s480.png and model_sections_d200_s480.png (b2_m0_model_figs.py). Launched
+16:24, detached: `b2_tiles_m0.sh` = the five tiles restarted from M0 (regions <tile>_m0: start = D-B005 x M0 change,
+P-4 from <tile>_v2, Vp/Vs floor 1.65), smoothing scan 20-480 at damping 200, smoothing chosen by rule, published to
+PR #33. Log `/wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log`; resume with
+`setsid nohup bash workflow/10_tomography/b2_tiles_m0.sh >> /wd1/mdenolle_data/tomo_v1/b2_tomodd/tiles_m0.log 2>&1 < /dev/null &`.
+Next (phase 2): resolution tests of each <tile>_m0 at damping 200 and its chosen smoothing (b2_res_pipeline.sh
+needs a smoothing option and res_tests.regions entries for the _m0 names).
+
+**Update 17:10.** PI: version and export the models (D-B047: Zarr + netCDF-4 Classic with EMC/CVM attributes +
+NonLinLoc grids, registry data/tomo_v1/models/registry.csv, Zenodo bundle velocity_models.zip in draft 23084158;
+tutorial read_velocity_model.py); the merged model is the Zenodo product; go on to relocation and stop before
+GrowClust. v0.1.0 = M0 registered and uploaded. Three detached jobs now chain to the end (each resumable with the
+same command from ~/wt_tomo_res; logs under /wd1/mdenolle_data/tomo_v1/):
+1. `b2_tiles_m0.sh` (b2_tomodd/tiles_m0.log): tiles from M0, smoothing scan, choice by rule.
+2. `b2_tiles_m0_phase2.sh` (b2_tomodd/tiles_m0_phase2.log): waits for 1, then the resolution tests of the five
+   tiles at damping 200 and the chosen smoothing (b2_res_pipeline.sh SMOOTH= DAMP=200).
+3. `b4_relocate.sh` (b4_relocate.log, state b4_relocate.state): waits for 2, then b2_merge.py -> v0.3.0 (registered,
+   NonLinLoc grids at cell centres), b4_time_grids.py (696 stations, D-B028 P-1/P-5: cell-centred, EFT, Richardson
+   1/0.5 km) -> reloc_v5/time_b4_v0.3.0, Track A NLLoc iter0 -> station terms -> iter1 (runs b4_iter0/iter1_v0.3.0),
+   catalog (a2_build_catalog.py, b4_catalog.py: EFT depths back, comparison with v4-NLL3D iter1), Zenodo bundle
+   with the merged model as product, commit and PR comment. Stops before GrowClust.
+Resume any of them with `setsid nohup bash workflow/10_tomography/<script> 9>&- >> <its log> 2>&1 < /dev/null &`
+(close fd 9: a launch from a shell that holds the publish lock passes the lock to every child).
+
+**Update 19:15.** PI: no smoothing cap; the chain runs on the adopted rule (P-M11 / D-B046): Mendocino-Gorda,
+Oregon and Washington at smoothing 480 (scan edge), Blanco 20, ridges 60. Whether the smoothing costs location quality
+is judged from the B4 relocation (misfits, depths against v4-NLL3D). Session handover: the session that ran the chain
+since 09:00 lost its sign-in at 18:55; this one took over, no job affected (all detached). At 19:09 Mendocino-Gorda
+and Washington phase-2 tests 16/20, the others done; b4_relocate.sh waiting on them.
+
+**Update 19:25.** PI: once v0.3.0 is built, upload it to Zenodo and put it on the atlas/dashboard *before* the
+relocation. `b4_relocate.sh` relaunched 19:19 with the order wait -> merge -> bundle (Zenodo upload) -> commit_model
+-> **gate** -> grids -> iter0 -> terms -> iter1 -> catalog -> publish. The gate waits for
+`/wd1/mdenolle_data/tomo_v1/b4_gate_v0.3.0.release`; create it (one line saying why) once the model is on the atlas.
+PR #33: description rewritten as a reading guide; the 16 automatic comments of the superseded `_v2` runs hidden as
+outdated. To do, in order:
+1. v0.3.0 built and uploaded (automatic, after washington_m0 phase 2, ~20:00).
+2. Model layer on the atlas/dashboard (workflow/06_analysis/build_v4_atlas.py, branch atlas/v4-nll3d), then release
+   the gate.
+3. B4 relocation (automatic after the gate; grids ~2 h, NLLoc two passes), stop before GrowClust.
+4. 2026-11-24: split PR #33 into code + decisions and generated results.
+
+**Update 19:45.** PI chose a *private* preview for the model layer (gh-pages atlas stays unchanged). Atlas code:
+branch `atlas/model-layer` (worktree ~/wt_atlas_model, commit 49c64544), `build_v4_atlas.py --model <netCDF>` adds a
+"Velocity model" layer (one depth slice of dVp, dVs, Vp/Vs, Vp, Vs; DWS mask 0/10/100/1000). Private page:
+https://claude.ai/artifact/9tH3U7Se35ds5h6yoBo8dj (now M0 v0.1.0; republish the same page with v0.3.0, from another
+session pass that URL). Steps once `[b4] stage gate` appears in b4_relocate.log:
+  1. `cd ~/wt_atlas_model && LD_LIBRARY_PATH=$ENV/lib $ENV/bin/python workflow/06_analysis/build_v4_atlas.py --model
+     /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.0.nc --out <scratch>/atlas_preview.html`
+     ($ENV = ~/cascadia_obs_ensemble/.pixi/envs/default; missing untracked inputs are symlinked from ~/wt_atlas/data)
+  2. strip the document wrapper tags, title "Cascadia Atlas Model Preview", publish to the URL above
+  3. `echo "model v0.3.0 on the private atlas preview <date>" > /wd1/mdenolle_data/tomo_v1/b4_gate_v0.3.0.release`
+
+**Update 20:20.** v0.3.0 built 19:45, uploaded to the private Zenodo draft (velocity_models.zip 0.64 GB, remote md5
+ac93e555fe2affa8796c38c8840c9305 OK), committed, on the private atlas preview (default ray mask DWS >= 10, option
+"resolved in checkerboard tests"); gate released 19:57; B4 travel-time grids running (all 172,340 v4.0 events are
+relocated, not only the tomography subset; v4.1's three added events keep their ComCat hypocentres and 172113 is
+spurious, to handle when the B4 catalog is assembled). Added (D-B048): after B4, test tomoDD (fixed velocity) against
+GrowClust3D on the Blanco swarms before B5. Proposed, not yet agreed: compare B4 NonLinLoc locations of the ~29k
+tomography events with their tomoDD final locations (decides whether one more tomography-location iteration is needed:
+median difference < 0.5 km and no depth offset -> none).
+
+**Update 23:10. B4 done** (22:57, PR #33 comment; data/tomo_v1/b4/b4_iter1_v0.3.0/compare.md; catalog
+/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv). Driver fixes: a2_parse_hyp.py before the station
+terms and the catalog (5e6166fe); wt_reloc/data links to the v4.0 catalog backup and anss_2010-16.csv (gitignored).
+157,270 of 172,340 events located in 3D (15,070 tier U as before). Median rms 0.110 s (v4-NLL3D iter1 0.124); median
+shift 1.4 km depth, 1.4 km horizontal. Smoothing 480 costs nothing measurable: in the s480 tiles' regions rms drops
+6-16 %, tiers unchanged, depths within 0.5 km. Blanco and Gorda improve. **Axial worse**: median depth 3.0 -> 5.0 km
+bsl (below the magma chamber), tier A-B 50 % -> 5 %, h_max 1.8 -> 3.1 km, rms 0.054 -> 0.060 s; this is the whole
+drop in A-B tiers. Cause: v0.3.0 at Axial comes from ridges_north (relocation only, D-B038, unresolved) and M0's slow
+ridge crust. **Open for the PI:** (1) keep v4-NLL3D locations at Axial, flagged (recommended now); (2) leave
+ridges_north out of the merge near Axial and relocate Axial again (~1 h); (3) accept B4. Also open: B4 vs tomoDD final
+locations check; v4.1 additions and spurious 172113 in the B4 catalog; D-B048 test (after the Axial choice).
+
+**Update 2026-11-24 05:10.** PI: the velocity model and the catalog can be public. Public atlas
+https://denolle-lab.github.io/cascadia_obs_ensemble/ (gh-pages 2b24559a, from atlas/model-layer b34a9abf) now has
+model v0.3.0 as 3D textures, as in the mt-rainier-digital-model viewer (horizontal slice at any depth, the model on
+the cross-section plane and behind the events in the 2D section, nothing above the ground or seafloor; DWS >= 10 mask
+by default, checkerboard-resolved option) and the B4 relocation as the second catalog ("Relocated in model v0.3.0
+(preliminary)", Axial caveat in the legend). Checked headless (Chromium + SwiftShader): no console or shader errors.
+The Zenodo draft stays private (publishing the record is a separate PI decision). Axial choice still open.
+
+Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
+the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).
+
+**ridges_north result (done, all on PR #33).** Lattice checkerboards and spikes: nothing resolved at any damping
+(1000, 300, 200, 100). Spikes at the event clusters with DWS >= 100 (52 of 105 P spikes sampled): median recovery
+22 % (damping 100), 21 % (200), 19 % (300), 10 % (1000); only 3 spikes >= 50 %, all at 12 km between northern Blanco
+and Axial (44.4-45.4 N, 130.0-130.3 W, DWS 1,165-7,203, smearing about one node). Real-data condition number at
+s20, last iteration: 87 (d100), 33 (d200), 21 (d300), 6 (d1000); first iteration: 290, 119, 69, 15 (Mendocino-Gorda
+v2 chose 1000 at first-iteration CND ~60, last-iteration 19).
+
+**Open, for the PI.**
+1. Resolved 2026-11-23 (D-B043): ridges_north damping 200. The D-B038 exception volume is not recovered at 200 and
+   stays on the damping-100 model unless dropped.
+2. Resolved 2026-11-23 (D-B045): damping 200 and smoothing 20 in every tile and in M0, pick weights on one scale
+   for the whole dataset.
+3. Resolved 2026-11-23 (D-B038): ridges_north for relocation only, except the 12 km volume between northern Blanco
+   and Axial where cluster spikes recover 50-64 % at damping 100.
+4. CASIE21 as a constraint on the shallow offshore Washington/Oregon starting model or prior (D-B035, not started).
+5. Merge order: PR #32, then PR #33, into `tomo/track-b`.
+6. Science framing (notes/science_framing.md, 2026-11-23): novelty wording (plate-wide local-earthquake Pn
+   tomography already exists, VanderBeek & Toomey 2019), questions that join sources and structure, steps after
+   the tomography. Adopted 2026-11-23 as D-B036..D-B042; references merged to main (PR #34, cbaf5efc).
+7. Merge design and tile-vs-tile tests (notes/merge_design.md, 2026-11-23, revised after a literature review):
+   P-M1..P-M10 proposed. Main choices: coarse whole-margin inversion as common start (P-M2, as Lin et al. 2010),
+   resolution-window weights without inverse variance (P-M4), joint-vs-stitched test on blanco + oregon (T6).
+   P-M1 and P-M2 adopted (D-B045, D-B044); T6 and M0 done (update 16:15). Open: P-M3..P-M11 (P-M11 = M0
+   smoothing 480 and a smoothing scan per tile).
 
 ## Done
 
@@ -48,7 +224,8 @@ Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting mo
 5. **Synthetic calibration.** Known model with station delays through the full ensemble; credible
    intervals must cover the truth at the stated rate; checkerboard and spike tests as figures (D-B018).
    Compare balanced vs unweighted B1b here (notes/balanced.md).
-6. **Real-data ensemble, region by region,** then overlap comparison and merge.
+6. **Real-data ensemble, region by region,** then overlap comparison and merge (notes/merge_design.md: one
+   reference model, common grid, taper x resolution x 1/variance weights, member-by-member merge, tests T1-T5).
 7. **B4.** Relocate all 172,340 events in the final model (NonLinLoc, new station terms, tiers),
    with location uncertainty from the ensemble.
 8. **B5.** GrowClust on the B4 locations (D-B002).

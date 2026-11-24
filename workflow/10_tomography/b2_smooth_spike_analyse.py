@@ -11,7 +11,11 @@ Also writes the per-layer spacing table: dz, lateral spacing, the gradient-equiv
 smoothing ratio (w3 dz)/(w1 dx), and the mean P DWS inside the event box from the check01 run.
 
   python b2_smooth_spike_analyse.py   ->  data/tomo_v1/b2_smooth_test/{spikes.csv, by_depth.csv, layers.csv, psf.png}
+  python b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d1000_s20
+                                      ->  data/tomo_v1/b2_res_tests/spike_inv_d1000_s20/{same files}
+  (damping and smoothing of the run are read from its tomoDD-SE.inp)
 """
+import os
 import sys
 from pathlib import Path
 
@@ -21,9 +25,11 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
-from b2_smooth_spike_test import BASE, INP, S, T, TEST, read_mod, spikes  # noqa: E402
+import b2_smooth_spike_test as st  # noqa: E402
+from b2_smooth_spike_test import T, read_mod  # noqa: E402
 
 OUT = REPO / "data" / "tomo_v1" / "b2_smooth_test"
+INV = "inv"
 MIN_REC = 0.5
 KM_DEG = 111.195
 
@@ -50,31 +56,58 @@ def hwhm_1d(vals, pos, c):
     return out  # [toward lower index, toward higher index]
 
 
+def dws_grid(m):
+    """First-iteration P DWS on the full MOD grid (nz, ny, nx)."""
+    return _dws(m)
+
+
 def dws_by_layer(m):
-    vel = BASE / "check01" / "Output_Files" / "tomoDD.vel"
-    lines = vel.read_text().split("\n")
-    i0 = next(i for i, l in enumerate(lines) if "DWS for P-wave" in l)
-    nz, ny, nx = m["vp"].shape
-    d = np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
-    lo, la = T["regions"][S["region"]]["events_lon"], T["regions"][S["region"]]["events_lat"]
+    d = _dws(m)
+    lo, la = T["regions"][st.REG]["events_lon"], T["regions"][st.REG]["events_lat"]
     ii = (m["x"] >= lo[0]) & (m["x"] <= lo[1])
     jj = (m["y"] >= la[0]) & (m["y"] <= la[1])
     return d[:, jj][:, :, ii]
 
 
+def _dws(m):
+    # DWS of the first iteration (background-model rays): check01 when it has it, else this test's null run
+    # (same events, stations and settings; mendocino_gorda_v2/check01 was written without the DWS block)
+    for vel in (st.BASE / "check01" / "Output_Files" / "tomoDD.vel", st.zdir("null") / INV / "Output_Files" / "tomoDD.vel"):
+        lines = vel.read_text().split("\n") if vel.exists() else []
+        i0 = next((i for i, l in enumerate(lines) if "DWS for P-wave" in l), None)
+        if i0 is not None:
+            break
+    else:
+        raise SystemExit("no DWS block in check01 or the null run")
+    nz, ny, nx = m["vp"].shape
+    return np.array([lines[i0 + 1 + r].split() for r in range(ny * nz)], float).reshape(nz, ny, nx)
+
+
+def run_settings():
+    """(damp, [w1, w2, w3]) of the null inversion (tomoDD-SE.inp)."""
+    lines = (st.zdir("null") / INV / "tomoDD-SE.inp").read_text().split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("* weight1")][0]
+    sm = [float(v) for v in lines[i + 1].split()[:3]]
+    j = [k for k, l in enumerate(lines) if l.startswith("* NITER")][0]
+    return float(lines[j + 1].split()[10]), sm
+
+
 def main():
-    P = load_params()
-    w1, w2, w3 = T["inp"]["smooth"]
-    m, sp = spikes()
+    S = st.S
+    damp, smooth = run_settings()
+    w1, w2, w3 = smooth
+    m, sp = st.spikes()
     nz, ny, nx = m["vp"].shape
     x, y, z = m["x"], m["y"], m["z"]
     vs0 = m["vp"] / m["vpvs"]
-    null = TEST / "null" / "inv" / "Output_Files"
+    null = st.zdir("null") / INV / "Output_Files"
     nvp = read_model(null / "Vp_model.dat", (nz, ny, nx)) / m["vp"] - 1
     nvs = read_model(null / "Vs_model.dat", (nz, ny, nx)) / vs0 - 1
+    dwsg = dws_grid(m)
+    dws_min = st.CFG.get("dws_min", 100)
     rows = []
     for ztag, k, nodes in sp:
-        o = TEST / ztag / "inv" / "Output_Files"
+        o = st.zdir(ztag) / INV / "Output_Files"
         if not (o / "Vp_model.dat").exists():
             print("missing", ztag)
             continue
@@ -87,7 +120,8 @@ def main():
                 r = dict(ztag=ztag, z=z[k], wave=wave, lon=x[i], lat=y[j], rec=pk / S["amp"],
                          rec_max_win=win.max() / S["amp"], peak_at_node=bool(pk >= win.max() - 1e-9),
                          dz_up=z[k] - z[k - 1], dz_dn=z[k + 1] - z[k], dx_km=0.125 * kx, dy_km=0.1 * KM_DEG,
-                         nul_rms=float(np.sqrt(np.mean(nul[k, j - 2:j + 3, i - 2:i + 3] ** 2))) / S["amp"])
+                         nul_rms=float(np.sqrt(np.mean(nul[k, j - 2:j + 3, i - 2:i + 3] ** 2))) / S["amp"],
+                         dws=float(dwsg[k, j, i]), sampled=bool(dwsg[k, j, i] >= dws_min))
                 if pk / S["amp"] >= MIN_REC:
                     hx = hwhm_1d(dv[k, j, :], x * kx, i)
                     hy = hwhm_1d(dv[k, :, i], y * KM_DEG, j)
@@ -97,6 +131,9 @@ def main():
                              bup=r["hw_up"] / (r["dz_up"] / 2), bdn=r["hw_dn"] / (r["dz_dn"] / 2))
                 rows.append(r)
     sp_df = pd.DataFrame(rows)
+    for c in ("hw_x", "hw_y", "hw_up", "hw_dn", "bx", "by", "bup", "bdn"):   # no spike above MIN_REC (e.g. ridges_north)
+        if c not in sp_df:
+            sp_df[c] = np.nan
     OUT.mkdir(parents=True, exist_ok=True)
     sp_df.to_csv(OUT / "spikes.csv", index=False, float_format="%.4g")
 
@@ -107,6 +144,16 @@ def main():
     by = res.groupby(["wave", "z"]).agg(agg).reindex(sp_df.groupby(["wave", "z"]).size().index)
     by["n_resolved"] = res.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
     by["n"] = sp_df.groupby(["wave", "z"]).size()
+    # DWS mask (PI 2026-11-23): statistics over sampled spikes only (first-iteration P DWS >= dws_min)
+    smp = sp_df[sp_df.sampled]
+    by["n_sampled"] = smp.groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
+    by["rec_median_sampled"] = smp.groupby(["wave", "z"]).rec.median().reindex(by.index)
+    by["rec_max_sampled"] = smp.groupby(["wave", "z"]).rec.max().reindex(by.index)
+    by["n_resolved_sampled"] = smp[smp.rec >= MIN_REC].groupby(["wave", "z"]).size().reindex(by.index).fillna(0).astype(int)
+    bands = pd.cut(sp_df.dws, [-1, 10, 100, 1000, np.inf], labels=["<10", "10-100", "100-1000", ">1000"])
+    sp_df.assign(dws_band=bands).groupby(["wave", "dws_band"], observed=False).rec.agg(
+        n="size", rec_median="median", rec_p75=lambda x: x.quantile(0.75), rec_max="max",
+        n_ge_half=lambda x: int((x >= MIN_REC).sum())).round(3).to_csv(OUT / "recovery_by_dws.csv")
     by.to_csv(OUT / "by_depth.csv", float_format="%.3g")
 
     # per-layer spacing table
@@ -123,15 +170,15 @@ def main():
     pd.set_option("display.width", 200)
     print(lay.to_string(index=False))
     print(by.round(2).to_string())
-    plot(by, OUT / "psf.png")
+    plot(by, OUT / "psf.png", damp, smooth)
     write_manifest("b2_smooth_spike_analyse", OUT,
-                   inputs=[TEST / t / "inv" / "Output_Files" / "Vp_model.dat" for t, _, _ in sp] + [null / "Vp_model.dat"],
+                   inputs=[st.zdir(t) / INV / "Output_Files" / "Vp_model.dat" for t, _, _ in sp] + [null / "Vp_model.dat"],
                    outputs=[OUT / f for f in ("spikes.csv", "by_depth.csv", "layers.csv", "psf.png")],
-                   params={"min_rec": MIN_REC, **S, "smooth": T["inp"]["smooth"], "damp": T["inp"]["damp"]},
+                   params={"min_rec": MIN_REC, **S, "smooth": smooth, "damp": damp, "cfg": st.CFG["name"], "inv": INV},
                    counts={"spikes": len(sp_df)})
 
 
-def plot(by, path):
+def plot(by, path, damp, smooth):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -160,10 +207,17 @@ def plot(by, path):
             aa.grid(color=grid, lw=0.6)
             aa.set_axisbelow(True)
     ax[0, 0].invert_yaxis()
-    fig.suptitle(f"tomoDD spike test, Mendocino-Gorda grid, smooth {T['inp']['smooth']}, damp {T['inp']['damp']}",
+    fig.suptitle(f"tomoDD spike test, {st.REG} grid, smooth {[f'{v:g}' for v in smooth]}, damp {damp:g}",
                  fontsize=9, color=ink)
     fig.savefig(path, dpi=200)
 
 
 if __name__ == "__main__":
+    a = sys.argv[1:]
+    if "--cfg" in a:
+        st.use(a[a.index("--cfg") + 1])
+        if st.CFG["name"] != "smooth_test":
+            INV = a[a.index("--inv") + 1] if "--inv" in a else st.CFG["inv_tags"][0]
+            OUT = REPO / "data" / "tomo_v1" / "b2_res_tests" / st.REG / \
+                (f"d{st.CFG['damp']:g}" if os.environ.get("TOMO_RES_DAMP") else "") / f"{st.CFG['prefix']}{INV}"
     main()

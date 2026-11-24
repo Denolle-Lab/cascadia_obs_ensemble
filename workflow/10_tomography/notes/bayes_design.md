@@ -32,6 +32,12 @@ unchanged by a static), because tomoDD cannot solve statics. Integrating them ou
 spread include station effects. Item 5 perturbs absolute times pick by pick; the differential times are rebuilt from
 the perturbed absolute times, so their noise is consistent.
 
+Amendments proposed 2026-11-23 (notes/merge_design.md P-M2, P-M5, P-M6): draw items 1, 2-3, 5 and 6 once for the
+whole region (random field on one regional lattice, statics by station code, noise by pick ID, start hypocentres by
+event ID) so member m of every tile shares its draw and tiles merge member by member, with the spread between tiles
+added to the variance in overlaps; item 7 per tile, log-uniform on [0.7, 1.5] x that tile's chosen damping; item 1's
+base model becomes the coarse whole-margin inversion if P-M2 (a) is adopted.
+
 ## 3. One member
 
 1. Draw items 1-7 (seeded RNG, seed = member index; draws saved in member/draws.json).

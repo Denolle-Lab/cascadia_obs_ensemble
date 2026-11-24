@@ -11,6 +11,8 @@ paths:
   picks_v4: data/catalog_v4/Cascadia_picks_catalog_v4.csv
   start_model: /wd1/mdenolle_data/reloc_v5/model_vpvs176  # D-B005: Track A 3D model (NLL grid)
   stations: /wd1/mdenolle_data/reloc_v5/model_vpvs176/stations_GTSRCE.in
+  b1_dir: b1_dataset_c           # D-B035: B1 and B1b outputs versioned (b1_dataset / b1b_balanced = before D-B035)
+  b1b_dir: b1b_balanced_c
 
 selection:                       # D-B003
   tiers: [A, B, C]
@@ -20,7 +22,7 @@ selection:                       # D-B003
   decluster_cell_km: 3.0         # cubic cells, lat/lon/depth
   decluster_keep_per_cell: 3     # keep the most-picked events
   ridge:                         # D-B023: softer rule for the ridge regions (replaces the main rule there)
-    regions: [Axial, Explorer, JdF ridge/plate]
+    regions: [Axial, Explorer, JdF ridge/plate, Offshore forearc]   # D-B035: offshore forearc added (PI 2026-11-23)
     tiers: [A, B, C, D]          # Explorer/JdF: nearest station 30-55 km, mostly tier C/D
     min_nphs: 8
     max_gap_deg: 270
@@ -74,6 +76,7 @@ balance:                         # D-B022 (B1b): balanced dataset of well-record
   region_w_clip: [0.33, 3.0]
   ridge:                         # D-B023: softer criteria for ridge-rule events
     min_picks: 10                # ridge-event picks for a station to count, no azimuth/distance test
+    obs_keep_all: true           # D-B035: an OBS admitted by this bar keeps all its picks (main-rule events too)
     post_min_picks: 6
     post_max_gap_deg: 300
   post_min_picks: 10             # events: picks at core stations
@@ -108,6 +111,342 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         station_corr: true                 # P-4: ADD c = median(tomoDD - P-1 reference) per station-phase (D-B031)
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv   # P-6 (b2_fwd_statics.py)
         p1_reference: mendocino_gorda_v2/p1_reference   # under tomodd.runs (b2_fwd_p1.py)
+    mendocino_gorda_v2s:                   # v2 + shallow events (b2_shallow_events.py, PI 2026-11-23): upper-crust coverage test
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+      extra_b1b: b1b_shallow_mg            # under paths.base; appended to the B1b events/picks (b2_tomodd_inputs.select)
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}   # compiled sizes of bin_e13k
+      forward:                             # as v2, except P-4 off (needs a 1-iteration forward with > 10000 events;
+        coords: ellipsoid                  #   irrelevant for synthetic tests, which replace the absolute times)
+        mod: nearest
+        station_corr: false
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1.csv
+        p1_reference: mendocino_gorda_v2/p1_reference
+    mendocino_gorda_c:                     # D-B035: Mendocino-Gorda on b1b_balanced_c (first build)
+      b1b: b1b_balanced_c
+      bins:                                # 12,191 events: MAXEVE 13000 / MAXDATA 2e6 builds, FORMAT-fixed (D-B034, D-B035)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k_fmt     # md5 08bbc9b8fe47daae6db89dfaf375a25b
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k  # md5 dba037c9be83605181f71c88cac71755
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt  # md5 550fd6ce229592beaf75cb666233fa3c
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+    mendocino_gorda_c_v2:                  # D-B035: as mendocino_gorda_v2 on b1b_balanced_c
+      b1b: b1b_balanced_c
+      bins:                                # 12,191 events: MAXEVE 13000 / MAXDATA 2e6 builds, FORMAT-fixed (D-B034, D-B035)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k_fmt     # md5 08bbc9b8fe47daae6db89dfaf375a25b
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k  # md5 dba037c9be83605181f71c88cac71755
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt  # md5 550fd6ce229592beaf75cb666233fa3c
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv
+        p1_reference: mendocino_gorda_c_v2/p1_reference
+    # D-B033 (proposed 2026-11-23): other tiles. <tile> = first build (B1b data, old statics, no forward fixes);
+    # <tile>_v2 = forward fixes as mendocino_gorda_v2 (P-1 reference from <tile>, per-tile OBS S statics).
+    blanco:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+
+    blanco_v2:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv
+        p1_reference: blanco_v2/p1_reference
+    oregon:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+
+    oregon_v2:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv
+        p1_reference: oregon_v2/p1_reference
+    washington:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins:                                # 225 stations, 109 per event: MAXSTA 260 / MAXOBS 140 builds, FORMAT-fixed (D-B034, D-B035)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt         # md5 85875a89eec843eebe3e81374a4b670e (src tomoDD_opt/O3nofs_w_fmt)
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_w_fmt # md5 7e32539635ac1190e26e670fdc81fcf5 (syn_w_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt      # md5 ccbc7193712e24819ca9a560f0a6c72f (chk_w_fmt)
+      limits: {MAXSTA: 260, MAXOBS: 140}
+    washington_v2:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins:                                # 225 stations, 109 per event: MAXSTA 260 / MAXOBS 140 builds, FORMAT-fixed (D-B034, D-B035)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt         # md5 85875a89eec843eebe3e81374a4b670e (src tomoDD_opt/O3nofs_w_fmt)
+        bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_w_fmt # md5 7e32539635ac1190e26e670fdc81fcf5 (syn_w_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt      # md5 ccbc7193712e24819ca9a560f0a6c72f (chk_w_fmt)
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv
+        p1_reference: washington_v2/p1_reference
+    ridges_north:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+
+    ridges_north_v2:
+      b1b: b1b_balanced_c                  # D-B035 dataset
+      bins:                                # D-B034: FORMAT-fixed builds (tomoDD-SE.f line 2324, comma added)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e (src tomoDD_opt/O3nofs_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089 (chk_fmt)
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+      damp: 200                            # D-B043 (PI 2026-11-23); smoothing not yet chosen (tests at 20)
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv
+        p1_reference: ridges_north_v2/p1_reference
+    # T6 joint-vs-stitched test (notes/merge_design.md; PI go 2026-11-23): blanco + oregon as one tile. Events and
+    # stations = union of the two tiles' boxes (events_boxes); events_lat/lon = bounding box (centre, plots only).
+    # Interior lon nodes on the blanco lattice, 88 + 2 boundary = maxnx 90. Weights on the dataset scale (D-B045).
+    blanco_oregon:                         # first build (P-1 picks)
+      b1b: b1b_balanced_c
+      bins:                                # 242 stations: MAXSTA 260 / MAXOBS 140 builds (as washington)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      events_boxes: [[42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0]]
+      events_lat: [42.6, 46.4]
+      events_lon: [-130.6, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -120.475, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+    blanco_oregon_v2:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt         # md5 85875a89eec843eebe3e81374a4b670e
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt      # md5 ccbc7193712e24819ca9a560f0a6c72f
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      events_boxes: [[42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0]]
+      events_lat: [42.6, 46.4]
+      events_lon: [-130.6, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -120.475, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+      damp: 200                            # D-B045
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco_oregon.csv
+        p1_reference: blanco_oregon_v2/p1_reference
+    # T6 stitched side: oregon_v2 rebuilt on the dataset weight scale (D-B045); P-1 reference and OBS S statics of
+    # oregon_v2 reused. blanco_v2 needs no rebuild: its largest pick weight is the dataset's.
+    oregon_v2g:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt      # md5 361ee293b5c266bd078d037f08ba792e
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt   # md5 26347cf885bd63e3b6b7aedc03400089
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      weights_scale: dataset
+      damp: 200                            # D-B045
+      forward:
+        coords: ellipsoid
+        mod: nearest
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv
+        p1_reference: oregon_v2/p1_reference
+    # M0 (D-B044): coarse whole-margin inversion, the common starting model of every tile. Events of the five tile
+    # boxes declustered to 2 per 10 x 10 x 10 km cell (6,943 of 28,816); ~0.375 x 0.3 deg nodes; start = D-B005
+    # model averaged over a 31 km box (node spacing, no aliasing of single columns); weights on the dataset scale.
+    margin_m0:                             # first build (P-1 picks)
+      b1b: b1b_balanced_c
+      bins:                                # 518 stations, 109 per event: MAXSTA 560 / MAXOBS 130 builds (11-23)
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt         # md5 27599b20ecff18dbbf23e73c2c805114 (src tomoDD_opt/O3nofs_m_fmt)
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt      # md5 3e680298e29463fddbfc5e5bcd3fd8b1 (chk_m_fmt)
+      limits: {MAXSTA: 560, MAXOBS: 130}
+      events_boxes: [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0],
+                     [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]]
+      events_lat: [39.5, 50.0]
+      events_lon: [-131.0, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -120.125, 0.375]
+      node_lat: [38.9, 50.6, 0.3]
+      decluster: {cell_km: 10, depth_cell_km: 10, keep_per_cell: 2}
+      model_box_avg_km: 31
+      weights_scale: dataset
+    margin_m0_v2:
+      b1b: b1b_balanced_c
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt         # md5 27599b20ecff18dbbf23e73c2c805114
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt      # md5 3e680298e29463fddbfc5e5bcd3fd8b1
+      limits: {MAXSTA: 560, MAXOBS: 130}
+      events_boxes: [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0],
+                     [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]]
+      events_lat: [39.5, 50.0]
+      events_lon: [-131.0, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -120.125, 0.375]
+      node_lat: [38.9, 50.6, 0.3]
+      decluster: {cell_km: 10, depth_cell_km: 10, keep_per_cell: 2}
+      model_box_avg_km: 31
+      weights_scale: dataset
+      damp: 200                            # D-B045 (one damping for all); d1000 run alongside for the CND record
+      forward:
+        coords: ellipsoid
+        mod: box                           # box average at the node spacing (coarse grid), not the nearest column
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv
+        p1_reference: margin_m0_v2/p1_reference
+    # D-B046 (PI 2026-11-23): every tile restarts from M0 = margin_m0_v2 d200_s480 (start_model), damping 200,
+    # dataset weight scale (D-B045). Start = D-B005 at the tile's nodes (nearest column, as <tile>_v2) x (1 + M0's
+    # change from its own start) (start_model_mode: change), so the fine near-surface detail stays and M0 adds its
+    # long wavelengths. P-4 station corrections reused from <tile>_v2 (station_corr_from): recomputed in the new
+    # start they would absorb M0's change per station. P-1 reference and OBS S statics as <tile>_v2
+    # (<runs>/<tile>_m0/p1_reference links to the _v2 one). Smoothing from a scan per tile.
+    mendocino_gorda_c_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k_fmt, bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k,
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt}
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv,
+        p1_reference: mendocino_gorda_c_v2/p1_reference, station_corr_from: mendocino_gorda_c_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    blanco_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv,
+        p1_reference: blanco_v2/p1_reference, station_corr_from: blanco_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    oregon_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv,
+        p1_reference: oregon_v2/p1_reference, station_corr_from: oregon_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    washington_m0:
+      b1b: b1b_balanced_c
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt, bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_w_fmt,
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt}
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv,
+        p1_reference: washington_v2/p1_reference, station_corr_from: washington_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    ridges_north_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv,
+        p1_reference: ridges_north_v2/p1_reference, station_corr_from: ridges_north_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -115,6 +454,7 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
   edge_z: [-6, 400]                # top / bottom boundary nodes (top <= -4 km, D-B026)
   edge_deg: 8.0                    # lateral boundary nodes this far outside the interior
   model_box_avg_km: 11             # start model: average rock velocity over this horizontal box at each node
+  start_vpvs_min: 1.65             # D-B046: floor on Vp/Vs of a start built from M0 (start_model_mode change); Vs lowered
   deep_vp: {100: 8.05, 125: 8.10, 400: 8.90}   # below the 80 km model bottom; Vp/Vs from the 80 km level
   weights:
     quality: "(0.05/sigma)^2"      # D-B008 sigma, S already 2x P sigma
@@ -143,3 +483,141 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     depths_km: [-1, 3, 7, 12, 21, 34, 55]   # one run per depth (must be nodes of node_z)
     lon: [-127.25, -126.25, -125.25, -124.25, -123.25]   # 8 nodes (~85 km) apart
     lat: [39.7, 40.5, 41.3, 42.1, 42.9]                  # 8 nodes (~89 km) apart
+  bin_e13k: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k          # md5 44a7176ec0689be781584d2165f8bb96; MAXEVE 13000, MAXDATA 2e6 (2 GB static limit), else as bin
+  bin_syn_e13k: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k  # md5 dba037c9be83605181f71c88cac71755
+  shallow_add:                     # b2_shallow_events.py: shallow events for the upper crust (PI 2026-11-23: depth uncertainty is not a criterion)
+    base_region: mendocino_gorda_v2
+    out_dir: b1b_shallow_mg        # under paths.base
+    max_depth_km: 12               # v4-NLL3D depth bsl
+    min_nphs: 8                    # catalogue phases
+    decluster_cell_km: 3.0         # as D-B003
+    decluster_keep_per_cell: 3
+    min_picks: 8                   # picks left after QC at the base region's stations
+    qc:                            # B1 thresholds frozen from the B1 run (b1_dataset/b1_run.log): |res_iter1 - median| > threshold
+      P: {median: 0.014, threshold: 0.826}
+      S: {median: -0.101, threshold: 1.8}
+      SP: {median: 0.0, threshold: 1.234}
+  shallow_test:                    # b2_shallow_test.py: station-centred spikes, v2 vs v2s
+    regions: [mendocino_gorda_v2, mendocino_gorda_v2s]
+    subdir: shallow_test           # under <runs>/<region>
+    amp: 0.05
+    depths_km: [-1, 3, 7, 12]
+    min_sep_nodes: 4               # spikes at the node nearest each station in the event box, greedy, >= this apart (Chebyshev, i/j)
+    damp: 1000                     # D-B030 baseline
+    smooth: [20, 20, 10]
+  res_tests:                       # B2 resolution tests on v2 (D-B018, D-B029 repeat); notes/resolution_tests.md
+    region: mendocino_gorda_v2     # b2_smooth_spike_test.py --cfg res_tests, b2_res_checker.py
+    subdir: res_tests              # under <runs>/<region>
+    damp: 1000                     # D-B030 baseline
+    smooth: [[10, 10, 5], [20, 20, 10], [40, 40, 20]]   # candidates from the v2 scan (equal RMS)
+    spike:                         # same lattice/depths as smooth_test, v2 inputs, exact Vp/Vs lines
+      amp: 0.05
+      depths_km: [-1, 3, 7, 12, 21, 34, 55]
+      lon: [-127.25, -126.25, -125.25, -124.25, -123.25]
+      lat: [39.7, 40.5, 41.3, 42.1, 42.9]
+    checker:
+      amp: 0.08                    # +-8% Vp and Vs (Vp/Vs unchanged), D-B018
+      cell_km: [40, 60, 100]       # lateral cell size (geographic km from the region centre)
+      bands_km: [-10, 12, 25, 40, 65]   # node depth in [b_i, b_i+1): sign alternates band to band; deeper nodes 0
+      phase_shift: 0.5             # phase 1 = pattern shifted by half a cell in x and y
+      noise_seed: 20261122
+      loc_h_from_68: 1.515         # 1-sigma per horizontal component = h_max / this (h_max = 68% semi-major axis)
+      window_cells: 1.5            # local correlation / amplitude window (square, side = window_cells x cell)
+      resolved: {corr: 0.7, amp: 0.5}   # D-B018
+    sections:                      # cross-sections of the resolution figures: name -> [[lat0, lon0], [lat1, lon1]]
+      "A: N-S through MTJ (124.4 W)": [[39.5, -124.4], [43.1, -124.4]]
+      "B: E-W across Gorda plate (41.3 N)": [[41.3, -127.5], [41.3, -122.5]]
+    highlight_box: {lat: [40.0, 40.6], lon: [-125.2, -124.0]}   # MTJ shallow-anomaly box (b2_mtj_common.MTJ)
+    dws_min: 100                   # spike DWS mask: spikes at nodes with first-iteration P DWS below this are "unsampled"
+                                   # (ridges_north median DWS of sampled nodes 132, Mendocino-Gorda 451); recovery also by DWS band
+    regions:                       # D-B033: per-tile overrides, selected with TOMO_RES_REGION=<tile>_v2 (default: region above)
+      blanco_v2:
+        spike: {lon: [-130.35, -129.35, -128.35, -127.35, -126.35], lat: [42.8, 43.6, 44.4]}
+        sections:
+          "A: along the Blanco transform": [[43.0, -126.6], [44.4, -130.3]]
+          "B: N-S at 128.0 W": [[42.6, -128.0], [45.2, -128.0]]
+        highlight_box: null
+      oregon_v2:
+        spike: {lon: [-125.95, -124.95, -123.95, -122.95, -121.95], lat: [42.8, 43.6, 44.4, 45.2, 46.0]}
+        sections:
+          "A: E-W at 44.5 N": [[44.5, -126.2], [44.5, -121.0]]
+          "B: N-S at 123.5 W": [[42.6, -123.5], [46.4, -123.5]]
+        highlight_box: null
+      washington_v2:
+        spike: {lon: [-126.15, -125.15, -124.15, -123.15, -122.15], lat: [46.0, 46.8, 47.6, 48.4, 49.2]}
+        sections:
+          "A: E-W at 47.5 N": [[47.5, -126.4], [47.5, -121.0]]
+          "B: N-S at 122.5 W": [[45.8, -122.5], [49.8, -122.5]]
+        highlight_box: null
+      ridges_north_v2:
+        spike: {lon: [-130.75, -129.75, -128.75, -127.75], lat: [44.6, 45.4, 46.2, 47.0, 47.8, 48.6, 49.4],
+                # PI 2026-11-23: spikes at the event clusters (nodes with the most events, >= min_sep_nodes apart,
+                # at most max_spikes), used with SPIKES_ONLY=1 / TOMO_SPIKE_PLACEMENT=clusters
+                cluster: {min_sep_nodes: 4, max_spikes: 15}}
+        sections:
+          "A: N-S at 130.0 W (Axial)": [[44.4, -130.0], [50.0, -130.0]]
+          "B: E-W at 46.0 N": [[46.0, -131.0], [46.0, -126.6]]
+        highlight_box: null
+  merge:                           # notes/merge_design.md (proposed 2026-11-23): tiles onto one volume; tile-vs-tile tests
+    grid: {lon_step: 0.125, lat_step: 0.1}   # common geographic lattice (multiples of the step); depth = node_z interior
+    max_depth_km: 55               # deepest depth compared (deeper nodes carry no events)
+    mask_default_damp: 1000        # masks for this damping sit in b2_res_tests/<tile>/ (others in <tile>/d<D>/)
+    pairs:                         # T1/T2 overlap tests: tile A, tile B, list of [tag A, tag B] (real-data runs)
+      - [blanco_v2, oregon_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d300_s20], [d300_s20, d1000_s20], [d1000_s20, d300_s20]]]
+      - [mendocino_gorda_c_v2, blanco_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d1000_s20, d300_s20]]]
+      - [mendocino_gorda_c_v2, oregon_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d1000_s20, d300_s20]]]
+      - [blanco_v2, ridges_north_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d200_s20], [d1000_s20, d200_s20]]]
+      - [oregon_v2, washington_v2, [[d1000_s20, d1000_s20], [d500_s20, d500_s20], [d300_s20, d1000_s20]]]
+    t6:                            # T6 joint vs stitched (b2_t6_joint.py; PI go 2026-11-23), damping D-B045
+      joint: [blanco_oregon_v2, d200_s20]
+      tile_a: [blanco_v2, d200_s20]          # dataset weight scale = its own (largest pick weight is the dataset's)
+      tile_b: [oregon_v2g, d200_s20]         # oregon_v2 rebuilt on the dataset weight scale
+      mask_tiles: [blanco_v2, oregon_v2]     # checkerboard masks at d200 (oregon_v2g has none: oregon_v2's used)
+      taper_km: 15                           # resolution window taper (M3: one to two node spacings)
+      floor: 0.1                             # M3 placeholder, set from T3 later
+      yardsticks:                            # diff rms of these pairs, inside the first run's events box
+        damp200_vs_300_A: [blanco_v2, d200_s20, blanco_v2, d300_s20]
+        damp200_vs_300_B: [oregon_v2, d200_s20, oregon_v2, d300_s20]
+        weightscale_B: [oregon_v2, d200_s20, oregon_v2g, d200_s20]
+    m0_smooth_scan:                # M0 smoothing from its own trade-off (D-B044 text), damping 200 (D-B045): weight1-3
+      - [60, 60, 30]
+      - [120, 120, 60]
+      - [240, 240, 120]
+      - [480, 480, 240]            # extended 15:50: weighted RMS flat from 20 to 240, no corner yet
+      - [960, 960, 480]
+      - [1920, 1920, 960]
+    tile_smooth_scan:              # D-B046: per-tile smoothing scan at damping 200 on the M0 start (weight1-3)
+      - [20, 20, 10]
+      - [60, 60, 30]
+      - [120, 120, 60]
+      - [240, 240, 120]
+      - [480, 480, 240]
+    smooth_rule_tol: 0.015         # chosen smoothing = the largest whose weighted RMS <= (1 + tol) x the scan's best
+    product:                       # b2_merge.py: the merged model (D-B047 versions 0.3.x; Zenodo product, PI 2026-11-23)
+      choice: data/tomo_v1/b2_merge/tiles_m0/choice.csv   # tile runs (phase 1); masks from phase 2 (<tile>_m0/d200)
+      reference: margin_m0_v2/d200_s480                    # M0 (D-B046); V_ref = D-B005 x (1 + M0 change)
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}   # the M0 extent; depth = tomodd.node_z
+      taper_km: 15                 # resolution-window taper (M3)
+      floor: 0.1                   # resolution-window floor outside the mask (M3 placeholder until T3)
+  models:                          # D-B047 (proposed 2026-11-23): versioned model export (b2_model_export.py, env models)
+    name: cascadia_obs_tomo        # internal model name (store path, ids); public name for EMC / CVM: PI to choose
+    store: /wd1/mdenolle_data/tomo_v1/models   # canonical Zarr + netCDF per version (immutable); netCDF < 5 MB also in git
+    summary: >-
+      Three-dimensional Vp and Vs of the Cascadia margin and Juan de Fuca / Gorda plates from double-difference
+      local-earthquake tomography (tomoDD-SE) of the offshore-onshore ensemble catalog (OBS and land picks), on the
+      tomoDD node grid (interior nodes). Depth in km below sea level, positive down.
+    attributes:                    # EMC global attributes (header_3D.csv sample); TO FILL before any submission
+      keywords: seismic, tomography, P wave velocity, S wave velocity, Vp/Vs, Cascadia, Juan de Fuca plate, Gorda, OBS
+      Conventions: CF-1.0
+      Metadata_Conventions: Unidata Dataset Discovery v1.0
+      repository_name: EMC
+      repository_institution: EarthScope DS
+      repository_pid: TO FILL (assigned by EMC on acceptance)
+      author_name: TO FILL (PI)
+      author_institution: TO FILL (PI)
+      author_email: TO FILL (PI)
+      author_url: https://github.com/Denolle-Lab/cascadia_obs_ensemble
+      reference: TO FILL (peer-reviewed paper, required by EMC and CRESCENT CVM)
+      reference_pid: TO FILL (paper DOI)
+      model_type: 3D velocity model
+      model_subtype: local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs

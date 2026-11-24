@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 07:55 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 08:30 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -33,6 +33,16 @@ D tier U (why 15,070 events are not located; relaxed-settings test). Scratch out
 If the session died, resume (finished agents come from cache): Workflow scriptPath
 `~/.claude/projects/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/workflows/scripts/above-surface-root-cause-wf_5c33d6dc-211.js`,
 resumeFromRunId wf_5c33d6dc-211, same args {"scratch": "<scratchpad>/above_surface"}.
+
+**Round 1 results (08:15).** Report `data/tomo_v1/above_surface/above_surface_round1.html`; evidence archived in
+`/wd1/mdenolle_data/tomo_v1/above_surface/round1_2026-11-24/`. v4: no surface in GENIE/GraphDD, search domain up to +5 km,
+rock in water/air, Axial model 2x too fast + mirror ambiguity -> v4 depths not publishable (paper uses v4.1: PI decision).
+NLLoc: nearest-node surface lookup -> FIXED (D-B056, reloc/track-a 85cc3dae, topo_15s_cons_eft.bin, used from v0.3.1
+iter0). Open: upward pull (~4 % of B4 events pressed on the floor; stations 50 m below surface in a1_build_model.py:253),
+station reach (tile box drops 6.1 % of arrivals), 80 km floor, tier U (5-pick events; v4 hypocentres copied).
+**Round 2 running** (workflow nlloc-upward-pull-and-reach, run wf_2c163670-389, task wqzs0ijq7; scratch
+`<scratchpad>/above_surface2`; resume with resumeFromRunId and the same args). T aims for a tested station-reach fix
+before v0.3.1 iter0 (~11:00): if ready, apply to a2_run_nlloc.py before iter0 starts, else rerun iter0/iter1 after.
 
 **Next, in order.** (1) Read the workflow results; implement the tested NLLoc mask fix (Track A template in
 ~/wt_reloc, used by b4 iter0/iter1); rerun iter0/iter1/catalog of v0.3.1 with new run names. (2) Acceptance tests of

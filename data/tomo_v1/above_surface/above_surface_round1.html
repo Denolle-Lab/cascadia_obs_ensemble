@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Events Above the Surface</title>
+<style>
+:root { --bg: #fbfaf7; --fg: #1d1c1a; --muted: #5d5b56; --rule: #dedbd3; --accent: #2a78d6; --warn: #b3412a; --ok: #2f7d4a; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecebe6; --muted: #a9a69d; --rule: #3a3936; --accent: #7fb2ee; --warn: #ec8b72; --ok: #7cc795; } }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 Georgia, "Times New Roman", serif; margin: 0; }
+main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 36px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font: 14px/1.4 system-ui, sans-serif; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+code { font: 13px ui-monospace, Menlo, monospace; background: color-mix(in srgb, var(--rule) 45%, transparent); padding: 1px 4px; border-radius: 3px; }
+.tag { font: 12px system-ui, sans-serif; padding: 1px 6px; border-radius: 9px; border: 1px solid currentColor; }
+.fixed { color: var(--ok); } .open { color: var(--warn); }
+.box { border-left: 3px solid var(--accent); padding: 4px 14px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>Events above the ground or seafloor</h1>
+<p class="sub">Root causes, round 1 · 2026-11-24 · four investigations, each checked by an independent verifier who tried to refute it</p>
+
+<p>The rule (D-B055): no event above the solid surface goes into a published catalog, and such an event is a sign of a
+wrong computation, to be fixed where it happens rather than moved. The surface is GMT earth_relief 01m, interpolated
+bilinearly. Three sets of events break the rule today, and they have different causes.</p>
+
+<table>
+<tr><th>Catalog</th><th>Events above the surface</th><th>How far above</th><th>Status</th></tr>
+<tr><td>v4 (Ian: GENIE location, GraphDD relocation)</td><td class="n">40,555 of 172,340 (23.5 %)</td><td>median 2.1 km; 25,304 above sea level</td><td><span class="tag open">not fixable by us</span></td></tr>
+<tr><td>Our NLLoc relocation, B4 in model v0.3.0</td><td class="n">1,079 of 157,270 (0.7 %)</td><td>median 30 m, max 0.41 km</td><td><span class="tag fixed">fixed (D-B056)</span></td></tr>
+<tr><td>Our NLLoc relocation, v4-NLL3D (Track A)</td><td class="n">594 of 157,267 (0.4 %)</td><td>median 50 m, max 0.28 km</td><td><span class="tag fixed">fixed (D-B056)</span></td></tr>
+<tr><td>Tier U (not located by NLLoc, v4 position kept)</td><td class="n">4,080 of 15,070</td><td>as v4</td><td><span class="tag open">round 2</span></td></tr>
+</table>
+
+<h2>1. Catalog v4: the location steps never knew where the surface is</h2>
+<p>Our repository did not change any v4 depth: <code>utils/fix_catalog_v4.py</code> touched 21 dates and nothing else.
+The depths are Ian's. In the public GENIE code (commit e6f3a1d) topography is off by default, the source search domain
+extends above sea level, and the travel-time grid fills the air and the water with the velocity of the top layer of the
+1D model. GraphDD has no surface or depth bound at all. In Ian's 2025 GENIE run the domain reached 5 km above sea level:
+217 events sit exactly at a depth of −5.000 km, and 37 % of the GENIE-stage events were already above the surface
+before GraphDD ran.</p>
+<p>Axial carries half of the problem: 18,878 of its 26,731 events (71 %) are above the seafloor. Ian's model there
+(<code>data/vel_pnsn_jdf.csv</code>) starts with Vp 6.5 km/s at sea level, with rock in the water column, about twice
+the speed of Axial's shallow crust. The v4 positions fit the picks best with exactly that velocity. With all eight
+stations on one seafloor plane, a hypocentre and its mirror image above the plane fit the picks equally well (within
+0.02 s for all 18,612 tested events), so nothing kept the events below the seafloor. Away from Axial, the events above
+the surface are the shallow tail of a large vertical error (interquartile range 3 to 7 km) on poorly constrained events:
+few S picks, only seafloor stations, large spatial sigma.</p>
+<p>No change of depth datum rescues v4. Taking depths relative to the local surface or to the station elevations still
+leaves 16 to 19 % above, and makes the agreement with ANSS worse.</p>
+<div class="box"><b>Consequence.</b> The v4 and v4.1 depths cannot be published as they are, and the paper uses v4.1.
+The hypocentres have to come from a location that has the solid Earth in its model and a surface in its search, which is
+what our NLLoc relocation does. For Ian, if he reruns: topography on with a real DEM and bathymetry, a water layer, the
+search top at the highest topography, densely sampled 1D profiles referenced to the seafloor offshore, and a surface
+bound in GraphDD.</div>
+
+<h2>2. Our NLLoc relocation: a coarse surface lookup, now fixed</h2>
+<p>NLLoc reads its topography file at the nearest grid node, while the check interpolates bilinearly. On slopes the
+nearest node can sit higher than the true surface under the epicentre, so NLLoc accepted locations above it. Reproducing
+NLLoc's lookup explains every case: 1,079 of 1,079 in B4 and 594 of 594 in Track A.</p>
+<p>The fix needs no code change (D-B056, branch reloc/track-a 85cc3dae). A new 15″ file holds, at each node, the lowest
+point of the bilinear surface over the area NLLoc assigns to that node, minus 1 m, in the Earth-flattened frame. Tests:
+0 events above the surface among 500 sampled, 1,078 B4 and 594 Track A affected events; 197 of 200 random controls did
+not move, and the other 3 moved by one search cell. The v0.3.1 relocation uses it from its first pass (about 11:00 today).</p>
+<p><span class="tag open">open</span> The verifier found a deeper problem. Rerun without the surface, the fit puts about
+4 % of B4 events (6,500; 29.5 % of JdF ridge, 18.9 % of Endeavour, 7 % of Axial) 0.3 to 1.7 km above the surface. For
+these events the surface sets the depth, not the data, which amounts to the clamping you rejected. One concrete
+suspect: <code>a1_build_model.py</code> line 253 places 590 of 696 stations about 50 m below the real surface, against
+its own docstring. Round 2 is testing this and the near-surface model.</p>
+
+<h2>3. Tier U: three workflow flaws</h2>
+<table>
+<tr><th>Cause</th><th>Events</th></tr>
+<tr><td>Only 5 picks (the v4 minimum); NLLoc needs 6, skips them, and <code>a2_build_catalog.py</code> silently copies the v4 hypocentre</td><td class="n">12,089</td></tr>
+<tr><td>Station reach: the tile search box (tile ±75 km) must fit inside each station's ±250 km time grid, so far stations are dropped. Real reach is about 160 km; 169,011 arrivals (6.1 %) were dropped in B4, including for 140 of the 146 tier U events of M ≥ 4 (M5–6 at Blanco, Explorer, Mendocino)</td><td class="n">2,875–3,314</td></tr>
+<tr><td>Rejected at a grid boundary; 12 of them are well-recorded intraslab events at 66–82 km beneath Puget/Georgia, stopped by the 80 km floor of the model, grids and search (11 more located events are pinned at it)</td><td class="n">106</td></tr>
+</table>
+<p>The dropped arrivals also weaken located events, not only tier U. Round 2 is designing and testing a fix for the
+station reach (aiming to have it in the v0.3.1 run), the 80 km floor, and the rule for events that still cannot be
+located: never a v4 hypocentre.</p>
+
+<h2>4. Decisions for you</h2>
+<p><b>Paper catalog.</b> I recommend making the NLLoc relocation in the final model the paper's catalog once the round-2
+fixes are in, with v4 kept as the association and pick catalog. Asking Ian for a corrected GENIE/GraphDD run is useful as a
+cross-check but not needed for the hypocentres.</p>
+<p><b>Events that cannot be located in 3D</b> (a few thousand after the fixes, estimated): list them with the v4 epicentre
+flagged as such and no depth, or leave them out of the hypocentre table.</p>
+
+<h2>Evidence</h2>
+<p>Results, scripts and logs of the eight agents: <code>/wd1/mdenolle_data/tomo_v1/above_surface/round1_2026-11-24/</code>
+(<code>results.json</code>; folders A–D and verify_*). Decisions D-B055 and D-B056 in
+<code>workflow/10_tomography/DECISIONS.md</code> (branch tomo/tiles).</p>
+</main>
+</body>
+</html>

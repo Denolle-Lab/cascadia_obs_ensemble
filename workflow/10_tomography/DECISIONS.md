@@ -537,15 +537,22 @@ git or on Zenodo): /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24 (
 malformed FORMAT string fixed by a comma, PATCH.diff, build_variants.sh, README), binaries for every size class in
 /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24 (main, syn, chk), archive in /wd1/mdenolle_data/tomo_v1/archive.
 Licence caveat: the WARF licence forbids modification; the request to Haijiang Zhang for permission is still open.
+Freeze audit (11-24): six commas in total. D-B034 (tomoDD-SE.f 2318, 2320; tomoDD-SE_syn.f 2283, 2285), the relocation
+fix (lsfitHFDD_lsqr_lm5.f 504), and one more found by the full scan, getinpSPDR.f 215 ('": DAMP= "f7.1' -> '": DAMP=
+",f7.1'; no output change; PI acknowledgement needed). Three string-string joins without a comma are left unchanged
+(cluster1.f 182-183, tomoDD-SE.f 2651-2652, tomoDD-SE_syn.f 2598-2599; accepted by the gfortran 8.5 and 15.2 runtimes).
+51 test runs (joint, relocation-only, synthetics, every size class, pixi 15.2 and system 8.5 runtimes): all result
+files byte-identical to the binaries in use. Corrections to the frozen README (read-only): it cites D-B054 for the B5
+relocation-only mode (that is D-B053), and says the permission request was sent; no record of the email was found.
 
-### D-B055 No hypocentre above the ground or seafloor (adopted, 2026-11-24, PI)
-PI rule: no earthquake above the solid surface. NLLoc already masks the location PDF above GMT earth_relief 01m
-(LOCTOPO_SURFACE, nlloc_template.in of Track A), but it reads that grid by nearest node (velmod.c get_surface_z), so
-0.7 % of the B4 v0.3.0 locations (1,079 of 157,270) sat up to 0.41 km (median 0.03 km) above the bilinear surface;
-the 15,070 tier U events keep the v4 position, and 23.5 % of the v4 positions (40,553 events; 71 % of Axial) are
-above the surface, by a median 2.1 km. b4_catalog.py now writes depth = max(depth_raw, -surface_km) and the same for
-exp_depth, with surface_km = earth_relief 01m bilinear at the final epicentre for every event (tier U included),
-depth_raw the depth before the rule and above_surface marking the moved events (v0.3.0 test: 5,159 moved, 1,079
-located and 4,080 tier U). The atlas draws any hypocentre above its rendered terrain at that terrain (all catalogs and
-the moves layer), keeps the flag ("Above surface": show / grey / hide) and gives the catalog depth in the popup.
-Catalog v4 / v4.1 itself is unchanged (PI to decide).
+### D-B055 No event above the ground or seafloor; fix the computation, never move events (adopted, 2026-11-24, PI)
+PI: an event above the solid surface is the product of a wrong computation or workflow; a catalog with any such
+event is not published, and moving events to the surface is rejected (a first version of this entry did that in
+b4_catalog.py and the atlas; both reverted the same day). b4_catalog.py computes surface_km (GMT earth_relief 01m,
+gridline, bilinear) at every final epicentre and above_surface on the true depth, never changes a depth, and writes
+the counts to compare.md and "publishable" to the manifest. Counts on 11-24: B4 v0.3.0 1,079 of 157,270 located
+events above (median 0.03 km, max 0.41 km; Track A 594), tier U (v4 position kept) 4,080 of 15,070, catalog v4
+40,553 of 172,340 (23.5 %, median 2.1 km above; 71 % of Axial). Root causes under investigation (workflow
+above-surface-root-cause, 11-24): v4 GENIE/GraphDD depth datum, velocity model top and search domain; NLLoc
+LOCTOPO_SURFACE read by node lookup (velmod.c get_surface_z) instead of the bilinear surface; why tier U events are not
+located. The atlas shows catalog positions as they are and flags the events above the surface.

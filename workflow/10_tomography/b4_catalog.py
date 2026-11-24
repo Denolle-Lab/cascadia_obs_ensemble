@@ -16,12 +16,11 @@ parameters in params b4.depth_flags and b4.quarry:
   with dist_min > 15 km; "ok" otherwise (tier U has no dist_min, so the Gorda rule does not apply to it);
 * event_flag: "quarry_blast_likely" for events in the Texada Island box (lat 49.40-49.85, lon -124.75 to -124.25)
   on a weekday between 07:00 and 19:00 America/Vancouver time, "" otherwise.
-Surface rule (D-B055, PI 2026-11-24): no hypocentre above the solid surface (land or seafloor). surface_km (km,
-positive up) is GMT earth_relief 01m (gridline), bilinear, at the final epicentre of every event (tier U included: it
-keeps the v4 position, 23 % of which are above the surface); depth_raw is the depth before the rule, depth and
-exp_depth are max(value, -surface_km), and above_surface marks the events moved up to the surface. NLLoc masks the
-same grid (LOCTOPO_SURFACE) but by nearest node, which leaves ~0.7 % of the located events up to 0.4 km above the
-bilinear surface; tier U events can be km above it (v4 depths).
+Surface check (D-B055, PI 2026-11-24): an event above the solid surface (land or seafloor) is a computation error,
+never corrected by moving it, and a catalog with any such event is not publishable. surface_km (km, positive up) is
+GMT earth_relief 01m (gridline), bilinear, at the final epicentre of every event (tier U included); above_surface is
+depth < -surface_km on the true (unflattened) depth. Depths are never changed here; counts go to compare.md and the
+manifest ("publishable").
 Outputs: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_<RUN>.csv, and data/tomo_v1/b4/<RUN>/ (compare.md,
 compare_by_region.csv, depth_hist.png).
 
@@ -111,13 +110,9 @@ def main():
         c.loc[m, col] = new
     for col in ("depth", "exp_depth"):
         c.loc[nll, col] = unflatten(c.loc[nll, col])
-    # D-B055: no hypocentre above the solid surface (docstring)
+    # D-B055: report events above the solid surface (docstring); depths are not changed
     c["surface_km"] = surface_km(c.lat, c.lon)
-    c["depth_raw"] = c.depth
     c["above_surface"] = c.depth < -c.surface_km
-    c["depth"] = np.maximum(c.depth, -c.surface_km)
-    c["exp_depth"] = np.maximum(c.exp_depth, -c.surface_km)   # NaN (tier U) stays NaN
-    assert (c.depth >= -c.surface_km).all()
     c.loc[nll, "shift_z_km"] = c.loc[nll, "depth"] - c.loc[nll, "v4_depth"]
     c["depth_frame"] = np.where(nll, "true depth (EFT undone, b4_catalog.py)", "v4")
     c["depth_quality"], c["event_flag"] = flags(c)
@@ -151,9 +146,11 @@ def main():
     L += [f"| {k} | {int(v.n)} | {v.dz_med:+.2f} | {v.absdz_med:.2f} / {v.absdz_p90:.2f} | {v.dh_med:.2f} / "
           f"{v.dh_p90:.2f} | {v.dt_med:+.3f} | {v.rms_b4:.3f} / {v.rms_ref:.3f} |" for k, v in g.iterrows()]
     na, nu = int(c.above_surface.sum()), int((c.above_surface & (c.loc_source != "nll3d")).sum())
-    L += ["", f"Above the surface before the D-B055 rule (located in both): B4 {100 * d.above_b4.mean():.1f} %, "
+    pub = na == 0
+    L += ["", f"Above the surface (located in both): B4 {100 * d.above_b4.mean():.1f} %, "
           f"reference {100 * d.above_ref.mean():.1f} % (reference: a2_parse_hyp.py check, no EFT).",
-          f"D-B055: {na} events moved up to the surface ({na - nu} located in 3D, {nu} tier U at the v4 position).",
+          f"D-B055: {na} events above the surface ({na - nu} located in 3D, {nu} tier U at the v4 position). "
+          + ("Publishable." if pub else "NOT PUBLISHABLE: these are computation errors to fix, not to move."),
           "The ANSS check per tier is in the tier summary of a2_build_catalog.py (copied next to this file)."]
     fq = pd.crosstab(c.region, c.depth_quality, margins=True, margins_name="all")
     nq = int((c.event_flag == "quarry_blast_likely").sum())
@@ -187,7 +184,7 @@ def main():
                    params={"depth_flags": DF, "quarry": QB},
                    counts={"events": len(c), "nll3d": int(nll.sum()), "both": len(both),
                            "depth_quality": {k: int(v) for k, v in c.depth_quality.value_counts().items()},
-                           "quarry_blast_likely": nq, "moved_to_surface": na, "moved_to_surface_tier_U": nu})
+                           "quarry_blast_likely": nq, "above_surface": na, "above_surface_tier_U": nu, "publishable": pub})
     print((od / "compare.md").read_text())
 
 

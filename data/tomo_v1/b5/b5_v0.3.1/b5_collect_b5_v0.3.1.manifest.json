@@ -1,0 +1,250 @@
+{
+ "name": "b5_collect_b5_v0.3.1",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_relocate.py",
+ "argv": [
+  "collect",
+  "--version",
+  "0.3.1",
+  "--run",
+  "b5_v0.3.1",
+  "--b4-run",
+  "b4_iter1_v0.3.1",
+  "--nproc",
+  "40"
+ ],
+ "utc": "2026-11-24T19:06:53.071535+00:00",
+ "git_commit": "7e8fe29ce7c503d8977e2712939863bf23633d31",
+ "git_dirty": true,
+ "params_md5": "53cadbb3ca5bc237bb9bc98905b3a958",
+ "params": {
+  "b5": {
+   "out": "/wd1/mdenolle_data/tomo_v1/b5",
+   "summary": "data/tomo_v1/b5",
+   "forbidden_out": [
+    "/wd1/mdenolle_data/b5_test",
+    "/wd1/mdenolle_data/reloc_v5/runs",
+    "/wd1/mdenolle_data/tomo_v1/b2_tomodd",
+    "/wd1/mdenolle_data/tomo_v1/above_surface"
+   ],
+   "reloc_v5": "/wd1/mdenolle_data/reloc_v5",
+   "defaults": {
+    "run": "b5_v{v}",
+    "b4_run": "b4_iter1_v{v}",
+    "b4_iter0": "b4_iter0_v{v}",
+    "time_grids": "time_b4_v{v}"
+   },
+   "grid_prefix": "cascadia3d",
+   "picks": "/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv",
+   "exclude_ids": [
+    172113
+   ],
+   "loc_source": "nll3d",
+   "grid_margin_km": 5.0,
+   "dt": {
+    "max_neighbours": 10,
+    "max_sep_km": 10.0,
+    "min_common": 8
+   },
+   "weight": "(0.05/sigma)^2",
+   "split": {
+    "halo_hops": 2,
+    "min_core": 50
+   },
+   "tomodd": {
+    "bin_dir": "/wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24",
+    "runtime": "/wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24/runtime_files",
+    "classes": {
+     "e10k": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 200,
+      "maxobs": 100
+     },
+     "e13k": {
+      "maxeve": 13000,
+      "maxdata": 2000000,
+      "maxsta": 200,
+      "maxobs": 100
+     },
+     "o140": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 200,
+      "maxobs": 140
+     },
+     "w": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 260,
+      "maxobs": 140
+     },
+     "m": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 560,
+      "maxobs": 130
+     }
+    },
+    "mod_max": {
+     "nx": 90,
+     "ny": 80,
+     "nz": 50
+    },
+    "variant": "dd",
+    "sets": [
+     [
+      3,
+      1.0,
+      1.0,
+      -9,
+      -9,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      8,
+      -9,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      6,
+      10,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      6,
+      10,
+      0.0
+     ]
+    ],
+    "damp": 100,
+    "node_margin_deg": 0.375,
+    "air_dep_margin_km": 0.05,
+    "crash_retries": 2
+   },
+   "frame_clear_km": 0.05,
+   "nboot": 0,
+   "nproc": 48,
+   "min_free_gb": 30,
+   "collect": {
+    "pca_min_events": 10
+   }
+  },
+  "config": {
+   "version": "0.3.1",
+   "run": "b5_v0.3.1",
+   "b4_run": "b4_iter1_v0.3.1",
+   "iter0": "b4_iter0_v0.3.1",
+   "time_grids": "time_b4_v0.3.1",
+   "dir": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1",
+   "catalog_b4": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "locations": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter1_v0.3.1/locations.csv",
+   "station_terms": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter0_v0.3.1/station_terms.in",
+   "grids": "/wd1/mdenolle_data/reloc_v5/time_b4_v0.3.1",
+   "model": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.1.nc",
+   "summary": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter1_v0.3.1/locations.csv",
+   "size": 52810885,
+   "mtime": "2026-11-24T18:44:29.374208+00:00",
+   "md5": "fd7511053ff27edb382f887dc59d42a7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv",
+   "size": 18154975,
+   "mtime": "2026-11-21T19:00:12.013022+00:00",
+   "md5": "33239b547040add3e1dd7ae3252764b2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/split/clusters.csv",
+   "size": 201155,
+   "mtime": "2026-11-24T18:46:39.624534+00:00",
+   "md5": "76a9c32453bf2686529571fb39d76d81"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/catalog_b5_b5_v0.3.1.csv",
+   "size": 79587421,
+   "mtime": "2026-11-24T19:06:47.317242+00:00",
+   "md5": "a0e279da34d84b3ffcf91dd7adb575ec"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/clusters_summary.csv",
+   "size": 583942,
+   "mtime": "2026-11-24T19:06:51.878217+00:00",
+   "md5": "a4bac1ab1c539e8c925e4042438885f4"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/compare.md",
+   "size": 7808,
+   "mtime": "2026-11-24T19:06:53.023211+00:00",
+   "md5": "5a294f2c446ad4f48c608175e0e813a1"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/clusters_summary.csv",
+   "size": 288993,
+   "mtime": "2026-11-24T19:06:53.052211+00:00",
+   "md5": "890d3810ec667c104609fd917f235336"
+  }
+ ],
+ "counts": {
+  "events": 172339,
+  "loc_source": {
+   "b5_tomodd": 88429,
+   "nll3d": 68840,
+   "v4": 15070
+  },
+  "b5_status": {
+   "relocated": 88429,
+   "unlinked": 54548,
+   "tier_U": 15070,
+   "cluster_failed": 9420,
+   "airquake_by_tomodd": 3551,
+   "dropped_by_tomodd": 1306,
+   "cluster_skipped": 15
+  },
+  "above_surface": 4880,
+  "above_surface_b5": 803,
+  "publishable": false,
+  "clusters": 2128,
+  "missing_clusters": 0,
+  "split_effect": {
+   "n": 2514,
+   "dh_med": 0.28951273071654493,
+   "dh_p90": 0.9964559223315911,
+   "dz_med": 0.24471271548175477,
+   "dz_p90": 0.8380549063440894,
+   "by_hop": {
+    "1": {
+     "n": 1209,
+     "dh_med": 0.25926814045524216,
+     "dz_med": 0.240712715481755
+    },
+    "2": {
+     "n": 1305,
+     "dh_med": 0.3257845849781869,
+     "dz_med": 0.2517127154817551
+    }
+   }
+  }
+ },
+ "notes": null
+}

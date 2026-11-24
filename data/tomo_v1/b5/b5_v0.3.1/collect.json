@@ -1,0 +1,41 @@
+{
+ "events": 172339,
+ "loc_source": {
+  "b5_tomodd": 88429,
+  "nll3d": 68840,
+  "v4": 15070
+ },
+ "b5_status": {
+  "relocated": 88429,
+  "unlinked": 54548,
+  "tier_U": 15070,
+  "cluster_failed": 9420,
+  "airquake_by_tomodd": 3551,
+  "dropped_by_tomodd": 1306,
+  "cluster_skipped": 15
+ },
+ "above_surface": 4880,
+ "above_surface_b5": 803,
+ "publishable": false,
+ "clusters": 2128,
+ "missing_clusters": 0,
+ "split_effect": {
+  "n": 2514,
+  "dh_med": 0.28951273071654493,
+  "dh_p90": 0.9964559223315911,
+  "dz_med": 0.24471271548175477,
+  "dz_p90": 0.8380549063440894,
+  "by_hop": {
+   "1": {
+    "n": 1209,
+    "dh_med": 0.25926814045524216,
+    "dz_med": 0.240712715481755
+   },
+   "2": {
+    "n": 1305,
+    "dh_med": 0.3257845849781869,
+    "dz_med": 0.2517127154817551
+   }
+  }
+ }
+}

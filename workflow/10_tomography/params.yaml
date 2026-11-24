@@ -708,3 +708,48 @@ b5_test:                           # D-B048: relative relocation tested before B
     centre: f1803                  # B4 median epicentre and depth of this case's events
     seed: 48
     start_depth_min_km: 3.0        # perturbed start depths clipped here (seafloor ~3-4.5 km bsl at West Blanco)
+
+b5:                                # B5 relative relocation of the whole catalog (D-B053; D-B060: catalog dt now, cc later)
+  # b5_relocate.py (stages prep, split, run, collect) + b5_relocate.sh (detached, state file); notes/b5_relocation.md
+  out: /wd1/mdenolle_data/tomo_v1/b5     # <out>/<run>/: prep, split, clusters/<cid>, catalog (large files, not in git)
+  summary: data/tomo_v1/b5               # repo: <summary>/<run>/compare.md, clusters_summary.csv, manifests
+  forbidden_out: [/wd1/mdenolle_data/b5_test, /wd1/mdenolle_data/reloc_v5/runs, /wd1/mdenolle_data/tomo_v1/b2_tomodd,
+                  /wd1/mdenolle_data/tomo_v1/above_surface]
+  reloc_v5: /wd1/mdenolle_data/reloc_v5  # B4: runs/<b4_run>/locations.csv, catalog/catalog_b4_<b4_run>.csv, <time_grids>/
+  defaults:                        # {v} = model version (--version); each can be overridden on the command line
+    run: b5_v{v}
+    b4_run: b4_iter1_v{v}          # start = its NLLoc solutions (status LOCATED), EFT undone
+    b4_iter0: b4_iter0_v{v}        # B4 station terms (absolute times; zero weight in variant dd)
+    time_grids: time_b4_v{v}       # B4 grids: pick kept if the event is grid_margin_km inside; dt rms before/after
+  grid_prefix: cascadia3d
+  picks: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv    # v4.0 picks (= B4 input)
+  exclude_ids: [172113]            # mis-associated in v4.0, removed in v4.1: not relocated, not in the B5 catalog
+  loc_source: nll3d                # relocate B4 3D locations only; tier U keeps its v4 hypocentre (loc_source v4)
+  grid_margin_km: 5.0              # as b5_test
+  dt: {max_neighbours: 10, max_sep_km: 10.0, min_common: 8}   # = tomodd.dt (3D distance, Earth-centred coordinates)
+  weight: "(0.05/sigma)^2"         # D-B008 sigma by pick_prob class; dt weight = min of the two picks
+  split:
+    halo_hops: 2                   # chunk = core + events within 2 pair-graph hops (every pair of a core event and of
+                                   # its partners is in the chunk); event taken from the chunk where it is core
+    min_core: 50                   # stop (error) if a core this small still fits no binary
+  tomodd:
+    bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24     # D-B054 frozen binaries (WARF: private, never copied)
+    runtime: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24/runtime_files   # ak135.15.SKS, layer-16.dat
+    classes:                       # BUILD.md array sizes; first class that fits all four limits is used
+      e10k: {maxeve: 10000, maxdata: 3000000, maxsta: 200, maxobs: 100}
+      e13k: {maxeve: 13000, maxdata: 2000000, maxsta: 200, maxobs: 100}
+      o140: {maxeve: 10000, maxdata: 3000000, maxsta: 200, maxobs: 140}
+      w: {maxeve: 10000, maxdata: 3000000, maxsta: 260, maxobs: 140}
+      m: {maxeve: 10000, maxdata: 3000000, maxsta: 560, maxobs: 130}
+    mod_max: {nx: 90, ny: 80, nz: 50}   # RaySPDR.inc maxnx (longitude nodes incl. edges), maxny (latitude), maxnz
+    variant: dd                    # = b5_test.tomodd.variants.dd: differential times only (WTCD = 0), JOINT = 0
+    sets: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]
+    damp: 100                      # LSQR damping (D-B048 test)
+    node_margin_deg: 0.375         # MOD interior nodes = model nodes over the cluster's events and stations + this
+    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test
+  frame_clear_km: 0.05             # D-B053: no event within 50 m of tomoDD's frame centre (b5_common.frame_centre)
+  nboot: 0                         # bootstrap runs per cluster (dt rows resampled, seed 48000 + k); 0 in production
+  nproc: 48                        # parallel tomoDD runs (brief: <= 8 while B4 iter1 runs, <= 48 after)
+  min_free_gb: 30                  # a tomoDD run starts only while MemAvailable >= this + the largest RSS seen
+  collect:
+    pca_min_events: 10             # cluster shape (PCA) reported for clusters with at least this many relocated events

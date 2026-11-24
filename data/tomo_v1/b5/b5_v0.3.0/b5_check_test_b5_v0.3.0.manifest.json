@@ -2,41 +2,51 @@
  "name": "b5_check_test_b5_v0.3.0",
  "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_check_test.py",
  "argv": [
-  "b5_v0.3.0",
-  "--catalog",
-  "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.0/catalog_b5_b5_v0.3.0_partial.csv",
-  "--cases",
-  "f0399"
+  "b5_v0.3.0"
  ],
- "utc": "2026-11-24T18:32:48.343476+00:00",
- "git_commit": "f5e94b87da22f8fa19042e1d03f369db01fc1d1b",
+ "utc": "2026-11-24T19:00:51.760926+00:00",
+ "git_commit": "09701e007042c8360b4e5045d02fb16b78e54fbf",
  "git_dirty": true,
- "params_md5": "04629aba932dfa4c43ab96197ff0e9b4",
+ "params_md5": "53cadbb3ca5bc237bb9bc98905b3a958",
  "params": {
   "cases": [
-   "f0399"
+   "f1803",
+   "f0399",
+   "f1051"
   ]
  },
  "inputs": [
   {
-   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.0/catalog_b5_b5_v0.3.0_partial.csv",
-   "size": 72472450,
-   "mtime": "2026-11-24T18:32:20.680741+00:00",
-   "md5": "7d5e65755b3b8cd405889bf7434fda76"
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.0/catalog_b5_b5_v0.3.0.csv",
+   "size": 77542669,
+   "mtime": "2026-11-24T19:00:17.736320+00:00",
+   "md5": "51df7476aadaccffed8b1370a71ca4df"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1803/tomodd/dd/reloc.csv",
+   "size": 48649,
+   "mtime": "2026-11-24T13:57:07.594884+00:00",
+   "md5": "cdfa28c84d08ad0c43c164f2271651c7"
   },
   {
    "path": "/wd1/mdenolle_data/b5_test/f0399/tomodd/dd/reloc.csv",
    "size": 124872,
    "mtime": "2026-11-24T13:59:08.266147+00:00",
    "md5": "bd3738009bcc77a65bdfd26a5b12726e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/tomodd/dd/reloc.csv",
+   "size": 83082,
+   "mtime": "2026-11-24T14:13:41.417963+00:00",
+   "md5": "e9c9f8f769e3a0ba14335fe7d1f9ffd6"
   }
  ],
  "outputs": [
   {
    "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.0/check_b5_test.md",
-   "size": 1088,
-   "mtime": "2026-11-24T18:32:48.342608+00:00",
-   "md5": "6ba687e28fc1b7b39c88cc6f8a3cafd5"
+   "size": 2029,
+   "mtime": "2026-11-24T19:00:51.760143+00:00",
+   "md5": "ebc53087315aa63492b6f2ebf358d4f6"
   }
  ],
  "counts": {},

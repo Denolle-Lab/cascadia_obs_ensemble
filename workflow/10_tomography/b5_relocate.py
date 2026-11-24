@@ -712,7 +712,7 @@ def parse_stdout(text):
     return it
 
 
-def run_tomodd(rdir, cid, info, tag=""):
+def run_tomodd(rdir, cid, info, tag="", damp=None):
     cls = _W["cl"].loc[cid, "cls"]
     binf = Path(B["tomodd"]["bin_dir"]) / f"tomoDD-SE_{cls}"
     rt = Path(B["tomodd"]["runtime"])
@@ -720,7 +720,7 @@ def run_tomodd(rdir, cid, info, tag=""):
         if not (rdir / f).exists():
             shutil.copy(rt / f, rdir / f)
     sets = B["tomodd"]["sets"]
-    damp = B["tomodd"]["damp"]
+    damp = B["tomodd"]["damp"] if damp is None else damp
     rows = [f"  {s[0]:<3d}  -9    -9    -9   -9  {s[1]:5.2f} {s[2]:5.2f} {s[3]:4g} {s[4]:4g} {s[5]:6g} {damp:6g}"
             f"   0  {T['inp']['thres']:g}" for s in sets]
     w1, w2, w3 = (f"{v:g}" for v in T["inp"]["smooth"])

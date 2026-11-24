@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 08:30 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 09:15 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -51,8 +51,9 @@ Blanco within 1 km of Lange 2026; Puget unchanged). (3) Tier U and catalog v4 pl
 publishable as they are). (4) Atlas with the v0.3.1 catalog. (5) PR #35: Copilot's last issue fixed (9936f8bd, reply
 posted); merge into tomo/track-b after a final look, then the part-2 results PR, close #32/#33.
 
-**Questions for the PI.** Fix 6 of the frozen tomoDD (getinpSPDR.f 215, extra comma, no output change): accept? Was
-the permission email to Haijiang Zhang sent? What to do with catalog v4/v4.1 depths and tier U (after the workflow).
+**PI answers (09:15).** Fix 6 kept; no email to Haijiang Zhang (do not contact him); paper hypocentres = final NLLoc
+relocation (D-B057). Round 2 is still running in the earlier Claude Code process (PID 475557); its results land in
+the journal of run wf_2c163670-389; do not relaunch it while that process lives.
 
 ## Handoff 2026-11-23 08:10
 

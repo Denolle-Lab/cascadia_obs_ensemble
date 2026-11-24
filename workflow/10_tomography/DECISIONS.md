@@ -544,6 +544,10 @@ fix (lsfitHFDD_lsqr_lm5.f 504), and one more found by the full scan, getinpSPDR.
 51 test runs (joint, relocation-only, synthetics, every size class, pixi 15.2 and system 8.5 runtimes): all result
 files byte-identical to the binaries in use. Corrections to the frozen README (read-only): it cites D-B054 for the B5
 relocation-only mode (that is D-B053), and says the permission request was sent; no record of the email was found.
+PI (2026-11-24): fix 6 (getinpSPDR.f 215) is kept. PI: do not write to Haijiang Zhang; no permission request has been
+or will be sent, so the frozen README's statement that one was sent is wrong (the README is read-only and archived;
+this entry is the correction). The WARF licence terms (no modification, no public posting) are unchanged: the patched
+version stays private on /wd1, never in git or on Zenodo.
 
 ### D-B055 No event above the ground or seafloor; fix the computation, never move events (adopted, 2026-11-24, PI)
 PI: an event above the solid surface is the product of a wrong computation or workflow; a catalog with any such
@@ -572,3 +576,11 @@ Earth-flattened (h' = Re ln(1 + h/Re), never above h, so one file serves both fr
 (verifier's no-topography reruns), so their depth is set by the floor, not the data. That upward pull is the open
 computation error (candidates: stations placed 50 m below the surface by a1_build_model.py line 253, near-surface
 velocities, Vp/Vs, station terms); under investigation.
+
+### D-B057 Paper hypocentres from the final NLLoc relocation; v4 depths not published (adopted, 2026-11-24, PI)
+Catalog v4/v4.1 depths come from GENIE location and GraphDD relocation without any surface (round-1 root-cause report,
+data/tomo_v1/above_surface/above_surface_round1.html: 23.5 % of events above the ground or seafloor, 71 % at Axial;
+no datum change fixes it), so under D-B055 they cannot be published. PI: the paper's hypocentres are the NLLoc 3D
+relocation in the final Track B model, once the open workflow fixes are in (round 2: upward pull, station reach, 80 km
+floor, tier U without v4 hypocentres). Catalog v4 stays the association and pick catalog (event IDs, picks, times,
+magnitudes). Asking Ian for a corrected GENIE/GraphDD run is not needed for the paper.

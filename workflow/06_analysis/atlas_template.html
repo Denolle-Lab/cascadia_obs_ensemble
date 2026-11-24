@@ -165,9 +165,9 @@
 <div class="controls panel" id="controls">
   <details class="grp" open><summary>View</summary><div class="grp-body">
   <div class="ctl-row" id="catRow"><span class="lab">Catalog</span>
-    <div class="seg" id="segCat"><button data-v="0" class="on">v4</button><button data-v="1">v4-NLL3D (preliminary)</button></div></div>
+    <div class="seg" id="segCat"><button data-v="0" class="on">v4</button><button data-v="1" id="btnCat2">relocated</button></div></div>
   <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Color by</span>
-    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier of v4-NLL3D (A-D, U)">Tier</button></div></div>
+    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier of the relocated catalog (A-D, U)">Tier</button></div></div>
   <div class="ctl-row"><span class="lab">Vertical ×</span><input type="range" id="exag" min="1" max="10" step="0.5" value="3"><span class="val mono" id="exagV">3×</span></div>
   <div class="ctl-row"><span class="lab">Ground</span><input type="range" id="ground" min="0" max="1" step="0.05" value="0.55"><span class="val mono" id="groundV">solid</span></div>
   <div class="ctl-row"><span class="lab">Point size</span><input type="range" id="psize" min="0.3" max="3" step="0.1" value="1"><span class="val mono" id="psizeV">1.0</span></div>
@@ -181,7 +181,7 @@
   <div class="ctl-row"><span class="lab">Max σ loc</span><input type="range" id="sig" min="1" max="30" step="0.5" value="30"><span class="val mono" id="sigV">all</span></div>
   <div class="ctl-row"><span class="lab">Depth datum</span><div class="seg" id="segDatum"><button data-v="0" class="on">Sea level</button><button data-v="1">Local surface</button></div></div>
   <div class="ctl-row"><span class="lab">Above ground</span><div class="seg" id="segAir"><button data-v="0">Show</button><button data-v="1" class="on">Grey</button><button data-v="2">Hide</button></div></div>
-  <div class="ctl-row" id="datumNote" style="display:none"><span class="lab"></span><span class="val" style="width:auto;text-align:left">v4-NLL3D depths are below sea level</span></div>
+  <div class="ctl-row" id="datumNote" style="display:none"><span class="lab"></span><span class="val" style="width:auto;text-align:left">relocated depths are below sea level</span></div>
   <div class="ctl-row"><span class="lab"></span><span class="val mono" id="airV" style="width:auto;text-align:left"></span></div>
   <div class="ctl-row"><span class="lab">Depth from</span><input type="range" id="d0" min="-5" max="80" step="1" value="-5"><span class="val mono" id="d0V">−5 km</span></div>
   <div class="ctl-row"><span class="lab">Depth to</span><input type="range" id="d1" min="-5" max="80" step="1" value="80"><span class="val mono" id="d1V">80 km</span></div>
@@ -191,7 +191,7 @@
   <div class="ctl-row optRow" data-layer="slab"><span class="lab">Slab color</span><select id="slabColor"></select></div>
   <div class="ctl-row optRow" id="mcRow" data-layer="mc"><span class="lab">Mc map</span><select id="mcSel"></select></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model</span><select id="tomoVar"></select></div>
-  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model depth</span><select id="tomoDep"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model depth</span><input type="range" id="tomoDep" min="-3" max="80" step="1" value="12"><span class="val mono" id="tomoDepV">12 km</span></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
   </div></details>
   <div class="ctl-row" style="border-top:1px solid var(--hairline);padding-top:9px"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
@@ -362,7 +362,9 @@ const elevAt = (lon, lat) => { for (const k of patchKeys) { const v = grids[k].s
 const N = EV.lon.length;
 // Two catalogs, one event set (same IDs, same order): elon/elat/ecat hold the positions and catalog depth
 // (km) of the catalog shown; everything else per event (time, magnitude, picks, fault) is shared.
-const NLL = !!EV.n_tier;                     // v4-NLL3D (preliminary) layer present
+const NLL = !!EV.n_tier;                     // second catalog (relocated, label in M.cat2) present
+const CAT2L = (M.cat2 && M.cat2.label) || "v4-NLL3D (preliminary)", CAT2N = (M.cat2 && M.cat2.note) || "";
+if ($("btnCat2")) $("btnCat2").textContent = CAT2L;
 const TIERS = "ABCDU";
 const elon = Float32Array.from(EV.lon), elat = Float32Array.from(EV.lat), ecat = Float32Array.from(EV.dep);
 const etier = new Float32Array(N).fill(4);   // 0-4 = A-D, U (v4 location kept)
@@ -589,7 +591,10 @@ function setMc(key) {
 }
 placeMc(); setMc("best");
 
-// ---------- velocity model (Track B, private preview): one horizontal slice at a time ----------
+// ---------- velocity model (Track B): 3D textures cut by a horizontal slice and the cross-section ----------
+// As in the mt-rainier-digital-model viewer: one 3D texture per property, sampled in the fragment shader (linear in
+// longitude, latitude and depth between the model nodes); nothing above the ground or seafloor is drawn. The same
+// values feed the model image behind the events in the 2D cross-section.
 const TMM = M.tomo;
 const RAMP_DIV = [[-1, 178, 24, 43], [-0.5, 239, 138, 98], [0, 247, 247, 247], [0.5, 103, 169, 207], [1, 33, 102, 172]];   // red slow, blue fast
 const RAMP_SEQ = [[0, 68, 1, 84], [0.25, 59, 82, 139], [0.5, 33, 145, 140], [0.75, 94, 201, 98], [1, 253, 231, 37]];
@@ -601,48 +606,98 @@ const TVARS = [
   { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_SEQ }];
 const TMASK = [[0, "all cells"], [10, "DWS ≥ 10"], [100, "DWS ≥ 100"], [1000, "DWS ≥ 1,000"]]
   .concat(TMG && TMG.resp ? [[-1, "resolved in checkerboard tests"]] : []);
-const TS = { v: "dvp", k: 0, mask: 10 };
+const TS = { v: "dvp", d: 12, mask: 10 };
+const TDMAX = 80;                                       // deepest level drawn (km)
 const rampCol = (R, t) => { t = Math.max(-1, Math.min(1, t)); if (t <= R[0][0]) return R[0].slice(1);
   for (let j = 1; j < R.length; j++) if (t <= R[j][0]) { const f = (t - R[j - 1][0]) / (R[j][0] - R[j - 1][0]);
     return [1, 2, 3].map(c => R[j - 1][c] + f * (R[j][c] - R[j - 1][c])); }
   return R[R.length - 1].slice(1); };
 const tvarT = (V, x) => V.ramp === RAMP_DIV ? x / V.hi : (x - V.lo) / (V.hi - V.lo);   // diverging: -1..1, sequential: 0..1
-let tomoMesh = null;
+const tVar = () => TVARS.find(t => t.key === TS.v);
+const tMaskArr = V => TS.mask === -1 ? TMG[V.wave === "p" ? "resp" : "ress"] : TS.mask > 0 ? TMG[V.wave === "p" ? "dwsp" : "dwss"] : null;
+const tThr = () => TS.mask === -1 ? 1 : TS.mask > 0 ? Math.round(50 * Math.log10(1 + TS.mask)) : 0;
+// fractional node index of a depth (nodes are unevenly spaced)
+const tK = d => { const z = TMM.depths; if (d <= z[0]) return 0; for (let k = 0; k < z.length - 1; k++) if (d <= z[k + 1]) return k + (d - z[k]) / (z[k + 1] - z[k]); return z.length - 1; };
+// CPU sample for the 2D section: value (trilinear) or null where masked or outside the model
+function tmSample(V, lon, lat, d) {
+  const fi = (lon - TMM.west) / TMM.dx, fj = (lat - TMM.south) / TMM.dy, fk = tK(d), nx = TMM.nx, ny = TMM.ny, nz = TMM.nz;
+  if (fi < 0 || fj < 0 || fi > nx - 1 || fj > ny - 1) return null;
+  const ms = tMaskArr(V);
+  if (ms) { const idx = Math.round(fk) * nx * ny + Math.round(fj) * nx + Math.round(fi); if (ms[idx] === 255 || ms[idx] < tThr()) return null; }
+  const a = TMG[V.key], i0 = Math.min(Math.floor(fi), nx - 2), j0 = Math.min(Math.floor(fj), ny - 2), k0 = Math.min(Math.floor(fk), nz - 2);
+  const u = fi - i0, v = fj - j0, w = fk - k0; let acc = 0;
+  for (let dk = 0; dk < 2; dk++) for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) {
+    const c = a[(k0 + dk) * nx * ny + (j0 + dj) * nx + i0 + di]; if (c === 255) return null;
+    acc += (di ? u : 1 - u) * (dj ? v : 1 - v) * (dk ? w : 1 - w) * V.dec(c); }
+  return acc;
+}
+let tomoSlice = null, tomoMat = null;
 if (TMG) {
-  TS.k = Math.max(0, TMM.depths.findIndex(z => z >= 12));
-  const nc = TMM.nx * TMM.ny, hx = TMM.dx / 2, hy = TMM.dy / 2, pos = new Float32Array(nc * 12), col = new Float32Array(nc * 12);
-  for (let i = 0; i < nc; i++) {
-    const lon = TMM.west + (i % TMM.nx) * TMM.dx, lat = TMM.south + Math.floor(i / TMM.nx) * TMM.dy;
-    [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].forEach(([a, b], j) => {
-      pos[(i * 4 + j) * 3] = toX(lon + a); pos[(i * 4 + j) * 3 + 2] = toZ(lat + b); });
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
-  tomoMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85,
-    side: THREE.DoubleSide, depthWrite: false }));
-  tomoMesh.renderOrder = 21; scene.add(tomoMesh);
+  const tex3 = (arr, linear) => { const t = new THREE.Data3DTexture(arr, TMM.nx, TMM.ny, TMM.nz);
+    t.format = THREE.RedFormat; t.type = THREE.UnsignedByteType; t.unpackAlignment = 1;
+    t.minFilter = t.magFilter = linear ? THREE.LinearFilter : THREE.NearestFilter; t.needsUpdate = true; return t; };
+  const VT = Object.fromEntries(TVARS.map(V => [V.key, tex3(TMG[V.key], true)]));
+  const MT = Object.fromEntries(["dwsp", "dwss", "resp", "ress"].filter(k => TMG[k]).map(k => [k, tex3(TMG[k], false)]));
+  const LUT = Object.fromEntries(TVARS.map(V => { const b = new Uint8Array(256 * 4);
+    for (let c = 0; c < 255; c++) b.set([...rampCol(V.ramp, tvarT(V, V.dec(c))).map(Math.round), 255], c * 4);
+    const t = new THREE.DataTexture(b, 256, 1); t.colorSpace = THREE.NoColorSpace; t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true;
+    return [V.key, t]; }));
+  const TB = M.terrain.base, tz = new Float32Array(TB.nx * TB.ny);   // ground and seafloor for the above-ground test (m)
+  for (let i = 0; i < tz.length; i++) tz[i] = TER.base[i] === -32768 ? 0 : TER.base[i];
+  const terTex = new THREE.DataTexture(tz, TB.nx, TB.ny, THREE.RedFormat, THREE.FloatType);
+  terTex.minFilter = terTex.magFilter = THREE.NearestFilter; terTex.needsUpdate = true;   // R32F: nearest works everywhere
+  const dep = new Float32Array(32); TMM.depths.forEach((z, k) => dep[k] = z);
+  const TU = { uVal: { value: null }, uMask: { value: null }, uLut: { value: null }, uTer: { value: terTex }, uExag: U.exag,
+    uOpacity: { value: 0.92 }, uThr: { value: 0 }, uMaskOn: { value: 0 }, uDep: { value: dep },
+    uGeo: { value: new THREE.Vector4(KX, KZ, LON0, LAT0) }, uGrid: { value: new THREE.Vector4(TMM.west, TMM.south, TMM.dx, TMM.dy) },
+    uN: { value: new THREE.Vector3(TMM.nx, TMM.ny, TMM.nz) }, uTerBox: { value: new THREE.Vector4(TB.west, TB.east, TB.south, TB.north) },
+    uTerN: { value: new THREE.Vector2(TB.nx, TB.ny) } };
+  // drawn before the terrain (renderOrder 10), like the events (3) and faults (4-7), so the see-through ground
+  // blends over it; opaque and writing depth, so events behind a slice are hidden and events in front show
+  tomoMat = new THREE.ShaderMaterial({ uniforms: TU, transparent: false, depthWrite: true, side: THREE.DoubleSide,
+    vertexShader: `varying vec3 vPos; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: `precision highp float; precision highp sampler3D;
+      uniform sampler3D uVal, uMask; uniform sampler2D uLut, uTer;
+      uniform float uExag, uOpacity, uThr, uMaskOn; uniform float uDep[32];
+      uniform vec4 uGeo, uGrid, uTerBox; uniform vec3 uN; uniform vec2 uTerN;
+      varying vec3 vPos;
+      float kOf(float d) {
+        if (d <= uDep[0]) return 0.0;
+        for (int i = 0; i < 31; i++) { if (float(i) >= uN.z - 1.0) break;
+          if (d <= uDep[i + 1]) return float(i) + (d - uDep[i]) / (uDep[i + 1] - uDep[i]); }
+        return uN.z - 1.0; }
+      void main() {
+        float lon = vPos.x / uGeo.x + uGeo.z, lat = -vPos.z / uGeo.y + uGeo.w, d = -vPos.y / uExag;
+        float fi = (lon - uGrid.x) / uGrid.z, fj = (lat - uGrid.y) / uGrid.w;
+        if (fi < 0.0 || fj < 0.0 || fi > uN.x - 1.0 || fj > uN.y - 1.0) discard;
+        vec2 tt = vec2(((lon - uTerBox.x) / (uTerBox.y - uTerBox.x) * (uTerN.x - 1.0) + 0.5) / uTerN.x,
+                       ((lat - uTerBox.z) / (uTerBox.w - uTerBox.z) * (uTerN.y - 1.0) + 0.5) / uTerN.y);
+        if (d < -texture(uTer, tt).r * 0.001) discard;            // above the ground or seafloor
+        vec3 t = vec3((fi + 0.5) / uN.x, (fj + 0.5) / uN.y, (kOf(d) + 0.5) / uN.z);
+        if (uMaskOn > 0.5) { float m = texture(uMask, t).r * 255.0; if (m > 254.5 || m < uThr) discard; }
+        vec4 c = texture(uLut, vec2((texture(uVal, t).r * 255.0 + 0.5) / 256.0, 0.5));
+        if (c.a < 0.5) discard;
+        gl_FragColor = vec4(c.rgb, uOpacity);
+      }` });
+  tomoMat.userData = { VT, MT, LUT };
+  const x0 = toX(TMM.west), x1 = toX(TMM.west + (TMM.nx - 1) * TMM.dx), z0 = toZ(TMM.south), z1 = toZ(TMM.south + (TMM.ny - 1) * TMM.dy);
+  tomoSlice = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z0 - z1), tomoMat);
+  tomoSlice.rotation.x = -Math.PI / 2; tomoSlice.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
+  tomoSlice.frustumCulled = false; tomoSlice.renderOrder = 2; scene.add(tomoSlice);
 }
-function placeTomo() {                                 // the slice sits at its depth, with the vertical exaggeration
-  if (!tomoMesh) return;
-  const p = tomoMesh.geometry.attributes.position, y = -TMM.depths[TS.k] * U.exag.value;
-  for (let i = 1; i < p.array.length; i += 3) p.array[i] = y;
-  p.needsUpdate = true; tomoMesh.geometry.computeBoundingSphere();
-}
+function placeTomo() { if (tomoSlice) tomoSlice.position.y = -TS.d * U.exag.value; }
 function setTomo() {
-  if (!tomoMesh) return;
-  const V = TVARS.find(t => t.key === TS.v), a = TMG[V.key], w = TMG[V.wave === "p" ? "dwsp" : "dwss"];
-  const res = TS.mask === -1 ? TMG[V.wave === "p" ? "resp" : "ress"] : null;
-  const thr = TS.mask > 0 ? Math.round(50 * Math.log10(1 + TS.mask)) : -1, n = TMM.nx * TMM.ny, off = TS.k * n;
-  const g = tomoMesh.geometry, c = g.attributes.color.array, idx = [];
-  for (let i = 0; i < n; i++) {
-    const code = a[off + i];
-    if (code === 255 || (res ? !(res[off + i] > 0 && res[off + i] !== 255) : w[off + i] < thr)) continue;
-    const rgb = rampCol(V.ramp, tvarT(V, V.dec(code))).map(v => (v / 255) ** 2.2);
-    for (let j = 0; j < 4; j++) c.set(rgb, (i * 4 + j) * 3);
-    const v = i * 4; idx.push(v, v + 1, v + 2, v, v + 2, v + 3);
-  }
-  g.attributes.color.needsUpdate = true; g.setIndex(idx); placeTomo();
+  if (!tomoMat) return;
+  const V = tVar(), D = tomoMat.userData, u = tomoMat.uniforms, ms = tMaskArr(V);
+  u.uVal.value = D.VT[V.key]; u.uLut.value = D.LUT[V.key];
+  u.uMaskOn.value = ms ? 1 : 0; u.uThr.value = tThr();
+  u.uMask.value = ms ? D.MT[TS.mask === -1 ? (V.wave === "p" ? "resp" : "ress") : (V.wave === "p" ? "dwsp" : "dwss")] : null;
+  placeTomo();
+}
+function tomoSectionMesh(a, b) {          // vertical model section along the cross-section line (scene coordinates)
+  const e = U.exag.value, top = 5 * e, bot = -TDMAX * e, g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array([a.x, top, a.z, b.x, top, b.z, b.x, bot, b.z, a.x, top, a.z, b.x, bot, b.z, a.x, bot, a.z]), 3));
+  const m = new THREE.Mesh(g, tomoMat); m.frustumCulled = false; m.renderOrder = 2; return m;
 }
 setTomo();
 
@@ -758,16 +813,20 @@ const LAYERS = [
   { key: "stations", label: "Stations", color: "#66ccf2", obj: [stPoints], on: true },
   { key: "tensors", label: "Tensors", color: "#e8a33d", obj: [tensorGroup], on: true },
   { key: "mc", label: "Mc map", color: "#6f9f6b", obj: [mcMesh].filter(Boolean), on: false },
-  { key: "tomo", label: "Velocity model", color: "#c06cd8", obj: [tomoMesh].filter(Boolean), on: false },
+  { key: "tomo", label: "Velocity model", color: "#c06cd8", obj: [tomoSlice].filter(Boolean), on: false },
 ];
 const lay = $("layers");
 for (const L of LAYERS) {
   if (!L.obj.length) continue;
   const b = document.createElement("button"); b.innerHTML = `<span class="sw" style="background:${L.color}"></span>${L.label}`;
-  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); syncOptRows(); };
+  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); syncOptRows();
+    if (L.key === "tomo" && on) groundSeeThrough(); };
   b.onclick = () => set(!L.on); set(L.on); L.set = set; lay.appendChild(b);
 }
 const layer = k => LAYERS.find(L => L.key === k);
+function groundSeeThrough() {                          // the model lies under the ground: make it see-through
+  const g = $("ground"); if (g && +g.value > 0.35) { g.value = 0.25; g.dispatchEvent(new Event("input")); }
+}
 function syncOptRows() {                               // a layer's options show only while the layer is on
   document.querySelectorAll(".optRow").forEach(r => { const L = LAYERS.find(x => x.key === r.dataset.layer); r.hidden = !(L && L.on); });
 }
@@ -783,12 +842,14 @@ mcSel.onchange = () => { setMc(mcSel.value); if (!layer("mc").on) layer("mc").se
 if (TMM) {
   const tv = $("tomoVar"), td = $("tomoDep"), tk = $("tomoMask");
   tv.innerHTML = TVARS.map(V => `<option value="${V.key}">${V.label}</option>`).join("");
-  td.innerHTML = TMM.depths.map((z, k) => `<option value="${k}">${z} km</option>`).join(""); td.value = TS.k;
   tk.innerHTML = TMASK.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); tk.value = TS.mask;
-  const go = () => { TS.v = tv.value; TS.k = +td.value; TS.mask = +tk.value; setTomo(); if (!layer("tomo").on) layer("tomo").set(true); drawLegend(); };
-  tv.onchange = td.onchange = tk.onchange = go;
+  td.value = TS.d; $("tomoDepV").textContent = TS.d + " km";
+  const on = () => { if (!layer("tomo").on) layer("tomo").set(true); };
+  tv.onchange = tk.onchange = () => { TS.v = tv.value; TS.mask = +tk.value; setTomo(); on(); drawLegend(); drawSection(); };
+  td.oninput = () => { TS.d = +td.value; $("tomoDepV").textContent = TS.d + " km"; placeTomo(); on(); drawLegend(); };
 } else document.querySelectorAll(".tomoRow").forEach(r => r.style.display = "none");
-lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend(); }; });
+lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend();
+  if (SEC.on) { drawSection3D(); drawSection(); } }; });
 
 // ---------- controls ----------
 let refreshT = 0;                                                  // debounce timer of refresh()
@@ -990,7 +1051,7 @@ function drawLegend() {
     { t: "Origin time", g: "linear-gradient(90deg,#4d8cf2,#40c7b8,#dbdb6b,#fa8f3d)", l: ["2010", "2012", "2014", "2016"] },
     { t: "Share of the event's picks added after ver3", g: "linear-gradient(90deg,#8c9eb8,#ff8033)", l: ["0% (all in ver3)", "100%"] },
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] },
-    { t: "v4-NLL3D location tier", tiers: true }][F.mode];
+    { t: `${CAT2L}: location tier`, tiers: true }][F.mode];
   const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${TIERS.split("").map((t, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${t} <span class="mono" style="color:var(--text-muted)">${TIER_N[k].toLocaleString()}</span></div>`).join("")}</div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the v4 location</div>`;
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
@@ -1001,10 +1062,10 @@ function drawLegend() {
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
   const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
-  const tomoLeg = tV ? `<div><h4>${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, ${TMM.depths[TS.k]} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
+  const tomoLeg = tV ? `<div><h4>${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
     [0, 0.25, 0.5, 0.75, 1].map(f => `rgb(${rampCol(tV.ramp, tV.ramp === RAMP_DIV ? 2 * f - 1 : f).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>${tV.ramp === RAMP_DIV ? -tV.hi : tV.lo}${tV.ramp === RAMP_DIV ? " slow" : ""}</span><span>${tV.ramp === RAMP_DIV ? 0 : ((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>${tV.hi}${tV.ramp === RAMP_DIV ? " fast" : ""}</span></div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}, tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} (40-100 km cells) shown.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."} <span class="caveat">Private preview, not for distribution.</span></div></div>` : "";
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}, tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} (40-100 km cells) shown.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
     ${slab}${mcLeg}${tomoLeg}
@@ -1017,7 +1078,7 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
-    ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">v4-NLL3D (preliminary)</b>: the v4 events relocated with NonLinLoc in a 3D velocity model, depths below sea level. A first pass, to be replaced by locations in the tomography model.${F.cat ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}</div>` : ""}
+    ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${CAT2L}</b>: ${CAT2N}${F.cat ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}</div>` : ""}
     <div class="attribution">Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;
@@ -1034,14 +1095,14 @@ const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "
 const nllHtml = i => {
   if (!NLL) return "";
   const t = etier[i], T = TIERS[t];
-  if (t === 4) return `<br><span class="k">v4-NLL3D</span> tier <b>U</b> · <span class="caveat">not relocated, v4 location</span>`;
+  if (t === 4) return `<br><span class="k">${CAT2L}</span> tier <b>U</b> · <span class="caveat">not relocated, v4 location</span>`;
   const f = (v, s, d) => v === 255 ? "–" : (v * s).toFixed(d);
   const dh = Math.hypot((nlon[i] - EV.lon[i]) * 111.195 * Math.cos((nlat[i] + EV.lat[i]) * Math.PI / 360), (nlat[i] - EV.lat[i]) * 111.195);
   const dz = ndep[i] - EV.dep[i];
-  return `<br><span class="k">v4-NLL3D</span> tier <b style="color:${TIER_RGB[t]}">${T}</b> · <span class="k">shift from v4</span> ${dh.toFixed(1)} km horiz., ${dz >= 0 ? "+" : "−"}${Math.abs(dz).toFixed(1)} km depth<br>
+  return `<br><span class="k">${CAT2L}</span> tier <b style="color:${TIER_RGB[t]}">${T}</b> · <span class="k">shift from v4</span> ${dh.toFixed(1)} km horiz., ${dz >= 0 ? "+" : "−"}${Math.abs(dz).toFixed(1)} km depth<br>
     <span class="k">nphs</span> ${EV.n_nph[i]} · <span class="k">gap</span> ${f(EV.n_gap[i], 2, 0)}° · <span class="k">rms</span> ${f(EV.n_rms[i], 0.01, 2)} s`;
 };
-const evHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">${F.cat ? "v4-NLL3D (preliminary)" : "v4"} · ${eflag[i] ? "QC" : "below QC"}</span><br>
+const evHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">${F.cat ? CAT2L : "v4"} · ${eflag[i] ? "QC" : "below QC"}</span><br>
   <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span><br>
   ${elat[i].toFixed(3)}°N ${(-elon[i]).toFixed(3)}°W · <b>${edep[i].toFixed(1)} km</b> bsl${F.datum ? ` <span class="k">(catalog ${ecat[i].toFixed(1)})</span>` : ""}<br>
   <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above ground</span>' : ""}<br>
@@ -1158,6 +1219,7 @@ function drawSection3D() {
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xe8a33d, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false }));
     m.renderOrder = 14; secCurtain.add(m); };
   quad(0, 0.10); quad(SEC.w, 0.05); quad(-SEC.w, 0.05);
+  if (tomoMat && layer("tomo") && layer("tomo").on) secCurtain.add(tomoSectionMesh(a, b));   // model on the section plane
   const lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x, top, a.z), new THREE.Vector3(b.x, top, b.z)]);
   secCurtain.add(new THREE.Line(lg, new THREE.LineBasicMaterial({ color: 0xe8a33d })));
 }
@@ -1203,6 +1265,23 @@ function drawSection() {
   let kx = pw / L, ky = ph / (dmax + 4);
   if (SEC.scale === 1) { const k = Math.min(kx, ky); kx = ky = k; }
   const X = s => pad.l + s * kx, Y = d => pad.t + (d + 4) * ky;
+  // velocity model behind everything, the same values as the 3D slice (2 px cells, smoothed when drawn)
+  if (TMM && layer("tomo") && layer("tomo").on) {
+    const V = tVar(), x0 = X(0), x1 = X(L), y0 = Y(-4), y1 = Y(dmax);
+    const cw = Math.max(2, Math.round((x1 - x0) / 2)), ch = Math.max(2, Math.round((y1 - y0) / 2));
+    const oc = document.createElement("canvas"); oc.width = cw; oc.height = ch;
+    const ox = oc.getContext("2d"), im = ox.createImageData(cw, ch);
+    for (let c = 0; c < cw; c++) {
+      const s = L * (c + 0.5) / cw, [lo, la] = fromXZ(a.x + ux * s, a.z + uz * s), gd = -elevAt(lo, la) / 1000;
+      for (let r = 0; r < ch; r++) {
+        const d = -4 + (dmax + 4) * (r + 0.5) / ch; if (d < gd || d > TDMAX) continue;
+        const v = tmSample(V, lo, la, d); if (v === null) continue;
+        const rgb = rampCol(V.ramp, tvarT(V, v)), o = (r * cw + c) * 4;
+        im.data[o] = rgb[0]; im.data[o + 1] = rgb[1]; im.data[o + 2] = rgb[2]; im.data[o + 3] = 215;
+      }
+    }
+    ox.putImageData(im, 0, 0); sctx.imageSmoothingEnabled = true; sctx.drawImage(oc, x0, y0, x1 - x0, y1 - y0);
+  }
   sctx.font = "10.5px IBM Plex Mono, monospace"; sctx.fillStyle = "#6f6d66"; sctx.strokeStyle = "rgba(255,255,255,0.07)";
   for (let d = 0; d <= dmax; d += 10) { sctx.beginPath(); sctx.moveTo(pad.l, Y(d)); sctx.lineTo(X(L), Y(d)); sctx.stroke(); sctx.fillText(d + " km", 2, Y(d) + 3); }
   const step = L > 400 ? 100 : L > 150 ? 50 : L > 60 ? 20 : 10;
@@ -1287,7 +1366,8 @@ drawLegend(); layoutPanels(); refresh();
 camera.position.set(0, 900, 900); controls.target.set(0, 0, 0);
 flyTo(location.hash.slice(1) || "full");
 $("loading").remove();
-window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, ex, ez, edep, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; } };   // for scripted checks
+window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, ex, ez, edep, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; },
+  tomo: { tmSample: (lon, lat, d) => TMM ? tmSample(tVar(), lon, lat, d) : null, TS } };   // for scripted checks
 let last = performance.now(), playAcc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;

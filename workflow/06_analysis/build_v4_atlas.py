@@ -142,6 +142,11 @@ def slab_and_coupling():
     return out, meta
 
 
+CAT2 = {"path": None, "label": "v4-NLL3D (preliminary)",
+        "note": "the v4 events relocated with NonLinLoc in a 3D velocity model, depths below sea level. A first pass, "
+                "to be replaced by locations in the tomography model."}
+
+
 def events():
     c = pd.read_csv(D / "catalog_v4" / "Cascadia_relocated_catalog_v4.csv", skipinitialspace=True)
     c.columns = [x.strip() for x in c.columns]
@@ -180,7 +185,7 @@ def events():
         flt = np.where(k.notna(), k.fillna(0), 65535).astype("<u2")
         print(f"  events on a fault: {(flt < 65535).sum():,}")
     arr["flt"] = flt
-    nll = nll3d(c["ID"])
+    nll = nll3d(c["ID"], CAT2["path"])
     if nll:
         arr.update(nll)
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
@@ -190,15 +195,16 @@ def events():
                      nll3d=dict(file=NLL3D.name, tiers=TIERS) if nll else None)
 
 
-def nll3d(ids: pd.Series) -> dict | None:
+def nll3d(ids: pd.Series, path=None) -> dict | None:
     """v4-NLL3D locations aligned on the v4 event IDs, stored as offsets from the v4 location: int16 lon/lat in
     1e-4 deg (the precision of the v4 csv) and depth in 10 m; -32768 where the v4 location is kept (tier U).
     Tier 0-4 = A-D, U (255 = ID missing); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none).
     The atlas recomputes the shift from v4 from the two positions (matches shift_h_km to < 2 m)."""
-    if not NLL3D.exists():
-        print(f"  v4-NLL3D: {NLL3D} missing, layer skipped")
+    path = Path(path or NLL3D)
+    if not path.exists():
+        print(f"  second catalog: {path} missing, layer skipped")
         return None
-    n = pd.read_csv(NLL3D).set_index("ID").reindex(ids)
+    n = pd.read_csv(path).set_index("ID").reindex(ids)
     kept = (n["loc_source"] != "nll3d").to_numpy()
     d = lambda col, ref, s: np.where(kept, -32768, np.clip(np.round((n[col] - n[ref]).to_numpy(float) * s), -32767, 32767)).astype("<i2")
     u1 = lambda v, s: np.where(np.isfinite(v) & ~kept, np.clip(np.round(v * s), 0, 254), 255).astype("u1")
@@ -207,7 +213,7 @@ def nll3d(ids: pd.Series) -> dict | None:
            "n_tier": tier, "n_nph": n["nphs"].fillna(0).clip(0, 255).to_numpy().astype("u1"),
            "n_gap": u1(n["gap"].to_numpy(float), 0.5), "n_rms": u1(n["rms"].to_numpy(float), 100)}
     cnt = pd.Series(tier).map(dict(enumerate(TIERS))).value_counts().reindex(list(TIERS)).fillna(0).astype(int)
-    print(f"  v4-NLL3D: {(~kept).sum():,} relocated, {kept.sum():,} keep v4; tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
+    print(f"  second catalog: {(~kept).sum():,} relocated, {kept.sum():,} keep v4; tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
     return out
 
 
@@ -437,9 +443,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
     ap.add_argument("--out", default=str(D / "catalog_v4" / "atlas" / "cascadia_v4_atlas.html"))
-    ap.add_argument("--model", help="Track B velocity model netCDF to add as a layer (private preview builds only)")
+    ap.add_argument("--model", help="Track B velocity model netCDF to add as a layer")
+    ap.add_argument("--catalog2", help="second catalog (same IDs as v4, columns as the Track A catalogue); default v4-NLL3D")
+    ap.add_argument("--catalog2-label", help="its short name in the catalog switch")
+    ap.add_argument("--catalog2-note", help="one or two sentences for the legend")
     a = ap.parse_args(argv)
     print("building atlas data")
+    if a.catalog2:
+        CAT2.update(path=a.catalog2, label=a.catalog2_label or Path(a.catalog2).stem, note=a.catalog2_note or "")
     ev, ev_meta = events()
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()
@@ -448,7 +459,7 @@ def main(argv=None):
     tm, tm_meta = tomo_model(a.model) if a.model else (None, None)
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],
-                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
+                     events=ev_meta, cat2=dict(label=CAT2["label"], note=CAT2["note"]), terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
                      built=pd.Timestamp.now().strftime("%Y-%m-%d")),
         "events": blob(ev), "terrain": blob(ter), "slab": blob(sl), "faults": blob(fa) if fa else None,
         "mc": blob(mc) if mc else None, "tomo": blob(tm) if tm else None,

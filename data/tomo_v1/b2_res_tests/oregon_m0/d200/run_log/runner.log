@@ -1,0 +1,41 @@
+17:35:47 start oregon_m0/res_tests/spike_null inv_d200_s480
+17:35:49 start oregon_m0/res_tests/spike_zm001 inv_d200_s480
+17:35:51 start oregon_m0/res_tests/spike_zp003 inv_d200_s480
+17:35:53 start oregon_m0/res_tests/spike_zp007 inv_d200_s480
+17:35:55 start oregon_m0/res_tests/spike_zp012 inv_d200_s480
+17:35:57 start oregon_m0/res_tests/spike_zp021 inv_d200_s480
+17:35:59 start oregon_m0/res_tests/spike_zp034 inv_d200_s480
+17:36:01 start oregon_m0/res_tests/spike_zp055 inv_d200_s480
+17:47:30 done rc=0 oregon_m0/res_tests/spike_zp021 inv_d200_s480
+17:47:33 start oregon_m0/res_tests/chk_L060_p0_noise inv_d200_s480
+17:47:37 done rc=0 oregon_m0/res_tests/spike_zp012 inv_d200_s480
+17:47:41 done rc=0 oregon_m0/res_tests/spike_zp055 inv_d200_s480
+17:47:50 start oregon_m0/res_tests/chk_L060_p0_clean inv_d200_s480
+17:47:52 start oregon_m0/res_tests/chk_L060_p1_noise inv_d200_s480
+17:47:56 done rc=0 oregon_m0/res_tests/spike_zm001 inv_d200_s480
+17:48:00 done rc=0 oregon_m0/res_tests/spike_zp007 inv_d200_s480
+17:48:09 start oregon_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s480
+17:48:11 start oregon_m0/res_tests/chk_L040_p0_noise inv_d200_s480
+17:48:11 done rc=0 oregon_m0/res_tests/spike_zp034 inv_d200_s480
+17:48:13 start oregon_m0/res_tests/chk_L040_p0_clean inv_d200_s480
+17:48:16 done rc=0 oregon_m0/res_tests/spike_zp003 inv_d200_s480
+17:48:30 start oregon_m0/res_tests/chk_L040_p1_noise inv_d200_s480
+17:48:33 done rc=0 oregon_m0/res_tests/spike_null inv_d200_s480
+17:48:47 start oregon_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s480
+18:03:41 done rc=0 oregon_m0/res_tests/chk_L040_p0_clean inv_d200_s480
+18:03:49 start oregon_m0/res_tests/chk_L100_p0_noise inv_d200_s480
+18:04:22 done rc=0 oregon_m0/res_tests/chk_L060_p0_clean inv_d200_s480
+18:04:36 start oregon_m0/res_tests/chk_L100_p0_clean inv_d200_s480
+18:05:16 done rc=0 oregon_m0/res_tests/chk_L060_p1_noise inv_d200_s480
+18:05:23 start oregon_m0/res_tests/chk_L100_p1_noise inv_d200_s480
+18:05:46 done rc=0 oregon_m0/res_tests/chk_L060_p0_noise inv_d200_s480
+18:05:52 done rc=0 oregon_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s480
+18:05:55 start oregon_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s480
+18:06:00 done rc=0 oregon_m0/res_tests/chk_L040_p0_noise inv_d200_s480
+18:06:49 done rc=0 oregon_m0/res_tests/chk_L040_p1_noise inv_d200_s480
+18:07:23 done rc=0 oregon_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s480
+18:19:03 done rc=0 oregon_m0/res_tests/chk_L100_p0_clean inv_d200_s480
+18:20:35 done rc=0 oregon_m0/res_tests/chk_L100_p0_noise inv_d200_s480
+18:21:59 done rc=0 oregon_m0/res_tests/chk_L100_p1_noise inv_d200_s480
+18:22:55 done rc=0 oregon_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s480
+ALL DONE 18:22:55

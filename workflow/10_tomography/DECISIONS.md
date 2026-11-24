@@ -584,3 +584,25 @@ no datum change fixes it), so under D-B055 they cannot be published. PI: the pap
 relocation in the final Track B model, once the open workflow fixes are in (round 2: upward pull, station reach, 80 km
 floor, tier U without v4 hypocentres). Catalog v4 stays the association and pick catalog (event IDs, picks, times,
 magnitudes). Asking Ian for a corrected GENIE/GraphDD run is not needed for the paper.
+
+### D-B058 Catalog versions v5.x (adopted, 2026-11-24, PI)
+Catalog v5.0 = the catalog v4 events and picks (v4.1 event list) with hypocentres from the B4 NonLinLoc relocation in
+merged model v0.3.1 (run b4_iter1_v0.3.1, D-B056 topography floor). It is an interim version: v5.1 = the NLLoc
+relocation rerun after the round-2 workflow fixes (upward pull, station reach, 80 km floor, tier U; D-B057), v5.2 =
+the B5 tomoDD relative relocation (D-B053) of v5.1. Each version goes into the private Zenodo draft 23084158 as one
+file, catalog_v5.zip (all versions, replaced at each version, as velocity_models.zip), and onto the atlas. Magnitudes
+in v5.0 are the v4.1 Route A values (computed with v4 hypocentres); recomputation with the new hypocentres is STATUS
+step 9. Note: the pick sets are also numbered ver5/ver6; "catalog v5.x" always means this event catalog.
+
+### D-B059 Tier U keeps its v4 hypocentre in v5.0, flagged (adopted, 2026-11-24, PI; exception to D-B055 for v5.0)
+Events NonLinLoc cannot locate (tier U, about 15,000, mostly <= 5 picks) keep their v4 hypocentre in v5.0 with
+loc_source = v4, tier U and the above_surface flag (about 4,000 of them are above the ground or seafloor). The PI chose
+this over blank hypocentres or dropping the rows, knowing it is an exception to D-B055; v5.0 is therefore flagged
+"publishable: false" by b4_catalog.py, and stays in the private Zenodo draft and on the atlas with the flag shown.
+Round 2 (D-B057) is to remove the copy of v4 hypocentres for v5.1.
+
+### D-B060 B5 uses catalog differential times first; waveform cross-correlation times later (adopted, 2026-11-24, PI)
+The whole-catalog B5 run (tomoDD-SE relocation-only, D-B053; frozen binaries D-B054; model frozen at the B4 model)
+uses catalog differential times (tomodd.dt rules) now, as in the D-B048 test, where they moved the B4 locations
+little. Waveform cross-correlation times (D-B040) are a second pass once waveforms are fetched. Driver on branch
+tomo/b5 (worktree ~/wt_b5_full), notes/b5_relocation.md.

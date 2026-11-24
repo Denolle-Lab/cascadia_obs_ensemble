@@ -19,5 +19,8 @@ LOCPHASEID S S s Sg Sn
 LOCQUAL2ERR 0.05 0.1 0.15 0.3 99999.9
 LOCPHSTAT 9999.0 -1 9999.0 1.0 1.0 9999.9 -9999.9 9999.9
 LOCANGLES ANGLES_YES 5
-LOCTOPO_SURFACE /wd1/mdenolle_data/reloc_v5/topo/topo_01m.bin 0
+# topography floor (D-B055/D-B056): NLLoc reads this grid by nearest node, so each 15 s node holds the minimum of the
+# bilinear earth_relief 01m surface over its node cell, minus 1 m, Earth-flattened (h' = Re ln(1 + h/Re) <= h, so
+# exact for the flattened B4 grids and at most 2.2 m conservative in the true frame); a2_make_topo_surface_cons.py
+LOCTOPO_SURFACE /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_eft.bin 0
 __STATERMS__

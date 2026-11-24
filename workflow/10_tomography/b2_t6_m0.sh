@@ -11,7 +11,8 @@
 #   run      blanco_oregon_v2 d200_s20, oregon_v2g d200_s20, margin_m0_v2 d200_s20 and d1000_s20 (CND record),
 #            each followed by the back-transform
 #   analyse  b2_t6_joint.py (T6), b2_tomodd_summary.py for the three regions, b2_m0_report.py (M0 maps)
-#   publish  commit data/tomo_v1/b2_merge/{t6,m0} and the run summaries, push, comment on PR #33
+#   publish  commit data/tomo_v1/b2_merge/{t6,m0} and the run summaries (files < 5 MB, larger ones listed in each
+#            folder's not_in_git.txt; only these files, whatever else is staged), push, comment on PR #33
 set -uo pipefail
 if [ -z "${B2_T6_COPY:-}" ]; then
   cp "$0" /wd1/mdenolle_data/tomo_v1/b2_tomodd/.t6_m0_running.sh
@@ -85,9 +86,17 @@ stage_publish() {
   exec 9> $LOCK; flock 9
   cd $CODE || return 1
   local br; br=$(git branch --show-current)
-  git add $(find data/tomo_v1/b2_merge/t6 data/tomo_v1/b2_merge/m0 -type f -size -5M)
-  if git diff --cached --quiet; then log "nothing new to commit"; else
-    git commit -q -F - <<EOF || return 1
+  # 5 MB limit in bytes: find rounds -size 5M up to whole MiB, so files of 4-5 MiB were in neither list
+  local big="" files d
+  for d in data/tomo_v1/b2_merge/t6 data/tomo_v1/b2_merge/m0; do
+    find $d -type f ! -size -5242880c > $d/not_in_git.txt; big+=$(cat $d/not_in_git.txt); done
+  mapfile -t files < <(find data/tomo_v1/b2_merge/t6 data/tomo_v1/b2_merge/m0 -type f -size -5242880c)
+  [ ${#files[@]} -gt 0 ] || { log "no file to publish in $OUTM/{t6,m0}"; return 1; }
+  # stop if git add fails (e.g. index.lock held by a session in this worktree), and commit only these files, not
+  # whatever else is staged
+  git add -- "${files[@]}" || return 1
+  if git diff --cached --quiet -- "${files[@]}"; then log "nothing new to commit"; else
+    git commit -q -F - -- "${files[@]}" <<EOF || return 1
 Track B: T6 joint vs stitched (blanco + oregon) and M0 coarse whole-margin inversion, damping 200 (D-B044, D-B045)
 
 Runs on $RUNS: blanco_oregon_v2 d200_s20, oregon_v2g d200_s20, margin_m0_v2 d200_s20 / d1000_s20.
@@ -105,7 +114,7 @@ M0 scan:
 \`\`\`
 $(cut -d, -f1,2,6,8,9,10,13,14,15,16,21,23 data/tomo_v1/b2_merge/m0/scan_summary.csv | column -t -s,)
 \`\`\`
-Files: data/tomo_v1/b2_merge/t6/, data/tomo_v1/b2_merge/m0/. Not yet reviewed by Claude in the session."
+Files: data/tomo_v1/b2_merge/t6/, data/tomo_v1/b2_merge/m0/.${big:+ Files over 5 MB not in git: see not_in_git.txt in each folder.} Not yet reviewed by Claude in the session."
   gh pr comment 33 --body "$body" > /dev/null && log "commented on PR #33"
 }
 

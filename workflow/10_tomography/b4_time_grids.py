@@ -9,8 +9,22 @@ Grids: the D-B005 Lambert lattice (origin -513, -709 km, z -5 to 80 km); per sta
 and velocity, Podvin-Lecomte Grid2Time (no angles) at 1 km and 0.5 km cells, combined on the 1 km nodes as
 T = T0.5 - k (T1 - T0.5) with k = tomodd.p1.richardson_k (P 1.33, S 1.28): +0.014 / +0.022 s median against the
 TauP-checked reference (notes/forward_accuracy.md), against +0.21 / +0.37 s for the v4-NLL3D grids.
+Within 2 km of the station T0.5 alone, tapered linearly to the combination at 5 km (R_T05, R_COMB): the
+extrapolation fails next to the source (negative times; PR #35 finding 14). This removes the negative and too-early
+times within 5 km only. T1's start-up error at the source also travels along the rays, and beyond 5 km the taper
+does not correct it: there T stays early by the excess of k (T1 - T0.5) over the network's (NED.CC about 0.04 s P /
+0.06 s S earlier than SEP.CC and VALT.CC, 0.4 and 1.6 km away). The manifest records per grid the median of T0.5 - T
+over rock nodes 5-15 km from the station (notes.t05_minus_t_s). In v0.3.0 it is 0.014 s P / 0.024 s S for the median
+station, 0.036 / 0.064 s at the 90th percentile, 0.056 / 0.093 s for NED.CC and up to 0.078 / 0.166 s at seafloor
+stations (J48A.7D). D-B052 (PI 2026-11-24): no whole-grid fallback. A T0.5-only grid for the outliers (median +
+3 x 1.4826 MAD: P 0.044 s, S 0.075 s) fixed some stations against co-located neighbours (NED.CC, J17D.7D, BS58.XG)
+and made others worse (FN08C.7D, G30B.7D, J25C.7D), and T0.5 is itself late with distance; the remaining offset is
+close to a constant shift per station, which the B4 station terms absorb. The diagnostic stays in the manifest; the
+fallback code is kept but off (params b4.grid_fallback.enabled false).
 The velocity field is computed once per cell size on the whole lattice (memmaps in the work folder) and cropped for
-each station.
+each station. A rerun into the same TIME_NAME keeps the grids already there, so it is refused unless the parameters
+are those of the earlier run (its manifest, or work_<TIME_NAME>/params.json of an interrupted run): time_b4_v0.3.0
+was built without the taper, and a new build needs a new TIME_NAME.
 
 Depth axis of the time grids = flattened depth z' = Re ln(Re / (Re - z)): NLLoc hypocentres from these grids are in
 z' and are mapped back with z = Re (1 - exp(-z' / Re)) (b4_unflatten.py; 0.2 km at 50 km).
@@ -44,6 +58,18 @@ HALF = 250.0                                          # km, box half-width (Trac
 TRANS = ("TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig 45.000000  LongOrig -125.800000  FirstStdParal 41.000000"
          "  SecondStdParal 49.000000  RotCW 0.000000")
 G = read_nll_hdr(NLL_MODEL / "cascadia3d.P.mod")      # the D-B005 lattice
+# job() takes crop indices as km from x0/y0 and doubles them for the 0.5 km field: only right on a 1 km lattice
+assert G["dx"] == 1.0, "b4_time_grids crop math assumes a 1 km D-B005 lattice"
+# Near the station T1's error comes from Grid2Time's start-up of the source cell, not from h^p, and the Richardson
+# step amplifies it (NED.CC P: -0.10 s at 0.4 km, 0.17 s for 0.38 s at 1.3 km; PR #35 finding 14). So T0.5 alone
+# within R_T05 of the source, the combination beyond R_COMB, linear in distance between. Only the nodes within R_COMB
+# are fixed: the start-up error carried along the rays beyond it is not (NED.CC about -0.04 s P / -0.06 s S against
+# SEP.CC and VALT.CC); job() measures it over R_DIAG for the manifest (D-B052: no whole-grid fallback, see docstring).
+R_T05, R_COMB = 2.0, 5.0                               # km, 3D distance from the GTSRCE position in the grid frame
+R_DIAG = (5.0, 15.0)                                   # km, shell of that diagnostic, just beyond the taper
+_GF = dict((P.get("b4") or {}).get("grid_fallback") or {})                 # D-B052: off unless enabled
+FALLBACK = ({"P": float(_GF.get("P", 0.044)), "S": float(_GF.get("S", 0.075))} if _GF.get("enabled")
+            else {"P": float("inf"), "S": float("inf")})                   # s; inf = never
 
 
 def proj():
@@ -126,11 +152,24 @@ def g2t(wd, tag, label, lat, lon, zsrc, phase, field, shape, dx, i0, i1, j0, j1)
     return wd / f"t_{tag}.{phase}.{label}.time"
 
 
+def near(src, g, rad):
+    """Block of nodes of grid g within rad km of src per axis (clipped to the grid), and their 3D distance to src."""
+    blk, ax = [], []
+    for s, o, n in zip(src, ("x0", "y0", "z0"), ("nx", "ny", "nz")):
+        f = (s - g[o]) / g["dx"]
+        b0, b1 = max(0, int(np.floor(f - rad / g["dx"]))), min(g[n], int(np.ceil(f + rad / g["dx"])) + 1)
+        blk.append(slice(b0, b1))
+        ax.append(g[o] + g["dx"] * np.arange(b0, b1) - s)
+    return tuple(blk), np.sqrt(ax[0][:, None, None] ** 2 + ax[1][None, :, None] ** 2 + ax[2][None, None, :] ** 2)
+
+
 def job(a):
     label, lat, lon, zsrc, phase, fields, shapes, work, out = a
     dst = out / f"cascadia3d.{phase}.{label}.time"
+    diag = work / f"{label}.{phase}.t05off"           # the diagnostic and fallback below, for a resumed run's manifest
     if Path(f"{dst}.hdr").exists():
-        return label, phase, "exists"
+        d = diag.read_text().split() if diag.exists() else []
+        return label, phase, "exists", float(d[0]) if d else None, bool(int(d[1])) if len(d) > 1 else None
     sx, sy = (v / 1e3 for v in proj()(lon, lat))
     i0 = max(0, int(np.floor(sx - HALF - G["x0"]))); i1 = min(G["nx"] - 1, int(np.ceil(sx + HALF - G["x0"])))
     j0 = max(0, int(np.floor(sy - HALF - G["y0"]))); j1 = min(G["ny"] - 1, int(np.ceil(sy + HALF - G["y0"])))
@@ -143,10 +182,32 @@ def job(a):
     t05 = np.fromfile(f"{r05}.buf", "<f4").reshape(g05["nx"], g05["ny"], g05["nz"])[::2, ::2, ::2]
     assert t05.shape == t1.shape, (t05.shape, t1.shape)
     k = T["p1"]["richardson_k"][phase]
-    (t05 - k * (t1 - t05)).astype("<f4").tofile(f"{dst}.buf")
-    shutil.copy(f"{r1}.hdr", f"{dst}.hdr")
+    tt = (t05 - k * (t1 - t05)).astype("<f4")
+    # taper to T0.5 near the source, only on the block of nodes within R_COMB (w = 1 leaves tt unchanged elsewhere)
+    src = [float(v) for v in Path(f"{r1}.hdr").read_text().splitlines()[1].split()[1:4]]   # x, y, z' of the source
+    blk, r = near(src, g1, R_COMB)
+    w = np.clip((r - R_T05) / (R_COMB - R_T05), 0.0, 1.0)
+    tt[blk] = t05[blk] + w * (tt[blk] - t05[blk])
+    # what the taper leaves: beyond R_COMB, T0.5 - T = k (T1 - T0.5); well above the network's = start-up error of T1
+    # carried along the rays (not corrected; see the docstring). Rock nodes only (1 km P cell from the node with
+    # Vp >= 1.6 km/s, build_field's rule; flattening adds at most 0.3% this shallow): water and air nodes have a small
+    # T0.5 - T and hide the offset (NED.CC P 0.028 s over all nodes, 0.056 s over rock)
+    blk, r = near(src, g1, R_DIAG[1])
+    vp = 1.0 / np.memmap(fields[1.0]["P"], dtype="<f4", mode="r", shape=shapes[1.0])[
+        tuple(slice(o + b.start, o + b.stop) for o, b in zip((i0, j0, 0), blk))]
+    sel = (r >= R_DIAG[0]) & (r <= R_DIAG[1]) & (vp >= 1.6)
+    off = round(float(np.median((t05[blk] - tt[blk])[sel])), 4)
+    # D-B052: start-up offset above the network's -> T0.5 for the whole grid (1 km nodes of the 0.5 km run, same hdr)
+    fb = bool(off > FALLBACK[phase])
+    if fb:
+        tt = t05.astype("<f4")                         # contiguous copy of the strided view
+    # NLLoc rejects or drops negative predicted times without a message: stop here instead
+    assert np.isfinite(tt).all() and tt.min() >= 0, (label, phase, float(np.nanmin(tt)))
+    tt.tofile(f"{dst}.buf")
+    diag.write_text(f"{off} {int(fb)}\n")
+    shutil.copy(f"{r1}.hdr", f"{dst}.hdr")           # last: marks the grid complete
     shutil.rmtree(wd)
-    return label, phase, "ok"
+    return label, phase, "ok", off, fb
 
 
 def main():
@@ -159,8 +220,18 @@ def main():
     ds = xr.open_dataset(Path(X["store"]) / X["name"] / f"v{a.version}.nc")
     out = RELOC / a.time_name
     work = RELOC / f"work_{a.time_name}"
+    prm = {"version": a.version, "half_km": HALF, "richardson_k": T["p1"]["richardson_k"], "eft": True,
+           "centred": True, "cells_km": [1.0, 0.5], "t05_taper_km": [R_T05, R_COMB], "grid_fallback_s": FALLBACK}
+    # a rerun keeps the grids and fields already there: refuse them when built with other or unknown parameters
+    # (time_b4_v0.3.0 has no taper), or the manifest would give them the new ones
+    stamp = work / "params.json"                      # written now, so an interrupted run can be resumed
+    old = [json.loads(p.read_text())["params"] for p in out.glob("b4_time_grids_*.manifest.json")]
+    old += [json.loads(stamp.read_text())] if stamp.exists() else []
+    if any(o != json.loads(json.dumps(prm)) for o in old) or (not old and any(out.glob("*.time.hdr"))):
+        sys.exit(f"{out} holds grids built with other or unknown parameters {old}: use a new TIME_NAME")
     out.mkdir(parents=True, exist_ok=True)
     work.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(json.dumps(prm))
     fields, shapes = {}, {}
     for dx in (1.0, 0.5):
         fields[dx], shapes[dx] = build_field(ds, dx, work)
@@ -174,14 +245,37 @@ def main():
     with ProcessPoolExecutor(a.nproc) as ex:
         for i, r in enumerate(ex.map(job, jobs, chunksize=1)):
             res.append(r)
-            if i % 50 == 0:
-                print(f"{i + 1}/{len(jobs)} {r}", flush=True)
+            if i % 50 == 0 or r[4]:
+                print(f"{i + 1}/{len(jobs)} {r}" + (" D-B052 fallback: T0.5 whole grid" if r[4] else ""), flush=True)
+    # per grid: median of T0.5 - T over rock nodes R_DIAG km from the station, the offset the taper leaves (docstring)
+    off = {f"{ph}.{lab}": o for lab, ph, _, o, _ in res}
+    fbk = {f"{ph}.{lab}": f for lab, ph, _, _, f in res}
+    for ph in ("P", "S"):
+        v = sorted(k for k, f in fbk.items() if k[0] == ph and f)
+        print(f"D-B052 fallback {ph} (> {FALLBACK[ph]} s): {len(v)}/{sum(k[0] == ph for k in fbk)} {v}", flush=True)
+    summ = {}
+    for ph in ("P", "S"):
+        v = {k: o for k, o in off.items() if k[0] == ph and o is not None}
+        if v:
+            x = np.array(list(v.values()))
+            summ[ph] = {"median": round(float(np.median(x)), 4), "p90": round(float(np.percentile(x, 90)), 4),
+                        "top10": dict(sorted(v.items(), key=lambda kv: -kv[1])[:10])}
+            print(f"T0.5 - T, {ph}, {R_DIAG[0]:g}-{R_DIAG[1]:g} km: {json.dumps(summ[ph])}", flush=True)
     write_manifest(f"b4_time_grids_{a.time_name}", out,
                    inputs=[Path(X["store"]) / X["name"] / f"v{a.version}.nc", NLL_MODEL / "cascadia3d.P.mod.buf",
                            NLL_MODEL / "stations_GTSRCE.in"],
-                   params={"version": a.version, "half_km": HALF, "richardson_k": T["p1"]["richardson_k"],
-                           "eft": True, "centred": True, "cells_km": [1.0, 0.5]},
-                   counts={"station_phases": len(jobs), "ok": sum(r[2] == "ok" for r in res)})
+                   params=prm,
+                   counts={"station_phases": len(jobs), "ok": sum(r[2] == "ok" for r in res),
+                           "fallback": sum(bool(f) for f in fbk.values())},
+                   notes={"t05_minus_t_s": off, "t05_minus_t_summary": summ, "t05_minus_t_shell_km": list(R_DIAG),
+                          "t05_minus_t_about": f"median of T0.5 - T over rock nodes {R_DIAG[0]:g}-{R_DIAG[1]:g} km "
+                          "from the station, T = the tapered Richardson combination; well above the network median "
+                          "(v0.3.0: 0.014 s P / 0.024 s S) = start-up error of T1 carried beyond the taper; None = "
+                          "grid kept from a run without the diagnostic",
+                          "grid_fallback": fbk, "grid_fallback_threshold_s": FALLBACK,
+                          "grid_fallback_about": "D-B052: true = t05_minus_t_s above the phase threshold, so the grid "
+                          "written is T0.5 (0.5 km run on the 1 km nodes) everywhere instead of the combination; "
+                          "None = grid kept from a run without the record"})
     print(json.dumps({"done": len(res), "ok": sum(r[2] == "ok" for r in res)}))
 
 

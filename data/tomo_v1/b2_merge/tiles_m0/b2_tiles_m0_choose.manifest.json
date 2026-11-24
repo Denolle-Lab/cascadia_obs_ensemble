@@ -1,0 +1,289 @@
+{
+ "name": "b2_tiles_m0_choose",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_tiles_m0_choose.py",
+ "argv": [],
+ "utc": "2026-11-24T01:33:55.110911+00:00",
+ "git_commit": "4cd156850a259016e3e64d87a4d88cbc446ba925",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": {
+  "merge": {
+   "grid": {
+    "lon_step": 0.125,
+    "lat_step": 0.1
+   },
+   "max_depth_km": 55,
+   "mask_default_damp": 1000,
+   "pairs": [
+    [
+     "blanco_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d300_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "blanco_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "blanco_v2",
+     "ridges_north_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d200_s20"
+      ],
+      [
+       "d1000_s20",
+       "d200_s20"
+      ]
+     ]
+    ],
+    [
+     "oregon_v2",
+     "washington_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ]
+     ]
+    ]
+   ],
+   "t6": {
+    "joint": [
+     "blanco_oregon_v2",
+     "d200_s20"
+    ],
+    "tile_a": [
+     "blanco_v2",
+     "d200_s20"
+    ],
+    "tile_b": [
+     "oregon_v2g",
+     "d200_s20"
+    ],
+    "mask_tiles": [
+     "blanco_v2",
+     "oregon_v2"
+    ],
+    "taper_km": 15,
+    "floor": 0.1,
+    "yardsticks": {
+     "damp200_vs_300_A": [
+      "blanco_v2",
+      "d200_s20",
+      "blanco_v2",
+      "d300_s20"
+     ],
+     "damp200_vs_300_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2",
+      "d300_s20"
+     ],
+     "weightscale_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2g",
+      "d200_s20"
+     ]
+    }
+   },
+   "m0_smooth_scan": [
+    [
+     60,
+     60,
+     30
+    ],
+    [
+     120,
+     120,
+     60
+    ],
+    [
+     240,
+     240,
+     120
+    ],
+    [
+     480,
+     480,
+     240
+    ],
+    [
+     960,
+     960,
+     480
+    ],
+    [
+     1920,
+     1920,
+     960
+    ]
+   ],
+   "tile_smooth_scan": [
+    [
+     20,
+     20,
+     10
+    ],
+    [
+     60,
+     60,
+     30
+    ],
+    [
+     120,
+     120,
+     60
+    ],
+    [
+     240,
+     240,
+     120
+    ],
+    [
+     480,
+     480,
+     240
+    ]
+   ],
+   "smooth_rule_tol": 0.015,
+   "product": {
+    "choice": "data/tomo_v1/b2_merge/tiles_m0/choice.csv",
+    "reference": "margin_m0_v2/d200_s480",
+    "grid": {
+     "lon": [
+      -131.75,
+      -120.125,
+      0.125
+     ],
+     "lat": [
+      38.9,
+      50.6,
+      0.1
+     ]
+    },
+    "taper_km": 15,
+    "floor": 0.1
+   }
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/summary_runs.csv",
+   "size": 1002,
+   "mtime": "2026-11-24T01:33:40.085135+00:00",
+   "md5": "2e3df26b18afbb09dffea97d924f48b8"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_m0/summary_runs.csv",
+   "size": 998,
+   "mtime": "2026-11-24T01:33:43.074116+00:00",
+   "md5": "36ea612831d25a1e155662fe5eaeb013"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/summary_runs.csv",
+   "size": 990,
+   "mtime": "2026-11-24T01:33:46.170095+00:00",
+   "md5": "722a45137198dd471e95057cc67781c1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/summary_runs.csv",
+   "size": 1003,
+   "mtime": "2026-11-24T01:33:49.174075+00:00",
+   "md5": "52bee638064213bbd77482e578e802fc"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/summary_runs.csv",
+   "size": 978,
+   "mtime": "2026-11-24T01:33:52.231055+00:00",
+   "md5": "5642881fcc8edeb553695cdd9908b76a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/choice.csv",
+   "size": 387,
+   "mtime": "2026-11-24T01:33:55.110038+00:00",
+   "md5": "c86fc7220c85a5f9e41e7e619bee3096"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/summary.md",
+   "size": 4553,
+   "mtime": "2026-11-24T01:33:55.110038+00:00",
+   "md5": "d9e45e64485d080cb57908922b61220f"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

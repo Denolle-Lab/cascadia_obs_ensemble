@@ -1,0 +1,27 @@
+{
+ "region":"mendocino_gorda_c_m0",
+ "events":12191,
+ "stations":161,
+ "obs_stations":113,
+ "picks":267834,
+ "P":129060,
+ "S":138774,
+ "dt_pairs":44362,
+ "dt_data":651518,
+ "max_sta_per_event":57,
+ "air_dep_km":-1.93,
+ "center_lat":41.3,
+ "center_lon":-125.0,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_mendocino_gorda_c.csv",
+  "p1_reference":"mendocino_gorda_c_v2\/p1_reference",
+  "station_corr_from":"mendocino_gorda_c_v2"
+ },
+ "nx":55,
+ "ny":49,
+ "nz":23,
+ "npar":104622
+}

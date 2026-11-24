@@ -1,0 +1,138 @@
+{
+ "name": "b2_m0_report",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_report.py",
+ "argv": [
+  "mendocino_gorda_c_m0",
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c"
+ ],
+ "utc": "2026-11-24T01:33:42.484229+00:00",
+ "git_commit": "4cd156850a259016e3e64d87a4d88cbc446ba925",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": {
+  "region": {
+   "b1b": "b1b_balanced_c",
+   "bins": {
+    "bin": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k_fmt",
+    "bin_syn": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k",
+    "bin_check": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt"
+   },
+   "limits": {
+    "MAXEVE": 13000,
+    "MAXDATA": 2000000
+   },
+   "events_lat": [
+    39.5,
+    43.1
+   ],
+   "events_lon": [
+    -127.5,
+    -122.5
+   ],
+   "station_margin_deg": [
+    0.5,
+    0.7
+   ],
+   "node_lon": [
+    -128.25,
+    -121.75,
+    0.125
+   ],
+   "node_lat": [
+    39.0,
+    43.6,
+    0.1
+   ],
+   "forward": {
+    "coords": "ellipsoid",
+    "mod": "nearest",
+    "station_corr": true,
+    "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv",
+    "p1_reference": "mendocino_gorda_c_v2/p1_reference",
+    "station_corr_from": "mendocino_gorda_c_v2"
+   },
+   "weights_scale": "dataset",
+   "start_model": "margin_m0_v2/d200_s480",
+   "start_model_mode": "change",
+   "damp": 200
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/d200_s120/Output_Files/model_geo.npz",
+   "size": 184426,
+   "mtime": "2026-11-24T01:09:46.273778+00:00",
+   "md5": "1546f80c9d8d7cb56d0bc75bdfb4eeb5"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/d200_s20/Output_Files/model_geo.npz",
+   "size": 187642,
+   "mtime": "2026-11-24T01:10:48.244416+00:00",
+   "md5": "fe7076ed5a8432d5655aa01f2543c9c6"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/d200_s240/Output_Files/model_geo.npz",
+   "size": 183768,
+   "mtime": "2026-11-24T01:08:15.797311+00:00",
+   "md5": "2434c2c2b3bf98eb1a6cd372beb37b64"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/d200_s480/Output_Files/model_geo.npz",
+   "size": 183398,
+   "mtime": "2026-11-24T01:11:01.576338+00:00",
+   "md5": "5beeddb94c07e0f378f9f20ae840e438"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_m0/d200_s60/Output_Files/model_geo.npz",
+   "size": 185446,
+   "mtime": "2026-11-24T01:10:34.017500+00:00",
+   "md5": "bc168b22d9590f9e1541388718781181"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/maps_d200_s120.png",
+   "size": 97556,
+   "mtime": "2026-11-24T01:33:41.295127+00:00",
+   "md5": "4ac88693b02b9f01d13a3107912ec966"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/maps_d200_s20.png",
+   "size": 102378,
+   "mtime": "2026-11-24T01:33:41.564126+00:00",
+   "md5": "f6e871c04ce4bd4543e1c590a11d77b8"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/maps_d200_s240.png",
+   "size": 91292,
+   "mtime": "2026-11-24T01:33:41.808124+00:00",
+   "md5": "a23e80c3b1b98680f272e0c59d43cdb5"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/maps_d200_s480.png",
+   "size": 83318,
+   "mtime": "2026-11-24T01:33:42.088122+00:00",
+   "md5": "de2f37ff6df581309f3ed6e455df387e"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/maps_d200_s60.png",
+   "size": 101282,
+   "mtime": "2026-11-24T01:33:42.329121+00:00",
+   "md5": "12b3d621be672dd1fa9fec45bff65796"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/start_vp.png",
+   "size": 51467,
+   "mtime": "2026-11-24T01:33:42.481120+00:00",
+   "md5": "2c9cbc44cbe0884c98275652482b75a7"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/mendocino_gorda_c/summary.md",
+   "size": 1825,
+   "mtime": "2026-11-24T01:33:42.483119+00:00",
+   "md5": "d092a371ffb27c9a9c4c3cb80617c71f"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

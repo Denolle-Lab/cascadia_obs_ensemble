@@ -1,0 +1,27 @@
+{
+ "region":"blanco_m0",
+ "events":4378,
+ "stations":87,
+ "obs_stations":87,
+ "picks":85293,
+ "P":41917,
+ "S":43376,
+ "dt_pairs":19992,
+ "dt_data":300516,
+ "max_sta_per_event":29,
+ "air_dep_km":0.727,
+ "center_lat":43.9,
+ "center_lon":-128.1,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_blanco.csv",
+  "p1_reference":"blanco_v2\/p1_reference",
+  "station_corr_from":"blanco_v2"
+ },
+ "nx":55,
+ "ny":39,
+ "nz":23,
+ "npar":82362
+}

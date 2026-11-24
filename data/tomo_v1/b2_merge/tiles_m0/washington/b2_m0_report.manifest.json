@@ -1,0 +1,138 @@
+{
+ "name": "b2_m0_report",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_report.py",
+ "argv": [
+  "washington_m0",
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington"
+ ],
+ "utc": "2026-11-24T01:33:51.619570+00:00",
+ "git_commit": "4cd156850a259016e3e64d87a4d88cbc446ba925",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": {
+  "region": {
+   "b1b": "b1b_balanced_c",
+   "events_lat": [
+    45.8,
+    49.8
+   ],
+   "events_lon": [
+    -126.4,
+    -121.0
+   ],
+   "station_margin_deg": [
+    0.5,
+    0.7
+   ],
+   "node_lon": [
+    -127.15,
+    -120.25,
+    0.125
+   ],
+   "node_lat": [
+    45.3,
+    50.3,
+    0.1
+   ],
+   "bins": {
+    "bin": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt",
+    "bin_syn": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_w_fmt",
+    "bin_check": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt"
+   },
+   "limits": {
+    "MAXSTA": 260,
+    "MAXOBS": 140
+   },
+   "forward": {
+    "coords": "ellipsoid",
+    "mod": "nearest",
+    "station_corr": true,
+    "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv",
+    "p1_reference": "washington_v2/p1_reference",
+    "station_corr_from": "washington_v2"
+   },
+   "weights_scale": "dataset",
+   "start_model": "margin_m0_v2/d200_s480",
+   "start_model_mode": "change",
+   "damp": 200
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/d200_s120/Output_Files/model_geo.npz",
+   "size": 214860,
+   "mtime": "2026-11-24T01:27:11.693536+00:00",
+   "md5": "413124e69f1bf8c33c0093f27c77c0b9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/d200_s20/Output_Files/model_geo.npz",
+   "size": 219085,
+   "mtime": "2026-11-24T01:33:39.442140+00:00",
+   "md5": "86e071b1b88cad8d41d3d3599acbce22"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/d200_s240/Output_Files/model_geo.npz",
+   "size": 214131,
+   "mtime": "2026-11-24T01:23:44.662783+00:00",
+   "md5": "1084623ff1be780d5cc5df3b436d338b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/d200_s480/Output_Files/model_geo.npz",
+   "size": 213546,
+   "mtime": "2026-11-24T01:22:10.489358+00:00",
+   "md5": "0e19fa846292b1f3cd020ebbb3c33f37"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/washington_m0/d200_s60/Output_Files/model_geo.npz",
+   "size": 216109,
+   "mtime": "2026-11-24T01:27:56.653263+00:00",
+   "md5": "8e3a2d408ea35b14e3eb6ed7f73770e1"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/maps_d200_s120.png",
+   "size": 95865,
+   "mtime": "2026-11-24T01:33:50.390068+00:00",
+   "md5": "f8e636d2050b87e6f9732398fc813793"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/maps_d200_s20.png",
+   "size": 100058,
+   "mtime": "2026-11-24T01:33:50.667066+00:00",
+   "md5": "0a10ce43ca484832bc20a769de8a7ee8"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/maps_d200_s240.png",
+   "size": 90301,
+   "mtime": "2026-11-24T01:33:50.920064+00:00",
+   "md5": "444cf888f96b6c4142cf04b387600596"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/maps_d200_s480.png",
+   "size": 82588,
+   "mtime": "2026-11-24T01:33:51.206062+00:00",
+   "md5": "074a24bc99c78938219bb9295ee45359"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/maps_d200_s60.png",
+   "size": 98759,
+   "mtime": "2026-11-24T01:33:51.457060+00:00",
+   "md5": "8d8715d6e906edcdfaea660826818b5f"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/start_vp.png",
+   "size": 57812,
+   "mtime": "2026-11-24T01:33:51.614059+00:00",
+   "md5": "04f14030ccb22d2998f9540be5d6caba"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/washington/summary.md",
+   "size": 1820,
+   "mtime": "2026-11-24T01:33:51.618059+00:00",
+   "md5": "f8995e5d15f5ce499a535503bb0cd6eb"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

@@ -27,6 +27,9 @@ that keep their v4 hypocentres (B4 kept: 0).
 * Differential-time fit: tomoDD's own rms falls by about a quarter (e.g. Blanco 143 -> 111 ms, median cluster), but
   in the B4 time grids P is unchanged (0.147 -> 0.148 s) and S gets worse (0.181 -> 0.232 s): B5 fits a different S
   forward model than B4 (section 8, P-B5-6).
+  **Correction 2026-11-24 (coordinator, notes/b5_s_mismatch.md): not a forward-model difference.** tomoDD and the B4
+  grids give the same differential times (MAD 2-5 ms); the S misfit grows in tomoDD's own model too. Cause: S
+  differential times weighted 1/4 of P (D-B008 sigma S = 2 x P) plus MAD re-weighting, so B5 fits P at S's expense.
 * Cluster shape: no thinning (PCA thickness sigma3 B5/B4 median 1.01; 45 % of 365 clusters thinner). Catalog
   differential times add little to B4, as the D-B048 test found on the Blanco swarms.
 * Above the surface: the events that go up are those B4 pressed against the surface (36 % of the events < 0.1 km
@@ -251,7 +254,7 @@ cluster would reduce the rest. Neither is done here (PI decisions, section 8).
   (a) fix the upward pull at its root (round 2), rerun B4 and then B5; (b) damping per cluster to bring the
   condition number into 40-80 (hypoDD practice) instead of one damping of 100 (halves the Axial above-surface count;
   does not remove it); (c) both. Clamping or moving is excluded (D-B055).
-* **P-B5-6 S misfit in the B4 grids.** B5 fits the differential times in tomoDD's forward model (rms decreases by a
+* **P-B5-6 S misfit in the B4 grids** (superseded by notes/b5_s_mismatch.md: weighting, not forward model). B5 fits the differential times in tomoDD's forward model (rms decreases by a
   quarter) but the S differential residuals in the B4 grids grow by 28 % (0.181 -> 0.232 s; P unchanged 0.147 ->
   0.148 s): tomoDD's S times (pseudo-bending through its trilinear 0.1 x 0.125 deg node model) differ from the
   B4 grids' (finite differences on 1 km cells of the same model, Earth-flattened); not examined further here. The B5 catalog mixes two forward models (B4 grid frame for the centroid, tomoDD for relative positions).

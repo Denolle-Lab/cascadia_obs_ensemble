@@ -537,3 +537,15 @@ git or on Zenodo): /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24 (
 malformed FORMAT string fixed by a comma, PATCH.diff, build_variants.sh, README), binaries for every size class in
 /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24 (main, syn, chk), archive in /wd1/mdenolle_data/tomo_v1/archive.
 Licence caveat: the WARF licence forbids modification; the request to Haijiang Zhang for permission is still open.
+
+### D-B055 No hypocentre above the ground or seafloor (adopted, 2026-11-24, PI)
+PI rule: no earthquake above the solid surface. NLLoc already masks the location PDF above GMT earth_relief 01m
+(LOCTOPO_SURFACE, nlloc_template.in of Track A), but it reads that grid by nearest node (velmod.c get_surface_z), so
+0.7 % of the B4 v0.3.0 locations (1,079 of 157,270) sat up to 0.41 km (median 0.03 km) above the bilinear surface;
+the 15,070 tier U events keep the v4 position, and 23.5 % of the v4 positions (40,553 events; 71 % of Axial) are
+above the surface, by a median 2.1 km. b4_catalog.py now writes depth = max(depth_raw, -surface_km) and the same for
+exp_depth, with surface_km = earth_relief 01m bilinear at the final epicentre for every event (tier U included),
+depth_raw the depth before the rule and above_surface marking the moved events (v0.3.0 test: 5,159 moved, 1,079
+located and 4,080 tier U). The atlas draws any hypocentre above its rendered terrain at that terrain (all catalogs and
+the moves layer), keeps the flag ("Above surface": show / grey / hide) and gives the catalog depth in the popup.
+Catalog v4 / v4.1 itself is unchanged (PI to decide).

@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 20:20 (handoff section below).
+Last update: 2026-11-23 23:10 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -134,6 +134,18 @@ spurious, to handle when the B4 catalog is assembled). Added (D-B048): after B4,
 GrowClust3D on the Blanco swarms before B5. Proposed, not yet agreed: compare B4 NonLinLoc locations of the ~29k
 tomography events with their tomoDD final locations (decides whether one more tomography-location iteration is needed:
 median difference < 0.5 km and no depth offset -> none).
+
+**Update 23:10. B4 done** (22:57, PR #33 comment; data/tomo_v1/b4/b4_iter1_v0.3.0/compare.md; catalog
+/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv). Driver fixes: a2_parse_hyp.py before the station
+terms and the catalog (5e6166fe); wt_reloc/data links to the v4.0 catalog backup and anss_2010-16.csv (gitignored).
+157,270 of 172,340 events located in 3D (15,070 tier U as before). Median rms 0.110 s (v4-NLL3D iter1 0.124); median
+shift 1.4 km depth, 1.4 km horizontal. Smoothing 480 costs nothing measurable: in the s480 tiles' regions rms drops
+6-16 %, tiers unchanged, depths within 0.5 km. Blanco and Gorda improve. **Axial worse**: median depth 3.0 -> 5.0 km
+bsl (below the magma chamber), tier A-B 50 % -> 5 %, h_max 1.8 -> 3.1 km, rms 0.054 -> 0.060 s; this is the whole
+drop in A-B tiers. Cause: v0.3.0 at Axial comes from ridges_north (relocation only, D-B038, unresolved) and M0's slow
+ridge crust. **Open for the PI:** (1) keep v4-NLL3D locations at Axial, flagged (recommended now); (2) leave
+ridges_north out of the merge near Axial and relocate Axial again (~1 h); (3) accept B4. Also open: B4 vs tomoDD final
+locations check; v4.1 additions and spurious 172113 in the B4 catalog; D-B048 test (after the Axial choice).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

@@ -648,3 +648,16 @@ b4:                                # B4 NonLinLoc relocation in the merged model
     lon: [-124.75, -124.25]        # D-B049..D-B051, rule 4: box longitude range
     weekday_hours_local: [7, 19]   # D-B049..D-B051, rule 4: Monday-Friday, 07:00-19:00 local
     tz: America/Vancouver          # D-B049..D-B051, rule 4: time zone of the local hours
+catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); D-B059 tier U kept with v4 hypocentres in v5.0
+  out: /wd1/mdenolle_data/catalog_v5                 # v<version>/ folders and catalog_v5.zip (all versions; Zenodo draft 23084158)
+  track_a_code: /home/mdenolle/wt_reloc/workflow/08_relocation   # a2_parse_hyp.region (region boxes)
+  v4_1_events: /home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv   # catalog v4.1 (fix_catalog_v4.py, 09f86844)
+  v4_1_magnitudes: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # Route A, v4.1
+  v4_1_removed: [172113]           # mis-associated in v4.0 (v4.1 patch)
+  v4_1_added: [900001, 900002, 900003]   # ComCat hypocentres + repicked phases (v4.1 patch)
+  versions:
+    "5.0":
+      b4_run: b4_iter1_v0.3.1      # NLLoc with iter0 station terms, D-B056 topography floor
+      terms_run: b4_iter0_v0.3.1   # station_terms.in used by b4_run
+      model: 0.3.1
+      note: "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059)."

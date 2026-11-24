@@ -2,10 +2,41 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 09:40 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 11:00 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## Update 2026-11-24 11:00: catalog v5.0, Zenodo, atlas, B5 (session cascadia-obs-ensemble-18)
+
+Split with the round-2 session (agreed by message): this session owns catalog versions, Zenodo, atlas and B5; the
+round-2 session owns the NLLoc fixes and the iter0/iter1 rerun for v5.1. Decision numbers: D-B058..D-B060 here,
+D-B061+ there.
+
+* **PI (10:10):** D-B058 catalog versions v5.0 (now) / v5.1 (after round 2) / v5.2 (B5 tomoDD); D-B059 tier U keeps
+  its v4 hypocentre in v5.0, flagged (exception to D-B055); D-B060 B5 with catalog dt now, waveform CC dt later.
+* **v0.3.1 chain finished 10:44** (1464b4f8): 157,269 located, 0 located events above the earth_relief 01m surface.
+  Acceptance (b4_acceptance.py -> data/tomo_v1/b4/b4_iter1_v0.3.1/acceptance.md): Axial A-B 28 % within 2 km of the
+  seafloor (target 85-90 %; median 2.4 km bsf; 1.2 km shallower than v0.3.0, 0.9 km deeper than v4-NLL3D) FAILS;
+  Puget/onshore/forearc/Mendocino/Gorda unchanged from v0.3.0. Event-paired (round-2 session, 1a7a6a3b): Mt St Helens
+  +0.49 km vs Hirao 2025 (passes); Blanco +1.99 km vs Lange 2026 (fails; West Blanco +4.64, worse than v0.3.0).
+* **Catalog v5.0 built** (catalog_version.py, params catalog_versions): /wd1/mdenolle_data/catalog_v5/v5.0/
+  (cascadia_catalog_v5.0.csv md5 23781b52..., README with known limits, station terms, B4 reports), registry
+  data/catalog_v5/registry.csv. 172,342 events (v4.1 list: 172113 out, 900001-3 in with ComCat hypocentres),
+  157,269 nll3d, 15,070 v4 (tier U), 3 comcat; 4,077 above the surface, all tier U at v4 positions -> publishable false.
+  Magnitudes = v4.1 Route A (v4 hypocentres; STATUS step 9 still to do).
+* **Zenodo:** catalog_v5.zip (all v5.x versions, replaced at each version) in the private draft 23084158, remote md5
+  257a425b... OK (data/catalog_v5/zenodo_uploads.csv). The draft is now at Zenodo's 100-file limit: any new product
+  must replace an existing file or go into an existing zip.
+* **Atlas (public, gh-pages 2a6ac1c5):** catalog v5.0 is the relocated catalog, moves from v4-NLL3D, model v0.3.1.
+  Built from atlas/model-layer a69a22ab with arguments only (--catalog2 <v5.0 csv> --catalog2-label "Catalog v5.0
+  (interim)" --catalog-before catalog_v5_trackA_iter1_vpvs176.csv). The atlas flags 4,787 events above its GMRT
+  terrain: the 4,077 catalog flags + 725 located events 0-354 m (median 17 m) above GMRT where GMRT is deeper than
+  earth_relief 01m (floor-held events; list /wd1/mdenolle_data/tomo_v1/above_surface/v5.0_atlas_gmrt_air_rows.json);
+  stated in the legend, flag not changed.
+* **B5 (D-B053, D-B060):** whole-catalog tomoDD relocation-only driver being built by an agent on branch tomo/b5
+  (worktree ~/wt_b5_full, from tomo/tiles + tomo/b5-blanco-test), outputs /wd1/mdenolle_data/tomo_v1/b5/<run>/,
+  notes/b5_relocation.md; production on b4_iter1_v0.3.1 / model 0.3.1 with frozen binaries.
 
 ## Handoff 2026-11-24 07:55 (read first)
 

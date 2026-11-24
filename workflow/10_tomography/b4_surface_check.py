@@ -21,9 +21,10 @@ Usage (default env; B4_SURFACE_DIR = the test copy of the sources, or the produc
   python b4_surface_check.py exact --out DIR --floor NAME=PATH_eft.bin ...
   python b4_surface_check.py lowering --out DIR --floor NAME=PATH_eft.bin ...
   python b4_surface_check.py stats --out DIR
-  python b4_surface_check.py nlloc-prep --out DIR --floor NAME=PATH_eft.bin ... [--n-control 200]
-  python b4_surface_check.py nlloc-run --out DIR [--nproc 12]
-  python b4_surface_check.py nlloc-analyse --out DIR
+  python b4_surface_check.py nlloc-prep --out DIR --floor NAME=PATH_eft.bin ... [--n-control 200] [--sub S --extra]
+  python b4_surface_check.py nlloc-run --out DIR [--nproc 12] [--sub S]
+  python b4_surface_check.py nlloc-analyse --out DIR [--sub S]
+  (--extra: instead of the atlas list + controls, every other located v0.3.1 iter1 event above surface_m)
 """
 import argparse
 import ast
@@ -439,7 +440,7 @@ def obs_blocks(path):
 
 
 def cmd_nlloc_prep(a):
-    out = Path(a.out) / "nlloc"
+    out = Path(a.out) / a.sub
     d = json.loads(GMRT_AIR.read_text())
     rows = pd.DataFrame(d["rows"], columns=["ID", "tier_code", "above_gmrt_km", "gmrt_km"])
     sel = rows[rows.tier_code < 4]                      # located (tiers A-D); tier U rows are v4 positions
@@ -449,6 +450,10 @@ def cmd_nlloc_prep(a):
     rng = np.random.default_rng(20261124)
     ctrl = rng.choice(loc.ID[~loc.ID.isin(sel.ID)].values, a.n_control, replace=False)
     ev = pd.concat([pd.DataFrame({"ID": sel.ID, "group": "gmrt_air"}), pd.DataFrame({"ID": ctrl, "group": "control"})])
+    if a.extra:   # every other located iter1 event above surface_m (the atlas list used a downsampled GMRT)
+        zt = RE_M / 1e3 * (1 - np.exp(-loc.depth.values / (RE_M / 1e3)))
+        above = loc.ID[(zt < -bs.surface_m(loc.lon.values, loc.lat.values) / 1e3) & ~loc.ID.isin(ev.ID)]
+        ev = pd.DataFrame({"ID": above.values, "group": "merged_air_extra"})
     ev = ev.merge(loc[["ID", "tile"]], on="ID")
     configs = dict(s.split("=", 1) for s in a.floor)
     configs = {"prod": str(PROD_FLOOR), **configs}
@@ -499,7 +504,7 @@ def _run(w):
 
 
 def cmd_nlloc_run(a):
-    jobs = (Path(a.out) / "nlloc" / "jobs.txt").read_text().split()
+    jobs = (Path(a.out) / a.sub / "jobs.txt").read_text().split()
     bad = []
     with ProcessPoolExecutor(a.nproc) as ex:
         for w, rc in ex.map(_run, jobs):
@@ -556,7 +561,7 @@ def km_h(la1, lo1, la2, lo2):
 
 
 def cmd_nlloc_analyse(a):
-    out = Path(a.out) / "nlloc"
+    out = Path(a.out) / a.sub
     ev = pd.read_csv(out / "events.csv")
     configs = json.loads((out / "configs.json").read_text())
     R = RE_M / 1e3
@@ -578,12 +583,12 @@ def cmd_nlloc_analyse(a):
         t["at_floor"] = t.dist_to_floor_km < t.ns_z                     # ML within one smallest oct-tree cell
         allt.append(t)
     T = pd.concat(allt, ignore_index=True)
-    save(a.out, "nlloc/results_long.csv", T)
+    save(a.out, f"{a.sub}/results_long.csv", T)
     base = T[T.config == "prod"].set_index("ID")
     summ = []
     for c in ["production"] + list(configs):
         t = T[T.config == c].set_index("ID")
-        for grp in ("gmrt_air", "control"):
+        for grp in sorted(ev.group.unique()):
             g = t[t.group == grp]
             located = g.status == "LOCATED"
             gl = g[located]
@@ -605,7 +610,7 @@ def cmd_nlloc_analyse(a):
                              depth_median_km=float(gl.depth_true.median()),
                              below_surface_median_km=float(gl.dist_to_surface_km.median())))
     S = pd.DataFrame(summ)
-    save(a.out, "nlloc/summary.csv", S)
+    save(a.out, f"{a.sub}/summary.csv", S)
     print(S.T.to_string())
 
 
@@ -620,6 +625,9 @@ def main():
         s.add_argument("--n", type=int, default=3000)
         s.add_argument("--n-control", type=int, default=200)
         s.add_argument("--controls", action="store_true")
+        s.add_argument("--sub", default="nlloc", help="nlloc-*: subfolder of --out")
+        s.add_argument("--extra", action="store_true", help="nlloc-prep: only the located iter1 events above "
+                       "surface_m that are not in the atlas list or the controls")
     a = ap.parse_args()
     assert str(Path(a.out).resolve()).startswith("/wd1/mdenolle_data/tomo_v1/v51_build/"), "--out outside v51_build"
     {"lookup": cmd_lookup, "exact": cmd_exact, "lowering": cmd_lowering, "stats": cmd_stats,

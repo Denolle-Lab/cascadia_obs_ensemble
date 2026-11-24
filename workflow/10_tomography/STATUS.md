@@ -2,10 +2,22 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 11:35 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## Update 2026-11-24 15:45: HANDOFF (round-2 / v5.1 session), read first
+
+Everything needed to pick up is in /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md (running jobs, how to resume
+them, agent briefs, workflow script, integration steps).
+* Checks D-B065 done: misfit -> D-B069 (LOCGAU 0.2 0.0, no LOCGAU2; check_misfit/out/s06_table.md); waveform S picks are
+  right, offshore S in the model ~3-6 % too fast -> D-B070 slower-S test running (check_slow_s/); ANSS explosions ->
+  D-B071 flag; UW timing check running (/wd1/mdenolle_data/tomo_v1/checks/uw_timing/).
+* v5.1 build workflow wf_ce50cf7f-723 at 15:45: surface and catalog built + verified, field building, wide and runner
+  building; branches v51/{surface,field,wide,runner,catalog-a,catalog-b} (worktrees ~/wt_v51_*), not merged yet.
+* Next: integrate (merge, fix verifier must_fix, add D-B071), wait for the slower-S result (new model version or not),
+  then the v5.1 production chain; tell session -18 when the catalog is final.
 
 ## Update 2026-11-24 15:30: v5.1 build (round-2 session)
 

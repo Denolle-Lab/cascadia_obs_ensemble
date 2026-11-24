@@ -621,3 +621,59 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       reference_pid: TO FILL (paper DOI)
       model_type: 3D velocity model
       model_subtype: local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs
+
+b5_test:                           # D-B048: relative relocation tested before B5, tomoDD-SE (velocity frozen) vs GrowClust3D
+  out: /wd1/mdenolle_data/b5_test  # large files; scripts b5_*.py, note notes/b5_blanco_test.md
+  model_version: 0.3.0             # D-B047 registry; tomoDD MOD from the netCDF nodes, GrowClust3D from the B4 grids
+  catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv   # B4 start (true depth, EFT undone)
+  picks: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv    # v4.0 picks (= B4 input)
+  time_grids: /wd1/mdenolle_data/reloc_v5/time_b4_v0.3.0       # B4 NLL grids: Lambert x, y; depth axis EFT z'
+  grid_prefix: cascadia3d
+  station_terms: /wd1/mdenolle_data/reloc_v5/runs/b4_iter0_v0.3.0/station_terms.in   # B4 terms (tomoDD absolute times)
+  tomodd_p4: blanco_v2             # P-4 tomoDD forward corrections reused (tomodd.runs/<tile>/inputs/station_corr.csv)
+  families: /home/mdenolle/wt_paper/data/catalog_v4/clusters_zbz/families_zbz.csv
+  members: /home/mdenolle/wt_paper/data/catalog_v4/clusters_zbz/events_zbz.csv.gz
+  cases:                           # name: zbz family ids (region BL); 1803 = June 2015 West Blanco swarm
+    f1803: [1803]
+    f0399: [399]
+    f1051: [1051]
+  loc_source: nll3d                # B4 events located in 3D only (tier U keeps v4 hypocentres in another frame)
+  grid_margin_km: 5.0              # pick kept if the event lies this far inside its station's time grid
+  dt: {max_neighbours: 10, max_sep_km: 10.0, min_common: 8}   # = tomodd.dt
+  weight: "(0.05/sigma)^2"         # D-B008 sigma by pick_prob class (pick_errors); pair weight = min of the two
+  tomodd:
+    # D-B034 build + the same missing comma fixed in lsfitHFDD_lsqr_lm5.f line 504 (relocation-only LSQR routine,
+    # never called by joint runs; unfixed it stops with exit 2 after the first LSQR). gfortran 8.5, O3nofs flags.
+    bin: /wd1/mdenolle_data/b5_test/bin/tomoDD-SE_O3nofs_e10k_fmt2   # md5 d59d8cdc938660732c6ba28f1c34aec1 (src b5_test/src/O3nofs_e10k_fmt2)
+    node_margin_deg: 0.375         # interior MOD nodes = v0.3.0 nodes over the events and stations + this margin
+    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation + margin), as tomodd.air_dep_margin_km
+    damp: 100                      # LSQR damping (relocation only); CND recorded
+    # NITER WTCTP WTCTS WRCT WDCT WTCD; JOINT = 0 (locations only). hier = tomodd.inp.sets (absolute data first);
+    # dd = differential data only (WTCD = 0: absolute rows weightless, removed at the first re-weighting).
+    variants:
+      hier: [[3, 1.0, 1.0, -9, -9, 10.0], [3, 1.0, 1.0, 8, -9, 10.0], [3, 1.0, 1.0, 6, 10, 1.0], [3, 1.0, 1.0, 6, 10, 0.1]]
+      dd: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]
+    nboot: 30                      # bootstrap: dt rows resampled with replacement (as GrowClust3D), same seeds
+  growclust:
+    julia: /wd1/mdenolle_data/b5_test/julia_env/.pixi/envs/default/bin/julia   # Julia 1.13.4 (separate pixi project)
+    depot: /wd1/mdenolle_data/b5_test/julia_depot
+    project: /wd1/mdenolle_data/b5_test/julia_env/gc3d   # GrowClust3D 0.1.0, git 592f6179 (not in the General registry)
+    threads: 16
+    nboot: 100
+    # rxcor field = pair weight (0-1): orders the merges, no weight in the L1 misfit; rmin = rmincut = 0 keeps every dt
+    inp: {rmin: 0.0, delmax: 400.0, rpsavgmin: 0.0, rmincut: 0.0, ngoodmin: 8, iponly: 0, nbranch_min: 2,
+          tt_zmin: -5.0, tt_zmax: 80.0, box_km: 80.0}
+    variants:                      # default = run_growclust3D.jl example values (tuned for waveform cross-correlation)
+      default: {distmax: 8.0, distmax2: 6.0, hshiftmax: 2.0, vshiftmax: 2.0, rmedmax: 0.1, rmsmax: 0.2,
+                maxlink: 12, nbeststa: 24, boxwid: 3.0, nit: 15, irelonorm: 1, torgdifmax: 10.0}
+      catalog: {distmax: 10.0, distmax2: 10.0, hshiftmax: 5.0, vshiftmax: 5.0, rmedmax: 0.3, rmsmax: 0.5,
+                maxlink: 12, nbeststa: 24, boxwid: 6.0, nit: 15, irelonorm: 1, torgdifmax: 10.0}
+  synth:                           # planar swarm through both codes
+    n_events: 200
+    length_km: 10.0                # along strike
+    width_km: 5.0                  # down dip
+    strike_deg: 111.0              # Blanco transform
+    dip_deg: 90.0
+    centre: f1803                  # B4 median epicentre and depth of this case's events
+    seed: 48
+    start_depth_min_km: 3.0        # perturbed start depths clipped here (seafloor ~3-4.5 km bsl at West Blanco)

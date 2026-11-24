@@ -4,16 +4,23 @@
  "argv": [
   "5.0"
  ],
- "utc": "2026-11-24T18:46:20.757488+00:00",
- "git_commit": "1464b4f8284ab5f85cd8d4b8147a1d2c0ae920c0",
+ "utc": "2026-11-24T18:47:33.764297+00:00",
+ "git_commit": "1a7a6a3b1defc4bceea99dceeed2a007e1177325",
  "git_dirty": true,
- "params_md5": "b6577a18337b9cc6ceb40c931ce59986",
+ "params_md5": "7cd2a572084bbeee6c30b435e0048c03",
  "params": {
   "version": "5.0",
   "b4_run": "b4_iter1_v0.3.1",
   "terms_run": "b4_iter0_v0.3.1",
   "model": "0.3.1",
   "note": "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059).",
+  "extra_files": [
+   "data/tomo_v1/depth_literature/paired_v0.3.1.md"
+  ],
+  "known_limits": [
+   "Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km).",
+   "Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md)."
+  ],
   "v4_1_removed": [
    172113
   ],
@@ -53,31 +60,31 @@
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv",
    "size": 59340878,
-   "mtime": "2026-11-24T18:46:17.794646+00:00",
+   "mtime": "2026-11-24T18:47:29.890268+00:00",
    "md5": "23781b52d42370f2a49e1d3ee3192876"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/README_v5.0.md",
-   "size": 4868,
-   "mtime": "2026-11-24T18:46:17.837646+00:00",
-   "md5": "e5fb510162dcca014c1bb70555f806d1"
+   "size": 5272,
+   "mtime": "2026-11-24T18:47:29.946268+00:00",
+   "md5": "a2c107ccb62717aa13f030864d14109d"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/MD5SUMS",
-   "size": 344,
-   "mtime": "2026-11-24T18:46:17.918645+00:00",
-   "md5": "1a988f98c6d06b6735baf0d22d79ed97"
+   "size": 395,
+   "mtime": "2026-11-24T18:47:30.045267+00:00",
+   "md5": "d2db61033a6a97b3887e12cc7ec9effa"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/catalog_v5.zip",
-   "size": 19689021,
-   "mtime": "2026-11-24T18:46:20.668631+00:00",
-   "md5": "5965b11b032a8baf63091815c06463c1"
+   "size": 19690913,
+   "mtime": "2026-11-24T18:47:33.645249+00:00",
+   "md5": "257a425b5e6df73dbca5b970b40e10f5"
   },
   {
    "path": "/home/mdenolle/wt_tomo_res/data/catalog_v5/registry.csv",
    "size": 393,
-   "mtime": "2026-11-24T18:46:18.003645+00:00",
+   "mtime": "2026-11-24T18:47:30.151267+00:00",
    "md5": "d6ace26063e7eaee8504e1ba119f65d5"
   }
  ],

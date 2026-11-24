@@ -68,3 +68,5 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 * Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local
   studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: 28 % of the 3,474 tier A-B Axial events are within 2 km of the seafloor (median 2.4 km below it), against 90 % in Waldhauser et al. (2020).
   Region medians against the previous relocations: b4_acceptance.md.
+* Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km).
+* Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md).

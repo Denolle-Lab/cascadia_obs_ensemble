@@ -97,6 +97,8 @@ def build(version):
     for f in ("compare.md", "acceptance.md", f"catalog_v5_trackA_{run}_tiers.md"):
         if (b4d / f).exists():
             shutil.copy(b4d / f, vd / f"b4_{f}")
+    for f in V.get("extra_files", []):
+        shutil.copy(REPO / f, vd / Path(f).name)
 
     ls = c.loc_source.value_counts().to_dict()
     ab = c[c.above_surface]
@@ -179,7 +181,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 * Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local
   studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: {axial}.
   Region medians against the previous relocations: b4_acceptance.md.
-"""
+""" + "".join(f"* {x}\n" for x in V.get("known_limits", []))
     (vd / f"README_v{version}.md").write_text(readme)
     files = sorted(p for p in vd.iterdir() if p.is_file() and p.name != "MD5SUMS")
     (vd / "MD5SUMS").write_text("".join(f"{md5(p)}  {p.name}\n" for p in files))

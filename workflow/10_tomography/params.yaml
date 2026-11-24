@@ -648,6 +648,32 @@ b4:                                # B4 NonLinLoc relocation in the merged model
     lon: [-124.75, -124.25]        # D-B049..D-B051, rule 4: box longitude range
     weekday_hours_local: [7, 19]   # D-B049..D-B051, rule 4: Monday-Friday, 07:00-19:00 local
     tz: America/Vancouver          # D-B049..D-B051, rule 4: time zone of the local hours
+  surface:                         # D-B068 merged solid surface (b4_surface.py, interface I1): GMRT patches, earth_relief elsewhere
+    dir: /wd1/mdenolle_data/reloc_v5/topo          # pinned sources read by surface_m: gmrt/<file>, <earth_relief.cache> (b4_surface.py install); env B4_SURFACE_DIR overrides (tests)
+    gmrt_src: /home/mdenolle/wt_atlas/data/gmrt    # install copies from here (atlas data can change: md5 below are checked)
+    gmrt_var: altitude
+    gmrt_md5:                      # the 11 GMRT v4 GridServer files of the atlas (2026-09-29 / 11-21), md5 at copy time 2026-11-24
+      gmrt_-123.6_-121.4_46.6_48.6_med.nc: 1419d851c3112ef96228a4a3df54ec25
+      gmrt_-125.6_-123.2_39.6_41.4_med.nc: 8b0aef3b02017a3eb57f422637b7dac3
+      gmrt_-126.8_-123.2_42.8_46.4_med.nc: 9b27b0947fd9bd495e7a1abecbbcd4aa
+      gmrt_-127.6_-123.2_46.2_49.2_med.nc: 96b54b1805c70ae9f22223384d558baa
+      gmrt_-128.8_-123.8_40.0_43.2_med.nc: 98c18c8677c4bb705eaea0a0afb575d0
+      gmrt_-129.3_-127.3_43.3_44.6_med.nc: 0dd4eda9525b07f4323d8255a4f33b94
+      gmrt_-129.55_-128.75_47.65_48.35_high.nc: 7bcc9e645a3cb1b276fbdea079460c2b
+      gmrt_-129.7_-127.9_48.55_49.4_med.nc: 077056a5725bd1f92a6ee6d8c38bf7cc
+      gmrt_-130.35_-129.75_45.75_46.2_high.nc: d2653715b20e7bc172bf88f2bdf48b54
+      gmrt_-130.4_-127.2_47.4_49.8_med.nc: 67f460ee394d9b575bc624fd0e8edd93
+      gmrt_-130.6_-126.6_42.6_45.3_med.nc: 9145fd1d13d7d2c0301596b44207fbb1
+    earth_relief:
+      resolution: 01m
+      registration: gridline
+      region: [-134, -118, 37.5, 52.5]             # also the region of the floor grid (contains every LOCGRID box)
+      cache: earth_relief_01m_g.nc                 # under dir; written by install with pygmt (GMT server cache)
+      values_md5: fba0fa3df82fd1b39069850540f55a8f # md5 of the float64 values, lat ascending (pygmt 0.13, 2026-11-24)
+    floor:                         # NLLoc LOCTOPO_SURFACE built from the merged surface (b4_surface.py floor)
+      spacing_s: 15                # node spacing (arcsec)
+      margin_m: 1.0                # subtracted from the exact cell minimum (float32 storage, coordinate rounding)
+      file: /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin   # + topo_15s_cons_merged.bin (true frame)
 catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); D-B059 tier U kept with v4 hypocentres in v5.0
   out: /wd1/mdenolle_data/catalog_v5                 # v<version>/ folders and catalog_v5.zip (all versions; Zenodo draft 23084158)
   track_a_code: /home/mdenolle/wt_reloc/workflow/08_relocation   # a2_parse_hyp.region (region boxes)

@@ -40,12 +40,16 @@ def res_cfg():
     res_tests.regions.<tile> over the defaults (spike and checker merged key by key; other keys replaced)."""
     base = {k: v for k, v in T["res_tests"].items() if k != "regions"}
     region = os.environ.get("TOMO_RES_REGION") or base["region"]
-    for k, v in (T["res_tests"].get("regions") or {}).get(region, {}).items():
+    regs = T["res_tests"].get("regions") or {}
+    key = region if region in regs else region.replace("_m0", "_v2")   # D-B046: <tile>_m0 uses <tile>_v2's layout
+    for k, v in regs.get(key, {}).items():
         base[k] = {**base[k], **v} if k in ("spike", "checker") else v
     base["region"] = region
     if os.environ.get("TOMO_RES_DAMP"):        # damping override for the tests (e.g. ridges_north at 100-300)
         d = float(os.environ["TOMO_RES_DAMP"])
         base["damp"] = int(d) if d.is_integer() else d
+    if os.environ.get("TOMO_RES_SMOOTH"):      # D-B046 phase 2: tests at one smoothing "W1 W2 W3" only
+        base["smooth"] = [[int(float(w)) for w in os.environ["TOMO_RES_SMOOTH"].split()]]
     return base
 
 

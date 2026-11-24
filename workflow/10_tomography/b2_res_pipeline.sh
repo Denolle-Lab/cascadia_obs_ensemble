@@ -59,11 +59,17 @@ SPIKES_ONLY=${SPIKES_ONLY:-}
 TAGM=${SPIKES_ONLY:+_spikec}
 SPFX=spike_; [ -n "$SPIKES_ONLY" ] && { SPFX=spikec_; export TOMO_SPIKE_PLACEMENT=clusters; }
 [ -n "$DAMP" ] && { export TOMO_RES_DAMP=$DAMP; OUT=$OUT/d$DAMP; }
-Q=$RT/queue$TAGM$TAGD
+# SMOOTH="W1 W2 W3" (D-B046 phase 2): spikes and checkerboards at this one smoothing (all variants, mask from it), no
+# real-data scan (done by b2_tiles_m0.sh); own queue and stage records (..._s<W1>)
+SMOOTH=${SMOOTH:-}
+TAGS=${SMOOTH:+_s${SMOOTH%% *}}
+MS=${SMOOTH%% *}; MS=${MS:-20}                      # smoothing (weight1) of the resolution mask
+[ -n "$SMOOTH" ] && export TOMO_RES_SMOOTH="$SMOOTH"
+Q=$RT/queue$TAGM$TAGD$TAGS
 mkdir -p $RUNS/$REGION
 
 log() { echo "$(date '+%F %T') [$REGION] $*"; }
-skey() { case $1 in build) echo $1 ;; prep) echo "prep$TAGM" ;; *) echo "$1$TAGM$TAGD" ;; esac; }   # build shared by all
+skey() { case $1 in build) echo $1 ;; prep) echo "prep$TAGM" ;; *) echo "$1$TAGM$TAGD$TAGS" ;; esac; }   # build shared by all
 done_stage() { grep -qx "$(skey $1)" "$STATE" 2>/dev/null; }
 mark() { skey $1 >> "$STATE"; log "stage $(skey $1) done"; }
 py() { (cd $CODE && $PY "$@"); }
@@ -129,14 +135,15 @@ stage_queue() {
     if [ -n "$DAMP" ]; then scan="$DAMP 10 10 5|$DAMP 20 20 10|$DAMP 40 40 20"
     else scan="500 20 20 10|1000 10 10 5|1000 20 20 10|1000 40 40 20|2000 20 20 10"; fi
     local IFS_OLD=$IFS; IFS='|'; set -f; local scans=($scan); IFS=$IFS_OLD; set +f
-    [ -n "$SPIKES_ONLY" ] && scans=()
+    [ -n "$SPIKES_ONLY$SMOOTH" ] && scans=()
     for ds in "${scans[@]}"; do set -- $ds
       echo "$REGION d$1_s$2 $1 $2 $3 $4"; done
-    for sm in "20 20 10" "10 10 5" "40 40 20"; do set -- $sm
+    local smooths=("20 20 10" "10 10 5" "40 40 20"); [ -n "$SMOOTH" ] && smooths=("$SMOOTH")
+    for sm in "${smooths[@]}"; do set -- $sm
       for d in $RT/${SPFX}*/; do echo "$R/$(basename $d) inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done
       [ -n "$SPIKES_ONLY" ] && continue
       for L in 060 040 100; do
-        for v in p0_noise p0_clean $( [ $1 = 20 ] && echo p1_noise p0_noise_ploc ); do echo "$R/chk_L${L}_$v inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done; done
+        for v in p0_noise p0_clean $( [ $1 = $MS ] && echo p1_noise p0_noise_ploc ); do echo "$R/chk_L${L}_$v inv_d${DTEST}_s$1 $DTEST $1 $2 $3"; done; done
     done
     echo END
   } > $Q/queue.txt
@@ -165,9 +172,10 @@ stage_run() {
 }
 
 stage_analyse() {
-  [ -n "$SPIKES_ONLY" ] || { log "checkerboard analysis"; py $W/b2_res_checker.py analyse || return 1; }
-  local w
-  for w in $(param "' '.join(str(s[0]) for s in T['res_tests']['smooth'])"); do
+  [ -n "$SPIKES_ONLY" ] || { log "checkerboard analysis"; py $W/b2_res_checker.py analyse --mask-smooth $MS || return 1; }
+  local w ws
+  ws=$(param "' '.join(str(s[0]) for s in T['res_tests']['smooth'])"); [ -n "$SMOOTH" ] && ws=$MS
+  for w in $ws; do
     log "spike analysis, damping $DTEST, smoothing $w"; py $W/b2_smooth_spike_analyse.py --cfg res_tests --inv inv_d${DTEST}_s$w || return 1; done
   log "damping/smoothing scan summary"; py $W/b2_tomodd_summary.py $REGION 'd*_s*' || return 1
   mkdir -p $OUT; cp $RUNS/$REGION/summary_runs.csv $OUT/scan_summary.csv 2>/dev/null || true

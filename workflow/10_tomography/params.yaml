@@ -593,3 +593,25 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       - [240, 240, 120]
       - [480, 480, 240]
     smooth_rule_tol: 0.015         # chosen smoothing = the largest whose weighted RMS <= (1 + tol) x the scan's best
+  models:                          # D-B047 (proposed 2026-11-23): versioned model export (b2_model_export.py, env models)
+    name: cascadia_obs_tomo        # internal model name (store path, ids); public name for EMC / CVM: PI to choose
+    store: /wd1/mdenolle_data/tomo_v1/models   # canonical Zarr + netCDF per version (immutable); netCDF < 5 MB also in git
+    summary: >-
+      Three-dimensional Vp and Vs of the Cascadia margin and Juan de Fuca / Gorda plates from double-difference
+      local-earthquake tomography (tomoDD-SE) of the offshore-onshore ensemble catalog (OBS and land picks), on the
+      tomoDD node grid (interior nodes). Depth in km below sea level, positive down.
+    attributes:                    # EMC global attributes (header_3D.csv sample); TO FILL before any submission
+      keywords: seismic, tomography, P wave velocity, S wave velocity, Vp/Vs, Cascadia, Juan de Fuca plate, Gorda, OBS
+      Conventions: CF-1.0
+      Metadata_Conventions: Unidata Dataset Discovery v1.0
+      repository_name: EMC
+      repository_institution: EarthScope DS
+      repository_pid: TO FILL (assigned by EMC on acceptance)
+      author_name: TO FILL (PI)
+      author_institution: TO FILL (PI)
+      author_email: TO FILL (PI)
+      author_url: https://github.com/Denolle-Lab/cascadia_obs_ensemble
+      reference: TO FILL (peer-reviewed paper, required by EMC and CRESCENT CVM)
+      reference_pid: TO FILL (paper DOI)
+      model_type: 3D velocity model
+      model_subtype: local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs

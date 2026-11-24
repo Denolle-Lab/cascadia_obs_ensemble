@@ -1,0 +1,11 @@
+a,b,pairs,absdiff_med,absdiff_p90,frac_lt_1km,corr
+b4,tomodd/hier,418155,1.642,6.269,0.349,0.781
+b4,tomodd/dd,418155,1.319,4.817,0.41,0.838
+b4,growclust/catalog,418155,1.134,3.415,0.454,0.917
+b4,growclust/default,418155,1.005,2.671,0.498,0.952
+tomodd/hier,tomodd/dd,418155,1.029,4.42,0.491,0.866
+tomodd/hier,growclust/catalog,418155,1.796,6.692,0.319,0.736
+tomodd/hier,growclust/default,418155,1.878,6.47,0.3,0.745
+tomodd/dd,growclust/catalog,418155,1.559,5.262,0.355,0.787
+tomodd/dd,growclust/default,418155,1.574,5.003,0.345,0.807
+growclust/catalog,growclust/default,418155,1.25,3.652,0.419,0.899

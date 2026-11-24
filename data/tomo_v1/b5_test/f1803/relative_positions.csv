@@ -1,0 +1,11 @@
+a,b,n,dh_med,dh_p90,dz_med,dz_p90,offset_e,offset_n,offset_z
+b4,tomodd/hier,325,0.64,1.553,0.823,2.863,0.193,0.228,-0.644
+b4,tomodd/dd,325,0.418,0.961,0.276,1.502,-0.005,-0.01,-0.071
+b4,growclust/catalog,325,0.88,2.209,0.926,2.576,0.033,0.006,0.051
+b4,growclust/default,325,0.689,1.49,0.697,1.707,-0.002,-0.006,-0.009
+tomodd/hier,tomodd/dd,325,0.453,1.061,0.682,1.921,-0.198,-0.238,0.573
+tomodd/hier,growclust/catalog,325,1.168,2.729,1.271,3.891,-0.16,-0.222,0.695
+tomodd/hier,growclust/default,325,1.017,2.143,1.043,3.105,-0.195,-0.234,0.634
+tomodd/dd,growclust/catalog,325,1.066,2.375,0.994,2.85,0.038,0.016,0.122
+tomodd/dd,growclust/default,325,0.88,1.69,0.769,2.479,0.003,0.004,0.061
+growclust/catalog,growclust/default,325,0.733,1.996,0.595,2.286,-0.035,-0.012,-0.06

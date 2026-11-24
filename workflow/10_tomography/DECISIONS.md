@@ -426,3 +426,23 @@ region key weights_scale: dataset). Blanco and ridges_north inputs are unchanged
 weights drop to a third, Mendocino-Gorda to 0.56. The column scaling also divides by the number of data rows, so
 the same damping still weighs less in a tile with more data; that part is left as is (it is what the condition
 number shows). Applies to M0, the T6 test and the tile reruns from M0.
+
+### D-B046 M0 = margin_m0_v2 d200_s480; every tile restarts from it (adopted, 2026-11-23, PI; P-M11)
+M0 is the whole-margin run at damping 200 and smoothing 480/480/240, the smoothest of the scan 20-1920 whose weighted
+RMS stays within 1.5 % of the best (0.2012 against 0.1984; notes/merge_design.md, M0 paragraph). Each tile
+(mendocino_gorda_c, blanco, oregon, washington, ridges_north; regions <tile>_m0) restarts from it at damping 200 on
+the dataset weight scale, scans smoothing 20-480 (params merge.tile_smooth_scan) and takes the largest smoothing
+whose weighted RMS is within 1.5 % of the scan's best (merge.smooth_rule_tol), then runs its resolution tests at that
+smoothing. Implementation choices made while building it (Claude, 2026-11-23; tell the PI):
+* Start = the D-B005 model at the tile's own nodes (nearest column, as <tile>_v2) multiplied by (1 + M0's change
+  from its own start), not M0's velocities as they are. M0 started from a 31 km box average, so taking its values
+  directly would replace the fine near-surface structure that the OBS S statics and the P-4 corrections were derived
+  in; M0's change carries what it learned (the long wavelengths).
+* P-4 station corrections reused from <tile>_v2. Recomputed in the new start they differ by +0.10 s (P) and -0.15 s
+  (S) median, up to 1 s, at ridges_north: that is M0's change, which P-4 would turn into per-station constants.
+  P-4 is meant to correct tomoDD's forward error, which the start model barely changes.
+* Vp/Vs floor 1.65 on the start (params start_vpvs_min; Vs lowered): M0 has isolated nodes with Vp/Vs down to 1.49
+  where Vp and Vs moved apart (48 nodes < 1.6); in the ridges_north start the floor changes 1.0 % of the nodes.
+Iteration: tomoDD solves locations and velocities together in every run (12 iterations, rays retraced each time);
+there is no separate outer tomography-location loop. After the merge, B4 relocates all 172,340 events in the merged
+model; a second tomography pass (M7) only if T4/T7 show seams or misfit the tiles cannot explain.

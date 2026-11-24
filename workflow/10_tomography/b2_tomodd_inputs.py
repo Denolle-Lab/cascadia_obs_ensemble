@@ -55,7 +55,7 @@ from scipy.spatial import cKDTree
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
-from b2_fwd_common import RE, mod_velocity, tomodd_forward  # noqa: E402
+from b2_fwd_common import RE, mod_velocity, read_mod, tomodd_forward  # noqa: E402
 from b2_fwd_mods import ellipsoid_coords, radii  # noqa: E402
 
 P = load_params()
@@ -239,16 +239,21 @@ def sample_model(xn, yn, zn_int, box_km):
     return VP, VS
 
 
-def sample_run(spec, xn, yn, zn_int):
-    """Vp, Vs of a finished run (<runs>/<region>/<tag>/Output_Files/model_geo.npz, geographic nodes after the
-    D-B028 back-transform) at these nodes, with tomoDD's trilinear lookup (b2_fwd_common.mod_velocity)."""
-    f = Path(T["runs"]) / spec / "Output_Files" / "model_geo.npz"
-    g = np.load(f)
-    m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=g["vp"], vs=g["vs"])
+def sample_run(spec, xn, yn, zn_int, which="final"):
+    """Vp, Vs of a finished run at these nodes, with tomoDD's trilinear lookup (b2_fwd_common.mod_velocity).
+    which = final: Output_Files/model_geo.npz (geographic nodes after the D-B028 back-transform); start: the run's
+    MOD values on the same geographic nodes (MOD itself carries the rescaled node coordinates)."""
+    run = Path(T["runs"]) / spec
+    g = np.load(run / "Output_Files" / "model_geo.npz")
+    if which == "start":
+        s = read_mod(run / "MOD")
+        m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=s["vp"], vs=s["vs"])
+    else:
+        m = dict(lon=g["lon"], lat=g["lat"], z=g["z"], vp=g["vp"], vs=g["vs"])
     LON, LAT, Z = np.meshgrid(xn, yn, zn_int, indexing="ij")
     VP = mod_velocity(m, "P", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
     VS = mod_velocity(m, "S", LON.ravel(), LAT.ravel(), Z.ravel(), clamp_surface=False).reshape(LON.shape)
-    log(f"start model from {f}: {len(xn)} x {len(yn)} x {len(zn_int)} nodes, Vp {VP.min():.2f}-{VP.max():.2f} km/s")
+    log(f"{which} model of {run}: {len(xn)} x {len(yn)} x {len(zn_int)} nodes, Vp {VP.min():.2f}-{VP.max():.2f} km/s")
     return VP, VS
 
 
@@ -257,10 +262,22 @@ def write_mod(path, R, F, center):
     zi = np.array(R.get("node_z", T["node_z"]), float)
     z_model = zi[zi <= 80]
     box = 1 if F["mod"] == "nearest" else R.get("model_box_avg_km", T["model_box_avg_km"])   # M0: ~node spacing
-    if R.get("start_model"):                         # D-B044: start from a finished run (M0), "<region>/<tag>"
-        VP, VS = sample_run(R["start_model"], xi, yi, z_model)
-    else:
-        VP, VS = sample_model(xi, yi, z_model, box)
+    VP, VS = sample_model(xi, yi, z_model, box)
+    if R.get("start_model"):                         # D-B046: a finished run (M0), "<region>/<tag>"
+        mode = R.get("start_model_mode", "change")
+        fp, fs = sample_run(R["start_model"], xi, yi, z_model)
+        if mode == "change":                         # D-B005 at this tile's nodes x (1 + M0's change from its start):
+            sp, ss = sample_run(R["start_model"], xi, yi, z_model, which="start")   # keeps the fine D-B005 detail
+            VP, VS = VP * fp / sp, VS * fs / ss      # (near-surface, OBS statics, P-4) and adds M0's long wavelengths
+            fl = float(T.get("start_vpvs_min", 0))   # M0 has isolated nodes with Vp/Vs < 1.6 (Vp and Vs moved apart)
+            low = VP / VS < fl
+            VS = np.where(low, VP / fl, VS)
+            log(f"start Vp/Vs floor {fl}: Vs lowered at {int(low.sum())} of {low.size} nodes")
+            log(f"start = D-B005 x M0 change ({R['start_model']}): dlnVp {100 * np.nanmin(fp / sp - 1):+.1f} to "
+                f"{100 * np.nanmax(fp / sp - 1):+.1f} %, dlnVs {100 * np.nanmin(fs / ss - 1):+.1f} to "
+                f"{100 * np.nanmax(fs / ss - 1):+.1f} %")
+        else:                                        # absolute: the run's velocities as they are
+            VP, VS = fp, fs
     # fill any interior column outside the NLL grid with the nearest valid column
     bad = np.isnan(VP[:, :, 0])
     if bad.any():
@@ -375,7 +392,17 @@ def main():
     elev_max = float(st.sta_elev_km.max())
     air_dep = round(-(elev_max + T["air_dep_margin_km"]), 3)
     p["station_corr_s"] = 0.0
-    if F["station_corr"]:
+    if F["station_corr"] and F.get("station_corr_from"):   # D-B046: P-4 of the same tile on the D-B005 start.
+        # Recomputing P-4 in a start model that differs from D-B005 would put that difference (here M0's change) into
+        # per-station constants; P-4 is meant to correct tomoDD's forward error only, which the start barely changes.
+        src = Path(T["runs"]) / F["station_corr_from"] / "inputs" / "station_corr.csv"
+        cc = pd.read_csv(src)
+        cc.to_csv(out / "station_corr.csv", index=False)
+        c = cc.set_index(["station", "phase"]).corr_s
+        log(f"P-4 station correction reused from {src}: {len(cc)} station-phases, median P "
+            f"{cc.corr_s[cc.phase == 'P'].median():+.3f} s, S {cc.corr_s[cc.phase == 'S'].median():+.3f} s")
+        p["station_corr_s"] = pd.MultiIndex.from_frame(p[["station", "phase"]]).map(c).fillna(0.0).values
+    elif F["station_corr"]:
         c = station_corr(out, p, e_w, st_w, air_dep, center, F).set_index(["station", "phase"]).corr_s
         p["station_corr_s"] = pd.MultiIndex.from_frame(p[["station", "phase"]]).map(c).fillna(0.0).values
     p["tt_abs"] = p.tt + p.station_corr_s           # absolute times only (tomoDD slow -> obs later); dt.ct from tt

@@ -1,9 +1,9 @@
-"""Track B, M0 (D-B044): maps of the coarse whole-margin inversion (margin_m0_v2) for review before the tiles
-restart from it. For each run tag d*_s20: dlnVp and dlnVs (change from the start, %) at 7, 15, 25 and 40 km on the
-interior nodes, the five tile boxes, and the DWS-free check of how many nodes moved; plus the start model (Vp) at
-the same depths. Outputs: data/tomo_v1/b2_merge/m0/ maps_<tag>.png, start_vp.png, summary.md.
+"""Track B: maps of every run d*_s* of one region (default M0 = margin_m0_v2, D-B044; also the tiles restarted
+from M0, D-B046): dlnVp and dlnVs (change from that run's start, %) at 7, 15, 25 and 40 km on the interior nodes,
+the five tile boxes, how many nodes moved; plus the start model (Vp) at the same depths.
+Outputs: <outdir> (default data/tomo_v1/b2_merge/m0/) maps_<tag>.png, start_vp.png, summary.md.
 
-  python b2_m0_report.py
+  python b2_m0_report.py [REGION [OUTDIR]]
 """
 import sys
 from pathlib import Path
@@ -17,9 +17,9 @@ from manifest import REPO, load_params, write_manifest  # noqa: E402
 from b2_fwd_common import read_mod  # noqa: E402
 
 T = load_params()["tomodd"]
-REG = "margin_m0_v2"
+REG = sys.argv[1] if len(sys.argv) > 1 else "margin_m0_v2"
 RUNS = Path(T["runs"])
-OUT = REPO / "data" / "tomo_v1" / "b2_merge" / "m0"
+OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else REPO / "data" / "tomo_v1" / "b2_merge" / "m0"
 TILES = ["mendocino_gorda_c_v2", "blanco_v2", "oregon_v2", "washington_v2", "ridges_north_v2"]
 DEPTHS = [7, 15, 25, 40]
 
@@ -37,8 +37,9 @@ def main():
     import matplotlib.pyplot as plt
     OUT.mkdir(parents=True, exist_ok=True)
     tags = sorted(p.name for p in (RUNS / REG).glob("d*_s*") if "partial" not in p.name and (p / "Output_Files" / "model_geo.npz").exists())
-    lines = [f"# M0 coarse whole-margin inversion ({REG})", "",
-             "dlnV = change from the start (D-B005 model averaged over 31 km boxes), interior nodes; % of nodes "
+    lines = [f"# Runs of {REG}", "",
+             "dlnV = change from the run's start (M0: D-B005 model averaged over 31 km boxes; tiles *_m0: M0), "
+             "interior nodes; % of nodes "
              "changed by more than 0.5 %; rms over nodes changed.", "",
              "| tag | depth km | Vp nodes changed % | rms dlnVp changed % | Vs nodes changed % | rms dlnVs changed % |",
              "|---|---|---|---|---|---|"]
@@ -58,6 +59,7 @@ def main():
                 a = ax[i, j]
                 pc = a.pcolormesh(lon, lat, 100 * d[:, :, k].T, cmap="RdBu", vmin=-6, vmax=6, shading="nearest")
                 tile_boxes(a)
+                a.set_xlim(lon[0], lon[-1]); a.set_ylim(lat[0], lat[-1])
                 a.set_aspect(1 / np.cos(np.radians(45)))
                 a.set_title(f"{tag} dln{nm} {z[k]:g} km", fontsize=8)
                 a.tick_params(labelsize=7)
@@ -69,7 +71,7 @@ def main():
                     lines.append(f"| {lines_row[0]} | {lines_row[1]:g} | {vp_ch:.0f} | {vp_rms:.2f} | {100 * ch.mean():.0f} | "
                                  f"{100 * np.sqrt(np.mean(d[:, :, k][ch] ** 2)) if ch.any() else 0:.2f} |")
         fig.colorbar(pc, ax=ax, orientation="horizontal", fraction=0.03, pad=0.06, label="change from start (%)")
-        fig.suptitle(f"M0 {REG} {tag}: tile boxes in grey", fontsize=9)
+        fig.suptitle(f"{REG} {tag}: change from start; tile boxes in grey", fontsize=9)
         fig.savefig(OUT / f"maps_{tag}.png", dpi=130)
         plt.close(fig)
     if start is not None:

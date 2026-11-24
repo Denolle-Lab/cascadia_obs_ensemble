@@ -367,6 +367,86 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         station_corr: true
         statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv
         p1_reference: margin_m0_v2/p1_reference
+    # D-B046 (PI 2026-11-23): every tile restarts from M0 = margin_m0_v2 d200_s480 (start_model), damping 200,
+    # dataset weight scale (D-B045). Start = D-B005 at the tile's nodes (nearest column, as <tile>_v2) x (1 + M0's
+    # change from its own start) (start_model_mode: change), so the fine near-surface detail stays and M0 adds its
+    # long wavelengths. P-4 station corrections reused from <tile>_v2 (station_corr_from): recomputed in the new
+    # start they would absorb M0's change per station. P-1 reference and OBS S statics as <tile>_v2
+    # (<runs>/<tile>_m0/p1_reference links to the _v2 one). Smoothing from a scan per tile.
+    mendocino_gorda_c_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e13k_fmt, bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_e13k,
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e13k_fmt}
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv,
+        p1_reference: mendocino_gorda_c_v2/p1_reference, station_corr_from: mendocino_gorda_c_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    blanco_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv,
+        p1_reference: blanco_v2/p1_reference, station_corr_from: blanco_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    oregon_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv,
+        p1_reference: oregon_v2/p1_reference, station_corr_from: oregon_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    washington_m0:
+      b1b: b1b_balanced_c
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_w_fmt, bin_syn: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_syn_O3nofs_w_fmt,
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_w_fmt}
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv,
+        p1_reference: washington_v2/p1_reference, station_corr_from: washington_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
+    ridges_north_m0:
+      b1b: b1b_balanced_c
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt, bin_check: /wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt}
+      events_lat: [44.4, 50.0]
+      events_lon: [-131.0, -126.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -125.85, 0.125]
+      node_lat: [43.9, 50.5, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv,
+        p1_reference: ridges_north_v2/p1_reference, station_corr_from: ridges_north_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v2/d200_s480
+      start_model_mode: change
+      damp: 200
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -374,6 +454,7 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
   edge_z: [-6, 400]                # top / bottom boundary nodes (top <= -4 km, D-B026)
   edge_deg: 8.0                    # lateral boundary nodes this far outside the interior
   model_box_avg_km: 11             # start model: average rock velocity over this horizontal box at each node
+  start_vpvs_min: 1.65             # D-B046: floor on Vp/Vs of a start built from M0 (start_model_mode change); Vs lowered
   deep_vp: {100: 8.05, 125: 8.10, 400: 8.90}   # below the 80 km model bottom; Vp/Vs from the 80 km level
   weights:
     quality: "(0.05/sigma)^2"      # D-B008 sigma, S already 2x P sigma
@@ -505,3 +586,10 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       - [480, 480, 240]            # extended 15:50: weighted RMS flat from 20 to 240, no corner yet
       - [960, 960, 480]
       - [1920, 1920, 960]
+    tile_smooth_scan:              # D-B046: per-tile smoothing scan at damping 200 on the M0 start (weight1-3)
+      - [20, 20, 10]
+      - [60, 60, 30]
+      - [120, 120, 60]
+      - [240, 240, 120]
+      - [480, 480, 240]
+    smooth_rule_tol: 0.015         # chosen smoothing = the largest whose weighted RMS <= (1 + tol) x the scan's best

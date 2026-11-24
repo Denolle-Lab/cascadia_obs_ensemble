@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-23 17:10 (handoff section below).
+Last update: 2026-11-23 19:15 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -96,6 +96,12 @@ same command from ~/wt_tomo_res; logs under /wd1/mdenolle_data/tomo_v1/):
    with the merged model as product, commit and PR comment. Stops before GrowClust.
 Resume any of them with `setsid nohup bash workflow/10_tomography/<script> 9>&- >> <its log> 2>&1 < /dev/null &`
 (close fd 9: a launch from a shell that holds the publish lock passes the lock to every child).
+
+**Update 19:15.** PI: no smoothing cap; the chain runs on the adopted rule (P-M11 / D-B046): Mendocino-Gorda,
+Oregon and Washington at smoothing 480 (scan edge), Blanco 20, ridges 60. Whether the smoothing costs location quality
+is judged from the B4 relocation (misfits, depths against v4-NLL3D). Session handover: the session that ran the chain
+since 09:00 lost its sign-in at 18:55; this one took over, no job affected (all detached). At 19:09 Mendocino-Gorda
+and Washington phase-2 tests 16/20, the others done; b4_relocate.sh waiting on them.
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

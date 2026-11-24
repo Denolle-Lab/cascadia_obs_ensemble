@@ -2,10 +2,10 @@
  "name": "b5_wtest_report",
  "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_wtest_report.py",
  "argv": [],
- "utc": "2026-11-24T20:39:32.679502+00:00",
- "git_commit": "9d6ac7c133bb360a8f329971598ee86f84934575",
- "git_dirty": false,
- "params_md5": "cf17a75b959ba5aab0943c256d3a7654",
+ "utc": "2026-11-24T21:15:28.512037+00:00",
+ "git_commit": "e1f14107307f70ce7a4b670e2252a42929ab485e",
+ "git_dirty": true,
+ "params_md5": "4a1e217be920a5891eae7649f4ae3c95",
  "params": {
   "run": "b5_v0.3.1",
   "out": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights",
@@ -105,21 +105,21 @@
  "outputs": [
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights/summary/report.md",
-   "size": 5826,
-   "mtime": "2026-11-24T20:39:32.679087+00:00",
-   "md5": "e036c29006ac081d77f0a6fa8cf774ec"
+   "size": 5844,
+   "mtime": "2026-11-24T21:15:28.510451+00:00",
+   "md5": "6629aebbf1c142277bc9f7af69037736"
   },
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights/summary/variant_scores.csv",
-   "size": 2102,
-   "mtime": "2026-11-24T20:39:32.674087+00:00",
-   "md5": "e2bebdd956d9597c1d36bc4b4385b393"
+   "size": 2120,
+   "mtime": "2026-11-24T21:15:28.505451+00:00",
+   "md5": "7802331429ead0e463af29c13b4aadb7"
   },
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights/summary/per_cluster.csv",
-   "size": 78106,
-   "mtime": "2026-11-24T20:39:32.664087+00:00",
-   "md5": "684016fcb831095fd31cd163b477f579"
+   "size": 78148,
+   "mtime": "2026-11-24T21:15:28.495451+00:00",
+   "md5": "9aae2b7fa3cbbca1e99b4827e6342fcc"
   }
  ],
  "counts": {

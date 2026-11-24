@@ -4,10 +4,10 @@
  "argv": [
   "collect"
  ],
- "utc": "2026-11-24T20:39:31.627735+00:00",
- "git_commit": "9d6ac7c133bb360a8f329971598ee86f84934575",
- "git_dirty": false,
- "params_md5": "cf17a75b959ba5aab0943c256d3a7654",
+ "utc": "2026-11-24T21:15:27.457049+00:00",
+ "git_commit": "e1f14107307f70ce7a4b670e2252a42929ab485e",
+ "git_dirty": true,
+ "params_md5": "4a1e217be920a5891eae7649f4ae3c95",
  "params": {
   "run": "b5_v0.3.1",
   "out": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights",
@@ -107,9 +107,9 @@
  "outputs": [
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights/summary/results.csv",
-   "size": 499238,
-   "mtime": "2026-11-24T20:39:31.627093+00:00",
-   "md5": "13a013ef415929b395a5f0003c536914"
+   "size": 595411,
+   "mtime": "2026-11-24T21:15:27.455458+00:00",
+   "md5": "071bf3f8d3d4fe9d1932fcfc09c1d381"
   }
  ],
  "counts": {

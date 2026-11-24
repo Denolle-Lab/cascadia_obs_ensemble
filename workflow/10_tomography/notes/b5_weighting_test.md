@@ -54,7 +54,10 @@ every variant (s1.0_prod h 1.06, z 1.28; production 1.38, 1.62) because B4's ons
 
 Not changed by the weights: events above the surface (166-178 of the ~19,000 test events in every variant: JdF 55,
 other onshore 15-17, Puget 9-10, Cascades 3-5): the upward-pull problem (D-B056, round 2) is independent of the
-weighting. Air quakes: 0 in these clusters.
+weighting. Air quakes (events tomoDD removes above its Air_dep level, counted from tomoDD-SE.log as
+b5_relocate.py does; a first version of this note said 0 because the test parsed the wrong stdout column): 61 in the
+full runs at production weights, 35 at S weight 1.0 (Cascades 21 -> 14, offshore forearc 19 -> 9, Mendocino 13 -> 9,
+Axial 4 -> 0), 47 at 0.5 and 46 at the measured ratio: weighting S like P also removes fewer events.
 
 Caveats: the held-out score against B4 stays above 1 (held-out P 1.11, S 1.23 for s1.0_prod) because B4 located
 every event with all stations' absolute picks, including the held-out ones; the test ranks B5 variants, it does not

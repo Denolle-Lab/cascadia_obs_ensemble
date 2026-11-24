@@ -69,7 +69,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
 from b2_fwd_common import RE, eft_depth, lambert_km, read_nll_hdr  # noqa: E402
-from b5_common import frame_centre, pca, pick_class, pick_sigma, unflatten, weight  # noqa: E402
+from b5_common import S_OVER_P, frame_centre, pca, pick_class, pick_sigma, unflatten, weight  # noqa: E402
 
 P = load_params()
 B = P["b5"]
@@ -737,7 +737,8 @@ def run_tomodd(rdir, cid, info, tag="", damp=None):
             shutil.copy(rt / f, rdir / f)
     sets = B["tomodd"]["sets"]
     damp = B["tomodd"]["damp"] if damp is None else damp
-    rows = [f"  {s[0]:<3d}  -9    -9    -9   -9  {s[1]:5.2f} {s[2]:5.2f} {s[3]:4g} {s[4]:4g} {s[5]:6g} {damp:6g}"
+    sw = B["tomodd"]["s_weight"] * S_OVER_P ** 2      # D-B061: S dt weighted like P of the same pick class
+    rows = [f"  {s[0]:<3d}  -9    -9    -9   -9  {s[1]:5.2f} {s[2] * sw:5.2f} {s[3]:4g} {s[4]:4g} {s[5]:6g} {damp:6g}"
             f"   0  {T['inp']['thres']:g}" for s in sets]
     w1, w2, w3 = (f"{v:g}" for v in T["inp"]["smooth"])
     (rdir / "tomoDD-SE.inp").write_text(INP.format(

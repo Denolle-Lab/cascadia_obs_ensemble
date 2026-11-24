@@ -59,6 +59,7 @@ stage_prep() { (cd $W && $PY b5_relocate.py prep $ARGS); }
 stage_split() { (cd $W && $PY b5_relocate.py split $ARGS); }
 stage_run() { (cd $W && $PY b5_relocate.py run $ARGS --nproc $NPROC --nboot $NBOOT); }
 stage_collect() { (cd $W && $PY b5_relocate.py collect $ARGS --nproc $NPROC); }
+stage_accept() { (cd $W && $PY b5_wtest.py accept $RUN); }   # D-B064: exit 2 = FAIL (stops the chain)
 stage_commit() {
   cd $CODE || return 1
   local p=data/tomo_v1/b5/$RUN
@@ -74,7 +75,7 @@ EOF
 }
 
 log "start (code $CODE, version $VERSION, run $RUN, B4 $R1, nproc $NPROC, nboot $NBOOT)"
-for s in wait prep split run collect commit; do
+for s in wait prep split run collect accept commit; do
   done_stage $s && { log "stage $s already done"; continue; }
   log "stage $s"
   stage_$s || { log "stage $s FAILED"; exit 1; }

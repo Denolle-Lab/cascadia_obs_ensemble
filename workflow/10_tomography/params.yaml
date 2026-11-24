@@ -743,7 +743,9 @@ b5:                                # B5 relative relocation of the whole catalog
       m: {maxeve: 10000, maxdata: 3000000, maxsta: 560, maxobs: 130}
     mod_max: {nx: 90, ny: 80, nz: 50}   # RaySPDR.inc maxnx (longitude nodes incl. edges), maxny (latitude), maxnz
     variant: dd                    # = b5_test.tomodd.variants.dd: differential times only (WTCD = 0), JOINT = 0
-    sets: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]
+    sets: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]   # NITER WTCTP WTCTS WRCT WDCT WTCD; D-B062: production MAD re-weighting kept
+    s_weight: 1.0                  # D-B061: S dt weight relative to P dt of the same pick class; dt.ct weights carry
+                                   # 1/S_over_P^2 (pick_errors, D-B008), so WTCTS written = sets WTCTS x s_weight x S_over_P^2
     damp: 100                      # LSQR damping (D-B048 test)
     node_margin_deg: 0.375         # MOD interior nodes = model nodes over the cluster's events and stations + this
     air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test
@@ -752,6 +754,13 @@ b5:                                # B5 relative relocation of the whole catalog
   nboot: 0                         # bootstrap runs per cluster (dt rows resampled, seed 48000 + k); 0 in production
   nproc: 48                        # parallel tomoDD runs (brief: <= 8 while B4 iter1 runs, <= 48 after)
   min_free_gb: 30                  # a tomoDD run starts only while MemAvailable >= this + the largest RSS seen
+  accept:                          # D-B064: station cross-validation of every B5 run (b5_wtest.py accept RUN)
+    reference_s_weight: 0.25       # D-B008 weighting the adopted s_weight must not lose to (held-out dt rms, P and S, per region)
+    clusters_per_region: 3         # largest unsplit clusters in size_range per region
+    size_range: [80, 1500]
+    subset_events: 1200            # regions with no such cluster: subsets of their largest split chunks (up to 2)
+    folds: 3
+    nproc: 40
   collect:
     pca_min_events: 10             # cluster shape (PCA) reported for clusters with at least this many relocated events
 b5_wtest:                          # PI 2026-11-24: test S weighting and re-weighting options for B5 (notes/b5_s_mismatch.md P-S1)

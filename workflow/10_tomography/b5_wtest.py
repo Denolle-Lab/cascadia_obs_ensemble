@@ -12,7 +12,8 @@ Variants = s_weight x reweight (params b5_wtest). Per cluster:
   residuals / sqrt(2) + origin-time error; start perturbed (params synth); error = centroid-removed position error.
 Outputs <out>/<cluster>/<variant>/<kind>/result.json, <out>/summary/*.csv; resumable (a task with result.json is skipped).
 
-  python b5_wtest.py setup | base | run | collect
+  python b5_wtest.py setup | base | run | collect        (weighting test, params b5_wtest)
+  python b5_wtest.py accept RUN                          (D-B064 acceptance of a B5 run, params b5.accept)
 """
 import json, os, re, shutil, subprocess, sys, zlib
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -135,8 +136,9 @@ def run_tomodd(d, src):
     exe = json.loads((src / "run.json").read_text())["bin"]
     with open(d / "stdout.txt", "w") as so:
         p = subprocess.run([exe, "tomoDD-SE.inp"], cwd=d, stdout=so, stderr=subprocess.STDOUT, timeout=7200)
-    txt = (d / "stdout.txt").read_text()
-    aq = sum(int(m) for m in re.findall(r"^\s*\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+[-\d.]+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s*$", txt, re.M))
+    # air quakes as b5_relocate.py counts them: events tomoDD removes with ">>>Warning: negative depth - <ID>"
+    lg = (d / "tomoDD-SE.log").read_text(errors="replace") if (d / "tomoDD-SE.log").exists() else ""
+    aq = len({l.split("-")[-1].strip() for l in lg.splitlines() if "negative depth" in l})
     return p.returncode, aq
 
 
@@ -186,6 +188,34 @@ def geo(reloc, centre):
     return lat, lon
 
 
+def make_subset(src, d, n):
+    """Sub-cluster of a split chunk: its n core events nearest the median epicentre, dt/absolute rows among them."""
+    if (d / "run.json").exists():
+        return
+    ev = read_events(src / "Input_Files" / "event.dat")
+    core = set(pd.read_csv(src / "reloc.csv").ID) if (src / "reloc.csv").exists() else set(ev.ID)
+    evc = ev[ev.ID.isin(core)]
+    la0, lo0 = evc.lat.median(), evc.lon.median()
+    dist = np.hypot((evc.lat - la0) * 111.2, (evc.lon - lo0) * 111.2 * np.cos(np.radians(la0)))
+    keep = set(evc.ID.values[np.argsort(dist.values)[:n]])
+    (d / "Input_Files").mkdir(parents=True, exist_ok=True)
+    write_events(d / "Input_Files" / "event.dat", ev[ev.ID.isin(keep)])
+    dt = read_dt(src / "Input_Files" / "dt.ct")
+    write_dt(d / "Input_Files" / "dt.ct", dt[dt.e1.isin(keep) & dt.e2.isin(keep)])
+    ab, cur = [], None
+    for l in (src / "Input_Files" / "absolute.dat").read_text().splitlines():
+        if l.startswith("#"):
+            cur = int(l.split()[1])
+        if cur in keep:
+            ab.append(l)
+    (d / "Input_Files" / "absolute.dat").write_text("\n".join(ab) + "\n")
+    shutil.copy(src / "Input_Files" / "station.dat", d / "Input_Files" / "station.dat")
+    for f in ("MOD", "ak135.15.SKS", "layer-16.dat", "tomoDD-SE.inp"):
+        shutil.copy(src / f, d / f)
+    rj = json.loads((src / "run.json").read_text())
+    (d / "run.json").write_text(json.dumps({"bin": rj["bin"], "center": rj["center"], "from": src.name}))
+
+
 # ------------------------------------------------------------------ setup
 def stage_setup():
     s = pd.read_csv(RUN / "clusters_summary.csv")
@@ -193,34 +223,21 @@ def stage_setup():
     s = s[(s.status == "ok") & (s.part == -1) & s.n_events.between(lo, hi)]
     pick = s.sort_values("n_events", ascending=False).groupby("region").head(P["clusters_per_region"])
     rows = [dict(name=r.cid, src=str(CL / r.cid), region=r.region, n_events=int(r.n_events)) for r in pick.itertuples()]
-    # Axial subsets: the n nearest core events to each chunk's median epicentre, rows restricted to them
-    for ch in P["axial_subsets"]["chunks"]:
-        src = CL / ch
-        d = OUT / "src" / f"axial_{ch}"
-        if not (d / "run.json").exists():
-            ev = read_events(src / "Input_Files" / "event.dat")
-            core = set(pd.read_csv(src / "reloc.csv").ID) if (src / "reloc.csv").exists() else set(ev.ID)
-            evc = ev[ev.ID.isin(core)]
-            la0, lo0 = evc.lat.median(), evc.lon.median()
-            dist = np.hypot((evc.lat - la0) * 111.2, (evc.lon - lo0) * 111.2 * np.cos(np.radians(la0)))
-            keep = set(evc.ID.values[np.argsort(dist.values)[:P["axial_subsets"]["n_events"]]])
-            (d / "Input_Files").mkdir(parents=True, exist_ok=True)
-            write_events(d / "Input_Files" / "event.dat", ev[ev.ID.isin(keep)])
-            dt = read_dt(src / "Input_Files" / "dt.ct")
-            write_dt(d / "Input_Files" / "dt.ct", dt[dt.e1.isin(keep) & dt.e2.isin(keep)])
-            ab, cur = [], None
-            for l in (src / "Input_Files" / "absolute.dat").read_text().splitlines():
-                if l.startswith("#"):
-                    cur = int(l.split()[1])
-                if cur in keep:
-                    ab.append(l)
-            (d / "Input_Files" / "absolute.dat").write_text("\n".join(ab) + "\n")
-            shutil.copy(src / "Input_Files" / "station.dat", d / "Input_Files" / "station.dat")
-            for f in ("MOD", "ak135.15.SKS", "layer-16.dat", "tomoDD-SE.inp"):
-                shutil.copy(src / f, d / f)
-            rj = json.loads((src / "run.json").read_text())
-            (d / "run.json").write_text(json.dumps({"bin": rj["bin"], "center": rj["center"], "from": ch}))
-        rows.append(dict(name=f"axial_{ch}", src=str(d), region="Axial", n_events=P["axial_subsets"]["n_events"]))
+    # subsets of split chunks: explicit (b5_wtest.axial_subsets) or, in accept mode, automatic for every region with
+    # no eligible unsplit cluster (its largest chunks, up to 2)
+    if P.get("axial_subsets"):
+        chunks = [(ch, "Axial") for ch in P["axial_subsets"]["chunks"]]
+        n_sub = P["axial_subsets"]["n_events"]
+    else:
+        a = pd.read_csv(RUN / "clusters_summary.csv")
+        a = a[(a.status == "ok") & (a.part >= 0)]
+        a = a[~a.region.isin(pick.region)].sort_values("n_events", ascending=False).groupby("region").head(2)
+        chunks = list(zip(a.cid, a.region))
+        n_sub = P["subset_events"]
+    for ch, region in chunks:
+        d = OUT / "src" / f"sub_{ch}"
+        make_subset(CL / ch, d, n_sub)
+        rows.append(dict(name=f"{region.split()[0].split('/')[0].lower()}_{ch}", src=str(d), region=region, n_events=n_sub))
     sel = pd.DataFrame(rows)
     OUT.mkdir(parents=True, exist_ok=True)
     sel.to_csv(OUT / "clusters.csv", index=False)
@@ -399,7 +416,7 @@ def stage_base():
 
 def stage_run():
     sel = pd.read_csv(OUT / "clusters.csv").to_dict("records")
-    kinds = ["full", "synth"] + [f"fold{k}" for k in range(P["folds"])]
+    kinds = P.get("kinds") or (["full", "synth"] + [f"fold{k}" for k in range(P["folds"])])
     jobs = [(r, sw, rw, kind, r["ratio_region"]) for r in sorted(sel, key=lambda r: -r["n_events"])
             for kind in kinds for sw in P["s_weight"] for rw in P["reweight"]]
     n = 0
@@ -430,5 +447,61 @@ def stage_collect():
     print(len(R), "results ->", od / "results.csv")
 
 
+# ------------------------------------------------------------------ accept (D-B064)
+def configure_accept(run):
+    """Point the module at run b5.out/<run>, output <run>/accept: reference (D-B008, S weight 0.25) vs adopted S weight
+    (b5.tomodd.s_weight, D-B061), production re-weighting (b5.tomodd.sets, D-B062), station folds only."""
+    global P, RUN, OUT, CL
+    A, T5 = PR["b5"]["accept"], PR["b5"]["tomodd"]
+    RUN = Path(PR["b5"]["out"]) / run
+    CL, OUT = RUN / "clusters", RUN / "accept"
+    P = dict(P, run=run, out=str(OUT), clusters_per_region=A["clusters_per_region"], size_range=A["size_range"],
+             s_weight=[A["reference_s_weight"], T5["s_weight"]], reweight={"prod": [[s[3], s[4]] for s in T5["sets"]]},
+             folds=A["folds"], kinds=[f"fold{k}" for k in range(A["folds"])], axial_subsets=None,
+             subset_events=A["subset_events"], nproc=A["nproc"])
+    return A
+
+
+def stage_accept(run):
+    A = configure_accept(run)
+    stage_setup()
+    stage_base()
+    stage_run()
+    ref, new = (f"s{w}_prod" for w in P["s_weight"])
+    sel = pd.read_csv(OUT / "clusters.csv").set_index("name")
+    rows = []
+    for c in sel.index:
+        r = {}
+        for v in (ref, new):
+            g = [json.loads((OUT / c / v / k / "result.json").read_text()) for k in P["kinds"]]
+            for ph in ("P", "S"):
+                n = np.array([x["heldout"][ph]["n"] for x in g], float)
+                rms = np.array([x["heldout"][ph]["rms"] or np.nan for x in g], float)
+                r[(v, ph)] = float(np.sqrt(np.nansum(n * rms ** 2) / n[np.isfinite(rms)].sum()))
+        rows.append(dict(cluster=c, region=sel.region[c], P=r[(new, "P")] / r[(ref, "P")], S=r[(new, "S")] / r[(ref, "S")]))
+    D = pd.DataFrame(rows)
+    g = D.groupby("region").agg(clusters=("cluster", "size"), P=("P", "median"), S=("S", "median"))
+    g["pass"] = (g.P <= 1.0) & (g.S <= 1.0)
+    ok = bool(g["pass"].all())
+    L = [f"# B5 acceptance (D-B064): run {run}", "",
+         f"Station cross-validation ({P['folds']} folds) on {len(D)} sample clusters: held-out dt rms of the adopted "
+         f"weighting ({new}) / the D-B008 weighting ({ref}), median per region; pass if <= 1 for P and S.", "",
+         "| region | clusters | P | S | pass |", "|---|---|---|---|---|"]
+    L += [f"| {k} | {v.clusters} | {v.P:.3f} | {v.S:.3f} | {'yes' if v['pass'] else 'NO'} |" for k, v in g.iterrows()]
+    L += ["", f"**{'PASS' if ok else 'FAIL'}**: " + ("every region" if ok else
+          "regions failing: " + ", ".join(g.index[~g["pass"]]))]
+    od = Path(__file__).resolve().parents[2] / PR["b5"]["summary"] / run
+    od.mkdir(parents=True, exist_ok=True)
+    for d in (OUT, od):
+        (d / "accept.md").write_text("\n".join(L) + "\n")
+        D.to_csv(d / "accept_per_cluster.csv", index=False, float_format="%.5g")
+    write_manifest(f"b5_accept_{run}", od, outputs=[od / "accept.md", od / "accept_per_cluster.csv"],
+                   params={**A, "reference": ref, "adopted": new}, counts={"pass": ok, "clusters": len(D)})
+    print("\n".join(L))
+    return ok
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "accept":
+        sys.exit(0 if stage_accept(sys.argv[2]) else 2)
     {"setup": stage_setup, "base": stage_base, "run": stage_run, "collect": stage_collect}[sys.argv[1]]()

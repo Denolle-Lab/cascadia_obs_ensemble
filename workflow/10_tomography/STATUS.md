@@ -2,7 +2,7 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 05:10 (handoff section below).
+Last update: 2026-11-24 06:00 (handoff section below).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
@@ -154,6 +154,16 @@ the cross-section plane and behind the events in the 2D section, nothing above t
 by default, checkerboard-resolved option) and the B4 relocation as the second catalog ("Relocated in model v0.3.0
 (preliminary)", Axial caveat in the legend). Checked headless (Chromium + SwiftShader): no console or shader errors.
 The Zenodo draft stays private (publishing the record is a separate PI decision). Axial choice still open.
+
+**Update 2026-11-24 06:00.** Public atlas (gh-pages 7df06a89, atlas/model-layer 7855966c): vertical model cut
+(east-west or north-south, slider; ground removed in front; section panel and camera follow), "Moves" layer (line from
+the v4-NLL3D location, start model, to the B4 location; red deeper, blue shallower; in 3D and in the section panel:
+157,225 events located in both, median depth change +0.00 km, median |change| 1.40 km, 50 % deeper), section panel
+fits by default, seismic colormap for the model (PI). PI suspects events went too deep: a literature comparison of
+depths by region is needed (not started). PR split: part 1 = PR #35 (tomo/b2-code -> tomo/track-b, code, decisions,
+pixi models env, OBS statics; Copilot review requested); part 2 (results) after #35 merges. D-B048 test running in a
+background agent on branch tomo/b5-blanco-test (worktree ~/wt_b5; Julia + GrowClust3D install under
+/wd1/mdenolle_data/b5_test).
 
 Options: `DAMP=<d>` (tests and real-data runs at damping d; results in `<tile>/d<d>/`), `SPIKES_ONLY=1` (spikes at
 the event clusters with the DWS mask, `spikec_*`), `MAXJ` (parallel inversions, default 10).

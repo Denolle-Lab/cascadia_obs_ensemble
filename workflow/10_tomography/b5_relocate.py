@@ -762,13 +762,22 @@ def run_tomodd(rdir, cid, info, tag="", damp=None):
     lg = (rdir / "tomoDD-SE.log").read_text(errors="replace") if (rdir / "tomoDD-SE.log").exists() else ""
     aq_ids = sorted({int(l.split("-")[-1]) for l in lg.splitlines() if "negative depth" in l})
     n_aq = len(aq_ids)
-    skipped = "skipping this cluster" in lg
+    skipped = skipped_run(rdir)
     return dict(cls=cls, bin=str(binf), exit=rc, wall_s=round(wall, 1), cpu_s=cpu, rss_gb=round(rss_kb / 1024 ** 2, 3),
                 mem_wait_s=waited, iterations=len(it), airquakes=n_aq, airquake_ids=aq_ids, skipped=skipped,
                 cnd_first=it[0]["cnd"] if it else None, cnd_last=it[-1]["cnd"] if it else None,
                 rmsct_first_ms=it[0]["rmsct_ms"] if it else None, rmsct_last_ms=it[-1]["rmsct_ms"] if it else None,
                 ev_pct_last=it[-1]["ev_pct"] if it else None, ct_pct_last=it[-1]["ct_pct"] if it else None,
                 os_last_m=it[-1]["os_m"] if it else None), it
+
+
+def skipped_run(rdir):
+    """tomoDD gave up on the cluster: fewer than 2 events left after air quakes ("skipping this cluster" in the log,
+    or "Cluster has less than 2 events." on stdout)."""
+    lg = rdir / "tomoDD-SE.log"
+    so = rdir / "stdout.txt"
+    return (lg.exists() and "skipping this cluster" in lg.read_text(errors="replace")) or \
+        (so.exists() and "less than 2 events" in so.read_text(errors="replace"))
 
 
 def read_reloc(path, center, e_ids):
@@ -1054,6 +1063,8 @@ def stage_collect(C, nproc, partial=False):
             rj["airquake_ids"] = sorted({int(l.split("-")[-1]) for l in lg if "negative depth" in l})
             rj["airquakes"] = len(rj["airquake_ids"])
         aq |= set(rj["airquake_ids"])
+        if rj.get("status") == "failed" and rj.get("exit") == 0 and skipped_run(f.parent):
+            rj["status"] = "skipped"                  # run.json of a first version: tomoDD gave up, not a failure
         g = mem[mem.cid == cid]
         core = set(g.ID[g.core])
         rf = d / "clusters" / cid / "reloc.csv"
@@ -1330,7 +1341,17 @@ def write_compare(C, cat, cs, dtr, allr, split_eff, od, tag, missing):
         x = cat[cat.above_surface & rel]
         hgt = -x.surface_km - x.depth
         L.append(f"B5 events above: height above the surface median {hgt.median() * 1e3:.0f} m, max {hgt.max() * 1e3:.0f} m;"
-                 f" their B4 depth was below the surface for {int((x.b4_depth >= -x.surface_km).sum())} of them.")
+                 f" {int((~x.b4_above_surface).sum())} of them were below the surface at their B4 position; "
+                 f"B4 depth below the surface median {(x.b4_depth + x.b4_surface_km).median() * 1e3:.0f} m (all "
+                 f"relocated events {(s.b4_depth + s.b4_surface_km).median() * 1e3:.0f} m); B5 - B4 depth median "
+                 f"{x.b5_shift_z_km.median():+.3f} km.")
+        L.append("Above-surface B5 events by start depth below the surface (B4): " + ", ".join(
+            f"{lab}: {int(((x.b4_depth + x.b4_surface_km) .between(lo, hi, inclusive='left')).sum())} of "
+            f"{int(((s.b4_depth + s.b4_surface_km).between(lo, hi, inclusive='left')).sum())}"
+            for lab, lo, hi in (("< 0.1 km", -1e9, 0.1), ("0.1-0.5 km", 0.1, 0.5), ("0.5-1 km", 0.5, 1.0),
+                                ("1-3 km", 1.0, 3.0), (">= 3 km", 3.0, 1e9))) + ".")
+        L.append(f"Tier U above the surface: {int((cat.above_surface & (cat.loc_source == 'v4')).sum())} (v4 "
+                 "hypocentres, D-B057; not relocated here).")
     tw = cs.wall_s.sum() / 3600
     L += ["", "## Run", "", f"{len(cs)} clusters ({int((cs.part >= 0).sum())} chunks of split components), "
           f"binaries {cs.cls.value_counts().to_dict()}; status {cs.status.value_counts().to_dict()}; tomoDD "

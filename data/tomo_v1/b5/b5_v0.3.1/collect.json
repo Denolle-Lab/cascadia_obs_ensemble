@@ -1,40 +1,39 @@
 {
  "events": 172339,
  "loc_source": {
-  "b5_tomodd": 88429,
-  "nll3d": 68840,
+  "b5_tomodd": 97619,
+  "nll3d": 59650,
   "v4": 15070
  },
  "b5_status": {
-  "relocated": 88429,
+  "relocated": 97619,
   "unlinked": 54548,
   "tier_U": 15070,
-  "cluster_failed": 9420,
-  "airquake_by_tomodd": 3551,
-  "dropped_by_tomodd": 1306,
+  "airquake_by_tomodd": 3607,
+  "dropped_by_tomodd": 1480,
   "cluster_skipped": 15
  },
- "above_surface": 4880,
- "above_surface_b5": 803,
+ "above_surface": 4946,
+ "above_surface_b5": 869,
  "publishable": false,
  "clusters": 2128,
  "missing_clusters": 0,
  "split_effect": {
-  "n": 2514,
-  "dh_med": 0.28951273071654493,
-  "dh_p90": 0.9964559223315911,
-  "dz_med": 0.24471271548175477,
-  "dz_p90": 0.8380549063440894,
+  "n": 2673,
+  "dh_med": 0.30521366931800537,
+  "dh_p90": 1.058754757296805,
+  "dz_med": 0.24871271548175455,
+  "dz_p90": 0.9415608088834153,
   "by_hop": {
    "1": {
-    "n": 1209,
-    "dh_med": 0.25926814045524216,
-    "dz_med": 0.240712715481755
+    "n": 1279,
+    "dh_med": 0.2694900176966385,
+    "dz_med": 0.24271271548175477
    },
    "2": {
-    "n": 1305,
-    "dh_med": 0.3257845849781869,
-    "dz_med": 0.2517127154817551
+    "n": 1394,
+    "dh_med": 0.33978819649785824,
+    "dz_med": 0.26049999999999995
    }
   }
  }

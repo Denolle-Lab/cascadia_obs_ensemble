@@ -5,15 +5,11 @@
   "collect",
   "--version",
   "0.3.1",
-  "--run",
-  "b5_v0.3.1",
-  "--b4-run",
-  "b4_iter1_v0.3.1",
   "--nproc",
-  "40"
+  "32"
  ],
- "utc": "2026-11-24T19:06:53.071535+00:00",
- "git_commit": "7e8fe29ce7c503d8977e2712939863bf23633d31",
+ "utc": "2026-11-24T19:31:33.051432+00:00",
+ "git_commit": "79c82d0a9c7385ee91f4346a6efc09cc330a7f09",
  "git_dirty": true,
  "params_md5": "53cadbb3ca5bc237bb9bc98905b3a958",
  "params": {
@@ -182,66 +178,65 @@
  "outputs": [
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/catalog_b5_b5_v0.3.1.csv",
-   "size": 79587421,
-   "mtime": "2026-11-24T19:06:47.317242+00:00",
-   "md5": "a0e279da34d84b3ffcf91dd7adb575ec"
+   "size": 80104275,
+   "mtime": "2026-11-24T19:31:25.350062+00:00",
+   "md5": "602aeb615a0cc1616b9003b90a652fae"
   },
   {
    "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/clusters_summary.csv",
-   "size": 583942,
-   "mtime": "2026-11-24T19:06:51.878217+00:00",
-   "md5": "a4bac1ab1c539e8c925e4042438885f4"
+   "size": 584091,
+   "mtime": "2026-11-24T19:31:31.760026+00:00",
+   "md5": "68f7abb1e8374fc3bbefe4a90ceaaff5"
   },
   {
    "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/compare.md",
-   "size": 7808,
-   "mtime": "2026-11-24T19:06:53.023211+00:00",
-   "md5": "5a294f2c446ad4f48c608175e0e813a1"
+   "size": 8078,
+   "mtime": "2026-11-24T19:31:33.004019+00:00",
+   "md5": "36b9e6663f62cafdf9081df5a4a24367"
   },
   {
    "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/clusters_summary.csv",
-   "size": 288993,
-   "mtime": "2026-11-24T19:06:53.052211+00:00",
-   "md5": "890d3810ec667c104609fd917f235336"
+   "size": 289069,
+   "mtime": "2026-11-24T19:31:33.033019+00:00",
+   "md5": "6c62c4452852405b80dbeda8a0ac2a89"
   }
  ],
  "counts": {
   "events": 172339,
   "loc_source": {
-   "b5_tomodd": 88429,
-   "nll3d": 68840,
+   "b5_tomodd": 97619,
+   "nll3d": 59650,
    "v4": 15070
   },
   "b5_status": {
-   "relocated": 88429,
+   "relocated": 97619,
    "unlinked": 54548,
    "tier_U": 15070,
-   "cluster_failed": 9420,
-   "airquake_by_tomodd": 3551,
-   "dropped_by_tomodd": 1306,
+   "airquake_by_tomodd": 3607,
+   "dropped_by_tomodd": 1480,
    "cluster_skipped": 15
   },
-  "above_surface": 4880,
-  "above_surface_b5": 803,
+  "above_surface": 4946,
+  "above_surface_b5": 869,
   "publishable": false,
   "clusters": 2128,
   "missing_clusters": 0,
   "split_effect": {
-   "n": 2514,
-   "dh_med": 0.28951273071654493,
-   "dh_p90": 0.9964559223315911,
-   "dz_med": 0.24471271548175477,
-   "dz_p90": 0.8380549063440894,
+   "n": 2673,
+   "dh_med": 0.30521366931800537,
+   "dh_p90": 1.058754757296805,
+   "dz_med": 0.24871271548175455,
+   "dz_p90": 0.9415608088834153,
    "by_hop": {
     "1": {
-     "n": 1209,
-     "dh_med": 0.25926814045524216,
-     "dz_med": 0.240712715481755
+     "n": 1279,
+     "dh_med": 0.2694900176966385,
+     "dz_med": 0.24271271548175477
     },
     "2": {
-     "n": 1305,
-     "dh_med": 0.3257845849781869,
-     "dz_med": 0.2517127154817551
+     "n": 1394,
+     "dh_med": 0.33978819649785824,
+     "dz_med": 0.26049999999999995
     }
    }
   }

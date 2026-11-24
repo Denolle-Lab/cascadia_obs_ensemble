@@ -1,16 +1,28 @@
 """Parse NLLoc *.hyp summary files of a run into one CSV and compare with catalog v4.
 
-Usage: python a2_parse_hyp.py RUN_NAME  ->  /wd1/mdenolle_data/reloc_v5/runs/RUN_NAME/locations.csv
-Columns: v4 ID, status, maximum-likelihood origin, expectation depth, RMS, phases used, gap, distances,
-68% horizontal ellipse (min/max), 3D ellipsoid semi-axes, depth sigma (sqrt CovZZ), v4 values, surface check.
+Usage: python a2_parse_hyp.py RUN_NAME [--deep DEEP_RUN]  ->  /wd1/mdenolle_data/reloc_v5/runs/RUN_NAME/locations.csv
+Columns: v4 ID, status, NLLoc comment (why REJECTED), maximum-likelihood origin (depth in the run's frame: z' for the
+Earth-flattened B4 grids), expectation depth, RMS, phases used, gap, distances, 68% horizontal ellipse (min/max), 3D
+ellipsoid semi-axes, depth sigma (sqrt CovZZ), ns_z (smallestNodeSide z of the SEARCH OCTREE line: the final oct-tree
+cell height, km), run and tile (workdir) of the row, pass ('main' or 'deep'), v4 values, surface check.
+One row per event. --deep DEEP_RUN (D-B067, v5.1: b4_v51_deep) also reads the second pass of the events rejected at
+the bottom face or located at z' >= 78 km; an event's row is its deep-pass row when that is LOCATED, else its main-pass
+row (LOCATED preferred, else the last one read; files in name order), else its deep-pass row.
+v4 values come from the catalog v4.1 event list (V4).
 """
-import sys
+import argparse
+import re
 from pathlib import Path
 import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
 B = Path("/wd1/mdenolle_data/reloc_v5")
+# catalog v4.1 event list (v4.0 minus 172113, plus 900001-900003 with ComCat hypocentres; utils/fix_catalog_v4.py).
+# data/catalog_v4 is gitignored and ~/wt_reloc/data/catalog_v4 links to the v4.0 backup, so the main tree's file is named
+V4 = Path("/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv")
+V41_REMOVED, V41_ADDED = {172113}, {900001, 900002, 900003}
+ANSS = REPO / "data/magnitude_v4/anss_2010-16.csv"
 
 
 def kv(tokens):
@@ -25,9 +37,12 @@ def parse(path):
             continue
         k = tok[0]
         if k == "NLLOC":
-            cur = {"status": tok[2].strip('"')}
+            q = re.findall(r'"([^"]*)"', line)     # file root, status, comment (e.g. why REJECTED)
+            cur = {"status": q[1], "comment": q[2] if len(q) > 2 else ""}
         elif cur is None:
             continue
+        elif k == "SEARCH" and tok[1] == "OCTREE":
+            cur["ns_z"] = float(kv(tok[2:])["smallestNodeSide"].split("/")[2])
         elif k == "PUBLIC_ID":
             cur["ID"] = int(tok[1].split("_")[1])
         elif k == "GEOGRAPHIC":
@@ -71,18 +86,52 @@ def region(lat, lon):
     return "Other onshore"
 
 
-def main(run):
-    rd = B / "runs" / run
-    rows = []
-    for f in sorted(rd.glob("*/loc.sum.grid0.loc.hyp")):
-        for r in parse(f):
-            r["tile"] = f.parent.name
-            rows.append(r)
-    loc = pd.DataFrame(rows)
-    v4 = pd.read_csv(REPO / "data/catalog_v4/Cascadia_relocated_catalog_v4.csv", skipinitialspace=True)
-    v4 = v4.rename(columns={"latitude": "v4_lat", "longitude": "v4_lon", "depth(km)": "v4_depth",
+def read_v4():
+    """Catalog v4.1 event list with v4_* column names (stops if V4 is not the v4.1 list)."""
+    v4 = pd.read_csv(V4, skipinitialspace=True)
+    v4.columns = [c.strip() for c in v4.columns]
+    ids = set(v4.ID)
+    assert not ids & V41_REMOVED and V41_ADDED <= ids and v4.ID.is_unique, f"{V4} is not the catalog v4.1 event list"
+    v4 = v4.rename(columns={"datetime": "v4_time", "latitude": "v4_lat", "longitude": "v4_lon", "depth(km)": "v4_depth",
                             "spatial_sigma(m)": "v4_sigma_m"})
     v4["v4_npick"] = v4.Num_p_picks + v4.Num_s_picks
+    return v4
+
+
+def read_run(run, pas):
+    rows = []
+    for f in sorted((B / "runs" / run).glob("*/loc.sum.grid0.loc.hyp")):
+        for r in parse(f):
+            r.update(run=run, tile=f.parent.name, **{"pass": pas})
+            rows.append(r)
+    assert rows, f"no loc.sum.grid0.loc.hyp under {B / 'runs' / run}"
+    return rows
+
+
+def one_row(loc):
+    """One row per event (docstring): deep LOCATED > main LOCATED > main other > deep other; ties: last read."""
+    ok = loc.status == "LOCATED"
+    deep = loc["pass"] == "deep"
+    k = np.select([deep & ok, ok, ~deep], [3, 2, 1], 0)
+    n_dup = int(loc[~deep].ID.duplicated().sum())
+    loc = loc.assign(_k=k, _i=np.arange(len(loc))).sort_values(["ID", "_k", "_i"])
+    return loc.drop_duplicates("ID", keep="last").drop(columns=["_k", "_i"]).reset_index(drop=True), n_dup
+
+
+def main(run, deep=None):
+    rd = B / "runs" / run
+    rows = read_run(run, "main") + (read_run(deep, "deep") if deep else [])
+    loc, n_dup = one_row(pd.DataFrame(rows))
+    if deep:
+        d = loc["pass"] == "deep"
+        print(f"deep pass {deep}: {sum(r['pass'] == 'deep' for r in rows)} rows, {int(d.sum())} events take the deep "
+              f"row ({int((d & (loc.status == 'LOCATED')).sum())} LOCATED)")
+    if n_dup:
+        print(f"{n_dup} duplicate main-pass rows dropped (one row per event)")
+    v4 = read_v4()
+    miss = sorted(set(loc.ID) - set(v4.ID))
+    if miss:
+        print(f"{len(miss)} events of the run are not in the v4.1 event list (kept here, no v4 values): {miss[:10]}")
     loc = loc.merge(v4[["ID", "v4_lat", "v4_lon", "v4_depth", "v4_npick", "v4_sigma_m"]], on="ID", how="left")
     # surface elevation under the new and v4 epicentres
     import pygmt
@@ -114,7 +163,7 @@ def main(run):
 
 def anss_check(loc, rd):
     """Depth vs ANSS/ComCat (PNSN, NCSN) for events matched within 4 s and 30 km."""
-    a = pd.read_csv(REPO / "data/magnitude_v4/anss_2010-16.csv")
+    a = pd.read_csv(ANSS)
     a["t"] = pd.to_datetime(a.time.str.rstrip("Z"), format="ISO8601", utc=True)
     a = a.rename(columns={"latitude": "a_lat", "longitude": "a_lon", "depth": "a_depth"}).sort_values("t")
     l = loc.assign(t=pd.to_datetime(loc.time, utc=True)).sort_values("t")
@@ -133,4 +182,8 @@ def anss_check(loc, rd):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("run")
+    ap.add_argument("--deep", help="deep-pass run (D-B067) whose LOCATED rows replace the main-pass rows")
+    a = ap.parse_args()
+    main(a.run, a.deep)

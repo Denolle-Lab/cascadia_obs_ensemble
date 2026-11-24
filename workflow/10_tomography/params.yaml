@@ -673,3 +673,35 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: {axial}. Region medians against the previous relocations: b4_acceptance.md."
         - "Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km)."
         - "Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md)."
+    "5.1":
+      b4_run: b4_v51_iter1         # NLLoc rerun after the round-2 fixes, iter0 station terms; its deep pass b4_v51_deep (D-B067) is merged in by a2_parse_hyp.py b4_v51_iter1 --deep b4_v51_deep
+      terms_run: b4_v51_iter0      # station_terms.in used by b4_run
+      model: 0.3.1
+      note: "Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre."
+      tier_u: none                 # D-B057: no v4 hypocentre outside the v4_* columns; u_reason says why
+      decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068]   # README header
+      flags: [floor_limited, far_only, deep_pass, five_phase]   # boolean columns of b4_catalog.py counted in the README
+      columns:                     # README descriptions added or changed for v5.1 (override catalog_version.py COLUMNS by key)
+        u_reason: "why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals'; empty for located events"
+        floor_limited: "True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here"
+        far_only: "True when none of the arrivals used came from a fine (near-station) travel-time grid: seen only by distant stations through the coarse wide grids; epicentre usable, depth poor; empty when not located here"
+        deep_pass: "True when the hypocentre comes from the deep pass (D-B067: grids to about 121 km, ak135 below 80 km and outside the tomography box); empty when not located here"
+        five_phase: "True when located with exactly 5 phases (D-B066: one degree of freedom, always tier D); empty when not located here"
+        surface_km: "ground or seafloor elevation at the epicentre (km, positive up): the merged solid surface of D-B068 (GMRT multibeam where available, GMT earth_relief 01m elsewhere, bilinear), the surface of NonLinLoc's floor; empty without a hypocentre"
+        above_surface: "depth above the solid surface (surface_km): a location error, kept visible, not moved (D-B055); empty without a hypocentre"
+        tier: "location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules in a2_build_catalog.py; counts in b4_catalog_v5_trackA_*_tiers.md)"
+        depth_quality: "ok, unconstrained (ridge regions, Blanco outside the 2012-13 OBS deployment), biased_deep (Gorda, nearest station > 15 km); empty without a hypocentre"
+        depth_frame: "how depth was obtained (true depth: the Earth-flattening of the NonLinLoc grids undone; ComCat for v4.1 additions); empty without a hypocentre"
+        "tile, region": "NonLinLoc tile (workdir of the main or deep pass; empty when not located here); region label of the v4 epicentre (box rules of a2_parse_hyp.py), also for rows without a hypocentre"
+      method_notes:                # README bullets after the hypocentre line
+        - "Every arrival is used: each station and phase has a fine travel-time grid (1 km, within about 250 km of the station) and a coarse wide grid over the whole model, which NonLinLoc uses when the search box is not inside the fine grid (v5.0 dropped the arrivals beyond about 160 km)."
+        - "Deep pass (D-B067): events rejected at the bottom face of the 80 km grids or located at 78 km or deeper (flattened depth) are located again in wide grids extended to about 121 km; below 80 km and outside the tomography box the velocities are ak135, blended under the deepest model layer (deep_pass). Events seen only by distant stations (far_only) are not sent to the deep pass."
+        - "Solid surface (D-B068): one merged surface, GMRT multibeam where available and GMT earth_relief 01m elsewhere, defines NonLinLoc's topography floor (each 15 s node holds the minimum of the bilinear surface over its cell, minus 1 m, Earth-flattened; D-B056), the above-surface test (surface_km, above_surface; D-B055) and the water/rock boundary of the velocity model."
+        - "Events with 5 picks are located with a 5-phase minimum (D-B066): one degree of freedom, tier D (five_phase)."
+        - "The v4.1 additions 900001-900003 carry their ComCat hypocentre (loc_source comcat, tier U) when NonLinLoc does not locate them."
+      known_limits:                # README lines ({axial}: computed Axial seafloor sentence; no other braces)
+        - "floor_limited events (count above) have depths set by NonLinLoc's topography floor, not by the data (in round 2 such events had sigma_z about 9 km and expectation depths about 13 km below the best point)."
+        - "far_only events (count above) are located with distant stations only: epicentres usable, depths poor (round 2: median difference from ANSS 21-24 km, against 11 km for catalog v4; Blanco M5-6 events at 59-77 km)."
+        - "five_phase events have one degree of freedom (round 2: sigma_z about 13 km, horizontal error about 27 km)."
+        - "Deep-pass hypocentres below 80 km depend on ak135 outside the tomography box (D-B067)."
+        - "Axial: {axial}."

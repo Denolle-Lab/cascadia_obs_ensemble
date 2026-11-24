@@ -633,14 +633,30 @@ def cluster_data(cid):
     return g, np.sort(e), pp, rows
 
 
-def write_inputs(rdir, cid, boot=0):
+def centre(lat, lon, retry=0):
+    """tomoDD frame centre: b5_common.frame_centre (D-B053); for a retry after a crash in the ray tracer, moved by
+    retry x (+0.0037, -0.0043) deg (about 0.5 km) and again by 0.003 deg steps until no event lies within
+    frame_clear_km."""
+    c = frame_centre(lat, lon, B["frame_clear_km"])
+    if retry:
+        c = [c[0] + 0.0037 * retry, c[1] - 0.0043 * retry]
+        for _ in range(100):
+            d = np.hypot((lat - c[0]) * KM_DEG, (lon - c[1]) * KM_DEG * np.cos(np.radians(c[0])))
+            if d.min() >= B["frame_clear_km"]:
+                break
+            c = [c[0] + 0.003, c[1] + 0.003]
+        c = (round(c[0], 4), round(c[1], 4))
+    return c
+
+
+def write_inputs(rdir, cid, boot=0, retry=0):
     from b2_fwd_mods import ellipsoid_coords
     ev, st = _W["ev"], _W["st"]
     g, e, pp, rows = cluster_data(cid)
     inp = rdir / "Input_Files"
     inp.mkdir(parents=True, exist_ok=True)
     (rdir / "Output_Files").mkdir(exist_ok=True)
-    center = frame_centre(ev.lat.values[e], ev.lon.values[e], B["frame_clear_km"])
+    center = centre(ev.lat.values[e], ev.lon.values[e], retry)
     dmin = float(np.min(np.hypot((ev.lat.values[e] - center[0]) * KM_DEG,
                                  (ev.lon.values[e] - center[1]) * KM_DEG * np.cos(np.radians(center[0])))))
     assert dmin >= B["frame_clear_km"], f"{cid}: an event lies {dmin * 1e3:.1f} m from the frame centre"
@@ -808,10 +824,25 @@ def _do_cluster(cid, boot, rdir):
     pidf = rdir / "running.pid"
     pidf.write_text(str(os.getpid()))
     t0 = time.time()
-    info, tcs = write_inputs(rdir, cid, boot)
-    t_in = time.time() - t0
-    res, it = run_tomodd(rdir, cid, info, "" if boot == 0 else f" boot {boot}")
-    _W["rss_gb"] = max(_W.get("rss_gb", 1.0), res["rss_gb"] if np.isfinite(res["rss_gb"]) else 0)
+    crashes = []
+    for retry in range(B["tomodd"]["crash_retries"] + 1):
+        info, tcs = write_inputs(rdir, cid, boot, retry)
+        t_in = time.time() - t0
+        res, it = run_tomodd(rdir, cid, info, "" if boot == 0 else f" boot {boot}")
+        _W["rss_gb"] = max(_W.get("rss_gb", 1.0), res["rss_gb"] if np.isfinite(res["rss_gb"]) else 0)
+        so = (rdir / "stdout.txt").read_text(errors="replace")
+        if res["exit"] == 0 or "Segmentation fault" not in so:
+            break
+        # tomoDD's ray tracer can return NaN path points for some geometries in some frames (D-B053: an event at the
+        # frame centre; here also elsewhere, RaySPDR2.f intmap index from a NaN, found with the bounds-checked build):
+        # keep the crashed run's files, retry with the frame centre moved
+        crashes.append(dict(retry=retry, center=info["center"], exit=res["exit"], iterations=res["iterations"]))
+        keep = rdir / f"crash{retry}"
+        keep.mkdir()
+        for f in ("stdout.txt", "tomoDD-SE.log", "tomoDD-SE.inp", "Input_Files", "Output_Files", "MOD"):
+            if (rdir / f).exists():
+                shutil.move(str(rdir / f), str(keep / f))
+    res["frame_retries"] = crashes
     rel = rdir / "Output_Files" / "tomoDD.reloc"
     ev = _W["ev"]
     g = _W["mem"].get_group(cid).sort_values("ev")

@@ -747,6 +747,7 @@ b5:                                # B5 relative relocation of the whole catalog
     damp: 100                      # LSQR damping (D-B048 test)
     node_margin_deg: 0.375         # MOD interior nodes = model nodes over the cluster's events and stations + this
     air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test
+    crash_retries: 2               # tomoDD segfault (NaN ray point, RaySPDR2.f intmap): rerun with the frame centre moved ~0.5 km
   frame_clear_km: 0.05             # D-B053: no event within 50 m of tomoDD's frame centre (b5_common.frame_centre)
   nboot: 0                         # bootstrap runs per cluster (dt rows resampled, seed 48000 + k); 0 in production
   nproc: 48                        # parallel tomoDD runs (brief: <= 8 while B4 iter1 runs, <= 48 after)

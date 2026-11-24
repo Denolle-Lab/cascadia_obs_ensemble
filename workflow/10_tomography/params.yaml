@@ -754,3 +754,22 @@ b5:                                # B5 relative relocation of the whole catalog
   min_free_gb: 30                  # a tomoDD run starts only while MemAvailable >= this + the largest RSS seen
   collect:
     pca_min_events: 10             # cluster shape (PCA) reported for clusters with at least this many relocated events
+b5_wtest:                          # PI 2026-11-24: test S weighting and re-weighting options for B5 (notes/b5_s_mismatch.md P-S1)
+  run: b5_v0.3.1                   # production run whose cluster inputs are reused (only weights / dt rows / start change)
+  out: /wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights
+  clusters_per_region: 3           # largest unsplit clusters with 80-1500 events per region (status ok)
+  size_range: [80, 1500]
+  axial_subsets: {chunks: [c000001_p000, c000001_p001], n_events: 1200}   # Axial has no mid-size cluster: nearest core events to each chunk's median epicentre
+  s_weight: [0.25, 0.5, meas, 1.0, 1.5, 2.0]   # 1.5, 2.0 added after the first pass (1.0 was best, at the edge); S weight relative to P (same pick class); 0.25 = production (D-B008 sigma S = 2 x P); meas = 1/r^2, r = region median of MAD_S/MAD_P of B4 dt residuals
+  reweight:                        # (WRCT, WDCT) per set, production sets otherwise
+    prod: [[-9, -9], [8, -9], [6, 10], [6, 10]]
+    loose: [[-9, -9], [12, -9], [10, 10], [10, 10]]
+    none: [[-9, -9], [-9, -9], [-9, -9], [-9, -9]]   # (not "off": YAML reads it as false)
+  folds: 3                         # cross-validation by station (random, seed); held-out rows scored with the per-pair offset of the training rows
+  seed: 0
+  synth:                           # truth = B4 positions; times from the B4 grids; noise resampled from the cluster's B4 dt residuals / sqrt(2) per phase
+    start_scale: 0.5               # start = truth + N(0, scale x B4 sigma): sigma_h = h_max / 1.515, sigma_z = sig_z
+    sigma_h_clip: [0.1, 3.0]
+    sigma_z_clip: [0.1, 5.0]
+    origin_sigma_s: 0.05
+  nproc: 40

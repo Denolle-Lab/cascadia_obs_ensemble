@@ -124,7 +124,7 @@ def build(run_spec, version, description):
     A.update(
         title=f"{X['name']} v{version}: {description}",
         id=f"{X['name']}.v{version}",
-        model=X["name"], version=version, data_revision=f"r{version}",
+        model=X["name"], version=f"v{version}", data_revision=f"r{version}", grid_dim="3D",
         summary=f"{description}. {X['summary']}",
         year=datetime.now(timezone.utc).year,
         history=f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} b2_model_export.py from {run_spec}",
@@ -145,6 +145,46 @@ def build(run_spec, version, description):
     )
     ds.attrs = {k: (json.dumps(val) if isinstance(val, (list, dict)) else val) for k, val in A.items()}
     return ds
+
+
+# EMC Metadata Inspector rules (EarthScope emc-tools src/emc_inspector.py, read 2026-11-23): required global
+# attributes and the string they must start with (None = any non-empty value); required variable attributes.
+EMC_REQUIRED = {"author_institution": None, "author_name": None, "Conventions": "CF-1.0", "data_revision": "r",
+                "id": None, "Metadata_Conventions": "Unidata Dataset Discovery v1.0", "model": None,
+                "model_type": None, "model_subtype": None, "reference_pid": "doi:", "reference": None,
+                "repository_institution": "EarthScope DS", "repository_name": "EMC", "repository_pid": "doi:",
+                "summary": None, "title": None, "year": None, "grid_dim": ("2D", "3D"),
+                "grid_ref": "latitude_longitude", "version": "v"}
+EMC_GEOSPATIAL = ["geospatial_lat_min", "geospatial_lat_max", "geospatial_lon_min", "geospatial_lon_max",
+                  "geospatial_vertical_min", "geospatial_vertical_max", "geospatial_vertical_units",
+                  "geospatial_vertical_positive"]
+
+
+def emc_check(ds):
+    """Our own check against the EMC inspector's rules (the inspector itself is not run here). Returns a list of
+    problems; 'TO FILL' placeholders are reported as pending (they must be filled before an EMC submission)."""
+    out = []
+    for k, start in EMC_REQUIRED.items():
+        v = str(ds.attrs.get(k, "")).strip()
+        if not v:
+            out.append(f"missing global attribute {k}")
+        elif v.startswith("TO FILL"):
+            out.append(f"pending (placeholder) {k}")
+        elif isinstance(start, tuple) and v not in start:
+            out.append(f"{k} must be one of {start}")
+        elif isinstance(start, str) and not v.startswith(start):
+            out.append(f"{k} must start with '{start}'")
+    out += [f"missing geospatial attribute {k}" for k in EMC_GEOSPATIAL if k not in ds.attrs]
+    for c in ("latitude", "longitude"):
+        out += [f"{c}: missing {a}" for a in ("long_name", "units", "standard_name") if a not in ds[c].attrs]
+    out += [f"depth: missing {a}" for a in ("long_name", "units", "positive") if a not in ds["depth"].attrs]
+    for v in ds.data_vars:
+        out += [f"{v}: missing {a}" for a in ("long_name", "units", "display_name", "source") if a not in ds[v].attrs]
+    for k, c in (("lat", "latitude"), ("lon", "longitude")):
+        if abs(ds.attrs[f"geospatial_{k}_min"] - float(ds[c].min())) > 0.1 or \
+                abs(ds.attrs[f"geospatial_{k}_max"] - float(ds[c].max())) > 0.1:
+            out.append(f"geospatial_{k} bounds differ from the {c} values")
+    return out
 
 
 def write(ds, version, nll):
@@ -222,7 +262,10 @@ def register(ds, version, description, files, status):
     reg = pd.read_csv(REGISTRY) if REGISTRY.exists() else pd.DataFrame(columns=list(row))
     if ((reg.model == name) & (reg.version.astype(str) == version)).any():
         raise SystemExit(f"{name} v{version} already registered")
-    pd.concat([reg, pd.DataFrame([row])], ignore_index=True).to_csv(REGISTRY, index=False)
+    reg = pd.concat([reg, pd.DataFrame([row])], ignore_index=True)
+    reg.to_csv(REGISTRY, index=False)
+    reg.to_csv(STORE / name / "registry.csv", index=False)          # a copy next to the stores (tutorial, bundle)
+    (STORE / name / f"v{version}.provenance.json").write_text(pj.read_text())
     return pj
 
 
@@ -235,6 +278,12 @@ def main():
     ap.add_argument("--status", default="intermediate", help="intermediate | candidate | release")
     a = ap.parse_args()
     ds = build(a.run, a.version, a.description)
+    issues = emc_check(ds)
+    ds.attrs["emc_check"] = "; ".join(issues) if issues else "passes the EMC inspector's required-attribute rules"
+    print("EMC check:", ds.attrs["emc_check"])
+    hard = [i for i in issues if not i.startswith("pending")]
+    if hard:
+        raise SystemExit(f"EMC metadata problems: {hard}")
     files = write(ds, a.version, a.nll)
     pj = register(ds, a.version, a.description, files, a.status)
     back = xr.open_zarr(files["zarr"], consolidated=True)          # read-back check

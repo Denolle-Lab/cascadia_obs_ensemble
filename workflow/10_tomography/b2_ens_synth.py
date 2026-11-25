@@ -6,7 +6,9 @@
 Truth (seed prior.truth_seed, the member draw functions of b2_ens_member.py):
 * model on the merge grid: the tomography nodes of configs.<c>.truth_model (v0.3.1: Vp, Vs as inverted, no surface,
   no D-B073 rule, like the inversion's own model space) times (1 + f) with one draw of the 3 % Vp and Vs random fields
-  (30 km / 8 km correlation, tapered below 50-60 km); per stage the truth MOD = this model sampled at the stage's
+  (30 km / 8 km correlation, tapered below 50-60 km), then the members' start floor Vs = Vp / 1.65 where Vp/Vs < 1.65
+  (P-E5; review 2026-11-25: without it 10.6 % of the resolved S nodes had truth Vp/Vs < 1.6, which every merged member
+  caps at 1.6 by D-B051, so the gate would miss them by construction); per stage the truth MOD = this model sampled at the stage's
   nodes with tomoDD's trilinear lookup (clamped at the grid edges), boundary nodes padded as the builder does. M0's
   30 km nodes see a node-sampled truth: its synthetic data are computed in that coarser truth (a simplification; M0
   only provides the tiles' starting model).
@@ -16,6 +18,7 @@ Truth (seed prior.truth_seed, the member draw functions of b2_ens_member.py):
   and pair list, in the truth MOD at the truth hypocentres; + one draw of statics, forward offsets and pick noise
   (lambda_c at its point estimate). No P-4 correction: the synthetic forward is tomoDD itself.
 """
+import hashlib
 import json
 import shutil
 import subprocess
@@ -39,6 +42,7 @@ from b2_smooth_spike_test import SYN_INP  # noqa: E402
 
 SD = C.ROOT / "synth"
 TD = SD / "truth"
+FLOOR = float(T.get("start_vpvs_min", 1.65))        # D-B046 start floor, applied to every member start (P-E5)
 
 
 def truth_model():
@@ -51,6 +55,7 @@ def truth_model():
     fp, fs = C.random_field(C.rng(seed, "rf_p")), C.random_field(C.rng(seed, "rf_s"))
     vp = vp * (1 + EM.field_at(fp, lon, lat, z))
     vs = vs * (1 + EM.field_at(fs, lon, lat, z))
+    vs = np.where(vp / vs < FLOOR, vp / FLOOR, vs)   # the members' start floor (P-E5): the truth is a draw of their prior
     return dict(lon=lon, lat=lat, z=z, vp=vp, vs=vs), fp, fs
 
 
@@ -62,6 +67,7 @@ def stage_truth_mod(stage, tm):
     LO, LA, Z = np.meshgrid(lon, lat, zi, indexing="ij")
     vp = mod_velocity(tm, "P", LO.ravel(), LA.ravel(), Z.ravel(), clamp_surface=False).reshape(LO.shape)
     vs = mod_velocity(tm, "S", LO.ravel(), LA.ravel(), Z.ravel(), clamp_surface=False).reshape(LO.shape)
+    vs = np.where(vp / vs < FLOOR, vp / FLOOR, vs)   # floor again at the stage nodes (trilinear Vp and Vs separately)
     VP, R_ = m["vp"].copy(), (m["vp"] / m["vs"]).copy()
     VP[1:-1, 1:-1, 1:-1], R_[1:-1, 1:-1, 1:-1] = vp, vp / vs
     for a in (VP, R_):
@@ -73,19 +79,31 @@ def stage_truth_mod(stage, tm):
 
 
 def syn_stage(stage, tm, hyp):
+    """tomoDD-SE_syn for one stage. Reuses an earlier run only if its MOD and event.dat are byte-identical to the ones
+    this truth gives (md5 of both stored in DONE); anything else is rerun from scratch."""
     wd = TD / f"syn_{stage}"
-    if (wd / "absolute.syn").exists() and (wd / "DONE").exists():
-        return stage, "exists"
-    if wd.exists():
-        shutil.rmtree(wd)
-    (wd / "Input_Files").mkdir(parents=True)
+    tmp = TD / f"_check_{stage}"
+    tmp.mkdir(parents=True, exist_ok=True)
     det = C.det_inputs(stage)
-    write_mod(wd / "MOD", stage_truth_mod(stage, tm))
+    write_mod(tmp / "MOD", stage_truth_mod(stage, tm))
     fw = json.loads((det / "forward.json").read_text())
     h = hyp.set_index("ID")
     la, lo = ellipsoid_coords(h.lat.values, h.lon.values, *fw["center"])
-    C.write_event_dat(wd / "Input_Files" / "event.dat", det / "event.dat",
+    C.write_event_dat(tmp / "event.dat", det / "event.dat",
                       pd.DataFrame({"lat": la, "lon": lo, "depth": h.depth.values}, index=h.index))
+    key = dict(mod_md5=hashlib.md5((tmp / "MOD").read_bytes()).hexdigest(),
+               event_md5=hashlib.md5((tmp / "event.dat").read_bytes()).hexdigest())
+    if (wd / "absolute.syn").exists() and (wd / "DONE").exists():
+        old = json.loads((wd / "DONE").read_text())
+        if all(old.get(k) == v for k, v in key.items()):
+            shutil.rmtree(tmp)
+            return stage, "exists (same MOD and event.dat)"
+    if wd.exists():
+        shutil.rmtree(wd)
+    (wd / "Input_Files").mkdir(parents=True)
+    shutil.move(str(tmp / "MOD"), wd / "MOD")
+    shutil.move(str(tmp / "event.dat"), wd / "Input_Files" / "event.dat")
+    shutil.rmtree(tmp)
     for f in ("station.dat", "absolute.dat", "dt.ct"):
         (wd / "Input_Files" / f).symlink_to(det / f)
     for f in ("ak135.15.SKS", "layer-16.dat"):
@@ -101,7 +119,8 @@ def syn_stage(stage, tm, hyp):
                             env=env).returncode
     if rc or not (wd / "absolute.syn").exists():
         raise SystemExit(f"tomoDD-SE_syn {stage}: exit {rc}")
-    C.jdump(wd / "DONE", dict(wall_min=round((time.time() - t0) / 60, 2), time=(wd / "time.txt").read_text()[-120:]))
+    C.jdump(wd / "DONE", dict(wall_min=round((time.time() - t0) / 60, 2), time=(wd / "time.txt").read_text()[-120:],
+                              finished=time.strftime("%F %T"), **key))
     return stage, "done"
 
 

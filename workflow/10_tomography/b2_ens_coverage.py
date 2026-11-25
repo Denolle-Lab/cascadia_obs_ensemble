@@ -14,6 +14,9 @@ PASS when, on the gate mask with >= min_nodes nodes, Vp and Vs and each hypocent
 calibration.cov68 and 95 % coverage in calibration.cov95. Vp/Vs is reported, not gated.
 Noise floor: the clones nf* of s000 (identical draws, 1e-6 s data perturbation): their node and hypocentre spread,
 reported against the ensemble spread.
+N_eff-aware consistency (review 2026-11-25), reported next to the D-B030 verdict without changing it: per item the
+observed coverage, N_eff (n^2 / sum rho, and / sum rho^2, rho the prior's 30 km / 8 km correlation; events binned
+5 x 5 x 2 km) and the Clopper-Pearson 95 % interval with n = N_eff, and whether 0.68 / 0.95 lies inside.
 """
 import argparse
 import json
@@ -27,7 +30,7 @@ import xarray as xr
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import b2_ens_common as C  # noqa: E402
-from b2_ens_common import CFG, E, ROOT, T  # noqa: E402
+from b2_ens_common import CFG, E, PR, ROOT, T  # noqa: E402
 
 SD = ROOT / "synth"
 CAL = E["calibration"]
@@ -90,7 +93,7 @@ def hypo_cov(names):
         km_n = (lat - t.lat.values[:, None]) * 111.19
         km_e = (lon - t.lon.values[:, None]) * 111.19 * np.cos(np.radians(t.lat.values[:, None]))
         km_z = dep - t.depth.values[:, None]
-        res = {}
+        res = {"neff": neff_events(t.lat.values, t.lon.values, t.depth.values) if len(t) else (0, 0.0, 0.0)}
         for nm, X in (("east", km_e), ("north", km_n), ("depth", km_z)):
             I = intervals(X.T, np.zeros(X.shape[0]))
             res[nm] = row(I, np.ones(X.shape[0], bool))
@@ -115,6 +118,63 @@ def noise_floor():
         hz.append(R.std(axis=1, ddof=1).values)
     hz = np.concatenate(hz)
     out.update(depth_std_median_km=float(np.median(hz)), depth_std_p95_km=float(np.percentile(hz, 95)))
+    return out
+
+
+# ---------------------------------------------------------------- N_eff-aware consistency (review 2026-11-25; reported,
+# not part of the D-B030 pass rule, which is the PI's): the truth is ONE random field with 30 km / 8 km correlation, so
+# the gate's nodes (and events) are not independent trials. N_eff = n^2 / sum_ij rho_ij^k with rho the prior's
+# correlation exp(-(dh/Lh)^2) exp(-(dz/Lz)^2): k = 1 for the field itself (conservative), k = 2 for the coverage
+# indicators (leading term). Clopper-Pearson 95 % interval of the coverage with n = N_eff; consistent = the nominal
+# value (0.68 or 0.95) lies inside.
+def _rho_sums(x, y, z, w=None, chunk=2000):
+    Lh, Lz = float(PR["rf"]["len_lat_km"]), float(PR["rf"]["len_z_km"])
+    w = np.ones(len(x)) if w is None else np.asarray(w, float)
+    s1 = s2 = 0.0
+    for i in range(0, len(x), chunk):
+        sl = slice(i, i + chunk)
+        r = (np.exp(-((x[sl, None] - x[None]) ** 2 + (y[sl, None] - y[None]) ** 2) / Lh ** 2)
+             * np.exp(-((z[sl, None] - z[None]) / Lz) ** 2))
+        ww = w[sl, None] * w[None]
+        s1 += float((ww * r).sum())
+        s2 += float((ww * r ** 2).sum())
+    n = float(w.sum())
+    return n, n ** 2 / s1, n ** 2 / s2
+
+
+def neff_nodes(mask, lon, lat, z):
+    LO, LA, Z = np.meshgrid(lon, lat, z, indexing="ij")
+    X, Y = C.proj()(LO[mask], LA[mask])
+    return _rho_sums(X / 1e3, Y / 1e3, Z[mask])
+
+
+def neff_events(lat, lon, depth, cell_km=5.0, cell_z_km=2.0):
+    """Events binned into cell_km x cell_km x cell_z_km cells (counts as weights; within-cell rho taken as 1)."""
+    X, Y = C.proj()(np.asarray(lon), np.asarray(lat))
+    k = pd.DataFrame({"i": np.floor(X / 1e3 / cell_km), "j": np.floor(Y / 1e3 / cell_km),
+                      "k": np.floor(np.asarray(depth) / cell_z_km)}).value_counts().reset_index(name="n")
+    return _rho_sums((k.i.values + 0.5) * cell_km, (k.j.values + 0.5) * cell_km, (k.k.values + 0.5) * cell_z_km, k.n.values)
+
+
+def cp_interval(p, n):
+    from scipy.stats import beta
+    x = p * n
+    lo = float(beta.ppf(0.025, x, n - x + 1)) if x > 0 else 0.0
+    hi = float(beta.ppf(0.975, x + 1, n - x)) if x < n else 1.0
+    return [round(lo, 3), round(hi, 3)]
+
+
+def consistency(r, n_field, n_ind):
+    out = dict(n=r.get("n", 0), neff_field=round(n_field, 1), neff_indicator=round(n_ind, 1))
+    for lev, key in ((0.68, "e68"), (0.95, "e95")):
+        if key not in r:
+            continue
+        obs = r[key]
+        for lab, ne in (("field", n_field), ("indicator", n_ind)):
+            iv = cp_interval(obs, ne)
+            out[f"{key}_{lab}_ci95"] = iv
+            out[f"{key}_{lab}_nominal_inside"] = bool(iv[0] <= lev <= iv[1])
+        out[key] = obs
     return out
 
 
@@ -151,8 +211,20 @@ def main():
     verdict.update({k: (CAL["cov68"][0] <= r["e68"] <= CAL["cov68"][1] and CAL["cov95"][0] <= r["e95"] <= CAL["cov95"][1])
                     for k, r in gate_hypo.items()})
     passed = bool(N >= 2 and all(verdict.values()))
+    cons = {}
+    for mk, (mp, ms) in masks.items():
+        for q, kind in (("Vp", 0), ("Vs", 1), ("VpVs", 2)):
+            m = mp if kind == 0 else ms if kind == 1 else (mp & ms)
+            if m.sum():
+                _, nf, ni = neff_nodes(m, tm["lon"], tm["lat"], tm["z"])
+                cons[f"{mk}_{q}"] = consistency(nodes[f"{mk}_{q}"], nf, ni)
+    for t, h in hyp.items():
+        if h["events"]:
+            _, nf, ni = h["neff"]
+            for c in ("east", "north", "depth"):
+                cons[f"{t}_{c}"] = consistency(h[c], nf, ni)
     out = dict(members=N, names=names, criteria=CAL, nodes=nodes, hypocentres=hyp, verdict=verdict,
-               result="PASS" if passed else "FAIL", noise_floor=noise_floor())
+               result="PASS" if passed else "FAIL", neff_consistency=cons, noise_floor=noise_floor())
     C.jdump(SD / "coverage.json", out)
     md = [f"# Calibration of the {C.CONFIG} ensemble on synthetic data ({N} members)", "",
           f"Result: **{out['result']}** (68 % coverage in {CAL['cov68']}, 95 % in {CAL['cov95']}, gate mask 'resolved', "
@@ -167,7 +239,22 @@ def main():
         for c in ("east", "north", "depth"):
             r = h[c]
             md.append(f"| {t} | {c} | {h['events']} | {r.get('e68', '')} | {r.get('e95', '')} | {r.get('median_abs_err_km', '')} |")
-    md += ["", f"Noise floor: {json.dumps(out['noise_floor'])}", "", f"Verdict per item: {json.dumps(verdict)}"]
+    md += ["", f"Noise floor: {json.dumps(out['noise_floor'])}", "", f"Verdict per item (D-B030 rule): {json.dumps(verdict)}",
+           "", "## N_eff-aware consistency (reported next to the D-B030 verdict; does not change it)", "",
+           "One truth field with 30 km / 8 km correlation: nodes and events are not independent. N_eff = n^2 / sum rho^k "
+           "(k = 1 field, k = 2 coverage indicators). Clopper-Pearson 95 % interval of the observed coverage with n = "
+           "N_eff; 'in' = the nominal value lies inside (consistent with calibration). Gate items (D-B030) marked *.", "",
+           "| item | n | N_eff field / indicator | 68 % obs | 95 % CI (field) | 95 % CI (indicator) | 0.68 in (f / i) | "
+           "95 % obs | 95 % CI (field) | 95 % CI (indicator) | 0.95 in (f / i) |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+    gate_items = {"resolved_Vp", "resolved_Vs"} | {f"{t}_{c}" for t in hyp for c in ("east", "north", "depth")}
+    for k, r in cons.items():
+        if "e68" not in r:
+            continue
+        md.append(f"| {k}{' *' if k in gate_items else ''} | {r['n']} | {r['neff_field']} / {r['neff_indicator']} | "
+                  f"{r['e68']} | {r['e68_field_ci95']} | {r['e68_indicator_ci95']} | "
+                  f"{'yes' if r['e68_field_nominal_inside'] else 'no'} / {'yes' if r['e68_indicator_nominal_inside'] else 'no'} | "
+                  f"{r['e95']} | {r['e95_field_ci95']} | {r['e95_indicator_ci95']} | "
+                  f"{'yes' if r['e95_field_nominal_inside'] else 'no'} / {'yes' if r['e95_indicator_nominal_inside'] else 'no'} |")
     (SD / "coverage.md").write_text("\n".join(md) + "\n")
     print("\n".join(md))
     if not a.no_exit:

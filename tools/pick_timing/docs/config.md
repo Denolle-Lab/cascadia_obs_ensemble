@@ -29,7 +29,7 @@ file), `read_kwargs` (passed to pandas.read_csv, e.g. `{skipinitialspace: true}`
 ## Parameters (defaults)
 
 `scan`: channels [HH?, BH?, EH?], components "Z3", drift_threshold_s 0.005, tear_samples 0.5.
-`retime`: channel_priority [HH, BH, EH], alternate_rules [[EH]], components "Z3", day_seconds 86400,
+`retime`: channel_priority `[HH, BH, EH]`, alternate_rules `[[EH]]`, components "Z3", day_seconds 86400,
 nominal_rate 100, grid_tolerance 0.001 (sample), apply_threshold_s 0.005, value_window 50.
 `detect`: neighbor_km 100, min_neighbors 3, fallback event, same_phase true, min_weight 0, max_abs_residual_s 3,
 bin_picks 20, bin_max_days 7, bin_min_picks 3, min_picks 60, min_bins 12, grid_max 160, min_epoch_days 2,

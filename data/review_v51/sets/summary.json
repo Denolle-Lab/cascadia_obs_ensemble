@@ -1,0 +1,157 @@
+{
+ "P1": {
+  "box_located": 7471,
+  "deep": 331,
+  "deep_tiers": {
+   "D": 209,
+   "C": 118,
+   "B": 3,
+   "A": 1
+  },
+  "deep_sigz_med": 16.576,
+  "deep_depth_range": [
+   30.050434,
+   117.99226
+  ],
+  "deep_distmin_med": 4.5371,
+  "wed_deep": 22,
+  "tue_deep": 0,
+  "wed_all": 24,
+  "views": {
+   "deep, stratified by depth and tier": 30,
+   "Wednesday 19:14-19:20 UTC": 24,
+   "shallow reference (tier A-B, < 10 km)": 10,
+   "deep, tier C with sig_z < 14 km and nearest station < 4 km": 6,
+   "deep, tier A-B": 4
+  }
+ },
+ "P2": {
+  "n": 39,
+  "depth_range": [
+   41.936026,
+   64.544953
+  ],
+  "v4_depth_med": 20.1815,
+  "depth_med": 52.482292,
+  "sigz_med": 7.0576,
+  "distmin_med": 44.94,
+  "years": {
+   "2012": 33,
+   "2013": 5,
+   "2014": 1
+  },
+  "depth_quality": {
+   "ok": 39
+  }
+ },
+ "P3": {
+  "n": 148,
+  "n_v51_match": 139,
+  "n_carried": 9,
+  "dz_med_v51match": 13.715240999999999,
+  "dt_med_v51match": -0.580997,
+  "dz_med_by_region": {
+   "Blanco": 13.0,
+   "Cascades": 3.9,
+   "Explorer": 24.9,
+   "Gorda": 13.7,
+   "JdF ridge/plate": -7.3,
+   "Mendocino": 13.9,
+   "Offshore forearc": 11.0,
+   "Other onshore": 4.7,
+   "Puget/Georgia": 4.3
+  },
+  "movers": [
+   {
+    "ID": 165020,
+    "dh_cc": 101.6,
+    "dz_cc": 32.4,
+    "d3_cc": 106.6,
+    "dt_cc": 12.2
+   },
+   {
+    "ID": 160800,
+    "dh_cc": 79.9,
+    "dz_cc": 43.4,
+    "d3_cc": 90.9,
+    "dt_cc": 8.7
+   },
+   {
+    "ID": 31192,
+    "dh_cc": 61.0,
+    "dz_cc": 58.1,
+    "d3_cc": 84.3,
+    "dt_cc": 7.1
+   },
+   {
+    "ID": 25052,
+    "dh_cc": 50.4,
+    "dz_cc": 50.4,
+    "d3_cc": 71.2,
+    "dt_cc": -5.3
+   },
+   {
+    "ID": 113182,
+    "dh_cc": 31.4,
+    "dz_cc": 52.6,
+    "d3_cc": 61.2,
+    "dt_cc": 6.3
+   },
+   {
+    "ID": 171983,
+    "dh_cc": 44.4,
+    "dz_cc": 41.5,
+    "d3_cc": 60.8,
+    "dt_cc": -6.4
+   },
+   {
+    "ID": 156577,
+    "dh_cc": 51.1,
+    "dz_cc": 0.9,
+    "d3_cc": 51.1,
+    "dt_cc": 4.6
+   },
+   {
+    "ID": 63461,
+    "dh_cc": 40.0,
+    "dz_cc": 9.3,
+    "d3_cc": 41.1,
+    "dt_cc": -5.4
+   }
+  ]
+ },
+ "P4_deep_pass": {
+  "n": 356,
+  "depth_med": 86.2824045,
+  "v4_depth_med": 30.669249999999998,
+  "by_region": {
+   "Cascades": 178,
+   "Other onshore": 41,
+   "Explorer": 27,
+   "Mendocino": 25,
+   "Offshore forearc": 21,
+   "Puget/Georgia": 17,
+   "Gorda": 15,
+   "JdF ridge/plate": 15,
+   "Blanco": 13,
+   "Axial": 3,
+   "Endeavour": 1
+  },
+  "views": 42
+ },
+ "P4_far_only": {
+  "n": 624,
+  "depth_med": 51.9700325,
+  "v4_depth_med": 3.762,
+  "by_region": {
+   "Blanco": 286,
+   "Gorda": 214,
+   "Mendocino": 50,
+   "Offshore forearc": 30,
+   "Explorer": 24,
+   "JdF ridge/plate": 11,
+   "Other onshore": 9
+  },
+  "views": 39
+ }
+}

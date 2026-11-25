@@ -891,3 +891,14 @@ narrow": the Vp and Vs posterior spreads (std and percentile half-widths about t
 from the synthetic members as the larger of the factors that bring the 68 % and the 95 % coverage of the resolved nodes to
 nominal, rounded up to the next 0.05; hypocentres and Vp/Vs are not inflated. The values and their derivation are recorded
 in the ensemble note and the product attributes. The v0.3.2-configuration calibration is accepted for v0.4.1 (P-E11).
+
+### D-B095 Catalog v6.0 station terms: NLL-SSST + coherence, stopping distance set by a confirmatory check (adopted, 2026-11-25 15:51, PI; amends D-B093)
+Independent-cluster test (branch reloc/v6-termtest 07b45252; /wd1/mdenolle_data/reloc_v6/termtest/; decision rule written before
+scoring): on three clusters sharing no event with the D-B078 sets (Puget 1,000, Mendocino 2015 sequence 600, western Blanco 2012
+swarm 1,200), SSST stopped at 2 km + coherence (B) beat static + coherence (A) on held-out stations (session -18's fold scorer,
+no leak) in all three, P and S: MAD P 85 -> 59, 67 -> 56, 149 -> 107 ms; S 141 -> 90, 118 -> 88, 264 -> 164 ms (95 % bootstrap
+intervals exclude 0); CC fit better in 3/3; depth closer to Lange 2026 at western Blanco (median |dz| 2.11 -> 1.52 km), ties
+elsewhere; 0 events above the surface in every arm. Agrees in direction with -18's D-B078 four-set result. v6.0 uses NLL-SSST
+(Loc2ssst, CharDist schedule 9999 -> 16 -> 8 -> 4 [-> 2] km) followed by the coherence stage, instead of D-B093's static terms. A
+post-hoc hint (4 km stop better than 2 km at Puget and Mendocino; 16 km at western Blanco) is checked on two further independent
+clusters with the same protocol before the full run; the stopping distance with the better held-out score is used.

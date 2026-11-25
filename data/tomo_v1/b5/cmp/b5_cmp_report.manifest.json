@@ -1,0 +1,105 @@
+{
+ "name": "b5_cmp_report",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_cmp_report.py",
+ "argv": [],
+ "utc": "2026-11-25T21:21:03.886349+00:00",
+ "git_commit": "cc09cb37ab7d73e394404b7db4edc79a31b5ee9e",
+ "git_dirty": true,
+ "params_md5": "457dc4bda362c2171b0a98a2a94a9091",
+ "params": {
+  "legs": [
+   "tomodd",
+   "tomodd_d300_o0",
+   "tomodd_d100_o4",
+   "tomodd_d300_o4",
+   "tomodd_snll",
+   "tomodd_d300_o0_snll",
+   "growclust",
+   "nllbase",
+   "nllssst",
+   "nllcoh"
+  ]
+ },
+ "inputs": [],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/cmp/report.md",
+   "size": 5319,
+   "mtime": "2026-11-25T21:21:03.878323+00:00",
+   "md5": "fda77b2358eacaaf1d74ce5e32e3fccd"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/cmp/report.json",
+   "size": 63682,
+   "mtime": "2026-11-25T21:21:03.884323+00:00",
+   "md5": "a23317ca7e2d7800c3dd510faee5427e"
+  }
+ ],
+ "counts": {
+  "tomodd": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "tomodd_d300_o0": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "tomodd_d100_o4": [
+   "msh",
+   "jdf"
+  ],
+  "tomodd_d300_o4": [
+   "msh",
+   "jdf"
+  ],
+  "tomodd_snll": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "tomodd_d300_o0_snll": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "growclust": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "nllbase": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "nllssst": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ],
+  "nllcoh": [
+   "axial",
+   "axial_no_candidates",
+   "blanco",
+   "msh",
+   "jdf"
+  ]
+ },
+ "notes": null
+}

@@ -62,8 +62,32 @@ def picks(s):
     return pk[pk.ID.isin(ids)][["ID", "station", "phase", "tt", "pick_prob", "sigma", "w"]].reset_index(drop=True)
 
 
-def cc_rows(s, unretimable=True):
-    """Accepted CC dt rows of a set after the common cuts: ID1, ID2, station, phase, dt_cc, cc_max, pair_source."""
+CANDIDATES = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/detect_full/review_candidates.csv")
+
+
+def candidate_straddle(c):
+    """Rows whose two events fall on different sides of a candidate clock epoch of their station (pick-timing screen of
+    D-B090, not confirmed: used only as a scoring sensitivity)."""
+    if not CANDIDATES.exists():
+        return np.zeros(len(c), bool)
+    k = pd.read_csv(CANDIDATES)
+    out = np.zeros(len(c), bool)
+    t1 = pd.to_datetime(c.T0_1, unit="s", utc=True) if np.issubdtype(c.T0_1.dtype, np.number) else pd.to_datetime(c.T0_1, utc=True)
+    t2 = pd.to_datetime(c.T0_2, unit="s", utc=True) if np.issubdtype(c.T0_2.dtype, np.number) else pd.to_datetime(c.T0_2, utc=True)
+    for r in k.itertuples():
+        if pd.isna(r.t_start_utc) or pd.isna(r.t_end_utc):
+            continue
+        a, b = pd.Timestamp(r.t_start_utc), pd.Timestamp(r.t_end_utc)
+        m = (c.station == r.station).values
+        in1 = ((t1 >= a) & (t1 < b)).values
+        in2 = ((t2 >= a) & (t2 < b)).values
+        out |= m & (in1 != in2)
+    return out
+
+
+def cc_rows(s, unretimable=True, drop_candidates=False):
+    """Accepted CC dt rows of a set after the common cuts: ID1, ID2, station, phase, dt_cc, cc_max, pair_source.
+    drop_candidates: also drop rows straddling an unconfirmed candidate clock epoch (scoring sensitivity only)."""
     c = pd.read_parquet(CC / f"cc_{s}.parquet")
     keep = (c.status == "ok") & c.above.astype(bool)
     tri = (c.n_tri >= 2) & (c.n_tri_fail20 > c.n_tri / 2)
@@ -72,6 +96,8 @@ def cc_rows(s, unretimable=True):
         keep &= ~c.straddles_clock_epoch.astype(bool)
     if not unretimable:
         keep &= ~c.unretimable_any.astype(bool)
+    if drop_candidates:
+        keep &= ~candidate_straddle(c)
     return c[keep][["ID1", "ID2", "station", "phase", "dt_cc", "cc_max", "pair_source"]].reset_index(drop=True)
 
 
@@ -141,24 +167,35 @@ def fold_score(cc, pos, out_sta):
     return h.dropna(subset=["ref"]).assign(score=lambda x: x.res - x.ref)
 
 
-def score_set(leg, s, unretimable=True):
+def score_set(leg, s, unretimable=True, drop_candidates=False):
     """Scores of a leg on a set (and of the v5.1 reference): held-out CC rms / MAD per phase pooled over folds; full-run
     surface, thickness and shift statistics."""
-    cc = cc_rows(s, unretimable)
+    cc = cc_rows(s, unretimable, drop_candidates)
     ev = events(s).set_index("ID")
     out = {}
-    for tag in ("v5.1", leg):
-        rows = []
+    # tags: v5.1 (all events); <leg> (the leg's relocated events only); <leg>_filled (events the leg left out kept at
+    # v5.1, as production would: the operational score); v5.1_same (v5.1 on the pairs the leg relocated)
+    for tag in ("v5.1", leg, f"{leg}_filled", "v5.1_same"):
+        rows, nrel = [], []
         for run in runs()[1:]:
-            pos = ev if tag == "v5.1" else read_reloc(leg, s, run)
-            if pos is None:
+            rel = read_reloc(leg, s, run)
+            if rel is None:
                 continue
-            rows.append(fold_score(cc, pos, held_out(s, run)))
+            if tag == "v5.1":
+                pos, c = ev, cc
+            elif tag == leg:
+                pos, c = rel, cc
+            elif tag == f"{leg}_filled":
+                pos = pd.concat([rel[["lat", "lon", "depth"]], ev.loc[~ev.index.isin(rel.index), ["lat", "lon", "depth"]]])
+                c = cc
+            else:
+                pos, c = ev, cc[cc.ID1.isin(rel.index) & cc.ID2.isin(rel.index)]
+            nrel.append(int(len(rel)))
+            rows.append(fold_score(c, pos, held_out(s, run)))
         if not rows:
             continue
         H = pd.concat(rows)
-        d = {"folds": len(rows), "relocated_per_fold": None if tag == "v5.1" else
-             [int(len(read_reloc(leg, s, r))) for r in runs()[1:] if read_reloc(leg, s, r) is not None]}
+        d = {"folds": len(rows), "relocated_per_fold": nrel}
         for ph, g in H.groupby("phase"):
             v = g.score.values
             d[ph] = dict(n=len(v), rms_ms=round(float(np.sqrt(np.mean(v ** 2))) * 1e3, 2),

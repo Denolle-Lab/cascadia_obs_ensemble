@@ -63,10 +63,29 @@ def floor_nodes(fl, lon0, lon1, lat0, lat1):
 
 
 def cmd_write(region, inputs=None, outdir=None):
+    info, (path, inp, out, od) = write_surface(region, inputs, outdir)
+    print(json.dumps(info, indent=1))
+    write_manifest(f"b2_tomodd_floor_{region}", od, inputs=[path, Path(f"{path}.hdr"), inp / "forward.json"],
+                   outputs=[out, od / "floor.json"], params={"tomodd.floor": FL, "region": region}, counts=info)
+
+
+_FLOORS = {}
+
+
+def write_surface(region, inputs=None, outdir=None, cache=False, floor_file=None):
+    """surface.dat + floor.json of a stage in its rescaled frame (centre from <inputs>/forward.json), no manifest
+    (the ensemble writes one per member stage). cache: keep the floor grid in memory between calls. floor_file: a copy
+    of the configured floor grid to read instead (the ensemble's pinned copy; same .bin/.hdr pair)."""
     R, inp, center, path = stage(region, inputs)
+    if floor_file is not None:
+        path = Path(floor_file)
     od = Path(outdir) if outdir else inp
     od.mkdir(parents=True, exist_ok=True)
-    fl = read_floor(path)
+    fl = _FLOORS.get(path) if cache else None
+    if fl is None:
+        fl = read_floor(path)
+        if cache:
+            _FLOORS[path] = fl
     m = float(FL["margin_deg"])
     lo, la = R["node_lon"], R["node_lat"]                 # the stage's interior node box: every reachable position
     ix0, ix1, k0, k1 = floor_nodes(fl, lo[0] - m, lo[1] + m, la[0] - m, la[1] + m)
@@ -90,9 +109,7 @@ def cmd_write(region, inputs=None, outdir=None):
                 floor_depth_km_min_max=[float(dep.min()), float(dep.max())])
     info["inputs"] = str(inp)
     (od / "floor.json").write_text(json.dumps(info, indent=1))
-    print(json.dumps(info, indent=1))
-    write_manifest(f"b2_tomodd_floor_{region}", od, inputs=[path, Path(f"{path}.hdr"), inp / "forward.json"],
-                   outputs=[out, od / "floor.json"], params={"tomodd.floor": FL, "region": region}, counts=info)
+    return info, (path, inp, out, od)
 
 
 def read_surface_dat(path):

@@ -121,6 +121,15 @@ def stats(kind):
                 sampled_nodes=[int(S["sampled_p"].sum()), int(S["sampled_s"].sum())],
                 tile_disagreement_p_median_overlap=float(np.median(S["tile_disagreement_p"][S["tile_disagreement_p"] > 0]))
                 if (S["tile_disagreement_p"] > 0).any() else None)
+    if C.FLOOR:                              # D-B083 floor per stage over the members (DONE records)
+        fl = {}
+        for st in C.STAGES:
+            recs = [r[st].get("floor") or {} for r in runs]
+            fl[st] = {k: [int(np.min([x.get(k, 0) for x in recs])), float(np.median([x.get(k, 0) for x in recs])),
+                          int(np.max([x.get(k, 0) for x in recs]))]
+                      for k in ("lines", "events_hit", "end_on_floor", "start_above_floor", "above_floor_by_more_than_2m",
+                                "not_met", "air_quake_lines")}
+        summ["floor_min_median_max"] = fl
     C.jdump(out / "stats.json", summ)
     C.jdump(out / "runs.json", runs)
     print(json.dumps(summ, indent=1, default=str)[:2000])
@@ -212,16 +221,25 @@ def report(kind, ds, summ, outdir):
                     f"<td>{np.nanmean(k):.0f}</td></tr>")
     cov = ROOT / "synth" / "coverage.md"
     covtxt = cov.read_text() if cov.exists() else "(no calibration run)"
-    html = [f"<!doctype html><html><head><meta charset='utf-8'><title>Ensemble {C.CONFIG}</title>",
+    frows = []
+    for st, v in (summ.get("floor_min_median_max") or {}).items():
+        frows.append(f"<tr><td>{st}</td>" + "".join(f"<td>{v[k][0]} / {v[k][1]:g} / {v[k][2]}</td>" for k in
+                                                     ("lines", "events_hit", "end_on_floor", "start_above_floor",
+                                                      "above_floor_by_more_than_2m")) + "</tr>")
+    ftab = (["<h2>Floor (D-B083) per stage: min / median / max over the members</h2><table><tr><th>stage</th>"
+             "<th>floor stops</th><th>events hit</th><th>end on the floor</th><th>start above the floor</th>"
+             "<th>above the floor by &gt; 2 m at the end (errors)</th></tr>", *frows, "</table>"] if frows else [])
+    html = [f"<!doctype html><html><head><meta charset='utf-8'><title>Ensemble {product_label(summ['members'])}</title>",
             "<style>body{font-family:sans-serif;max-width:1300px;margin:auto;padding:16px;background:#fff;color:#111}"
             "img{max-width:100%}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:3px 8px}"
             "pre{white-space:pre-wrap;background:#f4f4f4;padding:8px}</style></head><body>",
-            f"<h1>Bayesian ensemble of the {C.CONFIG} configuration ({kind}, {summ['members']} members)</h1>",
+            f"<h1>Bayesian ensemble of model v{C.product_version()} (configuration {C.CONFIG}; {kind}, "
+            f"{summ['members']} members)</h1>",
             f"<p>Created {summ['created']}. Product {product_label(summ['members'])}. Median std on rock nodes: Vp "
             f"{summ['vp_std_rock_median']:.3f} km/s, Vs {summ['vs_std_rock_median']:.3f} km/s; resolved nodes P/S "
             f"{summ['resolved_nodes']}; sampled nodes P/S {summ['sampled_nodes']}.</p>",
             "<h2>Run cost per member</h2><table><tr><th>stage</th><th>median wall (min)</th><th>max wall (min)</th>"
-            "<th>max RSS (GB)</th><th>kept (MB, mean)</th></tr>", *rows, "</table>",
+            "<th>max RSS (GB)</th><th>kept (MB, mean)</th></tr>", *rows, "</table>", *ftab,
             "<h2>Calibration (synthetic)</h2><pre>", covtxt, "</pre>"]
     for cap, b in imgs:
         html += [f"<h3>{cap}</h3>", f"<img src='data:image/png;base64,{b}'>"]
@@ -234,7 +252,7 @@ def report(kind, ds, summ, outdir):
 def product_label(n_members):
     """Version label of the ensemble product: the configuration's model version (product_version before any '+')
     with '+ens.<number of merged members>' (D-B047 build metadata), e.g. 0.3.2+ens.97."""
-    return f"{str(CFG['product_version']).split('+')[0]}+ens.{int(n_members)}"
+    return f"{C.product_version()}+ens.{int(n_members)}"
 
 
 def products(kind, dry):
@@ -246,8 +264,10 @@ def products(kind, dry):
     ds, summ = dataset(kind)
     version = product_label(summ["members"])
     register = os.environ.get("B2_ENS_REGISTER") == "1" and not dry
-    desc = (f"Bayesian (RTO) ensemble statistics of the {C.CONFIG} configuration: {summ['members']} members of M0 + "
-            f"{', '.join(CFG['tiles'])} merged with the v0.3.1 rules, D-B073 node rule with drawn parameters")
+    desc = (f"Bayesian (RTO) ensemble statistics of model v{C.product_version()} (configuration {C.CONFIG}): "
+            f"{summ['members']} members of M0 + {', '.join(CFG['tiles'])} merged with the D-B049..D-B051 rules "
+            f"(tomodd.merge.{CFG.get('merge_product', 'product')}), D-B073 node rule with drawn parameters"
+            + ("; tomoDD's D-B081 floor in every inversion (D-B083)" if C.FLOOR else ""))
     prov = dict(run=f"ensemble {C.CONFIG} ({ROOT})", members=summ["members"], config=json.dumps(CFG),
                 prior=json.dumps(E["prior"]), calibration=(ROOT / "synth" / "coverage.json").read_text()[:2000]
                 if (ROOT / "synth" / "coverage.json").exists() else "none")

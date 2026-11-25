@@ -5,30 +5,48 @@ stage of a member, and the member merge. Configuration and layout: b2_ens_common
   python b2_ens_member.py draws KIND NAME           -> ROOT/KIND/NAME/draws.json, draws.npz, start_hypo.parquet
   python b2_ens_member.py stage KIND NAME STAGE     -> build inputs, run tomoDD (frozen binary), back-transform, trim
   python b2_ens_member.py merge KIND NAME           -> merged.npz (b2_merge rules + the D-B073 node rule)
+  python b2_ens_member.py nullmerge                 -> ROOT/verify/nullmerge.json: the member merge with null draws on
+                                                       the deterministic runs against v<node_model>.nc
 KIND = synth | real; NAME = s000.. / r000.. (seed = index, synth offset 10000) or nf<i> (noise-floor clone of
 synth member 0: every draw of s000 plus N(0, 1e-6 s) on every pick, seed i).
 
 One member (draws once for the whole margin, shared by M0 and every tile, P-M5):
  1 starting model: mixture component (v4-NLL3D Vp/Vs 1.76 / 1.73 / 1.80 = Vp kept, Vp/Vs shifted; Delph et al. 2018
    blended where it covers, if its coverage passes prep), times (1 + f) with independent 3 % Gaussian random fields
-   for Vp and Vs (30 km lateral, 8 km depth correlation, tapered to 0 from 50 to 60 km) on one Lambert lattice.
+   for Vp and Vs (30 km lateral, 8 km depth correlation, tapered to 0 from 50 to 60 km) on one Lambert lattice; the
+   width (std, correlation lengths, an optional long-wavelength component rf.long) is the parameter prior.rf.
    M0 start = the deterministic M0 start (D-B005 box average) with these; tile start = D-B005 at the tile nodes with
    these, times (1 + this member's M0 change from its own start), Vp/Vs floor start_vpvs_min (D-B046 rule).
  2-3 station statics per station-phase: OBS S N(0, bootstrap sd of the near-event median + 0.05 s) around the
    D-B031 statics already in the data; land P 0.05, land S 0.08, OBS P 0.08 s.
  4 forward-error offsets per station-phase-distance bin: N(0, robust sd of tomoDD - P-1 reference - P-4 correction).
- 5 pick noise per pick N(0, lambda_c sigma_pick), lambda_c per class (land/OBS x P/S) from its inverse-gamma
-   posterior given the deterministic runs' final residuals (empirical Bayes).
+ 5 pick noise per pick N(0, lambda_g,c sigma_pick), lambda_g,c per noise group g and class c (land/OBS x P/S) from its
+   inverse-gamma posterior given the deterministic runs' final residuals (empirical Bayes). prior.noise_groups: tile
+   (review 2026-11-25) = one group per tile, estimated from that tile's run only; a pick belongs to the tile holding
+   most picks of its event among the tiles that hold it; picks in no tile (M0 only) use the factor pooled over the
+   tiles; M0's own residuals are left out of every factor (reported only); a tile-class with fewer than
+   prior.class_factor_min_events events uses the pooled factor. pooled_with_m0 = the v0.3.1 rule (one factor per
+   class pooled over M0 and the tiles).
  6 starting hypocentres per event: v4-NLL3D + N(0, h_max / 1.515) per horizontal axis and N(0, sig_z) in depth,
    truncated (exact inverse-CDF sampling, not clipping) at the merged solid surface of the drawn epicentre.
  7 damping: one factor per member, log-uniform [0.7, 1.5], times the configured damping of M0 and of every tile.
  8 D-B073 rule parameters (Vp/Vs U[1.95, 2.25], thickness U[2, 3] km), applied to the merged member's rock nodes.
 Items 2-5 are summed into one time shift per pick, added to the absolute times and to both times of every catalog
 differential time (statics cancel in dt; noise does not). Smoothing is fixed at the configured value.
+
+Floor (configs.<c>.floor, D-B083): every stage of every member runs with tomoDD's D-B081 floor. After the member's
+inputs are built (its drawn start hypocentres rescaled into event.dat), surface.dat is written for the stage in the
+stage's own rescaled frame (b2_tomodd_floor.write_surface from the member's forward.json, the pinned floor grid in
+prior/floor/; it must equal the prior's surface.dat of that stage byte for byte) and copied into the run, Air_dep =
+tomodd.floor.air_dep_km. Kept per stage: run/floor_hits.csv.gz (every >>>Floor line: iteration, ID, attempted
+depth, floor), run/floor_end.csv (events whose final depth is at tomoDD's floor) and the counts in DONE ("floor").
+Prep pins its external inputs (statics files, Delph2018.nc, floor grids) as copies in prior/ with md5s in
+prior.json, and refuses a re-prep when a source changed.
 """
 import argparse
 import gzip
 import json
+import os
 import pickle
 import shutil
 import subprocess
@@ -43,6 +61,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import b2_ens_common as C  # noqa: E402
 from b2_ens_common import CFG, PR, PRIOR, STAGES, T  # noqa: E402
+import b2_tomodd_floor as FLR  # noqa: E402
 from b2_fwd_common import mod_velocity, read_mod, write_mod  # noqa: E402
 from b2_fwd_mods import ellipsoid_coords  # noqa: E402
 
@@ -61,6 +80,14 @@ def node_axes(stage):
     import b2_tomodd_inputs as TI
     R = region_cfg(stage)
     return TI.nodes(R["node_lon"]), TI.nodes(R["node_lat"]), np.array(R.get("node_z", T["node_z"]), float)
+
+
+def bm():
+    """b2_merge with the configuration's merge settings (tomodd.merge.<merge_product>: grid, taper, floor, reference),
+    as b2_merge.py --product does."""
+    import b2_merge as BM
+    BM.C = BM.M[CFG.get("merge_product", "product")]
+    return BM
 
 
 def forward_from(stage):
@@ -103,11 +130,33 @@ def prep_unions():
     u = u.merge(sp[["station", "phase", "spidx"]], on=["station", "phase"]).merge(
         spb[["station", "phase", "bin", "sbidx"]], on=["station", "phase", "bin"]).sort_values("pidx")
     u = u.reset_index(drop=True)
+    u["ngroup"] = noise_groups(pk, u)
     for name, d in (("picks", u), ("events", ev), ("stations", st), ("station_phase", sp), ("station_phase_bin", spb)):
         d.to_parquet(PRIOR / f"{name}.parquet")
     return u, ev, codes, dict(picks=len(u), picks_all_regions=len(pk), events=len(ev), stations=len(st),
                               station_phases=len(sp), station_phase_bins=len(spb),
-                              dist_check_max_km=float((chk.d1 - chk.d0).max()))
+                              dist_check_max_km=float((chk.d1 - chk.d0).max()),
+                              picks_by_noise_group=u.ngroup.value_counts().to_dict())
+
+
+def noise_groups(pk, u):
+    """Noise group of every union pick (prior.noise_groups). tile: among the tiles holding the pick, the one holding
+    most picks of its event (ties: configuration order); 'pooled' for picks in no tile (M0 only). pooled_with_m0: 'all'
+    (the v0.3.1 rule)."""
+    mode = PR.get("noise_groups", "tile")
+    if mode == "pooled_with_m0":
+        return np.full(len(u), "all", dtype=object)
+    if mode != "tile":
+        raise SystemExit(f"prior.noise_groups {mode}: tile or pooled_with_m0")
+    tiles = STAGES[1:]
+    pt = pk[pk.stage != "m0"][["event_ID", "station", "phase", "stage"]]
+    evc = pt.groupby(["event_ID", "stage"]).size().rename("evc").reset_index()
+    pt = pt.merge(evc, on=["event_ID", "stage"])
+    pt["ord"] = pt.stage.map({t: i for i, t in enumerate(tiles)})
+    pt = pt.sort_values(["event_ID", "station", "phase", "evc", "ord"], ascending=[True, True, True, False, True])
+    home = pt.drop_duplicates(["event_ID", "station", "phase"]).set_index(["event_ID", "station", "phase"]).stage
+    g = pd.MultiIndex.from_frame(u[["event_ID", "station", "phase"]]).map(home)
+    return np.where(pd.isna(g), "pooled", g).astype(object)
 
 
 def prep_statics(sp):
@@ -117,11 +166,7 @@ def prep_statics(sp):
     boot = {}
     for s in STAGES:
         F = region_cfg(s)["forward"]
-        f = C.REPO / F["statics_file"]
-        if not f.exists():                          # margin_m0's statics file is not in git (built in ~/wt_tomo_res)
-            f = Path("/home/mdenolle/wt_tomo_res") / F["statics_file"]
-        shutil.copy(f, PRIOR / f"statics_{s}.csv")
-        stf = pd.read_csv(f)
+        stf = pd.read_csv(PRIOR / f"statics_{s}.csv")    # pinned copy (pin_inputs)
         ph = pd.read_parquet(C.RUNS / F["p1_reference"] / "obs_S_iter1_p1.parquet")
         ph["r"] = ph.obs_tt - ph.t_p1
         for r in stf.itertuples():
@@ -162,6 +207,10 @@ def prep_fwd(u):
 
 
 def prep_lambda(u, codes):
+    """Pick-noise class factors (final residual / sigma_pick, 1.4826 MAD) per noise group and class, from the
+    deterministic runs' tomoDD.res. Columns: group, cls, n, n_eff (events), lam_mad, lam_rms, res_mad_s, order (draw
+    order), source (the group whose factor the group's picks use: itself, or 'pooled' below the event minimum). The
+    M0 rows (group m0) are reported only (used False)."""
     rows = []
     for s in STAGES:
         r = C.read_res_abs(C.det_run(s) / "Output_Files" / "tomoDD.res")
@@ -170,13 +219,33 @@ def prep_lambda(u, codes):
     r = pd.concat(rows)
     d = r.merge(u[["event_ID", "station", "phase", "sigma_s", "cls"]], on=["event_ID", "station", "phase"])
     d["z"] = d.res / d.sigma_s
+    mode = PR.get("noise_groups", "tile")
+    if mode == "pooled_with_m0":
+        groups = [("all", d, True)]
+    else:
+        tiles = STAGES[1:]
+        groups = [(t, d[d.stage == t], True) for t in tiles] + [("pooled", d[d.stage != "m0"], True),
+                                                                 ("m0", d[d.stage == "m0"], False)]
+    nmin = int(PR.get("class_factor_min_events", 30))
     out = []
-    for c, g in d.groupby("cls"):
-        z = g.z.values
-        mad = 1.4826 * np.median(np.abs(z - np.median(z)))
-        out.append(dict(cls=c, n=len(z), n_eff=int(g.event_ID.nunique()), lam_mad=float(mad),
-                        lam_rms=float(np.sqrt(np.mean(z ** 2))), res_mad_s=float(1.4826 * np.median(np.abs(g.res - g.res.median())))))
+    for k, (grp, dg, used) in enumerate(groups):
+        for c in CLASSES:
+            g = dg[dg.cls == c]
+            z = g.z.values
+            rec = dict(group=grp, cls=c, n=len(z), n_eff=int(g.event_ID.nunique()), used=used, order=k)
+            if len(z):
+                rec.update(lam_mad=float(1.4826 * np.median(np.abs(z - np.median(z)))),
+                           lam_rms=float(np.sqrt(np.mean(z ** 2))),
+                           res_mad_s=float(1.4826 * np.median(np.abs(g.res - g.res.median()))))
+            else:
+                rec.update(lam_mad=np.nan, lam_rms=np.nan, res_mad_s=np.nan)
+            own = grp in ("all", "pooled", "m0") or (rec["n_eff"] >= nmin and np.isfinite(rec["lam_mad"]))
+            rec["source"] = grp if own else "pooled"
+            out.append(rec)
     t = pd.DataFrame(out)
+    bad = t[t.used & (t.source == t.group) & ~(t.lam_mad > 0)]
+    if len(bad):
+        raise SystemExit(f"class factors without data: {bad[['group', 'cls']].values.tolist()}")
     t.to_parquet(PRIOR / "class_factors.parquet")
     return t
 
@@ -213,7 +282,7 @@ def db005_base(lon, lat, z80):
 
 
 def prep_bases():
-    import b2_merge as BM
+    BM = bm()
     out = {}
     for s in STAGES[1:]:
         lo, la, z = node_axes(s)
@@ -240,12 +309,9 @@ def prep_delph():
     max_depth_km. Saved as grids for delph_at(); coverage = share of the deterministic runs' P DWS where W > 0."""
     import xarray as xr
     from scipy import ndimage
-    f = C.REPO / "data/tomography/Delph2018.nc"
-    if not f.exists():                               # untracked in git; the main checkout holds it (read only)
-        f = Path("/home/mdenolle/cascadia_obs_ensemble/data/tomography/Delph2018.nc")
+    f = PRIOR / "Delph2018.nc"                       # pinned copy (pin_inputs)
     if not f.exists():
         return dict(available=False)
-    shutil.copy(f, PRIOR / "Delph2018.nc")
     d = xr.open_dataset(f)
     vs = d.vs.transpose("depth", "latitude", "longitude").values.astype(float)
     z, la, lo = d.depth.values.astype(float), d.latitude.values.astype(float), d.longitude.values.astype(float)
@@ -273,7 +339,8 @@ def prep_delph():
         share_num += float(dp[W > 0].sum())
         share_den += float(dp[Z <= PR["delph"]["max_depth_km"]].sum())
     import hashlib
-    cov = dict(available=True, file=str(f), md5=hashlib.md5(f.read_bytes()).hexdigest(),
+    cov = dict(available=True, file=str(f), source=str(external_inputs().get("Delph2018.nc")),
+               md5=hashlib.md5(f.read_bytes()).hexdigest(),
                dws_share_inside=share_num / max(share_den, 1e-9),
                lat=[float(la.min()), float(la.max())], lon=[float(lo.min()), float(lo.max())])
     cov["use"] = cov["dws_share_inside"] >= PR["delph"]["min_share"]
@@ -304,19 +371,103 @@ def brocher_vp(vs, vpvs_min=1.76):
 
 
 def prep_geometry():
-    import b2_merge as BM
+    BM = bm()
     lon, lat, z = BM.grid_axes()
-    tiles = [dict(region=c["region"], tag=c["tag"], run=C.det_run(s), mask_region=c["region"],
+    # mask_region: v0.4.x tiles use the resolution masks of the v0.3.1 tiles (same events, stations, picks), as
+    # tomodd.merge.product_v040 / product_v041 (choice.csv column mask_region)
+    tiles = [dict(region=c["region"], tag=c["tag"], run=C.det_run(s), mask_region=c.get("mask_region", c["region"]),
                   mask_damp=float(CFG["mask_damp"]), stage=s) for s, c in CFG["tiles"].items()]
     GEO = BM.geometry(tiles, lon, lat, z)
     with open(PRIOR / "merge_geometry.pkl", "wb") as f:
         pickle.dump(GEO, f)
-    return dict(tiles=[t["region"] for t in tiles], gated=[g["tile"]["region"] for g in GEO["geo"] if g["gated"]])
+    return dict(tiles=[t["region"] for t in tiles], gated=[g["tile"]["region"] for g in GEO["geo"] if g["gated"]],
+                masks={g["tile"]["region"]: g["mask"] for g in GEO["geo"]}, merge_product=CFG.get("merge_product", "product"))
+
+
+# ---------------------------------------------------------------- pinned external inputs and the floor
+MAIN_CHECKOUT = Path("/home/mdenolle/cascadia_obs_ensemble")
+TOMO_RES = Path("/home/mdenolle/wt_tomo_res")
+
+
+def external_inputs():
+    """{name in prior/: source file} of the files prep copies (pins) into prior/: the OBS S statics of every stage,
+    Delph et al. (2018), and with the floor the conservative floor grids (.bin + .hdr) of the stages' spacings."""
+    ext = {}
+    for s in STAGES:
+        rel = region_cfg(s)["forward"]["statics_file"]
+        f = C.REPO / rel
+        if not f.exists():                          # margin_m0's statics file is not in git (built in ~/wt_tomo_res)
+            f = TOMO_RES / rel
+        ext[f"statics_{s}.csv"] = f
+    f = C.REPO / "data/tomography/Delph2018.nc"
+    if not f.exists():                               # untracked in git; the main checkout holds it (read only)
+        f = MAIN_CHECKOUT / "data/tomography/Delph2018.nc"
+    if f.exists():
+        ext["Delph2018.nc"] = f
+    if C.FLOOR:
+        for sp in sorted({int(region_cfg(s)["floor_spacing_s"]) for s in STAGES}):
+            b = Path(T["floor"]["files"][sp])
+            ext[f"floor/{b.name}"] = b
+            ext[f"floor/{b.name}.hdr"] = Path(f"{b}.hdr")
+    return ext
+
+
+def pin_inputs():
+    """Copy every external input into prior/ and return {name: {source, md5}}. A re-prep (prior.json present) is
+    refused if a source changed since the first prep or the earlier prep had no pins (older driver): new root."""
+    ext = external_inputs()
+    cur = {k: dict(source=str(f), md5=C.md5(f)) for k, f in ext.items()}
+    pj = PRIOR / "prior.json"
+    if pj.exists():
+        old = json.loads(pj.read_text()).get("pins")
+        if old is None:
+            raise SystemExit(f"{pj} has no pinned inputs (older driver): prep a new root (B2_ENS_ROOT)")
+        diff = sorted(k for k in set(old) | set(cur) if (old.get(k) or {}).get("md5") != (cur.get(k) or {}).get("md5"))
+        if diff:
+            raise SystemExit("re-prep refused: external inputs changed since the first prep of " + str(C.ROOT) +
+                             ": " + "; ".join(f"{k}: {(old.get(k) or {}).get('md5')} -> {(cur.get(k) or {}).get('md5')}"
+                                              for k in diff) + " (prep a new root)")
+    for k, f in ext.items():
+        dst = PRIOR / k
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(f, dst)
+        if C.md5(dst) != cur[k]["md5"]:
+            raise SystemExit(f"copy of {f} to {dst} differs")
+    return cur
+
+
+def pinned_floor_file(stage):
+    return PRIOR / "floor" / Path(T["floor"]["files"][int(region_cfg(stage)["floor_spacing_s"])]).name
+
+
+def prep_floor():
+    """surface.dat of every stage from the pinned floor grids in the deterministic inputs' frame (prior/floor/<stage>/);
+    each must equal the surface.dat its deterministic run used, byte for byte; the members' must equal it too."""
+    out = {}
+    for s in STAGES:
+        od = PRIOR / "floor" / s
+        info, _ = FLR.write_surface(C.stage_cfg(s)["region"], inputs=C.det_inputs(s), outdir=od,
+                                    floor_file=pinned_floor_file(s))
+        m = C.md5(od / "surface.dat")
+        det = C.det_run(s) / "surface.dat"
+        same = det.exists() and C.md5(det) == m
+        if not same:
+            raise SystemExit(f"{s}: prior surface.dat ({m}) differs from the deterministic run's {det}")
+        out[s] = dict(surface_dat_md5=m, nodes=info["nodes"], spacing_s=info["spacing_s"], header=info["tomodd_header"],
+                      center=info["center"], identical_to_deterministic_run=same,
+                      floor_depth_km_min_max=info["floor_depth_km_min_max"])
+    return out
 
 
 def prep():
     PRIOR.mkdir(parents=True, exist_ok=True)
+    C.check_config()
     t0 = time.time()
+    pins = pin_inputs()
+    print("pinned", {k: v["md5"] for k, v in pins.items()}, flush=True)
+    flo = prep_floor() if C.FLOOR else None
+    if flo:
+        print("floor", {s: (v["nodes"], v["surface_dat_md5"]) for s, v in flo.items()}, flush=True)
     u, ev, codes, cnt = prep_unions()
     print("unions", cnt, flush=True)
     sp = pd.read_parquet(PRIOR / "station_phase.parquet")
@@ -333,8 +484,10 @@ def prep():
     chk = prep_bases()
     print("base checks", chk, flush=True)
     mix = PR["mixture"] if dl.get("use") else PR["mixture_no_delph"]
-    info = dict(config=C.CONFIG, cfg=CFG, prior=PR, unions=cnt, delph=dl, mixture=mix, geometry=geo, base_checks=chk,
-                class_factors=lam.set_index("cls")[["lam_mad", "n_eff", "n"]].to_dict("index"),
+    info = dict(config=C.CONFIG, cfg=CFG, prior=PR, pins=pins, floor=flo, unions=cnt, delph=dl, mixture=mix,
+                geometry=geo, base_checks=chk,
+                class_factors={f"{r.group}:{r.cls}": dict(lam_mad=r.lam_mad, n_eff=r.n_eff, n=r.n, used=r.used,
+                                                          source=r.source) for r in lam.itertuples()},
                 fwd_sd=fw.round(4).to_dict("records"),
                 static_sd_obs_S=st[st.cls == "obs_S"].sd.describe().round(4).to_dict(), wall_s=round(time.time() - t0))
     C.jdump(PRIOR / "prior.json", info)
@@ -371,44 +524,71 @@ def draw_hypo(seed, ev):
                      n_drawn_above_surface=int((z < zsurf - 1e-9).sum()))
 
 
-def draw_delta(seed, lam_scale=None, eps_seed=None):
-    """Per-pick time shift (s) over the pick union: static + forward offset + pick noise (+ eps for clones)."""
+def class_lambdas(seed, point=False):
+    """{(group, cls): lambda} of one draw: per group with its own factor (class_factors source == group, used), in
+    the table's draw order, lambda = sqrt(a lam_mad^2 / Gamma(a)), a = n_eff / 2 (inverse-gamma posterior); point:
+    lam_mad itself (synthetic truth). Groups below the event minimum take their source group's value (the same draw)."""
+    t = pd.read_parquet(PRIOR / "class_factors.parquet")
+    t = t[t.used].sort_values(["order", "cls"], key=lambda c: c.map(CLASSES.index) if c.name == "cls" else c)
+    g = C.rng(seed, "lam")
+    lam = {}
+    for r in t[t.source == t.group].itertuples():
+        a = r.n_eff / 2.0
+        lam[(r.group, r.cls)] = float(r.lam_mad) if point else float(np.sqrt(a * r.lam_mad ** 2 / g.gamma(a)))
+    for r in t[t.source != t.group].itertuples():
+        lam[(r.group, r.cls)] = lam[(r.source, r.cls)]
+    return lam
+
+
+def draw_delta(seed, point=False, eps_seed=None):
+    """Per-pick time shift (s) over the pick union: static + forward offset + pick noise (+ eps for clones).
+    point: class factors at their point values (synthetic truth)."""
     u = pd.read_parquet(PRIOR / "picks.parquet")
     st = pd.read_parquet(PRIOR / "static_sd.parquet")
     fw = pd.read_parquet(PRIOR / "fwd_sd.parquet").set_index(["cls", "bin"]).sd
     spb = pd.read_parquet(PRIOR / "station_phase_bin.parquet")
-    lamt = pd.read_parquet(PRIOR / "class_factors.parquet").set_index("cls")
     stat = C.rng(seed, "static").standard_normal(len(st)) * st.sd.values
     fsd = pd.MultiIndex.from_arrays([pclass(spb.is_obs, spb.phase), spb.bin]).map(fw).values.astype(float)
     fsd = np.where(np.isfinite(fsd), fsd, np.nanmax(fw.values))
     fwd = C.rng(seed, "fwd").standard_normal(len(spb)) * fsd
-    g = C.rng(seed, "lam")
-    lam = {}
-    for c in CLASSES:
-        a = lamt.loc[c, "n_eff"] / 2.0
-        lam[c] = float(np.sqrt(a * lamt.loc[c, "lam_mad"] ** 2 / g.gamma(a))) if lam_scale is None else float(lam_scale[c])
-    lp = u.cls.map(lam).values
+    lam = class_lambdas(seed, point)
+    lp = pd.MultiIndex.from_arrays([u.ngroup, u.cls]).map(pd.Series(lam)).values.astype(float)
+    if not np.isfinite(lp).all():
+        raise SystemExit("picks without a class factor")
     noise = C.rng(seed, "noise").standard_normal(len(u)) * lp * u.sigma_s.values
     delta = stat[u.spidx.values] + fwd[u.sbidx.values] + noise
     if eps_seed is not None:
         delta = delta + C.rng(eps_seed, "eps").standard_normal(len(u)) * float(PR["eps_floor_s"])
     cls = u.cls.values
-    info = dict(lambda_c=lam, static_sd_drawn={c: float(np.std(stat[(st.cls == c).values])) for c in CLASSES},
+    info = dict(lambda_c={f"{k[0]}:{k[1]}": v for k, v in lam.items()},
+                static_sd_drawn={c: float(np.std(stat[(st.cls == c).values])) for c in CLASSES},
                 fwd_sd_drawn=float(np.std(fwd)), noise_sd={c: float(np.std(noise[cls == c])) for c in CLASSES},
+                noise_sd_by_group={f"{gk}:{c}": float(np.std(noise[(u.ngroup.values == gk) & (cls == c)]))
+                                   for gk in sorted(set(u.ngroup)) for c in CLASSES
+                                   if ((u.ngroup.values == gk) & (cls == c)).any()},
                 delta_sd=float(np.std(delta)))
     return delta, stat, info
 
 
+def check_prior(pri):
+    """Members of one root share one prior: the effective prior now must be the one prep recorded."""
+    now = json.loads(json.dumps(PR, default=str))
+    if now != pri.get("prior"):
+        raise SystemExit(f"prior changed since prep of {C.ROOT} (params tomodd.ensemble.prior / configs.{C.CONFIG}.prior):"
+                         f" members of one root must share one prior; prep a new root (B2_ENS_ROOT)")
+
+
 def draws(kind, name):
     md = C.member_dir(kind, name)
-    md.mkdir(parents=True, exist_ok=True)
     if (md / "draws.json").exists():
         return json.loads((md / "draws.json").read_text())
     seed, eps = seed_of(kind, name)
     pri = json.loads((PRIOR / "prior.json").read_text())
+    check_prior(pri)
+    md.mkdir(parents=True, exist_ok=True)
     names = list(pri["mixture"])
     comp = names[int(C.rng(seed, "component").choice(len(names), p=[pri["mixture"][n] for n in names]))]
-    fp, fs = C.random_field(C.rng(seed, "rf_p")), C.random_field(C.rng(seed, "rf_s"))
+    fp, fs = C.prior_field(seed, "P"), C.prior_field(seed, "S")
     delta, stat, dinfo = draw_delta(seed, eps_seed=eps)
     ev = pd.read_parquet(PRIOR / "events.parquet")
     hyp, hinfo = draw_hypo(seed, ev)
@@ -420,7 +600,7 @@ def draws(kind, name):
               thickness_km=float(gs.uniform(*PR["shallow_crust"]["thickness_km"])))
     np.savez(md / "draws.npz", rf_p=fp, rf_s=fs, delta=delta, static=stat)
     hyp.to_parquet(md / "start_hypo.parquet")
-    d = dict(kind=kind, member=name, seed=seed, eps_clone=eps, config=C.CONFIG, component=comp,
+    d = dict(kind=kind, member=name, seed=seed, eps_clone=eps, config=C.CONFIG, component=comp, rf_prior=PR["rf"],
              rf_p_std_pct=float(100 * fp[:, :, :12].std()), rf_s_std_pct=float(100 * fs[:, :, :12].std()),
              damp_factor=dfac, damp={s: round(C.stage_cfg(s)["damp"] * dfac, 2) for s in STAGES},
              smooth={s: C.stage_cfg(s)["smooth"] for s in STAGES}, shallow_crust=sc, data=dinfo, hypo=hinfo)
@@ -574,9 +754,70 @@ def write_inp(run, stage, damp, smooth):
             f"{T['inp']['thres']:g}" for s in T["inp"]["sets"]]
     w1, w2, w3 = (f"{v:g}" for v in smooth)
     (run / "tomoDD-SE.inp").write_text(INP.format(
-        region=f"ensemble {C.CONFIG} {run.parent.parent.name} {stage}", tag="run", air=summ["air_dep_km"],
+        region=f"ensemble {C.CONFIG} {run.parent.parent.name} {stage}", tag="run", air=C.air_dep_km(summ),
         nset=len(rows), stepl=T["inp"]["stepl_km"], clat=summ["center_lat"], clon=summ["center_lon"], w1=w1, w2=w2,
         w3=w3, sets="\n".join(rows)))
+
+
+# ---------------------------------------------------------------- floor (D-B083) per member stage
+AT_FLOOR_KM = 0.005          # "ends on the floor": final depth within 5 m below tomoDD's floor (it stops 1 m under it)
+EPS_KM = 0.002               # REAL*4 positions and 3-decimal depths: a stopped event can read up to ~1 m above it
+                             # (b2_v041_analyse.py); above by more = error
+
+
+def floor_prepare(stage, sd, run):
+    """surface.dat of this member stage in the stage's rescaled frame (from the member's inputs/forward.json and the
+    pinned floor grid), checked against the prior's, copied into the run; the member's start hypocentres (event.dat)
+    against tomoDD's floor."""
+    pri = json.loads((PRIOR / "prior.json").read_text())
+    want = (pri.get("floor") or {}).get(stage, {}).get("surface_dat_md5")
+    if not want:
+        raise SystemExit(f"{stage}: prior.json has no floor for this stage (prep without the floor?)")
+    info, _ = FLR.write_surface(C.stage_cfg(stage)["region"], inputs=sd / "inputs", outdir=sd / "inputs",
+                                cache=True, floor_file=pinned_floor_file(stage))
+    got = C.md5(sd / "inputs" / "surface.dat")
+    if got != want:
+        raise SystemExit(f"{stage}: member surface.dat {got} differs from the prior's {want}")
+    shutil.copy(sd / "inputs" / "surface.dat", run / "surface.dat")
+    S = FLR.read_surface_dat(run / "surface.dat")
+    ev = FLR.read_event_dat(sd / "inputs" / "event.dat")
+    fz = FLR.floordep(S, ev.lat_w.values, ev.lon_w.values)[0]
+    above = ev.depth_w.values < fz                         # tomoDD: an event with tdep >= zfloor is at or below it
+    return dict(surface_dat_md5=got, nodes=info["nodes"], header=info["tomodd_header"], air_dep_km=float(T["floor"]["air_dep_km"]),
+                start_events=len(ev), start_above_floor=int(above.sum()),
+                start_above_floor_max_m=round(float(1000 * (fz - ev.depth_w.values)[above].max()), 1) if above.any() else 0.0)
+
+
+def floor_outputs(stage, run, start):
+    """Floor hits of the run (every >>>Floor line -> run/floor_hits.csv.gz) and the events that end on the floor
+    (final position in tomoDD's frame within [-2 m, 5 m) of the floor at it -> run/floor_end.csv); counts for DONE."""
+    lg = (run / "tomoDD-SE.log").read_text(errors="replace")
+    hits, aq, notmet = C.floor_log(lg)
+    hits.to_csv(run / "floor_hits.csv.gz", index=False)
+    S = FLR.read_surface_dat(run / "surface.dat")
+    w = pd.read_csv(run / "Output_Files" / "tomoDD.reloc", sep=r"\s+", header=None)
+    w = w.rename(columns={0: "ID", 1: "lat_w", 2: "lon_w", 3: "depth_w"})[["ID", "lat_w", "lon_w", "depth_w"]]
+    g = C.read_reloc(run / "Output_Files" / "tomoDD.reloc_geo").reset_index()
+    d = w.merge(g, on="ID", validate="1:1")
+    d["floor_km"] = FLR.floordep(S, d.lat_w.values, d.lon_w.values)[0]
+    dz = d.depth_w - d.floor_km
+    d["at_floor"] = (dz >= -EPS_KM) & (dz < AT_FLOOR_KM)
+    nh = hits.groupby("ID").size()
+    d["floor_hits"] = d.ID.map(nh).fillna(0).astype(int)
+    ev = pd.read_csv(C.det_inputs(stage) / "events.csv", usecols=["ID", "region"])
+    end = d[d.at_floor].merge(ev, on="ID", how="left")
+    end[["ID", "region", "lat", "lon", "depth", "floor_km", "floor_hits"]].round(5).to_csv(run / "floor_end.csv",
+                                                                                           index=False)
+    out = dict(start, lines=len(hits), events_hit=int(hits.ID.nunique()), iterations_with_hits=int(hits.iteration.nunique()),
+               not_met=len(notmet), air_quake_lines=len(aq), events_final=len(d), end_on_floor=int(d.at_floor.sum()),
+               end_on_floor_by_region=end.region.value_counts().to_dict(),
+               above_floor_by_more_than_2m=int((dz < -EPS_KM).sum()),
+               hit_height_above_floor_m_p50_max=([round(float(np.percentile(1000 * (hits.floor - hits.depth), q)), 1)
+                                                  for q in (50, 100)] if len(hits) else None))
+    if out["above_floor_by_more_than_2m"] or out["not_met"] or out["air_quake_lines"]:
+        print(f"WARNING floor {stage}: {out['above_floor_by_more_than_2m']} final positions above the floor by > 2 m, "
+              f"{out['not_met']} not met, {out['air_quake_lines']} air-quake lines", flush=True)
+    return out
 
 
 def backtransform(run):
@@ -636,12 +877,27 @@ def trim(run, codes):
 
 
 def run_stage(kind, name, stage):
+    """One tomoDD stage of a member, under the stage's lock (<member>/<stage>/LOCK: flock + pid, pgid, host, start;
+    a second process on the same member stage is refused)."""
     md = C.member_dir(kind, name)
     sd = md / stage
     if (sd / "DONE").exists():
         return json.loads((sd / "DONE").read_text())
+    lk = C.Lock(sd / "LOCK")
+    if not lk.acquire(f"{kind}/{name}/{stage}"):
+        raise SystemExit(f"{kind}/{name}/{stage}: locked by another process {lk.owner()}")
+    try:
+        if (sd / "DONE").exists():
+            return json.loads((sd / "DONE").read_text())
+        return _run_stage(kind, name, stage, md, sd)
+    finally:
+        lk.release()
+
+
+def _run_stage(kind, name, stage, md, sd):
     if stage != "m0" and not (md / "m0" / "DONE").exists():
         raise SystemExit(f"{kind}/{name}/{stage}: M0 of this member not done")
+    C.check_config()
     t0 = time.time()
     (sd / "FAILED").unlink(missing_ok=True)
     shutil.rmtree(sd / "run", ignore_errors=True)
@@ -654,14 +910,16 @@ def run_stage(kind, name, stage):
         (run / "Input_Files" / f).symlink_to(sd / "inputs" / f)
     shutil.copy(sd / "inputs" / "MOD", run / "MOD")
     for f in ("ak135.15.SKS", "layer-16.dat"):
-        shutil.copy(Path(C.E["runtime_files"]) / f, run / f)
+        shutil.copy(C.runtime_files() / f, run / f)
+    fstart = floor_prepare(stage, sd, run) if C.FLOOR else None
     damp = d["damp"][stage]
     write_inp(run, stage, damp, C.stage_cfg(stage)["smooth"])
     b = C.binary(stage)
     t1 = time.time()
     env = {"PATH": "/usr/bin:/bin", "HOME": str(Path.home()), "OMP_NUM_THREADS": "1"}   # system libgfortran 8.5
     with open(run / "stdout.txt", "w") as so, open(run / "time.txt", "w") as se:
-        rc = subprocess.run(["nice", "-n", str(C.E["nice"]), "/usr/bin/time", "-f", "%e s %U user %M KB", b,
+        inc = max(0, int(C.E["nice"]) - os.nice(0))  # tomoDD at niceness tomodd.ensemble.nice (absolute, also when the
+        rc = subprocess.run(["nice", "-n", str(inc), "/usr/bin/time", "-f", "%e s %U user %M KB", b,   # driver is niced)
                              "tomoDD-SE.inp"], cwd=run, stdout=so, stderr=se, env=env).returncode
     t_run = time.time() - t1
     if rc or not (run / "Output_Files" / "tomoDD.reloc").exists() or not (run / "Output_Files" / "Vp_model.dat").exists():
@@ -669,6 +927,7 @@ def run_stage(kind, name, stage):
         C.jdump(sd / "FAILED", rec)
         raise SystemExit(f"{kind}/{name}/{stage}: tomoDD exit {rc}")
     backtransform(run)
+    finfo = floor_outputs(stage, run, fstart) if C.FLOOR else None
     codes = pd.read_csv(C.det_inputs(stage) / "station_codes.csv")
     info = trim(run, codes)
     tt = (run / "time.txt").read_text().split()
@@ -684,59 +943,127 @@ def run_stage(kind, name, stage):
                events_final=sum(1 for _ in open(run / "Output_Files" / "tomoDD.reloc_geo")),
                events_start=sum(1 for _ in open(C.det_inputs(stage) / "event.dat")),
                aq_repeats=info["log"].get("aq_repeats"), passes=info["log"].get("passes"), build=binfo,
-               finished=time.strftime("%Y-%m-%d %H:%M:%S"))
+               floor=finfo, air_dep_km=C.air_dep_km(json.loads((sd / "inputs" / "summary.json").read_text())),
+               pid=os.getpid(), finished=time.strftime("%Y-%m-%d %H:%M:%S"))
     C.jdump(sd / "DONE", rec)
-    print(f"{kind}/{name}/{stage}: done {rec['wall_min']} min, {rec['max_rss_gb']} GB, {rec['kept_mb']} MB kept",
-          flush=True)
+    print(f"{kind}/{name}/{stage}: done {rec['wall_min']} min, {rec['max_rss_gb']} GB, {rec['kept_mb']} MB kept"
+          + (f"; floor: {finfo['lines']} stops, {finfo['events_hit']} events hit, {finfo['end_on_floor']} end on it"
+             if finfo else ""), flush=True)
     return rec
 
 
 # ================================================================ merge
-def merge(kind, name):
+def merge_core(GEO, d, m0_run, stage_runs, sc, node_model):
+    """Member merge: b2_merge.blend of the stage runs on the member reference (d: draws, None = deterministic), the
+    node model's medium (water Vp 1.5, air NaN) and the D-B073 node rule with sc = {vpvs, thickness_km}.
+    Returns (arrays [x, y, z] float32, blend record)."""
     import xarray as xr
-    import b2_merge as BM
-    md = C.member_dir(kind, name)
-    if (md / "MERGED").exists():
-        return json.loads((md / "MERGED").read_text())
-    t0 = time.time()
-    d = json.loads((md / "draws.json").read_text())
-    for s in STAGES:
-        if not (md / s / "DONE").exists():
-            raise SystemExit(f"{kind}/{name}: stage {s} not done")
-    with open(PRIOR / "merge_geometry.pkl", "rb") as f:
-        GEO = pickle.load(f)
+    BM = bm()
     for g in GEO["geo"]:
-        g["tile"] = {**g["tile"], "run": md / g["tile"]["stage"] / "run"}
-    VP0, VS0 = reference_member(d, md / "m0" / "run")
+        g["tile"] = {**g["tile"], "run": stage_runs[g["tile"]["stage"]]}
+    VP0, VS0 = reference_member(d, m0_run)
     B = BM.blend(GEO, VP0, VS0, quiet=True)
     shp = GEO["shape"]
-    nd = xr.open_dataset(Path(T["models"]["store"]) / T["models"]["name"] / f"v{CFG['node_model']}.nc")
+    nd = xr.open_dataset(Path(T["models"]["store"]) / T["models"]["name"] / f"v{node_model}.nc")
     tr = lambda a: np.asarray(a).transpose(2, 1, 0)          # [z, y, x] -> [x, y, z]
     med = tr(nd.medium.values)
     off = nd.offshore.values.T.astype(bool)[:, :, None]
     surf = nd.surface_elevation.values.T.astype(float)[:, :, None]
     z = nd.depth.values[None, None, :]
     vp, vs = B["out"]["P"], B["out"]["S"]
-    sc = d["shallow_crust"]
     rule = (med == 0) & off & (z > 0) & (z + surf <= sc["thickness_km"])
     vs_rule = np.where(med == 0, np.where(rule, np.minimum(vs, vp / sc["vpvs"]), vs), np.nan)
     vp_med = np.where(med == 0, vp, np.where(med == 1, 1.5, np.nan))
     f4 = lambda a: np.asarray(a, "float32")
-    np.savez_compressed(md / "merged.npz", vp=f4(vp), vs=f4(vs), vp_start=f4(B["start"]["P"]), vs_start=f4(B["start"]["S"]),
-                        vp_medium=f4(vp_med), vs_rule=f4(vs_rule), r_p=f4(B["Rg"]["P"]), r_s=f4(B["Rg"]["S"]),
-                        dws_p=f4(B["dsum"]["p"].reshape(shp)), dws_s=f4(B["dsum"]["s"].reshape(shp)),
-                        vs_reverted=B["vs_rev"].astype("int8"), rule=rule.astype("int8"))
-    rec = dict(status="merged", wall_s=round(time.time() - t0, 1), fall=B["fall"],
-               vs_reverted=int((B["vs_rev"] > 0).sum()), rule_nodes_lowered=int((rule & (vs_rule < vs)).sum()),
-               shallow_crust=sc, finished=time.strftime("%Y-%m-%d %H:%M:%S"))
-    C.jdump(md / "MERGED", rec)
-    print(f"{kind}/{name}: merged in {rec['wall_s']} s", flush=True)
-    return rec
+    A = dict(vp=f4(vp), vs=f4(vs), vp_start=f4(B["start"]["P"]), vs_start=f4(B["start"]["S"]), vp_medium=f4(vp_med),
+             vs_rule=f4(vs_rule), r_p=f4(B["Rg"]["P"]), r_s=f4(B["Rg"]["S"]), dws_p=f4(B["dsum"]["p"].reshape(shp)),
+             dws_s=f4(B["dsum"]["s"].reshape(shp)), vs_reverted=B["vs_rev"].astype("int8"), rule=rule.astype("int8"))
+    rec = dict(fall=B["fall"], vs_reverted=int((B["vs_rev"] > 0).sum()), rule_nodes_lowered=int((rule & (vs_rule < vs)).sum()))
+    return A, rec
+
+
+def merge(kind, name):
+    md = C.member_dir(kind, name)
+    if (md / "MERGED").exists():
+        return json.loads((md / "MERGED").read_text())
+    lk = C.Lock(md / "merge.LOCK")
+    if not lk.acquire(f"{kind}/{name}/merge"):
+        raise SystemExit(f"{kind}/{name}/merge: locked by another process {lk.owner()}")
+    try:
+        t0 = time.time()
+        d = json.loads((md / "draws.json").read_text())
+        for s in STAGES:
+            if not (md / s / "DONE").exists():
+                raise SystemExit(f"{kind}/{name}: stage {s} not done")
+        with open(PRIOR / "merge_geometry.pkl", "rb") as f:
+            GEO = pickle.load(f)
+        A, brec = merge_core(GEO, d, md / "m0" / "run", {s: md / s / "run" for s in STAGES[1:]}, d["shallow_crust"],
+                             CFG["node_model"])
+        np.savez_compressed(md / "merged.npz", **A)
+        flo = {s: (json.loads((md / s / "DONE").read_text()).get("floor") or {}) for s in STAGES} if C.FLOOR else None
+        rec = dict(status="merged", wall_s=round(time.time() - t0, 1), **brec, shallow_crust=d["shallow_crust"],
+                   floor=({s: {k: f.get(k) for k in ("lines", "events_hit", "end_on_floor", "start_above_floor",
+                                                     "above_floor_by_more_than_2m", "not_met")} for s, f in flo.items()}
+                          if flo else None),
+                   finished=time.strftime("%Y-%m-%d %H:%M:%S"))
+        C.jdump(md / "MERGED", rec)
+        print(f"{kind}/{name}: merged in {rec['wall_s']} s", flush=True)
+        return rec
+    finally:
+        lk.release()
+
+
+def nullmerge():
+    """The member merge with null draws (deterministic start, reference and runs of the configuration; D-B073 at
+    b4.shallow_crust) against the registered v<node_model>.nc: every compared variable must agree within float32
+    (|diff| <= 2 ulp of the stored value). -> ROOT/verify/nullmerge.json; exit 1 if not."""
+    import xarray as xr
+    out = C.ROOT / "verify"
+    out.mkdir(parents=True, exist_ok=True)
+    with open(PRIOR / "merge_geometry.pkl", "rb") as f:
+        GEO = pickle.load(f)
+    sc = {k: float(v) for k, v in P_B4()["shallow_crust"].items() if k in ("vpvs", "thickness_km")}
+    A, brec = merge_core(GEO, None, C.det_run("m0"), {s: C.det_run(s) for s in STAGES[1:]}, sc, CFG["node_model"])
+    nd = xr.open_dataset(Path(T["models"]["store"]) / T["models"]["name"] / f"v{CFG['node_model']}.nc")
+    pairs = {"vp": "Vp_tomography", "vs": "Vs_tomography", "vp_medium": "Vp", "vs_rule": "Vs", "vp_start": "Vp_start",
+             "vs_start": "Vs_start", "dws_p": "dws_p", "dws_s": "dws_s", "r_p": "tile_weight_p", "r_s": "tile_weight_s",
+             "vs_reverted": "vs_reverted"}
+    res, ok = {}, True
+    for a, v in pairs.items():
+        if v not in nd:
+            res[a] = dict(variable=v, missing=True)
+            continue
+        x = np.asarray(A[a]).transpose(2, 1, 0)
+        y = nd[v].values
+        both = np.isnan(x.astype(float)) & np.isnan(y.astype(float))
+        nan_mis = int((np.isnan(x.astype(float)) != np.isnan(y.astype(float))).sum())
+        dd = np.where(both, 0.0, np.abs(x.astype(float) - y.astype(float)))
+        if x.dtype.kind == "f":
+            ulp = np.where(both, 0.0, dd / np.spacing(np.abs(y.astype("float32"))).astype(float))
+            r = dict(variable=v, max_abs=float(np.nanmax(dd)), max_ulp=float(np.nanmax(ulp)), n_diff=int((dd > 0).sum()),
+                     nan_mismatch=nan_mis)
+            r["within_float32"] = bool(nan_mis == 0 and r["max_ulp"] <= 2)
+        else:
+            r = dict(variable=v, n_diff=int((dd > 0).sum()), nan_mismatch=nan_mis)
+            r["within_float32"] = r["n_diff"] == 0
+        ok &= r["within_float32"]
+        res[a] = r
+    rec = dict(config=C.CONFIG, node_model=CFG["node_model"], shallow_crust=sc, all_within_float32=bool(ok),
+               runs={s: str(C.det_run(s)) for s in STAGES}, merge=brec, compare=res, created=time.strftime("%F %T"))
+    C.jdump(out / "nullmerge.json", rec)
+    print(json.dumps(rec, indent=1, default=str))
+    if not ok:
+        raise SystemExit(1)
+
+
+def P_B4():
+    from manifest import load_params
+    return load_params()["b4"]
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["prep", "draws", "stage", "merge"])
+    ap.add_argument("cmd", choices=["prep", "draws", "stage", "merge", "nullmerge"])
     ap.add_argument("kind", nargs="?")
     ap.add_argument("name", nargs="?")
     ap.add_argument("stage", nargs="?")
@@ -747,6 +1074,8 @@ def main():
         print(json.dumps(draws(a.kind, a.name), indent=1, default=str)[:3000])
     elif a.cmd == "stage":
         run_stage(a.kind, a.name, a.stage)
+    elif a.cmd == "nullmerge":
+        nullmerge()
     else:
         merge(a.kind, a.name)
 

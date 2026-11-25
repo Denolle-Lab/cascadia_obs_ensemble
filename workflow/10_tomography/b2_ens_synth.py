@@ -52,7 +52,7 @@ def truth_model():
     lon, lat, z = nd.longitude.values, nd.latitude.values, nd.depth.values
     vp, vs = (nd[v].values.transpose(2, 1, 0).astype(float) for v in (vpn, vsn))
     seed = int(PR["truth_seed"])
-    fp, fs = C.random_field(C.rng(seed, "rf_p")), C.random_field(C.rng(seed, "rf_s"))
+    fp, fs = C.prior_field(seed, "P"), C.prior_field(seed, "S")
     vp = vp * (1 + EM.field_at(fp, lon, lat, z))
     vs = vs * (1 + EM.field_at(fs, lon, lat, z))
     vs = np.where(vp / vs < FLOOR, vp / FLOOR, vs)   # the members' start floor (P-E5): the truth is a draw of their prior
@@ -133,8 +133,7 @@ def truth():
     ev = pd.read_parquet(PRIOR / "events.parquet")
     hyp, hinfo = EM.draw_hypo(seed, ev)
     hyp.to_parquet(TD / "truth_hypo.parquet")
-    lam = pd.read_parquet(PRIOR / "class_factors.parquet").set_index("cls").lam_mad.to_dict()
-    delta, stat, dinfo = EM.draw_delta(seed, lam_scale=lam)
+    delta, stat, dinfo = EM.draw_delta(seed, point=True)      # class factors at their point values
     np.save(TD / "delta_true.npy", delta)
     with ThreadPoolExecutor(len(STAGES)) as ex:
         res = list(ex.map(lambda s: syn_stage(s, tm, hyp), STAGES))

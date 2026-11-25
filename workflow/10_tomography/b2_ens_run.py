@@ -11,7 +11,8 @@ Chain stages (ROOT/chain.state records the finished ones; rerunning the same com
   calibrate  b2_ens_coverage.py: the D-B030 gate. FAIL -> the chain stops with exit 2 (real members not started)
   real       real-data members r000..r(N-1)
   stats      b2_ens_stats.py stats real (per-node statistics)
-  products   b2_ens_stats.py products real (versioned ensemble product, HTML report)
+  products   b2_ens_stats.py products real (dry-run netCDF + HTML report; with B2_ENS_REGISTER=1, after the PI's go,
+             the immutable version <model>+ens.<members> is registered, read-back checked first)
 Scheduler: per member M0 first, then its tiles (all four at once), then the merge; at most tomodd.ensemble.max_procs
 tomoDD processes of this chain, each started only while MemAvailable, minus mem_per_run_gb for every process started in
 the last 5 minutes (still allocating), stays above min_avail_gb + mem_per_run_gb; tile

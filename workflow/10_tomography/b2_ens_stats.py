@@ -1,8 +1,8 @@
 """Track B Bayesian ensemble: per-node statistics, the versioned ensemble product (D-B047) and the HTML report.
 
   python b2_ens_stats.py stats KIND                       (default env)  -> ROOT/stats/KIND/stats.npz, stats.json
-  python b2_ens_stats.py products KIND [--dry-run DIR]    (models env)   -> registered ensemble product
-                                                                           (configs.<c>.product_version) + report HTML
+  python b2_ens_stats.py products KIND [--dry-run DIR]    (models env)   -> dry-run netCDF + report HTML (default);
+        B2_ENS_REGISTER=1 registers the immutable version <model version>+ens.<members> (PI's go needed)
 Statistics over the merged members (merge grid of b2_merge.py: 0.125 x 0.1 deg, tomodd.node_z):
 * Vp, Vs, VpVs as v0.3.2 defines them (medium from the node model: water Vp 1.5 and NaN Vs, air NaN; Vs with the D-B073
   node rule at the member's drawn Vp/Vs and thickness), and Vp_tomography, Vs_tomography (the inversion's values, no
@@ -217,7 +217,7 @@ def report(kind, ds, summ, outdir):
             "img{max-width:100%}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:3px 8px}"
             "pre{white-space:pre-wrap;background:#f4f4f4;padding:8px}</style></head><body>",
             f"<h1>Bayesian ensemble of the {C.CONFIG} configuration ({kind}, {summ['members']} members)</h1>",
-            f"<p>Created {summ['created']}. Product {CFG['product_version']}. Median std on rock nodes: Vp "
+            f"<p>Created {summ['created']}. Product {product_label(summ['members'])}. Median std on rock nodes: Vp "
             f"{summ['vp_std_rock_median']:.3f} km/s, Vs {summ['vs_std_rock_median']:.3f} km/s; resolved nodes P/S "
             f"{summ['resolved_nodes']}; sampled nodes P/S {summ['sampled_nodes']}.</p>",
             "<h2>Run cost per member</h2><table><tr><th>stage</th><th>median wall (min)</th><th>max wall (min)</th>"
@@ -231,24 +231,35 @@ def report(kind, ds, summ, outdir):
     return f
 
 
+def product_label(n_members):
+    """Version label of the ensemble product: the configuration's model version (product_version before any '+')
+    with '+ens.<number of merged members>' (D-B047 build metadata), e.g. 0.3.2+ens.97."""
+    return f"{str(CFG['product_version']).split('+')[0]}+ens.{int(n_members)}"
+
+
 def products(kind, dry):
+    """Default: dry run (netCDF in ROOT/products or --dry-run DIR) + the HTML report. Registration of the immutable
+    version only with B2_ENS_REGISTER=1 in the environment (needs the PI's go), through b2_model_export.export with the
+    read-back on Vp_mean before the registry is touched."""
+    import os
     import b2_model_export as EX
     ds, summ = dataset(kind)
-    version = CFG["product_version"]
+    version = product_label(summ["members"])
+    register = os.environ.get("B2_ENS_REGISTER") == "1" and not dry
     desc = (f"Bayesian (RTO) ensemble statistics of the {C.CONFIG} configuration: {summ['members']} members of M0 + "
             f"{', '.join(CFG['tiles'])} merged with the v0.3.1 rules, D-B073 node rule with drawn parameters")
     prov = dict(run=f"ensemble {C.CONFIG} ({ROOT})", members=summ["members"], config=json.dumps(CFG),
                 prior=json.dumps(E["prior"]), calibration=(ROOT / "synth" / "coverage.json").read_text()[:2000]
                 if (ROOT / "synth" / "coverage.json").exists() else "none")
-    EX.add_attrs(ds, version if not dry else "0.0.0-dryrun", desc, prov, "b2_ens_stats.py")
+    EX.add_attrs(ds, version if register else "0.0.0-dryrun", desc, prov, "b2_ens_stats.py")
     out = Path(dry) if dry else ROOT / "products"
     out.mkdir(parents=True, exist_ok=True)
-    if dry:
-        ds.to_netcdf(out / f"ensemble_{kind}_dryrun.nc", format="NETCDF4_CLASSIC",
-                     encoding={k: dict(zlib=True, complevel=4) for k in ds.data_vars})
-        print("dry run:", out / f"ensemble_{kind}_dryrun.nc", (out / f"ensemble_{kind}_dryrun.nc").stat().st_size)
+    if register:
+        EX.export(ds, version, desc, nll=False, status="intermediate", readback_var="Vp_mean")
     else:
-        EX.export(ds, version, desc, nll=False, status="intermediate")
+        f = out / f"ensemble_{kind}_{version}_dryrun.nc"
+        ds.to_netcdf(f, format="NETCDF4_CLASSIC", encoding={k: dict(zlib=True, complevel=4) for k in ds.data_vars})
+        print(f"dry run (not registered; B2_ENS_REGISTER=1 registers v{version}):", f, f.stat().st_size)
     print("report:", report(kind, ds, summ, out))
 
 

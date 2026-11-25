@@ -83,7 +83,9 @@ Simplification: M0's synthetic data come from the truth sampled on M0's 30 km no
   gated. Nodes with DWS >= 100 in 90 % of members reported as a second mask.
 * P-E9 Binaries: the 2026-11-24 freeze (D-B054) for the v0.3.1 configuration, the build its deterministic runs used;
   the freeze folder is a parameter (section 5).
-* P-E10 Ensemble product label `0.3.2+ens.100`, status intermediate, D-B047 exporter; statistics on the v0.3.2
+* P-E10 Ensemble product label `<model version>+ens.<merged members>` (e.g. `0.3.2+ens.100`), status intermediate,
+  D-B047 exporter; the chain writes a dry run and the report by default and registers only with B2_ENS_REGISTER=1
+  (PI's go; the exporter read-back checks Vp_mean before the registry is touched, under a registry flock); statistics on the v0.3.2
   convention (medium, node rule) and on the inversion values (Vp_tomography, Vs_tomography), with the tile
   disagreement term of P-M5 as separate variables.
 

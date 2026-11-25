@@ -22,6 +22,8 @@ negative = above sea level). data_layout vertex, grid_ref latitude_longitude.
       VERSION  semantic version, e.g. 0.1.0
 """
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import json
 import subprocess
@@ -292,13 +294,28 @@ def register(ds, version, description, files, status):
                zarr=str(files["zarr"]), zarr_sha256=prov["files"]["zarr"]["sha256"],
                netcdf=str(files["netcdf"]), netcdf_sha256=prov["files"]["netcdf"]["sha256"],
                netcdf_git=prov["netcdf_in_git"] or "", nll=str(files.get("nll_P", "")).rsplit("/", 1)[0] if "nll_P" in files else "")
-    reg = read_registry()
-    check_new(reg, version)
-    reg = pd.DataFrame([row]) if reg is None else pd.concat([reg, pd.DataFrame([row])], ignore_index=True)
-    reg.to_csv(REGISTRY, index=False)                               # the union goes to both copies
-    reg.to_csv(STORE / name / "registry.csv", index=False)          # a copy next to the stores (tutorial, bundle)
+    with registry_lock():                                           # read-modify-write of both copies, serialised
+        reg = read_registry()
+        check_new(reg, version)
+        reg = pd.DataFrame([row]) if reg is None else pd.concat([reg, pd.DataFrame([row])], ignore_index=True)
+        reg.to_csv(REGISTRY, index=False)                           # the union goes to both copies
+        reg.to_csv(STORE / name / "registry.csv", index=False)      # a copy next to the stores (tutorial, bundle)
     (STORE / name / f"v{version}.provenance.json").write_text(pj.read_text())
     return pj
+
+
+@contextlib.contextmanager
+def registry_lock():
+    """Exclusive flock on <store>/registry.lock (/wd1/mdenolle_data/tomo_v1/models/registry.lock) around the registry
+    read-modify-write, shared by every exporter (b2_model_export, b2_merge, b2_model_v032, the ensemble products, the
+    v0.4.x exports), so two registrations cannot drop each other's rows."""
+    STORE.mkdir(parents=True, exist_ok=True)
+    with open(STORE / "registry.lock", "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def main():
@@ -312,19 +329,25 @@ def main():
     export(build(a.run, a.version, a.description), a.version, a.description, a.nll, a.status)
 
 
-def export(ds, version, description, nll=False, status="intermediate"):
-    """EMC check, write (Zarr, netCDF, optional NonLinLoc grids), register; read-back test. Returns the files."""
+def export(ds, version, description, nll=False, status="intermediate", readback_var="Vp"):
+    """EMC check, write (Zarr, netCDF, optional NonLinLoc grids), read-back test of `readback_var` (and the id), then
+    register. The read-back runs BEFORE the registration, so a failing check leaves the version unregistered (its files
+    stay in the store and must be removed by hand before a retry). Returns the files."""
     issues = emc_check(ds)
     ds.attrs["emc_check"] = "; ".join(issues) if issues else "passes the EMC inspector's required-attribute rules"
     print("EMC check:", ds.attrs["emc_check"])
     hard = [i for i in issues if not i.startswith("pending")]
     if hard:
         raise SystemExit(f"EMC metadata problems: {hard}")
+    if readback_var not in ds:
+        raise SystemExit(f"read-back variable {readback_var!r} not in the dataset ({list(ds.data_vars)[:8]} ...)")
     check_new(read_registry(), version)                             # before any file is written
     files = write(ds, version, nll)
+    back = xr.open_zarr(files["zarr"], consolidated=True)          # read-back check, before the registration
+    if not (np.allclose(back[readback_var].values, ds[readback_var].values, equal_nan=True)
+            and back.attrs["id"] == ds.attrs["id"]):
+        raise SystemExit(f"read-back of {files['zarr']} differs ({readback_var} or id): v{version} NOT registered")
     pj = register(ds, version, description, files, status)
-    back = xr.open_zarr(files["zarr"], consolidated=True)          # read-back check
-    assert np.allclose(back.Vp.values, ds.Vp.values, equal_nan=True) and back.attrs["id"] == ds.attrs["id"]
     print(json.dumps({k: str(p) for k, p in files.items()}, indent=1))
     print(f"registered {X['name']} v{version} -> {REGISTRY}; provenance {pj}")
     return files

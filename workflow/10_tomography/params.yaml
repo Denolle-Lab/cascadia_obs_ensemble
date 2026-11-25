@@ -454,6 +454,101 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       start_model: margin_m0_v2/d200_s480
       start_model_mode: change
       damp: 200
+    # v0.4.0 (PI 2026-11-25, "re-run v0.3.1 with the correct re-timed picks"; notes/retime_v040.md): the v0.3.1 chain
+    # with ONLY the pick times changed (datasets b1b_balanced_ct = b1b_balanced_c re-timed, D-B072/D-B075). Every other
+    # setting as margin_m0_v2 / <tile>_m0: same events, picks, weights, OBS S statics (same files), P-1 reference
+    # (same jobs: the event-station-phase set is unchanged), P-4 recomputed as before (M0: from its own 1-iteration
+    # forward run; tiles: reused from <tile>_v2), damping 200, same smoothing. Frozen tomoDD binaries (D-B054) of the
+    # same size classes (byte-identical results to the builds v0.3.1 used, D-B054 freeze audit).
+    margin_m0_v3: &margin_m0_v3
+      b1b: b1b_balanced_ct
+      bins:
+        bin: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_m          # md5 2a8ef4eb47f93c34c6e449c418a8f82a
+        bin_check: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_chk_m  # md5 f32f779bfe206f021f5387de26a44eae
+      limits: {MAXSTA: 560, MAXOBS: 130}
+      events_boxes: [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0],
+                     [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]]
+      events_lat: [39.5, 50.0]
+      events_lon: [-131.0, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.75, -120.125, 0.375]
+      node_lat: [38.9, 50.6, 0.3]
+      decluster: {cell_km: 10, depth_cell_km: 10, keep_per_cell: 2}
+      model_box_avg_km: 31
+      weights_scale: dataset
+      damp: 200
+      forward:
+        coords: ellipsoid
+        mod: box
+        station_corr: true
+        statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv
+        p1_reference: margin_m0_v2/p1_reference
+    mendocino_gorda_c_m0t: &mendocino_gorda_c_m0t
+      b1b: b1b_balanced_ct
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_e13k, bin_check: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_chk_e13k}
+      limits: {MAXEVE: 13000, MAXDATA: 2000000}
+      events_lat: [39.5, 43.1]
+      events_lon: [-127.5, -122.5]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-128.25, -121.75, 0.125]
+      node_lat: [39.0, 43.6, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_mendocino_gorda_c.csv,
+        p1_reference: mendocino_gorda_c_v2/p1_reference, station_corr_from: mendocino_gorda_c_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v3/d200_s480
+      start_model_mode: change
+      damp: 200
+    blanco_m0t: &blanco_m0t
+      b1b: b1b_balanced_ct
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_e10k, bin_check: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_chk_e10k}
+      events_lat: [42.6, 45.2]
+      events_lon: [-130.6, -125.6]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-131.35, -124.85, 0.125]
+      node_lat: [42.1, 45.7, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_blanco.csv,
+        p1_reference: blanco_v2/p1_reference, station_corr_from: blanco_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v3/d200_s480
+      start_model_mode: change
+      damp: 200
+    oregon_m0t: &oregon_m0t
+      b1b: b1b_balanced_ct
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_e10k, bin_check: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_chk_e10k}
+      events_lat: [42.6, 46.4]
+      events_lon: [-126.2, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-126.95, -120.375, 0.125]
+      node_lat: [42.1, 46.9, 0.1]
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv,
+        p1_reference: oregon_v2/p1_reference, station_corr_from: oregon_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v3/d200_s480
+      start_model_mode: change
+      damp: 200
+    washington_m0t: &washington_m0t
+      b1b: b1b_balanced_ct
+      events_lat: [45.8, 49.8]
+      events_lon: [-126.4, -121.0]
+      station_margin_deg: [0.5, 0.7]
+      node_lon: [-127.15, -120.25, 0.125]
+      node_lat: [45.3, 50.3, 0.1]
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_w, bin_check: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24/tomoDD-SE_chk_w}
+      limits: {MAXSTA: 260, MAXOBS: 140}
+      forward: {coords: ellipsoid, mod: nearest, station_corr: true, statics_file: data/tomo_v1/obs_check/obs_near_station_S_terms_p1_washington.csv,
+        p1_reference: washington_v2/p1_reference, station_corr_from: washington_v2}
+      weights_scale: dataset
+      start_model: margin_m0_v3/d200_s480
+      start_model_mode: change
+      damp: 200
+    # v0.4.0 numerical noise floor (notes/retime_v040.md): the same chain with N(0, 1e-6 s) added to every observed time
+    # (b2_v040_noise.py: the region's inputs built as above, then absolute.dat and dt.ct rewritten with the perturbed
+    # times at 6 decimals). Tiles restart from the perturbed M0, so the floor includes the M0 noise every tile inherits.
+    margin_m0_v3nf: {<<: *margin_m0_v3}
+    mendocino_gorda_c_m0tnf: {<<: *mendocino_gorda_c_m0t, start_model: margin_m0_v3nf/d200_s480}
+    blanco_m0tnf: {<<: *blanco_m0t, start_model: margin_m0_v3nf/d200_s480}
+    oregon_m0tnf: {<<: *oregon_m0t, start_model: margin_m0_v3nf/d200_s480}
+    washington_m0tnf: {<<: *washington_m0t, start_model: margin_m0_v3nf/d200_s480}
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -611,6 +706,18 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       floor: 0.1                   # resolution-window floor outside the mask (M3 placeholder until T3)
     gate_max_smooth: 100         # D-B049 as amended (PI 2026-11-24): only tiles merged at smoothing W1 <= this are gated by
                                  #   their checkerboard mask (blanco s20); s480 tiles count fully in their box
+    product_v040:                  # v0.4.0 (notes/retime_v040.md): the v0.3.1 merge (same rules and resolution masks) on the
+      choice: data/tomo_v1/b2_merge/tiles_m0t/choice.csv   # re-timed tiles (mask_region = the v0.3.1 tile, d200 masks)
+      reference: margin_m0_v3/d200_s480                    # the new M0
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
+    product_v040nf:                # noise-floor chain of v0.4.0 (dry run only, never registered)
+      choice: data/tomo_v1/b2_merge/tiles_m0t/choice_nf.csv
+      reference: margin_m0_v3nf/d200_s480
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
   models:                          # D-B047 (proposed 2026-11-23): versioned model export (b2_model_export.py, env models)
     name: cascadia_obs_tomo        # internal model name (store path, ids); public name for EMC / CVM: PI to choose
     store: /wd1/mdenolle_data/tomo_v1/models   # canonical Zarr + netCDF per version (immutable); netCDF < 5 MB also in git
@@ -633,6 +740,21 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       reference_pid: TO FILL (paper DOI)
       model_type: 3D velocity model
       model_subtype: local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs
+
+retime:                            # v0.4.0 (PI 2026-11-25): v0.3.1 re-inverted with the re-timed picks (D-B072, D-B075); notes/retime_v040.md
+  picks_v40: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv   # = paths.picks_v4 of B1 (catalog v4.0)
+  picks_v40_md5: 17b7d0bced600f8c83e4e1a8c5881e38
+  picks_v41t: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv   # D-B075 re-timed picks
+  picks_v41t_md5: 762f18e8f181eaaaa247d367c2d2c302
+  corrections: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/corrections.csv.gz
+  datasets:                        # [v0.3.1 dataset, re-timed copy] (b1t_retime_dataset.py)
+    b1: [b1_dataset_c, b1_dataset_ct]
+    b1b: [b1b_balanced_c, b1b_balanced_ct]
+  out: /wd1/mdenolle_data/tomo_v1/v040_retimed   # chain state, log, RESUME.md, analysis outputs
+  noise_sigma_s: 1.0e-6            # noise-floor chain: N(0, sigma) on every observed time (seed noise_seed)
+  noise_seed: 20261125
+  version: 0.4.0
+  description: "v0.3.1 configuration re-inverted with the re-timed picks (D-B072/D-B075); no surface treatment, no D-B073 rule"
 
 b4:                                # B4 NonLinLoc relocation in the merged model and its catalog (PI 2026-11-24)
   grid_fallback: {enabled: false, P: 0.044, S: 0.075}   # D-B052 (PI 2026-11-24): whole-grid T0.5 fallback rejected (it

@@ -86,7 +86,10 @@ def tile_runs(spec=None):
         raise SystemExit(f"tomodd.merge.exclude_tiles {unknown} match no tile of {C['choice']} ({', '.join(ch.tile)})")
     dropped = [t for t in ch.tile if t in EXCL]
     print(f"excluded from the merge (D-B050): {', '.join(dropped) or 'none'}", flush=True)
-    return [(r.region, r.tag, r.region, 200) for r in ch.itertuples() if r.tile not in EXCL], dropped
+    # optional column mask_region (v0.4.0: the re-timed tiles use the resolution masks of the v0.3.1 tiles, whose
+    # event, station and pick sets they share); default the tile's own region
+    mreg = lambda r: r.mask_region if isinstance(getattr(r, "mask_region", None), str) else r.region
+    return [(r.region, r.tag, mreg(r), 200) for r in ch.itertuples() if r.tile not in EXCL], dropped
 
 
 def box(region):
@@ -150,7 +153,11 @@ def main():
     ap.add_argument("--status", default="candidate")
     ap.add_argument("--dry-run", help="write the merged netCDF here, do not register")
     ap.add_argument("--runs", help='test: "region:tag:maskregion:damp,..." instead of the phase-1 choice')
+    ap.add_argument("--product", default="product", help="key of tomodd.merge holding choice, reference, grid, taper_km, "
+                    "floor (default product = v0.3.x; product_v040 = the re-timed tiles)")
     a = ap.parse_args()
+    global C
+    C = M[a.product]
     assert 0 <= C["floor"] < 1, f"tomodd.merge.product.floor = {C['floor']}: must be in [0, 1) (R divides by 1 - floor)"
     G = C["grid"]
     lon = np.round(np.arange(G["lon"][0], G["lon"][1] + G["lon"][2] / 2, G["lon"][2]), 4)

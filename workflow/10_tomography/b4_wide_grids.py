@@ -48,7 +48,8 @@ b4.wide.blend_km; the 2 km field is the mean slowness of the 2 x 2 x 2 1 km cell
 b4_time_grids.py (z' = Re ln(Re/(Re-z)), v' = v exp(z'/Re)).
 Grid: 2 km nodes of the D-B005 lattice x -513..457, y -709..725, z' -5..121 (486 x 718 x 64, 89 MB).
 
-Builds are never mixed: the grids go to /wd1/mdenolle_data/reloc_v5/wide_<TIME_NAME>/ with a manifest
+Builds are never mixed: the grids go to /wd1/mdenolle_data/reloc_v5/wide_<TIME_NAME>/ (--root R: R/wide_<TIME_NAME>/,
+fine build in R, local manifest) with a manifest
 b4_wide_grids_<TIME_NAME>.manifest.json whose params name the fine build (time_name, its manifest's utc and git commit,
 md5 of its fields) and the md5 of this script; a rerun into a folder stamped for another fine build, other
 parameters or other code, a fine build that is incomplete, or a fine field that changed since the stamp, is refused.
@@ -119,9 +120,9 @@ def ak135():
     return a[:, 0], a[:, 1], a[:, 2]
 
 
-def fine_identity(time_name):
+def fine_identity(time_name, root=RELOC):
     """The fine build the wide grids belong to: refuse an incomplete one. Returns (identity, work folder, version)."""
-    fine, work = RELOC / time_name, RELOC / f"work_{time_name}"
+    fine, work = root / time_name, root / f"work_{time_name}"
     man = fine / f"b4_time_grids_{time_name}.manifest.json"
     if not man.exists():
         sys.exit(f"{man} missing: the fine build {time_name} is not finished")
@@ -164,9 +165,8 @@ class DeepModel:
     linearly in true depth into ak135 over blend_km (D-B067)."""
 
     def __init__(self, version):
-        import xarray as xr
-        from b4_time_grids import dB005
-        ds = xr.open_dataset(Path(X["store"]) / X["name"] / f"v{version}.nc")
+        from b4_time_grids import dB005, open_model
+        ds = open_model(version)[0]                   # Vp_tomography / Vs_tomography of a D-B076 product
         self.m = dict(lon=ds.longitude.values, lat=ds.latitude.values, z=ds.depth.values)
         self.mm = {ph: dict(self.m, vp=ds[v].values.transpose(2, 1, 0), vs=ds[v].values.transpose(2, 1, 0))
                    for ph, v in (("P", "Vp"), ("S", "Vs"))}
@@ -417,11 +417,14 @@ def main():
     ap.add_argument("--stations", help="comma-separated STA or STA:PH (test; default: every station-phase of the fine "
                                        "build)")
     ap.add_argument("--phases", default="P,S")
-    ap.add_argument("--out", help="output folder (test; default reloc_v5/wide_<TIME_NAME>)")
+    ap.add_argument("--out", help="output folder (test; default <root>/wide_<TIME_NAME>)")
+    ap.add_argument("--root", default=str(RELOC), help="folder of the fine build (b4_time_grids.py --root; catalog v6.0: "
+                    "reloc_v6); other than reloc_v5, the manifest is written only next to the grids")
     a = ap.parse_args()
-    ident, work_fine, version = fine_identity(a.time_name)
-    fine_dir = RELOC / a.time_name
-    out = Path(a.out) if a.out else RELOC / f"wide_{a.time_name}"
+    root = Path(a.root)
+    ident, work_fine, version = fine_identity(a.time_name, root)
+    fine_dir = root / a.time_name
+    out = Path(a.out) if a.out else root / f"wide_{a.time_name}"
     prm = {"time_name": a.time_name, "fine": ident, "model_version": version, "wide": WP, "richardson_k": K,
            "lattice": {"x0": G["x0"], "y0": G["y0"], "z0": G["z0"], "nodes": [NXW, NYW, NZW], "node_km": DXW,
                        "field_cells_1km": list(N1)}, "eft": True, "centred": True,
@@ -467,7 +470,8 @@ def main():
             for ph, v in dmed.items() if v}
     print(f"wide grids {len(wide)}; fine grids without a wide one: {len(fine - wide)}; D = fine - raw (median per "
           f"grid) {summ}", flush=True)
-    write_manifest(f"b4_wide_grids_{a.time_name}", out,
+    from b4_time_grids import local_manifest
+    (write_manifest if root == RELOC else local_manifest)(f"b4_wide_grids_{a.time_name}", out,
                    inputs=[fine_dir / f"b4_time_grids_{a.time_name}.manifest.json",
                            *(work_fine / f"field_1.{ph}.buf" for ph in ("P", "S")),
                            Path(X["store"]) / X["name"] / f"v{version}.nc", NLL_MODEL / "cascadia3d.P.mod.buf",

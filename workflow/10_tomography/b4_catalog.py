@@ -26,8 +26,9 @@ error, never corrected by moving it, and a catalog with any such event is not pu
 is the solid surface at the final epicentre of every event with a hypocentre (empty otherwise): params
 b4.surface.source "merged" -> b4_surface.surface_m (D-B068: GMRT patches where available, earth_relief 01m elsewhere,
 bilinear on the source grid of each point), any other setting (default) -> GMT earth_relief 01m (gridline), bilinear;
-"merged" never falls back to earth_relief. The build stops when the run's NLLoc floor (LOCTOPO_SURFACE of its nlloc.in;
-D-B068 floor files have "merged" in their name) and this surface are not the same kind. above_surface is
+"merged" never falls back to earth_relief. The build stops unless every located row (main and deep runs) used one and
+the same NLLoc floor (LOCTOPO_SURFACE of its nlloc.in), and with "merged" that floor must be params
+b4.surface.floor.file; with another surface it must not be a merged floor. above_surface is
 depth < -surface_km on the true (unflattened) depth. Depths are never changed here; counts go to compare.md and the
 manifest ("publishable").
 v5.1 flags (booleans on NLLoc-located rows, empty on every other row):
@@ -47,12 +48,18 @@ v5.1 flags (booleans on NLLoc-located rows, empty on every other row):
 * five_phase: located with exactly 5 phases (D-B066; tier D, a2_build_catalog.py).
 arrivals_used.csv (interface I2 of a2_run_nlloc.py: ID, n_obs, n_used, n_fine, n_wide, pass) is read from every run
 named in locations.csv; every located event needs its main-pass row, and a deep-pass hypocentre its deep row too.
+Deep pass (D-B067): for a run made by the v5.1 runner (it has arrivals_used.csv) a2_parse_hyp.py must have written
+deep_check.json for this locations.csv (md5): the build stops if the deep pass was omitted (--no-deep) while events
+needed it, or if the deep rows come from another run than the one a2_parse_hyp.py checked (it checks the deep run's
+run_config.json against the main run's: grids by manifest md5, template, likelihood, floor, station terms, NLLoc).
 Outputs: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_<RUN>.csv, and data/tomo_v1/b4/<RUN>/ (compare.md,
 compare_by_region.csv, depth_hist.png).
 
   python b4_catalog.py RUN [--ref iter1_vpvs176]
 """
 import argparse
+import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -161,6 +168,27 @@ def floor_height(loc):
     return h, f
 
 
+def check_deep_pass(run):
+    """D-B067: a run made by the v5.1 runner (it has arrivals_used.csv) needs the deep-pass check that a2_parse_hyp.py
+    writes next to locations.csv in the same invocation (deep_check.json): same locations.csv (md5), deep pass not
+    omitted, and the deep rows of locations.csv from the deep run it checked (provenance: same grids, template,
+    likelihood, floor, station terms, NLLoc). Returns the deep run name or None."""
+    rd = RUNS / run
+    if not (rd / "arrivals_used.csv").exists():
+        return None                                   # a run made before the v5.1 runner: no deep pass exists
+    f = rd / "deep_check.json"
+    if not f.exists():
+        raise SystemExit(f"{f} missing: rerun a2_parse_hyp.py (v5.1) on {run}, with --deep for its deep pass")
+    dc = json.loads(f.read_text())
+    md5 = hashlib.md5((rd / "locations.csv").read_bytes()).hexdigest()
+    if dc.get("locations_md5") != md5:
+        raise SystemExit(f"{f} belongs to another locations.csv: rerun a2_parse_hyp.py on {run}")
+    if dc.get("deep_omitted"):
+        raise SystemExit(f"{run}: {dc.get('triggers')} events needed the deep pass (D-B067) and a2_parse_hyp.py was run "
+                         "with --no-deep: run the deep pass and parse with --deep")
+    return dc.get("deep_run")
+
+
 def arrivals_used(loc):
     """Main-pass rows of runs/<run>/arrivals_used.csv (interface I2) for the LOCATED rows of locations.csv, read from
     every run named there; checks that each deep-pass hypocentre has its deep row. Stops when a file or row is missing.
@@ -216,6 +244,12 @@ def main():
     # full-precision coordinates in place of the '%.5g' ones (one row per event: a2_parse_hyp.py)
     loc = pd.read_csv(RUNS / a.run / "locations.csv")
     assert loc.ID.is_unique, "locations.csv: several rows per event (rerun a2_parse_hyp.py)"
+    deep_run = check_deep_pass(a.run)
+    if "pass" in loc and (loc["pass"] == "deep").any():
+        runs_deep = set(loc.loc[loc["pass"] == "deep", "run"])
+        if runs_deep != {deep_run}:
+            raise SystemExit(f"deep-pass rows of locations.csv come from {sorted(runs_deep)}, but a2_parse_hyp.py "
+                             f"checked {deep_run!r}")
     loc = loc[loc.status == "LOCATED"].set_index("ID")
     v4 = pd.read_csv(V4, skipinitialspace=True)
     v4.columns = [x.strip() for x in v4.columns]
@@ -249,7 +283,14 @@ def main():
     src_surf = surface_source()
     h_fl, floor_file = floor_height(li)                            # km above the NLLoc floor, run frame
     floors = sorted(set(floor_file))
-    if any("merged" in Path(f).name for f in floors) != (SURFACE == "merged"):
+    # one floor for every row (main and deep runs), and with the merged surface exactly the configured floor file
+    if len(floors) != 1:
+        raise SystemExit(f"the located events used {len(floors)} NLLoc floor files {floors}: one build, one floor")
+    want = ((B4.get("surface") or {}).get("floor") or {}).get("file")
+    if SURFACE == "merged" and (not want or Path(floors[0]).resolve() != Path(want).resolve()):
+        raise SystemExit(f"surface 'merged' needs the run's NLLoc floor to be params b4.surface.floor.file ({want}); "
+                         f"the run used {floors[0]}")
+    if SURFACE != "merged" and "merged" in Path(floors[0]).name:
         raise SystemExit(f"surface {SURFACE!r} ({src_surf}) does not match the run's NLLoc floor {floors} (D-B068: one "
                          "surface for both); set params b4.surface.source")
     c["surface_km"] = np.nan

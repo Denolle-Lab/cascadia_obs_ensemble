@@ -1,8 +1,9 @@
 """Track B (D-B047): the Zenodo bundle velocity_models.zip, built around one product version (PI 2026-11-23: the
 merged model is the Zenodo product).
 
-Contents: README.md and read_velocity_model.py (tutorial), registry.csv, and for every registered version its
-netCDF, Zarr store and provenance JSON; the NonLinLoc grids only for the product version (the earlier versions'
+Contents: README.md, read_velocity_model.py (tutorial) and velocity_model_tools.py (point queries with the solid
+surface and the D-B073 rule), registry.csv, and for every registered version its netCDF, Zarr store, provenance JSON
+and, where it exists, v<version>_surface_lattice.nc (v0.3.2 on); the NonLinLoc grids only for the product version (the earlier versions'
 grids can be regenerated with b2_model_export.py; v0.1.0's were sampled at the nodes, not the cell centres).
 Writes <store>/zenodo/velocity_models.zip and prints its md5 (upload with utils/zenodo_picks_draft.py upload).
 
@@ -35,10 +36,13 @@ def main():
     with zipfile.ZipFile(tmp, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         z.write(REPO / "data" / "tomo_v1" / "models" / "README.md", f"{top}/README.md")
         z.write(HERE / "read_velocity_model.py", f"{top}/read_velocity_model.py")
+        z.write(HERE / "velocity_model_tools.py", f"{top}/velocity_model_tools.py")
         z.write(STORE / "registry.csv", f"{top}/registry.csv")
         z.write(STORE / "registry.csv", f"{top}/{X['name']}/registry.csv")
         for v in reg.version:
-            for f in (f"v{v}.nc", f"v{v}.provenance.json"):
+            for f in (f"v{v}.nc", f"v{v}.provenance.json", f"v{v}_surface_lattice.nc"):
+                if f.endswith("_surface_lattice.nc") and not (STORE / f).exists():
+                    continue
                 z.write(STORE / f, f"{top}/{X['name']}/{f}")
             for p in sorted((STORE / f"v{v}.zarr").rglob("*")):
                 if p.is_file():

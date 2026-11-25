@@ -84,7 +84,9 @@ Run: `v1_detect.py` (about 9 min on 5 processes), `v1_build.py` (2 min), `v1_rep
 
 - **Uncertainty scope.** sigma_total (median 0.59 km) and the strike/dip intervals hold for a fixed set of members. The
   detection itself is far less certain: over the four detection reruns the strike of the best-matching plane ranges over
-  a median 103 deg for the 93 unstable surfaces (6.5 deg for the 49 stable ones). Of the 130 non-strand surfaces, 38 are
+  a median 103 deg for the 84 unstable surfaces and 6.5 deg for the 42 stable ones (non-strand surfaces matched in at
+  least one rerun; the 12 strands are not rerun, and v1_MT031, v1_ON025, v1_WA002 and v1_WA004 match no plane in any
+  rerun, so `strike_settings_range_width` is empty for these 16 rows). Of the 130 non-strand surfaces, 38 are
   recovered (Jaccard >= 0.5) on a random 80 % of the fit set (27 of the 42 'stable'), 12 after moving every event once by
   its own catalog error (9 of 42 'stable'; pessimistic, since tier B-C errors exceed the scatter), 10 of 116 on tiers A-B
   only; 9 pass both the subsample and the perturbation tests. Columns `stable`, `strike_settings_range_width`,
@@ -96,7 +98,9 @@ Run: `v1_detect.py` (about 9 min on 5 processes), `v1_build.py` (2 min), `v1_rep
   on/off-fault fraction.
 - **Flags** (summary `flags`, rectangles and mesh geojson): depth poorly constrained; deep Blanco and Endeavour
   centroids; Mount St Helens deep population (v1_ON028); 2012 Brookings swarm (v1_GO022); members moved > 10 km in depth
-  from v4 to v5.1 (17 surfaces); weekday-daytime excess (v1_MT031, v1_ON030); strand dips set by the band selection (12
+  from v4 to v5.1 (17 surfaces, on the median of all members or of the depth_quality ok members; in v1_GO022, v1_ON017,
+  v1_GO004 and v1_GO019 at least half of the members are depth-ok and those moved > 10 km themselves, compare
+  `median_shift_z_km` and `median_shift_z_depth_ok_km`); weekday-daytime excess (v1_MT031, v1_ON030); strand dips set by the band selection (12
   Blanco strands); rectangle above the surface; unstable; not recovered in the verifier's reruns. Flags are separated by
   "; ". Assignment column `catalog_note` marks the 331 Mount St Helens deep events and the 39 Brookings swarm events.
 - **Literature** is carried unchanged to 15 surfaces (matched, normals within 25 deg, centroids within 10 km

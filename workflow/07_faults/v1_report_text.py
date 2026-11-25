@@ -29,6 +29,13 @@ def pct(a, b):
     return f"{100 * a / b:.0f}%" if b else "n/a"
 
 
+def range_sample(det):
+    """Which surfaces the strike/dip range medians are taken over."""
+    nm = det.get("nomatch_ids", [])
+    return (f"non-strand surfaces matched in at least one rerun; the {det['n_strand']} strands are not rerun"
+            + (f", and {', '.join(nm)} match no plane in any rerun" if nm else ""))
+
+
 def text(x, FIGS, img, table, REG):
     narrative(x, table)
     s, pairs, st0, cmp1, rem = x["summ"], x["pairs"], x["st0"], x["cmp1"], x["rem"]
@@ -107,7 +114,8 @@ def text(x, FIGS, img, table, REG):
              f"{s.sigma_total_median_km.quantile(.9):.2f} km) and the strike/dip intervals hold for a fixed set of members only. "
              f"The detection itself is much less certain. Over the four detection reruns of v0 (seeds, tolerance), the range of "
              f"strike of the best-matching plane has a median of {det['sw_unstable']:.0f}&deg; for the {det['n_unstable']} unstable "
-             f"surfaces and {det['sw_stable']:.1f}&deg; for the {det['n_stable']} stable ones. In the verifier's reruns, of the "
+             f"surfaces and {det['sw_stable']:.1f}&deg; for the {det['n_stable']} stable ones ({range_sample(det)}). "
+             f"In the verifier's reruns, of the "
              f"{det['n_ns']} non-strand surfaces, {rc['sub80']['rec']} are recovered (Jaccard &ge; 0.5) on a random 80 % of the fit "
              f"set ({rc['sub80']['stable']} of the 'stable' ones), {rc['perturbed']['rec']} after moving every event once by its own "
              f"catalog error ({rc['perturbed']['stable']} 'stable'), and {rc['tierAB']['rec']} of {rc['tierAB']['n']} on tiers A-B "
@@ -320,16 +328,30 @@ def narrative(x, table):
              f"{rc['perturbed']['rec']}; tiers A-B alone recover {rc['tierAB']['rec']} of {rc['tierAB']['n']}. Only {det['both']} pass "
              f"both the subsample and the perturbation tests ({', '.join(det['both_ids'])}), and {det['all3']} pass all three. "
              f"The perturbation test is pessimistic, because tier B and C errors exceed the scatter. Over the builder's four "
-             f"reruns the strike range of the {det['n_unstable']} unstable surfaces has a median of {det['sw_unstable']:.0f}&deg; "
-             f"({det['sw_stable']:.1f}&deg; for the {det['n_stable']} stable ones). Use a surface's geometry only where its "
+             f"reruns the strike range has a median of {det['sw_unstable']:.0f}&deg; for the {det['n_unstable']} unstable and "
+             f"{det['sw_stable']:.1f}&deg; for the {det['n_stable']} stable surfaces ({range_sample(det)}). Use a surface's "
+             f"geometry only where its "
              f"<code>recovery_tests</code> and <code>stable</code> columns support it. There is no null test yet of how many "
              f"30-event 'planes' a catalog of the same density without faults would give.</li>")
     shf = s[s["flags"].fillna("").str.contains("members moved a median")]
-    shf_ok = shf[shf.frac_depth_ok >= 0.5]
-    f.append(f"<li><b>Surfaces whose members moved more than 10 km in depth from v4 to v5.1 are flagged</b> ({len(shf)} surfaces; "
-             f"{len(shf_ok)} of them with at least half of their events depth_quality ok, where the catalog gives no other warning: "
-             + ", ".join(f"{r.surface_id} {r.median_shift_z_km:+.1f} km" for r in shf_ok.sort_values("median_shift_z_km", ascending=False).itertuples())
-             + "). The v5.1 events with ComCat moment tensors are a median 13.7 km deeper than ComCat (v5.1 review P3), so these "
+    # surfaces where the depth-ok members themselves moved more than the flag threshold (median_shift_z_depth_ok_km),
+    # not those flagged only because their members without depth_quality ok moved
+    thr = x.get("shift_flag", 10.0)
+    half = shf[shf.frac_depth_ok >= 0.5]
+    moved_ok = half.median_shift_z_depth_ok_km.abs() > thr
+    shf_ok = half[moved_ok].sort_values("median_shift_z_depth_ok_km", ascending=False)
+    shf_rest = half[~moved_ok]
+    f.append(f"<li><b>Surfaces whose members moved more than {thr:.0f} km in depth from v4 to v5.1 are flagged</b> ({len(shf)} "
+             f"surfaces, on the median shift of all members or of the depth_quality ok members). In {len(shf_ok)} of them at least "
+             f"half of the events are depth_quality ok and those events themselves moved more than {thr:.0f} km, where the catalog "
+             f"gives no other warning (median shift of the depth-ok members): "
+             + ", ".join(f"{r.surface_id} {r.median_shift_z_depth_ok_km:+.1f} km" for r in shf_ok.itertuples())
+             + (". Flagged on all members only, with at least half depth-ok: "
+                + ", ".join(f"{r.surface_id} ({r.median_shift_z_km:+.1f} km for all members, "
+                            + (f"{r.median_shift_z_depth_ok_km:+.1f} km" if np.isfinite(r.median_shift_z_depth_ok_km) else "n/a")
+                            + f" for the {r.frac_depth_ok:.0%} depth-ok)" for r in shf_rest.itertuples())
+                if len(shf_rest) else "")
+             + ". The v5.1 events with ComCat moment tensors are a median 13.7 km deeper than ComCat (v5.1 review P3), so these "
              "depths are not confirmed.</li>")
     wdf = s[s["flags"].fillna("").str.contains("weekday-daytime excess")]
     blx = s[(s.region == "BL") & (s.weekday_daytime_p < 0.05 / 152)]
@@ -377,7 +399,7 @@ def narrative(x, table):
         f"the detection, which dominates: over the four detection reruns the strike of the best-matching plane ranges over a median "
         f"{x['det']['sw_unstable']:.0f}&deg; (dip {x['det']['dw_unstable']:.0f}&deg;) for the {x['det']['n_unstable']} unstable "
         f"surfaces and {x['det']['sw_stable']:.1f}&deg; (dip {x['det']['dw_stable']:.1f}&deg;) for the {x['det']['n_stable']} stable "
-        f"ones. Recovery of the {x['det']['n_ns']} non-strand surfaces in the verifier's detection reruns (strands are made by a "
+        f"ones ({range_sample(x['det'])}). Recovery of the {x['det']['n_ns']} non-strand surfaces in the verifier's detection reruns (strands are made by a "
         f"separate map-view search that these reruns do not repeat):</p>" + table(pd.DataFrame([
             dict(test=k, description=dsc, surfaces_tested=v["n"], recovered=v["rec"], recovered_of_stable=v["stable"],
                  median_jaccard=round(v["median_J"], 2))

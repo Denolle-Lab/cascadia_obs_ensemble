@@ -82,7 +82,7 @@ AXIAL_CLASS = "not fitted (Axial Seamount left out)"
 BLAST_CLASS = "non-earthquake timing (weekday-daytime member of a surface removed for its timing)"
 MSH_BOX = (-122.35, -122.10, 46.05, 46.30)   # Mount St Helens box of the v5.1 review (P1)
 BROOK_BOX = (-125.0, -124.4, 42.0, 42.4)     # 2012 Brookings swarm (v5.1 review P2)
-SHIFT_FLAG = 10.0                  # flag surfaces whose members moved > 10 km in depth from v4 to v5.1
+SHIFT_FLAG = C.SHIFT_FLAG          # flag surfaces whose members moved > 10 km in depth from v4 to v5.1
 LIT =["lit_match", "lit_confidence", "lit_class", "lit_new_candidate", "lit_refs", "lit_dois", "lit_urls"]
 G = {}
 

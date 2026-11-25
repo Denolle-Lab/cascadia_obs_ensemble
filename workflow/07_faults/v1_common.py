@@ -34,6 +34,7 @@ H68 = 1.515
 NONQUAKE = "anss_explosion|anss_quarry_blast|anss_other_event|anss_sonic_boom|quarry_blast_likely"
 TAG = "v1"
 CATLABEL = "Cascadia catalog v5.1"
+SHIFT_FLAG = 10.0   # flag surfaces whose members moved > 10 km in depth from v4 to v5.1 (v1_build, v1_report)
 
 
 def params(**kw):

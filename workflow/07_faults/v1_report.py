@@ -291,14 +291,20 @@ def checks(cat, summ, st0, cmp1, pairs, mlog, sep, res):
                          median_J=float(col.median()))
     both = (ns.recovery_J_sub80 >= 0.5) & (ns.recovery_J_perturbed >= 0.5)
     allr = both & (ns.recovery_J_tierAB >= 0.5)
+    # strike/dip ranges over the builder's four reruns exist only for non-strand surfaces matched in at least one rerun
+    # (strands are not rerun); the counts quoted with the medians are those of that sample
+    sw, dw = summ.strike_settings_range_width, summ.dip_settings_range_width
+    assert (sw.notna() == dw.notna()).all(), "strike and dip range samples differ"
+    has = sw.notna()
+    uns, stb = has & ~summ.stable, has & summ.stable
     x["det"] = dict(rec=rec, both=int(both.sum()), both_ids=list(ns.surface_id[both]), all3=int(allr.sum()),
                     all3_ids=list(ns.surface_id[allr]), n_ns=len(ns),
-                    sw_unstable=float(summ.strike_settings_range_width[~summ.stable].median()),
-                    sw_stable=float(summ.strike_settings_range_width[summ.stable].median()),
-                    dw_unstable=float(summ.dip_settings_range_width[~summ.stable].median()),
-                    dw_stable=float(summ.dip_settings_range_width[summ.stable].median()),
-                    n_unstable=int((~summ.stable).sum()), n_stable=int(summ.stable.sum()),
-                    n_sw=int(summ.strike_settings_range_width.notna().sum()))
+                    sw_unstable=float(sw[uns].median()), sw_stable=float(sw[stb].median()),
+                    dw_unstable=float(dw[uns].median()), dw_stable=float(dw[stb].median()),
+                    n_unstable=int(uns.sum()), n_stable=int(stb.sum()), n_sw=int(has.sum()),
+                    n_strand=int(summ.strand.sum()),
+                    nomatch_ids=list(ns.surface_id[ns.strike_settings_range_width.isna()]))
+    x["shift_flag"] = C.SHIFT_FLAG
     # cost of the dip rule: v0 surfaces flatter than 30 deg and what became of them
     s0 = pd.read_csv(C.V0DIR / "fault_surfaces_v0_summary.csv")
     x["flat"] = st0[st0.v0_surface.isin(s0.surface_id[s0.dip < 30])]

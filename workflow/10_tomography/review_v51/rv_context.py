@@ -104,6 +104,7 @@ def p1_pops():
                          pct_no_S=round(100 * float((x.n_S == 0).mean()), 0),
                          P_span_med=round(float(x.P_span_s[span_ok].median()), 2),
                          pct_P_span_lt_0p5=round(100 * float((x.P_span_s[span_ok] < 0.5).mean()), 0),
+                         pct_P_at_UW=round(100 * float(np.mean([st.endswith(".UW") for v in x.P_stations.dropna() for st in v.split()])), 0),
                          n_span=int(span_ok.sum())))
     return rows
 

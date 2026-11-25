@@ -355,7 +355,8 @@ def build(problem, only=None, out_name="index.html"):
                                ("weekday_daytime_pct", "weekday daytime %", None), ("median_P", "median P picks", None),
                                ("median_S", "median S picks", None), ("pct_no_S", "% without S pick", None),
                                ("P_span_med", "median P-pick span s", None), ("pct_P_span_lt_0p5", "% P span < 0.5 s", None),
-                               ("n_span", "events with span", None)], left=("population",)))
+                               ("n_span", "events with span", None), ("pct_P_at_UW", "% of P picks at UW stations", None)],
+                              left=("population",)))
         # Wednesday table
         W = T[T.wed_window].copy() if "wed_window" in T else T.iloc[:0]
         Vw = V[V.view_group.str.startswith("Wednesday")].copy()
@@ -390,7 +391,14 @@ def build(problem, only=None, out_name="index.html"):
                         "; ".join(f"<b>{k}</b>: Wednesdays {v['Wed']['quiet_ge10']} of {v['Wed']['days']} "
                                   f"({v['Wed']['quiet_ge10_in_14_21']} at 19:14-19:21; first {v['Wed']['first']}, last "
                                   f"{v['Wed']['last']}), Tuesdays {v['Tue']['quiet_ge10']} of {v['Tue']['days']}"
-                                  for k, v in ss.items()) + ".</div>")
+                                  for k, v in ss.items() if not k.startswith("_")) + ". "
+                        + ("".join(f"At {k} the stretches starting 19:14-21 UTC ({v['n']} Wednesdays of {v['wednesdays_with_data_in_span']} "
+                                   f"with data, {v['first']} to {v['last']}) last a median {v['quiet_median_s']:.0f} s and start "
+                                   f"{v['drift_s_per_week']:+.1f} s earlier each week on average (from 19:{v['start_first']:04.1f} to "
+                                   f"19:{v['start_last']:04.1f} UTC; rms about the line {v['fit_rms_s']:.0f} s). "
+                                   for k, v in ss.get("_drift", {}).items() if k == "STD.UW"))
+                        + "HSR.UW also has quiet stretches on Tuesdays and Wednesdays in late 2015 to 2016 at other clock "
+                        "times (a different pattern).</div>")
         body.append(ctx_fig("P1", "weekly_scan.webp", "Weekly scan: longest quiet stretch per day and its clock time, Wednesdays vs Tuesdays."))
         for st in ("HSR_UW", "STD_UW", "STD_CC", "SEP_CC"):
             body.append(ctx_fig("P1", f"cont_{st}.webp", f"{st.replace('_', '.')}: 19:05-19:30 UTC, Wednesdays with a catalogued Wednesday-window event (black) and the Tuesdays before (grey)."))

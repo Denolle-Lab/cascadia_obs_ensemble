@@ -119,16 +119,33 @@ def _scan_one(a):
 
 
 def weekly_scan(nproc=12):
-    f = W / "weekly_scan.csv"
-    if f.exists():
-        return pd.read_csv(f)
+    """Resumable: rows are appended to WORK/p1_cont/weekly_scan_rows.csv as they finish (spawned workers: no state
+    inherited from this process)."""
+    import csv
+    import multiprocessing as mp
+    f = W / "weekly_scan_rows.csv"
     days = pd.date_range("2010-01-01", "2016-12-31", freq="D")
     days = [d.strftime("%Y-%m-%d") for d in days if d.dayofweek in (1, 2)]
     jobs = [(s, d) for s in ("HSR.UW", "STD.UW", "STD.CC") for d in days]
-    with Pool(nproc) as p:
-        rows = p.map(_scan_one, jobs, chunksize=4)
-    df = pd.DataFrame(rows)
-    df.to_csv(f, index=False)
+    cols = ["sta", "day", "status", "ratio", "t_peak_min", "cover_min", "quiet_s", "quiet_start_min", "step_ratio"]
+    done = set()
+    if f.exists():
+        old = pd.read_csv(f)
+        done = set(zip(old.sta, old.day))
+    todo = [j for j in jobs if j not in done]
+    print(f"scan: {len(todo)} of {len(jobs)} station-days to do", flush=True)
+    new = not f.exists()
+    with open(f, "a", newline="") as fh, mp.get_context("spawn").Pool(nproc) as p:
+        w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
+        if new:
+            w.writeheader()
+        for i, r in enumerate(p.imap_unordered(_scan_one, todo, chunksize=2)):
+            w.writerow(r)
+            if i % 100 == 0:
+                fh.flush()
+                print(f"scan {i + 1}/{len(todo)}", flush=True)
+    df = pd.read_csv(f)
+    df.to_csv(W / "weekly_scan.csv", index=False)
     return df
 
 

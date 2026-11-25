@@ -1,0 +1,76 @@
+{
+ "HSR.UW": {
+  "Tue": {
+   "days": 361,
+   "quiet_ge10": 14,
+   "quiet_ge10_in_14_21": 2,
+   "first": "2013-01-08",
+   "last": "2016-12-27"
+  },
+  "Wed": {
+   "days": 362,
+   "quiet_ge10": 60,
+   "quiet_ge10_in_14_21": 45,
+   "first": "2011-06-01",
+   "last": "2016-12-21"
+  }
+ },
+ "STD.CC": {
+  "Tue": {
+   "days": 357,
+   "quiet_ge10": 0,
+   "quiet_ge10_in_14_21": 0,
+   "first": "nan",
+   "last": "nan"
+  },
+  "Wed": {
+   "days": 351,
+   "quiet_ge10": 0,
+   "quiet_ge10_in_14_21": 0,
+   "first": "nan",
+   "last": "nan"
+  }
+ },
+ "STD.UW": {
+  "Tue": {
+   "days": 359,
+   "quiet_ge10": 4,
+   "quiet_ge10_in_14_21": 0,
+   "first": "2012-01-03",
+   "last": "2015-01-06"
+  },
+  "Wed": {
+   "days": 361,
+   "quiet_ge10": 52,
+   "quiet_ge10_in_14_21": 50,
+   "first": "2011-05-18",
+   "last": "2014-03-19"
+  }
+ },
+ "_drift": {
+  "STD.UW": {
+   "n": 50,
+   "first": "2011-05-18",
+   "last": "2013-08-28",
+   "drift_min_per_year": -2.67,
+   "drift_s_per_week": -3.07,
+   "start_first": 20.4,
+   "start_last": 14.1,
+   "fit_rms_s": 16.0,
+   "quiet_median_s": 24.0,
+   "wednesdays_with_data_in_span": 120
+  },
+  "HSR.UW": {
+   "n": 45,
+   "first": "2011-06-01",
+   "last": "2016-02-10",
+   "drift_min_per_year": -0.73,
+   "drift_s_per_week": -0.84,
+   "start_first": 20.38,
+   "start_last": 18.48,
+   "fit_rms_s": 63.7,
+   "quiet_median_s": 24.0,
+   "wednesdays_with_data_in_span": 243
+  }
+ }
+}

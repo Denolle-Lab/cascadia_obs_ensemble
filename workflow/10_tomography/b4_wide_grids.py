@@ -22,10 +22,13 @@ between neighbouring tiles). Here, per station-phase:
    on rock nodes only (rock_wide: at least 0.25 km below the model surface; a water, air or near-surface node carries
    D of the nearest rock node below it). D is mostly R's start-up error at the source carried along the rays
    (direction-dependent, -0.25 to +0.39 s within one grid in the tests), so it is carried outward, not recomputed.
-   Tests (v51_build/wide, w03): against a whole-lattice reference built with the fine recipe, rock nodes 0-60 km
-   beyond the fine region |error| p95 <= 0.04 s (z' >= 5) and <= 0.05 s (z' < 5); jump across the region's faces p95
-   0.002 s; real hypocentres outside the fine region p95 0.013 s. Blending into smoother per-sector or per-column
-   offsets was worse near the region and at the hypocentres.
+   Test (tomo_v1/v51_build/wide, w02/w03; 8 OBS and land station-phases, v0.3.1) against a whole-lattice reference
+   built with the fine recipe (0.5 and 1 km runs; it equals the fine grid inside its box), rock nodes outside the
+   fine region, |W - ref| p95 (worst grid): 0-30 km beyond the region 0.03 s (z' >= 5) / 0.05 s (z' < 5), 30-120 km
+   0.09 / 0.10 s, beyond 120 km (stations 370+ km away) 0.22 / 0.26 s; jump across the region's faces p95 0.003 s;
+   real hypocentres outside the fine region (wide-served arrivals of production v0.3.1 events) p95 0.013 s, against
+   0.05-0.38 s for R alone. Blending C into per-sector or per-column medians was worse near the region and at the
+   hypocentres, better only beyond 120 km.
 Velocity field: the fine build's whole-lattice 1 km field (work_<TIME_NAME>/field_1.<ph>.buf of b4_time_grids.py:
 cell-centred, Earth-flattened SLOW_LEN, merged-surface water/air mask of that build) copied unchanged for z' -5..81 km
 (cells 0..85),
@@ -112,12 +115,16 @@ def fine_identity(time_name):
     c = m.get("counts", {})
     if c.get("ok") != c.get("station_phases") or not c.get("station_phases"):
         sys.exit(f"fine build {time_name} is incomplete: {c}")
+    need = [work / "params.json", *(work / f"field_1.{ph}.buf" for ph in ("P", "S")), work / "field_0.5.P.buf"]
+    if not all(f.exists() for f in need):
+        sys.exit(f"{work}: the fine build's work files {[f.name for f in need if not f.exists()]} are missing")
     prm = json.loads((work / "params.json").read_text())
     if prm != m["params"]:
         sys.exit(f"{work}/params.json differs from the fine manifest's params: not the field of this build")
     ident = {"time_name": time_name, "fine_manifest_utc": m["utc"], "fine_git_commit": m["git_commit"],
              "fine_params": m["params"],
-             "field_md5": {ph: md5(work / f"field_1.{ph}.buf") for ph in ("P", "S")}}
+             "field_md5": {ph: md5(work / f"field_1.{ph}.buf") for ph in ("P", "S")},
+             "field_05_P_md5": md5(work / "field_0.5.P.buf")}           # rock_wide's surface test
     return ident, work, prm["version"]
 
 

@@ -748,6 +748,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "floor_limited events (count above) have depths set by NonLinLoc's topography floor, not by the data (in round 2 such events had sigma_z about 9 km and expectation depths about 13 km below the best point)."
         - "far_only events (count above) are located with distant stations only: epicentres usable, depths poor (round 2: median difference from ANSS 21-24 km, against 11 km for catalog v4; Blanco M5-6 events at 59-77 km)."
         - "five_phase events have one degree of freedom (round 2: sigma_z about 13 km, horizontal error about 27 km)."
-        - "Deep-pass hypocentres below 80 km depend on ak135 outside the tomography box (D-B067)."
+        - "Deep-pass hypocentres below 80 km depend on ak135 outside the tomography box (D-B067); check sigma_z (e.g. one deep-pass event at 103.6 km under the Juan de Fuca plate has sigma_z 12.6 km)."
+        - "S arrivals beyond about 300 km have residuals of -0.8 to -1.1 s (velocity model or picks, not the travel-time grids; D-B074); they matter most for far_only events."
         - "Axial: {axial}."
         - "Blanco: with the shallow-crust rule (D-B073) depths are about 1 km deeper relative to the Lange et al. (2026) OBS catalog than without it if that catalog's depths are below sea level; its datum is not stated (below the seafloor would reverse the comparison)."

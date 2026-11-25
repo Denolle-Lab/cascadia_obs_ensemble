@@ -137,6 +137,9 @@ def build_chunk(block, raw, P, cfg, n_tri, n_fail, q):
     """Full output columns for a chunk of raw rows (one or more part files)."""
     tk = load_tasks()
     pk, pr = tk["pk"], tk["pr"]
+    for c in ("edge", "rate_mismatch", "chan_mismatch", "cc_max", "cc_2nd", "dt_cc_hdr", "lag_s"):
+        if c not in raw:          # a chunk of failed rows only (no_waveform, short_window) has no CC columns
+            raw[c] = np.nan
     p1, p2 = raw.p1.values, raw.p2.values
     prs = pr.iloc[raw.pair.values]
     d = {}
@@ -154,7 +157,7 @@ def build_chunk(block, raw, P, cfg, n_tri, n_fail, q):
     d["phase"] = pk.phase.values[p1]
     st = raw.status.astype(str).values
     d["status"] = st
-    edge = raw.edge.fillna(False).astype(bool).values if "edge" in raw else np.zeros(len(raw), bool)
+    edge = raw.edge.astype("boolean").fillna(False).astype(bool).values
     rm = raw.rate_mismatch.astype("boolean").fillna(False).astype(bool).values
     cm = raw.chan_mismatch.astype("boolean").fillna(False).astype(bool).values
     cc = raw.cc_max.values.astype(float)

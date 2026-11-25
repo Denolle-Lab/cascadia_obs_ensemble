@@ -61,14 +61,20 @@ def main():
     ap.add_argument("--blocks", default="cascades,puget,onshore")
     ap.add_argument("--max-pairs", type=int, default=20000)
     ap.add_argument("--workers", type=int, default=24)
+    ap.add_argument("--available-only", action="store_true")
     a = ap.parse_args()
     MM.load_tables()
-    pr = pd.read_parquet(A.TASKS / "pairs.parquet", columns=["pair", "block", "pair_source", "n_common", "i1", "tile_a",
-                                                             "tile_b"])
+    pr = pd.read_parquet(A.TASKS / "pairs.parquet", columns=["pair", "block", "pair_source", "n_common", "i1", "i2",
+                                                             "tile_a", "tile_b"])
     _, th = A.load_params("cascades")
     res = []
     for blk in a.blocks.split(","):
         x = pr[(pr.block == blk) & (pr.pair_source == "family") & (pr.n_common > 0)]
+        if a.available_only:   # while the read stage runs: pairs whose two events are read (pnwstore cache)
+            ids = MM.G["ev_id"]
+            have = np.array([int(i) in MM.G["old"] or (A.snip_dir(A.SNIP, int(i)) / f"{int(i)}.meta.csv").exists()
+                             for i in ids])
+            x = x[have[x.i1.values] & have[x.i2.values]]
         if len(x) > a.max_pairs:
             x = x.sample(a.max_pairs, random_state=0)
         x = x.sort_values(["tile_a", "tile_b", "i1"])

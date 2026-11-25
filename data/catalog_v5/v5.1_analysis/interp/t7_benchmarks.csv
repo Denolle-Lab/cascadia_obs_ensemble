@@ -1,0 +1,16 @@
+benchmark,n,v51_med,v51_p10,v51_p90,v4_med,literature,datum,note
+"Axial caldera, tier A-B: share within 2.0 km below seafloor",12975,80.994,,,,90 % (Waldhauser et al. 2020); 85 % within 1.6 km,% of events,v4-NLL3D 79 %; B4 at v0.3.0 12 %
+"Axial caldera, tier A-B, depth below seafloor",12975,1.666,0.786,2.162,-2.139,0-2 km; ring faults to the reservoir roof at ~1.1-2.3 km,bsf,
+"Endeavour axial box (47.85-48.10N, 129.2-129.0W), all tiers",36,2.615,0.677,57.124,-3.756,1.5-3.5 km (Wilcock 2002; Van Ark 2007),bsf,
+Explorer seaward of the front (seafloor deeper than 1.5 km),1214,44.025,11.341,64.406,9.260,"5-22 km (Hutchinson et al. 2019, 2023)",bsl,
+"Explorer seaward, nearest station < 30 km",57,31.739,23.938,55.979,11.493,5-22 km,bsl,
+"JdF ridge/plate, all tiers",2843,0.805,0.023,40.161,2.711,above the AMC at 2.0-2.7 km; crust 6.7-8 km (indirect),bsf,
+"Blanco, tier A-B, X9 years (2012-09 to 2013-10)",3258,8.203,4.753,15.998,2.558,"West 0-8, east 3-13 km bsf; Lange p5-p95 4.7-11.3 km",bsf,
+"Gorda interior (127-125W, 40.5-42.5N), nearest station < 10 km",542,8.312,1.494,23.600,-1.979,faulting limit ~9.5-15 km bsf (thermal),bsf,
+"Gorda interior, all",6187,22.339,5.706,33.629,20.278,~9.5-15 km bsf,bsf,
+"Gorda Ridge axis (within 10 km of the PB2002 ridge), tier A-B",51,21.178,7.675,30.249,0.484,~3-7 km bsf (Jones & Johnson 1978),bsf,
+"Gorda Ridge axis, tier A-B, nearest station < 15 km",33,12.185,7.049,26.117,-1.990,~3-7 km bsf,bsf,
+"Fortuna cluster (6 km of 40.6N 124.1W), tier A-C",1688,18.989,16.733,20.423,18.219,17-23 km (Alongi et al. 2021),not stated,
+"Central Puget Lowland crust, tier A-B, depth < 35 km",1294,19.494,12.812,25.165,18.012,"15-25 km, mean 17.6 km (Blakely 2002)",not stated (surface ~0),
+"Mount St. Helens (10 km of summit), tier A-B",3273,1.539,-0.610,7.498,-0.492,"-2.2 to 2 km bsl, deeper events 2-8 km from 2016 (Hirao 2025); paired +0.76 km (paired_v5.1.md)",bsl,
+"Mount St. Helens (10 km of summit), deeper than 30 km, all tiers",290,68.123,35.879,104.205,28.647,none expected; SHZ base ~16-20 km,bsl,

@@ -598,7 +598,16 @@ def write_mod(path, lat, lon, center):
     s = ds.sel(longitude=slice(lon.min() - m, lon.max() + m), latitude=slice(lat.min() - m, lat.max() + m))
     xi, yi, zi = s.longitude.values, s.latitude.values, s.depth.values
     vp = s.Vp.values.transpose(2, 1, 0).astype(float)
-    r = (s.Vp / s.Vs).values.transpose(2, 1, 0).astype(float)
+    vs = s.Vs.values.transpose(2, 1, 0).astype(float)
+    if "medium" in s:   # v0.3.2 on (D-B076): water / air nodes above the solid surface; tomoDD gets rock-continued values
+        # there (each takes the node below, the D-B073 rule included), as NonLinLoc's grids do (FLUID_NODES); D-B081
+        med = s.medium.values.transpose(2, 1, 0)
+        for k in range(med.shape[2] - 2, -1, -1):
+            m = med[:, :, k] != 0
+            vp[:, :, k][m] = vp[:, :, k + 1][m]
+            vs[:, :, k][m] = vs[:, :, k + 1][m]
+        assert (med[:, :, -1] == 0).all(), "fluid node at the deepest model depth"
+    r = vp / vs
     E = T["edge_deg"]
     xn, yn = np.r_[xi[0] - E, xi, xi[-1] + E], np.r_[yi[0] - E, yi, yi[-1] + E]
     zt, zb = T["edge_z"]

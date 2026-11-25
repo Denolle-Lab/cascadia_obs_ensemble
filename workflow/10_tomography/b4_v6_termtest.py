@@ -30,6 +30,8 @@ before every pass, so a running chain can be given more processes).
   python b4_v6_termtest.py picks
   python b4_v6_termtest.py prep
   python b4_v6_termtest.py run SET --runs full,fold0,fold1,fold2 --arms static,ssst[,static_coherence,coherence]
+  python b4_v6_termtest.py picks --sets georgia,gorda; ... prep --sets georgia,gorda
+  python b4_v6_termtest.py run georgia --arms ssst,coh_stops     # stopping-distance test (it2-it5 + coherence)
 """
 import argparse
 import hashlib
@@ -56,10 +58,12 @@ SETDIR = TT / "sets"
 CC_DIR = TT / "cc"
 INPUTS = TT / "inputs"
 RUNS = TT / "runs"
-SETS = ("puget", "mtj", "blancow")
+SETS = ("puget", "mtj", "blancow", "georgia", "gorda")      # georgia, gorda: stopping-distance test
 G = "g51"
 FOLDS, SEED = 3, 78
-SEED_INDEX = {"puget": 4, "mtj": 5, "blancow": 6}
+SEED_INDEX = {"puget": 4, "mtj": 5, "blancow": 6, "georgia": 7, "gorda": 8}
+STOPS = {2: 16, 3: 8, 4: 4, 5: 2}       # SSST pass it<k> = SSST stopped at CharDist STOPS[k] km
+MEM_MIN_GB = 35.0                       # no new NLLoc pass below this MemAvailable (PI: keep > 30 GB)
 ARMS = ("static", "ssst", "static_coherence", "coherence")
 
 
@@ -87,7 +91,18 @@ def run_dir(s, run):
     return set_dir(s) / run
 
 
+def mem_available_gb():
+    with open("/proc/meminfo") as fh:
+        for line in fh:
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1048576.0
+    return float("inf")
+
+
 def nproc_for(s, default):
+    """processes for the next pass (control file or default); waits while MemAvailable < MEM_MIN_GB."""
+    while mem_available_gb() < MEM_MIN_GB:
+        time.sleep(30)
     f = TT / "control" / f"nproc_{s}"
     try:
         return max(1, int(f.read_text().split()[0]))
@@ -100,13 +115,15 @@ def cmd_picks(a):
     INPUTS.mkdir(parents=True, exist_ok=True)
     h = md5(S.PICKS)
     assert h == S.PICKS_MD5, f"{S.PICKS} md5 {h}, expected {S.PICKS_MD5}"
-    ids = {s: set(pd.read_csv(SETDIR / f"events_{s}.csv").ID) for s in SETS}
+    sets = a.sets.split(",")
+    ids = {s: set(pd.read_csv(SETDIR / f"events_{s}.csv").ID) for s in sets}
     allid = set().union(*ids.values())
     parts = [ch[ch.event_ID.isin(allid)] for ch in pd.read_csv(S.PICKS, skipinitialspace=True, chunksize=500_000)]
     p = pd.concat(parts)
     ev = pd.read_csv(S.EVENTS, skipinitialspace=True)
-    out = {}
-    for s in SETS:
+    old = json.loads((INPUTS / "inputs.json").read_text()) if (INPUTS / "inputs.json").exists() else {}
+    out = old.get("counts", {})
+    for s in sets:
         q = p[p.event_ID.isin(ids[s])]
         q.to_csv(INPUTS / f"picks_{s}.csv", index=False)
         e = ev[ev.ID.isin(ids[s])]
@@ -282,11 +299,17 @@ def run_one_set_run(s, run, arms, nproc):
     if "static" in arms or "static_coherence" in arms:
         so = S.nll_run(d / "static_oct", blocks, box, fw, stat=stat, octree=True, nproc=nproc_for(s, nproc))
     d_in, last = base, None
-    if "ssst" in arms or "coherence" in arms:
+    # coh_stops (stopping-distance test): oct-trees on it2-it5 and the coherence stage on each (coherence_it<k>)
+    oct_its = set(STOPS) if "coh_stops" in arms else {len(S.SCHEDULE)}
+    grids_in = {}
+    if "ssst" in arms or "coherence" in arms or "coh_stops" in arms:
         nfin = len(S.SCHEDULE)
         for k, char in enumerate(S.SCHEDULE):
-            it = S.nll_run(d / "ssst" / f"it{k}", blocks, box, (f"{d_in}/cascadia3d",), nproc=nproc_for(s, nproc))
+            grids_in[k] = d_in
+            it = S.nll_run(d / "ssst" / f"it{k}", blocks, box, (f"{d_in}/cascadia3d",), octree=k in oct_its,
+                           nproc=nproc_for(s, nproc))
             d_in = S.loc2ssst(it, d_in, d / "ssst" / f"g{k}", char, box, sp, nproc=nproc_for(s, nproc))
+        grids_in[nfin] = d_in
         last = S.nll_run(d / "ssst" / f"it{nfin}", blocks, box, (f"{d_in}/cascadia3d",), octree=True,
                          nproc=nproc_for(s, nproc))
     if "static_coherence" in arms or "coherence" in arms:
@@ -296,11 +319,17 @@ def run_one_set_run(s, run, arms, nproc):
             coherence_run(s, run, so, fw, box, stat=stat, name="static_coherence", nproc=nproc_for(s, nproc))
         if "coherence" in arms:
             coherence_run(s, run, last, (f"{d_in}/cascadia3d",), box, name="coherence", nproc=nproc_for(s, nproc))
+    if "coh_stops" in arms:
+        while not cc_ready(s):
+            time.sleep(30)
+        for k in sorted(STOPS, reverse=True):          # 2 km first (the adopted stop), then 4, 8, 16 km
+            coherence_run(s, run, d / "ssst" / f"it{k}", (f"{grids_in[k]}/cascadia3d",), box,
+                          name=f"coherence_it{k}", nproc=nproc_for(s, nproc))
 
 
 def cmd_prep(a):
     """obs of every run and the grid links of every set, one process (the run chains then only read them)."""
-    for s in SETS:
+    for s in a.sets.split(","):
         box = set_box(s)
         base_grids(s, box)
         for run in run_names():
@@ -319,8 +348,9 @@ def cmd_run(a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("picks")
-    sub.add_parser("prep")
+    for c in ("picks", "prep"):
+        x = sub.add_parser(c)
+        x.add_argument("--sets", default="puget,mtj,blancow")
     r = sub.add_parser("run")
     r.add_argument("set", choices=SETS)
     r.add_argument("--runs", default=",".join(run_names()))

@@ -153,6 +153,127 @@ def fig(res):
     return base64.b64encode(b.getvalue()).decode()
 
 
+STOP_DIR = T.TT / "score_stop"
+STOPS_KM = [16, 8, 4, 2]
+SETNAME.update({"georgia": "Strait of Georgia (onshore)", "gorda": "Gorda plate interior (OBS + land)"})
+
+
+def stop_fig(res, choice):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    sets = list(res)
+    fig, axs = plt.subplots(1, len(sets) + 1, figsize=(3.3 * (len(sets) + 1), 3.0), squeeze=False)
+    panels = [(s, {f"coh{km}": res[s]["heldout"]["sum_PS"][f"coh{km}"] for km in STOPS_KM},
+               {f"ssst{km}": res[s]["heldout"]["sum_PS"][f"ssst{km}"] for km in STOPS_KM}) for s in sets]
+    panels.append(("mean of clusters (the rule)", {f"coh{km}": choice["score_coh"][str(km)] for km in STOPS_KM},
+                   {f"ssst{km}": choice["score_no_coh"][str(km)] for km in STOPS_KM}))
+    for ax, (title, coh, no) in zip(axs[0], panels):
+        x = np.arange(len(STOPS_KM))
+        for dat, key, col, lab, dx in ((no, "ssst", "#8a8985", "SSST alone", -0.08), (coh, "coh", "#eb6834",
+                                                                                       "SSST + coherence", 0.08)):
+            v = np.array([dat[f"{key}{km}"] for km in STOPS_KM])
+            ax.plot(x + dx, v[:, 0], "-", color=col, lw=1.5)
+            ax.vlines(x + dx, v[:, 1], v[:, 2], color=col, lw=2)
+            ax.plot(x + dx, v[:, 0], "o", color=col, ms=7, mec="white", mew=1.5, label=lab)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"{km} km" for km in STOPS_KM], fontsize=8)
+        ax.set_title(title, fontsize=9)
+        ax.grid(axis="y", color="#e5e4e0", lw=0.6)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
+        ax.tick_params(labelsize=8)
+    axs[0, 0].set_ylabel("held-out MAD P + S (ms)", fontsize=8)
+    axs[0, -1].legend(fontsize=7, frameon=False)
+    fig.suptitle("SSST stopping distance: held-out misfit (lower is better), 95 % bootstrap intervals", fontsize=9)
+    fig.tight_layout()
+    b = io.BytesIO()
+    fig.savefig(b, format="png", dpi=130)
+    plt.close(fig)
+    return base64.b64encode(b.getvalue()).decode()
+
+
+def stop_section():
+    if not (STOP_DIR / "choice.json").exists():
+        return ""
+    res = json.loads((STOP_DIR / "scores.json").read_text())
+    ch = json.loads((STOP_DIR / "choice.json").read_text())
+    sets = json.loads((T.SETDIR / "sets.json").read_text())
+    arms = [f"ssst{km}" for km in STOPS_KM] + [f"coh{km}" for km in STOPS_KM]
+    lab = {**{f"ssst{km}": f"SSST stopped at {km} km" for km in STOPS_KM},
+           **{f"coh{km}": f"SSST stopped at {km} km + coherence" for km in STOPS_KM}}
+    S = ["<h2>Follow-up: where to stop the SSST schedule (16, 8, 4 or 2 km)</h2>"]
+    sp = HERE / "notes" / "v6_termtest_stop_summary.md"
+    if sp.exists():
+        S.append(md(sp.read_text()))
+    S.append(f"<div class='verdict'><b>Choice by the rule written before the scores:</b> stop at "
+             f"<b>{ch['chosen_km']} km</b>. Lowest score: {ch['best_km']} km; {html.escape(ch['reason'])}.</div>")
+    rows = []
+    for km in STOPS_KM:
+        d = ch["diffs_coh"].get(f"{km}-{ch['best_km']}")
+        rows.append([f"{km} km", fci(ch["score_coh"][str(km)]), fci(d) if d else "best",
+                     fci(ch["score_no_coh"][str(km)])])
+    S.append("<p class='muted'>Score S(d) = mean over the two clusters of held-out MAD P + MAD S (ms) with the "
+             "coherence stage; 95 % paired bootstrap intervals (2,000 resamples of event pairs within each cluster). "
+             "Rule: lowest S(d); the next coarser stop is taken if the interval of their difference includes 0.</p>")
+    S.append(table(["stop", "S(d) with coherence [95 %]", "S(d) - S(best) [95 %]", "S(d) without coherence [95 %]"],
+                   rows))
+    S.append(f"<img alt='held-out misfit by stopping distance' src='data:image/png;base64,{stop_fig(res, ch)}'>")
+    rows = []
+    for s, i in sets.items():
+        if i.get("group") != 2:
+            continue
+        rows.append([f"{s}: {SETNAME.get(s, s)}", html.escape(i["rule"]), f(i["events"]), f"{i['lat']:.3f}, {i['lon']:.3f}",
+                     f(i["depth"], 1), f(i["radius_km"], 1), html.escape(", ".join(f"{k} {v}" for k, v in i["tiers"].items())),
+                     f"{i['time_min'][:10]} to {i['time_max'][:10]}"])
+    S.append(table(["set", "selection", "events", "median lat, lon", "median depth km", "radius km", "v5.1 tiers",
+                    "dates"], rows))
+    for s, r in res.items():
+        h = r["heldout"]
+        S.append(f"<h3>{s}: {SETNAME.get(s, s)}</h3>")
+        rows = []
+        for a_ in arms:
+            rows.append([lab[a_], fci(h["common"]["P"][a_]), fci(h["common"]["S"][a_]), fci(h["sum_PS"][a_]),
+                         f"{f(h['own'][a_].get('P', {}).get('mad_ms'))} / {f(h['own'][a_].get('S', {}).get('mad_ms'))}",
+                         " / ".join(str(x) for x in h["located_per_fold"][a_])])
+        rows.append(["v5.1 catalog (in-sample for held-out)", f(h["v5.1"].get("P", {}).get("mad_ms")),
+                     f(h["v5.1"].get("S", {}).get("mad_ms")), "", "", ""])
+        S.append(table(["arm", "held-out P MAD ms [95 %]", "held-out S MAD ms [95 %]", "P + S [95 %]",
+                        "own rows P / S", "located per fold"], rows, hl=(4, 5, 6, 7)))
+        S.append(f"<p class='muted'>Common rows: P {r['common_rows']['P']:,}, S {r['common_rows']['S']:,}, "
+                 f"{r['common_pairs']:,} event pairs.</p>")
+        rows = [[f"{km} km", fci(h["coh_minus_ssst"]["P"][str(km)]), fci(h["coh_minus_ssst"]["S"][str(km)])]
+                for km in STOPS_KM]
+        S.append("<p class='muted'>Does the coherence stage help? Held-out MAD with coherence minus without, same stop "
+                 "(negative = coherence helps).</p>")
+        S.append(table(["stop", "P: coh - SSST ms [95 %]", "S: coh - SSST ms [95 %]"], rows))
+        c = r["ccfit"]
+        rp = c.get("repeaters", {})
+        rows = []
+        for a_ in arms:
+            x = c["arms"].get(a_, {})
+            rows.append([lab[a_], fci(c["mad"].get(a_)), fci(c["rms"].get(a_)),
+                         fci(rp["sep"].get(a_), 3) if rp.get("n") else "", f(x.get("located")), f(x.get("above_surface")),
+                         f(x.get("floor_limited"))])
+        rows.append(["v5.1 catalog", "", "", f(rp.get("v5.1_median_km"), 3), "", "", ""])
+        S.append(table(["arm (full run)", "CC median per-pair residual ms [95 %]", "CC rms ms [95 %]",
+                        f"repeater separation km [95 %] ({rp.get('n', 0)} pairs)", "located", "above surface",
+                        "floor-limited"], rows, hl=(4, 5, 6, 7)))
+        d = r["depth"]
+        rows = []
+        for t_ in ("A-D", "A-B"):
+            x = d.get(t_, {})
+            if not x.get("n"):
+                continue
+            for a_ in arms:
+                rows.append([t_, lab[a_], f(x["n"]), fci(x["bias"].get(a_), 2), fci(x["absdev"].get(a_), 2)])
+            rows.append([t_, "v5.1 catalog", f(x["n"]), f(x["all_bias"].get("v5.1"), 2), f(x["all_absdev"].get("v5.1"), 2)])
+        S.append(f"<p class='muted'>Depths against {html.escape(d['reference'])} ({d['pairs']} paired events; "
+                 f"tiers = v5.1 tier).</p>")
+        S.append(table(["tiers", "arm", "events", "median dz km [95 %]", "median |dz| km [95 %]"], rows))
+    return "\n".join(S)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--summary", default=str(HERE / "notes" / "v6_termtest_summary.md"))
@@ -190,6 +311,8 @@ def main():
     S.append("<h2>The three clusters</h2>")
     rows = []
     for s, i in sets.items():
+        if i.get("group") == 2:
+            continue
         cc = json.loads((T.CC_DIR / "qc" / f"summary_{s}.json").read_text()) if (T.CC_DIR / "qc" / f"summary_{s}.json").exists() else {}
         acc = sum(v.get("n", 0) for v in cc.get("above_by_phase", {}).values())
         rows.append([f"{s}: {SETNAME[s]}", html.escape(i["rule"]), f(i["events"]), f"{i['lat']:.3f}, {i['lon']:.3f}",
@@ -287,6 +410,7 @@ def main():
                          "", f"static {f(x['all_absdev'].get('static'), 2)}; SSST {f(x['all_absdev'].get('ssst_it5'), 2)}; v5.1 {f(x['all_absdev'].get('v5.1'), 2)}", "", ""])
     S.append(table(["set", "reference", "tiers", "events", "A median dz km", "B median dz km", "A median |dz| km",
                     "B median |dz| km", "B - A of median |dz|"], rows))
+    S.append(stop_section())
     S.append("<h2>Method</h2>" + md((HERE / "notes" / "v6_termtest_method.md").read_text())
              if (HERE / "notes" / "v6_termtest_method.md").exists() else "")
     page = ("<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' "

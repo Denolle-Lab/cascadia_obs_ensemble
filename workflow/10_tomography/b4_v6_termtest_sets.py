@@ -21,6 +21,7 @@ Pairs (for the CC "given" pairs, as b5_cc_sets.py): the catalog differential-tim
 the B5 prep (b5_v5.1_s3/prep/pairs.parquet: 10 nearest neighbours within 10 km, >= 8 common station-phases).
 
   python b4_v6_termtest_sets.py   -> /wd1/mdenolle_data/reloc_v6/termtest/sets/{events,pairs}_<set>.csv, README.md
+  python b4_v6_termtest_sets.py --group 2   -> georgia, gorda (stopping-distance test), README2.md
 """
 import json
 import sys
@@ -118,5 +119,72 @@ def main():
     print("\n".join(L))
 
 
+# ------------------------------------------------------------------------------------------- group 2 (stop distance)
+SETS2 = ("georgia", "gorda")
+N_GEORGIA, N_GORDA = 700, 800
+GEORGIA_PEAK = (48.624, -123.075)      # Strait of Georgia / Haro Strait density peak (8 km count 691, region Puget/Georgia)
+
+
+def main2():
+    """Confirmatory test of the SSST stopping distance (D-B095 follow-up): two more clusters sharing no event with
+    axial, blanco, msh, jdf, puget, mtj, blancow.
+    * georgia - onshore, Strait of Georgia / Haro Strait (CN, PB, UW, TA stations, ~15 km deep): the N_GEORGIA events
+      of the Puget/Georgia region nearest the median epicentre of the events within 10 km of GEORGIA_PEAK (the
+      densest spot north of 48.3 N below 5 km depth; the 49.1 N Fraser Valley spot is at 2 km depth and left out);
+    * gorda - offshore, Gorda plate interior: ZBZ family 1162 (2014-03-10 M6.8 and aftershocks; Z5 and 7D OBS + NC,
+      PB, BK, TA land stations), the N_GORDA family events nearest the family's median epicentre."""
+    e = pd.read_csv(CLU)
+    c = pd.read_csv(CAT, usecols=["ID", "time", "lat", "lon", "depth", "loc_source", "tier", "region"])
+    c = c[c.loc_source == "nll3d"]
+    e = e[["event_id", "family_id", "cls", "region_v51"]].rename(columns={"event_id": "ID"}).merge(c, on="ID")
+    old = set()
+    for s in ("axial", "blanco", "msh", "jdf"):
+        old |= set(pd.read_csv(OLD / f"events_{s}.csv").ID)
+    for s in SETS:
+        old |= set(pd.read_csv(OUT / f"events_{s}.csv").ID)
+    info = json.loads((OUT / "sets.json").read_text())
+    sets = {}
+    p = e[e.region_v51 == "Puget/Georgia"].reset_index(drop=True)
+    pool = p[epi(p.lat.values, p.lon.values, *GEORGIA_PEAK) <= PUGET_POOL_R_KM]
+    d = epi(p.lat.values, p.lon.values, pool.lat.median(), pool.lon.median())
+    o = np.sort(np.argsort(d, kind="stable")[:N_GEORGIA])
+    sets["georgia"] = p.iloc[o].assign(d_med_km=d[o])
+    info["georgia"] = dict(rule=f"Strait of Georgia peak ({GEORGIA_PEAK[0]}, {GEORGIA_PEAK[1]}); {N_GEORGIA} region "
+                                f"events nearest the median epicentre of the {len(pool)} events within "
+                                f"{PUGET_POOL_R_KM:g} km")
+    f = e[e.family_id == 1162]
+    sets["gorda"], _ = nearest(f, N_GORDA)
+    info["gorda"] = dict(rule=f"ZBZ family 1162 ({len(f)} located events): the {N_GORDA} nearest its median epicentre")
+    pev = pd.read_parquet(PREP / "events.parquet", columns=["ID"])
+    pr = pd.read_parquet(PREP / "pairs.parquet")
+    pr["ID1"], pr["ID2"] = pev.ID.values[pr.e1.values], pev.ID.values[pr.e2.values]
+    L = ["# Station-term test sets, group 2: SSST stopping distance (b4_v6_termtest_sets.py --group 2)", "",
+         "| set | rule | events | pairs | lat | lon | depth median (km) | radius (km) | tiers | families |",
+         "|---|---|---|---|---|---|---|---|---|---|"]
+    for s in SETS2:
+        ev = sets[s]
+        assert not (set(ev.ID) & old), f"{s}: events shared with the earlier sets"
+        ids = set(ev.ID)
+        pp = pr[pr.ID1.isin(ids) & pr.ID2.isin(ids)]
+        ev[["ID", "time", "lat", "lon", "depth", "region", "tier"]].to_csv(OUT / f"events_{s}.csv", index=False,
+                                                                          float_format="%.8g")
+        pp[["ID1", "ID2", "n_dt", "sep_km"]].to_csv(OUT / f"pairs_{s}.csv", index=False, float_format="%.6g")
+        fam = ev.family_id.value_counts().head(4).to_dict()
+        info[s].update(events=len(ev), pairs=len(pp), lat=float(ev.lat.median()), lon=float(ev.lon.median()),
+                       depth=float(ev.depth.median()), radius_km=float(ev.d_med_km.max()),
+                       tiers=ev.tier.value_counts().sort_index().to_dict(),
+                       families={int(a): int(b) for a, b in fam.items()},
+                       time_min=str(ev.time.min()), time_max=str(ev.time.max()), group=2)
+        L.append(f"| {s} | {info[s]['rule']} | {len(ev):,} | {len(pp):,} | {ev.lat.median():.3f} | {ev.lon.median():.3f} "
+                 f"| {ev.depth.median():.2f} | {ev.d_med_km.max():.1f} | {info[s]['tiers']} | {fam} |")
+    L += ["", "No event is in axial, blanco, msh, jdf (D-B078) or puget, mtj, blancow (group 1)."]
+    (OUT / "README2.md").write_text("\n".join(L) + "\n")
+    (OUT / "sets.json").write_text(json.dumps(info, indent=1))
+    print("\n".join(L))
+
+
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--group", type=int, default=1)
+    {1: main, 2: main2}[ap.parse_args().group]()

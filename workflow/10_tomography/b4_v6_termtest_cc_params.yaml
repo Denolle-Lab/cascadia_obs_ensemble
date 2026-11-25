@@ -18,6 +18,8 @@ sets:
   puget: {band: [3.0, 15.0]}
   mtj: {band: [3.0, 15.0]}
   blancow: {band: [3.0, 15.0]}
+  georgia: {band: [3.0, 15.0]}
+  gorda: {band: [3.0, 15.0]}
 threshold:
   cc_min: 0.7
   margin_min: 0.1

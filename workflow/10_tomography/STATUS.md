@@ -16,7 +16,8 @@ them, agent briefs, workflow script, integration steps).
   D-B071 flag; UW timing check running (/wd1/mdenolle_data/tomo_v1/checks/uw_timing/).
 * v5.1 build workflow wf_ce50cf7f-723 at 15:45: surface and catalog built + verified, field building, wide and runner
   building; branches v51/{surface,field,wide,runner,catalog-a,catalog-b} (worktrees ~/wt_v51_*), not merged yet.
-* Next: integrate (merge, fix verifier must_fix, add D-B071), wait for the slower-S result (new model version or not),
+* 16:55: the three verifier must_fix of runner and catalog fixed and tested (v51/runner 30f66861, v51/catalog-a 1318a4d3, v51/catalog-b d1a5ec1d; details in the handoff README); the v5.1 chain must parse with --deep b4_v51_deep.
+* Next: integrate (merge, field/wide verifier results, add D-B071), wait for the slower-S result (new model version or not),
   then the v5.1 production chain; tell session -18 when the catalog is final.
 
 ## Update 2026-11-24 15:30: v5.1 build (round-2 session)

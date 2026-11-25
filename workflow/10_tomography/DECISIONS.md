@@ -694,3 +694,19 @@ the waveform with ObsPy only around the pick (a short read keeps each MiniSEED r
 accumulates the lag), not by a rate model. Corrected picks go into a new pick file with a flag column, used by the
 v5.1 relocation (station terms re-estimated). Other products (pick tables on Zenodo, Track B tomography, the picker
 code) are not changed for now.
+
+### D-B073 Shallow oceanic crust: Vp/Vs >= 2.1 in the top 2.5 km below the seafloor offshore (adopted, 2026-11-24, under the PI's "go continuously 1 to 5"; PI may revise before v5.1 is published)
+D-B070 test (/wd1/mdenolle_data/tomo_v1/above_surface/check_slow_s/, out/s16_runs_all_table.md; 2,397 events; constant
+0.2 s model error; "w" = station terms re-estimated in the new model, as in production): V4 (offshore rock cells whose
+centre lies within 2.5 km below the seafloor: Vs = min(Vs, Vp / 2.1)) raises Axial A-B events within 2 km of the seafloor
+from 31 % to 86 % (92 % without re-estimated terms; median 2.47 -> 1.56 km below the seafloor: meets the >= 85 % target),
+lowers floor-held events from 72 % to 46 % of the floor sample (13.1 % -> 8.5 % of all samples), raises tier A-B from
+1,045 to 1,106; controls: median depth change 0, p90 1.15 km, 17 of 300 move > 2 km, RMS unchanged or lower; Mount St
+Helens unchanged. Cost: Blanco minus Lange 2026 +1.08 -> +2.14 km if Lange's depths are below sea level (West Blanco
++1.74 -> +3.88, Blanco Ridge +2.06 -> +3.19, Cascadia Depression -1.98 -> -0.69); Lange's datum is not stated: if his
+depths are below the seafloor (~3 km of water), V4 is the closest variant. At Blanco V4 also lowers floor-held events
+(3.9 -> 1.0 %) and the unweighted RMS (0.219 -> 0.203 s). V2 (Vp/Vs 1.95) is milder (Axial 56 %, Blanco +1.53 km);
+V1/V3 (S 4 % slower everywhere offshore) push Blanco ~5 km deeper: rejected. Implementation: params b4.shallow_crust
+{vpvs 2.1, thickness_km 2.5} in b4_time_grids.py (field-level rule on the merged surface, D-B068; coast-scan offshore
+mask of the test), checked on a full field build (v51_build/sc_test: P unchanged; every changed S cell within 2.5 km
+below the merged seafloor at exactly the set Vp/Vs). The fields are model v0.3.1 plus this rule.

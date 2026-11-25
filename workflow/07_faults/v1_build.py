@@ -24,13 +24,21 @@ every reassignment pass; v1_common.py has the event selection). Steps:
    weekdays 08-17 local time (quarry blasts or other non-earthquake signals; the catalog average is 28 %); Blanco
    surfaces centred deeper than 25 km with < 30 depth_quality ok events (deep artefacts, as BL022/BL024/BL026 in v0).
 4. Stability: Jaccard overlap with the best-matching plane of the four stability runs (3D planes) or of four strand
-   reruns (seeds 101, 202; half-width 1.2, 1.8 km), as in v0.
+   reruns (seeds 101, 202; half-width 1.2, 1.8 km), as in v0. Detection-level recovery of each 3D plane in the
+   verifier's three detection reruns (80 % subsample, one perturbation of every event by its own error, tiers A-B
+   only; WORK/verifier_reruns), and the strike/dip range over the four stability runs. sigma_total and the strike/dip
+   intervals of step 2 hold for a fixed member set; these columns give the spread of the detection itself.
+   Flags carry the catalog problems: Mount St Helens deep population, 2012 Brookings swarm, members moved > 10 km in
+   depth from v4 to v5.1, weekday-daytime excess (binomial, Bonferroni), strand dips set by the band selection.
 5. Assignment of every located event (loc_source nll3d or comcat): distance d from the event to the surface (normal
-   offset from the fitted surface inside the rectangle, plus the in-plane distance outside it) against
+   offset from the fitted surface at the nearest point of the rectangle, plus the in-plane distance outside it) against
    z = d / sqrt(s_e^2 + s_s^2 + W^2): s_e the event's catalog error along that direction, s_s the surface's median
    sigma_total, W the surface's zone width. Compatible: z <= 2 and d <= 10 km. Fit members keep their surface;
-   others are assigned when exactly one surface is compatible, ambiguous when two or more are. Non-earthquakes
-   (event_flag) and members of surfaces removed for their timing are never assigned.
+   others are assigned when exactly one surface is compatible (compatible, not located on it), ambiguous when two or
+   more are. on_surface_strict: fit members and assigned tier A-C events within 2 km without floor_limited, far_only or
+   deep_pass. Axial events are 'not fitted' (Axial was left out). Non-earthquakes (event_flag) and the weekday-daytime
+   members of surfaces removed for their timing are never assigned; the other members of removed surfaces are
+   assigned like any event (column removed_surface).
 6. Comparison with v0 (data/faults/v0): v0 members (catalog v4 IDs = v5.1 IDs) against v1 fit members, removed v1
    surfaces included. A v0 and a v1 surface are linked when they share >= 15 events and these are >= 50 % of the v0
    surface's events that are v1 fit members, or >= 50 % of the v1 surface's members that were on a v0 surface, or
@@ -53,6 +61,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.path import Path as MPath
 from scipy.spatial import ConvexHull, cKDTree
+from scipy.stats import binom
 
 import v1_common as C
 import fault_surfaces_v0 as v0
@@ -67,7 +76,14 @@ PLATE_AZ = 111.0
 Z_MAX = 2.0
 D_CAP = 10.0
 LINK_N = 15
-LIT = ["lit_match", "lit_confidence", "lit_class", "lit_new_candidate", "lit_refs", "lit_dois", "lit_urls"]
+LIT_DZ = 5.0                       # literature carried unchanged only if the centroid depth moved <= 5 km
+STRICT_D = 2.0                     # on_surface_strict: assigned events within 2 km (tiers A-C, no floor/far/deep flags)
+AXIAL_CLASS = "not fitted (Axial Seamount left out)"
+BLAST_CLASS = "non-earthquake timing (weekday-daytime member of a surface removed for its timing)"
+MSH_BOX = (-122.35, -122.10, 46.05, 46.30)   # Mount St Helens box of the v5.1 review (P1)
+BROOK_BOX = (-125.0, -124.4, 42.0, 42.4)     # 2012 Brookings swarm (v5.1 review P2)
+SHIFT_FLAG = 10.0                  # flag surfaces whose members moved > 10 km in depth from v4 to v5.1
+LIT =["lit_match", "lit_confidence", "lit_class", "lit_new_candidate", "lit_refs", "lit_dois", "lit_urls"]
 G = {}
 
 
@@ -187,6 +203,7 @@ def fit_surface(job):
         events_depth_ok_98pct_km=None if np.isnan(bot_ok) else r1(bot_ok),
         median_shift_h_km=r2(np.nanmedian(f.shift_h_km.values[idx])),
         median_shift_z_km=r2(np.nanmedian(f.shift_z_km.values[idx])),
+        median_shift_z_depth_ok_km=r2(np.nanmedian(f.shift_z_km.values[idx][ok])) if ok.sum() >= 10 else None,
         weekday_daytime_fraction=r2(f.weekday_daytime.values[idx].mean()),
         first_year=int(yrs.min()), last_year=int(yrs.max()),
         nearest_cfm=fpp.get("name"), nearest_cfm_km=r1(dist), nearest_cfm_dip=fpp.get("dip"),
@@ -359,6 +376,108 @@ def plane_stability(f, surfaces):
             p["dip_settings_range"] = [round(float(di[0]), 1), round(float(di[4]), 1)]
 
 
+def range_width(x, circular):
+    """Width of a [lo, hi] range (strike: modulo 360, the short way)."""
+    if not isinstance(x, (list, tuple)) or len(x) != 2:
+        return None
+    d = float(x[1]) - float(x[0])
+    if circular:
+        d %= 360
+        d = min(d, 360 - d)
+    return round(d, 1)
+
+
+# ------------------------------------------------------------------ detection-level recovery (verifier's reruns)
+REC_DIR = C.WORK / "verifier_reruns"
+
+
+def recovery_runs(f):
+    """Plane detections rerun by the verifier of this piece (copied to WORK/verifier_reruns; scripts there):
+    sub80 = random 80 % of the fit set (rng 7), tierAB = tiers A-B only, perturbed = every fit event moved once by its
+    own catalog error (rng 11). Returns {name: (event -> plane label, universe or None)}."""
+    out = {}
+    for name in ("sub80", "perturbed", "tierAB"):
+        p = REC_DIR / f"detect_{name}.npz"
+        if not p.exists():
+            continue
+        z = np.load(p)
+        planes = [z[k] for k in sorted(z.files)]
+        lab = pd.Series(np.concatenate([np.full(len(m), i) for i, m in enumerate(planes)]), index=np.concatenate(planes))
+        if name == "sub80":
+            rng = np.random.default_rng(7)
+            uni = set(f.event_id.values[np.sort(rng.choice(len(f), int(0.8 * len(f)), replace=False))])
+        elif name == "tierAB":
+            uni = set(f.event_id.values[f.tier.isin(["A", "B"]).to_numpy()])
+        else:
+            uni = None
+        out[name] = (lab, uni)
+    return out
+
+
+def recovery_J(ev, lab, uni):
+    """Jaccard overlap of a surface's fit members with the best-matching rerun plane (both within the rerun's events)."""
+    A = set(ev) if uni is None else set(ev) & uni
+    if not A:
+        return np.nan
+    la = lab.reindex(list(A)).dropna().astype(int)
+    if len(la) == 0:
+        return 0.0
+    k = la.value_counts().idxmax()
+    B = set(lab.index[lab.to_numpy() == k])
+    return len(A & B) / len(A | B)
+
+
+# ------------------------------------------------------------------ catalog problems carried as surface flags
+def wed_window(t):
+    """Wednesday 19:14-19:21 UTC: the weekly artificial signal on analog UW channels (v5.1 review P1)."""
+    return ((t.dt.dayofweek == 2) & (t.dt.hour == 19) & t.dt.minute.between(14, 21)).to_numpy()
+
+
+def catalog_flags(f, idx, p):
+    """Flags for the catalog problems found by this piece and reviewed in /wd1/.../catalog_v5/v5.1_review."""
+    fl = []
+    dep, v4 = f.z.values[idx], f.v4_depth.values[idx]
+    ok = (f.depth_quality.values[idx] == "ok")
+    lo, la = p["lon"], p["lat"]
+    if MSH_BOX[0] <= lo <= MSH_BOX[1] and MSH_BOX[2] <= la <= MSH_BOX[3] and (p["depth_km"] > 20 or (dep > 30).mean() >= 0.25):
+        nw = int(wed_window(f.t.iloc[idx]).sum())
+        fl.append(f"Mount St Helens deep population: {int((dep > 30).sum())} of {len(idx)} members deeper than 30 km "
+                  f"(members {np.percentile(dep, 2):.0f}-{np.percentile(dep, 98):.0f} km), {nw} in the Wednesday 19:14-19:21 UTC "
+                  f"window, the same suspect population as removed v1x surface under the volcano (analog UW channels HSR, EDM, "
+                  f"STD carry a weekly artificial signal 2011-05 to 2013-08, v5.1 review P1): members may be false events, "
+                  f"surface not usable until reviewed")
+    if BROOK_BOX[0] <= lo <= BROOK_BOX[1] and BROOK_BOX[2] <= la <= BROOK_BOX[3] and p["depth_km"] > 30:
+        sd = p.get("slab2_minus_depth_km")
+        fl.append(f"2012 Brookings swarm depth probably wrong: members at {dep.min():.0f}-{dep.max():.0f} km in v5.1 against a "
+                  f"median {np.nanmedian(v4):.0f} km in v4, depth_quality ok for {ok.mean():.0%}"
+                  + (f", Slab2 slab top {sd + p['depth_km']:.0f} km at the centroid" if sd is not None else "")
+                  + ". Predicted S-P is not monotonic with depth in the v5.1 grids, so about 7-9 km and about 56 km both fit "
+                  "the distant stations and NonLinLoc took the deep one (v5.1 review P2)")
+    sz_all, sz_ok = p["median_shift_z_km"], p.get("median_shift_z_depth_ok_km")
+    if any(x is not None and np.isfinite(x) and abs(x) > SHIFT_FLAG for x in (sz_all, sz_ok)):
+        fl.append(f"members moved a median {sz_all:+.1f} km in depth from catalog v4 to v5.1"
+                  + (f" ({sz_ok:+.1f} km for the {ok.mean():.0%} with depth_quality ok)" if sz_ok is not None else "")
+                  + ": depth not confirmed (v5.1 events with ComCat moment tensors are a median 13.7 km deeper than ComCat, "
+                  "v5.1 review P3)")
+    return fl
+
+
+def event_notes(c, asg, keep):
+    """Per-event notes for the reviewed catalog problems (v5.1 review P1, P2)."""
+    e = c.set_index("event_id").loc[asg.event_id]
+    note = np.full(len(asg), "", object)
+    msh = (e.longitude.between(MSH_BOX[0], MSH_BOX[1]) & e.latitude.between(MSH_BOX[2], MSH_BOX[3]) & (e.z > 30)).to_numpy()
+    note[msh] = ("Mount St Helens deep population (box, deeper than 30 km; v5.1 review P1): likely false events from a "
+                 "weekly artificial signal on analog UW channels, pending human review")
+    brook = set()
+    for s in keep:
+        if "Brookings swarm" in s["props"]["flags"]:
+            brook |= set(G["f"].event_id.values[s["idx"]])
+    note[asg.event_id.isin(brook).to_numpy()] = ("2012 Brookings swarm (v5.1 review P2): v5.1 depth probably wrong "
+                                                 "(two S-P depth minima in the v5.1 grids; NonLinLoc took the deep one)")
+    return note
+
+
 # ------------------------------------------------------------------ assignment of every located event
 def assign(c, surfaces, member_of, blast_events):
     L = c[c.located].reset_index(drop=True)
@@ -383,9 +502,9 @@ def assign(c, surfaces, member_of, blast_events):
             continue
         P = np.c_[(lon[cand] - g["lon0"]) * g["kx"], (lat[cand] - g["lat0"]) * KM, dep[cand]] - g["c0"]
         u, v, w = P @ g["eu"], P @ g["ev"], P @ g["n"]
-        wf = w - v0.design(u, v, g["quad"]) @ g["coef"]
-        du = np.where(u < u0, u - u0, np.where(u > u1, u - u1, 0.0))
-        dv = np.where(v < v0_, v - v0_, np.where(v > v1, v - v1, 0.0))
+        uc, vc = np.clip(u, u0, u1), np.clip(v, v0_, v1)     # surface evaluated at the nearest point of the rectangle
+        wf = w - v0.design(uc, vc, g["quad"]) @ g["coef"]
+        du, dv = u - uc, v - vc
         dvec = du[:, None] * g["eu"] + dv[:, None] * g["ev"] + wf[:, None] * g["n"]
         d = np.linalg.norm(dvec, axis=1)
         dirn = np.where(d[:, None] > 1e-9, dvec / np.maximum(d, 1e-9)[:, None], g["n"])
@@ -406,7 +525,12 @@ def assign(c, surfaces, member_of, blast_events):
     a = eq & (best_z <= Z_MAX) & (ncomp == 1)
     cls[a], sid[a] = "assigned", best_s[a]
     cls[eq & (ncomp >= 2)] = "ambiguous"
-    cls[L.event_id.isin(blast_events).to_numpy() & eq] = "non-earthquake timing (surface screening)"
+    # Axial Seamount was never fitted (left out of the fit set, as in v0): its events are not "on no surface"
+    ax = eq & (L.fregion.to_numpy() == "AX")
+    cls[ax], sid[ax] = AXIAL_CLASS, -1
+    # members of surfaces removed for their timing: only their weekday-daytime events are marked, one by one
+    bl = L.event_id.isin(blast_events).to_numpy() & L.weekday_daytime.to_numpy() & eq
+    cls[bl], sid[bl] = BLAST_CLASS, -1
     m = mem_s >= 0
     cls[m], sid[m] = "fit member", mem_s[m]
     cls[~eq] = "not an earthquake"
@@ -414,17 +538,20 @@ def assign(c, surfaces, member_of, blast_events):
     zmem = np.where(np.isfinite(zmem), zmem, np.nan)
     zout = np.where(m, zmem, best_z)
     dout = np.where(m, dmem, best_d)
+    tier = L.tier.to_numpy()
+    strict = (cls == "fit member") | ((cls == "assigned") & np.isin(tier, ["A", "B", "C"]) & (dout <= STRICT_D)
+                                      & ~L.floor_limited.to_numpy() & ~L.far_only.to_numpy() & ~L.deep_pass.to_numpy())
     out = pd.DataFrame(dict(event_id=L.event_id, assignment=cls, surface=sid,
                             distance_km=np.round(dout, 2), z=np.round(np.where(np.isfinite(zout), zout, np.nan), 2),
-                            n_compatible=np.where(eq, ncomp, 0),
+                            n_compatible=np.where(eq, ncomp, 0), on_surface_strict=strict,
                             second_surface=np.where(eq & np.isfinite(second_z), second_s, -1),
                             second_z=np.round(np.where(eq & np.isfinite(second_z), second_z, np.nan), 2),
                             nearest_surface=np.where(eq & np.isfinite(best_z), best_s, -1),
                             nearest_z=np.round(np.where(eq & np.isfinite(best_z), best_z, np.nan), 2),
                             tier=L.tier, fit_set=L.fit, fit_excluded_because=L.fit_excl, region=L.fregion,
                             depth_quality=L.depth_quality, floor_limited=L.floor_limited, far_only=L.far_only,
-                            deep_pass=L.deep_pass, five_phase=L.five_phase, sigma_h_km=np.round(sh, 2),
-                            sigma_z_km=np.round(sz, 2), sigma_fallback=L.sigma_fallback))
+                            deep_pass=L.deep_pass, five_phase=L.five_phase, weekday_daytime=L.weekday_daytime,
+                            sigma_h_km=np.round(sh, 2), sigma_z_km=np.round(sz, 2), sigma_fallback=L.sigma_fallback))
     return out
 
 
@@ -579,7 +706,8 @@ def comparison(c, f, nodes):
             best = pl.iloc[0]
             src = best.v0_surface
             lv = {x: (lit[x].get(src, "") if x in lit else "") for x in LIT}
-            clear = kind == "matched" and best.normal_angle <= 25 and best.centroid_shift_h_km <= 10
+            clear = (kind == "matched" and best.normal_angle <= 25 and best.centroid_shift_h_km <= 10
+                     and abs(best.centroid_shift_z_km) <= LIT_DZ)
             if kind in ("merged", "split and merged"):
                 srcs = list(pl.v0_surface)
                 lv["lit_match"] = " | ".join(f"{x}: {lit.lit_match.get(x, '')}" for x in srcs)
@@ -589,10 +717,12 @@ def comparison(c, f, nodes):
                                                         if dd and dd != "nan"))
             if clear:
                 lv["lit_status"] = (f"carried from v0 {src} (matched: normals {best.normal_angle:.0f} deg apart, "
-                                    f"centroids {best.centroid_shift_h_km:.0f} km apart)")
+                                    f"centroids {best.centroid_shift_h_km:.0f} km apart horizontally and "
+                                    f"{best.centroid_shift_z_km:+.0f} km in depth)")
             elif kind == "matched":
                 lv["lit_status"] = (f"carried from v0 {src}, re-check: same events, geometry changed "
-                                    f"(normals {best.normal_angle:.0f} deg, centroids {best.centroid_shift_h_km:.0f} km apart)")
+                                    f"(normals {best.normal_angle:.0f} deg, centroids {best.centroid_shift_h_km:.0f} km apart "
+                                    f"horizontally, {best.centroid_shift_z_km:+.0f} km in depth)")
             elif kind == "split":
                 lv["lit_status"] = (f"carried from v0 {src}, re-check: {src} split into "
                                     f"{', '.join(ids[x] for x in b if nodes[x]['kept'])}")
@@ -634,8 +764,10 @@ def write_all(c, f, surfaces, ids, asg, removed, pairs_str, merge_log, cmp_pairs
         lo_, la_ = X[:, 0] / g["kx"] + g["lon0"], X[:, 1] / KM + g["lat0"]
         ring = [[round(float(lo_[i]), 5), round(float(la_[i]), 5), round(float(-X[i, 2] * 1000), 1)] for i in (0, 1, 2, 3, 0)]
         light.append(dict(type="Feature", properties={kk: p[kk] for kk in ("surface_id", "region", "n_events", "strike", "dip",
-                     "depth_km", "top_km", "bottom_km", "length_km", "width_km", "model", "kind", "stable", "change_from_v0",
-                     "v0_surfaces", "lit_match", "lit_status") if kk in p}, geometry=dict(type="Polygon", coordinates=[ring])))
+                     "depth_km", "top_km", "bottom_km", "length_km", "width_km", "model", "kind", "frac_depth_ok",
+                     "sigma_total_median_km", "stable", "strike_settings_range_width", "recovery_tests", "flags",
+                     "change_from_v0", "v0_surfaces", "lit_match", "lit_status") if kk in p},
+                          geometry=dict(type="Polygon", coordinates=[ring])))
         rows.append(p)
         el = s["surface_elev_km"]
         vdf = pd.DataFrame({"surface_id": sid, "vertex": np.arange(len(s["lon"])), "lon": np.round(s["lon"], 5),
@@ -665,7 +797,9 @@ def write_all(c, f, surfaces, ids, asg, removed, pairs_str, merge_log, cmp_pairs
                 "dip_depth_ok", "strike_depth_ok", "frac_depth_ok", "centroid_sigma_h_boot_km", "centroid_sigma_z_boot_km",
                 "centroid_sigma_h_loc_km", "centroid_sigma_z_loc_km", "sigma_boot_median_km", "sigma_loc_median_km",
                 "sigma_method_median_km", "sigma_total_median_km", "rms_normal_km", "median_sigma_n_km",
-                "scatter_to_sigma_n", "median_abs_resid_over_sigma_n", "zone_width_km", "cluster_jaccard_median", "stable"]
+                "scatter_to_sigma_n", "median_abs_resid_over_sigma_n", "zone_width_km", "cluster_jaccard_median", "stable",
+                "strike_settings_range_width", "dip_settings_range_width", "recovery_J_sub80", "recovery_J_perturbed",
+                "recovery_J_tierAB", "recovery_tests", "strand"]
     summ.to_csv(C.OUT / f"{stem}_summary.csv", index=False)
     summ[[x for x in unc_cols if x in summ]].to_csv(C.OUT / f"{stem}_uncertainty.csv", index=False)
     V = pd.concat(vrows)
@@ -685,14 +819,20 @@ def write_all(c, f, surfaces, ids, asg, removed, pairs_str, merge_log, cmp_pairs
     # region table
     rr = []
     for reg, g in a.groupby("region"):
-        eq = g.assignment != "not an earthquake"
+        nf = g.assignment == AXIAL_CLASS
+        eq = (g.assignment != "not an earthquake") & ~nf           # fractions only where surfaces were fitted
         fs = g.fit_set
-        rr.append(dict(region=reg, located=int(len(g)), earthquakes=int(eq.sum()), fit_set=int(fs.sum()),
+        rr.append(dict(region=reg, located=int(len(g)), earthquakes=int((g.assignment != "not an earthquake").sum()),
+                       not_fitted=int(nf.sum()), fit_set=int(fs.sum()),
                        fit_members=int((g.assignment == "fit member").sum()),
-                       frac_fit_set_on_a_fault=round(float((g.assignment[fs] == "fit member").mean()) if fs.any() else 0, 3),
+                       frac_fit_set_on_a_fault=round(float((g.assignment[fs] == "fit member").mean()), 3) if fs.any() else None,
                        assigned_other=int((g.assignment == "assigned").sum()),
-                       frac_earthquakes_on_a_fault=round(float(g.assignment[eq].isin(["fit member", "assigned"]).mean()), 3),
+                       frac_earthquakes_on_a_fault=(round(float(g.assignment[eq].isin(["fit member", "assigned"]).mean()), 3)
+                                                    if eq.any() else None),
+                       on_surface_strict=int(g.on_surface_strict.sum()),
+                       frac_earthquakes_on_surface_strict=round(float(g.on_surface_strict[eq].mean()), 3) if eq.any() else None,
                        ambiguous=int((g.assignment == "ambiguous").sum()),
+                       none=int((g.assignment == "none").sum()),
                        non_earthquake_timing_screening=int(g.assignment.str.startswith("non-earthquake timing").sum())))
     pd.DataFrame(rr).to_csv(C.OUT / f"{stem}_assignment_by_region.csv", index=False)
     pd.DataFrame(counts, columns=["rule", "events"]).to_csv(C.OUT / f"{stem}_selection.csv", index=False)
@@ -767,11 +907,26 @@ def main():
             rem.append(s)
         else:
             keep.append(s)
+    rec = recovery_runs(f)
+    log("verifier detection reruns for the recovery test: " + (", ".join(rec) if rec else "none found"))
+    p_wd, n_tests = float(f.weekday_daytime.mean()), len(fits)
     for s in keep:
         p = s["props"]
+        idx = s["idx"]
         p["kind"] = "steep zone (fault candidate)" if p["dip"] >= 45 else "dipping zone"
         p["stable"] = bool(p.get("cluster_jaccard_median", 0) >= 0.5)
         p["strand"] = bool(s["strand"])
+        # detection-level spread: builder's four reruns (strike/dip range) and the verifier's reruns (recovery)
+        p["strike_settings_range_width"] = range_width(p.get("strike_settings_range"), circular=True)
+        p["dip_settings_range_width"] = range_width(p.get("dip_settings_range"), circular=False)
+        J = {name: (np.nan if s["strand"] else recovery_J(f.event_id.values[idx], *run)) for name, run in rec.items()}
+        for name in ("sub80", "perturbed", "tierAB"):
+            p[f"recovery_J_{name}"] = None if not np.isfinite(J.get(name, np.nan)) else round(float(J[name]), 2)
+        nt = sum(np.isfinite(v) for v in J.values())
+        nr = sum(v >= 0.5 for v in J.values() if np.isfinite(v))
+        p["recovery_tests"] = f"{nr}/{nt}" if nt else ""
+        k_wd = int(f.weekday_daytime.values[idx].sum())
+        p["weekday_daytime_p"] = float(f"{binom.sf(k_wd - 1, p['n_events'], p_wd):.2g}")
         fl = []
         if p["frac_depth_ok"] < 0.5:
             fl.append(f"depth poorly constrained ({p['frac_depth_ok']:.0%} depth_quality ok): dip and depth extent not reliable")
@@ -779,10 +934,21 @@ def main():
             fl.append("centroid deeper than 20 km, below published Blanco seismicity (10-14 km)")
         if p["region"] in ("EN",) and p["depth_km"] > 25:
             fl.append("centroid deeper than 25 km on unconstrained ridge-region depths")
+        fl += catalog_flags(f, idx, p)
         if p["n_vertices_above_surface"] > 0:
             fl.append(f"rectangle above the ground or seafloor at {p['n_vertices_above_surface']} mesh vertices (extrapolation)")
+        if k_wd >= 2 * p_wd * p["n_events"]:          # at least twice the fit-set rate (an effect size, not only a p)
+            fl.append(f"weekday-daytime excess: {k_wd} of {p['n_events']} events ({k_wd / p['n_events']:.0%}) on weekdays "
+                      f"08-17 local time against {p_wd:.0%} in the fit set (binomial p = {p['weekday_daytime_p']:.2e}, "
+                      f"Bonferroni level 0.05/{n_tests} = {0.05 / n_tests:.2e}), may include blasts")
+        if s["strand"]:
+            fl.append("Blanco strand: dip near 90 deg and its narrow interval are set by the map-view band selection "
+                      "(half-width 1.5 km), not measured")
         if not p["stable"]:
             fl.append("unstable under detection reruns (Jaccard < 0.5)")
+        if nt and nr < nt:
+            fl.append(f"not recovered in {nt - nr} of {nt} verifier detection reruns (80 % subsample, error perturbation, "
+                      f"tiers A-B only): sigma_total and the strike/dip intervals hold for this member set only")
         p["flags"] = "; ".join(fl)
     keep.sort(key=lambda s: (s["props"]["region"], -s["props"]["n_events"]))
     count, ids = {}, []
@@ -809,8 +975,17 @@ def main():
     for k, s in enumerate(keep):
         for e in f.event_id.values[s["idx"]]:
             member_of[e] = k
+    msh_rem = [rid for s, rid in zip(rem, rids) if MSH_BOX[0] <= s["props"]["lon"] <= MSH_BOX[1]
+               and MSH_BOX[2] <= s["props"]["lat"] <= MSH_BOX[3]]
+    for s in keep:
+        s["props"]["flags"] = s["props"]["flags"].replace("removed v1x surface under the volcano",
+                                                          "removed " + (", ".join(msh_rem) or "surfaces"))
     asg = assign(c, keep, pd.Series(member_of), blast_events)
+    asg["removed_surface"] = asg.event_id.map(rem_members.set_index("event_id").removed_id).fillna("")
+    asg["catalog_note"] = event_notes(c, asg, keep)
     log("assignment: " + ", ".join(f"{k} {v:,}" for k, v in asg.assignment.value_counts().items()))
+    log(f"on_surface_strict {int(asg.on_surface_strict.sum()):,}; catalog notes "
+        + ", ".join(f"{k[:40]} {v}" for k, v in asg.catalog_note[asg.catalog_note != ''].value_counts().items()))
     nodes = [dict(id=i, idx=s["idx"], props=s["props"], normal=s["normal"], kept=True, reason="") for i, s in zip(ids, keep)]
     nodes += [dict(id=i, idx=s["idx"], props=s["props"], normal=s["normal"], kept=False, reason=s["reason"])
               for i, s in zip(rids, rem)]
@@ -824,7 +999,17 @@ def main():
     (C.OUT / "fault_surfaces_v1_run.json").write_text(json.dumps(dict(
         fit_set=int(len(f)), detection_planes=len(planes), blanco_parents=len(parents), blanco_strands=len(strands),
         surfaces_fitted=len(fits), kept=len(keep), removed=len(rem), fit_members=int(len(allm)),
-        assignment={k: int(v) for k, v in asg.assignment.value_counts().items()}), indent=1))
+        assignment={k: int(v) for k, v in asg.assignment.value_counts().items()},
+        on_surface_strict=int(asg.on_surface_strict.sum()),
+        catalog_note={k: int(v) for k, v in asg.catalog_note[asg.catalog_note != ""].value_counts().items()},
+        members_of_removed_surfaces=int((asg.removed_surface != "").sum()),
+        notes=["'none' = compatible with no surface, in a fitted region; Axial Seamount events (never fitted) are "
+               f"'{AXIAL_CLASS}'",
+               "'assigned' = compatible (z <= 2, d <= 10 km) with exactly one surface, not located on it; "
+               "on_surface_strict = fit members plus assigned tier A-C events within 2 km, without floor_limited, "
+               "far_only or deep_pass",
+               "sigma_total and the strike/dip intervals hold for a fixed member set; see recovery_* and "
+               "strike_settings_range_width in the summary for the detection-level spread"]), indent=1))
     # residual calibration sample for the report
     cal = pd.concat([pd.DataFrame(dict(surface_id=sid, resid_km=np.round(s["resid"], 3), sigma_n_km=np.round(s["sn"], 3),
                                        tier=f.tier.values[s["idx"]], depth_quality=f.depth_quality.values[s["idx"]]))

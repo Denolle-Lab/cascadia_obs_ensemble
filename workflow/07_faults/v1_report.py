@@ -19,6 +19,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.collections import PolyCollection  # noqa: E402
 from scipy.spatial import ConvexHull  # noqa: E402
+from scipy.stats import norm  # noqa: E402
 
 import v1_common as C  # noqa: E402
 
@@ -114,6 +115,8 @@ def fig_assign(cat, asg):
     col = {i: plt.cm.tab20(rng.integers(0, 20)) for i in ids}
     for ax, (title, b) in zip(axs, VIEWS):
         s = a[a.longitude.between(b[0], b[1]) & a.latitude.between(b[2], b[3])]
+        nf = s[s.assignment.str.startswith("not fitted")]
+        ax.scatter(nf.longitude, nf.latitude, s=0.2, c="#e8d9b5", lw=0, rasterized=True)
         n = s[s.assignment == "none"]
         ax.scatter(n.longitude, n.latitude, s=0.2, c="0.75", lw=0, rasterized=True)
         for cls, size, alpha in (("assigned", 0.3, 0.35), ("fit member", 0.35, 1.0)):
@@ -124,7 +127,7 @@ def fig_assign(cat, asg):
         ax.set_xlim(b[0], b[1]); ax.set_ylim(b[2], b[3]); ax.set_aspect(1 / np.cos(np.radians((b[2] + b[3]) / 2)))
         ax.set_title(title, fontsize=9); ax.tick_params(labelsize=7)
     fig.suptitle("Located events of catalog v5.1 by surface (colour), assigned only (faint colour), none (grey), "
-                 "non-earthquakes (red x)", fontsize=10)
+                 "Axial, not fitted (beige), non-earthquakes (red x)", fontsize=10)
     png(fig, "assignment_map")
 
 
@@ -202,6 +205,10 @@ def main():
     ctx = checks(cat, summ, st0, cmp1, pairs, mlog, sep, res)
     ctx.update(summ=summ, pairs=pairs, st0=st0, cmp1=cmp1, rem=rem, sep=sep, mlog=mlog, sel=sel, reg0=reg0, reg1=reg1,
                asg=asg, res=res, cat=cat)
+    rem_t_ids = rem.removed_id[rem.reason.str.startswith("non-earthquake")] if len(rem) else []
+    ctx["n_rem_timing"] = int(asg.removed_surface.fillna("").isin(rem_t_ids).sum())
+    ctx["n_blast"] = int(asg.assignment.str.startswith("non-earthquake timing").sum())
+    ctx["n_rem_other"] = ctx["n_rem_timing"] - ctx["n_blast"]
     html = build_html(ctx)
     (O / f"{S}_report.html").write_text(html)
     print("written", O / f"{S}_report.html", f"{len(html) / 1e6:.1f} MB")
@@ -258,13 +265,43 @@ def checks(cat, summ, st0, cmp1, pairs, mlog, sep, res):
         sid = cand.sort_values("n_events").iloc[-1].surface_id
         e = ci.loc[mem[mem.surface_id == sid].event_id]
         x["brook"] = dict(sid=sid, n=len(e), z=float(e.z.median()), zmin=float(e.z.min()), zmax=float(e.z.max()),
+                          slab=float(np.nanmedian(C.v0.slab()(e.longitude.values, e.latitude.values))),
                           v4=float(e.v4_depth.median()), sigz=float(e.sz.median()), dmin=float(e.dist_min.median()),
                           y2012=int((e.year == 2012).sum()), ok=float((e.depth_quality == "ok").mean()))
-    # tier calibration
+    # tier calibration. Members were selected within the detection tolerance of their plane, so their residuals are a
+    # truncated sample: expected median |r|/sigma_n under N(0, sigma_n) truncated at +-tolerance, member by member
     r = np.abs(res.resid_km) / res.sigma_n_km
-    x["cal"] = res.assign(r=r).groupby("tier").agg(members=("r", "size"), median_abs_resid_over_sigma=("r", "median"),
-                                                     median_sigma_n_km=("sigma_n_km", "median"),
-                                                     rms_resid_km=("resid_km", lambda v: float(np.sqrt(np.mean(v ** 2))))).round(2).reset_index()
+    t = (res.surface_id.map(summ.set_index("surface_id").tolerance_km) / res.sigma_n_km).to_numpy()
+    rng = np.random.default_rng(3)
+    E = np.array([norm.ppf((1 + rng.uniform(0, 1, len(t)) * (2 * norm.cdf(t) - 1)) / 2) for _ in range(20)])
+    exp_tr = {tier: float(np.mean(np.median(E[:, (res.tier == tier).to_numpy()], axis=1))) for tier in "ABC"}
+    cal = res.assign(r=r).groupby("tier").agg(members=("r", "size"), median_abs_resid_over_sigma=("r", "median"),
+                                             median_sigma_n_km=("sigma_n_km", "median"),
+                                             rms_resid_km=("resid_km", lambda v: float(np.sqrt(np.mean(v ** 2))))).reset_index()
+    cal.insert(3, "expected_untruncated", 0.67)
+    cal.insert(4, "expected_with_truncation", cal.tier.map(exp_tr))
+    x["cal"] = cal.round(2)
+    # detection-level spread: builder's four reruns and the verifier's three reruns (WORK/verifier_reruns)
+    ns = summ[~summ.strand]
+    rec = {}
+    for name in ("sub80", "perturbed", "tierAB"):
+        col = ns[f"recovery_J_{name}"]
+        rec[name] = dict(n=int(col.notna().sum()), rec=int((col >= 0.5).sum()),
+                         stable=f"{int((col[ns.stable] >= 0.5).sum())}/{int(col[ns.stable].notna().sum())}",
+                         median_J=float(col.median()))
+    both = (ns.recovery_J_sub80 >= 0.5) & (ns.recovery_J_perturbed >= 0.5)
+    allr = both & (ns.recovery_J_tierAB >= 0.5)
+    x["det"] = dict(rec=rec, both=int(both.sum()), both_ids=list(ns.surface_id[both]), all3=int(allr.sum()),
+                    all3_ids=list(ns.surface_id[allr]), n_ns=len(ns),
+                    sw_unstable=float(summ.strike_settings_range_width[~summ.stable].median()),
+                    sw_stable=float(summ.strike_settings_range_width[summ.stable].median()),
+                    dw_unstable=float(summ.dip_settings_range_width[~summ.stable].median()),
+                    dw_stable=float(summ.dip_settings_range_width[summ.stable].median()),
+                    n_unstable=int((~summ.stable).sum()), n_stable=int(summ.stable.sum()),
+                    n_sw=int(summ.strike_settings_range_width.notna().sum()))
+    # cost of the dip rule: v0 surfaces flatter than 30 deg and what became of them
+    s0 = pd.read_csv(C.V0DIR / "fault_surfaces_v0_summary.csv")
+    x["flat"] = st0[st0.v0_surface.isin(s0.surface_id[s0.dip < 30])]
     return x
 
 

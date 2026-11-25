@@ -42,6 +42,8 @@ TILES = {"mendocino_gorda_c": 480, "blanco": 20, "oregon": 480, "washington": 48
 STAGES = {"M0": ("margin_m0_v3", "margin_m0_v4", "margin_m0_v4nf", 480, "margin_m0_v3nf")}
 STAGES.update({t: (f"{t}_m0t", f"{t}_m0f", f"{t}_m0fnf", s, f"{t}_m0tnf") for t, s in TILES.items()})
 AT_FLOOR_KM = 0.005          # "at the floor": final depth within 5 m below tomoDD's floor (it stops 1 m under it)
+EPS_KM = 0.002               # tomoDD's positions are REAL*4 (~0.5 m at the Earth's radius) and reloc depths have 3
+                             # decimals: an event stopped at the floor can read up to ~1 m above it. Above by more = error
 TXT = []
 
 
@@ -103,7 +105,7 @@ def final_positions(region, sm, floored):
         S = FLR.read_surface_dat(run / "surface.dat")
         d["floor_km"] = FLR.floordep(S, d.lat_w.values, d.lon_w.values)[0]
         d["above_floor_km"] = d.floor_km - d.depth_w
-        d["at_floor"] = (d.depth_w - d.floor_km >= -1e-6) & (d.depth_w - d.floor_km < AT_FLOOR_KM)
+        d["at_floor"] = (d.depth_w - d.floor_km >= -EPS_KM) & (d.depth_w - d.floor_km < AT_FLOOR_KM)
     ev = pd.read_csv(RUNS / region / "inputs" / "events.csv")[["ID", "region"]]
     return d.merge(ev, on="ID", how="left")
 
@@ -194,8 +196,9 @@ def test_section():
                                    moved_gt_1m=int(((g.dz.abs() > 0.001) | (g.dh > 0.001)).sum()))
     S = FLR.read_surface_dat(fr / "surface.dat")
     fz = FLR.floordep(S, b.lat_w.values, b.lon_w.values)[0]
-    out["final_at_floor"] = int(((b.depth_w - fz >= -1e-6) & (b.depth_w - fz < AT_FLOOR_KM)).sum())
-    out["final_above_floor"] = int((b.depth_w - fz < -1e-6).sum())
+    out["final_at_floor"] = int(((b.depth_w - fz >= -EPS_KM) & (b.depth_w - fz < AT_FLOOR_KM)).sum())
+    out["final_above_floor_by_more_than_2m"] = int((b.depth_w - fz < -EPS_KM).sum())
+    out["final_above_floor_within_2m"] = int(((b.depth_w - fz < -1e-6) & (b.depth_w - fz >= -EPS_KM)).sum())
     from b2_tomodd_backtransform import inverse            # the test run was not back-transformed: same map here
     fw = json.loads((RUNS / "blanco_m0t" / "inputs" / "forward.json").read_text())
     for lab, g in (("v040", a), ("test", b)):
@@ -240,7 +243,9 @@ def production():
                          hit_height_above_floor_m_p50_max=([round(float(np.percentile(1000 * (h.floor - h.depth), p)), 1)
                                                             for p in (50, 100)] if len(h) else None),
                          events_at_floor_final=int(f1.at_floor.sum()),
-                         events_above_floor_final=int((f1.above_floor_km > 1e-6).sum()),
+                         events_above_floor_by_more_than_2m=int((f1.above_floor_km > EPS_KM).sum()),
+                         events_above_floor_within_2m=int(((f1.above_floor_km > 1e-6) &
+                                                           (f1.above_floor_km <= EPS_KM)).sum()),
                          air_quakes_v040=len(aq0), air_quakes_v041=len(aq),
                          iterations_v040=nit0, iterations_v041=nit,
                          events_final_v040=len(f0), events_final_v041=len(f1),
@@ -501,7 +506,8 @@ def main():
          f"floor stops on {T_.get('events_hit')} events (by iteration {T_.get('hits_by_iteration')}), not met "
          f"{T_.get('floor_not_met')}; air quakes {T_.get('air_quakes_v040')} (v0.4.0) -> {T_.get('air_quakes_test')}; "
          f"events kept {T_.get('events_final_v040')} -> {T_.get('events_final_test')} of {T_.get('events_start')}; "
-         f"final positions at the floor {T_.get('final_at_floor')}, above the floor {T_.get('final_above_floor')}, "
+         f"final positions at the floor {T_.get('final_at_floor')}, above the floor by more than 2 m "
+         f"{T_.get('final_above_floor_by_more_than_2m')} (within 2 m: {T_.get('final_above_floor_within_2m')}), "
          f"above the true surface {T_.get('final_above_true_surface_v040')} (v0.4.0) -> "
          f"{T_.get('final_above_true_surface_test')}. Unreachable floor (all nodes 50 km above sea level, Air_dep "
          f"as v0.4.0): {T_.get('nohit_files_compared')} output files compared, different: "
@@ -509,7 +515,9 @@ def main():
          "<pre>" + json.dumps(tst, indent=1, default=str) + "</pre>",
          "<h2>4. Production: floor stops and air quakes per stage</h2>",
          "<p>floor_lines = '>>>Floor' log lines (one per event and iteration where the update was stopped); "
-         f"at floor = final depth within {1000 * AT_FLOOR_KM:g} m below tomoDD's floor; air quakes = events tomoDD "
+         f"at floor = final depth from {1000 * EPS_KM:g} m above to {1000 * AT_FLOOR_KM:g} m below tomoDD's floor (REAL*4 "
+         "positions and 3-decimal reloc depths: a stopped event can read up to ~1 m above the floor, which itself is "
+         "1 m under the cell minimum); air quakes = events tomoDD "
          "dropped ('negative depth', each forcing a repeated iteration). above_true_surface = final hypocentres above "
          "the exact merged surface (errors; must be 0 for v0.4.1).</p>", html_table(prod),
          "<h2>5. Events at the floor, by region</h2>", html_table(preg), img("floor_events_map.png"),

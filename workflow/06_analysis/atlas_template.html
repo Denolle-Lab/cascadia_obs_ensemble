@@ -1147,10 +1147,14 @@ function showFamCard(k) {
   const fc = $("faultCard");                   // under the fault card when both are open (desktop)
   card.style.top = innerWidth > 700 && fc.style.display === "block" ? `${fc.getBoundingClientRect().bottom + 8}px` : "";
   $("famClose").onclick = () => selectFamily(-1);
-  $("famZoom").onclick = () => {                // frame the family's events, the view centred on their median depth
+  $("famZoom").onclick = () => {                // frame the family's events: centred on their median depth, its map span and 10-90 % depth span in view
     if (!nd) return;
-    flyToBox([w - 0.05, e + 0.05, s - 0.05, n + 0.05]);
-    const dy = -quant(dz, [0.5])[0] * U.exag.value - fly.q1.y; fly.q1.y += dy; fly.p1.y += dy;
+    const box = [w - 0.05, e + 0.05, s - 0.05, n + 0.05], q = quant(dz, [0.1, 0.5, 0.9]);
+    flyToBox(box);
+    const size = Math.max((box[1] - box[0]) * KX, (box[3] - box[2]) * KZ, 10), tall = (q[2] - q[0]) * U.exag.value;
+    const dy = -q[1] * U.exag.value - fly.q1.y; fly.q1.y += dy; fly.p1.y += dy;
+    const dist = 1.4 * (size + tall) / (2 * Math.tan(camera.fov * Math.PI / 360)) * Math.max(1, Math.pow(1 / camera.aspect, 0.75));   // room for the card
+    fly.p1.sub(fly.q1).setLength(dist).add(fly.q1);
   };
 }
 const cluTxt = i => {                          // tooltip line in the clustered catalog's view

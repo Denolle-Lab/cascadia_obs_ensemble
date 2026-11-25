@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascadia Catalog Reports</title>
+<style>
+:root { --bg: #f5f7f9; --fg: #18212c; --muted: #5a6573; --line: #d6dde4; --card: #ffffff; --link: #1c69ad;
+  --ok: #23806f; --warn: #b8620f; --old: #8b96a3; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0e1319; --fg: #e2e8ee; --muted: #9aa6b3; --line: #2a343f; --card: #151c24;
+  --link: #5aa7ec; --ok: #4cc2a9; --warn: #e9943f; --old: #6d7987; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: 32px max(16px, env(safe-area-inset-left, 0px)) 48px max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 900px; margin: 0 auto; display: grid; gap: 18px; }
+h1 { margin: 0; font-size: 1.9rem; line-height: 1.15; }
+h2 { margin: 0; font-size: 1.15rem; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+td { padding: 7px 8px 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+tr:first-child td { border-top: 0; }
+a { color: var(--link); }
+.tag { display: inline-block; font: 600 0.72rem/1.6 ui-monospace, Menlo, Consolas, monospace; padding: 0 6px; border-radius: 3px;
+  border: 1px solid currentColor; white-space: nowrap; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .old { color: var(--old); }
+.wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cascadia Catalog Reports</h1>
+  <p class="muted">Working reports of the Cascadia OBS ensemble catalog and the Track B tomography, as of 25 November 2026. Each report is a self-contained page. Status says how far you can rely on it today.</p>
+  <p class="muted"><span class="tag ok">current</span> verified and current &nbsp; <span class="tag warn">to update</span> verified, but a known change is coming &nbsp; <span class="tag old">superseded soon</span> replaced by the next version</p>
+
+  <section>
+    <h2>Catalog and model views</h2>
+    <div class="wrap"><table>
+      <tr><td><a href="../">Atlas</a></td><td>Catalog v5.1 in 3D with model v0.3.1 (map, depth sections, model layer).</td><td><span class="tag warn">to update</span></td></tr>
+      <tr><td><a href="../decisions/">Decision map</a></td><td>Every recorded decision since 22 November and what it changed.</td><td><span class="tag ok">current</span></td></tr>
+      <tr><td><a href="../review/">Review pages</a></td><td>v5.1 location problems (waveform pages, viewer, CSV) and station clock candidates, for human review.</td><td><span class="tag ok">current</span></td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Catalog v5.1 analysis</h2>
+    <p class="muted">Each piece was built, checked by an independent verifier, fixed and re-checked. v5.1 will be replaced by catalog v6.0 (model v0.4.1, corrected picks, SSST station terms), and the analyses will be redone on it.</p>
+    <div class="wrap"><table>
+      <tr><td><a href="v51_magnitudes.html">Magnitudes</a></td><td>Route A ML on the v5.1 hypocentres, Mc and b, comparison with v4.1 and ComCat. Offshore ML will drop by 0.3-0.7 once the station-term inversion is run to convergence (D-B091, in progress).</td><td><span class="tag warn">to update</span></td></tr>
+      <tr><td><a href="v51_fault_surfaces.html">Fault surfaces v1</a></td><td>Plane fits on tiers A-C, assignment of every located event, comparison with v0 and the literature.</td><td><span class="tag old">superseded soon</span></td></tr>
+      <tr><td><a href="v51_clustering.html">Clustering</a></td><td>Nearest-neighbour clustering: background, mainshock-aftershock sequences, swarms, multiplets; null tests.</td><td><span class="tag old">superseded soon</span></td></tr>
+      <tr><td><a href="v51_interpretation.html">Re-interpretation</a></td><td>Region by region: what the v5.1 locations change, active faults, sequences and swarms, agreement with published studies.</td><td><span class="tag old">superseded soon</span></td></tr>
+      <tr><td><a href="v51_structure_seismicity.html">Structure vs seismicity</a></td><td>Vp, Vs, Vp/Vs on resolved model nodes against seismicity, with randomized-catalog and coverage controls.</td><td><span class="tag old">superseded soon</span></td></tr>
+      <tr><td><a href="pick_retiming.html">Pick re-timing</a></td><td>Re-timing of the drifting analog picks from their record headers (D-B072, D-B075), with the co-located GPS-station test.</td><td><span class="tag ok">current</span></td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Velocity models</h2>
+    <div class="wrap"><table>
+      <tr><td><a href="model_v0.4.0.html">Model v0.4.0</a></td><td>v0.3.1 re-inverted with the re-timed picks: fit at the re-timed stations, model change against the numerical noise floor, hypocentre shifts.</td><td><span class="tag ok">current</span></td></tr>
+      <tr><td><a href="model_v0.4.1.html">Model v0.4.1</a></td><td>v0.4.0 with the surface floor in the inversion: no event above the surface, model change against noise. The model of catalog v6.0.</td><td><span class="tag ok">current</span></td></tr>
+    </table></div>
+  </section>
+
+  <p class="muted">Code and decisions: <a href="https://github.com/Denolle-Lab/cascadia_obs_ensemble">Denolle-Lab/cascadia_obs_ensemble</a> (DECISIONS.md in workflow/10_tomography).</p>
+</main>
+</body>
+</html>

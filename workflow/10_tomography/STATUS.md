@@ -7,6 +7,19 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## v5.1 RELOCATION DONE 2026-11-25 03:18 (round-2 session; stages 1-5 of the handoff)
+
+Run b4_v51_iter1 (terms b4_v51_iter0, deep pass b4_v51_deep), grids time_b4_v0.3.1m_sc21 (model v0.3.1 + D-B073
+shallow crust; merged surface D-B068), wide_time_b4_v0.3.1m_sc21, picks re-timed (D-B072/D-B075, v4.1t), LOCGAU 0.2
+(D-B069), five-phase minimum (D-B066), deep pass (D-B067). Catalog /wd1/mdenolle_data/reloc_v5/catalog/
+catalog_b4_b4_v51_iter1.csv: 171,717 of 172,340 located (tier U 623), 0 above the merged surface (publishable),
+floor_limited 8,682, far_only 624, deep_pass 356, five_phase 11,978. Acceptance (data/tomo_v1/b4/b4_v51_iter1/
+acceptance.md, depth_literature/paired_v5.1.md): Axial A-B 81 % within 2 km below the seafloor (v0.3.1 28 %; target
+85 % not met), Blanco - Lange +1.43 km (v0.3.1 +1.99), Mt St Helens - Hirao +0.54 km (v0.3.1 +0.49), Puget unchanged.
+Integration merged: tomo/tiles 763fb372, reloc/track-a 3cb230bf. Handed to session -18 for catalog v5.1 (build,
+private Zenodo, atlas). Chain fixes during the run: missing gitignored ANSS table link in the new Track A worktree;
+tier-summary copy path (97f9d1da).
+
 ## PROGRESS 2026-11-24 21:27 (PI: "go continuously from 1 to 5")
 
 * Integration branches (not merged into tomo/tiles or reloc/track-a yet): v51/integration (worktree ~/wt_v51_int:

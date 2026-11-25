@@ -4,7 +4,8 @@ Reads (never writes) the catalog v5.1, the outputs of the pieces mag, faults and
 (their worktrees, committed state), their verifiers' tables on /wd1, and the v4-era products
 (catalog v4 clusters, fault surfaces v0 and their literature matches) of this worktree.
 
-Paths can be overridden with environment variables (V51_CAT, V51_MAG, V51_FAULTS, V51_CLUSTERS).
+Paths can be overridden with environment variables (V51_WD1, V51_CAT, V51_MAG, V51_FAULTS, V51_CLUSTERS,
+V51_ANSS, V51_SLAB2; the figures script also reads V51_GMT). The defaults are this project's data locations.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-WD1 = Path("/wd1/mdenolle_data/catalog_v5")
+WD1 = Path(os.environ.get("V51_WD1", "/wd1/mdenolle_data/catalog_v5"))
 CAT = Path(os.environ.get("V51_CAT", WD1 / "v5.1" / "cascadia_catalog_v5.1.csv"))
 MAG = Path(os.environ.get("V51_MAG", "/home/mdenolle/wt_a51_mag/data/catalog_v5/v5.1_analysis/mag"))
 FLT = Path(os.environ.get("V51_FAULTS", "/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults"))
@@ -29,7 +30,8 @@ V4S = ROOT / "data" / "catalog_v4" / "swarms"
 V0 = ROOT / "data" / "faults" / "v0"
 OUT = ROOT / "data" / "catalog_v5" / "v5.1_analysis" / "interp"
 BIG = WD1 / "v5.1_analysis" / "interp"
-SLAB2 = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
+ANSS = Path(os.environ.get("V51_ANSS", BIG.parent / "mag" / "anss_2010-16.csv"))   # ANSS/ComCat 2010-2016 (mag piece)
+SLAB2 = Path(os.environ.get("V51_SLAB2", "/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz"))
 PB_STEPS = ROOT / "data" / "tectonics" / "PB2002_steps.json"
 
 REGIONS = ["Axial", "Endeavour", "Explorer", "JdF ridge/plate", "Blanco", "Gorda", "Mendocino",

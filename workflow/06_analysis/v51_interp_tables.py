@@ -22,11 +22,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-from v51_interp_common import (BIG, CLU, FLT, OUT, REGIONS, REVIEW, SLAB2, VER_C, V0, VOLCANOES, hav, load_events,
-                               load_pb_steps, load_surfaces, local_xy, nearest_boundary, nearest_volcano, q, MAG)
-
-OUT.mkdir(parents=True, exist_ok=True)
-BIG.mkdir(parents=True, exist_ok=True)
+from v51_interp_common import (ANSS, BIG, CLU, FLT, OUT, REGIONS, REVIEW, SLAB2, VER_C, V0, VOLCANOES, hav,
+                               load_events, load_pb_steps, load_surfaces, local_xy, nearest_boundary, nearest_volcano, q)
 
 
 def t1_locations(c):
@@ -324,8 +321,7 @@ def anss_pairs(c, a):
 
 
 def t6_anss(c):
-    f = "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/anss_2010-16.csv"
-    a0 = pd.read_csv(f)
+    a0 = pd.read_csv(ANSS)
     a0 = a0[a0.type.eq("earthquake") & a0.depth.notna()].copy()
     a0["t"] = pd.to_datetime(a0.time, utc=True, format="ISO8601")
     # main rule: drop fixed depths (no depth error, or us/at/pt at round values)
@@ -638,6 +634,8 @@ def region_extras(c):
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    BIG.mkdir(parents=True, exist_ok=True)
     c = load_events()
     pb = load_pb_steps()
     c["pb_km"], c["pb_class"], c["pb_bound"] = np.nan, None, None

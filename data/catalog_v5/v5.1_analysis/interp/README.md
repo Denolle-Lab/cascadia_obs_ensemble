@@ -32,6 +32,9 @@ verifiers' tables on `/wd1/mdenolle_data/catalog_v5/v5.1_analysis/verify_*`, the
 
 Code (`workflow/06_analysis/`): `v51_interp_common.py` (loaders), `v51_interp_tables.py` (tables, joined event table),
 `v51_interp_figs.py` (figures), `v51_interp_report.py` (HTML). Run in that order (about 1 minute in all).
+Input paths default to this project's data locations; override them with `V51_WD1`, `V51_CAT`, `V51_MAG`, `V51_FAULTS`,
+`V51_CLUSTERS`, `V51_ANSS` and `V51_SLAB2`. GMT is needed only to rebuild the cached coastline (`coast_i.txt`): `V51_GMT`, else
+the `gmt` next to the Python in use, else `gmt` on PATH.
 
 | file | content |
 |---|---|

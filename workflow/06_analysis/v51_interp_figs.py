@@ -9,7 +9,11 @@ faults and clusters. Writes PNGs to data/catalog_v5/v5.1_analysis/interp/figs/.
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
+import sys
+from functools import lru_cache
 from pathlib import Path
 
 import matplotlib
@@ -23,20 +27,40 @@ from v51_interp_common import (BIG, CLU, OUT, REGIONS, SLUG, VOLCANOES, V0, load
                                hav)
 
 FIG = OUT / "figs"
-FIG.mkdir(parents=True, exist_ok=True)
 plt.rcParams.update({"font.size": 8, "axes.titlesize": 9, "figure.dpi": 110, "savefig.dpi": 110})
 CLS_COL = {"background": "#9a9a9a", "mainshock-aftershock": "#1f5fa8", "swarm": "#d9711a", "multiplet": "#2e8b57"}
-GMT = "/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/gmt"
 
 SECT = {"Axial": 90, "Endeavour": 90, "Explorer": 90, "JdF ridge/plate": 20, "Blanco": 116, "Gorda": 90,
         "Mendocino": 90, "Offshore forearc": 90, "Puget/Georgia": 90, "Cascades": 0, "Other onshore": 90}
 
 
+def gmt_exe() -> str:
+    """GMT executable: $V51_GMT, else the gmt next to this Python (the pixi environment), else gmt on PATH."""
+    if os.environ.get("V51_GMT"):
+        return os.environ["V51_GMT"]
+    p = Path(sys.executable).parent / "gmt"
+    if p.exists():
+        return str(p)
+    w = shutil.which("gmt")
+    if w:
+        return w
+    raise FileNotFoundError("GMT not found: set V51_GMT=/path/to/gmt or put gmt on PATH")
+
+
+def lonlat_label(lat, lon, nd=2):
+    """'46.20N 122.19W': hemisphere letters from the sign (Cascadia longitudes are west, i.e. negative)."""
+    return f"{abs(lat):.{nd}f}{'N' if lat >= 0 else 'S'} {abs(lon):.{nd}f}{'E' if lon >= 0 else 'W'}"
+
+
+@lru_cache(maxsize=None)
 def coast():
+    """Coastline segments (GMT coast -Di), cached in BIG/coast_i.txt; read on first use, not at import."""
     f = BIG / "coast_i.txt"
     if not f.exists():
+        BIG.mkdir(parents=True, exist_ok=True)
         with open(f, "w") as fh:
-            subprocess.run([GMT, "coast", "-R-134/-118/38/52", "-Di", "-W", "-M"], stdout=fh, check=True, cwd=BIG)
+            subprocess.run([gmt_exe(), "coast", "-R-134/-118/38/52", "-Di", "-W", "-M"], stdout=fh, check=True,
+                           cwd=BIG)
     segs, cur = [], []
     for line in f.read_text().splitlines():
         if line.startswith(">"):
@@ -52,16 +76,17 @@ def coast():
     return segs
 
 
-COAST = coast()
-PB = load_pb_steps()
+@lru_cache(maxsize=None)
+def pb_steps():
+    return load_pb_steps()
 
 
 def draw_base(ax, ext, pb=True, volc=True):
-    for s in COAST:
+    for s in coast():
         ax.plot(s[:, 0], s[:, 1], "-", color="#333", lw=0.4, zorder=3)
     if pb:
         colors = {"OSR": "#b2182b", "OTF": "#2166ac", "SUB": "#4d4d4d"}
-        for _, r in PB.iterrows():
+        for _, r in pb_steps().iterrows():
             ax.plot([r.lon1, r.lon2], [r.lat1, r.lat2], "-", color=colors.get(r.cls, "#999"), lw=0.8, alpha=0.7, zorder=3)
     if volc:
         for n, (la, lo) in VOLCANOES.items():
@@ -103,7 +128,10 @@ def fig_overview(c):
         axs[1].text(g.lon.median(), g.lat.median(), r, fontsize=7, ha="center", color="k",
                     bbox=dict(fc="white", ec="none", alpha=0.6, pad=0.5), zorder=6)
     fig.colorbar(sc, ax=axs, shrink=0.6, label="depth (km below sea level)")
-    fig.suptitle(f"Located earthquakes ({len(E):,}; 623 rows without a hypocentre and 3,313 non-earthquakes left out).\n"
+    n_nohyp = int((~c.located).sum())
+    n_noneq = int((c.located & ~c.is_earthquake).sum())
+    fig.suptitle(f"Located earthquakes ({len(E):,}; {n_nohyp:,} rows without a hypocentre and {n_noneq:,} "
+                 "non-earthquakes left out).\n"
                  "Purple: fault-surface top edges (left v0, right v1; dashed = flagged). Red/blue/grey: PB2002 ridge/transform/subduction. Triangles: volcanoes.",
                  fontsize=8)
     fig.savefig(FIG / "fig_overview.png")
@@ -202,7 +230,7 @@ def fig_region(c, r):
         axs.scatter(d[good], E[de].values[good], s=0.8, c="#1f3a68", lw=0, rasterized=True, label="depth_good")
         axs.set_ylim(ytop, -4)
         axs.set_xlim(*xlim)
-        axs.set_xlabel(f"distance along azimuth {SECT[r]} deg from {lat0:.2f}N {lon0:.2f}E (km)")
+        axs.set_xlabel(f"distance along azimuth {SECT[r]} deg from {lonlat_label(lat0, lon0)} (km)")
         axs.set_ylabel(f"depth (km bsl), {ver}")
         axs.legend(fontsize=6, loc="lower left", markerscale=5)
         axs.set_title(f"section, all events of the region projected ({ver})")
@@ -253,7 +281,7 @@ def fig_swarm(c, fam, title, fa):
     ax.set_xlabel("km east")
     ax.set_ylabel("km north")
     ax.legend(fontsize=6, loc="lower left")
-    ax.set_title(f"map, centre {lat0:.3f}N {lon0:.3f}E")
+    ax.set_title(f"map, centre {lonlat_label(lat0, lon0, 3)}")
     fig.colorbar(sc, ax=ax, shrink=0.8, label="days since first event")
     ax = axs[1]
     ax.scatter(td, along, s=sz, c=np.where(good, "#1f3a68", "#aaaaaa"), lw=0)
@@ -451,6 +479,7 @@ def fig_axial_rate(c):
 
 
 def main():
+    FIG.mkdir(parents=True, exist_ok=True)
     c = pd.read_pickle(BIG / "events_joined.pkl")
     fa = pd.read_csv(CLU / "families_zbz_v51.csv")
     fig_overview(c)

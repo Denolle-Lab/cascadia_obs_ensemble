@@ -880,3 +880,14 @@ LOCPOSTERIOR OCT_TREE stacking; Lomax & Savvaidis 2022) for events with waveform
 differential times for every clustered family (D-B040), not only the test sets. PI: "use all resources you can while our
 jobs are running - we are the only one using the machine today": the per-session process caps of today are lifted, subject
 to keeping free memory (grid chain raised from 12 to 36 processes at 13:13).
+
+### D-B094 Real-data ensemble on v0.4.1 with velocity uncertainties inflated by the calibration, rounded up (adopted, 2026-11-25 15:37, PI; amends D-B030, D-B077)
+Synthetic calibration (ensemble_v0.3.2/synth/coverage.md, 102 members merged): hypocentres calibrated in every tile and
+coordinate (68 % coverage 0.70-0.73, 95 % 0.95-0.96); Vp/Vs calibrated (0.75 / 0.96); Vp and Vs too narrow on resolved
+nodes (Vp 0.565 / 0.849, rms z 1.28; Vs 0.581 / 0.863, rms z 1.22), as the f0 diagnostic predicted (each member misses the
+same 3-5 % of v0.3.1's structure at Blanco and Mendocino; the 3 % prior does not cover it). The D-B030 all-items rule failed
+(exit 2). PI: run the real phase on v0.4.1 (D-B083) and calibrate by inflation, "but round up because that's still a bit too
+narrow": the Vp and Vs posterior spreads (std and percentile half-widths about the median) are multiplied by factors taken
+from the synthetic members as the larger of the factors that bring the 68 % and the 95 % coverage of the resolved nodes to
+nominal, rounded up to the next 0.05; hypocentres and Vp/Vs are not inflated. The values and their derivation are recorded
+in the ensemble note and the product attributes. The v0.3.2-configuration calibration is accepted for v0.4.1 (P-E11).

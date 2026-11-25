@@ -1,0 +1,5 @@
+run,binary,binary_md5,exit,output_files,different,log_identical,wall_min
+blanco_m0t_d200_s20,tomoDD-SE_e10k,9cdc329c0976,exit 0,20,"['tomoDD-SE.log', 'stdout.txt']",False,24.0
+margin_m0_v3_d200_s480,tomoDD-SE_m,a334ef5e0c78,exit 0,20,"['tomoDD-SE.log', 'stdout.txt']",False,33.6
+mendocino_gorda_c_m0t_d200_s480,tomoDD-SE_e13k,c441d6ad7814,exit 0,20,"['tomoDD-SE.log', 'stdout.txt']",False,55.5
+washington_m0t_d200_s480,tomoDD-SE_w,aee014d37d67,exit 0,20,"['tomoDD-SE.log', 'stdout.txt']",False,76.1

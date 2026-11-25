@@ -1,0 +1,16 @@
+stage,version,run,wall_min,user_min,maxrss_gb
+M0,v0.4.0,margin_m0_v3/d200_s480,18.1,18.1,1.79
+M0,v0.4.1,margin_m0_v4/d200_s480,21.2,20.7,1.65
+M0,v0.4.1 noise floor,margin_m0_v4nf/d200_s480,22.0,21.4,1.52
+mendocino_gorda_c,v0.4.0,mendocino_gorda_c_m0t/d200_s480,38.1,38.0,2.85
+mendocino_gorda_c,v0.4.1,mendocino_gorda_c_m0f/d200_s480,35.7,34.7,2.71
+mendocino_gorda_c,v0.4.1 noise floor,mendocino_gorda_c_m0fnf/d200_s480,36.4,35.4,2.71
+blanco,v0.4.0,blanco_m0t/d200_s20,12.5,12.5,1.43
+blanco,v0.4.1,blanco_m0f/d200_s20,14.7,14.6,1.27
+blanco,v0.4.1 noise floor,blanco_m0fnf/d200_s20,14.2,14.1,1.78
+oregon,v0.4.0,oregon_m0t/d200_s480,17.8,17.7,1.15
+oregon,v0.4.1,oregon_m0f/d200_s480,14.6,14.5,1.3
+oregon,v0.4.1 noise floor,oregon_m0fnf/d200_s480,14.0,13.9,0.98
+washington,v0.4.0,washington_m0t/d200_s480,47.0,46.9,3.22
+washington,v0.4.1,washington_m0f/d200_s480,46.3,45.0,3.07
+washington,v0.4.1 noise floor,washington_m0fnf/d200_s480,45.9,44.8,3.07

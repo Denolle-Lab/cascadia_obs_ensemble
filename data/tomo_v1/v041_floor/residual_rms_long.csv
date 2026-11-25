@@ -1,0 +1,100 @@
+stage,version,phase,cls,n,rms_s,mean_s
+M0,start,P,OBS,20128,0.4107,0.2265
+M0,start,P,land,98197,0.3889,0.2567
+M0,start,S,OBS,26563,0.5216,-0.0249
+M0,start,S,land,84420,0.5936,0.1541
+M0,start,P,all,118325,0.3927,0.2516
+M0,start,S,all,110983,0.5772,0.1112
+M0,start,dt (catalog),all,371263,0.2514,-0.0074
+M0,v0.4.0,P,OBS,20085,0.2396,0.0082
+M0,v0.4.0,P,land,97404,0.204,0.0121
+M0,v0.4.0,S,OBS,26084,0.4645,0.074
+M0,v0.4.0,S,land,82179,0.4484,0.0688
+M0,v0.4.0,P,all,117489,0.2105,0.0115
+M0,v0.4.0,S,all,108263,0.4523,0.07
+M0,v0.4.0,dt (catalog),all,273717,0.2107,-0.0018
+M0,v0.4.1,P,OBS,20103,0.2396,0.0086
+M0,v0.4.1,P,land,98170,0.2042,0.0124
+M0,v0.4.1,S,OBS,26113,0.4654,0.0745
+M0,v0.4.1,S,land,82728,0.4495,0.0702
+M0,v0.4.1,P,all,118273,0.2107,0.0118
+M0,v0.4.1,S,all,108841,0.4534,0.0713
+M0,v0.4.1,dt (catalog),all,275169,0.2115,-0.002
+mendocino_gorda_c,start,P,OBS,37724,0.36,0.0076
+mendocino_gorda_c,start,P,land,91343,0.336,0.2193
+mendocino_gorda_c,start,S,OBS,65067,0.4518,0.0273
+mendocino_gorda_c,start,S,land,73707,0.5681,0.3238
+mendocino_gorda_c,start,P,all,129067,0.3432,0.1575
+mendocino_gorda_c,start,S,all,138774,0.5168,0.1848
+mendocino_gorda_c,start,dt (catalog),all,651492,0.2464,-0.0031
+mendocino_gorda_c,v0.4.0,P,OBS,37695,0.2101,0.0024
+mendocino_gorda_c,v0.4.0,P,land,91093,0.1846,-0.0
+mendocino_gorda_c,v0.4.0,S,OBS,64068,0.399,0.0741
+mendocino_gorda_c,v0.4.0,S,land,71974,0.3963,0.0423
+mendocino_gorda_c,v0.4.0,P,all,128788,0.1924,0.0007
+mendocino_gorda_c,v0.4.0,S,all,136042,0.3975,0.0573
+mendocino_gorda_c,v0.4.0,dt (catalog),all,578243,0.1988,0.0005
+mendocino_gorda_c,v0.4.1,P,OBS,37710,0.21,0.0027
+mendocino_gorda_c,v0.4.1,P,land,91200,0.1846,-0.0001
+mendocino_gorda_c,v0.4.1,S,OBS,64093,0.3989,0.0745
+mendocino_gorda_c,v0.4.1,S,land,72025,0.3963,0.0421
+mendocino_gorda_c,v0.4.1,P,all,128910,0.1923,0.0007
+mendocino_gorda_c,v0.4.1,S,all,136118,0.3975,0.0573
+mendocino_gorda_c,v0.4.1,dt (catalog),all,578675,0.1988,0.0004
+blanco,start,P,OBS,41920,0.2764,0.1331
+blanco,start,S,OBS,43377,0.4494,0.118
+blanco,start,P,all,41920,0.2764,0.1331
+blanco,start,S,all,43377,0.4494,0.118
+blanco,start,dt (catalog),all,300503,0.2442,-0.0044
+blanco,v0.4.0,P,OBS,41836,0.1522,0.0058
+blanco,v0.4.0,S,OBS,42422,0.2794,-0.0024
+blanco,v0.4.0,P,all,41836,0.1522,0.0058
+blanco,v0.4.0,S,all,42422,0.2794,-0.0024
+blanco,v0.4.0,dt (catalog),all,280907,0.2449,0.0015
+blanco,v0.4.1,P,OBS,41858,0.1518,0.0054
+blanco,v0.4.1,S,OBS,42431,0.2788,-0.0038
+blanco,v0.4.1,P,all,41858,0.1518,0.0054
+blanco,v0.4.1,S,all,42431,0.2788,-0.0038
+blanco,v0.4.1,dt (catalog),all,281080,0.245,0.0014
+oregon,start,P,OBS,838,0.3122,0.1677
+oregon,start,P,land,62201,0.2926,0.1817
+oregon,start,S,OBS,1167,0.4923,0.0388
+oregon,start,S,land,58086,0.4645,0.2402
+oregon,start,P,all,63039,0.2928,0.1815
+oregon,start,S,all,59253,0.4651,0.2363
+oregon,start,dt (catalog),all,300604,0.2054,-0.0168
+oregon,v0.4.0,P,OBS,816,0.1908,0.0322
+oregon,v0.4.0,P,land,61528,0.1574,0.0146
+oregon,v0.4.0,S,OBS,1037,0.3297,0.0272
+oregon,v0.4.0,S,land,55998,0.3136,0.0399
+oregon,v0.4.0,P,all,62344,0.1579,0.0149
+oregon,v0.4.0,S,all,57035,0.3139,0.0397
+oregon,v0.4.0,dt (catalog),all,278516,0.1624,-0.0013
+oregon,v0.4.1,P,OBS,827,0.1962,0.0352
+oregon,v0.4.1,P,land,62150,0.1583,0.0156
+oregon,v0.4.1,S,OBS,1041,0.3304,0.0281
+oregon,v0.4.1,S,land,56381,0.3155,0.043
+oregon,v0.4.1,P,all,62977,0.1588,0.0158
+oregon,v0.4.1,S,all,57422,0.3158,0.0428
+oregon,v0.4.1,dt (catalog),all,281666,0.1634,-0.0014
+washington,start,P,OBS,97,0.2794,0.0337
+washington,start,P,land,170013,0.319,0.1751
+washington,start,S,OBS,200,0.8256,-0.4021
+washington,start,S,land,164584,0.5804,0.2868
+washington,start,P,all,170110,0.319,0.1751
+washington,start,S,all,164784,0.5807,0.286
+washington,start,dt (catalog),all,811542,0.2136,-0.0108
+washington,v0.4.0,P,OBS,97,0.3185,0.0281
+washington,v0.4.0,P,land,168554,0.1814,0.0055
+washington,v0.4.0,S,OBS,121,0.6169,-0.232
+washington,v0.4.0,S,land,156997,0.3679,0.0384
+washington,v0.4.0,P,all,168651,0.1815,0.0055
+washington,v0.4.0,S,all,157118,0.3681,0.0382
+washington,v0.4.0,dt (catalog),all,731913,0.173,-0.0017
+washington,v0.4.1,P,OBS,97,0.3175,0.0268
+washington,v0.4.1,P,land,169883,0.1821,0.0057
+washington,v0.4.1,S,OBS,121,0.624,-0.2411
+washington,v0.4.1,S,land,158010,0.369,0.0392
+washington,v0.4.1,P,all,169980,0.1822,0.0058
+washington,v0.4.1,S,all,158131,0.3693,0.039
+washington,v0.4.1,dt (catalog),all,738267,0.1739,-0.0017

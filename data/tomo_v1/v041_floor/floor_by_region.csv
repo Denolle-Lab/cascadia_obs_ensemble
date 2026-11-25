@@ -1,0 +1,27 @@
+stage,region,events,hit_during_inversion,at_floor_final,at_floor_pct,air_quakes_v040,air_quakes_v041,above_surface_final_v040,within_100m_of_surface_v041
+M0,Axial,24,5,3,12.5,2,0,2,3
+M0,Blanco,536,12,7,1.31,0,0,10,7
+M0,Cascades,370,19,8,2.16,6,0,8,6
+M0,Explorer,211,3,1,0.47,0,0,1,1
+M0,Gorda,828,10,4,0.48,1,0,6,4
+M0,JdF ridge/plate,122,37,26,21.31,0,0,34,27
+M0,Mendocino,545,5,2,0.37,0,0,3,2
+M0,Offshore forearc,1593,42,25,1.57,21,0,9,17
+M0,Other onshore,1454,116,70,4.81,51,0,51,56
+M0,Puget/Georgia,1260,17,10,0.79,7,0,8,10
+mendocino_gorda_c,Blanco,99,4,3,3.03,0,0,5,4
+mendocino_gorda_c,Gorda,2467,18,11,0.45,1,0,16,9
+mendocino_gorda_c,Mendocino,4047,7,5,0.12,0,0,5,5
+mendocino_gorda_c,Offshore forearc,4296,31,23,0.54,14,0,14,21
+mendocino_gorda_c,Other onshore,1282,10,6,0.47,5,0,2,7
+blanco,Blanco,4214,13,8,0.19,3,0,8,9
+blanco,Gorda,3,1,1,33.33,0,0,1,1
+blanco,JdF ridge/plate,74,6,2,2.7,1,0,5,3
+blanco,Offshore forearc,87,1,0,0.0,0,0,0,0
+oregon,Cascades,983,31,21,2.14,12,0,15,20
+oregon,Offshore forearc,470,26,17,3.62,5,0,15,18
+oregon,Other onshore,1937,161,87,4.49,49,0,84,87
+washington,Cascades,1577,37,18,1.14,17,0,11,18
+washington,Offshore forearc,1921,121,70,3.65,77,0,21,69
+washington,Other onshore,1604,66,37,2.31,17,0,36,39
+washington,Puget/Georgia,4230,54,29,0.69,30,0,16,28

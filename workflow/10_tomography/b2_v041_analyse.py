@@ -284,20 +284,21 @@ def model_diff():
     from scipy.ndimage import maximum_filter
     z = new.depth.values
     res = {"Vp": new.resolution_p.values > 0, "Vs": new.resolution_s.values > 0}
+    cov = {"Vp": new.tile_weight_p.values > 0, "Vs": new.tile_weight_s.values > 0}
     same_mask = bool((old.resolution_p.values == new.resolution_p.values).all() and
                      (old.resolution_s.values == new.resolution_s.values).all())
     rows, tot = [], []
-    for k in ("Vp", "Vs"):
+    for (k, nodes, MS) in [(k, nn, ms) for nn, ms in (("resolved", res), ("tile-covered", cov)) for k in ("Vp", "Vs")]:
         nl = maximum_filter(np.maximum(np.abs(D[f"n{k}"]), np.abs(D[f"o{k}"])), size=3, mode="nearest")
         for i, zz in enumerate(list(z) + ["all"]):
-            m = res[k][i] if zz != "all" else res[k]
+            m = MS[k][i] if zz != "all" else MS[k]
             if m.sum() == 0:
                 continue
             d = D[f"d{k}"][i][m] if zz != "all" else D[f"d{k}"][m]
             n = D[f"n{k}"][i][m] if zz != "all" else D[f"n{k}"][m]
             o = D[f"o{k}"][i][m] if zz != "all" else D[f"o{k}"][m]
             L = nl[i][m] if zz != "all" else nl[m]
-            r = dict(quantity=k, depth_km=zz, resolved_nodes=int(m.sum()),
+            r = dict(quantity=k, nodes=nodes, depth_km=zz, n_nodes=int(m.sum()),
                      rms_pct=round(float(np.sqrt((d ** 2).mean())), 4), max_abs_pct=round(float(np.abs(d).max()), 3),
                      gt1_pct=round(100 * float((np.abs(d) > 1).mean()), 2),
                      noise_v041_rms_pct=round(float(np.sqrt((n ** 2).mean())), 4),
@@ -377,7 +378,12 @@ def hypo_shifts():
             m = x.merge(y, on="ID", suffixes=("", "_0")).merge(ev, on="ID", how="left")
             m["dh_km"] = np.hypot((m.lat - m.lat_0) * 111.19, (m.lon - m.lon_0) * 111.19 * np.cos(np.radians(m.lat)))
             m["dz_km"] = m.depth - m.depth_0
-            for reg, g in list(m.groupby("region")) + [("all", m)]:
+            hit = set(floor_log(rd(new, sm))[0].ID)
+            groups = list(m.groupby("region")) + [("all", m), ("events hit by the floor in v0.4.1", m[m.ID.isin(hit)]),
+                                                   ("events never hit", m[~m.ID.isin(hit)])]
+            for reg, g in groups:
+                if not len(g):
+                    continue
                 rows.append(dict(stage=name, comparison=lab, region=reg, events=len(g),
                                  dh_median_km=round(float(g.dh_km.median()), 3),
                                  dh_p90_km=round(float(g.dh_km.quantile(0.9)), 3),
@@ -389,14 +395,20 @@ def hypo_shifts():
 
 
 # ------------------------------------------------------------------ 8 residuals
-def residuals():
+def residuals(common=False):
+    """rms by stage, phase, station class; common=True: only events kept by both v0.4.0 and v0.4.1 (v0.4.1 keeps the
+    events v0.4.0 dropped as air quakes, which changes the event set)."""
     rows = []
     for name, (old, new, nf, sm, oldnf) in STAGES.items():
         if not (rd(new, sm) / "Output_Files" / "tomoDD.res").exists():
             continue
         codes = pd.read_csv(RUNS / new / "inputs" / "station_codes.csv")[["code", "is_obs"]]
+        keep = set(reloc_w(rd(old, sm)).ID) & set(reloc_w(rd(new, sm)).ID)
         for lab, reg, ini in (("start", new, True), ("v0.4.0", old, False), ("v0.4.1", new, False)):
             a, dtr = A.abs_res(rd(reg, sm), ini=ini)
+            if common:
+                a = a[a.event_ID.isin(keep)]
+                dtr = dtr[dtr.c1.isin(keep) & dtr.c2.isin(keep)]
             a = a.merge(codes, on="code", how="left")
             a["cls"] = np.where(a.is_obs, "OBS", "land")
             for (ph, cls), g in list(a.groupby(["phase", "cls"])) + [((ph, "all"), g) for ph, g in a.groupby("phase")]:
@@ -456,6 +468,8 @@ def main():
     rt, rpiv = residuals()
     rt.to_csv(OUT / "residual_rms_long.csv", index=False)
     rpiv.to_csv(OUT / "residual_rms.csv", index=False)
+    _, rpc = residuals(common=True)
+    rpc.to_csv(OUT / "residual_rms_common_events.csv", index=False)
     rtm, js = run_times()
     rtm.to_csv(OUT / "run_times.csv", index=False)
     reg = pd.read_csv(STORE / "registry.csv", dtype={"version": str})
@@ -524,14 +538,17 @@ def main():
          ("<p><b>Errors: v0.4.1 final hypocentres above the true surface:</b></p>" + html_table(pabove, 50))
          if len(pabove) else "<p>No v0.4.1 final hypocentre is above the true surface.</p>",
          "<h2>6. Model v0.4.1 - v0.4.0 on resolved nodes (inversion values, before the product rules)</h2>",
-         f"<p>Resolution masks identical: {same_mask}. Noise floors: the v0.4.1 chain and the v0.4.0 chain rerun "
+         f"<p>Resolved = checkerboard-resolved nodes (resolution &gt; 0, D-B049 masks); tile-covered = nodes inside a "
+         f"merged tile's box (tile_weight &gt; 0). Resolution masks identical: {same_mask}. Noise floors: the v0.4.1 chain and the v0.4.0 chain rerun "
          "with N(0, 1e-6 s) on every observed time, merged with the same rules. above_noise = |difference| &gt; 2 x "
          "the largest |noise difference| (either chain) at the node and its 26 neighbours.</p>",
          html_table(mdt), html_table(md), img("maps_diff.png"), img("maps_noise.png"),
          "<h2>7. Hypocentre shifts (tomoDD final), by stage and region</h2>", html_table(hs),
          "<h2>8. Residual rms by phase and station class</h2>",
          "<p>Absolute residuals of the final iteration (tomoDD.res; 'start' = v0.4.1's first iteration, same data "
-         "and start as v0.4.0's); catalog dt residuals in the last row of each stage.</p>", html_table(rpiv),
+         "and start as v0.4.0's); catalog dt residuals in the last row of each stage. All events of each run (v0.4.1 "
+         "keeps the events v0.4.0 dropped as air quakes):</p>", html_table(rpiv),
+         "<p>Only the events kept by both v0.4.0 and v0.4.1 (same event set):</p>", html_table(rpc),
          "<h2>9. Run times</h2>", html_table(rtm), html_table(js) if js is not None else "",
          "<h2>10. Product and registration</h2>",
          "<pre>" + json.dumps(dict(registration=regrow.to_dict("records"), info=nodes.get("info"),

@@ -7,7 +7,7 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
-## STAGE MARKER 2026-11-24 16:55 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+## STAGE MARKER 2026-11-24 16:50 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
 
 Stage 1 of 5 of v5.1: build pieces built and verified (surface, runner, catalog done; three verifier must_fix fixed and
 pushed; field and wide finishing: their test grid builds run detached). Then: 2 integration (merge v51/*, D-B071,

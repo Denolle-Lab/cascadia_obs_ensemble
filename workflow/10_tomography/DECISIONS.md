@@ -720,3 +720,18 @@ far_only, and capping would leave many offshore events unlocated; the trend is a
 upper-mantle S) before the next model version. Near-seafloor S at OBS stations: wide minus fine at real event positions
 within 2 km of the seafloor has p95 0.046-0.061 s (max 0.23 s), from interpolating on 2 km nodes; far below the 0.2 s
 model error of D-B069: accepted (1 km vertical wide grids would cost 246 GB).
+
+### D-B075 Re-time every pick whose day trace drifts from its record headers, if the co-located test confirms the headers (adopted, 2026-11-24, under the PI's "go continuously 1 to 5"; implements D-B072)
+Re-timing (/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/, RESUME.md): verified on pnwstore (exact sample matches;
+TDL 2014-07-13: 0.010 s at 00:30, 0.521 s at 23:30; data gaps reset the count). The listed epoch (D-B072) is re-timed:
+87,301 picks (AIC onsets: catalog - onset -0.310 -> -0.010 s). The header scan found the same mechanism beyond the list:
+UW analog EHZ channels before 2013-10-22 (opposite sign, typically -0.01 to -0.07 s/day; daily maximum error median
+0.03 s, up to ~0.24 s in 2010), more UW analog stations (RER RVC LMW STW CPW GHW GMW MPO OSR PGO WPO SSO; OBC OCP OOW OSD
+OTR +0.05-0.07 s/day), CC SEP SUG NED EHZ (+0.02 to +0.4 s/day), UO FRIS and HUO already in 2010 (~1.1 s/day), and
+small sporadic cases. The PI's rule (time each pick from a short read, because a whole-day read accumulates the lag)
+applies to every such channel-day, so v5.1 uses every correction (rule: a station-day is corrected when its record
+headers and the sample count differ by >= 5 ms anywhere in the day; each pick gets its own record's header time),
+PROVIDED the co-located test (tables/validation_colocated_slope.csv: pick differences against GPS-timed digital stations
+LON, STD.CC, B202 regressed on the correction; slope ~ 0 after re-timing) confirms that the headers are right. If it
+does not, v5.1 uses only the corrections of the listed epoch (epoch_class == 'listed' in corrections.csv). Not
+re-timable: NC/BK (not in pnwstore), channels resampled from another rate (flag rate_not_100), off-grid picks (kept).

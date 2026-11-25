@@ -58,6 +58,9 @@
   .seg button + button { border-left: 1px solid var(--hairline-strong); }
   .seg button.on { background: var(--text-primary); color: var(--surface-0); }
   .seg button:disabled { opacity: 0.4; cursor: default; }
+  /* catalog switch: one button per registry catalog + Compare, wrapped on several rows */
+  #segCat { display: flex; flex-wrap: wrap; max-width: 100%; }
+  #segCat button, #segCat button + button { flex: 1 0 auto; white-space: nowrap; border: 0; box-shadow: inset -1px -1px 0 var(--hairline-strong); margin: 0 -1px -1px 0; }
   .sep { border-top: 1px solid var(--hairline); margin: 2px 0; }
   details.grp { border-top: 1px solid var(--hairline); padding-top: 7px; }
   details.grp:first-child { border-top: 0; padding-top: 0; }
@@ -1340,7 +1343,11 @@ function catNote() {                          // the catalog shown: registry not
   if (F.cmp) return `<div class="attribution" style="border-top:0;padding-top:0">Compare: ${CMPQ.n.toLocaleString()} events located in both ${st(F.ca)} (A) and ${st(F.cb)} (B), drawn at B${nh(F.ca) + nh(F.cb) ? "; events without a hypocentre in A or B are not drawn" : ""}.${F.segs ? ` Lines join A (faint end) to B for at most ${F.segN.toLocaleString()} of the events shown (${F.segs === 1 ? "largest shifts" : "random subset"}).` : ""}</div>`;
   if (!F.cat) return "";
   const c = CATS[F.cat], nU = N - (c.n_loc ?? N) - nh(F.cat);
-  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${c.note ? esc(c.note) : `${esc(c.label)}. Depths below sea level.`}${nU ? ` Rings mark the ${nU.toLocaleString()} events not located in this catalog, at their ${esc(CATS[0].id)} location.` : ""}${nh(F.cat) ? ` The ${nh(F.cat).toLocaleString()} events without a hypocentre in this catalog (tier U) are not shown.` : ""}</div>`;
+  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(c.label)}. Depths below sea level.${nU ? ` Rings mark the ${nU.toLocaleString()} events not located in this catalog, at their ${esc(CATS[0].id)} location.` : ""}${nh(F.cat) ? ` The ${nh(F.cat).toLocaleString()} events without a hypocentre in this catalog (tier U) are not shown.` : ""}</div>`;
+}
+function catNotes() {                         // registry notes, folded under "Symbols and sources": the catalogs in view, else the relocated one
+  const ks = F.cmp ? [F.ca, F.cb] : [F.cat || REL];
+  return [...new Set(ks)].filter(k => CATS[k].note).map(k => `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${esc(CATS[k].label)}</b>: ${esc(CATS[k].note)}</div>`).join("");
 }
 function drawLegend() {
   const modes = [
@@ -1380,6 +1387,7 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
+    ${catNotes()}
     <div class="attribution">Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;

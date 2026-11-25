@@ -1,0 +1,11 @@
+event_id,label,expected,region,M,role,family_id,excluded,type,n,n_all,Mmax,M2,duration90_days,extent_km,mean_leaf_depth,regions,note
+262,2010-01-10 Mw 6.5 Gorda,mainshock-aftershock,MT,6.5,mainshock,5,,mainshock-aftershock,579,1668,6.5,4.953,61.6,70.3,1.3,MT:579,
+83695,2014-03-10 Mw 6.8 Gorda,mainshock-aftershock,MT,6.8,mainshock,1162,,mainshock-aftershock,1239,2358,6.8,4.855,71.5,134.1,3.22,MT:1237;GO:2,
+19960,2011-09-09 Mw 6.4 Vancouver Island,mainshock-aftershock,ON,6.41,mainshock,228,,mainshock-aftershock,133,229,6.41,4.565,57.7,33.0,1.23,ON:125;EN:7;WA:1,
+89617,2014-04-24 Mw 6.5 Vancouver Island,mainshock-aftershock,EN,6.53,mainshock,833,,mainshock-aftershock,107,300,6.53,5.51,279.8,100.1,2.12,EN:72;ON:35,
+40500,2012-11-08 Mw 6.1 Explorer plate,mainshock-aftershock,EN,6.14,mainshock,482,,mainshock-aftershock,21,91,6.14,3.231,12.1,45.4,1.0,EN:21,
+117222,2015-01-28 Mw 5.7 Mendocino fault zone,mainshock-aftershock,MT,5.71,mainshock,1536,,mainshock-aftershock,90,682,5.71,4.539,63.0,40.1,3.09,MT:90,
+150165,"2015-06-01 Mw 5.8, 5.4, 5.9 Blanco triplet",swarm or multiplet,BL,5.8,swarm,1932,,swarm,101,744,5.89,5.8,31.9,46.3,1.58,BL:101,
+27442,2012-02/04 Mw 5.8 and 6.0 Blanco,swarm or multiplet,BL,5.95,swarm,302,,swarm,96,163,5.95,5.83,225.6,50.2,1.4,BL:96,
+900001,2016-12-08 Mw 6.6 Mendocino fracture zone (v4.1 addition),mainshock-aftershock,GO,6.6,mainshock,2095,,mainshock-aftershock,4,4,6.6,4.71,16.9,74.2,1.0,GO:4,
+144500,2015-04-24 Axial Seamount eruption onset,swarm,AX,4.302,largest event,1872,,swarm,495,513,4.302,4.191,0.6,6.9,37.46,AX:495,start 2015-04-24 05:13:16.173002; 48% of AX analysis events 2015-04-23 to 05-31 in this family

@@ -44,8 +44,8 @@ cell-centred, Earth-flattened SLOW_LEN, merged-surface water/air mask of that bu
 (cells 0..85), extended to z' = 123 km (params b4.wide.z_max_km + 2) with the same recipe: inside the tomography box
 the model version of that build (v<version>.nc reaches 125 km), outside it the deepest D-B005 layer (80 km) blended
 linearly in true depth into ak135 (Kennett et al. 1995; data/tomo_v1/ref_models/ak135_0-410km.csv) over
-b4.wide.blend_km; the 2 km field is the mean slowness of the 2 x 2 x 2 1 km cells. Earth-flattening as b4_time_grids.py (z' = Re ln(Re/(Re-z)),
-v' = v exp(z'/Re)).
+b4.wide.blend_km; the 2 km field is the mean slowness of the 2 x 2 x 2 1 km cells. Earth-flattening as
+b4_time_grids.py (z' = Re ln(Re/(Re-z)), v' = v exp(z'/Re)).
 Grid: 2 km nodes of the D-B005 lattice x -513..457, y -709..725, z' -5..121 (486 x 718 x 64, 89 MB).
 
 Builds are never mixed: the grids go to /wd1/mdenolle_data/reloc_v5/wide_<TIME_NAME>/ with a manifest

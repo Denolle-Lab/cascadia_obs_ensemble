@@ -869,7 +869,7 @@ and test NLL-SSST (source-specific station terms, Lomax & Savvaidis 2022) agains
 few clusters. Picks: Cascadia_picks_catalog_v4.1tc.csv (D-B090; MH07/MG07 corrected). The full relocation runs after the PI's
 review of the other clock-candidate epochs; the location-review flags are applied when the catalog is built.
 
-### D-B093 Catalog v6.0 station terms: static terms plus the NLL-coherence stage, with waveform cross-correlation for all families; use the whole machine (adopted, 2026-11-25 13:10, PI)
+### D-B093 Catalog v6.0 station terms: static terms plus the NLL-coherence stage, with waveform cross-correlation for all families; use the whole machine (adopted, 2026-11-25 13:12, PI)
 SSST test on the four D-B078 sets (v5.1 grids, /wd1/mdenolle_data/reloc_v6/ssst_test/g51/; fit of the CC differential times,
 median per pair, ms): static / best SSST step / static + coherence = Axial 12.3 / 13.5 / 11.2; Mount St Helens 17.2 / 16.9 /
 10.6; Blanco 24.3 / 23.2 / 24.3; JdF 39.0 / 35.7 (16-8 km) / not applicable (too few compact pdfs). SSST pushed Mount St

@@ -197,3 +197,21 @@ Launch (not done; for the main session after review):
 
 The three test members are reused by the chain (their stages are DONE). For a v0.4.x configuration: add
 configs.v0.4.x, set `config` (or B2_ENS_CONFIG) and a new root (B2_ENS_ROOT), then the same command.
+
+## 7. Review items after the first launch (2026-11-25)
+
+* Synthetic truth fixed (commit 4e7abb94): the truth takes the members' start floor Vp/Vs >= 1.65 (P-E5); before, 34
+  of the 320 resolved S nodes had truth Vp/Vs < 1.6, which D-B051 caps in every member (missed by construction).
+  New truth: minimum Vp/Vs on the resolved S nodes 1.65 (float32), 75 of 320 at the floor. tomoDD-SE_syn reruns are
+  hash-checked (MOD and event.dat md5). The coverage report adds an N_eff-aware consistency table (N_eff P 25.7 /
+  50.9, S 11.2 / 21.4 on the gate masks) next to the unchanged D-B030 verdict.
+* Background bias of the truth (b2_ens_f0.py; result in ROOT/synth/f0_bias.md): the truth's v0.3.1 / start - 1 part
+  is not a draw of the members' prior, so what the inversions miss of it is common to all members. A second
+  synthetic dataset from v0.3.1 alone (f = 0, same floor, hypocentres and delta_true), inverted once with null draws,
+  maps that bias per tile on the gate nodes.
+* Open item for the real ensemble (no action yet): the pick-noise class factors are pooled over M0 and the four tiles
+  but differ strongly between stages (reviewer: OBS P 0.90 in Oregon against 3.04 in Washington; OBS S 1.13 in Blanco
+  against 3.36 in Washington). A pooled factor under-perturbs the noisier stages and over-perturbs the quieter ones.
+  Options: class factors per stage and class (each stage's picks drawn with its own factor; a pick shared by two
+  stages would then need one value, e.g. the factor of the stage that holds most of its picks), or per station
+  network. Decide before the real-data members.

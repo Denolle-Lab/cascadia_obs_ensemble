@@ -22,11 +22,14 @@ status 3. Outputs in the run folder: arrivals_used.csv (ID, n_obs, n_used, n_fin
 arrival_drops.csv (one row per documented box rejection).
 
 Guards (the runner refuses to start, exit status 2):
+  (0) the fine grid folder has no b4_time_grids manifest (only --no-grid-manifest allows grids of another builder);
   (a) a fine grid (header and complete buffer) is missing for a station-phase that an obs block references: NLLoc
       would silently fall back to the wide root, or drop the arrival without a message;
   (b) with --time-wide: a referenced station-phase whose fine grid does not contain its job's box has no complete wide
-      grid containing that box, or the wide folder has no b4_wide_grids manifest naming the fine folder;
-  (c) resume: the run folder's run_config.json differs from this invocation (grid roots, obs folder, template, LOCGAU,
+      grid containing that box, or the wide folder does not have exactly one b4_wide_grids manifest whose recorded fine
+      build (folder name, the fine manifest's utc, git commit and params) is the current fine build;
+  (c) resume: the run folder's run_config.json differs from this invocation (grid roots and the md5 of the fine and
+      wide build manifests, so a grid folder rebuilt in place under the same name is caught; obs folder, template, LOCGAU,
       LOCGAU2, topography file and contents, station-terms file and contents, NLLoc binary, chunking, pass), or the
       folder holds workdirs but no run_config.json, or a workdir's nlloc.in or events.obs differs from what this
       invocation would write. A workdir with loc.sum.grid0.loc.hyp and the same nlloc.in is skipped (resume).
@@ -204,9 +207,36 @@ def options(a):
                               locgau=a.locgau, locgau2=a.locgau2, topo=a.topo, max_dist=a.max_dist)
 
 
+def fine_manifest(time):
+    """the fine build's manifest (b4_time_grids.py), or None (grids of another builder, e.g. Track A)."""
+    d = grid_dir(time)
+    m = d / f"b4_time_grids_{d.name}.manifest.json"
+    return m if m.is_file() else None
+
+
+def wide_manifest(time_wide):
+    man = sorted(grid_dir(time_wide).glob("b4_wide_grids*.manifest.json"))
+    if len(man) != 1:
+        refuse(f"{grid_dir(time_wide)} has {len(man)} b4_wide_grids manifests (need exactly one)")
+    return man[0]
+
+
+def grid_identity(a):
+    """md5 of the fine and wide build manifests: a grid folder rebuilt in place under the same name changes them,
+    so resume (guard c) and the deep pass refuse to mix builds. A fine folder without a b4_time_grids manifest
+    (e.g. Track A's time_vpvs176) needs --no-grid-manifest."""
+    fm = fine_manifest(a.time)
+    if fm is None and not a.no_grid_manifest:
+        refuse(f"{grid_dir(a.time)} has no b4_time_grids manifest: cannot identify the grid build "
+               "(use --no-grid-manifest only for grids of another builder)")
+    return {"fine_manifest_md5": md5(fm) if fm else None,
+            "wide_manifest_md5": md5(wide_manifest(a.time_wide)) if a.time_wide else None}
+
+
 def run_config(a, opt, obs_dir):
-    """what defines a run (guard c); the template enters by its contents, not its path."""
-    return {"pass": "deep" if a.deep_from else "main", "time": opt.roots[0],
+    """what defines a run (guard c); the template enters by its contents, not its path; the grid builds by the md5 of
+    their manifests."""
+    return {"pass": "deep" if a.deep_from else "main", "time": opt.roots[0], **grid_identity(a),
             "time_wide": opt.roots[1] if len(opt.roots) > 1 else None,
             "obs": str(run_dir(a.deep_from)) if a.deep_from else str(obs_dir.resolve()),
             "template_md5": md5(opt.template), "locgau": opt.locgau, "locgau2": opt.locgau2,
@@ -269,8 +299,8 @@ def plan_deep(a, opt, rd, cfg):
         refuse(f"--deep-from {md}: {e.filename} missing (main run not finished by this runner)")
     if mcfg.get("pass") != "main" or set(used["pass"]) != {"main"}:
         refuse(f"--deep-from {md} is not a main-pass run")
-    same = ("time", "time_wide", "template_md5", "locgau", "locgau2", "topo", "topo_md5", "topo_hdr_md5", "stat",
-            "stat_md5", "max_dist", "nll_md5", "chunk", "max_events")
+    same = ("time", "time_wide", "fine_manifest_md5", "wide_manifest_md5", "template_md5", "locgau", "locgau2",
+            "topo", "topo_md5", "topo_hdr_md5", "stat", "stat_md5", "max_dist", "nll_md5", "chunk", "max_events")
     diff = {k: (mcfg.get(k), cfg[k]) for k in same if mcfg.get(k) != cfg[k]}
     if diff:
         refuse(f"deep pass options differ from the main run {md} (main, this): {diff}")
@@ -310,12 +340,22 @@ def plan_deep(a, opt, rd, cfg):
 
 # ------------------------------------------------------------------------------------------------------------ guards
 def check_wide_manifest(time, time_wide):
-    man = sorted(grid_dir(time_wide).glob("b4_wide_grids*.manifest.json"))
-    if not man:
-        refuse(f"{grid_dir(time_wide)} has no b4_wide_grids manifest: cannot check it was built for {time}")
-    built = {Path(str(json.loads(m.read_text()).get("params", {}).get("time_name"))).name for m in man}
-    if built != {grid_dir(time).name}:
-        refuse(f"{grid_dir(time_wide)} was built from {sorted(built)}, not from {grid_dir(time).name}")
+    """the wide build must belong to the CURRENT fine build: same folder name and the identity b4_wide_grids.py
+    recorded from the fine manifest (utc, git commit, params). A fine folder rebuilt in place after the wide grids
+    were made fails here."""
+    wm = json.loads(wide_manifest(time_wide).read_text()).get("params", {})
+    if Path(str(wm.get("time_name"))).name != grid_dir(time).name:
+        refuse(f"{grid_dir(time_wide)} was built from {wm.get('time_name')}, not from {grid_dir(time).name}")
+    fm = fine_manifest(time)
+    if fm is None:
+        refuse(f"{grid_dir(time)} has no b4_time_grids manifest: cannot check the wide grids belong to it")
+    f = json.loads(fm.read_text())
+    rec = wm.get("fine") or {}
+    now = {"fine_manifest_utc": f.get("utc"), "fine_git_commit": f.get("git_commit"), "fine_params": f.get("params")}
+    diff = {k: (rec.get(k), v) for k, v in now.items() if json.loads(json.dumps(rec.get(k))) != json.loads(json.dumps(v))}
+    if diff:
+        refuse(f"{grid_dir(time_wide)} was built from another build of {grid_dir(time).name} (recorded, current): "
+               f"{ {k: v for k, v in diff.items() if k != 'fine_params'} }{' and fine params differ' if 'fine_params' in diff else ''}")
 
 
 def check_grids(specs, roots):
@@ -462,6 +502,8 @@ def main():
     ap.add_argument("--topo", default=TOPO, help=f"LOCTOPO_SURFACE file (default {TOPO})")
     ap.add_argument("--max-dist", type=float, default=MAX_DIST, help="LOCMETH maximum station distance, km")
     ap.add_argument("--deep-from", help="deep pass (D-B067) of the events of this main run")
+    ap.add_argument("--no-grid-manifest", action="store_true",
+                    help="allow a fine grid folder without a b4_time_grids manifest (grids of another builder)")
     a = ap.parse_args()
     rd = run_dir(a.run)
     obs_dir = Path(a.obs_dir)

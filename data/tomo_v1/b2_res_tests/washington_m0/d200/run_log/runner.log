@@ -1,0 +1,41 @@
+17:38:34 start washington_m0/res_tests/spike_null inv_d200_s480
+17:38:36 start washington_m0/res_tests/spike_zm001 inv_d200_s480
+17:38:38 start washington_m0/res_tests/spike_zp003 inv_d200_s480
+17:38:40 start washington_m0/res_tests/spike_zp007 inv_d200_s480
+17:38:42 start washington_m0/res_tests/spike_zp012 inv_d200_s480
+17:38:44 start washington_m0/res_tests/spike_zp021 inv_d200_s480
+17:38:46 start washington_m0/res_tests/spike_zp034 inv_d200_s480
+17:38:48 start washington_m0/res_tests/spike_zp055 inv_d200_s480
+18:09:22 done rc=0 washington_m0/res_tests/spike_zp021 inv_d200_s480
+18:09:36 start washington_m0/res_tests/chk_L060_p0_noise inv_d200_s480
+18:10:59 done rc=0 washington_m0/res_tests/spike_zp012 inv_d200_s480
+18:11:06 done rc=0 washington_m0/res_tests/spike_zp034 inv_d200_s480
+18:11:08 start washington_m0/res_tests/chk_L060_p0_clean inv_d200_s480
+18:11:10 start washington_m0/res_tests/chk_L060_p1_noise inv_d200_s480
+18:11:18 done rc=0 washington_m0/res_tests/spike_zm001 inv_d200_s480
+18:11:27 start washington_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s480
+18:11:41 done rc=0 washington_m0/res_tests/spike_zp007 inv_d200_s480
+18:11:42 done rc=0 washington_m0/res_tests/spike_null inv_d200_s480
+18:11:44 start washington_m0/res_tests/chk_L040_p0_noise inv_d200_s480
+18:11:46 start washington_m0/res_tests/chk_L040_p0_clean inv_d200_s480
+18:12:10 done rc=0 washington_m0/res_tests/spike_zp055 inv_d200_s480
+18:12:18 start washington_m0/res_tests/chk_L040_p1_noise inv_d200_s480
+18:12:53 done rc=0 washington_m0/res_tests/spike_zp003 inv_d200_s480
+18:13:05 start washington_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s480
+18:55:18 done rc=0 washington_m0/res_tests/chk_L060_p0_noise inv_d200_s480
+18:55:22 start washington_m0/res_tests/chk_L100_p0_noise inv_d200_s480
+18:55:47 done rc=0 washington_m0/res_tests/chk_L040_p0_clean inv_d200_s480
+18:55:51 done rc=0 washington_m0/res_tests/chk_L060_p0_clean inv_d200_s480
+18:55:54 start washington_m0/res_tests/chk_L100_p0_clean inv_d200_s480
+18:55:56 start washington_m0/res_tests/chk_L100_p1_noise inv_d200_s480
+18:58:17 done rc=0 washington_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s480
+18:58:28 start washington_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s480
+18:59:13 done rc=0 washington_m0/res_tests/chk_L060_p1_noise inv_d200_s480
+18:59:49 done rc=0 washington_m0/res_tests/chk_L040_p0_noise inv_d200_s480
+19:00:16 done rc=0 washington_m0/res_tests/chk_L040_p1_noise inv_d200_s480
+19:01:26 done rc=0 washington_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s480
+19:42:09 done rc=0 washington_m0/res_tests/chk_L100_p0_noise inv_d200_s480
+19:42:41 done rc=0 washington_m0/res_tests/chk_L100_p0_clean inv_d200_s480
+19:42:47 done rc=0 washington_m0/res_tests/chk_L100_p1_noise inv_d200_s480
+19:45:03 done rc=0 washington_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s480
+ALL DONE 19:45:03

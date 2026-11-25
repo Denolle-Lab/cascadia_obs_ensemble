@@ -1,0 +1,27 @@
+{
+ "region":"ridges_north_m0",
+ "events":1592,
+ "stations":82,
+ "obs_stations":76,
+ "picks":16238,
+ "P":8978,
+ "S":7260,
+ "dt_pairs":4556,
+ "dt_data":47856,
+ "max_sta_per_event":14,
+ "air_dep_km":-0.779,
+ "center_lat":47.2,
+ "center_lon":-128.8,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_ridges_north.csv",
+  "p1_reference":"ridges_north_v2\/p1_reference",
+  "station_corr_from":"ridges_north_v2"
+ },
+ "nx":50,
+ "ny":69,
+ "nz":23,
+ "npar":135072
+}

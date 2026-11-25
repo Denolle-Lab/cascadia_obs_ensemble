@@ -1,0 +1,366 @@
+---
+title: "The fault architecture and seismic behavior of an entire plate-boundary system offshore Cascadia, imaged by a moving ocean-bottom array"
+shorttitle: "Cascadia plate-boundary faults from OBS seismicity"
+teaser: "A machine-learning catalog of 172,342 earthquakes maps 141 seismogenic faults and how they slip, from ridge to forearc."
+abstract: |
+  Most faults of the Juan de Fuca plate system lie offshore, where earthquakes have been too poorly located
+  to map them in three dimensions. We built a catalog of 172,342 earthquakes (2010–2016) from ocean-bottom
+  and land seismometers with ensemble deep-learning phase picking, graph-network association and location,
+  and calibrated local magnitudes. Planar alignments of the events define 141 rectangular fault surfaces
+  that hold 70% of the located earthquakes, with uncertainties at every point. They resolve parallel and
+  stepping strands of the Blanco transform, the Gorda Ridge segments, the Mendocino transform at depth and
+  structures with no published counterpart. Nearest-neighbor clustering shows that how faults slip follows
+  the tectonic setting: swarms dominate ridges and transforms, short productive sequences the triple
+  junction, and isolated events the forearc. [TO UPDATE after the 3D relocation; ≤150 words.]
+bibliography: references.bib
+format:
+  latex:
+    output-file: main_body
+    cite-method: natbib
+    number-sections: false
+---
+
+<!--
+Draft, 2026-11-22. Single paper (Science Advances). Main text: Introduction, Results, Discussion; then
+Materials and Methods; technical development and tests in supplementary.qmd (Text S1–S6, Figs S1–S12,
+Tables S1–S6). All references are in references.bib, every entry resolved from its DOI
+(utils/build_bib.py). Numbers marked [TO UPDATE] change with the 3D relocation (Track A, catalog v5).
+-->
+
+# Introduction
+
+The Juan de Fuca, Gorda and Explorer plates are young, small and deforming. Their boundaries include
+spreading ridges (Juan de Fuca, Gorda), long transforms (Blanco, Mendocino, Sovanco), a triple junction,
+and the Cascadia subduction zone, all within 1,000 km. Most of these faults are offshore. Land networks
+locate offshore earthquakes with errors of 10–20 km, so the published picture of offshore faults comes
+from bathymetry, a few ocean-bottom deployments of months to a year on single segments, and
+teleseismic relocations [@Braunmiller2008; @Ren2023; @Lange2026]. The community fault model of the
+region contains no fault geometry built from earthquake locations, and no Blanco, Gorda or ridge faults
+at all [@Hatem2021 and the CRESCENT Community Fault Model; Text S4].
+
+The Cascadia Initiative deployed ocean-bottom seismometers across the whole plate from 2011 to 2015,
+moving them each year. Combined with land stations, this array recorded the ridges, transforms, the
+triple junction, the forearc and the volcanic arc at the same time. Machine-learning phase pickers now
+work on ocean-bottom data [@Yuan2023; @Bornstein2023; @Niksejel2024], and graph neural networks
+associate and locate the picks of large, changing networks [@McBrearty2023; @McBrearty2025].
+
+We use this to ask three questions that need one consistent catalog across a whole plate system.
+(1) Which faults are seismically active, and what is their three-dimensional architecture, offshore as
+well as onshore? (2) How does the way faults slip — in isolated events, mainshock–aftershock sequences
+or swarms — change between ridges, transforms, the triple junction, the forearc and the arc? (3) What
+does a short, moving array reveal that permanent networks miss? Because the array moved every year, we
+focus on spatial structure and on processes lasting hours to months, not on multi-year rate changes.
+
+# Results
+
+## A plate-wide catalog from a moving amphibious array
+
+The catalog has 172,342 events from 2010 to 2016, located with 2,503,627 P and S picks on 801 stations,
+322 of them on the seafloor (Fig. 1; Materials and Methods); 105 land stations carry only the repicks of
+four 2016 offshore events (Text S5). Magnitudes calibrated to ComCat exist
+for 130,769 events (3,416 common events, scatter 0.21 magnitude units). The magnitude of completeness
+(Mc), mapped with three methods (Fig. 2; Table S6), is lowest at Mount St. Helens and in the Axial
+caldera (0.0–0.3) and in the Puget Lowland and offshore Washington (node medians 1.0–1.1), and highest on
+the western Blanco transform and the northern Gorda Ridge (2.9–3.2). Pooled by region, Mc is 1.2–1.7
+onshore and in the forearc and 1.8–2.2 on the offshore plate boundaries. Completeness follows the moving
+array. Offshore Mc can be measured only while the ocean-bottom stations were deployed (2011–2015): in 2010
+and 2016 no offshore node has 150 events within 50 km, and the rate of M ≥ 2.5 events on the Blanco
+transform drops to 5% (2010) and 8% (2016) of its 2013–2015 rate. Offshore Mc also improved by 0.2–0.4
+between the first two deployment years and 2013–2015 (Blanco 2.6 to 2.2). Where the land network was
+stable, Mc changes little between periods (median change 0.0 to 0.1). The 2016 drop near Mendocino (M ≥ 2.5
+rate 10% of 2013–2015) comes from missing northern California picks, not from the ocean-bottom array.
+These maps bound every comparison between places and times in this study. Epicenters are
+reliable enough to place offshore earthquakes on bathymetric features: on the Gorda Ridge, catalog
+epicenters fall on the axial valley, while ComCat epicenters of the same events lie 10–20 km east
+(Text S5). Absolute depths depend on the velocity model, so we track every location version with the same
+measures (Text S8; Fig. S8; Table S7). In catalog v4 23.5% of events plot above the seafloor or ground.
+Relocating the same events in a 3D model moves epicenters by a median of 2.4 km (15% by more than 5 km)
+and depths by a median of 2.7 km downward, and puts no event above the surface. Where a station with a pick
+lies closer than the event depth, the median depth difference with ComCat goes from −1.0 km (v4) to
++0.4 km (3D) with the same spread (2.4 km). Where no station is near, depths follow the model: offshore
+Gorda events sit 3.7 km deeper than ComCat, and the Explorer median depth goes from 9 to 33 km. These
+numbers will change with the locations in the tomography model [TO UPDATE].
+
+## Seismic velocity structure
+
+[TO UPDATE when the tomography model is final.] Joint Vp and Vs tomography with double-difference
+relocation (tomoDD) in overlapping regions, starting with Mendocino–Gorda, on a travel-time dataset
+balanced across stations and regions (Materials and Methods; Fig. 7). This region has been imaged
+before: P-wave local-earthquake tomography at Cape Mendocino [@Verdonck1994] and Vp/Vs of the southern Cascadia
+megathrust from double-difference tomography with land and ocean-bottom stations [@Guo2021] [TO CHECK
+method and data of Guo et al. 2021, and the 2025 Mendocino Vp/Vs model of the same group]. Local-earthquake
+tomography has so far covered parts of the plate system (Mendocino, the ridges); plate-wide models exist
+only from teleseismic body waves, P and S, at mantle scale [TO CITE: Byrnes et al. 2017 G-cubed;
+VanderBeek et al. 2020 G-cubed] and from surface waves and ambient noise (Vs only). Intended claim, to
+check against the literature before submission: the first plate-wide local-earthquake Vp and Vs model of
+the Juan de Fuca plate system, at crustal and uppermost-mantle scale, with uncertainties. The new model
+must be compared with all of these. Placeholder for: the main
+velocity anomalies, their resolution, and how relocating every event in the new model changes the
+faults and depths of the previous sections.
+
+## Seventy percent of earthquakes lie on 141 rectangular faults
+
+We searched the catalog for planes rather than for dense clusters (Materials and Methods). A plane's
+thickness tolerance follows the expected location error along its normal; planes grow along the plane
+through connected events; every event then joins the plane that best contains it. Each fault is a
+rectangle in its own plane, whether or not it reaches the surface, with an uncertainty normal to the
+surface at every point (median 0.44 km), strike and dip intervals, and a stability score from repeated
+runs (Text S1–S2).
+
+The search returns 141 faults holding 53,291 of the 76,281 well-recorded events (70%; Fig. 3). The share
+is highest where seismicity is concentrated on plate boundaries: 90% on the Blanco transform, 72% at the
+Mendocino triple junction, 61% in the Puget Lowland, 50% in the Gorda plate. It is lowest in the sparse
+forearc offshore Washington and Oregon (19–21%), where few planes reach 30 events. Six quarry-blast
+clusters and four artefacts were removed after checks (Text S3). Axial Seamount, where cabled-array
+catalogs already map the ring faults [@Wilcock2016; @Waldhauser2020], was left out.
+
+We compared every fault with the published faults, ridge and transform segments and seismic zones of its
+region (Text S4; Table S4). 94 match a known structure, 26 of them with high confidence, 17 duplicate a
+neighbor, 10 are layers of seismicity rather than single faults, and 20 have no published counterpart.
+Every fault carries at least one verified reference. Examples of strong matches: the Blanco Ridge
+transform (strike within 2°), the north–south normal faults of the Cascadia Depression, the Escanaba
+Trough and the Jackson and Central segments of the Gorda Ridge, the faults of the 2010 Mw 6.5 and 2014
+Mw 6.8 Gorda earthquakes (strikes within 4–10° of the moment-tensor planes), the Garberville
+low-frequency earthquake band that continues the Mendocino transform under land [@Shelly2025;
+@Shelly2026], the Mount St. Helens seismic zone, the Twin Lakes segment of the Mount Hood fault zone,
+and the fault of the 2014 Mw 6.4 Nootka sequence [@Hutchinson2023].
+
+## The Blanco transform is a set of parallel and stepping strands
+
+On the Blanco transform, single planes fitted across the whole zone cut across right-stepping strands.
+We split the Blanco faults into strands found in map view, where locations are good, and kept two
+overlapping parallel strands apart only when their separation is justified: the across-strike
+distributions must be bimodal (Ashman's D > 2) [@Ashman1994] over their overlap and again within every
+year, which rules out a shift between ocean-bottom deployments (Materials and Methods; Fig. 4). Twenty
+strands remain; the 22 overlapping parallel pairs are 1.6–10.7 km apart (D = 2.8–15.9, minimum per
+year 2.7). For most pairs a single dipping fault would need a dip of 3–48° to produce the offset, far from
+the near-vertical strike-slip faults of the Blanco [@Braunmiller2008], so the separation is horizontal.
+
+The strands reproduce what ocean-bottom studies resolved on single segments and connect them. The two
+wall strands of the Surveyor Depression (5.3 km apart) match the strands about 7 km apart of
+@Ren2023 and @Lange2026. The West Blanco–Surveyor and Blanco Ridge–Gorda Transform overlaps sit at the
+pull-apart step-overs mapped from bathymetry [@Embley1992; @Braunmiller2008]. Two "deeper band" strands
+2 km south of the Blanco Ridge and Gorda Transform were merged into their main strand: their offset
+follows depth, as expected from depth-dependent location error, and the ocean-bottom catalogs see one
+zone within 1.5 km [@Lange2026; @Kuna2019]. Pairs about 2 km apart at equal depth in the West Blanco
+Depression and on the north wall of the Gorda Depression are finer than any published spacing; they are
+candidates for new structure to be confirmed with the relocated catalog.
+
+## How faults slip follows the tectonic setting
+
+We classified events into background earthquakes, mainshock–aftershock sequences, swarms and
+multiplets with the nearest-neighbor method in space, time and magnitude [@Baiesi2004; @Zaliapin2008;
+@Zaliapin2013a; @Zaliapin2013] (Materials and Methods). The distribution of rescaled time and distance is
+bimodal in every region, and the clustered mode disappears when event times are shuffled (Text S6). All
+six large earthquakes of the period come out as mainshock–aftershock sequences with the mainshock first,
+and the 2015 Axial eruption as one 632-event swarm.
+
+Clustering follows the tectonic setting (Fig. 5). The ridges and transforms (Axial, Blanco, Gorda) are
+about half background, and two thirds of their families of five or more events are swarms, with long,
+chain-like trees. The Mendocino triple junction has fewer swarms (31%) and short, bushy sequences; 76% of
+its events 1–2 magnitude units above Mc have no linked aftershock above Mc, consistent with
+@Hsu2026. The forearc, Puget Lowland and onshore regions are 68–84% background. This is the dependence
+on crustal temperature found in southern California and globally [@Zaliapin2013; @Zaliapin2016], here
+across one plate system recorded by one array.
+
+On the Blanco transform, swarms are short (median 4 hours) and compact (4 km), and the largest events
+occur in swarms or doublets: the 2012 Mw 5.8 and 6.0 events share one swarm, and three M 5.4–5.9 events
+struck within 13 hours in June 2015. Swarm shares are highest on the West Blanco, Surveyor and Cascadia
+Depression strands (33–45% of events above Mc), in the pull-apart basins. Low aftershock productivity
+and swarm-like sequences are typical of oceanic transforms, where aseismic slip loads small seismic
+patches [@McGuire2005; @Roland2009; @Boettcher2009; @Kuna2019].
+
+## Short-lived processes caught by the moving array
+
+The catalog resolves processes that last hours to months wherever stations were close (Fig. 6). At
+Axial Seamount, where the catalog uses the cabled observatory stations from November 2014, the weekly
+number of events above Mc rose from about 60 in November 2014 to about 300 in mid-March 2015, and swarm
+families from 1 per month to 16 in March and 13 in April (Fig. 6A). The eruption week of 24 April holds
+1,021 events; within four weeks the rate fell below 15 per week and then to almost none above Mc 0.75.
+This is the build-up and shutdown described from the cabled array and from deformation
+[@Wilcock2016; @Nooner2016]; it is not an independent detection, and its value here is to show that the
+nearest-neighbor classification sees the precursory swarms as swarms.
+
+On the West Blanco transform, the swarm of 1 June 2015 began with an M 5.8 at 06:52 UTC, followed by an
+M 5.4 four hours later about 5 km to the east and an M 5.9 thirteen hours after the first, 17 km to the
+west (Fig. 6B). Within six hours, events spanned 23 km of the transform; within one day, 41 km, the
+length the family kept for the next 64 days (755 events). Seismicity spreading to 40 km in a day, with
+the largest events in sequence rather than as mainshock and aftershocks, matches swarms on oceanic
+transforms that are driven by aseismic slip [@McGuire2005; @Roland2009].
+
+In the Gorda plate near 41.85°N, 126.1°W, one source has produced strike-slip earthquakes of M 4–5.9
+in 1996, 1997, 2006, 2014, 2016, 2019, 2020 and 2026 (ComCat moment tensors), and 272 well-recorded
+events in our catalog (Fig. 6C). The tensors have one plane striking NW–WNW and the other NE. Our
+surfaces there include both orientations (two striking 114–124°, one striking 34°), and the epicenters
+are only weakly elongated (aspect ratio 1.7), so the v4 locations cannot tell a WNW right-lateral fault
+from a NE left-lateral one like the fault of the 1991 Mw 7.1 nearby. The relocation and focal mechanisms
+from our picks are the tests.
+
+The moving array also shows where the catalog is blind. Along the western Mendocino transform,
+seismicity appears along the whole segment when ocean-bottom stations were within 120 km, and only
+events near the coast or above M 4 remain when they were not (Fig. 6D). The Mw 6.6 of 8 December 2016,
+after the array left, was missing from catalog v4.0: no northern California picks exist in 2016, the nearest
+picks that day were 300 km away, and four of its Pn arrivals at 708–797 km were associated into a spurious
+event near Mount St. Helens. Repicking 279 stations recovers it (146 P and 54 S picks on 148 stations,
+156–400 km), but with all stations to the east and a 255° gap our epicenter falls 20–41 km west of
+ComCat and the depth is unresolved; catalog v4.1 adds it with the ComCat hypocenter and our picks and drops the spurious event (Text S5). Of the 61 ComCat earthquakes of M ≥ 5 in 2010–2016 inside the catalog area, 46 were in
+catalog v4.0; 10 of the 15 missing lie north of 49.3°N at the edge of the network, 3 are offshore in 2016
+(the Mw 6.6 and an M 5.1–5.0 pair in the Gorda plate, added in v4.1), 1 is in northern California in 2016, where picks
+are missing (Text S5), and 1 is on the Blanco in 2011. Rates over years offshore cannot be read from this
+catalog; changes over hours to months within one deployment can.
+
+[TO CHECK, not in Fig. 6: a swarm off Brookings, Oregon, July–September 2012 (family 346, 28 events,
+GO020). Dropped after checking: a "dike-like" migration in the May 2013 Escanaba swarm (the events
+scatter by ±5 km with no trend and depths at or above sea level; it is a 15-hour burst); a 2015
+precursor on the Mendocino transform (2015 looks like 2013–2014 while stations were present).]
+
+# Discussion
+
+**A fault model built from earthquakes, offshore.** The community fault model of Cascadia was assembled
+from geology, geodesy and bathymetry, and it stops at the coast for most structures. The 141 surfaces here
+are the first three-dimensional fault geometries built from hypocenters for the Blanco, Gorda and
+Mendocino plate boundaries, and they come with what a geometric model needs to be used: an uncertainty at
+every vertex, strike and dip intervals, a stability score, the events that define each surface, and a
+verified reference for each match to published structure. Most surfaces match known faults, which is the
+test of the method; the 20 without a counterpart and the closely spaced Blanco pairs are the new results
+to confirm. Because the surfaces are computed from the catalog, they can be recomputed when locations
+improve, and the relocation in a 3D model (in progress) will change dips more than strikes. This is the
+approach of hypocenter-based fault models on land [@Ouillon2008; @Wang2013; @Alongi2025], carried to an
+offshore plate system with an amphibious array.
+
+**The Blanco transform is still organizing.** Along 350 km, the Blanco is not one fault but parallel
+strands 1.6–11 km apart and overlapping step-overs, with north–south normal faults in the Cascadia
+Depression (Fig. 4). The strands sit where bathymetry shows pull-apart basins, and the swarms concentrate
+in the same basins (33–45% of events above Mc on the West Blanco, Surveyor and Cascadia Depression
+strands). A mature transform tends to localize slip onto one strand; a transform whose pull-apart basins
+are still spreading keeps several active at once, which is the picture of an immature transform drawn
+from single-segment deployments [@Ren2023; @Lange2026]. The catalog shows that this holds along the whole
+transform at the same time. The pairs about 2 km apart need the relocation before they can be called
+separate faults.
+
+**Temperature controls how faults slip, across one plate system.** In one catalog, recorded by one array,
+the hot and thin lithosphere of the ridges and transforms releases half of its earthquakes in clusters,
+two thirds of its families as swarms, with long, chain-like trees and the largest events in sequence
+(Fig. 5, Fig. 6B). The colder triple junction produces short, bushy mainshock–aftershock sequences with
+few swarms, and the forearc and the arc release most of their earthquakes as isolated events. This is the
+ordering that @Zaliapin2013 and @Zaliapin2016 found by comparing regions of southern California and
+global catalogs, here within a single plate system where the network, the magnitude scale and the
+classification are the same everywhere. The West Blanco swarm of June 2015, which spread over 40 km of
+the transform within a day and contained three M 5.4–5.9 events, fits the view that aseismic slip loads
+the seismic patches of oceanic transforms [@McGuire2005; @Roland2009; @Boettcher2009].
+
+**What a moving array can and cannot do.** The array resolved spatial structure and processes lasting
+hours to months: the strands, the swarms, the build-up and shutdown of Axial seismicity around the 2015
+eruption. It cannot resolve rates over years offshore. Completeness changes by deployment (Fig. 2), the
+Mendocino transform is seismically "active" only while stations are nearby (Fig. 6D), and the largest
+earthquake of the period, the 2016 Mw 6.6, was missed because no station within 250 km had picks that
+day, and is in the catalog only through a targeted repick. Every comparison in this study is therefore within one deployment or between places at the same
+time, and the persistent sources (for example the Gorda plate source near 41.85°N, Fig. 6C) are
+identified by combining the catalog with decades of moment tensors, not from the catalog alone.
+
+**Limits.** Absolute depths are not reliable in catalog v4 (23.5% of events plot above the seafloor or
+ground), so dips and depth extents of the surfaces are provisional; the 3D relocation addresses this
+[TO UPDATE]. The per-region Mc keeps 27,555 events for the clustering, so volcanic microswarms are below
+it. Several fault planes, including the Gorda source, cannot be chosen between conjugates without focal
+mechanisms, which we will compute from our own picks. Catalog v4.0 missed 15 of the 61 ComCat events of
+M ≥ 5, most at the northern edge of the network and offshore in 2016; v4.1 adds the 2016 Mw 6.6 and the Gorda M 5.1–5.0 from a repick with ComCat hypocenters (Text S5), and 12 remain missing.
+
+# Materials and Methods
+
+## Data and catalog
+
+Continuous data from 728 land and ocean-bottom stations, 40–50°N and 131–122°W, 2010–2016, including
+the Cascadia Initiative ocean-bottom array, were picked with an ensemble of EQTransformer models
+[@Mousavi2020; @Yuan2023] in SeisBench [@Woollam2022]. Picks were associated with GENIE
+[@McBrearty2023] and located with a graph-network double-difference method [@McBrearty2025] (catalog
+v4, I. McBrearty). Pick completion, quality control and data issues are in Text S5. Every later
+location version (NonLinLoc in a 3D starting model, then the tomography model) is registered with its
+velocity model and method and compared with the same measures: depth distribution, events above the
+surface, shift from catalog v4, depth and epicenter differences with ComCat for events near and far
+from stations, and the spread of events about each fault surface (Text S8; code
+`workflow/11_compare/`). [TO UPDATE: 3D relocation, NonLinLoc and GrowClust, catalog v5.]
+
+## Tomography
+
+[TO UPDATE.] tomoDD [@Zhang2003] inverts P and S absolute and differential travel times for Vp, Vs and
+hypocenters in overlapping regions. Travel times come from the stations that recorded the most events,
+weighted so that no station, distance–azimuth bin or region dominates. Resolution from spike and
+checkerboard tests; uncertainty from an ensemble of inversions over station terms, pick noise and the
+starting model. Every parameter and decision is logged (`workflow/10_tomography/DECISIONS.md`).
+
+## Magnitudes and completeness
+
+Wood–Anderson amplitudes were measured for every pick in windows set by phase and distance, inverted for
+event size, distance attenuation and station terms, and anchored to 3,416 ComCat local magnitudes;
+moment magnitudes from regional moment tensors replace ML above 4.5 (Text S5). Mc was mapped on a 0.1°
+grid from the nearest 250 events with three methods: maximum curvature with a +0.2 correction,
+b-value stability, and goodness of fit [@Wiemer2000; @Cao2002; @Woessner2005], with bootstrap
+uncertainty (200 resamples), for the whole period and for each deployment period (nearest 150 events
+there), adapting the implementation of the AgentSeismo project (Z. Zhang). The b-value stability test
+follows @Woessner2005 with the standard error of b of @Shi1982; the best estimate is the goodness of fit
+at 95%, else 90%, else maximum curvature [@Mignan2012]. Because the samples are often incomplete when
+the array was absent (b ≈ 0.6), we also compare annual rates of M ≥ 2.0, 2.5 and 3.0 events between
+periods, which needs no fit.
+
+## Fault surfaces
+
+Events with at least four P and four S picks and non-negative depth were used. Planes were detected by
+sequential local random sampling [@Fischler1981]: around seeds taken from dense to sparse, candidate
+planes through the seed and two events within 10 km were scored by the number of free events within a
+tolerance $\tau = 1.5\sqrt{(1.5\,|n_h|)^2 + (3\,n_z)^2}$ km, where $n$ is the unit normal (1.5 km
+horizontal and 3 km vertical nominal relative errors). The best plane grew through events within $\tau$
+that were connected in the plane (4 km cells), and was kept with at least 30 events, planarity
+$\sqrt{\lambda_3/\lambda_2} \le 0.5$ and dip ≥ 30°. Events were then reassigned to the plane with the
+smallest $|d|/\tau$ among planes whose rectangle contains them, and coplanar neighbors were merged. Each
+fault is the rectangle spanning the 2–98% range of its events along strike and down dip, with a plane
+or quadratic surface chosen by the Bayesian information criterion. Uncertainty normal to the surface
+combines a bootstrap of the events, a Monte Carlo over location errors and the spread over model
+choices; strike and dip intervals come from the bootstrap; stability is the overlap of each fault's
+events across reruns with other random seeds and tolerances (Text S1–S2).
+
+On the Blanco transform, strands were found in map view (lines within 20° of plate motion, 1.5 km half
+width, grown along strike across gaps under 4 km). Two overlapping parallel strands were kept separate
+only if Ashman's $D = \sqrt{2}\,|\mu_1-\mu_2|/\sqrt{\sigma_1^2+\sigma_2^2}$ of their across-strike
+positions exceeds 2 over the overlap and within each year with at least 15 events in each [@Ashman1994].
+
+Each fault was compared with the literature of its region; matches, confidence, evidence and verified
+references are in Table S4.
+
+## Clustering
+
+For each event $j$ above Mc, the parent is the earlier event $i$ minimizing
+$\eta_{ij} = t_{ij}\, r_{ij}^{d_f}\, 10^{-b m_i}$, with rescaled time $T = t\,10^{-q b m_i}$ and distance
+$R = r^{d_f} 10^{-(1-q) b m_i}$, $q = 0.5$, $d_f = 1.6$, epicentral distance, and $b$ per region
+[@Baiesi2004; @Zaliapin2008; @Zaliapin2013a]. The threshold $\eta_0$ comes from a two-component Gaussian
+mixture on $\log_{10}\eta$ in each region. Links are limited to three rupture lengths [@Wells1994] or 10
+km. Families are connected trees; within a family the largest event is the mainshock. A family of five or
+more events is a swarm when at least two of three hold: largest minus second magnitude below 0.5; at
+least 20% of events before the largest; mean leaf depth at least 2 with fewer than half of events
+direct offspring of the largest [@Zaliapin2013; @Vidale2006]. Mc is the maximum curvature plus 0.2 per
+region and year. Shuffled catalogs and variants of $d_f$, distance, Mc and threshold are in Text S6.
+
+## Data and code availability
+
+Catalog, picks, magnitudes, fault surfaces (with ensembles and literature matches), clustering tables and
+the 3D atlas: [Zenodo DOI to be minted at submission]; interactive atlas:
+https://denolle-lab.github.io/cascadia_obs_ensemble/; code: https://github.com/Denolle-Lab/cascadia_obs_ensemble.
+
+# Figures (planned)
+
+- **Fig. 1.** Tectonic setting, stations by deployment year, and the catalog (map and depth sections).
+- **Fig. 2.** Magnitude of completeness (`figures/fig2a_mc_three_methods`, `fig2b_mc_periods`, from `v4_mc_maps.py`): three methods and the change with the moving array.
+- **Fig. 3.** The 141 fault surfaces: map and 3D views, colored by depth and by uncertainty; share of
+  events on faults by region.
+- **Fig. 4.** Blanco strands (`figures/fig4_blanco_strands`): events by strand, separation tests (Ashman's D overall and per year),
+  published strands and step-overs.
+- **Fig. 5.** Clustering (`figures/fig5_clustering`): rescaled time–distance densities by setting with each
+  region's threshold; share of each class by region; swarm share against aftershock productivity.
+- **Fig. 6.** Short-lived processes (`figures/fig6_short_lived`): (A) Axial events per week above Mc and swarm
+  families per month before and after the April 2015 eruption; (B) the West Blanco swarm of June 2015,
+  distance along the transform against time; (C) the persistent Gorda plate source near 41.85°N, 126.1°W,
+  events by year with fault surfaces and ComCat moment tensors (1996–2026, dark: 2010–2016); (D) the
+  western Mendocino transform, longitude against time, with periods when ocean-bottom stations were
+  within 120 km (blue) and ComCat Mw ≥ 5 (stars).
+- **Fig. 7.** Tomography (`figures/fig7_tomography`, from `workflow/08_figures/tomo_figures.py`) [TO UPDATE]:
+  depth slices of Vp and Vs perturbations and Vp/Vs, masked where rays are too few, with the relocated
+  events; cross-sections through the Mendocino transform and the Gorda plate; resolution test.

@@ -63,11 +63,19 @@ The new picks are in <code>ver6_added_picks_part1-3.csv.gz</code>, their amplitu
 <code>ver6_amps_NET_partNN.parquet</code> (98.8% with an amplitude). 1,846 station-days with
 fragmented data (1.15 M artifact picks) were left out (<code>ver6_dropped_station_days.csv</code>).
 See <code>ver6_README.md</code>.</li>
-<li><b>Catalog v4</b> (2026-11-21): GENIE + GraphDD catalog of the ver6 picks (I. McBrearty),
-172,340 events and 2,503,189 associated picks, 2010-2016
+<li><b>Catalog v4.1</b> (2026-11-22): GENIE + GraphDD catalog of the ver6 picks (I. McBrearty),
+172,342 events and 2,503,627 associated picks, 2010-2016
 (<code>Cascadia_relocated_catalog_v4.csv</code>, <code>Cascadia_picks_catalog_v4.csv.gz</code>), with
-21 events moved one day later (<code>catalog_v4_FIXES.md</code>). Not yet in the published-record
+21 events moved one day later (v4.0) and, in v4.1, the 2016 Mw 6.6 Mendocino earthquake and the
+Gorda M 5.1 and M 5.0 of 2016-01-30 added from our repicks with ComCat hypocentres, and one
+spurious event removed (<code>catalog_v4_FIXES.md</code>). Not yet in the published-record
 format; see <code>catalog_v4_README.md</code>.</li>
+<li><b>Fault surfaces v0</b> (2026-11-22, <code>fault_surfaces_v0*</code>): 141 rectangular
+faults fitted to planar alignments of catalog v4 events (plane-based detection; 69% of the QC
+events lie on a fault; Blanco 20 strands with separation tests, Mendocino triple junction 32, Gorda 20; every fault has a literature match with verified DOIs; quarry blasts and artefacts removed; Axial left out,
+since published fault maps there are better), with per-vertex uncertainty and the full ensemble.
+On the v4 locations; to be redone on the relocated catalog. See
+<code>fault_surfaces_v0_README.md</code>.</li>
 <li><b>Stations</b> (<code>stations_ver5_v6.csv</code>): coordinates and epochs of the 728
 stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 </ul>
@@ -75,7 +83,7 @@ stations of ver5 and ver6 (<code>stations_README.md</code>).</li>
 dropped by its pick_id ranges.</p>"""
 
 
-VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2+catalog v4 working copy"
+VERSION = "ver3+ver4+ver5+ver6+PickBlue+amps r2+catalog v4+fault surfaces v0 working copy"
 TRIES = 4
 
 

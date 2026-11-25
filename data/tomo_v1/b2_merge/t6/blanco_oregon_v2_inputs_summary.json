@@ -1,0 +1,26 @@
+{
+ "region":"blanco_oregon_v2",
+ "events":7691,
+ "stations":242,
+ "obs_stations":100,
+ "picks":207147,
+ "P":104739,
+ "S":102408,
+ "dt_pairs":33874,
+ "dt_data":600902,
+ "max_sta_per_event":88,
+ "air_dep_km":-2.318,
+ "center_lat":44.5,
+ "center_lon":-125.8,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_blanco_oregon.csv",
+  "p1_reference":"blanco_oregon_v2\/p1_reference"
+ },
+ "nx":90,
+ "ny":51,
+ "nz":23,
+ "npar":181104
+}

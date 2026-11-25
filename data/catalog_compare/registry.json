@@ -1,0 +1,81 @@
+{
+ "reference": "v4.1",
+ "benchmark": "anss",
+ "catalogs": [
+  {
+   "id": "v4.1",
+   "label": "Catalog v4.1 (v4.0 + 2016 repick)",
+   "adapter": "v4",
+   "file": "data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+   "keyed_v4": true,
+   "velocity": "PNSN 1D regional models (I. McBrearty); ComCat for 3 added events",
+   "method": "GENIE + GraphDD; targeted ELEP repick of four 2016 offshore events",
+   "parent": "v4.0",
+   "status": "final",
+   "date": "2026-11-22",
+   "atlas": true,
+   "_rows": 172342,
+   "_md5": "722975b82ac5f3e6761c7f1f57cd346d"
+  },
+  {
+   "id": "v3",
+   "label": "Catalog v3 (Zenodo record, 2010-2015)",
+   "adapter": "v3_origins",
+   "file": "data/catalog_v3/origins_v3.csv",
+   "keyed_v4": false,
+   "velocity": "PNSN 1D regional models",
+   "method": "GENIE association, GraphDD + cross-correlation relocation (ver3 picks)",
+   "parent": null,
+   "status": "superseded",
+   "date": "2026-09-30",
+   "atlas": false,
+   "_rows": 63887,
+   "_md5": "6c76bacf3f70a7622db6ed2463105855"
+  },
+  {
+   "id": "v4.0",
+   "label": "Catalog v4.0 (GENIE + GraphDD)",
+   "adapter": "v4",
+   "file": "/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv",
+   "keyed_v4": true,
+   "velocity": "PNSN 1D regional models (I. McBrearty)",
+   "method": "GENIE association, GraphDD relocation (ver6 picks)",
+   "parent": null,
+   "status": "superseded",
+   "date": "2026-11-21",
+   "atlas": false,
+   "_rows": 172340,
+   "_md5": "33239b547040add3e1dd7ae3252764b2"
+  },
+  {
+   "id": "NLL3D-i0",
+   "label": "v4-NLL3D iteration 0 (no station terms)",
+   "adapter": "nll_run",
+   "file": "/wd1/mdenolle_data/reloc_v5/runs/iter0_vpvs176/locations.csv",
+   "keyed_v4": true,
+   "velocity": "CRESCENT Gen0 Vs + Brocher Vp, Vp/Vs >= 1.76, literature 1D at the ridges",
+   "method": "NonLinLoc EDT, 3D grids, no station terms",
+   "parent": "v4.1",
+   "status": "superseded",
+   "date": "2026-11-22",
+   "atlas": false,
+   "_rows": 157249,
+   "_md5": "303f4d46d259a05094af0b33b5050f68"
+  },
+  {
+   "id": "NLL3D-i1",
+   "label": "v4-NLL3D iteration 1 (static station terms)",
+   "adapter": "nll_catalog",
+   "file": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "keyed_v4": true,
+   "velocity": "CRESCENT Gen0 Vs + Brocher Vp, Vp/Vs >= 1.76, literature 1D at the ridges",
+   "method": "NonLinLoc EDT, 3D grids, static station terms from iteration 0; tiers A-D, U = v4 kept",
+   "parent": "NLL3D-i0",
+   "status": "preliminary",
+   "date": "2026-11-22",
+   "atlas": true,
+   "_rows": 172340,
+   "_md5": "de44780c3dbe49b404d785914e132459"
+  }
+ ]
+}

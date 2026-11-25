@@ -89,4 +89,18 @@ data/magnitude_v4/*.csv
 !data/magnitude_v4/comcat_ml_events.csv
 !data/magnitude_v4/route_b_ml_anchors_routeA.csv
 !data/magnitude_v4/route_b_station_terms_routeA.csv
+
+# Fault-surface ensembles (large; shared on the private Zenodo draft)
+data/faults/*/fault_surfaces_*_ensemble.csv.gz
+paper_sciadv/figures/*.pdf
+
+# Science Advances draft build products (main.tex and supplementary.tex ARE committed)
+paper_sciadv/*.pdf
+paper_sciadv/*.log
+paper_sciadv/*.blg
+paper_sciadv/*.bbl
+paper_sciadv/*.aux
+paper_sciadv/*_body.tex
+
+# Track B relocation (v5) binary intermediates
 data/reloc_v5/**/*.npz

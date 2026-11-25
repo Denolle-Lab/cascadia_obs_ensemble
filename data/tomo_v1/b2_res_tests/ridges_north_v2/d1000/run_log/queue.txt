@@ -1,0 +1,25 @@
+ridges_north_v2/res_tests/spikec_null inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zm001 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp003 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp007 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp012 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp021 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp034 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_zp055 inv_d1000_s20 1000 20 20 10
+ridges_north_v2/res_tests/spikec_null inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zm001 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp003 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp007 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp012 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp021 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp034 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_zp055 inv_d1000_s10 1000 10 10 5
+ridges_north_v2/res_tests/spikec_null inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zm001 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp003 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp007 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp012 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp021 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp034 inv_d1000_s40 1000 40 40 20
+ridges_north_v2/res_tests/spikec_zp055 inv_d1000_s40 1000 40 40 20
+END

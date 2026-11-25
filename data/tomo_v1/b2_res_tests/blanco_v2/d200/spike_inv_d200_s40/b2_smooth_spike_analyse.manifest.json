@@ -1,0 +1,128 @@
+{
+ "name": "b2_smooth_spike_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_smooth_spike_analyse.py",
+ "argv": [
+  "--cfg",
+  "res_tests",
+  "--inv",
+  "inv_d200_s40"
+ ],
+ "utc": "2026-11-23T18:26:49.855168+00:00",
+ "git_commit": "1e39d02cfd46ba18632ab8bc584e4b677460a034",
+ "git_dirty": false,
+ "params_md5": "8de1272f412743dc234ef0d7d2d99210",
+ "params": {
+  "min_rec": 0.5,
+  "amp": 0.05,
+  "depths_km": [
+   -1,
+   3,
+   7,
+   12,
+   21,
+   34,
+   55
+  ],
+  "lon": [
+   -130.35,
+   -129.35,
+   -128.35,
+   -127.35,
+   -126.35
+  ],
+  "lat": [
+   42.8,
+   43.6,
+   44.4
+  ],
+  "region": "blanco_v2",
+  "smooth": [
+   40.0,
+   40.0,
+   20.0
+  ],
+  "damp": 200.0,
+  "cfg": "res_tests",
+  "inv": "inv_d200_s40"
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zm001/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:06:20.882547+00:00",
+   "md5": "0e073c0c3d88560ce52156bb3e0029ee"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp003/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:06:27.824510+00:00",
+   "md5": "63ff669b11277ee9a74229d351e67bf7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp007/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:12:56.561464+00:00",
+   "md5": "97de13e1ca30671096b011fd10f67aa2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp012/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:16:00.912487+00:00",
+   "md5": "0b28e112f748f2488cdf49f970fa967a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp021/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:16:56.817191+00:00",
+   "md5": "a5d1a878e413cbc083035deb2afc45b0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp034/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:17:18.777074+00:00",
+   "md5": "009a4a615630e94f10311a070b2d450e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_zp055/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:17:31.328008+00:00",
+   "md5": "9575990f802108e03df2af703f01ca68"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/spike_null/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T18:05:16.217891+00:00",
+   "md5": "d44e7f2db2969dc2847f78eedaa69c4e"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/spike_inv_d200_s40/spikes.csv",
+   "size": 16533,
+   "mtime": "2026-11-23T18:26:49.359051+00:00",
+   "md5": "d9c131d3af4bc025b3878eb0f8ef409d"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/spike_inv_d200_s40/by_depth.csv",
+   "size": 814,
+   "mtime": "2026-11-23T18:26:49.375051+00:00",
+   "md5": "37b54f1532fef7b58a01aaed9fb0c3ae"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/spike_inv_d200_s40/layers.csv",
+   "size": 992,
+   "mtime": "2026-11-23T18:26:49.386051+00:00",
+   "md5": "1c53375e4c592b3702482debdee0794a"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/spike_inv_d200_s40/psf.png",
+   "size": 138870,
+   "mtime": "2026-11-23T18:26:49.854048+00:00",
+   "md5": "b81733a45fc8841e1992e4522e3d1195"
+  }
+ ],
+ "counts": {
+  "spikes": 210
+ },
+ "notes": null
+}

@@ -11,6 +11,12 @@ name: sync-paper-to-overleaf
 # the already-committed, already-verified main.tex + assets. main.pdf is NOT synced
 # (Overleaf compiles its own).
 #
+# Science Advances draft (paper_sciadv/, built with `python paper_sciadv/build.py`) goes to the folder
+# sciadv/ of the same Overleaf repo. Its main.tex and supplementary.tex are copied ONLY if they do not exist
+# there yet (one-time seed): co-authors edit the text on Overleaf, and a push here must not overwrite them.
+# Figures (PNG) and references.bib are synced on every push (never deleting files added on Overleaf).
+# To overwrite the Overleaf text deliberately: run this workflow by hand with force_sciadv_text = true.
+#
 # One-time setup (not done by this workflow):
 #   1. ssh-keygen -t ed25519 -C "cascadia-paper-sync" -f ~/.ssh/cascadia-paper-deploy -N ""
 #   2. gh repo deploy-key add ~/.ssh/cascadia-paper-deploy.pub \
@@ -30,8 +36,17 @@ on:
       - "paper/banner.png"
       - "paper/empty.png"
       - "paper/figures/**"
+      - "paper_sciadv/main.tex"
+      - "paper_sciadv/supplementary.tex"
+      - "paper_sciadv/references.bib"
+      - "paper_sciadv/figures/**"
       - ".github/workflows/sync-paper-to-overleaf.yml"
   workflow_dispatch:
+    inputs:
+      force_sciadv_text:
+        description: "Overwrite sciadv/main.tex and supplementary.tex on Overleaf (discards edits made there)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,7 +62,9 @@ jobs:
       - name: Checkout cascadia_obs_ensemble (paper source)
         uses: actions/checkout@v4
         with:
-          sparse-checkout: paper
+          sparse-checkout: |
+            paper
+            paper_sciadv
           sparse-checkout-cone-mode: false
 
       - name: Checkout the Overleaf-linked paper repo
@@ -69,13 +86,28 @@ jobs:
           mkdir -p paper-repo/figures
           rsync -a --delete paper/figures/ paper-repo/figures/
 
+      - name: Sync the Science Advances draft (text seeded once; figures and bib always)
+        env:
+          FORCE: ${{ github.event.inputs.force_sciadv_text }}
+        run: |
+          mkdir -p paper-repo/sciadv/figures
+          for f in main.tex supplementary.tex; do
+            if [ ! -f "paper-repo/sciadv/$f" ] || [ "$FORCE" = "true" ]; then
+              cp "paper_sciadv/$f" "paper-repo/sciadv/$f"; echo "copied $f"
+            else
+              echo "kept sciadv/$f (edited on Overleaf)"
+            fi
+          done
+          cp paper_sciadv/references.bib paper-repo/sciadv/
+          rsync -a --include='*.png' --exclude='*' paper_sciadv/figures/ paper-repo/sciadv/figures/
+
       - name: Commit and push if changed
         working-directory: paper-repo
         run: |
           git config user.name "cascadia-sync[bot]"
           git config user.email "actions@github.com"
           git add main.tex mybibfile.bib seismica.cls abbrvnat_seismica_upcasetitle.bst \
-            supplementary_section.tex banner.png empty.png figures/
+            supplementary_section.tex banner.png empty.png figures/ sciadv/
           if git diff --cached --quiet; then
             echo "No changes to sync."
             exit 0

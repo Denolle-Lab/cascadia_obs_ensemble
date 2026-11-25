@@ -70,6 +70,21 @@ pyyaml = ">=6"
 quarto = ">=1.4"
 tectonic = "*"             # self-contained LaTeX engine (auto-fetches CTAN packages)
 
+# ── Models feature: cloud-native export of the velocity models (Track B, D-B047) ──────────────────
+# Lean env (no default ML stack) with current zarr (v3 needs Python >= 3.11). Install with:
+#   pixi install --environment models  ;  pixi run -e models python workflow/10_tomography/b2_model_export.py ...
+[feature.models.dependencies]
+python = "3.12.*"
+numpy = ">=1.26"
+pandas = ">=2.2"
+xarray = ">=2025.1"
+zarr = ">=3.0"
+netcdf4 = ">=1.7"
+pyproj = ">=3.6"
+pyyaml = ">=6"
+matplotlib = ">=3.8"
+scipy = ">=1.13"
+
 # ── Environment definitions ────────────────────────────────────────────────────
 [environments]
 # default: public / EarthScope FDSN only — works anywhere
@@ -80,6 +95,8 @@ internal = {features = ["internal"], solve-group = "default"}
 amplitude = {features = ["amplitude"], no-default-feature = true}
 # paper: Quarto + LaTeX manuscript build (no default ML stack)
 paper = {features = ["paper"], no-default-feature = true}
+# models: velocity-model export to Zarr / netCDF-4 Classic (EMC) / NonLinLoc grids
+models = {features = ["models"], no-default-feature = true}
 
 # ── Convenience tasks ─────────────────────────────────────────────────────────
 [tasks]

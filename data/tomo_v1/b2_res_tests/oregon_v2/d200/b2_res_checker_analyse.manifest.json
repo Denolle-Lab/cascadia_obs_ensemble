@@ -1,0 +1,331 @@
+{
+ "name": "b2_res_checker_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_res_checker.py",
+ "argv": [
+  "analyse"
+ ],
+ "utc": "2026-11-23T18:39:59.252222+00:00",
+ "git_commit": "b0a5eccdb386d4a7b22d54db20b70dec4c0a1c9e",
+ "git_dirty": false,
+ "params_md5": "8de1272f412743dc234ef0d7d2d99210",
+ "params": {
+  "amp": 0.08,
+  "cell_km": [
+   40,
+   60,
+   100
+  ],
+  "bands_km": [
+   -10,
+   12,
+   25,
+   40,
+   65
+  ],
+  "phase_shift": 0.5,
+  "noise_seed": 20261122,
+  "loc_h_from_68": 1.515,
+  "window_cells": 1.5,
+  "resolved": {
+   "corr": 0.7,
+   "amp": 0.5
+  },
+  "mask_smooth": 20
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:15:36.000619+00:00",
+   "md5": "0b9cf9a69771ecab2526ba581312c892"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:37:40.687653+00:00",
+   "md5": "ec25a7521074b336cd7e1ab7e109cf0d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:36:45.533821+00:00",
+   "md5": "820ef1ae3b586f96eb08304d6646799b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:21:07.073867+00:00",
+   "md5": "b392ed6e296d226249cfd6f73bdbad04"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:42:12.759198+00:00",
+   "md5": "978fbbf7821bcde2129f4244c37c4573"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:39:32.853919+00:00",
+   "md5": "3e3810a60b7eb67a63fdb520fbc0553d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:54:09.359381+00:00",
+   "md5": "54618c346dd6a19dfd2cc25a16e0915d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:52:21.149955+00:00",
+   "md5": "2e0503738d171c53e6e3891035b44ac7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L040_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:15:08.848763+00:00",
+   "md5": "f3eebfafdfb3e1534c12e1d38a16cb08"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:37:15.850787+00:00",
+   "md5": "d437b482f51fa4ad1bb7ca75320263d3"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:34:54.539416+00:00",
+   "md5": "40f16eebe4de4cacb4565940e7185043"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:20:13.477151+00:00",
+   "md5": "e25eaa75cc0f1b377b69a658d9ee03ae"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:42:48.089009+00:00",
+   "md5": "e0d204c7adda31a5b18e6dcbef7181e9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:37:59.094426+00:00",
+   "md5": "e3b65472a3acbb7fb9ad4fefb82ad3f0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:44:03.241607+00:00",
+   "md5": "3fcbc269a0506c2e74203cb7a7abd987"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:43:19.362842+00:00",
+   "md5": "a976b0b6109831e6bbcf6558b8b2d054"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L060_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:18:13.256786+00:00",
+   "md5": "d518f5e1a66e967da6d6d37d9d07d03e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:52:57.441765+00:00",
+   "md5": "a4f6471b69cb5cbaff308295ae61b8f6"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:36:12.484998+00:00",
+   "md5": "55df293ab6aa7d878ce8ccd0f1ffb982"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:21:18.284808+00:00",
+   "md5": "9416f41f033100ea495f9fd14949ae93"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:52:02.641052+00:00",
+   "md5": "2d81ebce8d826dde069d6d8d5eee1040"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:39:53.433807+00:00",
+   "md5": "af2091b69d221543a020693adb5a9c1c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T18:01:36.521998+00:00",
+   "md5": "a8b555e4231a1b394cc41602cda261e7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 460989,
+   "mtime": "2026-11-23T17:58:17.349059+00:00",
+   "md5": "b74ce968756098e1cde3c11ad6102b23"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2/res_tests/chk_L100_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/checker_by_depth.csv",
+   "size": 69311,
+   "mtime": "2026-11-23T18:39:55.591795+00:00",
+   "md5": "d593a71b79f4bfd533d6dbc3c95d63fb"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/checker_maps_p_s20.png",
+   "size": 828755,
+   "mtime": "2026-11-23T18:39:56.919788+00:00",
+   "md5": "a594ce13cbf07a0314141a149395b43b"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/checker_maps_s_s20.png",
+   "size": 875808,
+   "mtime": "2026-11-23T18:39:57.985782+00:00",
+   "md5": "e871bc45ade04dba6508f9f7d824cff8"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/coast_i.txt",
+   "size": 23257,
+   "mtime": "2026-11-23T18:39:55.882794+00:00",
+   "md5": "ce30acec8fb1ad8e84bf703bb41ddf14"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/resolution_mask.npz",
+   "size": 4426,
+   "mtime": "2026-11-23T18:39:55.595795+00:00",
+   "md5": "74d16708e00b870c938d8e5f5c1aa925"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/resolution_mask_maps_s20.png",
+   "size": 94064,
+   "mtime": "2026-11-23T18:39:58.591779+00:00",
+   "md5": "7df9615d90a6151e937a28416bae5a2c"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/resolution_sections_s20.png",
+   "size": 314906,
+   "mtime": "2026-11-23T18:39:59.250775+00:00",
+   "md5": "a9d41a185662e06ae1b7464634ed1241"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/summary_tables.md",
+   "size": 6333,
+   "mtime": "2026-11-23T18:39:55.603795+00:00",
+   "md5": "98c007ba3161d76b19c0bae41ba6d495"
+  }
+ ],
+ "counts": {
+  "runs": 24
+ },
+ "notes": null
+}

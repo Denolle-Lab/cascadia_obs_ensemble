@@ -51,6 +51,8 @@ def f(v, nd=1):
         return ""
     if isinstance(v, (int, np.integer)):
         return f"{v:,}"
+    if nd == 0 and isinstance(v, float) and np.isfinite(v):
+        return f"{int(round(v)):,}"
     try:
         v = float(v)
     except (TypeError, ValueError):
@@ -175,7 +177,7 @@ def main():
     for r in V.itertuples():
         better = {"A": "<span class='A'>A</span>", "B": "<span class='B'>B</span>", "-": "no material difference"}.get(
             r.better, html.escape(str(r.better)))
-        nd = 2 if "km" in r.criterion else 1
+        nd = 0 if r.criterion.startswith("3 above") else 2 if "km" in r.criterion else 1
         rows.append([html.escape(r.set), html.escape(r.criterion), f(r.A, nd), f(r.B, nd),
                      f(getattr(r, "diff"), nd) + (f" <span class='muted'>[{f(r.lo, nd)}, {f(r.hi, nd)}]</span>"
                                                   if np.isfinite(r.lo) else ""), better])
@@ -234,6 +236,16 @@ def main():
         S.append(table(["arm", "P MAD ms [95 %]", "P rms ms [95 %]", "S MAD ms [95 %]", "S rms ms [95 %]",
                         "own rows P / S MAD", "located per fold"], rows, hl=(7, 8)))
         S.append(f"<p class='muted'>Common rows: {n}.</p>")
+        rows = []
+        for ph in ("P", "S"):
+            c = h["common"].get(ph, {})
+            for lab, name in (("coh_both", "both events relocated by the coherence stage in A and in B"),
+                              ("rest", "other rows")):
+                x = c.get(lab, {})
+                m = x.get("mad", {})
+                rows.append([ph, name, f(x.get("n")), f(x.get("pairs"))] +
+                            [fci(m.get(a)) if m else "" for a in ("static", "ssst_it5", "A", "B", "B-A")])
+        S.append(table(["phase", "rows", "n", "pairs", "static", "SSST 2 km", "A", "B", "B - A"], rows))
     # criterion 2
     S.append("<h2>2. Fit of the CC differential times (full runs)</h2>")
     S.append("<p class='muted'>b4_v6_ssst_metrics.cc_score: per CC row, observed minus predicted differential time "

@@ -25,7 +25,7 @@ import subprocess
 import sys
 import time
 import traceback
-from multiprocessing import Pool
+from multiprocessing import get_context
 from pathlib import Path
 
 import numpy as np
@@ -150,7 +150,9 @@ def stage_snippets(a):
         n = 0
         t0 = time.time()
         if tasks:
-            with Pool(a.workers, initializer=init_worker) as pool:
+            # spawn, not fork: after merge_nc has run obspy's MiniSEED reader in this process, forked workers
+            # segfaulted in libffi (blancow, 2026-11-25 15:02; the events read fine in a fresh process)
+            with get_context("spawn").Pool(a.workers, initializer=init_worker) as pool:
                 for eid, st, k in pool.imap_unordered(read_one, tasks, chunksize=1):
                     n += 1
                     if n % 100 == 0 or n == len(tasks):

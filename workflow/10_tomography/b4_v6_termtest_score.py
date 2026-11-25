@@ -202,6 +202,13 @@ def heldout(s, nboot):
             base = h.rename(a).to_frame() if base is None else base.join(h.rename(a), how="inner")
         base = base.reset_index()
         base["run"] = run
+        # events the coherence stage relocated (LOCATED there) in both A and B
+        rel = None
+        for sub in ("static_coherence", "coherence"):
+            ev, _ = M.read_arm(T.run_dir(s, run) / sub)
+            ids = set(ev.ID[ev.status == "LOCATED"]) if len(ev) else set()
+            rel = ids if rel is None else rel & ids
+        base["coh_both"] = base.ID1.isin(rel) & base.ID2.isin(rel)
         parts.append(base)
     C = pd.concat(parts, ignore_index=True)
     C["pair"] = list(zip(C.ID1, C.ID2))
@@ -213,6 +220,14 @@ def heldout(s, nboot):
         res["common"][ph] = dict(n=len(g), pairs=int(g.pair.nunique()), mad=r_mad, rms=r_rms,
                                  all_mad={a: mad(g[a]) * 1e3 for a in arms},
                                  all_rms={a: float(np.sqrt(np.mean(g[a] ** 2))) * 1e3 for a in arms})
+        # split: rows whose two events the coherence stage relocated in both A and B, and the other rows
+        for lab, sub in (("coh_both", g[g.coh_both]), ("rest", g[~g.coh_both])):
+            sub = sub.reset_index(drop=True)
+            if sub.pair.nunique() >= 20:
+                res["common"][ph][lab] = dict(n=len(sub), pairs=int(sub.pair.nunique()),
+                                              mad=paired_boot(sub, "pair", lambda v: mad(v) * 1e3, mainarms, nboot, 8))
+            else:
+                res["common"][ph][lab] = dict(n=len(sub), pairs=int(sub.pair.nunique()))
     return res
 
 
@@ -274,6 +289,9 @@ def ccfit(s, nboot):
                           for a in mainarms})
         R["pair"] = list(zip(rp.ID1, rp.ID2))
         out["repeaters"] = dict(n=len(R), sep=paired_boot(R, "pair", lambda v: float(np.median(v)), mainarms, nboot, 5))
+        allarms = [a for a in pos if set(rp.ID1) <= set(pos[a].index) and set(rp.ID2) <= set(pos[a].index)]
+        out["repeaters"]["all_median_km"] = {a: float(np.median(np.linalg.norm(
+            pos[a].loc[rp.ID1].to_numpy() - pos[a].loc[rp.ID2].to_numpy(), axis=1))) for a in allarms}
         c51 = v51_positions(s).set_index("ID")[["x", "y", "depth_t"]]
         ok = rp.ID1.isin(c51.index) & rp.ID2.isin(c51.index)
         out["repeaters"]["v5.1_median_km"] = float(np.median(np.linalg.norm(

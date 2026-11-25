@@ -1,0 +1,98 @@
+{
+ "name": "b5_compare_f1051",
+ "script": "/home/mdenolle/wt_b5/workflow/10_tomography/b5_compare.py",
+ "argv": [
+  "f1051"
+ ],
+ "utc": "2026-11-24T14:23:36.507056+00:00",
+ "git_commit": "9249dfb7266b70efe38604b2b0d031321944c190",
+ "git_dirty": true,
+ "params_md5": "eb2fe1d673224107434fefcd3ccd5831",
+ "params": null,
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/data/dt.csv",
+   "size": 1258298,
+   "mtime": "2026-11-24T14:10:45.693996+00:00",
+   "md5": "dfe33492f11b270d14c8f33cbea7571e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/tomodd/hier/reloc.csv",
+   "size": 119639,
+   "mtime": "2026-11-24T14:12:23.277421+00:00",
+   "md5": "bc073eb0e20b924e471b8f23cee6b7a8"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/tomodd/dd/reloc.csv",
+   "size": 83082,
+   "mtime": "2026-11-24T14:13:41.417963+00:00",
+   "md5": "e9c9f8f769e3a0ba14335fe7d1f9ffd6"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/growclust/catalog/reloc.csv",
+   "size": 96857,
+   "mtime": "2026-11-24T14:14:16.661757+00:00",
+   "md5": "dcc7bd63c62ed7265bdce4d0f406db2f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/growclust/default/reloc.csv",
+   "size": 94811,
+   "mtime": "2026-11-24T14:14:58.160515+00:00",
+   "md5": "857b8015701e89db1f81611fbef48169"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/metrics.json",
+   "size": 9654,
+   "mtime": "2026-11-24T14:23:33.929405+00:00",
+   "md5": "1612b595ea6c80e89055b1bd340dd379"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/shape.csv",
+   "size": 995,
+   "mtime": "2026-11-24T14:23:33.312409+00:00",
+   "md5": "45d6cc9dd21680ae3ea4a9bc6c1b84c8"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/pair_distances.csv",
+   "size": 598,
+   "mtime": "2026-11-24T14:23:33.393409+00:00",
+   "md5": "382288a1cdc9704d0b4a1a3e1b3c5f9c"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/relative_positions.csv",
+   "size": 774,
+   "mtime": "2026-11-24T14:23:33.396409+00:00",
+   "md5": "6d49404a65ea7b4271708b66d117fab2"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/uncertainty.csv",
+   "size": 407,
+   "mtime": "2026-11-24T14:23:33.822406+00:00",
+   "md5": "8a1601a40534f4e9597985e0abbdf687"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/sections.png",
+   "size": 194325,
+   "mtime": "2026-11-24T14:23:34.704401+00:00",
+   "md5": "e17cb164f3e9c23b6a11e1f463a5dece"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/f1051/depth_pairs.png",
+   "size": 162451,
+   "mtime": "2026-11-24T14:23:36.505390+00:00",
+   "md5": "8a90239355435185fbb7fcdbe6d68077"
+  }
+ ],
+ "counts": {
+  "common": 627,
+  "runs": [
+   "tomodd/hier",
+   "tomodd/dd",
+   "growclust/catalog",
+   "growclust/default"
+  ]
+ },
+ "notes": null
+}

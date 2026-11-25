@@ -1,0 +1,5 @@
+run,n,lsqr_eh_med,lsqr_ez_med,boot_sh_med,boot_sz_med,boot_sh_p90,boot_sz_p90,gc_mad_h_med,gc_mad_z_med,boot_rel_sh_med,boot_rel_sz_med,boot_rel_frac
+tomodd/hier,194,0.247,0.203,0.159,0.127,0.485,0.714,,,,,
+tomodd/dd,118,0.483,0.443,0.731,0.675,1.312,1.951,,,,,
+growclust/catalog,103,,,2.377,2.849,2.95,3.533,1.409,1.784,2.431,3.081,0.95
+growclust/default,56,,,1.06,0.895,1.313,1.23,0.514,0.482,1.176,1.074,0.695

@@ -1,0 +1,22 @@
+{
+ "events": 172340,
+ "loc_source": {
+  "nll3d": 159426,
+  "b5_tomodd": 12291,
+  "none": 623
+ },
+ "b5_status": {
+  "cluster_not_run": 89028,
+  "unlinked": 69346,
+  "relocated": 12291,
+  "airquake_by_tomodd": 922,
+  "tier_U": 623,
+  "dropped_by_tomodd": 130
+ },
+ "above_surface": 76,
+ "above_surface_b5": 76,
+ "publishable": false,
+ "clusters": 4,
+ "missing_clusters": 2332,
+ "split_effect": {}
+}

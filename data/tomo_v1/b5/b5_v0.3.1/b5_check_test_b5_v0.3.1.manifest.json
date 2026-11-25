@@ -1,0 +1,54 @@
+{
+ "name": "b5_check_test_b5_v0.3.1",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_check_test.py",
+ "argv": [
+  "b5_v0.3.1"
+ ],
+ "utc": "2026-11-24T19:31:49.623001+00:00",
+ "git_commit": "79c82d0a9c7385ee91f4346a6efc09cc330a7f09",
+ "git_dirty": true,
+ "params_md5": "53cadbb3ca5bc237bb9bc98905b3a958",
+ "params": {
+  "cases": [
+   "f1803",
+   "f0399",
+   "f1051"
+  ]
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/catalog_b5_b5_v0.3.1.csv",
+   "size": 80104275,
+   "mtime": "2026-11-24T19:31:25.350062+00:00",
+   "md5": "602aeb615a0cc1616b9003b90a652fae"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1803/tomodd/dd/reloc.csv",
+   "size": 48649,
+   "mtime": "2026-11-24T13:57:07.594884+00:00",
+   "md5": "cdfa28c84d08ad0c43c164f2271651c7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f0399/tomodd/dd/reloc.csv",
+   "size": 124872,
+   "mtime": "2026-11-24T13:59:08.266147+00:00",
+   "md5": "bd3738009bcc77a65bdfd26a5b12726e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/f1051/tomodd/dd/reloc.csv",
+   "size": 83082,
+   "mtime": "2026-11-24T14:13:41.417963+00:00",
+   "md5": "e9c9f8f769e3a0ba14335fe7d1f9ffd6"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v0.3.1/check_b5_test.md",
+   "size": 2032,
+   "mtime": "2026-11-24T19:31:49.621928+00:00",
+   "md5": "2e8ad66173df5419f7c290f794f85a38"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

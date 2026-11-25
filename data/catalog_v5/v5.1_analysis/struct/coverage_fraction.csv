@@ -1,0 +1,33 @@
+group,n,n_resP,n_resPS,n_resP8,n_resPS8,pct_resP,pct_resPS
+all rows (incl. no hypocentre),172342,18675,4825,6424,1112,10.836,2.79967
+located (loc_source nll3d/comcat),171719,18675,4825,6424,1112,10.8753,2.80982
+located earthquakes,168406,18560,4825,6383,1112,11.021,2.8651
+"located earthquakes, depth_good",98204,12640,2828,4626,755,12.8712,2.87972
+"located earthquakes, M >= Mc of box",30201,2324,847,485,185,7.69511,2.80454
+class: background,136627,14406,3580,5104,875,10.544,2.62027
+class: mainshock-aftershock,14637,1521,328,174,82,10.3915,2.2409
+class: swarm,8501,1483,632,646,56,17.445,7.43442
+class: multiplet,3714,346,148,149,52,9.3161,3.98492
+class: linked_to_single,4927,804,137,310,47,16.3182,2.7806
+fault assignment: ambiguous,26257,3412,974,1284,173,12.9946,3.70949
+fault assignment: assigned,12651,1207,308,284,60,9.54075,2.43459
+fault assignment: fit member,64272,10944,3311,4342,834,17.0276,5.15154
+fault assignment: non-earthquake timing (weekday-daytime member of a surface removed for its timing),884,1,0,0,0,0.113122,0
+fault assignment: none,37468,2996,232,473,45,7.99616,0.619195
+fault assignment: not fitted (Axial Seamount left out),26874,0,0,0,0,0,0
+region: Axial,26726,0,0,0,0,0,0
+region: Blanco,42349,5881,4825,2049,1112,13.887,11.3934
+region: Cascades,16731,7369,0,3902,0,44.044,0
+region: Endeavour,178,0,0,0,0,0,0
+region: Explorer,1514,0,0,0,0,0,0
+region: Gorda,11352,776,0,0,0,6.8358,0
+region: JdF ridge/plate,2843,0,0,0,0,0,0
+region: Mendocino,24608,210,0,0,0,0.853381,0
+region: Offshore forearc,13814,807,0,0,0,5.8419,0
+region: Other onshore,13869,1664,0,412,0,11.998,0
+region: Puget/Georgia,14422,1853,0,20,0,12.8484,0
+tier: A,21206,4556,155,1871,30,21.4845,0.730925
+tier: B,32803,4163,798,1207,216,12.6909,2.4327
+tier: C,71726,6202,3013,2033,715,8.64679,4.20071
+tier: D,42669,3639,859,1272,151,8.52844,2.01317
+tier: U,2,0,0,0,0,0,0

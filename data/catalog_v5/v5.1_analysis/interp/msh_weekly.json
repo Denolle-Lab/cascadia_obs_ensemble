@@ -1,0 +1,92 @@
+{
+ "n": 8258,
+ "deep": 351,
+ "deep_wed_window": 22,
+ "shallow_wed_window": 2,
+ "deep_wed_local_1130_1300": 71,
+ "deep_wed_local_dates": 51,
+ "deep_wed_local_pst": 19,
+ "deep_wed_local_pdt": 52,
+ "deep_wed_local_1150_1205": 34,
+ "deep_wed_local_1210_1225": 31,
+ "deep_wed_local_in_utc_window": 22,
+ "deep_tue_local_1130_1300": 10,
+ "deep_outside_local_window": 280,
+ "shallow_wed_local_1130_1300": 49,
+ "deep_wed_local_by_year": {
+  "2011": 28,
+  "2012": 37,
+  "2013": 5,
+  "2015": 1
+ },
+ "deep_wed_local_first": "2011-06-08",
+ "deep_wed_local_last": "2015-06-03",
+ "deep_days_by_local_dow": {
+  "0": 25,
+  "1": 30,
+  "2": 77,
+  "3": 23,
+  "4": 24,
+  "5": 23,
+  "6": 20
+ },
+ "deep_tiers": {
+  "D": 224,
+  "C": 122,
+  "B": 4,
+  "A": 1
+ },
+ "deep_sigz_med": 16.506,
+ "deep_distmin_med": 4.654,
+ "deep_v4_depth_med": 28.674,
+ "deep_depth_med": 66.95472,
+ "deep_dow": {
+  "0": 44,
+  "1": 60,
+  "2": 111,
+  "3": 40,
+  "4": 32,
+  "5": 41,
+  "6": 23
+ },
+ "deep_dow_local": {
+  "0": 41,
+  "1": 61,
+  "2": 118,
+  "3": 31,
+  "4": 38,
+  "5": 33,
+  "6": 29
+ },
+ "deep_by_year": {
+  "2010": 40,
+  "2011": 98,
+  "2012": 112,
+  "2013": 26,
+  "2014": 22,
+  "2015": 48,
+  "2016": 5
+ },
+ "review_box_located_eq": 7458,
+ "review_box_deep30": 331,
+ "review_scan_2011_05_to_2013_09": {
+  "HSR.UW": {
+   "wed_pdt": 89,
+   "hit_pdt": 42,
+   "wed_pst": 36,
+   "hit_pst": 0
+  },
+  "STD.CC": {
+   "wed_pdt": 85,
+   "hit_pdt": 0,
+   "wed_pst": 35,
+   "hit_pst": 0
+  },
+  "STD.UW": {
+   "wed_pdt": 89,
+   "hit_pdt": 50,
+   "wed_pst": 36,
+   "hit_pst": 0
+  }
+ }
+}

@@ -1,0 +1,133 @@
+{
+ "name": "b2_m0_report",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_report.py",
+ "argv": [
+  "ridges_north_m0",
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north"
+ ],
+ "utc": "2026-11-24T01:33:54.613145+00:00",
+ "git_commit": "4cd156850a259016e3e64d87a4d88cbc446ba925",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": {
+  "region": {
+   "b1b": "b1b_balanced_c",
+   "bins": {
+    "bin": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt",
+    "bin_check": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt"
+   },
+   "events_lat": [
+    44.4,
+    50.0
+   ],
+   "events_lon": [
+    -131.0,
+    -126.6
+   ],
+   "station_margin_deg": [
+    0.5,
+    0.7
+   ],
+   "node_lon": [
+    -131.75,
+    -125.85,
+    0.125
+   ],
+   "node_lat": [
+    43.9,
+    50.5,
+    0.1
+   ],
+   "forward": {
+    "coords": "ellipsoid",
+    "mod": "nearest",
+    "station_corr": true,
+    "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_ridges_north.csv",
+    "p1_reference": "ridges_north_v2/p1_reference",
+    "station_corr_from": "ridges_north_v2"
+   },
+   "weights_scale": "dataset",
+   "start_model": "margin_m0_v2/d200_s480",
+   "start_model_mode": "change",
+   "damp": 200
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/d200_s120/Output_Files/model_geo.npz",
+   "size": 193207,
+   "mtime": "2026-11-24T00:36:49.360026+00:00",
+   "md5": "4ecdd550b94206b4a24315e9b9092a93"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/d200_s20/Output_Files/model_geo.npz",
+   "size": 196760,
+   "mtime": "2026-11-24T00:36:43.215065+00:00",
+   "md5": "dfe1dd30c4f16b28c9b91c29e95a9d31"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/d200_s240/Output_Files/model_geo.npz",
+   "size": 192090,
+   "mtime": "2026-11-24T00:37:03.940933+00:00",
+   "md5": "e48851283fc422beb557c13d43df273e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/d200_s480/Output_Files/model_geo.npz",
+   "size": 191156,
+   "mtime": "2026-11-24T00:37:18.692839+00:00",
+   "md5": "e95e0ff508e1c6d6b390c0fec7433640"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_m0/d200_s60/Output_Files/model_geo.npz",
+   "size": 194587,
+   "mtime": "2026-11-24T00:36:52.681005+00:00",
+   "md5": "904c684b4b804ed4754a6d959a768b5a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/maps_d200_s120.png",
+   "size": 81621,
+   "mtime": "2026-11-24T01:33:53.428048+00:00",
+   "md5": "5581206e7c99f777319c436b0780650c"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/maps_d200_s20.png",
+   "size": 86005,
+   "mtime": "2026-11-24T01:33:53.695047+00:00",
+   "md5": "0d545842ba4837951e0e7ae1b1d1dd59"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/maps_d200_s240.png",
+   "size": 77552,
+   "mtime": "2026-11-24T01:33:53.937045+00:00",
+   "md5": "a04264bb24f3302fc495cc86482058d2"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/maps_d200_s480.png",
+   "size": 71604,
+   "mtime": "2026-11-24T01:33:54.181044+00:00",
+   "md5": "7c28b7bc9396bf0de4588c7066c821b7"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/maps_d200_s60.png",
+   "size": 84648,
+   "mtime": "2026-11-24T01:33:54.457042+00:00",
+   "md5": "e9125993b0478ffbd7a7da59989871fc"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/start_vp.png",
+   "size": 55236,
+   "mtime": "2026-11-24T01:33:54.609041+00:00",
+   "md5": "f4f8d45d1fe668eadfa7045a9061c0a6"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/ridges_north/summary.md",
+   "size": 1805,
+   "mtime": "2026-11-24T01:33:54.612041+00:00",
+   "md5": "5afdd10280578397085f6b0d678cbfd4"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

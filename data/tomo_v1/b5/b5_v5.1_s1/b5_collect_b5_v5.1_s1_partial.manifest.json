@@ -1,0 +1,256 @@
+{
+ "name": "b5_collect_b5_v5.1_s1_partial",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_relocate.py",
+ "argv": [
+  "collect",
+  "--version",
+  "0.3.1",
+  "--run",
+  "b5_v5.1_s1",
+  "--b4-run",
+  "b4_v51_iter1",
+  "--iter0",
+  "b4_v51_iter0",
+  "--time",
+  "time_b4_v0.3.1m_sc21",
+  "--picks",
+  "/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv",
+  "--partial"
+ ],
+ "utc": "2026-11-25T14:17:32.694841+00:00",
+ "git_commit": "322f3049dcd0b347c6a9d67840dec9f626e8c8a4",
+ "git_dirty": true,
+ "params_md5": "457dc4bda362c2171b0a98a2a94a9091",
+ "params": {
+  "b5": {
+   "out": "/wd1/mdenolle_data/tomo_v1/b5",
+   "summary": "data/tomo_v1/b5",
+   "forbidden_out": [
+    "/wd1/mdenolle_data/b5_test",
+    "/wd1/mdenolle_data/reloc_v5/runs",
+    "/wd1/mdenolle_data/tomo_v1/b2_tomodd",
+    "/wd1/mdenolle_data/tomo_v1/above_surface"
+   ],
+   "reloc_v5": "/wd1/mdenolle_data/reloc_v5",
+   "defaults": {
+    "run": "b5_v{v}",
+    "b4_run": "b4_iter1_v{v}",
+    "b4_iter0": "b4_iter0_v{v}",
+    "time_grids": "time_b4_v{v}"
+   },
+   "grid_prefix": "cascadia3d",
+   "picks": "/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv",
+   "exclude_ids": [
+    172113
+   ],
+   "loc_source": "nll3d",
+   "grid_margin_km": 5.0,
+   "dt": {
+    "max_neighbours": 10,
+    "max_sep_km": 10.0,
+    "min_common": 8
+   },
+   "weight": "(0.05/sigma)^2",
+   "split": {
+    "halo_hops": 2,
+    "min_core": 50
+   },
+   "tomodd": {
+    "bin_dir": "/wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-25",
+    "runtime": "/wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-25/runtime_files",
+    "classes": {
+     "e10k": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 200,
+      "maxobs": 100
+     },
+     "e13k": {
+      "maxeve": 13000,
+      "maxdata": 2000000,
+      "maxsta": 200,
+      "maxobs": 100
+     },
+     "o140": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 200,
+      "maxobs": 140
+     },
+     "w": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 260,
+      "maxobs": 140
+     },
+     "m": {
+      "maxeve": 10000,
+      "maxdata": 3000000,
+      "maxsta": 560,
+      "maxobs": 130
+     }
+    },
+    "mod_max": {
+     "nx": 90,
+     "ny": 80,
+     "nz": 50
+    },
+    "variant": "dd",
+    "sets": [
+     [
+      3,
+      1.0,
+      1.0,
+      -9,
+      -9,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      8,
+      -9,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      6,
+      10,
+      0.0
+     ],
+     [
+      3,
+      1.0,
+      1.0,
+      6,
+      10,
+      0.0
+     ]
+    ],
+    "s_weight": 1.0,
+    "damp": 100,
+    "node_margin_deg": 0.375,
+    "air_dep_margin_km": 0.05,
+    "floor": {
+     "enabled": true,
+     "file": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged.bin",
+     "margin_deg": 0.15,
+     "air_dep_km": -1000.0,
+     "max_passes": 3
+    },
+    "crash_retries": 2
+   },
+   "frame_clear_km": 0.05,
+   "nboot": 0,
+   "nproc": 48,
+   "min_free_gb": 30,
+   "accept": {
+    "reference_s_weight": 0.25,
+    "clusters_per_region": 3,
+    "size_range": [
+     80,
+     1500
+    ],
+    "subset_events": 1200,
+    "folds": 3,
+    "nproc": 40
+   },
+   "collect": {
+    "pca_min_events": 10
+   }
+  },
+  "config": {
+   "version": "0.3.1",
+   "run": "b5_v5.1_s1",
+   "b4_run": "b4_v51_iter1",
+   "iter0": "b4_v51_iter0",
+   "time_grids": "time_b4_v0.3.1m_sc21",
+   "picks": "/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv",
+   "dir": "/wd1/mdenolle_data/tomo_v1/b5/b5_v5.1_s1",
+   "catalog_b4": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+   "locations": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_iter1/locations.csv",
+   "station_terms": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_iter0/station_terms.in",
+   "grids": "/wd1/mdenolle_data/reloc_v5/time_b4_v0.3.1m_sc21",
+   "model": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.1.nc",
+   "summary": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v5.1_s1"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+   "size": 61837532,
+   "mtime": "2026-11-25T11:15:10.080835+00:00",
+   "md5": "8435e4c63af3a3abff11a8a136ac331c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_iter1/locations.csv",
+   "size": 65920880,
+   "mtime": "2026-11-25T11:14:57.497922+00:00",
+   "md5": "16c630a14fb02044fa1638c1060c00f9"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+   "size": 18155178,
+   "mtime": "2026-11-23T04:30:00.638894+00:00",
+   "md5": "722975b82ac5f3e6761c7f1f57cd346d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v5.1_s1/split/clusters.csv",
+   "size": 220119,
+   "mtime": "2026-11-25T13:42:08.596408+00:00",
+   "md5": "7d98efaec3d0c99ed742610f1e93fa9b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v5.1_s1/catalog_b5_b5_v5.1_s1_partial.csv",
+   "size": 83841832,
+   "mtime": "2026-11-25T14:17:31.730494+00:00",
+   "md5": "220aa948f7e2ee9fdfd039c43997682f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v5.1_s1/clusters_summary_partial.csv",
+   "size": 1964,
+   "mtime": "2026-11-25T14:17:32.184491+00:00",
+   "md5": "b476af63de9cec5b49fdf397f04c0fc6"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v5.1_s1/compare_partial.md",
+   "size": 7149,
+   "mtime": "2026-11-25T14:17:32.665489+00:00",
+   "md5": "5c569be05f3887c7f0a1e4edfd7c669b"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5_full/data/tomo_v1/b5/b5_v5.1_s1/clusters_summary_partial.csv",
+   "size": 913,
+   "mtime": "2026-11-25T14:17:32.675489+00:00",
+   "md5": "de52907bb2a6b0bff64d27d1ca6476d6"
+  }
+ ],
+ "counts": {
+  "events": 172340,
+  "loc_source": {
+   "nll3d": 159426,
+   "b5_tomodd": 12291,
+   "none": 623
+  },
+  "b5_status": {
+   "cluster_not_run": 89028,
+   "unlinked": 69346,
+   "relocated": 12291,
+   "airquake_by_tomodd": 922,
+   "tier_U": 623,
+   "dropped_by_tomodd": 130
+  },
+  "above_surface": 76,
+  "above_surface_b5": 76,
+  "publishable": false,
+  "clusters": 4,
+  "missing_clusters": 2332,
+  "split_effect": {}
+ },
+ "notes": null
+}

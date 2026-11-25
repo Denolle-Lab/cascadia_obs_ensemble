@@ -1,0 +1,49 @@
+07:51:55 start ridges_north_v2/res_tests/spikec_null inv_d100_s20
+07:51:57 start ridges_north_v2/res_tests/spikec_zm001 inv_d100_s20
+07:51:59 start ridges_north_v2/res_tests/spikec_zp003 inv_d100_s20
+07:52:01 start ridges_north_v2/res_tests/spikec_zp007 inv_d100_s20
+07:52:03 start ridges_north_v2/res_tests/spikec_zp012 inv_d100_s20
+07:52:05 start ridges_north_v2/res_tests/spikec_zp021 inv_d100_s20
+07:54:38 done rc=0 ridges_north_v2/res_tests/spikec_zp012 inv_d100_s20
+07:54:40 done rc=0 ridges_north_v2/res_tests/spikec_zm001 inv_d100_s20
+07:54:41 done rc=0 ridges_north_v2/res_tests/spikec_null inv_d100_s20
+07:54:42 done rc=0 ridges_north_v2/res_tests/spikec_zp007 inv_d100_s20
+07:54:47 done rc=0 ridges_north_v2/res_tests/spikec_zp003 inv_d100_s20
+07:54:50 done rc=0 ridges_north_v2/res_tests/spikec_zp021 inv_d100_s20
+07:54:52 start ridges_north_v2/res_tests/spikec_zp034 inv_d100_s20
+07:54:54 start ridges_north_v2/res_tests/spikec_zp055 inv_d100_s20
+07:54:56 start ridges_north_v2/res_tests/spikec_null inv_d100_s10
+07:54:58 start ridges_north_v2/res_tests/spikec_zm001 inv_d100_s10
+07:55:00 start ridges_north_v2/res_tests/spikec_zp003 inv_d100_s10
+07:55:02 start ridges_north_v2/res_tests/spikec_zp007 inv_d100_s10
+07:57:30 done rc=0 ridges_north_v2/res_tests/spikec_null inv_d100_s10
+07:57:31 done rc=0 ridges_north_v2/res_tests/spikec_zm001 inv_d100_s10
+07:57:34 start ridges_north_v2/res_tests/spikec_zp012 inv_d100_s10
+07:57:35 done rc=0 ridges_north_v2/res_tests/spikec_zp034 inv_d100_s20
+07:57:36 start ridges_north_v2/res_tests/spikec_zp021 inv_d100_s10
+07:57:38 start ridges_north_v2/res_tests/spikec_zp034 inv_d100_s10
+07:57:40 done rc=0 ridges_north_v2/res_tests/spikec_zp055 inv_d100_s20
+07:57:43 done rc=0 ridges_north_v2/res_tests/spikec_zp007 inv_d100_s10
+07:57:49 done rc=0 ridges_north_v2/res_tests/spikec_zp003 inv_d100_s10
+07:57:55 start ridges_north_v2/res_tests/spikec_zp055 inv_d100_s10
+07:57:57 start ridges_north_v2/res_tests/spikec_null inv_d100_s40
+07:57:59 start ridges_north_v2/res_tests/spikec_zm001 inv_d100_s40
+08:00:02 done rc=0 ridges_north_v2/res_tests/spikec_zp012 inv_d100_s10
+08:00:16 start ridges_north_v2/res_tests/spikec_zp003 inv_d100_s40
+08:00:19 done rc=0 ridges_north_v2/res_tests/spikec_zp021 inv_d100_s10
+08:00:20 done rc=0 ridges_north_v2/res_tests/spikec_zp034 inv_d100_s10
+08:00:29 done rc=0 ridges_north_v2/res_tests/spikec_zp055 inv_d100_s10
+08:00:33 start ridges_north_v2/res_tests/spikec_zp007 inv_d100_s40
+08:00:35 start ridges_north_v2/res_tests/spikec_zp012 inv_d100_s40
+08:00:37 start ridges_north_v2/res_tests/spikec_zp021 inv_d100_s40
+08:00:46 done rc=0 ridges_north_v2/res_tests/spikec_null inv_d100_s40
+08:00:47 done rc=0 ridges_north_v2/res_tests/spikec_zm001 inv_d100_s40
+08:00:54 start ridges_north_v2/res_tests/spikec_zp034 inv_d100_s40
+08:00:56 start ridges_north_v2/res_tests/spikec_zp055 inv_d100_s40
+08:03:06 done rc=0 ridges_north_v2/res_tests/spikec_zp003 inv_d100_s40
+08:03:07 done rc=0 ridges_north_v2/res_tests/spikec_zp012 inv_d100_s40
+08:03:14 done rc=0 ridges_north_v2/res_tests/spikec_zp007 inv_d100_s40
+08:03:14 done rc=0 ridges_north_v2/res_tests/spikec_zp021 inv_d100_s40
+08:03:37 done rc=0 ridges_north_v2/res_tests/spikec_zp034 inv_d100_s40
+08:03:41 done rc=0 ridges_north_v2/res_tests/spikec_zp055 inv_d100_s40
+ALL DONE 08:03:41

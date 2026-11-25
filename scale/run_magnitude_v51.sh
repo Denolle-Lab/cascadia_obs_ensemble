@@ -11,20 +11,30 @@
 #   4. phase18 (ComCat tensors) -> phase19 (preferred M)
 #   5. v51_magnitude_table.py: per-event table joined to the v5.1 flags, fallback
 #      ML_v4hyp for rows without a hypocentre
-# Large outputs in $DATA (default /wd1/.../v5.1_analysis/mag), suffix _v51.
+# Large outputs in $DATA (default $CASCADIA_WD1/catalog_v5/v5.1_analysis/mag), suffix _v51.
 # Resumable: steps whose output exists are skipped (FORCE=1 reruns all).
+# Paths: the pixi env and the v4 run (gitignored CSVs) are taken from the main checkout,
+# found from the git common directory so that the script also runs from a worktree
+# (CASCADIA_MAIN overrides it; ENV, V4 override each one). CASCADIA_WD1 is the project
+# data disk (default /wd1/mdenolle_data). Same defaults as workflow/05_magnitude/v51_paths.py.
 #   bash scale/run_magnitude_v51.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/workflow/05_magnitude"
-ENV="${ENV:-/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default}"
+if [ -z "${CASCADIA_MAIN:-}" ]; then
+  COMMON="$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || echo "$ROOT/.git")"
+  CASCADIA_MAIN="$(dirname "$COMMON")"
+fi
+export CASCADIA_MAIN
+export CASCADIA_WD1="${CASCADIA_WD1:-/wd1/mdenolle_data}"
+ENV="${ENV:-$CASCADIA_MAIN/.pixi/envs/default}"
 PY="$ENV/bin/python"
 export LD_LIBRARY_PATH="$ENV/lib"
 export PYTHONPATH="$PWD"
-DATA="${DATA:-/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag}"
+DATA="${DATA:-$CASCADIA_WD1/catalog_v5/v5.1_analysis/mag}"
 SUFFIX="${SUFFIX:-_v51}"
-AMPS="${AMPS:-/wd1/mdenolle_data/amps_v6_all}"
-V4="/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4"
+AMPS="${AMPS:-$CASCADIA_WD1/amps_v6_all}"
+V4="${V4:-$CASCADIA_MAIN/data/magnitude_v4}"
 ANSS="$DATA/anss_2010-16.csv"
 MATCHED="$DATA/comcat_mt_matched$SUFFIX.csv"
 mkdir -p "$DATA"

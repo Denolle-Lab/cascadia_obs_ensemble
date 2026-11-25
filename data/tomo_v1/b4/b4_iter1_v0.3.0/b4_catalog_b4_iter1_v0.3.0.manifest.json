@@ -1,0 +1,58 @@
+{
+ "name": "b4_catalog_b4_iter1_v0.3.0",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b4_catalog.py",
+ "argv": [
+  "b4_iter1_v0.3.0"
+ ],
+ "utc": "2026-11-24T06:57:24.270790+00:00",
+ "git_commit": "5e6166feacd7a054c2d4bfc343d54a149f74c2ca",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": null,
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_b4_iter1_v0.3.0.csv",
+   "size": 44217132,
+   "mtime": "2026-11-24T06:57:19.276545+00:00",
+   "md5": "856eca55c28f4ebaf9946b33512e32cc"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "size": 50695776,
+   "mtime": "2026-11-22T21:27:14.064885+00:00",
+   "md5": "de44780c3dbe49b404d785914e132459"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv",
+   "size": 50711269,
+   "mtime": "2026-11-24T06:57:22.913524+00:00",
+   "md5": "a8b560faaa581fd1eba3b74136348003"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.0/compare.md",
+   "size": 1702,
+   "mtime": "2026-11-24T06:57:23.495521+00:00",
+   "md5": "a383ca09b75de3bceb4a4f36243e6934"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.0/compare_by_region.csv",
+   "size": 862,
+   "mtime": "2026-11-24T06:57:23.475521+00:00",
+   "md5": "0cf4bca5ac70e538d7f938fd8cddebc1"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.0/depth_hist.png",
+   "size": 50320,
+   "mtime": "2026-11-24T06:57:24.268517+00:00",
+   "md5": "809534fc955d928eec7c8feced787132"
+  }
+ ],
+ "counts": {
+  "events": 172340,
+  "nll3d": 157270,
+  "both": 157225
+ },
+ "notes": null
+}

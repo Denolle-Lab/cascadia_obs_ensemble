@@ -1,0 +1,177 @@
+mask,events,zone,var,split_by,group,mc_plus,n_low,n_high,b_low,b_high,db_high_minus_low,n_ML,n_review
+resP,all above Mc,BL,Vp,all,all,0,658,372,1.31501,1.28107,-0.0339341,1026,30
+resP,all above Mc,BL,Vp,all,all,0.2,358,221,1.30412,1.39159,0.087464,575,25
+resP,all above Mc,BL,Vp,box,BL,0,655,372,1.32231,1.28107,-0.0412341,1023,29
+resP,all above Mc,BL,Vp,box,BL,0.2,355,221,1.31062,1.39159,0.0809681,572,24
+resP,all above Mc,BL,Vp,box,GO,0,3,0,,,,3,1
+resP,all above Mc,BL,Vp,box,GO,0.2,3,0,,,,3,1
+resP,all above Mc,BL,Vp,node depth,12-18 km,0,599,342,1.41151,1.33648,-0.0750252,937,26
+resP,all above Mc,BL,Vp,node depth,12-18 km,0.2,312,199,1.40462,1.4616,0.0569791,507,21
+resP,all above Mc,BL,Vp,node depth,29 km,0,59,30,0.776231,0.869923,0.0936922,89,4
+resP,all above Mc,BL,Vp,node depth,29 km,0.2,46,22,0.878018,,,68,4
+resP,all above Mc,BL,dVp,all,all,0,668,362,1.31662,1.27735,-0.0392761,1026,30
+resP,all above Mc,BL,dVp,all,all,0.2,361,218,1.3016,1.39766,0.0960617,575,25
+resP,all above Mc,BL,dVp,box,BL,0,665,362,1.32384,1.27735,-0.0464908,1023,29
+resP,all above Mc,BL,dVp,box,BL,0.2,358,218,1.30799,1.39766,0.0896667,572,24
+resP,all above Mc,BL,dVp,box,GO,0,3,0,,,,3,1
+resP,all above Mc,BL,dVp,box,GO,0.2,3,0,,,,3,1
+resP,all above Mc,BL,dVp,node depth,12-18 km,0,609,332,1.41185,1.33379,-0.0780522,937,26
+resP,all above Mc,BL,dVp,node depth,12-18 km,0.2,315,196,1.40025,1.4702,0.0699541,507,21
+resP,all above Mc,BL,dVp,node depth,29 km,0,59,30,0.776231,0.869923,0.0936922,89,4
+resP,all above Mc,BL,dVp,node depth,29 km,0.2,46,22,0.878018,,,68,4
+resP,all above Mc,MTJ,Vp,all,all,0,197,560,0.884017,1.07881,0.194794,755,6
+resP,all above Mc,MTJ,Vp,all,all,0.2,127,326,0.847554,1.02941,0.181857,451,6
+resP,all above Mc,MTJ,Vp,box,GO,0,1,0,,,,1,1
+resP,all above Mc,MTJ,Vp,box,GO,0.2,1,0,,,,1,1
+resP,all above Mc,MTJ,Vp,box,MT,0,196,560,0.882383,1.07881,0.196428,754,5
+resP,all above Mc,MTJ,Vp,box,MT,0.2,126,326,0.842343,1.02941,0.187068,450,5
+resP,all above Mc,MTJ,Vp,node depth,29 km,0,197,560,0.884017,1.07881,0.194794,755,6
+resP,all above Mc,MTJ,Vp,node depth,29 km,0.2,127,326,0.847554,1.02941,0.181857,451,6
+resP,all above Mc,MTJ,dVp,all,all,0,253,504,0.888774,1.10218,0.213407,755,6
+resP,all above Mc,MTJ,dVp,all,all,0.2,160,293,0.830818,1.06955,0.238729,451,6
+resP,all above Mc,MTJ,dVp,box,GO,0,0,1,,,,1,1
+resP,all above Mc,MTJ,dVp,box,GO,0.2,0,1,,,,1,1
+resP,all above Mc,MTJ,dVp,box,MT,0,253,503,0.888774,1.10173,0.212957,754,5
+resP,all above Mc,MTJ,dVp,box,MT,0.2,160,292,0.830818,1.06691,0.236092,450,5
+resP,all above Mc,MTJ,dVp,node depth,29 km,0,253,504,0.888774,1.10218,0.213407,755,6
+resP,all above Mc,MTJ,dVp,node depth,29 km,0.2,160,293,0.830818,1.06955,0.238729,451,6
+resP,all above Mc,WA,Vp,all,all,0,286,251,1.23614,1.61954,0.383402,537,3
+resP,all above Mc,WA,Vp,all,all,0.2,157,116,1.18371,1.5987,0.414985,273,2
+resP,all above Mc,WA,Vp,box,ON,0,164,68,1.15086,1.52762,0.376766,232,3
+resP,all above Mc,WA,Vp,box,ON,0.2,94,28,1.11142,,,122,2
+resP,all above Mc,WA,Vp,box,PU,0,122,183,1.37289,1.65658,0.283686,305,0
+resP,all above Mc,WA,Vp,box,PU,0.2,63,88,1.31094,1.76796,0.45702,151,0
+resP,all above Mc,WA,Vp,node depth,1-9 km,0,95,57,1.48074,2.09042,0.609678,152,2
+resP,all above Mc,WA,Vp,node depth,1-9 km,0.2,43,19,1.2755,,,62,1
+resP,all above Mc,WA,Vp,node depth,12-18 km,0,191,194,1.14228,1.519,0.376723,385,1
+resP,all above Mc,WA,Vp,node depth,12-18 km,0.2,114,97,1.15243,1.56803,0.415595,211,1
+resP,all above Mc,WA,dVp,all,all,0,318,219,1.2975,1.55032,0.252821,537,3
+resP,all above Mc,WA,dVp,all,all,0.2,169,104,1.2395,1.51059,0.271089,273,2
+resP,all above Mc,WA,dVp,box,ON,0,145,87,1.11908,1.51449,0.395418,232,3
+resP,all above Mc,WA,dVp,box,ON,0.2,85,37,1.09664,1.2395,0.142863,122,2
+resP,all above Mc,WA,dVp,box,PU,0,173,132,1.49763,1.57487,0.0772439,305,0
+resP,all above Mc,WA,dVp,box,PU,0.2,84,67,1.42771,1.7181,0.290394,151,0
+resP,all above Mc,WA,dVp,node depth,1-9 km,0,87,65,1.36526,2.34656,0.9813,152,2
+resP,all above Mc,WA,dVp,node depth,1-9 km,0.2,43,19,1.24806,,,62,1
+resP,all above Mc,WA,dVp,node depth,12-18 km,0,231,154,1.27369,1.3561,0.0824092,385,1
+resP,all above Mc,WA,dVp,node depth,12-18 km,0.2,126,85,1.23661,1.44335,0.206739,211,1
+resP,background,BL,Vp,all,all,0,340,173,1.62321,1.43847,-0.184735,513,24
+resP,background,BL,Vp,all,all,0.2,166,84,1.68312,1.28857,-0.394544,250,19
+resP,background,BL,Vp,box,BL,0,338,173,1.64081,1.43847,-0.202333,511,23
+resP,background,BL,Vp,box,BL,0.2,164,84,1.70687,1.28857,-0.418299,248,18
+resP,background,BL,Vp,box,GO,0,2,0,,,,2,1
+resP,background,BL,Vp,box,GO,0.2,2,0,,,,2,1
+resP,background,BL,Vp,node depth,12-18 km,0,301,158,1.83697,1.58502,-0.251956,459,21
+resP,background,BL,Vp,node depth,12-18 km,0.2,138,73,2.03451,1.44231,-0.592198,211,16
+resP,background,BL,Vp,node depth,29 km,0,39,15,0.855169,,,54,3
+resP,background,BL,Vp,node depth,29 km,0.2,28,11,,,,39,3
+resP,background,BL,dVp,all,all,0,343,170,1.61744,1.44479,-0.172653,513,24
+resP,background,BL,dVp,all,all,0.2,165,85,1.63873,1.34648,-0.292257,250,19
+resP,background,BL,dVp,box,BL,0,341,170,1.63472,1.44479,-0.189936,511,23
+resP,background,BL,dVp,box,BL,0.2,163,85,1.66084,1.34648,-0.314363,248,18
+resP,background,BL,dVp,box,GO,0,2,0,,,,2,1
+resP,background,BL,dVp,box,GO,0.2,2,0,,,,2,1
+resP,background,BL,dVp,node depth,12-18 km,0,304,155,1.82628,1.5966,-0.229686,459,21
+resP,background,BL,dVp,node depth,12-18 km,0.2,137,74,1.96021,1.52413,-0.436084,211,16
+resP,background,BL,dVp,node depth,29 km,0,39,15,0.855169,,,54,3
+resP,background,BL,dVp,node depth,29 km,0.2,28,11,,,,39,3
+resP,background,MTJ,Vp,all,all,0,128,152,1.07128,1.05408,-0.017199,279,4
+resP,background,MTJ,Vp,all,all,0.2,80,86,1.09601,0.940765,-0.155246,165,4
+resP,background,MTJ,Vp,box,GO,0,1,0,,,,1,1
+resP,background,MTJ,Vp,box,GO,0.2,1,0,,,,1,1
+resP,background,MTJ,Vp,box,MT,0,127,152,1.06936,1.05408,-0.0152799,278,3
+resP,background,MTJ,Vp,box,MT,0.2,79,86,1.08618,0.940765,-0.145418,164,3
+resP,background,MTJ,Vp,node depth,29 km,0,128,152,1.07128,1.05408,-0.017199,279,4
+resP,background,MTJ,Vp,node depth,29 km,0.2,80,86,1.09601,0.940765,-0.155246,165,4
+resP,background,MTJ,dVp,all,all,0,146,134,1.07508,1.04785,-0.0272281,279,4
+resP,background,MTJ,dVp,all,all,0.2,89,77,1.06727,0.950424,-0.116845,165,4
+resP,background,MTJ,dVp,box,GO,0,0,1,,,,1,1
+resP,background,MTJ,dVp,box,GO,0.2,0,1,,,,1,1
+resP,background,MTJ,dVp,box,MT,0,146,133,1.07508,1.04592,-0.0291532,278,3
+resP,background,MTJ,dVp,box,MT,0.2,89,76,1.06727,0.941103,-0.126165,164,3
+resP,background,MTJ,dVp,node depth,29 km,0,146,134,1.07508,1.04785,-0.0272281,279,4
+resP,background,MTJ,dVp,node depth,29 km,0.2,89,77,1.06727,0.950424,-0.116845,165,4
+resP,background,WA,Vp,all,all,0,158,176,1.30095,1.78977,0.488824,334,0
+resP,background,WA,Vp,all,all,0.2,86,76,1.28251,1.75734,0.474829,162,0
+resP,background,WA,Vp,box,ON,0,80,45,1.15404,1.79378,0.639741,125,0
+resP,background,WA,Vp,box,ON,0.2,47,18,1.15107,,,65,0
+resP,background,WA,Vp,box,PU,0,78,131,1.49631,1.7884,0.29209,209,0
+resP,background,WA,Vp,box,PU,0.2,39,58,1.48718,1.80956,0.322381,97,0
+resP,background,WA,Vp,node depth,1-9 km,0,38,36,1.60256,2.32589,0.723323,74,0
+resP,background,WA,Vp,node depth,1-9 km,0.2,16,12,,,,28,0
+resP,background,WA,Vp,node depth,12-18 km,0,120,140,1.22777,1.68963,0.461853,260,0
+resP,background,WA,Vp,node depth,12-18 km,0.2,70,64,1.27146,1.69999,0.42853,134,0
+resP,background,WA,dVp,all,all,0,187,147,1.45057,1.61767,0.167098,334,0
+resP,background,WA,dVp,all,all,0.2,92,70,1.35194,1.65671,0.304774,162,0
+resP,background,WA,dVp,box,ON,0,71,54,1.21002,1.51127,0.301252,125,0
+resP,background,WA,dVp,box,ON,0.2,40,25,1.17061,,,65,0
+resP,background,WA,dVp,box,PU,0,116,93,1.65153,1.68662,0.0350894,209,0
+resP,background,WA,dVp,box,PU,0.2,52,45,1.53482,1.84457,0.309755,97,0
+resP,background,WA,dVp,node depth,1-9 km,0,39,35,1.56901,2.44182,0.872804,74,0
+resP,background,WA,dVp,node depth,1-9 km,0.2,17,11,,,,28,0
+resP,background,WA,dVp,node depth,12-18 km,0,148,112,1.42228,1.46333,0.0410489,260,0
+resP,background,WA,dVp,node depth,12-18 km,0.2,75,59,1.35989,1.57122,0.211325,134,0
+resPS,all above Mc,BL,VpVs,all,all,0,353,494,1.41196,1.37352,-0.0384335,843,20
+resPS,all above Mc,BL,VpVs,all,all,0.2,186,271,1.43276,1.43084,-0.00191509,453,16
+resPS,all above Mc,BL,VpVs,box,BL,0,353,494,1.41196,1.37352,-0.0384335,843,20
+resPS,all above Mc,BL,VpVs,box,BL,0.2,186,271,1.43276,1.43084,-0.00191509,453,16
+resPS,all above Mc,BL,VpVs,node depth,12-18 km,0,347,481,1.46931,1.3822,-0.0871165,824,20
+resPS,all above Mc,BL,VpVs,node depth,12-18 km,0.2,180,262,1.51592,1.43146,-0.084463,438,16
+resPS,all above Mc,BL,VpVs,node depth,29 km,0,6,13,,,,19,0
+resPS,all above Mc,BL,VpVs,node depth,29 km,0.2,6,9,,,,15,0
+resPS,all above Mc,BL,dVpVs,all,all,0,434,413,1.36217,1.41896,0.0567874,843,20
+resPS,all above Mc,BL,dVpVs,all,all,0.2,225,232,1.31298,1.56912,0.256135,453,16
+resPS,all above Mc,BL,dVpVs,box,BL,0,434,413,1.36217,1.41896,0.0567874,843,20
+resPS,all above Mc,BL,dVpVs,box,BL,0.2,225,232,1.31298,1.56912,0.256135,453,16
+resPS,all above Mc,BL,dVpVs,node depth,12-18 km,0,428,400,1.40436,1.43166,0.0273032,824,20
+resPS,all above Mc,BL,dVpVs,node depth,12-18 km,0.2,219,223,1.36631,1.57614,0.209829,438,16
+resPS,all above Mc,BL,dVpVs,node depth,29 km,0,6,13,,,,19,0
+resPS,all above Mc,BL,dVpVs,node depth,29 km,0.2,6,9,,,,15,0
+resPS,all above Mc,BL,Vs,all,all,0,651,196,1.38514,1.40324,0.0181,843,20
+resPS,all above Mc,BL,Vs,all,all,0.2,349,108,1.41358,1.49318,0.0795965,453,16
+resPS,all above Mc,BL,Vs,box,BL,0,651,196,1.38514,1.40324,0.0181,843,20
+resPS,all above Mc,BL,Vs,box,BL,0.2,349,108,1.41358,1.49318,0.0795965,453,16
+resPS,all above Mc,BL,Vs,node depth,12-18 km,0,632,196,1.42187,1.40324,-0.0186368,824,20
+resPS,all above Mc,BL,Vs,node depth,12-18 km,0.2,334,108,1.45571,1.49318,0.0374697,438,16
+resPS,all above Mc,BL,Vs,node depth,29 km,0,19,0,,,,19,0
+resPS,all above Mc,BL,Vs,node depth,29 km,0.2,15,0,,,,15,0
+resPS,all above Mc,BL,dVs,all,all,0,623,224,1.3753,1.42971,0.0544133,843,20
+resPS,all above Mc,BL,dVs,all,all,0.2,335,122,1.39998,1.52634,0.126363,453,16
+resPS,all above Mc,BL,dVs,box,BL,0,623,224,1.3753,1.42971,0.0544133,843,20
+resPS,all above Mc,BL,dVs,box,BL,0.2,335,122,1.39998,1.52634,0.126363,453,16
+resPS,all above Mc,BL,dVs,node depth,12-18 km,0,604,224,1.41291,1.42971,0.0168027,824,20
+resPS,all above Mc,BL,dVs,node depth,12-18 km,0.2,320,122,1.44248,1.52634,0.0838631,438,16
+resPS,all above Mc,BL,dVs,node depth,29 km,0,19,0,,,,19,0
+resPS,all above Mc,BL,dVs,node depth,29 km,0.2,15,0,,,,15,0
+resPS,background,BL,VpVs,all,all,0,177,227,1.70459,1.85404,0.149451,404,15
+resPS,background,BL,VpVs,all,all,0.2,84,99,1.82907,1.89933,0.0702641,183,11
+resPS,background,BL,VpVs,box,BL,0,177,227,1.70459,1.85404,0.149451,404,15
+resPS,background,BL,VpVs,box,BL,0.2,84,99,1.82907,1.89933,0.0702641,183,11
+resPS,background,BL,VpVs,node depth,12-18 km,0,174,225,1.79435,1.87444,0.0800871,399,15
+resPS,background,BL,VpVs,node depth,12-18 km,0.2,81,98,2.00295,1.93573,-0.0672241,179,11
+resPS,background,BL,VpVs,node depth,29 km,0,3,2,,,,5,0
+resPS,background,BL,VpVs,node depth,29 km,0.2,3,1,,,,4,0
+resPS,background,BL,dVpVs,all,all,0,211,193,1.74382,1.83331,0.0894852,404,15
+resPS,background,BL,dVpVs,all,all,0.2,97,86,1.80607,1.93952,0.13345,183,11
+resPS,background,BL,dVpVs,box,BL,0,211,193,1.74382,1.83331,0.0894852,404,15
+resPS,background,BL,dVpVs,box,BL,0.2,97,86,1.80607,1.93952,0.13345,183,11
+resPS,background,BL,dVpVs,node depth,12-18 km,0,208,191,1.82245,1.85662,0.0341765,399,15
+resPS,background,BL,dVpVs,node depth,12-18 km,0.2,94,85,1.94928,1.98393,0.0346567,179,11
+resPS,background,BL,dVpVs,node depth,29 km,0,3,2,,,,5,0
+resPS,background,BL,dVpVs,node depth,29 km,0.2,3,1,,,,4,0
+resPS,background,BL,Vs,all,all,0,316,88,1.80742,1.71082,-0.0965997,404,15
+resPS,background,BL,Vs,all,all,0.2,147,36,2.01424,1.43608,-0.578159,183,11
+resPS,background,BL,Vs,box,BL,0,316,88,1.80742,1.71082,-0.0965997,404,15
+resPS,background,BL,Vs,box,BL,0.2,147,36,2.01424,1.43608,-0.578159,183,11
+resPS,background,BL,Vs,node depth,12-18 km,0,311,88,1.87836,1.71082,-0.167547,399,15
+resPS,background,BL,Vs,node depth,12-18 km,0.2,143,36,2.1667,1.43608,-0.73062,179,11
+resPS,background,BL,Vs,node depth,29 km,0,5,0,,,,5,0
+resPS,background,BL,Vs,node depth,29 km,0.2,4,0,,,,4,0
+resPS,background,BL,dVs,all,all,0,302,102,1.80394,1.7329,-0.0710388,404,15
+resPS,background,BL,dVs,all,all,0.2,141,42,2.01062,1.50424,-0.506386,183,11
+resPS,background,BL,dVs,box,BL,0,302,102,1.80394,1.7329,-0.0710388,404,15
+resPS,background,BL,dVs,box,BL,0.2,141,42,2.01062,1.50424,-0.506386,183,11
+resPS,background,BL,dVs,node depth,12-18 km,0,297,102,1.87801,1.7329,-0.145113,399,15
+resPS,background,BL,dVs,node depth,12-18 km,0.2,137,42,2.16957,1.50424,-0.665336,179,11
+resPS,background,BL,dVs,node depth,29 km,0,5,0,,,,5,0
+resPS,background,BL,dVs,node depth,29 km,0.2,4,0,,,,4,0

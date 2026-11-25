@@ -1,0 +1,103 @@
+09:05:19 start oregon_v2 d200_s10
+09:05:21 start oregon_v2 d200_s20
+09:05:23 start oregon_v2 d200_s40
+09:05:25 start oregon_v2/res_tests/spike_null inv_d200_s20
+09:05:27 start oregon_v2/res_tests/spike_zm001 inv_d200_s20
+09:05:29 start oregon_v2/res_tests/spike_zp003 inv_d200_s20
+09:05:31 start oregon_v2/res_tests/spike_zp007 inv_d200_s20
+09:05:33 start oregon_v2/res_tests/spike_zp012 inv_d200_s20
+09:05:35 start oregon_v2/res_tests/spike_zp021 inv_d200_s20
+09:05:37 start oregon_v2/res_tests/spike_zp034 inv_d200_s20
+09:20:22 done rc=0 oregon_v2/res_tests/spike_zp007 inv_d200_s20
+09:20:24 done rc=0 oregon_v2/res_tests/spike_zp012 inv_d200_s20
+09:20:25 start oregon_v2/res_tests/spike_zp055 inv_d200_s20
+09:20:27 start oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s20
+09:20:31 done rc=0 oregon_v2/res_tests/spike_zp034 inv_d200_s20
+09:20:33 done rc=0 oregon_v2/res_tests/spike_zp003 inv_d200_s20
+09:20:39 done rc=0 oregon_v2/res_tests/spike_zm001 inv_d200_s20
+09:20:44 start oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s20
+09:20:46 start oregon_v2/res_tests/chk_L060_p1_noise inv_d200_s20
+09:20:48 start oregon_v2/res_tests/chk_L060_p0_noise_ploc inv_d200_s20
+09:21:04 done rc=0 oregon_v2/res_tests/spike_zp021 inv_d200_s20
+09:21:05 start oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s20
+09:21:47 done rc=0 oregon_v2/res_tests/spike_null inv_d200_s20
+09:21:52 start oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s20
+09:29:24 done rc=0 oregon_v2 d200_s20
+09:29:39 start oregon_v2/res_tests/chk_L040_p1_noise inv_d200_s20
+09:30:41 done rc=0 oregon_v2 d200_s10
+09:30:41 start oregon_v2/res_tests/chk_L040_p0_noise_ploc inv_d200_s20
+09:30:58 done rc=0 oregon_v2 d200_s40
+09:31:13 start oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s20
+09:36:20 done rc=0 oregon_v2/res_tests/spike_zp055 inv_d200_s20
+09:36:30 start oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s20
+09:37:16 done rc=0 oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s20
+09:37:17 start oregon_v2/res_tests/chk_L100_p1_noise inv_d200_s20
+09:37:41 done rc=0 oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s20
+09:37:49 start oregon_v2/res_tests/chk_L100_p0_noise_ploc inv_d200_s20
+09:42:13 done rc=0 oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s20
+09:42:21 start oregon_v2/res_tests/spike_null inv_d200_s10
+09:42:48 done rc=0 oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s20
+09:42:53 start oregon_v2/res_tests/spike_zm001 inv_d200_s10
+09:43:20 done rc=0 oregon_v2/res_tests/chk_L060_p1_noise inv_d200_s20
+09:43:25 start oregon_v2/res_tests/spike_zp003 inv_d200_s10
+09:44:04 done rc=0 oregon_v2/res_tests/chk_L060_p0_noise_ploc inv_d200_s20
+09:44:12 start oregon_v2/res_tests/spike_zp007 inv_d200_s10
+09:52:03 done rc=0 oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s20
+09:52:14 start oregon_v2/res_tests/spike_zp012 inv_d200_s10
+09:52:21 done rc=0 oregon_v2/res_tests/chk_L040_p1_noise inv_d200_s20
+09:52:31 start oregon_v2/res_tests/spike_zp021 inv_d200_s10
+09:52:58 done rc=0 oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s20
+09:53:03 start oregon_v2/res_tests/spike_zp034 inv_d200_s10
+09:54:10 done rc=0 oregon_v2/res_tests/chk_L040_p0_noise_ploc inv_d200_s20
+09:54:20 start oregon_v2/res_tests/spike_zp055 inv_d200_s10
+09:57:39 done rc=0 oregon_v2/res_tests/spike_null inv_d200_s10
+09:57:52 start oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s10
+09:58:18 done rc=0 oregon_v2/res_tests/chk_L100_p1_noise inv_d200_s20
+09:58:24 start oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s10
+09:58:37 done rc=0 oregon_v2/res_tests/spike_zp003 inv_d200_s10
+09:58:41 start oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s10
+09:58:53 done rc=0 oregon_v2/res_tests/spike_zm001 inv_d200_s10
+09:58:58 start oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s10
+09:59:47 done rc=0 oregon_v2/res_tests/spike_zp007 inv_d200_s10
+10:00:00 start oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s10
+10:01:37 done rc=0 oregon_v2/res_tests/chk_L100_p0_noise_ploc inv_d200_s20
+10:01:47 start oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s10
+10:07:12 done rc=0 oregon_v2/res_tests/spike_zp012 inv_d200_s10
+10:07:20 start oregon_v2/res_tests/spike_null inv_d200_s40
+10:07:43 done rc=0 oregon_v2/res_tests/spike_zp021 inv_d200_s10
+10:07:52 start oregon_v2/res_tests/spike_zm001 inv_d200_s40
+10:07:58 done rc=0 oregon_v2/res_tests/spike_zp034 inv_d200_s10
+10:08:09 start oregon_v2/res_tests/spike_zp003 inv_d200_s40
+10:09:19 done rc=0 oregon_v2/res_tests/spike_zp055 inv_d200_s10
+10:09:26 start oregon_v2/res_tests/spike_zp007 inv_d200_s40
+10:15:09 done rc=0 oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s10
+10:15:13 start oregon_v2/res_tests/spike_zp012 inv_d200_s40
+10:15:36 done rc=0 oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s10
+10:15:45 start oregon_v2/res_tests/spike_zp021 inv_d200_s40
+10:18:14 done rc=0 oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s10
+10:18:17 start oregon_v2/res_tests/spike_zp034 inv_d200_s40
+10:20:14 done rc=0 oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s10
+10:20:19 start oregon_v2/res_tests/spike_zp055 inv_d200_s40
+10:21:07 done rc=0 oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s10
+10:21:19 done rc=0 oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s10
+10:21:21 start oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s40
+10:21:23 start oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s40
+10:21:58 done rc=0 oregon_v2/res_tests/spike_zm001 inv_d200_s40
+10:22:10 start oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s40
+10:22:15 done rc=0 oregon_v2/res_tests/spike_null inv_d200_s40
+10:22:27 start oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s40
+10:22:36 done rc=0 oregon_v2/res_tests/spike_zp003 inv_d200_s40
+10:22:44 start oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s40
+10:23:19 done rc=0 oregon_v2/res_tests/spike_zp007 inv_d200_s40
+10:23:31 start oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s40
+10:28:12 done rc=0 oregon_v2/res_tests/spike_zp012 inv_d200_s40
+10:28:21 done rc=0 oregon_v2/res_tests/spike_zp021 inv_d200_s40
+10:30:20 done rc=0 oregon_v2/res_tests/spike_zp034 inv_d200_s40
+10:32:22 done rc=0 oregon_v2/res_tests/spike_zp055 inv_d200_s40
+10:34:55 done rc=0 oregon_v2/res_tests/chk_L060_p0_clean inv_d200_s40
+10:36:13 done rc=0 oregon_v2/res_tests/chk_L100_p0_clean inv_d200_s40
+10:36:46 done rc=0 oregon_v2/res_tests/chk_L040_p0_clean inv_d200_s40
+10:37:59 done rc=0 oregon_v2/res_tests/chk_L060_p0_noise inv_d200_s40
+10:39:33 done rc=0 oregon_v2/res_tests/chk_L040_p0_noise inv_d200_s40
+10:39:54 done rc=0 oregon_v2/res_tests/chk_L100_p0_noise inv_d200_s40
+ALL DONE 10:39:54

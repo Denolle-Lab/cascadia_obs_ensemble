@@ -6,7 +6,8 @@ Same role as v4_build_arrivals.py, for catalog v5.1 (catalog v4.1 events relocat
 with NonLinLoc in model v0.3.1; picks re-timed on drifting channels, D-B072/D-B075).
 
 Picks: Cascadia_picks_catalog_v4.1t.csv.gz. The pick_id of each arrival comes from
-the v4 cache (data/catalog_v4/ridge_report/v4_pick_ids.parquet), joined on event,
+the v4 cache (data/catalog_v4/ridge_report/v4_pick_ids.parquet of the main checkout,
+gitignored; input paths and their defaults in v51_paths.py), joined on event,
 station and phase; v4.1 keeps every v4 pick of the events it keeps, so the join is
 exact. The picks v4.1 added (events 900001-900003 and the repicks of 172114) are not
 ver6 picks: no pick_id, so no Route A amplitude (FIXES.md, v4.1).
@@ -44,13 +45,7 @@ import os
 import numpy as np
 import pandas as pd
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-MAIN = "/home/mdenolle/cascadia_obs_ensemble"
-V51 = "/wd1/mdenolle_data/catalog_v5/v5.1"
-CAT = os.path.join(V51, "cascadia_catalog_v5.1.csv")
-PICKS = os.path.join(V51, "Cascadia_picks_catalog_v4.1t.csv.gz")
-PICK_IDS = os.path.join(MAIN, "data/catalog_v4/ridge_report/v4_pick_ids.parquet")
-STATIONS = "/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv"
+import v51_paths as vp
 
 
 def iso_z(s: pd.Series) -> pd.Series:
@@ -80,17 +75,23 @@ def arrivals(picks, ev, sta):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--outdir", required=True)
-    ap.add_argument("--stations", default=STATIONS)
+    ap.add_argument("--catalog", default=str(vp.V51_CATALOG), help="catalog v5.1 csv")
+    ap.add_argument("--picks", default=str(vp.V41T_PICKS), help="v4.1t pick file")
+    ap.add_argument("--pick-ids", default=None,
+                    help="v4 pick_id cache (default data/catalog_v4/ridge_report/v4_pick_ids.parquet "
+                         "of the main checkout, see v51_paths.py)")
+    ap.add_argument("--stations", default=str(vp.STATIONS))
     a = ap.parse_args(argv)
     os.makedirs(a.outdir, exist_ok=True)
+    pick_ids = a.pick_ids or vp.main_data("catalog_v4/ridge_report/v4_pick_ids.parquet")
 
-    cat = pd.read_csv(CAT)
-    picks = pd.read_csv(PICKS, skipinitialspace=True)
+    cat = pd.read_csv(a.catalog)
+    picks = pd.read_csv(a.picks, skipinitialspace=True)
     picks.columns = [c.strip() for c in picks.columns]
     picks["row"] = np.arange(len(picks))
     for c in ("station", "phase"):
         picks[c] = picks[c].str.strip()
-    ids = pd.read_parquet(PICK_IDS)
+    ids = pd.read_parquet(pick_ids)
     k = ["event_ID", "station", "phase"]
     assert not picks.duplicated(k).any(), "event/station/phase not unique in v4.1t"
     picks = picks.merge(ids[k + ["pick_id"]], on=k, how="left", validate="one_to_one")

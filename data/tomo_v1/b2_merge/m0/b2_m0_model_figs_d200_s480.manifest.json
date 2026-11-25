@@ -1,0 +1,59 @@
+{
+ "name": "b2_m0_model_figs_d200_s480",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_model_figs.py",
+ "argv": [
+  "d200_s480"
+ ],
+ "utc": "2026-11-24T00:17:57.435949+00:00",
+ "git_commit": "16219486bf9bff8c65dbc17ceb250863f5e1793e",
+ "git_dirty": true,
+ "params_md5": "ceacfc1b7cb88c6ac4141477b35dc5a7",
+ "params": {
+  "tag": "d200_s480",
+  "dws_min": 1,
+  "depths": [
+   3,
+   9,
+   15,
+   25,
+   40
+  ],
+  "sections": [
+   41.0,
+   44.5,
+   47.5
+  ]
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s480/Output_Files/model_geo.npz",
+   "size": 95703,
+   "mtime": "2026-11-24T00:06:10.897735+00:00",
+   "md5": "c0f091322fcc65b2b67c97a57fbf9c52"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s480/Output_Files/tomoDD.vel",
+   "size": 14051560,
+   "mtime": "2026-11-24T00:06:10.341738+00:00",
+   "md5": "75ea13d43407679f300a5856b07b1d28"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/model_maps_d200_s480.png",
+   "size": 558838,
+   "mtime": "2026-11-24T00:17:56.733266+00:00",
+   "md5": "a651a585950d3e274a7e6f8b669735fc"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/model_sections_d200_s480.png",
+   "size": 224915,
+   "mtime": "2026-11-24T00:17:57.434262+00:00",
+   "md5": "90d4ae3e284cbf0b841a2d38976d2591"
+  }
+ ],
+ "counts": {
+  "sampled_nodes_frac": 0.2571800595238095
+ },
+ "notes": null
+}

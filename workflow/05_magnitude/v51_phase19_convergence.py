@@ -58,6 +58,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--v4", default=None,
+                    help="v4 Route A run (default data/magnitude_v4 of the main checkout, see v51_paths.py)")
     a = ap.parse_args(argv)
     near = pd.read_parquet(f"{a.data}/phase19_near_picks_v51.parquet",
                            columns=["event_id", "sp", "m", "M_ev"])
@@ -121,7 +123,8 @@ def main(argv=None):
     # v4.1 pick set rebuilt as in v51_magnitude_report.decomposition (near_inversion on the v4 dataset).
     from phase18_moment_tensor_match import hutton_boore
     from v51_magnitude_table import near_inversion
-    V4 = "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4"
+    import v51_paths as vp
+    V4 = a.v4 or vp.main_data("magnitude_v4")
     ds4 = pd.read_csv(f"{V4}/amp_distance_dataset_routeA.csv",
                       usecols=["arid", "event_id", "station", "phase", "dist_hypo_km", "log10A"])
     ds4["m"] = hutton_boore(ds4.log10A, ds4.dist_hypo_km)

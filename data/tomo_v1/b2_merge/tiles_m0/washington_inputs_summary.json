@@ -1,0 +1,27 @@
+{
+ "region":"washington_m0",
+ "events":9332,
+ "stations":225,
+ "obs_stations":22,
+ "picks":334878,
+ "P":170098,
+ "S":164780,
+ "dt_pairs":40539,
+ "dt_data":811641,
+ "max_sta_per_event":109,
+ "air_dep_km":-2.318,
+ "center_lat":47.8,
+ "center_lon":-123.7,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_washington.csv",
+  "p1_reference":"washington_v2\/p1_reference",
+  "station_corr_from":"washington_v2"
+ },
+ "nx":58,
+ "ny":53,
+ "nz":23,
+ "npar":119952
+}

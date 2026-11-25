@@ -1,0 +1,11 @@
+problem,role,n,excluded,in_analysis,depth_good,in_families,n_families,families_by_type
+P1,deep,331,0,159,85,77,32,mainshock-aftershock:15;multiplet:11;swarm:6
+P1,reference,10,1,1,9,4,2,swarm:1;multiplet:1
+P1,wednesday_shallow,2,0,0,2,1,1,swarm:1
+P2,v1_GO022,39,0,18,39,17,4,mainshock-aftershock:3;multiplet:1
+P3,large_mover,8,0,8,1,3,3,mainshock-aftershock:3
+P3,no_hypocentre,2,0,2,0,0,0,
+P3,tensor_v51_match,139,0,139,54,96,74,mainshock-aftershock:70;swarm:4
+P3,v4.1_addition,1,0,1,1,1,1,mainshock-aftershock:1
+P4,deep_pass,356,0,183,0,46,28,multiplet:12;mainshock-aftershock:11;swarm:5
+P4,far_only,624,0,482,0,79,22,mainshock-aftershock:15;multiplet:6;swarm:1

@@ -1,0 +1,78 @@
+region,dband,n,pct_resP,pct_resPS
+Axial,"[-5, 5)",24529,0,0
+Axial,"[10, 15)",159,0,0
+Axial,"[15, 20)",80,0,0
+Axial,"[20, 30)",103,0,0
+Axial,"[30, 50)",46,0,0
+Axial,"[5, 10)",1790,0,0
+Axial,"[50, 200)",19,0,0
+Blanco,"[-5, 5)",5281,0,0
+Blanco,"[10, 15)",5681,28.3225,27.6184
+Blanco,"[15, 20)",5000,77.62,64.16
+Blanco,"[20, 30)",5113,5.30022,0.704088
+Blanco,"[30, 50)",3834,3.12989,0.312989
+Blanco,"[5, 10)",16930,0,0
+Blanco,"[50, 200)",510,0,0
+Cascades,"[-5, 5)",6840,51.2719,0
+Cascades,"[10, 15)",3235,35.9196,0
+Cascades,"[15, 20)",1706,38.0422,0
+Cascades,"[20, 30)",782,0,0
+Cascades,"[30, 50)",316,0,0
+Cascades,"[5, 10)",3509,58.4497,0
+Cascades,"[50, 200)",343,0,0
+Endeavour,"[-5, 5)",77,0,0
+Endeavour,"[10, 15)",5,0,0
+Endeavour,"[15, 20)",5,0,0
+Endeavour,"[20, 30)",8,0,0
+Endeavour,"[30, 50)",47,0,0
+Endeavour,"[5, 10)",12,0,0
+Endeavour,"[50, 200)",24,0,0
+Explorer,"[-5, 5)",97,0,0
+Explorer,"[10, 15)",40,0,0
+Explorer,"[15, 20)",35,0,0
+Explorer,"[20, 30)",236,0,0
+Explorer,"[30, 50)",598,0,0
+Explorer,"[5, 10)",40,0,0
+Explorer,"[50, 200)",468,0,0
+Gorda,"[-5, 5)",888,0,0
+Gorda,"[10, 15)",822,0,0
+Gorda,"[15, 20)",1254,0,0
+Gorda,"[20, 30)",5273,13.1804,0
+Gorda,"[30, 50)",2224,3.64209,0
+Gorda,"[5, 10)",647,0,0
+Gorda,"[50, 200)",244,0,0
+JdF ridge/plate,"[-5, 5)",1753,0,0
+JdF ridge/plate,"[10, 15)",101,0,0
+JdF ridge/plate,"[15, 20)",58,0,0
+JdF ridge/plate,"[20, 30)",142,0,0
+JdF ridge/plate,"[30, 50)",468,0,0
+JdF ridge/plate,"[5, 10)",169,0,0
+JdF ridge/plate,"[50, 200)",152,0,0
+Mendocino,"[-5, 5)",1283,0,0
+Mendocino,"[10, 15)",2149,0,0
+Mendocino,"[15, 20)",3339,0,0
+Mendocino,"[20, 30)",12372,1.49531,0
+Mendocino,"[30, 50)",3770,0.66313,0
+Mendocino,"[5, 10)",1330,0,0
+Mendocino,"[50, 200)",365,0,0
+Offshore forearc,"[-5, 5)",1144,0,0
+Offshore forearc,"[10, 15)",1505,0,0
+Offshore forearc,"[15, 20)",3637,0,0
+Offshore forearc,"[20, 30)",4632,14.3998,0
+Offshore forearc,"[30, 50)",1607,8.71189,0
+Offshore forearc,"[5, 10)",1080,0,0
+Offshore forearc,"[50, 200)",209,0,0
+Other onshore,"[-5, 5)",2105,4.60808,0
+Other onshore,"[10, 15)",2570,18.8327,0
+Other onshore,"[15, 20)",2672,28.3308,0
+Other onshore,"[20, 30)",3215,4.32348,0
+Other onshore,"[30, 50)",1469,0.408441,0
+Other onshore,"[5, 10)",1488,12.164,0
+Other onshore,"[50, 200)",350,0,0
+Puget/Georgia,"[-5, 5)",2193,0.0455996,0
+Puget/Georgia,"[10, 15)",3375,1.98519,0
+Puget/Georgia,"[15, 20)",3817,46.7645,0
+Puget/Georgia,"[20, 30)",2494,0,0
+Puget/Georgia,"[30, 50)",473,0,0
+Puget/Georgia,"[5, 10)",1792,0,0
+Puget/Georgia,"[50, 200)",278,0,0

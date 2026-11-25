@@ -1,0 +1,6 @@
+tile,region,tag,smooth,rms_wt,rms_wt_best,n_scan
+mendocino_gorda_c,mendocino_gorda_c_m0,d200_s480,"[480, 480, 240]",0.1535,0.1513,5
+blanco,blanco_m0,d200_s20,"[20, 20, 10]",0.1277,0.1277,5
+oregon,oregon_m0,d200_s480,"[480, 480, 240]",0.1515,0.151,5
+washington,washington_m0,d200_s480,"[480, 480, 240]",0.1649,0.1629,5
+ridges_north,ridges_north_m0,d200_s60,"[60, 60, 30]",0.0611,0.0603,5

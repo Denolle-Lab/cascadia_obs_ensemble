@@ -1,0 +1,696 @@
+{
+ "axial_east_west_ratio_v4": 4.200400801603206,
+ "axial_east_west_ratio_v5.1": 4.270105605199025,
+ "axial_monthly": {
+  "2012-02": 1,
+  "2012-03": 2,
+  "2012-05": 1,
+  "2013-09": 3,
+  "2013-10": 1,
+  "2013-11": 8,
+  "2013-12": 3,
+  "2014-01": 4,
+  "2014-03": 1,
+  "2014-04": 4,
+  "2014-05": 6,
+  "2014-11": 670,
+  "2014-12": 1562,
+  "2015-01": 2764,
+  "2015-02": 4248,
+  "2015-03": 8158,
+  "2015-04": 7271,
+  "2015-05": 570,
+  "2015-06": 106,
+  "2015-07": 138,
+  "2015-08": 94,
+  "2015-09": 104,
+  "2015-10": 86,
+  "2015-11": 49,
+  "2015-12": 28,
+  "2016-01": 58,
+  "2016-02": 59,
+  "2016-03": 58,
+  "2016-04": 105,
+  "2016-05": 90,
+  "2016-06": 88,
+  "2016-07": 73,
+  "2016-08": 89,
+  "2016-09": 21,
+  "2016-10": 67,
+  "2016-11": 64,
+  "2016-12": 72
+ },
+ "axial_bsf_AB_p90": 2.16224128,
+ "axial_floor_limited": 1562,
+ "blanco_segments": [
+  {
+   "segment": "West (WBD/EBD)",
+   "n": 16796,
+   "n_above_Mc": 2903,
+   "pct_bg": 39.8208749569411,
+   "pct_swarm": 45.02239063038236,
+   "pct_MA": 7.0961074750258355,
+   "n_good": 6795,
+   "good_bsf_med": 5.5170549,
+   "good_bsf_p90": 17.113805980000002,
+   "good_v4_med": 5.533020299999999,
+   "y2012": 3320,
+   "y2013": 6063,
+   "y2014": 4506,
+   "y2015": 2846
+  },
+  {
+   "segment": "Surveyor",
+   "n": 6802,
+   "n_above_Mc": 1110,
+   "pct_bg": 64.77477477477478,
+   "pct_swarm": 10.81081081081081,
+   "pct_MA": 14.954954954954955,
+   "n_good": 3304,
+   "good_bsf_med": 5.487884899999999,
+   "good_bsf_p90": 13.564162490000003,
+   "good_v4_med": 2.1355196999999997,
+   "y2012": 1043,
+   "y2013": 3540,
+   "y2014": 1434,
+   "y2015": 734
+  },
+  {
+   "segment": "Cascadia Depression",
+   "n": 8442,
+   "n_above_Mc": 1084,
+   "pct_bg": 47.69372693726937,
+   "pct_swarm": 18.634686346863468,
+   "pct_MA": 21.033210332103323,
+   "n_good": 3059,
+   "good_bsf_med": 4.503088999999999,
+   "good_bsf_p90": 14.829763240000005,
+   "good_v4_med": 7.334720900000001,
+   "y2012": 862,
+   "y2013": 4503,
+   "y2014": 2125,
+   "y2015": 932
+  },
+  {
+   "segment": "Blanco Ridge",
+   "n": 8293,
+   "n_above_Mc": 1552,
+   "pct_bg": 60.373711340206185,
+   "pct_swarm": 13.853092783505156,
+   "pct_MA": 13.724226804123713,
+   "n_good": 3120,
+   "good_bsf_med": 11.619482649999998,
+   "good_bsf_p90": 21.00722271,
+   "good_v4_med": 4.8595894,
+   "y2012": 1096,
+   "y2013": 4047,
+   "y2014": 2078,
+   "y2015": 950
+  },
+  {
+   "segment": "Gorda Depression",
+   "n": 2016,
+   "n_above_Mc": 578,
+   "pct_bg": 79.75778546712803,
+   "pct_swarm": 0.0,
+   "pct_MA": 14.359861591695502,
+   "n_good": 838,
+   "good_bsf_med": 10.91899545,
+   "good_bsf_p90": 22.929598840000008,
+   "good_v4_med": 4.392101799999999,
+   "y2012": 274,
+   "y2013": 921,
+   "y2014": 486,
+   "y2015": 227
+  }
+ ],
+ "puget_bg_deep30": 93.38235294117648,
+ "puget_bg_shallow30": 73.45989926385123,
+ "puget_n_deep30_good": 472,
+ "near_surface_Puget/Georgia": {
+  "n": 997,
+  "weekday_daytime": 0.6840521564694082,
+  "region_weekday_daytime": 0.28685341838857303,
+  "floor_limited": 0.8204613841524574
+ },
+ "near_surface_Other onshore": {
+  "n": 1097,
+  "weekday_daytime": 0.609845031905196,
+  "region_weekday_daytime": 0.3106208089984858,
+  "floor_limited": 0.8386508659981768
+ },
+ "near_surface_Cascades": {
+  "n": 1740,
+  "weekday_daytime": 0.28390804597701147,
+  "region_weekday_daytime": 0.25551371705217857,
+  "floor_limited": 0.6810344827586207
+ },
+ "near_surface_Offshore forearc": {
+  "n": 510,
+  "weekday_daytime": 0.3254901960784314,
+  "region_weekday_daytime": 0.2202837700883162,
+  "floor_limited": 0.7196078431372549
+ },
+ "daytime_by_depth": {
+  "base_deeper_12": 0.22593034722582656,
+  "bins": [
+   {
+    "bsf_lo": 0,
+    "bsf_hi": 1,
+    "n": 2094,
+    "weekday_daytime": 0.6451766953199618,
+    "floor_limited": 0.8299904489016237,
+    "excess": 1134.1380582003485
+   },
+   {
+    "bsf_lo": 1,
+    "bsf_hi": 2,
+    "n": 538,
+    "weekday_daytime": 0.5947955390334573,
+    "floor_limited": 0.055762081784386616,
+    "excess": 256.37159715703365
+   },
+   {
+    "bsf_lo": 2,
+    "bsf_hi": 3,
+    "n": 505,
+    "weekday_daytime": 0.6138613861386139,
+    "floor_limited": 0.0,
+    "excess": 253.08468553037412
+   },
+   {
+    "bsf_lo": 3,
+    "bsf_hi": 5,
+    "n": 952,
+    "weekday_daytime": 0.5577731092436975,
+    "floor_limited": 0.0,
+    "excess": 408.12129542711546
+   },
+   {
+    "bsf_lo": 5,
+    "bsf_hi": 8,
+    "n": 1689,
+    "weekday_daytime": 0.41681468324452337,
+    "floor_limited": 0.0,
+    "excess": 416.5046935765052
+   },
+   {
+    "bsf_lo": 8,
+    "bsf_hi": 12,
+    "n": 3246,
+    "weekday_daytime": 0.2698706099815157,
+    "floor_limited": 0.0,
+    "excess": 184.26002413839328
+   },
+   {
+    "bsf_lo": 12,
+    "bsf_hi": 20,
+    "n": 10756,
+    "weekday_daytime": 0.2103012272220156,
+    "floor_limited": 0.0,
+    "excess": -217.17272361539526
+   },
+   {
+    "bsf_lo": 20,
+    "bsf_hi": 40,
+    "n": 7231,
+    "weekday_daytime": 0.23910939012584706,
+    "floor_limited": 0.0,
+    "excess": 123.11251173394125
+   }
+  ],
+  "excess_above_8": 2468.220329891377,
+  "n_above_8": 5778
+ },
+ "axial_assignment": {
+  "n": 26726,
+  "not_fitted": 26668,
+  "none": 58,
+  "box_not_fitted": 26874,
+  "box_not_fitted_other_regions": {
+   "JdF ridge/plate": 206
+  }
+ },
+ "migration": {
+  "n_tested": 343,
+  "n_resolvable": 67,
+  "n_migrating": 4,
+  "bonferroni_p": 0.0007462686567164179,
+  "families": [
+   {
+    "family_id": 296,
+    "region": "Explorer",
+    "type": "mainshock-aftershock",
+    "n": 45,
+    "n_all": 132,
+    "start": "2012-02-04",
+    "rho": 0.7102,
+    "p_perm": 0.0005,
+    "v_radial": 0.7844,
+    "passes_bonferroni": true,
+    "days": 122.1765
+   },
+   {
+    "family_id": 400,
+    "region": "Cascades",
+    "type": "swarm",
+    "n": 5,
+    "n_all": 19,
+    "start": "2012-09-10",
+    "rho": 0.9091,
+    "p_perm": 0.002,
+    "v_radial": 0.2152,
+    "passes_bonferroni": false,
+    "days": 40.651
+   },
+   {
+    "family_id": 675,
+    "region": "Puget/Georgia",
+    "type": "mainshock-aftershock",
+    "n": 14,
+    "n_all": 52,
+    "start": "2013-04-07",
+    "rho": 0.5719,
+    "p_perm": 0.0005,
+    "v_radial": 0.0039,
+    "passes_bonferroni": true,
+    "days": 1055.9134
+   },
+   {
+    "family_id": 989,
+    "region": "Gorda",
+    "type": "swarm",
+    "n": 14,
+    "n_all": 19,
+    "start": "2013-11-13",
+    "rho": 0.75,
+    "p_perm": 0.0045,
+    "v_radial": 37.54,
+    "passes_bonferroni": false,
+    "days": 0.3812
+   }
+  ]
+ },
+ "depth_swarm_vs_ma": [
+  {
+   "region": "AX",
+   "n_swarm_families": 38,
+   "n_MA_families": 116,
+   "swarm_family_median_km": 3.3,
+   "MA_family_median_km": 3.4,
+   "swarm_event_median_km": 3.4,
+   "MA_event_median_km": 3.4,
+   "p_mannwhitney": 0.9716,
+   "n_tests": 7,
+   "p_bonferroni": 1.0
+  },
+  {
+   "region": "EN",
+   "n_swarm_families": 0,
+   "n_MA_families": 1,
+   "swarm_family_median_km": NaN,
+   "MA_family_median_km": 31.7,
+   "swarm_event_median_km": NaN,
+   "MA_event_median_km": 30.5,
+   "p_mannwhitney": NaN,
+   "n_tests": 7,
+   "p_bonferroni": NaN
+  },
+  {
+   "region": "BL",
+   "n_swarm_families": 28,
+   "n_MA_families": 94,
+   "swarm_family_median_km": 8.3,
+   "MA_family_median_km": 10.3,
+   "swarm_event_median_km": 8.2,
+   "MA_event_median_km": 9.0,
+   "p_mannwhitney": 0.0706,
+   "n_tests": 7,
+   "p_bonferroni": 0.494
+  },
+  {
+   "region": "GO",
+   "n_swarm_families": 8,
+   "n_MA_families": 17,
+   "swarm_family_median_km": 9.1,
+   "MA_family_median_km": 25.3,
+   "swarm_event_median_km": 13.4,
+   "MA_event_median_km": 31.0,
+   "p_mannwhitney": 0.0039,
+   "n_tests": 7,
+   "p_bonferroni": 0.0271
+  },
+  {
+   "region": "MT",
+   "n_swarm_families": 13,
+   "n_MA_families": 132,
+   "swarm_family_median_km": 19.4,
+   "MA_family_median_km": 25.4,
+   "swarm_event_median_km": 19.4,
+   "MA_event_median_km": 23.3,
+   "p_mannwhitney": 0.0157,
+   "n_tests": 7,
+   "p_bonferroni": 0.11
+  },
+  {
+   "region": "WA",
+   "n_swarm_families": 3,
+   "n_MA_families": 12,
+   "swarm_family_median_km": 13.1,
+   "MA_family_median_km": 14.7,
+   "swarm_event_median_km": 14.2,
+   "MA_event_median_km": 17.8,
+   "p_mannwhitney": 0.8396,
+   "n_tests": 7,
+   "p_bonferroni": 1.0
+  },
+  {
+   "region": "OR",
+   "n_swarm_families": 0,
+   "n_MA_families": 6,
+   "swarm_family_median_km": NaN,
+   "MA_family_median_km": 12.5,
+   "swarm_event_median_km": NaN,
+   "MA_event_median_km": 13.8,
+   "p_mannwhitney": NaN,
+   "n_tests": 7,
+   "p_bonferroni": NaN
+  },
+  {
+   "region": "PU",
+   "n_swarm_families": 14,
+   "n_MA_families": 72,
+   "swarm_family_median_km": 14.5,
+   "MA_family_median_km": 14.8,
+   "swarm_event_median_km": 15.6,
+   "MA_event_median_km": 17.2,
+   "p_mannwhitney": 0.6274,
+   "n_tests": 7,
+   "p_bonferroni": 1.0
+  },
+  {
+   "region": "ON",
+   "n_swarm_families": 21,
+   "n_MA_families": 48,
+   "swarm_family_median_km": 8.3,
+   "MA_family_median_km": 12.9,
+   "swarm_event_median_km": 9.0,
+   "MA_event_median_km": 14.4,
+   "p_mannwhitney": 0.0192,
+   "n_tests": 7,
+   "p_bonferroni": 0.1346
+  }
+ ],
+ "gorda_ridge": {
+  "n": 1436,
+  "n_above_Mc": 174,
+  "pct_swarm": 13.793103448275861,
+  "pct_MA": 21.839080459770116,
+  "pct_bg": 54.02298850574713,
+  "depth_med": 23.511199,
+  "bsf_near_station": 10.1892786,
+  "n_near_station": 261
+ },
+ "gorda_interior": {
+  "n": 9916,
+  "n_above_Mc": 2463,
+  "pct_swarm": 4.709703613479497,
+  "pct_MA": 50.87291920422249,
+  "pct_bg": 40.154283394234675,
+  "depth_med": 24.834284,
+  "bsf_near_station": 10.9901591,
+  "n_near_station": 1123
+ },
+ "ridge_Endeavour": {
+  "n": 178,
+  "floor_limited": 47,
+  "deeper_8bsf": 89,
+  "within_0p25_of_floor": 45,
+  "bsf_med": 8.1505164,
+  "v4_bsf_med": -1.1997947500000001,
+  "sig_z_med": 13.965,
+  "dist_min_med": 29.2145,
+  "years": {
+   "2011": 51,
+   "2012": 40,
+   "2013": 20,
+   "2014": 49,
+   "2015": 9,
+   "2016": 9
+  }
+ },
+ "ridge_Explorer": {
+  "n": 1514,
+  "floor_limited": 50,
+  "deeper_8bsf": 1376,
+  "within_0p25_of_floor": 36,
+  "bsf_med": 38.25330905,
+  "v4_bsf_med": 7.776903075,
+  "sig_z_med": 10.632,
+  "dist_min_med": 74.8865,
+  "years": {
+   "2010": 46,
+   "2011": 88,
+   "2012": 429,
+   "2013": 357,
+   "2014": 474,
+   "2015": 90,
+   "2016": 30
+  }
+ },
+ "ridge_JdF ridge/plate": {
+  "n": 2843,
+  "floor_limited": 1173,
+  "deeper_8bsf": 908,
+  "within_0p25_of_floor": 1049,
+  "bsf_med": 0.8046129,
+  "v4_bsf_med": 2.7109271999999995,
+  "sig_z_med": 13.331,
+  "dist_min_med": 34.524,
+  "years": {
+   "2010": 5,
+   "2011": 72,
+   "2012": 523,
+   "2013": 896,
+   "2014": 773,
+   "2015": 521,
+   "2016": 53
+  }
+ },
+ "mendocino_good_depth_hist": [
+  126,
+  202,
+  246,
+  525,
+  864,
+  552,
+  636,
+  1544,
+  2298,
+  2968,
+  2056,
+  2702,
+  1751,
+  584,
+  228,
+  120,
+  84
+ ],
+ "volcano_Mount St. Helens": {
+  "n": 8198,
+  "n_AB": 3937,
+  "depth_med": 1.8248256,
+  "depth_AB_med": 2.949621,
+  "v4_depth_med": -0.11574999999999999,
+  "n_above_Mc": 436,
+  "pct_bg": 48.853211009174316,
+  "n_deeper_30": 350,
+  "dist_min_med": 2.0313
+ },
+ "volcano_Mount Hood": {
+  "n": 336,
+  "n_AB": 0,
+  "depth_med": 9.0127161,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 3.5805,
+  "n_above_Mc": 59,
+  "pct_bg": 42.3728813559322,
+  "n_deeper_30": 4,
+  "dist_min_med": 54.274
+ },
+ "volcano_Mount Rainier": {
+  "n": 707,
+  "n_AB": 289,
+  "depth_med": 6.9124803,
+  "depth_AB_med": 10.265159,
+  "v4_depth_med": 4.8825,
+  "n_above_Mc": 133,
+  "pct_bg": 81.95488721804512,
+  "n_deeper_30": 3,
+  "dist_min_med": 8.1376
+ },
+ "volcano_Mount Baker": {
+  "n": 35,
+  "n_AB": 8,
+  "depth_med": 10.670308,
+  "depth_AB_med": 17.136937,
+  "v4_depth_med": 2.725,
+  "n_above_Mc": 6,
+  "pct_bg": 83.33333333333334,
+  "n_deeper_30": 2,
+  "dist_min_med": 13.519
+ },
+ "volcano_Mount Shasta": {
+  "n": 56,
+  "n_AB": 18,
+  "depth_med": 11.296395,
+  "depth_AB_med": 10.4857423,
+  "v4_depth_med": 9.867750000000001,
+  "n_above_Mc": 14,
+  "pct_bg": 71.42857142857143,
+  "n_deeper_30": 2,
+  "dist_min_med": 28.083
+ },
+ "volcano_Lassen Peak": {
+  "n": 26,
+  "n_AB": 0,
+  "depth_med": 12.143313500000001,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 0.7685,
+  "n_above_Mc": 25,
+  "pct_bg": 44.0,
+  "n_deeper_30": 1,
+  "dist_min_med": 104.065
+ },
+ "volcano_Glacier Peak": {
+  "n": 7,
+  "n_AB": 0,
+  "depth_med": 5.5487972,
+  "depth_AB_med": NaN,
+  "v4_depth_med": -0.0845,
+  "n_above_Mc": 3,
+  "pct_bg": 33.33333333333333,
+  "n_deeper_30": 0,
+  "dist_min_med": 52.897
+ },
+ "volcano_Mount Adams": {
+  "n": 17,
+  "n_AB": 0,
+  "depth_med": -1.015706,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 9.7865,
+  "n_above_Mc": 2,
+  "pct_bg": 100.0,
+  "n_deeper_30": 2,
+  "dist_min_med": 40.289
+ },
+ "volcano_Three Sisters": {
+  "n": 6,
+  "n_AB": 0,
+  "depth_med": 9.8413821,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 5.6335,
+  "n_above_Mc": 2,
+  "pct_bg": 100.0,
+  "n_deeper_30": 1,
+  "dist_min_med": 44.045500000000004
+ },
+ "volcano_Newberry": {
+  "n": 0,
+  "n_AB": 0,
+  "depth_med": NaN,
+  "depth_AB_med": NaN,
+  "v4_depth_med": NaN,
+  "n_above_Mc": 0,
+  "pct_bg": NaN,
+  "n_deeper_30": 0,
+  "dist_min_med": NaN
+ },
+ "volcano_Crater Lake": {
+  "n": 1,
+  "n_AB": 0,
+  "depth_med": 10.044157,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 14.3285,
+  "n_above_Mc": 0,
+  "pct_bg": NaN,
+  "n_deeper_30": 0,
+  "dist_min_med": 41.486
+ },
+ "volcano_Medicine Lake": {
+  "n": 4,
+  "n_AB": 0,
+  "depth_med": 16.91744775,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 29.5415,
+  "n_above_Mc": 2,
+  "pct_bg": 100.0,
+  "n_deeper_30": 1,
+  "dist_min_med": 71.26599999999999
+ },
+ "volcano_Mount McLoughlin": {
+  "n": 10,
+  "n_AB": 4,
+  "depth_med": 12.4379025,
+  "depth_AB_med": 12.4379025,
+  "v4_depth_med": 12.617750000000001,
+  "n_above_Mc": 5,
+  "pct_bg": 100.0,
+  "n_deeper_30": 3,
+  "dist_min_med": 14.829
+ },
+ "volcano_Mount Jefferson": {
+  "n": 1,
+  "n_AB": 0,
+  "depth_med": 33.354224,
+  "depth_AB_med": NaN,
+  "v4_depth_med": 27.2215,
+  "n_above_Mc": 0,
+  "pct_bg": NaN,
+  "n_deeper_30": 1,
+  "dist_min_med": 29.565
+ },
+ "brookings": {
+  "n": 39,
+  "depth_med": 52.482292,
+  "depth_min": 41.936026,
+  "depth_max": 64.544953,
+  "v4_depth_med": 20.1815,
+  "slab_min": 9.42213916779,
+  "slab_med": 10.0304794312,
+  "slab_max": 11.3538970947,
+  "below_slab_med": 41.8080404436,
+  "v4_below_slab_med": 9.4507918777,
+  "sig_z_med": 7.0576,
+  "dist_min_med": 44.94,
+  "lat": 42.210929,
+  "lon": -124.73968,
+  "years": {
+   "2012": 33,
+   "2013": 5,
+   "2014": 1
+  }
+ },
+ "depth_spikes": {
+  "axial": {
+   "old_metric_3.0": {
+    "n_window": 7157,
+    "expected": 3694.2,
+    "ratio": 1.94
+   },
+   "spike_3.0": 1.07,
+   "old_metric_3.5": {
+    "n_window": 7132,
+    "expected": 3514.5,
+    "ratio": 2.03
+   },
+   "spike_3.5": 1.06,
+   "share_2p9_3p6_bsl": 42.6
+  },
+  "blanco_peak_bin_centre": {
+   "12": 11.975,
+   "15": 14.975,
+   "19": 18.975
+  }
+ }
+}

@@ -1,0 +1,13 @@
+tile,run,note,var,n_nodes,n_events,event_mean_res,res_ci_lo,res_ci_hi,node_sd,corr_with_v031
+blanco_m0,d200_s20,the run merged into v0.3.1,dVp,346,5881,-1.81647,-3.0939,-0.230134,5.14023,0.998486
+blanco_m0,d200_s20,the run merged into v0.3.1,dVs,224,4825,-2.85123,-5.29992,-0.0628581,4.53162,0.999878
+blanco_m0,d200_s60,smoothing 60,dVp,346,5881,-1.5222,-2.76449,0.140497,4.13832,0.886008
+blanco_m0,d200_s60,smoothing 60,dVs,224,4825,-2.18646,-4.20635,0.170957,3.38636,0.869172
+blanco_m0,d200_s120,smoothing 120,dVp,346,5881,-1.06426,-2.16146,0.403047,3.28025,0.743239
+blanco_m0,d200_s120,smoothing 120,dVs,224,4825,-1.52218,-2.82996,0.0992034,2.56153,0.715042
+blanco_m0t,d200_s20,re-timed picks; the Blanco tile of v0.4.0,dVp,346,5881,-1.76827,-3.0289,-0.20467,5.02398,0.970667
+blanco_m0t,d200_s20,re-timed picks; the Blanco tile of v0.4.0,dVs,224,4825,-2.8589,-5.27507,-0.0528278,4.52292,0.995203
+blanco_m0t,d200_s60,"re-timed picks, smoothing 60",dVp,346,5881,-1.45294,-2.70868,0.161728,4.21431,0.886917
+blanco_m0t,d200_s60,"re-timed picks, smoothing 60",dVs,224,4825,-2.17468,-4.19524,0.189719,3.37616,0.867759
+blanco_m0tnf,d200_s20,"re-timed picks, start from the margin_m0_v3nf reference",dVp,346,5881,-1.92635,-3.17403,-0.304358,5.13845,0.974576
+blanco_m0tnf,d200_s20,"re-timed picks, start from the margin_m0_v3nf reference",dVs,224,4825,-2.91173,-5.35045,-0.092951,4.5311,0.994289

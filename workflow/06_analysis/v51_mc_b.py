@@ -48,10 +48,13 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.append(str(HERE.parent / "05_magnitude"))   # v51_paths: input paths and their defaults
 import v4_mc_maps as mm  # noqa: E402
+import v51_paths as vp  # noqa: E402
 
-PICKS = "/wd1/mdenolle_data/catalog_v5/v5.1/Cascadia_picks_catalog_v4.1t.csv.gz"
-V4CAT = "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv"
+# Set in main() from --picks and --v4cat.
+PICKS = None    # v4.1t pick file (QC variant)
+V4CAT = None    # catalog v4 (version A epicentres; gitignored, in the main checkout)
 _MAGS = None
 _PS = None
 
@@ -320,7 +323,7 @@ def plot(a):
 
 
 def main():
-    global _MAGS
+    global _MAGS, PICKS, V4CAT
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--mags", required=True)
     p.add_argument("--out", required=True)
@@ -331,7 +334,13 @@ def main():
     p.add_argument("--nboot", type=int, default=200)
     p.add_argument("--step", type=float, default=0.1)
     p.add_argument("--nproc", type=int, default=14)
+    p.add_argument("--picks", default=str(vp.V41T_PICKS), help="v4.1t pick file (QC variant)")
+    p.add_argument("--v4cat", default=None,
+                   help="catalog v4 csv for version A (default data/catalog_v4/Cascadia_relocated_catalog_v4.csv "
+                        "of the main checkout, see 05_magnitude/v51_paths.py)")
     a = p.parse_args()
+    PICKS = a.picks
+    V4CAT = str(a.v4cat or vp.main_data("catalog_v4/Cascadia_relocated_catalog_v4.csv"))
     _MAGS = pd.read_csv(a.mags, low_memory=False).rename(columns={"region": "catalog_region"})
     if a.stage in ("compute", "all"):
         compute(a)

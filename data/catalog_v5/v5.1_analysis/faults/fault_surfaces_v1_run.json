@@ -1,0 +1,30 @@
+{
+ "fit_set": 101296,
+ "detection_planes": 161,
+ "blanco_parents": 21,
+ "blanco_strands": 12,
+ "surfaces_fitted": 152,
+ "kept": 142,
+ "removed": 10,
+ "fit_members": 64272,
+ "assignment": {
+  "fit member": 64272,
+  "none": 37468,
+  "not fitted (Axial Seamount left out)": 26874,
+  "ambiguous": 26257,
+  "assigned": 12651,
+  "not an earthquake": 3313,
+  "non-earthquake timing (weekday-daytime member of a surface removed for its timing)": 884
+ },
+ "on_surface_strict": 65709,
+ "catalog_note": {
+  "Mount St Helens deep population (box, deeper than 30 km; v5.1 review P1): likely false events from a weekly artificial signal on analog UW channels, pending human review": 331,
+  "2012 Brookings swarm (v5.1 review P2): v5.1 depth probably wrong (two S-P depth minima in the v5.1 grids; NonLinLoc took the deep one)": 39
+ },
+ "members_of_removed_surfaces": 1314,
+ "notes": [
+  "'none' = compatible with no surface, in a fitted region; Axial Seamount events (never fitted) are 'not fitted (Axial Seamount left out)'",
+  "'assigned' = compatible (z <= 2, d <= 10 km) with exactly one surface, not located on it; on_surface_strict = fit members plus assigned tier A-C events within 2 km, without floor_limited, far_only or deep_pass",
+  "sigma_total and the strike/dip intervals hold for a fixed member set; see recovery_* and strike_settings_range_width in the summary for the detection-level spread"
+ ]
+}

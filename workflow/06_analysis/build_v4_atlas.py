@@ -205,7 +205,7 @@ def events():
 def nll3d(ids: pd.Series, path=None) -> dict | None:
     """v4-NLL3D locations aligned on the v4 event IDs, stored as offsets from the v4 location: int16 lon/lat in
     1e-4 deg (the precision of the v4 csv) and depth in 10 m; -32768 where the v4 location is kept (tier U).
-    Tier 0-4 = A-D, U (255 = ID missing); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none).
+    Tier 0-4 = A-D, U (255 = ID missing), 5 = loc_source none (no hypocentre: drawn only in the v4 view); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none).
     The atlas recomputes the shift from v4 from the two positions (matches shift_h_km to < 2 m)."""
     path = Path(path or NLL3D)
     if not path.exists():
@@ -216,11 +216,16 @@ def nll3d(ids: pd.Series, path=None) -> dict | None:
     d = lambda col, ref, s: np.where(kept, -32768, np.clip(np.round((n[col] - n[ref]).to_numpy(float) * s), -32767, 32767)).astype("<i2")
     u1 = lambda v, s: np.where(np.isfinite(v) & ~kept, np.clip(np.round(v * s), 0, 254), 255).astype("u1")
     tier = n["tier"].map({t: k for k, t in enumerate(TIERS)}).fillna(255).to_numpy().astype("u1")
+    tier[(n["loc_source"] == "none").to_numpy()] = 5    # no hypocentre (catalog v5.1+): hidden in the second catalog's view
     out = {"n_dlon": d("lon", "v4_lon", 1e4), "n_dlat": d("lat", "v4_lat", 1e4), "n_ddep": d("depth", "v4_depth", 100),
            "n_tier": tier, "n_nph": n["nphs"].fillna(0).clip(0, 255).to_numpy().astype("u1"),
            "n_gap": u1(n["gap"].to_numpy(float), 0.5), "n_rms": u1(n["rms"].to_numpy(float), 100)}
+    out["n_dep"] = np.where(kept, np.nan, n["depth"].to_numpy(float)).astype("<f4")   # exact depth (n_ddep is 10 m steps)
+    if "surface_km" in n:   # the catalog's own solid surface (D-B068 in v5.1): the atlas tests "above surface" against it
+        out["n_surf"] = np.where(kept, np.nan, n["surface_km"].to_numpy(float)).astype("<f4")
     cnt = pd.Series(tier).map(dict(enumerate(TIERS))).value_counts().reindex(list(TIERS)).fillna(0).astype(int)
-    print(f"  second catalog: {(~kept).sum():,} relocated, {kept.sum():,} keep v4; tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
+    print(f"  second catalog: {(~kept).sum():,} relocated, {(kept & (tier != 5)).sum():,} keep v4, {(tier == 5).sum():,} without a "
+          "hypocentre (hidden in its view); tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
     return out
 
 

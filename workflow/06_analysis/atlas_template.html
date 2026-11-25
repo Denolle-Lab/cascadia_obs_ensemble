@@ -371,7 +371,7 @@ const CAT2L = (M.cat2 && M.cat2.label) || "v4-NLL3D (preliminary)", CAT2N = (M.c
 if ($("btnCat2")) $("btnCat2").textContent = CAT2L;
 const TIERS = "ABCDU";
 const elon = Float32Array.from(EV.lon), elat = Float32Array.from(EV.lat), ecat = Float32Array.from(EV.dep);
-const etier = new Float32Array(N).fill(4);   // 0-4 = A-D, U (v4 location kept)
+const etier = new Float32Array(N).fill(4);   // 0-4 = A-D, U (v4 location kept); 5 = no hypocentre in the second catalog (hidden in its view)
 let nlon = null, nlat = null, ndep = null;   // v4-NLL3D positions (NaN = v4 location kept), from the stored offsets
 if (NLL) {
   nlon = new Float32Array(N); nlat = new Float32Array(N); ndep = new Float32Array(N);
@@ -379,9 +379,10 @@ if (NLL) {
     etier[i] = EV.n_tier[i] === 255 ? 4 : EV.n_tier[i];
     const k = EV.n_dlon[i] === -32768;
     nlon[i] = k ? NaN : EV.lon[i] + EV.n_dlon[i] * 1e-4; nlat[i] = k ? NaN : EV.lat[i] + EV.n_dlat[i] * 1e-4;
-    ndep[i] = k ? NaN : EV.dep[i] + EV.n_ddep[i] / 100;
+    ndep[i] = k ? NaN : EV.n_dep ? EV.n_dep[i] : EV.dep[i] + EV.n_ddep[i] / 100;   // n_dep: exact (10 m steps could round a near-surface event above it)
   }
 }
+const TIER_N = [0, 0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) TIER_N[etier[i]]++;   // counts per tier code 0-5
 // positions before (moves layer: before -> second catalog), NaN where not relocated in either
 const MOVES = NLL && !!EV.b_dlon;
 let blon = null, blat = null, bdep = null;
@@ -417,12 +418,13 @@ evGeo.setAttribute("position", new THREE.BufferAttribute(evPos, 3));
 // "Local surface": the catalog depth is km below the ground/seafloor under the epicentre, so we add the water depth or
 // subtract the elevation. Events still above the surface after that are flagged (eair) as location errors and greyed
 // or hidden with "Above surface".
-let nAir = 0;
+let nAir = 0, CATV = 0;                     // CATV: catalog shown (F.cat; F is declared below)
 function applyDatum(mode) {
   nAir = 0;
   for (let i = 0; i < N; i++) {
     edep[i] = mode ? ecat[i] - esurf[i] : ecat[i];
-    eair[i] = edep[i] < -esurf[i] ? 1 : 0; nAir += eair[i];
+    eair[i] = edep[i] < -esurf[i] ? 1 : 0;
+    if (!(CATV && etier[i] === 5)) nAir += eair[i];   // tier 5 is not drawn in the second catalog
   }
 }
 applyDatum(0);
@@ -471,7 +473,7 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
     ${ramps}
     void main() {
       bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1 && !(uAir > 1.5 && air > 0.5)
-        && tier <= uTierMax + 0.5 && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
+        && min(tier, 4.0) <= uTierMax + 0.5 && !(uCat > 0.5 && tier > 4.5) && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
       if (uBoxOn > 0.5) keep = keep && position.x >= uBox.x && position.x <= uBox.y && position.z >= uBox.z && position.z <= uBox.w;
       if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
       vec4 mv = modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0);
@@ -497,7 +499,8 @@ scene.add(evPoints);
 function passes(i) {
   const d = edep[i];
   if (F.air === 2 && eair[i]) return false;
-  if (etier[i] > F.tmax) return false;
+  if (Math.min(etier[i], 4) > F.tmax) return false;
+  if (F.cat && etier[i] === 5) return false;      // no hypocentre in the second catalog
   if (F.fault >= 0 && eflt[i] !== F.fault) return false;
   if (F.onf === 1 && eflt[i] < 0 || F.onf === 2 && eflt[i] >= 0) return false;
   if (EV.day[i] < F.t0 || EV.day[i] > F.t1 || emag[i] < F.mmin || esig[i] > F.sig || eflag[i] < F.qc || d < F.d0 || d > F.d1) return false;
@@ -947,7 +950,7 @@ function seg(id, cb) {
 }
 seg("segColor", v => { F.mode = v; EU.uMode.value = v; drawLegend(); drawSection(); });
 seg("segQC", v => { F.qc = v; EU.uQC.value = v; refresh(); });
-const airText = () => $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / N).toFixed(1)}%) above the surface: location errors`;
+const airText = () => { const n = F.cat ? N - TIER_N[5] : N; $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / n).toFixed(1)}%) above the surface: location errors`; };
 airText();
 seg("segDatum", v => { F.datum = v; applyDatum(v); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText(); refresh(); });
 seg("segAir", v => { F.air = v; EU.uAir.value = v; refresh(); });
@@ -958,10 +961,11 @@ seg("segTier", v => { F.tmax = v; EU.uTierMax.value = v; refresh(); });
 const SUB4 = $("sub").textContent;
 function setCatalog(c) {
   if (!NLL) return;
-  F.cat = c; EU.uCat.value = c;
+  F.cat = c; CATV = c; EU.uCat.value = c;
   if (c && !esurfN) {
     esurfN = esurf4.slice();
-    for (let i = 0; i < N; i++) if (!Number.isNaN(nlon[i])) esurfN[i] = elevAt(nlon[i], nlat[i]) / 1000;
+    // the second catalog's own surface (surface_km, the surface of its above-surface test) where it has one, else the atlas terrain
+    for (let i = 0; i < N; i++) if (!Number.isNaN(nlon[i])) esurfN[i] = EV.n_surf && Number.isFinite(EV.n_surf[i]) ? EV.n_surf[i] : elevAt(nlon[i], nlat[i]) / 1000;
   }
   for (let i = 0; i < N; i++) {
     const nl = c && !Number.isNaN(nlon[i]);
@@ -976,7 +980,7 @@ function setCatalog(c) {
   dbtn.forEach(b => { b.disabled = !!c; b.classList.toggle("on", +b.dataset.v === F.datum); });
   $("datumNote").style.display = c ? "" : "none";
   applyDatum(F.datum); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText();
-  $("sub").textContent = c ? "Catalog v4 events relocated with NonLinLoc in a 3D velocity model (preliminary). Depths in km below sea level." : SUB4;
+  $("sub").textContent = c ? `${CAT2L}: the catalog v4 events relocated with NonLinLoc. Depths in km below sea level.` : SUB4;
   drawLegend(); refresh(); drawSection();
 }
 seg("segCat", v => setCatalog(v));
@@ -1128,8 +1132,7 @@ function layoutPanels() {   // keep panels from overlapping
     for (const id of ["section"]) { $(id).style.left = l + "px"; $(id).style.right = r + "px"; }
     document.querySelector(".timeline").style.left = l + "px"; document.querySelector(".timeline").style.right = r + "px"; }
 }
-const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94"];
-const TIER_N = [0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) TIER_N[etier[i]]++;
+const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94", "#9e9c94"];
 const LEG_SRC = { open: false };                       // "Symbols and sources" folded unless opened
 function drawLegend() {
   const modes = [
@@ -1138,7 +1141,7 @@ function drawLegend() {
     { t: "Share of the event's picks added after ver3", g: "linear-gradient(90deg,#8c9eb8,#ff8033)", l: ["0% (all in ver3)", "100%"] },
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] },
     { t: `${CAT2L}: location tier`, tiers: true }][F.mode];
-  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${TIERS.split("").map((t, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${t} <span class="mono" style="color:var(--text-muted)">${TIER_N[k].toLocaleString()}</span></div>`).join("")}</div>
+  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${TIERS.split("").map((t, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${t} <span class="mono" style="color:var(--text-muted)">${(k === 4 ? TIER_N[4] + TIER_N[5] : TIER_N[k]).toLocaleString()}</span></div>`).join("")}</div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the v4 location</div>`;
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
     ? `<div><h4>Slab2 coloured by coupling (${sc.value})</h4><div class="ramp" style="background:linear-gradient(90deg,#4578b3,#d9d9d1,#cc4038)"></div><div class="ramp-labels"><span>0 creeping</span><span>0.5</span><span>1 locked</span></div></div>` : "";
@@ -1165,7 +1168,7 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
-    ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${CAT2L}</b>: ${CAT2N}${F.cat ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}</div>` : ""}
+    ${NLL ? `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${CAT2L}</b>: ${CAT2N}${F.cat && TIER_N[4] ? ` Rings mark tier U events (${TIER_N[4].toLocaleString()}), which could not be relocated and stay at their v4 location.` : ""}${F.cat && TIER_N[5] ? ` Tier U events without a hypocentre in this catalog (${TIER_N[5].toLocaleString()}) are not shown.` : ""}</div>` : ""}
     <div class="attribution">Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;
@@ -1183,6 +1186,7 @@ const nllHtml = i => {
   if (!NLL) return "";
   const t = etier[i], T = TIERS[t];
   if (t === 4) return `<br><span class="k">${CAT2L}</span> tier <b>U</b> · <span class="caveat">not relocated, v4 location</span>`;
+  if (t === 5) return `<br><span class="k">${CAT2L}</span> tier <b>U</b> · <span class="caveat">not located: no hypocentre in this catalog</span>`;
   const f = (v, s, d) => v === 255 ? "–" : (v * s).toFixed(d);
   const dh = Math.hypot((nlon[i] - EV.lon[i]) * 111.195 * Math.cos((nlat[i] + EV.lat[i]) * Math.PI / 360), (nlat[i] - EV.lat[i]) * 111.195);
   const dz = nraw[i] - EV.dep[i];
@@ -1416,7 +1420,7 @@ function drawSection() {
     sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
     const col = rampJS(F.mode, F.mode === 0 ? edep[i] : F.mode === 1 ? EV.day[i] / M.events.days_max : F.mode === 3 ? eflt[i] : F.mode === 4 ? etier[i] : enew[i]);
     sctx.beginPath(); sctx.arc(px, py, r, 0, 2 * Math.PI);
-    if (etier[i] === 4 && NLL && (F.cat || F.mode === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U: ring
+    if (etier[i] >= 4 && NLL && (F.cat || F.mode === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U: ring
     else { sctx.fillStyle = col; sctx.fill(); }
     secPts.push([px, py, i]);
   }

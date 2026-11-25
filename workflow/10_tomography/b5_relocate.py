@@ -621,6 +621,65 @@ def write_mod(path, lat, lon, center):
     return dict(nx=len(xn), ny=len(yn), nz=len(zn), lon=[float(xi[0]), float(xi[-1])], lat=[float(yi[0]), float(yi[-1])])
 
 
+def floor_grid():
+    """NonLinLoc's floor (params b5.tomodd.floor.file, the true-frame LOCTOPO_SURFACE grid of the B4 run; b4_catalog
+    read_floor), cached."""
+    if "floor" not in _W:
+        from b4_catalog import read_floor
+        _W["floor"] = read_floor(B["tomodd"]["floor"]["file"])
+    return _W["floor"]
+
+
+def write_floor(path, lat, lon, center, shift=(0.0, 0.0, 0.0)):
+    """surface.dat of the D-B081 tomoDD floor: the NonLinLoc floor nodes over the cluster (events + margin_deg), in
+    tomoDD's frame. Node k of the floor grid sits where NonLinLoc's nearest-node rule (get_surface_z: floor(pix_shift
+    + offset / inc)) and tomoDD's (floor(offset / inc + 0.5)) pick the same node: x0 + (k + 0.5 - pix_shift) inc.
+    shift = the cluster's centroid shift (dlat, dlon, ddep) that collect removes (D-B053): the floor is written so
+    that it holds for the final positions (tomoDD position - shift): node coordinates + (dlat, dlon), depths + ddep.
+    Coordinates rescaled about the frame centre as every other tomoDD input (D-B028 P-2). Depth km, positive down."""
+    from b2_fwd_mods import ellipsoid_coords
+    fl = floor_grid()
+    m = B["tomodd"]["floor"]["margin_deg"]
+    ix0 = int(np.floor(fl["shift"] + (lon.min() - m - fl["x0"]) / fl["dx"]))
+    ix1 = int(np.floor(fl["shift"] + (lon.max() + m - fl["x0"]) / fl["dx"]))
+    k0 = int(np.floor(fl["shift"] + (lat.min() - m - fl["y0"]) / fl["dy"]))
+    k1 = int(np.floor(fl["shift"] + (lat.max() + m - fl["y0"]) / fl["dy"]))
+    ix0, k0 = max(ix0, 0), max(k0, 0)
+    ix1, k1 = min(ix1, fl["nx"] - 1), min(k1, fl["ny"] - 1)
+    nlo, nla = ix1 - ix0 + 1, k1 - k0 + 1
+    assert 2 <= nla <= 1001 and 2 <= nlo <= 1001, (nla, nlo)
+    lon_n = fl["x0"] + (np.arange(ix0, ix1 + 1) + 0.5 - fl["shift"]) * fl["dx"] + shift[1]
+    lat_n = fl["y0"] + (np.arange(k0, k1 + 1) + 0.5 - fl["shift"]) * fl["dy"] + shift[0]
+    z = fl["z"][fl["ny"] - 1 - np.arange(k0, k1 + 1)][:, ix0:ix1 + 1].astype(float)   # rows south -> north
+    assert np.isfinite(z).all(), "floor grid has no value over the cluster"
+    dep = -z / 1000.0 + shift[2]
+    la_w, lo_w = ellipsoid_coords(lat_n, lon_n, *center)
+    head = f"{nla} {nlo} {la_w[0]:.8f} {(la_w[-1] - la_w[0]) / (nla - 1):.10f} {lo_w[0]:.8f} {(lo_w[-1] - lo_w[0]) / (nlo - 1):.10f}"
+    Path(path).write_text(head + "\n" + "\n".join(" ".join(f"{v:.4f}" for v in row) for row in dep) + "\n")
+    return dict(floor_nodes=[nla, nlo], floor_shift=[float(v) for v in shift])
+
+
+def floor_check(r, shift):
+    """Final-frame check of a tomoDD solution r (lat, lon, depth): positions - shift against the NonLinLoc floor
+    (b4_catalog.floor_at, true frame). Returns (on_floor, above) boolean arrays: within 5 m of the floor, above it."""
+    from b4_catalog import floor_at
+    lat, lon, dep = r.lat.values - shift[0], r.lon.values - shift[1], r.depth.values - shift[2]
+    fdep = -floor_at(floor_grid(), lat, lon) / 1000.0
+    return (dep - fdep) < 0.005, (dep - fdep) < -1e-6
+
+
+def core_shift(r, cid):
+    """Mean (tomoDD - B4) lat, lon, depth of the cluster's core events (the shift collect removes, D-B053)."""
+    g = _W["mem"].get_group(cid)
+    core = set(_W["ev"].ID.values[g.ev.values[g.core.values]])
+    rc = r[r.ID.isin(core)]
+    if not len(rc):
+        return (0.0, 0.0, 0.0)
+    b = _W["ev"].set_index("ID").loc[rc.ID]
+    return (float((rc.lat.values - b.lat.values).mean()), float((rc.lon.values - b.lon.values).mean()),
+            float((rc.depth.values - b.depth.values).mean()))
+
+
 def cluster_data(cid):
     """Event positions, pick rows and dt rows of one cluster (shared tables)."""
     g = _W["mem"].get_group(cid)
@@ -709,7 +768,12 @@ def write_inputs(rdir, cid, boot=0, retry=0):
     mod = write_mod(rdir / "MOD", np.r_[ev.lat.values[e], st.lat.values[sta]],
                     np.r_[ev.lon.values[e], st.lon.values[sta]], center)
     air = round(float(st.zsrc_km.values[sta].min()) - B["tomodd"]["air_dep_margin_km"], 3)
-    return dict(center=list(center), min_dist_centre_km=dmin, air_dep_km=air, mod=mod, n_events=len(e),
+    fl = {}
+    if B["tomodd"].get("floor", {}).get("enabled"):     # D-B081: the local floor replaces the flat Air_dep limit
+        air = float(B["tomodd"]["floor"]["air_dep_km"])
+        fl = write_floor(rdir / "surface.dat", ev.lat.values[e], ev.lon.values[e], center,
+                         _W.get("floor_shift", {}).get(cid, (0.0, 0.0, 0.0)))
+    return dict(center=list(center), min_dist_centre_km=dmin, air_dep_km=air, mod=mod, n_events=len(e), **fl,
                 n_sta=len(sta), n_abs=len(pp), n_dt=len(rows), picks_missing_term=n_noterm), tcs
 
 
@@ -836,28 +900,72 @@ def _do_cluster(cid, boot, rdir):
     pidf = rdir / "running.pid"
     pidf.write_text(str(os.getpid()))
     t0 = time.time()
-    crashes = []
-    for retry in range(B["tomodd"]["crash_retries"] + 1):
-        info, tcs = write_inputs(rdir, cid, boot, retry)
-        t_in = time.time() - t0
-        res, it = run_tomodd(rdir, cid, info, "" if boot == 0 else f" boot {boot}")
-        _W["rss_gb"] = max(_W.get("rss_gb", 1.0), res["rss_gb"] if np.isfinite(res["rss_gb"]) else 0)
-        so = (rdir / "stdout.txt").read_text(errors="replace")
-        if res["exit"] == 0 or "Segmentation fault" not in so:
-            break
-        # tomoDD's ray tracer can return NaN path points for some geometries in some frames (D-B053: an event at the
-        # frame centre; here also elsewhere, RaySPDR2.f intmap index from a NaN, found with the bounds-checked build):
-        # keep the crashed run's files, retry with the frame centre moved
-        crashes.append(dict(retry=retry, center=info["center"], exit=res["exit"], iterations=res["iterations"]))
-        keep = rdir / f"crash{retry}"
-        keep.mkdir()
-        for f in ("stdout.txt", "tomoDD-SE.log", "tomoDD-SE.inp", "Input_Files", "Output_Files", "MOD"):
-            if (rdir / f).exists():
-                shutil.move(str(rdir / f), str(keep / f))
-    res["frame_retries"] = crashes
     rel = rdir / "Output_Files" / "tomoDD.reloc"
     ev = _W["ev"]
     g = _W["mem"].get_group(cid).sort_values("ev")
+    FL = B["tomodd"].get("floor", {})
+    floor_on = bool(FL.get("enabled")) and boot == 0
+    _W.setdefault("floor_shift", {})[cid] = (0.0, 0.0, 0.0)
+    passes = []
+    RUNFILES = ("stdout.txt", "tomoDD-SE.log", "tomoDD-SE.inp", "Input_Files", "Output_Files", "MOD", "surface.dat",
+                "time.txt")
+    for fpass in range(int(FL.get("max_passes", 1)) if floor_on else 1):
+        crashes = []
+        for retry in range(B["tomodd"]["crash_retries"] + 1):
+            info, tcs = write_inputs(rdir, cid, boot, retry)
+            t_in = time.time() - t0
+            res, it = run_tomodd(rdir, cid, info, "" if boot == 0 else f" boot {boot}")
+            _W["rss_gb"] = max(_W.get("rss_gb", 1.0), res["rss_gb"] if np.isfinite(res["rss_gb"]) else 0)
+            so = (rdir / "stdout.txt").read_text(errors="replace")
+            if res["exit"] == 0 or "Segmentation fault" not in so:
+                break
+            # tomoDD's ray tracer can return NaN path points for some geometries in some frames (D-B053: an event at
+            # the frame centre; here also elsewhere, RaySPDR2.f intmap index from a NaN, found with the bounds-checked
+            # build): keep the crashed run's files, retry with the frame centre moved
+            crashes.append(dict(retry=retry, center=info["center"], exit=res["exit"], iterations=res["iterations"]))
+            keep = rdir / f"crash{retry}"
+            keep.mkdir()
+            for f in RUNFILES:
+                if (rdir / f).exists():
+                    shutil.move(str(rdir / f), str(keep / f))
+        res["frame_retries"] = crashes
+        if not floor_on or not (res["exit"] == 0 and rel.exists() and rel.stat().st_size > 0):
+            break
+        # D-B081 floor in the final frame: collect removes the core centroid shift (D-B053), so the floor written for
+        # this pass held for (tomoDD position - given shift); check it for the actual shift, rerun with it if needed
+        r0 = read_reloc(rel, info["center"], ev.ID.values[g.ev.values])
+        sh = core_shift(r0, cid)
+        on, above = floor_check(r0, sh)
+        lg = (rdir / "tomoDD-SE.log").read_text(errors="replace")
+        hits = sorted({int(l.split()[1]) for l in lg.splitlines() if l.startswith(">>>Floor: ")})
+        passes.append(dict(given=list(_W["floor_shift"][cid]), shift=list(sh), floor_hits=len(hits),
+                           on_floor=int(on.sum()), above=int(above.sum())))
+        if not above.any() or fpass == int(FL.get("max_passes", 1)) - 1:
+            break
+        keep = rdir / f"floor_pass{fpass}"
+        keep.mkdir()
+        for f in list(RUNFILES) + [x.name for x in rdir.glob("crash*")]:
+            if (rdir / f).exists():
+                shutil.move(str(rdir / f), str(keep / f))
+        _W["floor_shift"][cid] = sh
+    if floor_on and passes and passes[-1]["above"] > 0:
+        # no fixed point (the floor holds so much of the cluster that each offset deepens the centroid further): keep
+        # the horizontal shift and limit the vertical one to the largest that leaves every event at or below the floor
+        # (cluster-level datum, D-B053 within D-B081; no event moved on its own). Recorded per cluster.
+        from b4_catalog import floor_at
+        r0 = read_reloc(rel, info["center"], ev.ID.values[g.ev.values])
+        sh = core_shift(r0, cid)
+        fdep = -floor_at(floor_grid(), r0.lat.values - sh[0], r0.lon.values - sh[1]) / 1000.0
+        sz = min(sh[2], float(np.min(r0.depth.values - fdep)) - 1e-4)
+        res["anchor"] = [sh[0], sh[1], sz]
+        res["anchor_z_limited_km"] = sh[2] - sz
+        on, above = floor_check(r0, res["anchor"])
+        passes.append(dict(given="anchor_limited", shift=res["anchor"], on_floor=int(on.sum()), above=int(above.sum())))
+    if floor_on:
+        res["floor_passes"] = passes
+        lg = (rdir / "tomoDD-SE.log").read_text(errors="replace") if (rdir / "tomoDD-SE.log").exists() else ""
+        res["floor_hit_ids"] = sorted({int(l.split()[1]) for l in lg.splitlines() if l.startswith(">>>Floor: ")})
+        res["floor_not_met"] = sum(1 for l in lg.splitlines() if l.startswith(">>>Floor not met"))
     if res["exit"] == 0 and rel.exists() and rel.stat().st_size > 0:
         r = read_reloc(rel, info["center"], ev.ID.values[g.ev.values])
         tw = pd.Series(tcs, index=ev.ID.values[np.sort(g.ev.values)])
@@ -1054,7 +1162,7 @@ def stage_collect(C, nproc, partial=False):
     mem = pd.read_parquet(d / "split" / "members.parquet")
     mem["ID"] = ev.ID.values[mem.ev]
     E = ev.set_index("ID")
-    rows, sols, missing, aq = [], [], [], set()
+    rows, sols, missing, aq, fh = [], [], [], set(), set()
     for cid in cl.index:
         f = d / "clusters" / cid / "run.json"
         if not f.exists():
@@ -1066,6 +1174,7 @@ def stage_collect(C, nproc, partial=False):
             rj["airquake_ids"] = sorted({int(l.split("-")[-1]) for l in lg if "negative depth" in l})
             rj["airquakes"] = len(rj["airquake_ids"])
         aq |= set(rj["airquake_ids"])
+        fh |= set(rj.get("floor_hit_ids", []))
         if rj.get("status") == "failed" and rj.get("exit") == 0 and skipped_run(f.parent):
             rj["status"] = "skipped"                  # run.json of a first version: tomoDD gave up, not a failure
         g = mem[mem.cid == cid]
@@ -1081,6 +1190,8 @@ def stage_collect(C, nproc, partial=False):
                       ddep=float((rc.depth.values - b.depth.values).mean()), dt_s=float(rc.dt_s.mean()))
         else:
             sh = dict(dlat=0.0, dlon=0.0, ddep=0.0, dt_s=0.0)
+        if rj.get("anchor"):                       # D-B081: vertical shift limited by the floor (_do_cluster)
+            sh.update(dlat=rj["anchor"][0], dlon=rj["anchor"][1], ddep=rj["anchor"][2])
         r["lat_f"], r["lon_f"], r["depth_f"] = r.lat - sh["dlat"], r.lon - sh["dlon"], r.depth - sh["ddep"]
         r["dt_f"] = r.dt_s - sh["dt_s"]
         rc = r[r.core]
@@ -1088,7 +1199,10 @@ def stage_collect(C, nproc, partial=False):
         row = dict(cid=cid, **{k: rj.get(k) for k in ("status", "wall_s", "cpu_s", "rss_gb", "inputs_s",
                                                        "iterations", "airquakes", "cnd_first", "cnd_last",
                                                        "rmsct_first_ms", "rmsct_last_ms", "ev_pct_last", "ct_pct_last",
-                                                       "os_last_m", "min_dist_centre_km", "air_dep_km")},
+                                                       "os_last_m", "min_dist_centre_km", "air_dep_km",
+                                                       "anchor_z_limited_km")},
+                   floor_runs=len([x for x in rj.get("floor_passes", []) if x.get("given") != "anchor_limited"]),
+                   floor_hits=len(rj.get("floor_hit_ids", [])),
                    relocated=len(r), relocated_core=len(rc),
                    shift_e_km=sh["dlon"] * KM_DEG * np.cos(np.radians(lat0)), shift_n_km=sh["dlat"] * KM_DEG,
                    shift_z_km=sh["ddep"], shift_t_s=sh["dt_s"],
@@ -1182,6 +1296,15 @@ def stage_collect(C, nproc, partial=False):
     st_[nr] = np.where(cst == "ok", "dropped_by_tomodd", "cluster_" + cst)
     st_[nr & cat.ID.isin(aq).values] = "airquake_by_tomodd"     # update would put it above Air_dep (tomoDD drops it)
     cat["b5_status"] = st_
+    # D-B081: the event's update hit tomoDD's floor in the final run (any iteration); it ends on the floor (final depth
+    # within 5 m of NonLinLoc's floor at the final epicentre)
+    cat["b5_floor_hit"] = reloc & cat.ID.isin(fh).values
+    if B["tomodd"].get("floor", {}).get("enabled") and reloc.any():
+        from b4_catalog import floor_at
+        fdep = -floor_at(floor_grid(), cat.lat.values[reloc], cat.lon.values[reloc]) / 1000.0
+        on = np.zeros(len(cat), bool)
+        on[reloc] = (cat.depth.values[reloc] - fdep) < 0.005
+        cat["b5_floor_limited"] = on
     cat["b5_shift_h_km"] = np.where(reloc, np.hypot((cat.lat - cat.b4_lat) * KM_DEG, (cat.lon - cat.b4_lon) * KM_DEG
                                                     * np.cos(np.radians(cat.b4_lat))), np.nan)
     cat["b5_shift_z_km"] = np.where(reloc, cat.depth - cat.b4_depth, np.nan)

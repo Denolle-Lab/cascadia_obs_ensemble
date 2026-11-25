@@ -848,8 +848,8 @@ b5:                                # B5 relative relocation of the whole catalog
                                    # its partners is in the chunk); event taken from the chunk where it is core
     min_core: 50                   # stop (error) if a core this small still fits no binary
   tomodd:
-    bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24     # D-B054 frozen binaries (WARF: private, never copied)
-    runtime: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24/runtime_files   # ak135.15.SKS, layer-16.dat
+    bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-25     # D-B081 freeze (= D-B054 + local floor; without surface.dat identical results, checked on 3 clusters); WARF: private, never copied
+    runtime: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-25/runtime_files   # ak135.15.SKS, layer-16.dat
     classes:                       # BUILD.md array sizes; first class that fits all four limits is used
       e10k: {maxeve: 10000, maxdata: 3000000, maxsta: 200, maxobs: 100}
       e13k: {maxeve: 13000, maxdata: 2000000, maxsta: 200, maxobs: 100}
@@ -863,7 +863,13 @@ b5:                                # B5 relative relocation of the whole catalog
                                    # 1/S_over_P^2 (pick_errors, D-B008), so WTCTS written = sets WTCTS x s_weight x S_over_P^2
     damp: 100                      # LSQR damping (D-B048 test)
     node_margin_deg: 0.375         # MOD interior nodes = model nodes over the cluster's events and stations + this
-    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test
+    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test (floor off)
+    floor:                         # D-B081 (PI 2026-11-25): NonLinLoc's floor inside tomoDD (patched source 2026-11-25, surface.dat)
+      enabled: true                # an update that would put an event above the floor stops 1 m below it (logged >>>Floor:)
+      file: /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged.bin   # true-frame LOCTOPO_SURFACE of the b4_v51 runs (D-B068 merged surface, cell min - 1 m)
+      margin_deg: 0.15             # floor nodes over the cluster's events + this margin (beyond: the edge node)
+      air_dep_km: -1000.0          # flat Air_dep out of the way: tomoDD tests it on the raw update, before the step caps, and would drop the event (the floor is the limit)
+      max_passes: 3                # reruns with the floor offset by the cluster's centroid shift until it holds in the final frame (D-B053)
     crash_retries: 2               # tomoDD segfault (NaN ray point, RaySPDR2.f intmap): rerun with the frame centre moved ~0.5 km
   frame_clear_km: 0.05             # D-B053: no event within 50 m of tomoDD's frame centre (b5_common.frame_centre)
   nboot: 0                         # bootstrap runs per cluster (dt rows resampled, seed 48000 + k); 0 in production

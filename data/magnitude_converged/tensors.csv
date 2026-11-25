@@ -1,41 +1,41 @@
-solution,events,Mw_class,n,ML_minus_Mw
-v4.1 stored,all,3-4.5,67,-0.0220
-v4.1 stored,all,4.5-5.5,60,-0.7935
-v4.1 stored,all,5.5-7.5,20,-1.0135
-v4.1 stored,all,"3-4.5, offshore and coastal labels",57,-0.0510
-v4.1 stored,all,"3-4.5, onshore labels",10,0.0455
-v4.1 stored,near,3-4.5,52,0.0825
-v4.1 stored,near,4.5-5.5,29,-0.3570
-v4.1 stored,near,5.5-7.5,9,-0.6760
-v4.1 stored,near,"3-4.5, offshore and coastal labels",43,0.1110
-v4.1 stored,near,"3-4.5, onshore labels",9,0.0540
-v4.1 converged,all,3-4.5,67,-0.1510
-v4.1 converged,all,4.5-5.5,60,-1.1500
-v4.1 converged,all,5.5-7.5,20,-1.2005
-v4.1 converged,all,"3-4.5, offshore and coastal labels",57,-0.2310
-v4.1 converged,all,"3-4.5, onshore labels",10,0.0735
-v4.1 converged,near,3-4.5,52,-0.0240
-v4.1 converged,near,4.5-5.5,29,-0.6910
-v4.1 converged,near,5.5-7.5,9,-0.7950
-v4.1 converged,near,"3-4.5, offshore and coastal labels",43,-0.0730
-v4.1 converged,near,"3-4.5, onshore labels",9,0.0800
-v5.1 stored,all,3-4.5,64,0.0765
-v5.1 stored,all,4.5-5.5,56,-0.7980
-v5.1 stored,all,5.5-7.5,19,-0.9440
-v5.1 stored,all,"3-4.5, offshore and coastal labels",54,0.0765
-v5.1 stored,all,"3-4.5, onshore labels",10,0.0745
-v5.1 stored,near,3-4.5,52,0.2220
-v5.1 stored,near,4.5-5.5,27,-0.1990
-v5.1 stored,near,5.5-7.5,9,-0.4640
-v5.1 stored,near,"3-4.5, offshore and coastal labels",43,0.2640
-v5.1 stored,near,"3-4.5, onshore labels",9,0.1060
-v5.1 converged,all,3-4.5,64,-0.1115
-v5.1 converged,all,4.5-5.5,56,-1.2230
-v5.1 converged,all,5.5-7.5,19,-1.3090
-v5.1 converged,all,"3-4.5, offshore and coastal labels",54,-0.2075
-v5.1 converged,all,"3-4.5, onshore labels",10,0.0870
-v5.1 converged,near,3-4.5,52,-0.0120
-v5.1 converged,near,4.5-5.5,27,-0.6650
-v5.1 converged,near,5.5-7.5,9,-0.7550
-v5.1 converged,near,"3-4.5, offshore and coastal labels",43,-0.0190
-v5.1 converged,near,"3-4.5, onshore labels",9,0.1190
+solution,events,Mw_class,n,ML_minus_Mw,ci95_lo,ci95_hi
+v4.1 stored,all,3-4.5,67,-0.0220,-0.0900,0.1110
+v4.1 stored,all,4.5-5.5,60,-0.7935,-1.0760,-0.5530
+v4.1 stored,all,5.5-7.5,20,-1.0135,-1.1550,-0.6230
+v4.1 stored,all,"3-4.5, offshore and coastal labels",57,-0.0510,-0.1420,0.1110
+v4.1 stored,all,"3-4.5, onshore labels",10,0.0455,-0.0500,0.4930
+v4.1 stored,near,3-4.5,52,0.0825,-0.0220,0.1970
+v4.1 stored,near,4.5-5.5,29,-0.3570,-0.7550,-0.1970
+v4.1 stored,near,5.5-7.5,9,-0.6760,-1.1440,0.0100
+v4.1 stored,near,"3-4.5, offshore and coastal labels",43,0.1110,-0.0470,0.1970
+v4.1 stored,near,"3-4.5, onshore labels",9,0.0540,-0.0500,0.5260
+v4.1 converged,all,3-4.5,67,-0.1510,-0.2650,-0.0150
+v4.1 converged,all,4.5-5.5,60,-1.1500,-1.4015,-0.9150
+v4.1 converged,all,5.5-7.5,20,-1.2005,-1.6180,-0.9430
+v4.1 converged,all,"3-4.5, offshore and coastal labels",57,-0.2310,-0.3220,-0.0730
+v4.1 converged,all,"3-4.5, onshore labels",10,0.0735,-0.0420,0.3100
+v4.1 converged,near,3-4.5,52,-0.0235,-0.1435,0.0640
+v4.1 converged,near,4.5-5.5,29,-0.6910,-0.9460,-0.3860
+v4.1 converged,near,5.5-7.5,9,-0.7950,-1.1310,-0.1720
+v4.1 converged,near,"3-4.5, offshore and coastal labels",43,-0.0730,-0.2120,0.0170
+v4.1 converged,near,"3-4.5, onshore labels",9,0.0800,-0.0420,0.3350
+v5.1 stored,all,3-4.5,64,0.0765,-0.0090,0.2665
+v5.1 stored,all,4.5-5.5,56,-0.7980,-0.9820,-0.5065
+v5.1 stored,all,5.5-7.5,19,-0.9440,-1.0340,-0.4640
+v5.1 stored,all,"3-4.5, offshore and coastal labels",54,0.0765,-0.0455,0.2675
+v5.1 stored,all,"3-4.5, onshore labels",10,0.0745,-0.0595,0.4050
+v5.1 stored,near,3-4.5,52,0.2220,0.0655,0.2865
+v5.1 stored,near,4.5-5.5,27,-0.1990,-0.6820,-0.0860
+v5.1 stored,near,5.5-7.5,9,-0.4640,-1.0340,0.1100
+v5.1 stored,near,"3-4.5, offshore and coastal labels",43,0.2640,0.0750,0.2840
+v5.1 stored,near,"3-4.5, onshore labels",9,0.1060,-0.0340,0.6170
+v5.1 converged,all,3-4.5,64,-0.1115,-0.2430,0.0010
+v5.1 converged,all,4.5-5.5,56,-1.2225,-1.5130,-0.9725
+v5.1 converged,all,5.5-7.5,19,-1.3090,-1.7140,-1.0120
+v5.1 converged,all,"3-4.5, offshore and coastal labels",54,-0.2075,-0.3270,-0.0170
+v5.1 converged,all,"3-4.5, onshore labels",10,0.0870,-0.0420,0.2880
+v5.1 converged,near,3-4.5,52,-0.0120,-0.1405,0.0550
+v5.1 converged,near,4.5-5.5,27,-0.6650,-0.9200,-0.3700
+v5.1 converged,near,5.5-7.5,9,-0.7550,-1.1320,-0.1730
+v5.1 converged,near,"3-4.5, offshore and coastal labels",43,-0.0190,-0.2080,0.0280
+v5.1 converged,near,"3-4.5, onshore labels",9,0.1190,-0.0160,0.3340

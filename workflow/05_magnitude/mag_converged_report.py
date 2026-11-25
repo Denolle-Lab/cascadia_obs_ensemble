@@ -66,6 +66,8 @@ def tab(df, fmt="{:.3f}", cols=None, index=False):
         d = d.reset_index()
 
     def f(v):
+        if isinstance(v, (bool, np.bool_)):
+            return str(bool(v))
         if isinstance(v, (float, np.floating)):
             return "" if np.isnan(v) else fmt.format(v)
         if isinstance(v, (int, np.integer)):
@@ -84,8 +86,9 @@ def fig_convergence():
     c = t("convergence_curve")
     if c is None:
         return
-    fig, ax = plt.subplots(1, 1, figsize=(6.2, 3.6))
-    for (sol, g), col in zip(c.groupby("solver", sort=False), ("C0", "C3")):
+    fig, ax = plt.subplots(1, 1, figsize=(7.5, 4.2))
+    for (sol, g), col in zip(c.groupby("solver", sort=False), ("C0", "C2", "C3")):
+        g = g.drop_duplicates("itn")
         ax.plot(g.itn, g.median_abs, "o-", color=col, label=f"{sol}: median")
         ax.plot(g.itn, g.p99_abs, "s--", color=col, alpha=.7, label=f"{sol}: 99th percentile")
     ax.axvline(3000, color="0.4", lw=.8)
@@ -209,9 +212,11 @@ def _axial_weekly(d):
     nov = wk[(wk.index >= "2014-11-01") & (wk.index < "2014-12-01")].mean()
     mar = wk[(wk.index >= "2015-03-08") & (wk.index < "2015-03-29")].mean()
     er = wk.max()
-    after = wk[wk.index >= "2015-05-22"].max()
-    return (f"Nov 2014 {nov:.0f}/wk, mid-Mar 2015 {mar:.0f}/wk, eruption week {er:,}, from 4 weeks after <= {after}; "
-            f"swarm families Nov 2014 {mo.get('2014-11', 0)}, Mar 2015 {mo.get('2015-03', 0)}, Apr 2015 {mo.get('2015-04', 0)}")
+    cal = ax.set_index("time").resample("W-SUN").size().max()      # calendar weeks (the text's 1,021)
+    post = wk[wk.index > wk.idxmax()].head(4).tolist()
+    return (f"Nov 2014 {nov:.0f}/wk, mid-Mar 2015 {mar:.0f}/wk; eruption week {cal:,} (calendar week, Mon-Sun; "
+            f"the text's quantity) or {er:,} (7-day bins of Fig. 6A); next four 7-day bins {post}; swarm families "
+            f"Nov 2014 {mo.get('2014-11', 0)}, Mar 2015 {mo.get('2015-03', 0)}, Apr 2015 {mo.get('2015-04', 0)}")
 
 
 def _bl_swarms(d):
@@ -373,7 +378,8 @@ def paper_impact():
         except Exception as ex:
             print("bl swarms:", ex)
         try:
-            add("main.tex 258-265; Fig. 6A", "Axial weekly events above Mc and swarm families per month",
+            add("main.tex 258-265 (Overleaf); Fig. 6A", "Axial weekly events above Mc and swarm families per month "
+                "(text: about 60 -> about 300 per week, 1,021 in the eruption week, below 15 per week within four weeks)",
                 _axial_weekly(zo), _axial_weekly(zn))
         except Exception as ex:
             print("axial weekly:", ex)
@@ -403,6 +409,17 @@ def paper_impact():
                                                  f"{_mc(Rn, r, col='mc_mbs'):.1f}, best {_mc(Rn, r):.1f})" for r in below) or "none")
     add("Figs. 5, 6; Table S5; family IDs 270, 346, 1758, 1803", "clustering products", "data/catalog_v4/clusters_zbz",
         ZBZ_NEW, "regenerate figures (v4_figures.py clusters/short) and re-identify the family IDs quoted in the text")
+    add("Overleaf main.tex 265 (repo main.tex 243)", "'... to almost none above Mc 0.75' (Axial clustering Mc)", "0.75",
+        "0.85", "update")
+    add("Overleaf main.tex 435-438 (repo main.tex 405-408), Methods", "'inverted for event size, distance attenuation and "
+        "station terms'", "wrong for the near-event ML (127,000 of 130,769 events): the Hutton-Boore distance term is "
+        "fixed, only event and station-phase terms are inverted; the solver is not mentioned",
+        "near ML: event + station-phase terms with the Hutton & Boore (1987) distance term fixed, solved exactly "
+        "(one gauge row); the distance-attenuation inversion (phase3) is used only for the 3,522 'mapped' events",
+        "correct the Methods sentence (bullet)")
+    add("Fig. 6B (West Blanco swarm, June 2015)", "symbols coloured and sized by M (cpt 1.5-5.0); stars 'M x.x' for "
+        "M >= 5", "stored M", "converged M: the ML events of the swarm drop by about 0.67; the three tensor Mw (5.80, "
+        "5.44, 5.89) do not change", "remake (colour bar range may need 1.0-5.0)")
     add("main.tex 291-294 (Fig. 6D)", "'only events near the coast or above M 4 remain'", "stored M",
         "Mendocino ML -0.19 (v4.1 near)", "recheck on the remade Fig. 6D")
     add("main.tex 352-363", "'the magnitude scale ... the same everywhere'", "claim", "holds better: offshore anchor gap "
@@ -412,8 +429,21 @@ def paper_impact():
     add("Table S4 rows GO004, GO011", "catalog maximum M", "M5.6, M4.1 (catalog magnitude column, not Route A)",
         "Route A: 144373 Mw 5.45; 103612 ML 3.85 -> see per-event file", "check (not Route A values)")
     add("Text S5", "Hutton-Boore named without \\cite", "-", "Hutton1987 is in references.bib", "cite")
-    add("Data availability; atlas; catalog v5 bundles", "Route A magnitudes in the released products", "stored",
-        "converged", "rebuild when the PI adopts the converged file")
+    add("workflow/06_analysis/v51_clusters_zbz.py:86, :90 (main)", "v5.1 clustering reads the stored v5.1 magnitudes "
+        "(MAG = /wd1/.../v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv) and the stored mc_b table (MCB)",
+        "stored", "converged: /wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv; "
+        "data/magnitude_converged/mc_b/mc_b_regional.csv", "repoint and rerun (PR body)")
+    add("workflow/06_analysis/v51_struct_common.py:29 (main)", "v5.1 structure analysis MAG", "stored v5.1 magnitudes",
+        "converged v5.1 table", "repoint and rerun (PR body)")
+    add("workflow/06_analysis/v51_interp_common.py:21, :81 (main)", "v5.1 interpretation reads "
+        "cascadia_catalog_v5.1_magnitudes_slim.csv.gz from V51_MAG (default the old worktree wt_a51_mag)",
+        "stored slim table", "data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz "
+        "(new name, next to the stored one)", "repoint and rerun (PR body)")
+    add("workflow/10_tomography/params.yaml catalog_versions.v4_1_magnitudes (main)", "catalog v5.x bundles take M from "
+        "the v4.1 Route A file", "data/magnitude_v4/cascadia_catalog_M_routeA.csv (main checkout)",
+        "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv", "switch when adopted (PR body)")
+    add("Data availability; atlas; catalog v5 bundles; Zenodo", "Route A magnitudes in the released products", "stored",
+        "converged", "rebuild when the PI adopts the converged file (not done here)")
     return pd.DataFrame(rows)
 
 

@@ -12,26 +12,36 @@
 #   4. v51_magnitude_table.py with the converged v4.1 as M_v4 -> cascadia_catalog_v5.1_magnitudes_converged.csv
 #   5. near-pick tables v4.1 (exact, legacy3000)
 #   6. thread test (1 vs 12 BLAS threads, exact and legacy) and LSQR convergence curve
-#   7. gauge (deployment ties) and comparisons (region, magnitude, distance, ComCat, tensors)
+#   7. gauge (deployment ties), gauge-design test, comparisons (region, magnitude, distance, ComCat,
+#      tensors) and the reconciliation with D-B091
 #   8. Mc / b: v51_mc_b.py on the converged v5.1 table; v4_mc_maps.py on the converged v4.1 M;
 #      clustering v4_clusters_zbz.py on the converged v4.1 M (main run + 3 shuffles)
 #   9. Mc/b comparison and report (HTML) -> data/magnitude_converged/
 # Large outputs in $OUT (default /wd1/mdenolle_data/magnitude_converged), small tables,
 # figures and the report in data/magnitude_converged/ of this repository.
 #   setsid nohup nice -n 10 bash scale/run_magnitude_converged.sh > $OUT/driver.log 2>&1 &
+# Paths as in scale/run_magnitude_v51.sh: the pixi env and the stored v4 run (gitignored CSVs) come
+# from the main checkout (CASCADIA_MAIN, found from the git common directory), the data disk is
+# CASCADIA_WD1 (default /wd1/mdenolle_data); the Python side reads the same from v51_paths.py.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/workflow/05_magnitude"
-ENV="${ENV:-/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default}"
+if [ -z "${CASCADIA_MAIN:-}" ]; then
+  COMMON="$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || echo "$ROOT/.git")"
+  CASCADIA_MAIN="$(dirname "$COMMON")"
+fi
+export CASCADIA_MAIN
+export CASCADIA_WD1="${CASCADIA_WD1:-/wd1/mdenolle_data}"
+ENV="${ENV:-$CASCADIA_MAIN/.pixi/envs/default}"
 PY="$ENV/bin/python"
 export LD_LIBRARY_PATH="$ENV/lib"
 export PYTHONPATH="$PWD:$ROOT/workflow/06_analysis"
 export OMP_NUM_THREADS="${THREADS:-12}" OPENBLAS_NUM_THREADS="${THREADS:-12}" MKL_NUM_THREADS="${THREADS:-12}"
 NPROC="${NPROC:-12}"
-OUT="${OUT:-/wd1/mdenolle_data/magnitude_converged}"
+OUT="${OUT:-$CASCADIA_WD1/magnitude_converged}"
 SMALL="$ROOT/data/magnitude_converged"
-V4="/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4"
-V51="/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag"
+V4="${V4:-$CASCADIA_MAIN/data/magnitude_v4}"
+V51="${V51:-$CASCADIA_WD1/catalog_v5/v5.1_analysis/mag}"
 mkdir -p "$OUT/v4.1" "$OUT/v5.1" "$SMALL"
 run() { echo "[$(date +%F' '%T)] $*"; "$@"; }
 need() { [ -n "${FORCE:-}" ] || [ ! -s "$1" ]; }
@@ -50,10 +60,11 @@ need "$OUT/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv" && run "$PY" v51
     --data "$V51" --suffix _v51 --pm "$OUT/v5.1/cascadia_catalog_M_v51_converged.csv" --out "$OUT/v5.1" \
     --tag _converged --solver exact --v4-mags "$OUT/v4.1/cascadia_catalog_M_routeA_converged.csv" \
     > "$OUT/v5.1/table.log" 2>&1
-need "$OUT/v4.1/phase19_near_picks_routeA_legacy3000.parquet" && run "$PY" mag_converged.py near \
+need "$OUT/v4.1/phase19_near_picks_routeA_converged.parquet" && run "$PY" mag_converged.py near \
     > "$OUT/v4.1/near.log" 2>&1
 need "$SMALL/convergence_curve.csv" && run "$PY" mag_converged.py threads > "$OUT/threads.log" 2>&1
 need "$SMALL/gauge_deployments.csv" && run "$PY" mag_converged.py gauge > "$OUT/gauge.log" 2>&1
+need "$SMALL/gauge_design_test.csv" && run "$PY" mag_converged.py gauge-test > "$OUT/gauge_test.log" 2>&1
 need "$SMALL/phase19_runs.csv" && run "$PY" mag_converged.py compare > "$OUT/compare.log" 2>&1
 need "$SMALL/reconcile_db091.csv" && run "$PY" mag_converged.py reconcile > "$OUT/reconcile.log" 2>&1
 
@@ -91,5 +102,6 @@ r.main()" >> "$OUT/clusters.log" 2>&1 || true
 fi
 cd "$ROOT/workflow/05_magnitude"
 run "$PY" mag_converged.py mcb > "$OUT/mcb_compare.log" 2>&1
+run "$PY" mag_converged.py release > "$OUT/release.log" 2>&1
 run "$PY" mag_converged_report.py > "$OUT/report.log" 2>&1
 echo "[$(date +%F' '%T)] done -> $SMALL/magnitude_converged_report.html"

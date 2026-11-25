@@ -23,11 +23,16 @@ the previous ones and writes under --out, small tables under --small):
   threads    phase19 'near' ML of v4.1 with 1 and 12 BLAS threads, exact and legacy solvers
              (separate processes), and LSQR (plain and column-scaled) stopped at a series of
              iteration counts against the exact solution.
+  gauge-test the gauge design: two rows / one row, with and without the isolated term, and the new
+             full chain against the previous (two-row) converged run (gauge_design_test.csv,
+             gauge_ml_unchanged.csv).
   reconcile  on the stored pick sets: misfit of the stored, the D-B091 LSQR-to-istop-2 and the exact
              solutions, and their ML differences by region, plus the effect of the 4-MAD rejection
              (full exact chain vs exact on the stored pick set) and the picks it changes, by
              deployment (reconcile_db091.csv, reconcile_misfit.csv, reconcile_rejection_*.csv).
   mcb        Mc / b (v51_mc_b.py outputs on the converged table) against the stored tables.
+  release    converged v5.1 slim table next to the stored one (data/catalog_v5/v5.1_analysis/mag/
+             cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz) and MD5SUMS.txt.
 
 Usage (from workflow/05_magnitude; Python of the pixi env):
   python mag_converged.py patch|near|gauge|compare|threads|mcb [--out DIR] [--small DIR]
@@ -46,13 +51,15 @@ import numpy as np
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-V4 = "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4"
-V51D = "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag"
-V51CAT = "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
-OUT = "/wd1/mdenolle_data/magnitude_converged"
+import v51_paths as vp  # noqa: E402  (main checkout and data disk, as for the v5.1 scripts)
+
+V4 = str(vp.main_data("magnitude_v4"))                     # stored v4.1 run (gitignored CSVs, main checkout)
+V51D = str(vp.WD1 / "catalog_v5/v5.1_analysis/mag")        # stored v5.1 run
+V51CAT = str(vp.V51_CATALOG)
+OUT = str(vp.WD1 / "magnitude_converged")
 SMALL = os.path.normpath(os.path.join(HERE, "../../data/magnitude_converged"))
 STORED_MCB = os.path.normpath(os.path.join(HERE, "../../data/catalog_v5/v5.1_analysis/mag/mc_b"))
-PAPER_MC = "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/mc_maps/mc_regional.csv"
+ISOLATED = "7D.J35C@2013-08-09|S"    # the one station-phase term not linked to the main network
 REMOVE_V41 = {172113}
 ADDED_V41 = {900001, 900002, 900003}
 REG_ORDER = ["Axial", "Endeavour", "Explorer", "JdF ridge/plate", "Blanco", "Gorda", "Mendocino",
@@ -145,6 +152,8 @@ def near(a):
     ds = load_ds(f"{V4}/amp_distance_dataset_routeA.csv")
     an = pd.read_csv(f"{V4}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
     for solver, tag in (("exact", "converged"), ("legacy3000", "legacy3000")):
+        if os.path.exists(f"{d}/phase19_near_picks_routeA_{tag}.parquet") and not a.force:
+            continue
         nr, M, C = near_tables(ds, solver)
         off = anchor_offset(M, nr, an)
         nr = nr.assign(offset=off)
@@ -173,7 +182,7 @@ def subarray(station, stel):
     return f"{dep} {pre}"
 
 
-def gauge_one(nc, nu, anchors, region, label, out_small):
+def gauge_one(nc, nu, anchors, region, label, out_small, before_source="", stored_ml=None):
     """nc / nu: converged / unconverged near-pick tables (event_id, sp, station, stel_m, m, C,
     M_ev, res, offset). Returns the per-deployment table and the eigen table."""
     nc = nc.copy()
@@ -258,6 +267,9 @@ def gauge_one(nc, nu, anchors, region, label, out_small):
                 n_anchors=len(an_near), n_anchors_dominated=len(an_dom),
                 anchor_gap_unconv=float((MLu.reindex(an_dom.index) - an_dom).median()) if len(an_dom) else np.nan,
                 anchor_gap_conv=float((MLc.reindex(an_dom.index) - an_dom).median()) if len(an_dom) else np.nan,
+                anchor_gap_stored_file=(float((stored_ml.reindex(an_dom.index) - an_dom).median())
+                                        if stored_ml is not None and len(an_dom) else np.nan),
+                before_source=before_source,
                 dC_minus_land=dC, dC_median_minus_land=float(dCG.median()) - dCr,
                 dML_dominated=float((MLc.reindex(dom) - MLu.reindex(dom)).median()) if len(dom) else np.nan,
                 rigid_mode_eig=k / (terms.sum() + len(evG)),
@@ -291,7 +303,12 @@ def gauge(a):
     nc = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_converged.parquet")
     nu = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_legacy3000.parquet")
     an = pd.read_csv(f"{V4}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
-    t, e, m = gauge_one(nc, nu, an, reg, "v4.1", a.small)
+    st = pd.read_csv(f"{V4}/cascadia_catalog_M_routeA.csv", usecols=["event_id", "ML", "ML_method"])
+    st = st[st.ML_method == "near"].set_index("event_id").ML
+    t, e, m = gauge_one(nc, nu, an, reg, "v4.1", a.small,
+                        before_source="v4.1: 'unconv' columns = legacy3000 rerun at 12 threads (the stored per-pick "
+                                      "table was not kept); anchor_gap_stored_file = the stored v4.1 file",
+                        stored_ml=st)
     out.append(t); eig.append(e); meta["v4.1"] = m
     # v5.1: converged from the table step, stored legacy from the v5.1 piece
     ds = pd.read_csv(f"{V51D}/amp_distance_dataset_v51.csv", usecols=["station", "stel_m"]).drop_duplicates("station")
@@ -303,7 +320,8 @@ def gauge(a):
         x["stel_m"] = x.station.map(stel)
     nc["offset"] = anchor_offset(nc.groupby("event_id").M_ev.first(), nc, an)
     nu["offset"] = anchor_offset(nu.groupby("event_id").M_ev.first(), nu, an)
-    t, e, m = gauge_one(nc, nu, an, reg, "v5.1", a.small)
+    t, e, m = gauge_one(nc, nu, an, reg, "v5.1", a.small,
+                        before_source="v5.1: 'unconv' columns = the stored v5.1 run (phase19_near_picks_v51.parquet)")
     out.append(t); eig.append(e); meta["v5.1"] = m
     t = pd.concat(out)
     t.to_csv(f"{a.small}/gauge_deployments.csv", index=False, float_format="%.4f")
@@ -311,7 +329,8 @@ def gauge(a):
     json.dump(meta, open(f"{a.small}/gauge_meta.json", "w"), indent=1)
     cols = ["group", "n_terms", "n_picks", "n_events", "n_events_with_land", "n_events_with_other_obs", "n_anchors",
             "n_anchors_dominated", "stiffness", "rigid_mode_eig", "se_level", "dphi_opt_0.5", "dphi_naive_0.5",
-            "dC_minus_land", "dML_dominated", "anchor_gap_unconv", "anchor_gap_conv", "main_region"]
+            "dC_minus_land", "dML_dominated", "anchor_gap_unconv", "anchor_gap_stored_file", "anchor_gap_conv",
+            "main_region"]
     with pd.option_context("display.width", 250, "display.max_columns", 30):
         for lab in ("v4.1", "v5.1"):
             print(lab, meta[lab])
@@ -320,6 +339,17 @@ def gauge(a):
 
 
 # ------------------------------------------------------------------ compare
+def med_ci(v, nboot=2000, seed=0):
+    """Median and bootstrap 95% interval of the median."""
+    v = np.asarray(v, float)
+    v = v[np.isfinite(v)]
+    if len(v) < 3:
+        return (float(np.median(v)) if len(v) else np.nan), np.nan, np.nan
+    rng = np.random.default_rng(seed)
+    b = np.median(v[rng.integers(0, len(v), (nboot, len(v)))], axis=1)
+    return float(np.median(v)), float(np.quantile(b, .025)), float(np.quantile(b, .975))
+
+
 def tensor_rows(x, label, region):
     """x: event_id, ML, ML_method, Mw_mt (matched tensors). Rows for every event with ML and
     for the 'near' events only (the mapped ML depends on the Theil-Sen mapping fit)."""
@@ -327,15 +357,25 @@ def tensor_rows(x, label, region):
     for sub, xx in (("all", x), ("near", x[x.ML_method == "near"])):
         for lo, hi in ((3, 4.5), (4.5, 5.5), (5.5, 7.5)):
             s = xx[(xx.Mw_mt >= lo) & (xx.Mw_mt < hi)]
-            rows.append(dict(solution=label, events=sub, Mw_class=f"{lo}-{hi}", n=len(s),
-                             ML_minus_Mw=float(np.median(s.ML - s.Mw_mt)) if len(s) else np.nan))
+            m_, l_, h_ = med_ci(s.ML - s.Mw_mt)
+            rows.append(dict(solution=label, events=sub, Mw_class=f"{lo}-{hi}", n=len(s), ML_minus_Mw=m_,
+                             ci95_lo=l_, ci95_hi=h_))
         s = xx[(xx.Mw_mt >= 3) & (xx.Mw_mt < 4.5)]
         off = s.event_id.map(region).isin(OFF6 + COAST)
         for lab, o in (("offshore and coastal labels", off), ("onshore labels", ~off)):
             g = s[o]
-            rows.append(dict(solution=label, events=sub, Mw_class=f"3-4.5, {lab}", n=len(g),
-                             ML_minus_Mw=float(np.median(g.ML - g.Mw_mt)) if len(g) else np.nan))
+            m_, l_, h_ = med_ci(g.ML - g.Mw_mt)
+            rows.append(dict(solution=label, events=sub, Mw_class=f"3-4.5, {lab}", n=len(g), ML_minus_Mw=m_,
+                             ci95_lo=l_, ci95_hi=h_))
     return rows
+
+
+def tensor_region(x, label, region):
+    """Near events, tensor Mw 3-4.5, median ML - Mw by region label."""
+    s = x[(x.ML_method == "near") & (x.Mw_mt >= 3) & (x.Mw_mt < 4.5)].copy()
+    s["region"] = s.event_id.map(region)
+    return [dict(solution=label, region=r, n=len(g), ML_minus_Mw=float(np.median(g.ML - g.Mw_mt)))
+            for r, g in s.groupby("region")]
 
 
 def anchor_rows(x, label, region):
@@ -392,10 +432,16 @@ def compare(a):
     # ComCat anchors and tensors
     an4 = pd.read_csv(f"{V4}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
     mt4 = pd.read_csv(f"{V4}/comcat_mt_matched_v4.csv")[["event_id", "Mw_mt"]].drop_duplicates("event_id")
-    arows, trows = [], []
+    arows, trows, rrows = [], [], []
     for lab, f in (("v4.1 stored", s4), ("v4.1 converged", c4)):
         arows += anchor_rows(an4.merge(f[f.ML_method == "near"][["event_id", "ML"]], on="event_id"), lab, region)
         trows += tensor_rows(mt4.merge(f[["event_id", "ML", "ML_method"]], on="event_id"), lab, region)
+        rrows += tensor_region(mt4.merge(f[["event_id", "ML", "ML_method"]], on="event_id"), lab, region)
+    # onshore labels split at 42 N: northern California moves with the NC network
+    on = d[(d.ML_method_s == "near") & ~d.region.isin(OFF6 + COAST)].copy()
+    on["part"] = np.where(d.loc[on.index, "evla_s"] < 42.0, "onshore labels, south of 42 N (northern California)",
+                          "onshore labels, north of 42 N")
+    tabs["v41_onshore_split"] = grp(on, "part", "dML")
     # ---- v5.1: converged vs stored (tables)
     s5 = pd.read_csv(f"{V51D}/cascadia_catalog_v5.1_magnitudes.csv", low_memory=False)
     c5 = pd.read_csv(f"{a.out}/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv", low_memory=False)
@@ -430,8 +476,12 @@ def compare(a):
         f = f.rename(columns={"ID": "event_id"})
         arows += anchor_rows(an5.merge(f[f.ML_method == "near"][["event_id", "ML"]], on="event_id"), lab, region)
         trows += tensor_rows(mt5.merge(f[["event_id", "ML", "ML_method"]], on="event_id"), lab, region)
+        rrows += tensor_region(mt5.merge(f[["event_id", "ML", "ML_method"]], on="event_id"), lab, region)
     tabs["comcat_anchors"] = pd.DataFrame(arows)
     tabs["tensors"] = pd.DataFrame(trows)
+    tr = pd.DataFrame(rrows)
+    tabs["tensors_by_region"] = tr.pivot_table(index="region", columns="solution", values="ML_minus_Mw").join(
+        tr[tr.solution == "v4.1 stored"].set_index("region").n.rename("n_v41")).reset_index()
     # phase19 provenance numbers side by side
     pv = []
     for lab, f in (("v4.1 converged", f"{a.out}/v4.1/cascadia_catalog_M_routeA_converged_raw.provenance.json"),
@@ -451,7 +501,8 @@ def compare(a):
     json.dump(res, open(f"{a.small}/compare_meta.json", "w"), indent=1)
     with pd.option_context("display.width", 250, "display.max_columns", 30):
         for k in ("v41_by_region", "v41_by_mag", "v41_by_dist", "v41_by_method", "v41_M_type", "v51_by_region",
-                  "v51_minus_v41", "comcat_anchors", "tensors", "phase19_runs"):
+                  "v51_minus_v41", "comcat_anchors", "tensors", "tensors_by_region", "v41_onshore_split",
+                  "phase19_runs"):
             print(f"== {k}\n{tabs[k].round(3).to_string(index=False)}")
     print(res)
     # per-event file of the v4.1 change (small enough for the repo as gz)
@@ -501,35 +552,128 @@ def threads(a):
 
 
 def convergence_curve(a):
-    """LSQR (plain, phase19 settings, and column-scaled) stopped at a series of iteration
-    counts, on the final (pass-2) v4.1 near pick set of the exact run, against the exact
-    solution: max and p99 |ML - ML_exact| of the near events (same anchor offset rule)."""
+    """LSQR stopped at a series of iteration counts against the exact solution of the same
+    system, near events of the final v4.1 pick set (ML with the anchor offset recomputed):
+      * the stored system (two gauge rows, the isolated J35C S term kept) with the phase19
+        LSQR settings (damp 1e-3, atol = btol = 1e-8): how far the stored runs were off;
+      * the new system (one gauge row, isolated term dropped) with the same tolerances;
+      * the new system with the column-scaled LSQR of --solver lsqr (atol = btol = 1e-14).
+    The exact solutions of the two systems give the same ML to 0.0015 (gauge-test)."""
     import phase19_solver as ps
-    nr = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_converged.parquet")
+    nr = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_converged.parquet", columns=["event_id", "sp", "m"])
+    leg = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_legacy3000.parquet", columns=["event_id", "sp", "m"])
+    stored_sys = pd.concat([nr, leg[leg.sp == ISOLATED]], ignore_index=True)
     an = pd.read_csv(f"{V4}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
-    s = ps.build(nr)
-    xe, _ = ps.solve_exact(s)
-    ne = s["ne"]
-    cnt = np.bincount(s["e"])
-    ok = cnt >= 3
-
-    def ml(x):
-        M = pd.Series(x[:ne], index=s["ev_ids"])
-        return (M + anchor_offset(M, nr, an)).to_numpy()
-
-    mle = ml(xe)
     rows = []
-    for scaled, its in ((False, (500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 12000)),
-                        (True, (50, 100, 200, 300, 400))):
+    for label, d, gauge, scaled, tol, its in (
+            ("LSQR (phase19 settings, stored system: two gauge rows)", stored_sys, "PS", False, 1e-8,
+             (500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 12000)),
+            ("LSQR (phase19 tolerances, new system: one gauge row)", nr, "P", False, 1e-8,
+             (1000, 2000, 3000, 4000, 6000)),
+            ("LSQR column-scaled (new system)", nr, "P", True, 1e-14, (50, 100, 200, 300, 400))):
+        s_ = ps.build(d, gauge=gauge)
+        xe, _ = ps.solve_exact(s_)          # both systems pass the gauge check
+        ne = s_["ne"]
+        ok = np.bincount(s_["e"]) >= 3
+
+        def ml(x):
+            M = pd.Series(x[:ne], index=s_["ev_ids"])
+            return (M + anchor_offset(M, d, an)).to_numpy()
+
+        mle = ml(xe)
         for it in its:
-            x, info = ps.solve_lsqr(s, iter_lim=it, tol=1e-8 if not scaled else 1e-14, check=False, scaled=scaled)
+            x, info = ps.solve_lsqr(s_, iter_lim=it, tol=tol, check=False, scaled=scaled)
             dd = np.abs(ml(x) - mle)[ok]
-            rows.append(dict(solver="LSQR column-scaled" if scaled else "LSQR (phase19 settings)", iter_lim=it,
-                             istop=info["istop"], itn=info["itn"], max_abs=float(dd.max()),
+            rows.append(dict(solver=label, iter_lim=it, istop=info["istop"], itn=info["itn"], max_abs=float(dd.max()),
                              p99_abs=float(np.quantile(dd, .99)), median_abs=float(np.median(dd)),
                              normal_res_rel=info["normal_res_rel"]))
             print(rows[-1], flush=True)
     pd.DataFrame(rows).to_csv(f"{a.small}/convergence_curve.csv", index=False, float_format="%.4e")
+
+
+# ------------------------------------------------------------------ gauge design test
+def gauge_test(a):
+    """The gauge design (verifier must-fix 1), on the final v4.1 pick set of the exact run
+    plus the 9 picks of the isolated term 7D.J35C@2013-08-09|S (from the legacy pick set):
+    stored design (two rows, isolated term kept), new design (one row, isolated term
+    dropped), one row with the term kept, and two rows with the term dropped (the case the
+    stored design would have hit without the isolated term). Same exact solver; the gauge
+    check is reported, not enforced. Also: the new full chain against the previous
+    converged run (two rows), unrounded, v4.1 and v5.1 (gauge_ml_unchanged.csv)."""
+    import phase19_solver as ps
+    nr = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_converged.parquet", columns=["event_id", "sp", "m"])
+    leg = pd.read_parquet(f"{a.out}/v4.1/phase19_near_picks_routeA_legacy3000.parquet", columns=["event_id", "sp", "m"])
+    iso = leg[leg.sp == ISOLATED]
+    assert ISOLATED not in set(nr.sp) and len(iso) == 9, (len(iso),)
+    with_iso = pd.concat([nr, iso], ignore_index=True)
+    an = pd.read_csv(f"{V4}/route_b_ml_anchors_routeA.csv")[["event_id", "ml"]]
+    reg = pd.read_csv(V51CAT, usecols=["ID", "region"]).set_index("ID").region
+    rows, mls = [], {}
+    for name, d, g in (("stored design: two rows (sum P, sum S), isolated term kept", with_iso, "PS"),
+                       ("new: one row (sum P), isolated term dropped", nr, "P"),
+                       ("one row, isolated term kept", with_iso, "P"),
+                       ("two rows, isolated term dropped", nr, "PS")):
+        s_ = ps.build(d, gauge=g)
+        S0 = ps.schur_blocks(s_)[0]
+        gi = ps.check_gauge(s_, S0, raise_on_fail=False)
+        x, _ = ps.solve_exact(s_, check=False)
+        ne = s_["ne"]
+        M = pd.Series(x[:ne], index=s_["ev_ids"])
+        C = pd.Series(x[ne:], index=s_["sp_ids"])
+        cnt = d.groupby("event_id").size()
+        M = M[cnt.reindex(M.index) >= 3]
+        ml = M + anchor_offset(M, d, an)
+        mls[name] = ml
+        r = (s_["b"] - s_["A"] @ x)[:s_["n"]]
+        main = C[C.index != ISOLATED]
+        rows.append(dict(design=name, gauge_rows=gi["n_gauge_rows"], connected_pieces=gi["n_components"],
+                         null_directions=gi["n_null_numerical"],
+                         check_passes=bool(gi["n_components"] == gi["n_null_numerical"] == gi["n_gauge_rows"]),
+                         misfit=float(r @ r),
+                         meanS_minus_meanP=float(main[main.index.str.endswith("|S")].mean()
+                                                 - main[main.index.str.endswith("|P")].mean()),
+                         isolated_term=float(C.get(ISOLATED, np.nan))))
+    ref = mls["stored design: two rows (sum P, sum S), isolated term kept"]
+    for r_ in rows:
+        v = mls[r_["design"]]
+        i = v.index.intersection(ref.index)
+        dd = v[i] - ref[i]
+        r_["max_abs_dML_vs_stored_design"] = float(dd.abs().max())
+        med = dd.groupby(reg.reindex(i).to_numpy()).median()
+        for k in ("Mendocino", "Offshore forearc", "Gorda", "Blanco", "Axial", "Explorer", "Puget/Georgia"):
+            r_[f"dML_{k}"] = float(med.get(k, np.nan))
+    t = pd.DataFrame(rows)
+    t.to_csv(f"{a.small}/gauge_design_test.csv", index=False, float_format="%.4f")
+    with pd.option_context("display.width", 250, "display.max_columns", 30):
+        print(t.round(4).to_string(index=False))
+    # the new full chain against the previous converged run (two gauge rows), unrounded
+    prev = f"{a.out}/previous_two_row_gauge"
+    out = []
+    p4 = f"{prev}/threads/ml_exact_t12.parquet"
+    n4 = f"{a.out}/threads/ml_exact_t12.parquet"
+    if os.path.exists(p4) and os.path.exists(n4):
+        x0 = pd.read_parquet(p4).set_index("event_id").ML
+        x1 = pd.read_parquet(n4).set_index("event_id").ML
+        i = x0.index.intersection(x1.index)
+        out.append(dict(catalog="v4.1", n_prev=len(x0), n_new=len(x1), n_common=len(i),
+                        max_abs=float((x1[i] - x0[i]).abs().max()), median=float((x1[i] - x0[i]).median())))
+    p5 = f"{prev}/v5.1/phase19_near_picks_v51_converged.parquet"
+    n5 = f"{a.out}/v5.1/phase19_near_picks_v51_converged.parquet"
+    an5 = pd.read_csv(f"{V51D}/route_b_ml_anchors_v51.csv")[["event_id", "ml"]]
+    if os.path.exists(p5) and os.path.exists(n5):
+        def ml5(f):
+            nr_ = pd.read_parquet(f, columns=["event_id", "M_ev"])
+            M = nr_.groupby("event_id").M_ev.first()
+            k = nr_.groupby("event_id").size()
+            return (M + anchor_offset(M, nr_, an5))[k[k >= 3].index]
+        x0, x1 = ml5(p5), ml5(n5)
+        i = x0.index.intersection(x1.index)
+        out.append(dict(catalog="v5.1", n_prev=len(x0), n_new=len(x1), n_common=len(i),
+                        max_abs=float((x1[i] - x0[i]).abs().max()), median=float((x1[i] - x0[i]).median())))
+    if out:
+        u = pd.DataFrame(out)
+        u.to_csv(f"{a.small}/gauge_ml_unchanged.csv", index=False, float_format="%.6f")
+        print(u.to_string(index=False))
 
 
 # ------------------------------------------------------------------ reconcile with D-B091
@@ -543,11 +687,23 @@ def reconcile(a):
     for lab, f, anf in (("v4.1", f"{a.out}/v4.1/phase19_near_picks_routeA_legacy3000.parquet",
                          f"{V4}/route_b_ml_anchors_routeA.csv"),
                         ("v5.1", f"{V51D}/phase19_near_picks_v51.parquet", f"{V51D}/route_b_ml_anchors_v51.csv")):
+        # the stored system: the stored pick set (isolated J35C S term included) with the two gauge rows of
+        # the stored runs and of the D-B091 check; it passes the gauge check (2 pieces, 2 null directions).
         nu = pd.read_parquet(f)
         an = pd.read_csv(anf)[["event_id", "ml"]]
-        s = ps.build(nu)
+        s = ps.build(nu, gauge="PS")
         ne, n, A, b = s["ne"], s["n"], s["A"], s["b"]
         xe, _ = ps.solve_exact(s)
+        # the new system (isolated term dropped, one gauge row) gives the same ML
+        nf_ = ps.main_component(nu, verbose=False)
+        s1 = ps.build(nf_)
+        x1, _ = ps.solve_exact(s1)
+        M1 = pd.Series(x1[:s1["ne"]], index=s1["ev_ids"])
+        M0 = pd.Series(xe[:ne], index=s["ev_ids"])
+        k1 = nf_.groupby("event_id").size()
+        k1 = k1[k1 >= 3].index
+        d01 = ((M1 + anchor_offset(M1, nf_, an)).reindex(k1) - (M0 + anchor_offset(M0, nu, an)).reindex(k1)).abs()
+        print(f"{lab}: exact, stored system vs new system: max |dML| {d01.max():.5f}", flush=True)
         xu = np.concatenate([nu.groupby("event_id").M_ev.first().reindex(s["ev_ids"]).to_numpy(),
                              nu.groupby("sp").C.first().reindex(s["sp_ids"]).to_numpy()])
         xl, il = ps.solve_lsqr(s, iter_lim=50000, tol=1e-8, check=False, scaled=False)
@@ -560,7 +716,9 @@ def reconcile(a):
         for name, x in (("3000 iterations" + (" (rerun, 12 threads)" if lab == "v4.1" else " (stored)"), xu),
                         ("D-B091 LSQR to istop 2", xl), ("exact", xe)):
             r = (b - A @ x)[:n]
-            mrows.append(dict(catalog=lab, solution=name, misfit=float(r @ r), r_norm=float(np.sqrt(r @ r)),
+            mrows.append(dict(catalog=lab, solution=name, system="stored (two gauge rows, isolated term kept)",
+                              max_abs_dML_exact_new_vs_stored_system=float(d01.max()),
+                              misfit=float(r @ r), r_norm=float(np.sqrt(r @ r)),
                               itn=il["itn"] if name.startswith("D-B091") else None,
                               istop=il["istop"] if name.startswith("D-B091") else None))
         mle, mll, mlu = ml(xe), ml(xl), ml(xu)
@@ -605,6 +763,31 @@ def reconcile(a):
         print(r.round(3).to_string(index=False))
 
 
+# ------------------------------------------------------------------ release files
+SLIM_COLS = ["ID", "M", "M_unc", "M_type", "ML", "ML_unc", "ML_method", "ml_caution", "depth_quality",
+             "n_ML", "n_sta_ML", "Mw_mt", "comcat_id", "mt_match", "anchor_ml", "is_earthquake", "ML_v4hyp",
+             "ML_v4hyp_unc", "n_ML_v4hyp", "Mw_mt_v4"]
+
+
+def release(a):
+    """The converged v5.1 slim table next to the stored one (new name, same columns as
+    v51_magnitude_report.py writes), and MD5SUMS.txt of the converged files under --out."""
+    m = pd.read_csv(f"{a.out}/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv", low_memory=False)
+    fo = os.path.normpath(os.path.join(HERE, "../../data/catalog_v5/v5.1_analysis/mag/"
+                                             "cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz"))
+    m[SLIM_COLS].to_csv(fo, index=False, float_format="%.3f", compression="gzip")
+    print(f"wrote {fo}")
+    files = [f"v4.1/cascadia_catalog_M_routeA_converged.csv", "v4.1/cascadia_catalog_M_routeA_converged.provenance.json",
+             "v5.1/cascadia_catalog_M_v51_converged.csv", "v5.1/cascadia_catalog_M_v51_converged.provenance.json",
+             "v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv", "v5.1/phase19_station_terms_v51_converged.csv",
+             "v5.1/phase19_near_picks_v51_converged.parquet", "v4.1/phase19_near_picks_routeA_converged.parquet"]
+    lines = [f"{md5(f'{a.out}/{f}')}  {f}" for f in files if os.path.exists(f"{a.out}/{f}")]
+    lines.append(f"{md5(fo)}  {os.path.relpath(fo, os.path.join(HERE, '../..'))} (repository)")
+    open(f"{a.out}/MD5SUMS.txt", "w").write("\n".join(lines) + "\n")
+    open(f"{a.small}/MD5SUMS.txt", "w").write("\n".join(lines) + "\n")
+    print("\n".join(lines))
+
+
 # ------------------------------------------------------------------ Mc / b
 def mcb(a):
     new = pd.read_csv(f"{a.out}/mc_b/mc_b_regional.csv")
@@ -622,15 +805,12 @@ def mcb(a):
         sel = m[(m.period == "all") & m.version.isin(["A_v4M_v4loc", "C_v51M_v51loc"])]
         print(sel[k + ["n_stored", "n_conv", "mc_best_stored", "mc_best_conv", "b_stored", "b_conv", "d_mc_best",
                        "d_b"]].round(2).to_string(index=False))
-    if os.path.exists(PAPER_MC):
-        p = pd.read_csv(PAPER_MC)
-        print("paper mc_regional.csv columns:", list(p.columns)[:20])
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("stage", choices=["patch", "near", "gauge", "compare", "threads", "threads-worker", "curve",
-                                      "reconcile", "mcb"])
+                                      "reconcile", "mcb", "gauge-test", "release"])
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--small", default=SMALL)
     ap.add_argument("--solver", default="exact")
@@ -639,7 +819,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     os.makedirs(a.small, exist_ok=True)
     {"patch": patch, "near": near, "gauge": gauge, "compare": compare, "threads": threads,
-     "threads-worker": threads_worker, "curve": convergence_curve, "reconcile": reconcile, "mcb": mcb}[a.stage](a)
+     "threads-worker": threads_worker, "curve": convergence_curve, "reconcile": reconcile, "mcb": mcb,
+     "gauge-test": gauge_test, "release": release}[a.stage](a)
 
 
 if __name__ == "__main__":

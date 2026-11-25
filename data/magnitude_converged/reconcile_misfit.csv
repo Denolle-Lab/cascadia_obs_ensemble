@@ -1,7 +1,7 @@
-catalog,solution,misfit,r_norm,itn,istop
-v4.1,stored (3000 iterations),72504.569,269.267,,
-v4.1,D-B091 LSQR to istop 2,72321.076,268.926,4658.000,2.000
-v4.1,exact,72320.585,268.925,,
-v5.1,stored (3000 iterations),72021.387,268.368,,
-v5.1,D-B091 LSQR to istop 2,71749.167,267.860,4863.000,2.000
-v5.1,exact,71747.892,267.858,,
+catalog,solution,system,max_abs_dML_exact_new_vs_stored_system,misfit,r_norm,itn,istop
+v4.1,"3000 iterations (rerun, 12 threads)","stored (two gauge rows, isolated term kept)",0.002,72504.569,269.267,,
+v4.1,D-B091 LSQR to istop 2,"stored (two gauge rows, isolated term kept)",0.002,72321.076,268.926,4658.000,2.000
+v4.1,exact,"stored (two gauge rows, isolated term kept)",0.002,72320.585,268.925,,
+v5.1,3000 iterations (stored),"stored (two gauge rows, isolated term kept)",0.003,72021.387,268.368,,
+v5.1,D-B091 LSQR to istop 2,"stored (two gauge rows, isolated term kept)",0.003,71749.167,267.860,4863.000,2.000
+v5.1,exact,"stored (two gauge rows, isolated term kept)",0.003,71747.892,267.858,,

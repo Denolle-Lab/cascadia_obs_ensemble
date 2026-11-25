@@ -12,18 +12,19 @@
  "theil_max": 5000,
  "damp": 0.001,
  "gauge_w": 1000.0,
- "anchor_offset": 0.3427257127735097,
+ "gauge": "P",
+ "anchor_offset": 0.3428290375135815,
  "n_anchors": 3414,
- "anchor_std": 0.17484055258068193,
- "s_anchor": 0.16584215304229616,
+ "anchor_std": 0.17484816760227626,
+ "s_anchor": 0.16585021115989826,
  "mapped_fit": {
-  "intercept": -0.28868154236044363,
-  "slope": 0.9990474250507168,
-  "std": 0.6506288673831324
+  "intercept": -0.2887279878153515,
+  "slope": 0.9990928361846003,
+  "std": 0.6506392326764628
  },
  "mw_cal_offset": {
-  "mapped": 1.507356105349237,
-  "near": 0.16876311564781155
+  "mapped": 1.5072279455358297,
+  "near": 0.16868508034961893
  },
  "m_type": {
   "ML": 130246,
@@ -42,45 +43,47 @@
  "inversions": [
   {
    "method": "exact",
-   "refine_step": 1.428578406841979e-13,
-   "normal_res_rel": 2.8651914048076607e-13,
+   "refine_step": 5.336392757705832e-15,
+   "normal_res_rel": 1.5405215916840298e-13,
    "istop": null,
    "itn": null,
    "eig_min": [
-    0.03492721402143231,
-    0.7259877323313902,
-    0.9443973719167391
+    0.724100019446683,
+    0.912418271052362,
+    1.3770573489509923
    ],
-   "n_components": 2,
-   "terms_outside_main": [
-    "7D.J35C@2013-08-09|S"
-   ],
-   "near_events_outside_main": 0,
-   "n_picks": 1363151,
-   "n_events": 160591,
-   "n_terms": 1332,
-   "r_norm": 286.6559860138246
+   "n_components": 1,
+   "terms_outside_main": [],
+   "n_null_numerical": 1,
+   "n_gauge_rows": 1,
+   "gauge_null_sv": 0.7084336856772447,
+   "n_picks": 1363142,
+   "n_events": 160582,
+   "n_terms": 1331,
+   "gauge": "P",
+   "r_norm": 286.6559856007244
   },
   {
    "method": "exact",
-   "refine_step": 2.645426267740327e-13,
-   "normal_res_rel": 3.075677000496058e-13,
+   "refine_step": 1.524542669297754e-14,
+   "normal_res_rel": 5.177892284045154e-14,
    "istop": null,
    "itn": null,
    "eig_min": [
-    0.03435206534851333,
-    0.7062717623989905,
-    0.8712786357156094
+    0.704690722767421,
+    0.8376470256218409,
+    1.3709830699786105
    ],
-   "n_components": 2,
-   "terms_outside_main": [
-    "7D.J35C@2013-08-09|S"
-   ],
-   "near_events_outside_main": 0,
-   "n_picks": 1356944,
-   "n_events": 160509,
-   "n_terms": 1332,
-   "r_norm": 267.9018857668047
+   "n_components": 1,
+   "terms_outside_main": [],
+   "n_null_numerical": 1,
+   "n_gauge_rows": 1,
+   "gauge_null_sv": 0.7084336856772419,
+   "n_picks": 1356935,
+   "n_events": 160500,
+   "n_terms": 1331,
+   "gauge": "P",
+   "r_norm": 267.9018853157469
   }
  ]
 }

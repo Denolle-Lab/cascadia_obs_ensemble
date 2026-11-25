@@ -23,6 +23,12 @@ def sections(t, tab, img, pi):
     r41, r51, d5 = t("v41_by_region"), t("v51_by_region"), t("v51_minus_v41")
     rec, recm = t("reconcile_db091"), t("reconcile_misfit")
     mcb, pb = t("mc_b_change"), t("paired_b_converged")
+    gdt, gmu, tbr, onsp = t("gauge_design_test"), t("gauge_ml_unchanged"), t("tensors_by_region"), t("v41_onshore_split")
+
+    def ten_ci(sol, ev, cls):
+        x = ten[(ten.solution == sol) & (ten.events == ev) & (ten.Mw_class == cls)]
+        return (f"{x.ML_minus_Mw.iat[0]:+.2f} [{x.ci95_lo.iat[0]:+.2f}, {x.ci95_hi.iat[0]:+.2f}]"
+                if len(x) and "ci95_lo" in x else "?")
     cm = json.load(open(f"{mc.SMALL}/compare_meta.json")) if os.path.exists(f"{mc.SMALL}/compare_meta.json") else {}
     gm = json.load(open(f"{mc.SMALL}/gauge_meta.json")) if os.path.exists(f"{mc.SMALL}/gauge_meta.json") else {}
     c41 = runs.set_index("run").loc["v4.1 converged"]
@@ -46,7 +52,8 @@ def sections(t, tab, img, pi):
     d5oc = _v(d5, "region == 'offshore and coastal labels'", "d_conv")
     d5os = _v(d5, "region == 'offshore and coastal labels'", "d_stored")
     d5xc = _v(d5, "region == 'Axial'", "d_conv")
-    cp = cur[cur.solver.str.startswith("LSQR (phase19")]
+    cp = cur[cur.solver.str.startswith("LSQR (phase19 settings")]
+    cn = cur[cur.solver.str.startswith("LSQR (phase19 tolerances, new")]
     cs = cur[cur.solver.str.startswith("LSQR column")]
     at3000 = cp[cp.iter_lim == 3000].iloc[0]
     conv_row = cp[cp.istop.isin([1, 2])].head(1)
@@ -61,13 +68,22 @@ def sections(t, tab, img, pi):
     o41 = _v(anc, "solution == 'v4.1 stored' and value == 'offshore and coastal labels'", "median")
     n41a = _v(anc, "solution == 'v4.1 converged' and value == 'offshore and coastal labels'", "median")
     n41, n51 = t("v41_by_region_near"), t("v51_by_region_near")
+    h.append("<div class='box'><b>Independent verification.</b> A separate verifier re-derived the converged "
+             "magnitudes (scripts and outputs in <code>/wd1/mdenolle_data/magnitude_converged/verify/</code>) and found "
+             "them fit to replace the paper's magnitudes. Its checks: the solution is the true minimum, it is set by "
+             "the data and not by the damping (damping 1e-4 changes ML by at most 0.001, damping 1e-2 by 0.026 at the "
+             "99th percentile), and the anchor test is not circular (offset from half of the anchors, gap measured on the "
+             "other half: offshore +0.116 stored, +0.009 converged, in 99.8% of 500 splits closer to zero). Its "
+             "must-fix items are resolved here: one gauge row with a null-direction check (section 1b); the text that "
+             "said two gauge rows fix the P-S difference is corrected; the isolated term no longer appears in the "
+             "station-term tables.</div>")
     h.append("<div class='box'><b>Summary.</b><ul>"
              "<li>The phase19 inversion is now solved exactly: the 161,093 event terms are eliminated and the "
-             "1,338 station-phase terms come from a direct solve of their Schur complement, "
-             "followed by two refinement steps. The last refinement step is 3e-13 and the relative "
-             "normal-equation residual 2e-13. Two independent solvers agree with it: a sparse LU factorisation "
-             "of the full normal equations (5e-7) and a column-scaled LSQR, which converges in about 330 "
-             f"iterations. One and twelve BLAS threads give the same ML to {ex.max_abs:.0e}.</li>"
+             "1,337 station-phase terms come from a direct solve of their Schur complement, "
+             "followed by two refinement steps. The last refinement step is at most 6e-14 and the relative "
+             "normal-equation residual at most 3e-13. Two independent solvers agree with it: a sparse LU "
+             "factorisation of the full normal equations (5e-7) and a column-scaled LSQR, which converges in "
+             f"about 250 iterations to the same output file. One and twelve BLAS threads give the same ML to {ex.max_abs:.0e}.</li>"
              f"<li>The stored solver, LSQR stopped at 3000 iterations, is {at3000.median_abs:.2f} from the "
              f"minimum for the median event and {at3000.p99_abs:.2f} at the 99th percentile. It is not "
              f"reproducible: 1 and 12 threads differ by up to {lg.max_abs:.2f} (99th percentile {lg.p99_abs:.3f}), "
@@ -94,10 +110,20 @@ def sections(t, tab, img, pi):
              f"at offshore labels, near events, ML - Mw {ten_med('v4.1 stored', 'near', '3-4.5, offshore and coastal labels'):+.2f}"
              f" -> {ten_med('v4.1 converged', 'near', '3-4.5, offshore and coastal labels'):+.2f} (v5.1 "
              f"{ten_med('v5.1 stored', 'near', '3-4.5, offshore and coastal labels'):+.2f} -> "
-             f"{ten_med('v5.1 converged', 'near', '3-4.5, offshore and coastal labels'):+.2f}).</li>"
+             f"{ten_med('v5.1 converged', 'near', '3-4.5, offshore and coastal labels'):+.2f}). The ComCat ML anchors "
+             "favour the converged solution clearly; the tensor comparison does not decide between the two "
+             "(43 events, overlapping 95% intervals, Gorda worse, section 4).</li>"
+             "<li>'Onshore' is not uniform: near events at onshore labels south of 42 N (northern California, 3,708 "
+             "events in v4.1) drop by -0.19 with the northern California network NC; north of 42 N they change by "
+             "+0.01. The onshore Mc box b goes from 0.92 to 1.01.</li>"
+             "<li>Gauge rows (verifier must-fix): the stored design had two gauge rows, of which the S row was "
+             "absorbed by one isolated term (7D.J35C@2013-08-09|S, C = -303). Now the isolated picks are dropped, one "
+             "gauge row is used, and the solver checks that the gauge rows equal the null directions. ML is unchanged "
+             "(largest difference 0.0015 in the design test, see section 1b for the full-chain comparison).</li>"
              "<li>Gauge: every ocean-bottom deployment is tied to the land network well enough that its formal "
-             "level error is below 0.1 (most below 0.03). The stored offsets came from the solver, not from weak "
-             "ties. The ties that are thin are NV 2014, 7A 2010, NV 2011 and OO 2014 (Axial). X9 (Blanco) has "
+             "level error is below 0.1 (most below 0.03); a bootstrap gives errors 1.0-1.7 times larger (NV 2014 "
+             "about 0.12), and the thinly tied ones carry about 0.1 of model uncertainty. The stored offsets came "
+             "from the solver, not from weak ties. The ties that are thin are NV 2014, 7A 2010, NV 2011 and OO 2014 (Axial). X9 (Blanco) has "
              "only 3-4 events with land picks; 3,800 events shared with 7D Y2, 401 with 7D Y3 and 108 with Z5 2013 "
              "carry its level. In "
              "phase19 the anchors set one global offset only; the cross-links set every deployment level. The "
@@ -114,9 +140,8 @@ def sections(t, tab, img, pi):
     # ---- 1 solver
     h.append("<h2>1. Solver change and convergence proof</h2>")
     h.append("<p>phase19 fits station ML = M_i + C_jp to the Hutton-Boore station magnitudes within 150 km, with "
-             "two gauge rows (sum of the P terms = 0 and sum of the S terms = 0, row weight 1000) and damping "
-             "1e-3. The objective is unchanged. The stored runs solved it with LSQR stopped at 3000 iterations "
-             "(istop 7). LSQR is slow on this system for two reasons. First, the column norms range from 1 (an "
+             "damping 1e-3 and gauge rows of weight 1000 (section 1b for the gauge). The stored runs solved it with "
+             "LSQR stopped at 3000 iterations (istop 7). LSQR is slow on this system for two reasons. First, the column norms range from 1 (an "
              "event with one pick) to 130 (a station-phase term with 16,876 picks), and the gauge rows have weight "
              "1000. Second, moving a whole "
              "deployment against its events changes the misfit little per unknown: the eigenvalue of that mode "
@@ -125,24 +150,23 @@ def sections(t, tab, img, pi):
              "LSQR resolves these modes last. Until it does, the large site terms of sediment-covered "
              "ocean-bottom stations stay in the event terms, so offshore ML comes out too high.</p>")
     h.append("<p>The new default, <code>phase19_solver.solve(method='exact')</code>, eliminates the event terms "
-             "(their block of the normal equations is diagonal). The 1,338 x 1,338 Schur complement of the station "
+             "(their block of the normal equations is diagonal). The 1,337 x 1,337 Schur complement of the station "
              "terms is solved by a symmetric eigendecomposition, and two refinement steps follow on the full sparse "
              "system. It raises <code>NotConverged</code> unless the last refinement step is below 1e-8 and the "
-             "relative normal-equation residual is below 1e-10. It also raises if any event with three or more picks "
-             "sits in a part of the event / station graph that is not linked to the main network. There is one such "
-             "isolated piece: the S term of 7D.J35C@2013-08-09 with 9 one-pick events, whose level is set by the "
-             "damping only (stored value -234); none of its events has an ML. "
+             "relative normal-equation residual is below 1e-10, or unless the gauge rows equal the null directions "
+             "(section 1b). "
              "<code>--solver lsqr</code> runs a column-scaled LSQR with atol = btol = 1e-12 and fails unless istop "
              "is 1 or 2. <code>--solver legacy3000</code> reproduces the stored runs.</p>")
     h.append(tab(runs, cols=["run", "solver", "istop", "itn", "r_norm", "normal_res_rel", "anchor_offset", "n_anchors",
                              "anchor_std", "mapped_intercept", "mapped_slope", "mapped_std", "mw_cal_near",
                              "mw_cal_mapped", "M_type_ML", "M_type_Mw", "M_type_Mw_cal"]))
-    h.append("<p>Exact-solver diagnostics (both passes, v4.1 and v5.1): last refinement step 3e-14 to 3e-13, "
-             "relative normal-equation residual 1.7e-13 to 3.1e-13. Independent checks on the v4.1 first pass: "
-             "a sparse LU factorisation of the full 162,515 x 162,515 normal equations differs by at most 5.4e-7; "
-             "a column-scaled LSQR (atol = btol = 1e-12) stops with istop 2 after 332 iterations and differs by at "
-             "most 1.7e-6. The full phase19 run with <code>--solver lsqr</code> gives the same output file as the "
-             "exact run (largest difference 0.001, the rounding of the file).</p>")
+    h.append("<p>Exact-solver diagnostics (both passes, v4.1 and v5.1, one gauge row): last refinement step 5e-15 "
+             "to 6e-14, relative normal-equation residual 5e-14 to 3e-13; in every pass 1 connected piece, 1 "
+             "numerical null direction, 1 gauge row. The full phase19 run with <code>--solver lsqr</code> "
+             "(column-scaled, istop 2 after 238 and 240 iterations) gives the same v4.1 output file as the exact "
+             "run (largest difference 0.000). Independent check on the first version (two-row system, v4.1 first "
+             "pass): a sparse LU factorisation of the full 162,515 x 162,515 normal equations differs by at most "
+             "5.4e-7.</p>")
     h.append("<h3>Thread count</h3><p>phase19 'near' ML of v4.1 (both passes and the anchor offset) in separate "
              "processes with 1 and 12 BLAS threads:</p>" + tab(thr, fmt="{:.3g}"))
     h.append(f"<p>The legacy solver at 1 thread gives the stored anchor offset (+0.4132; stored +0.413) and at 12 "
@@ -158,9 +182,40 @@ def sections(t, tab, img, pi):
                  "bounds the gradient, not the error: in a soft direction the error is the gradient divided by a "
                  "small eigenvalue. The D-B091 check (4,863 iterations on the stored v5.1 pick set) was therefore "
                  "close, but not exact (section 4).</p>")
-    h.append(img("fig_convergence", "LSQR error against iterations (v4.1, near events). Plain LSQR with the "
-                 "phase19 settings needs about 4,600 iterations to reach istop 2 and is still 0.06 off at the 99th "
-                 "percentile; the column-scaled LSQR converges in a few hundred."))
+    if len(cn) and cn.istop.isin([1, 2]).any():
+        r2 = cn[cn.istop.isin([1, 2])].iloc[0]
+        h.append(f"<p>The same tolerances on the new one-row system stop with istop 2 after {int(r2.itn):,} iterations, "
+                 f"{r2.p99_abs:.2f} from the minimum at the 99th percentile: the stopping test is the problem, not "
+                 "the gauge. The column-scaled LSQR reaches the minimum to 1e-8 in a few hundred iterations.</p>")
+    h.append("<h3>1b. Gauge rows and null directions (verifier must-fix 1)</h3>"
+             "<p>The data fix every M_i + C_jp but not a common shift: on each connected piece of the event / "
+             "station-phase graph, all event terms +delta and all station terms -delta leave the misfit unchanged. "
+             "The gauge needs one row per such null direction; any further row constrains the fit. The stored runs, "
+             "and the first version of this work, used two rows (sum of the P terms = 0, sum of the S terms = 0). The "
+             "graph had two pieces: the main network and one isolated S term, 7D.J35C@2013-08-09|S (9 picks on 9 "
+             "one-pick events). The S row was absorbed by that term, which ended at C = -303 (v4.1) and -295 (v5.1); "
+             "stored legacy runs -255 and -234. The two rows therefore fixed the two null directions, and the P - S "
+             "level difference of the main network stayed free (mean S term - mean P term +0.454). The earlier text "
+             "of this report said that the two rows fix the P - S difference; that was wrong. Without the isolated "
+             "term, though, the two rows would have forced mean S = mean P: the misfit rises by about 2,900 and "
+             "regional ML moves by up to -0.22. The convergence test of the solver does not see this, because the "
+             "constrained problem is solved exactly too.</p>"
+             "<p>Fix: picks not linked to the main network are dropped before each pass "
+             "(<code>main_component()</code>; their events have fewer than 3 picks, so no ML is lost). ONE gauge row "
+             "is used (sum of the P terms = 0, which keeps the P terms and the main-network S terms of the previous "
+             "solution). <code>check_gauge()</code> counts the null directions from the graph (connected pieces) and "
+             "numerically (eigenvalues of the reduced system below 1e-9 of the largest). It raises NotConverged "
+             "unless both equal the number of gauge rows and the gauge rows are not orthogonal to the null space. The "
+             "anchor offset absorbs any single gauge row, so ML does not depend on which one is chosen. The isolated "
+             "term no longer appears in the converged station-term tables. The stored "
+             "<code>phase19_station_terms_v51.csv</code> still lists it (C about -234); that value is a gauge "
+             "artefact and should be ignored.</p>"
+             "<p>Design test on the final v4.1 pick set (exact solver; the 9 isolated picks added back where kept):</p>"
+             + tab(gdt) + "<p>The new full chain (both passes, rejection, anchor offset) against the previous "
+             "converged run with two rows, unrounded near-event ML:</p>" + tab(gmu, fmt="{:.2e}"))
+    h.append(img("fig_convergence", "LSQR error against iterations (v4.1, near events), each against the exact "
+                 "solution of its own system. Blue: the stored system with the phase19 settings. Green: the new "
+                 "one-row system with the same tolerances. Red: the column-scaled LSQR."))
 
     # ---- 2 gauge
     h.append("<h2>2. The gauge: how each ocean-bottom deployment is tied to the land network</h2>")
@@ -191,9 +246,19 @@ def sections(t, tab, img, pi):
         h.append(f"<h3>{lab}, land networks</h3>" + tab(g[(g.catalog == lab) & (g.level == "land network")], cols=cols))
     h.append("<p>The 7D sub-arrays (J, FN, FS, G, M per year) are in <code>gauge_deployments.csv</code> (level "
              "sub-array).</p>")
+    h.append("<p>Source of the 'before' columns (dC_minus_land, dML_dominated, anchor_gap_unconv): for v4.1, a "
+             "legacy3000 rerun at 12 threads, because the stored run did not keep its per-pick table. "
+             "anchor_gap_stored_file uses the stored v4.1 file itself. For v5.1, the stored v5.1 run.</p>"
+             "<p>Uncertainty of the levels. The formal s.e. assumes independent Gaussian residuals and a correct "
+             "model. The verifier's bootstrap (32 replicates, resampling events) gives errors 1.0-1.7 times the "
+             "formal ones (7D Y2 0.016 vs 0.010, X9 0.023 vs 0.016, NV 2014 0.12 vs 0.085). A model test shifts the "
+             "thinly tied levels by about 0.1: with picks within 100 km instead of 150 km, Axial -0.15, Explorer "
+             "+0.13, Endeavour -0.11. Blanco, Gorda and Mendocino move by -0.04 to +0.04 in that test. "
+             "The NC terms sit 0.19 below the other land networks (bootstrap s.d. 0.014).</p>")
     h.append("<p>What the table shows:</p><ul>"
              "<li>No deployment is free. The largest formal error of a deployment level is 0.085-0.091 (NV 2014, "
-             "4 terms, 2 or fewer events with land picks); every other is 0.009-0.046. A 0.5 shift of a deployment "
+             "bootstrap 0.12, "
+             "4 terms, 2 or fewer events with land picks); every other is 0.009-0.046 (bootstrap 0.011-0.051). A 0.5 shift of a deployment "
              "costs from 2 (NV 2014) to 6,900 (7D Y4) in misfit, out of about 72,000.</li>"
              "<li>Thin ties (stiffness below about 400): NV 2014 (k 8-10), 7A 2010 (69-75), NV 2011 (117-119; 0-2 "
              "events with land picks), OO 2014 (194-200; 66-71 of its 22,000 events have land picks), NV 2010 (244-256), "
@@ -205,9 +270,10 @@ def sections(t, tab, img, pi):
              "data leave it free.</li>"
              "<li>Anchors versus cross-links. In phase19 the 3,416 anchors (84% onshore) set one global offset and do "
              "not enter the deployment levels; the cross-links set every level. The anchors are an independent check. "
-             "Where a deployment has 9 or more dominated anchors, convergence reduces the gap (v4.1): 7D Y2 +0.30 -> "
-             "+0.03 (24 anchors), 7D Y4 +0.17 -> +0.02 (43), Z5 2013 +0.22 -> -0.09 (38), X9 +0.87 -> +0.23 (9); Z5 2014 "
-             "stays at -0.12/-0.13 (13). OO 2014 (Axial) stays at +0.39/+0.40 with only 4 anchors; the 2 anchors in "
+             "Where a deployment has 9 or more dominated anchors, convergence reduces the gap. Against the stored v4.1 "
+             "file: 7D Y2 +0.32 -> +0.03 (24 anchors), 7D Y4 +0.20 -> +0.02 (43), Z5 2013 +0.25 -> -0.09 (38), X9 "
+             "+0.89 -> +0.23 (9). The 12-thread legacy rerun gives +0.30, +0.17, +0.22, +0.87. Z5 2014 gets worse: "
+             "-0.06 in the stored file (-0.12 in the rerun) -> -0.13 (13 anchors). OO 2014 (Axial) stays at +0.39/+0.40 with only 4 anchors; the 2 anchors in "
              "the Axial region are +0.9 above ComCat in both solutions. Axial is the one place where the anchors "
              "disagree with the cross-link level, and its ties are thin (open problem 1).</li>"
              "<li>The land network is not one rigid block either. The northern California network NC (128 terms) moves "
@@ -248,6 +314,10 @@ def sections(t, tab, img, pi):
     h.append("<h3>By region (converged minus stored ML, all events with ML)</h3>" + tab(r41))
     h.append("<h3>By region, near events (3 or more picks within 150 km; the D-B091 set)</h3>" + tab(n41))
     h.append("<h3>By region, mapped events</h3>" + tab(t("v41_by_region_mapped")))
+    h.append("<h3>Near events at onshore labels, north and south of 42 N</h3>" + tab(onsp)
+             + "<p>The onshore +0.01 holds north of 42 N only. South of 42 N (northern California) near events drop by "
+             "-0.19, with the NC network level (section 2). The onshore box of the Mc maps changes b from 0.92 to "
+             "1.01 (section 6).</p>")
     h.append("<h3>By ML method</h3>" + tab(t("v41_by_method")))
     h.append("<h3>By stored ML</h3>" + tab(t("v41_by_mag")))
     h.append("<h3>By distance to the nearest station with an amplitude (v4 hypocentre)</h3>" + tab(t("v41_by_dist")))
@@ -279,13 +349,24 @@ def sections(t, tab, img, pi):
                  "number under each label is the number of anchors."))
     h.append("<h3>ComCat moment tensors (median ML - Mw)</h3>")
     h.append(tab(ten.pivot_table(index=["events", "Mw_class"], columns="solution", values="ML_minus_Mw").reset_index()))
-    h.append("<p>For near events at offshore labels with Mw 3-4.5, ML - Mw goes from +0.11 to -0.07 (v4.1) and "
-             "from +0.26 to -0.02 (v5.1); onshore it stays at +0.05 to +0.12. Counted over all events, the offshore "
+    h.append(tab(ten, cols=["solution", "events", "Mw_class", "n", "ML_minus_Mw", "ci95_lo", "ci95_hi"]))
+    h.append("<h3>Tensor Mw 3-4.5, near events, by region (median ML - Mw)</h3>" + tab(tbr))
+    h.append("<p>The tensor comparison is inconclusive. For near events at offshore labels with Mw 3-4.5 "
+             f"(43 events), ML - Mw goes from {ten_ci('v4.1 stored', 'near', '3-4.5, offshore and coastal labels')} to "
+             f"{ten_ci('v4.1 converged', 'near', '3-4.5, offshore and coastal labels')} (v4.1; median and bootstrap "
+             f"95% interval) and from {ten_ci('v5.1 stored', 'near', '3-4.5, offshore and coastal labels')} to "
+             f"{ten_ci('v5.1 converged', 'near', '3-4.5, offshore and coastal labels')} (v5.1). The intervals "
+             "overlap, and by region Gorda gets worse (-0.03 -> -0.22, 10 events) while Mendocino and the offshore "
+             "forearc get better. The tensors do not reject either solution; the ComCat ML anchors (549 offshore "
+             "and coastal, 3,416 in all) are the stronger test. Onshore, ML - Mw stays at +0.05 to +0.12. Counted over all events, the offshore "
              "value goes to -0.21/-0.23 because of the 11-14 'mapped' tensor events: their ML comes from the "
              "Theil-Sen map of the inversion ML, whose slope fell from 1.15 to 1.01 when the near ML it is fitted to "
              "came down. phase19 already flags mapped ML above about 4 as lower bounds. Above Mw 4.5 the tensor "
              "Mw is used, so these values do not enter M.</p>")
-    h.append("<h3>D-B091 on the stored pick sets</h3><p>On the pick set of the stored v5.1 run, the exact solver "
+    h.append("<h3>D-B091 on the stored pick sets</h3><p>These comparisons use the stored system (stored pick set, "
+             "isolated term included, two gauge rows), which is what the stored runs and the D-B091 check solved; "
+             "its exact solution gives the same ML as the new one-row system (column "
+             "max_abs_dML_exact_new_vs_stored_system). On the pick set of the stored v5.1 run, the exact solver "
              "reproduces the D-B091 changes, and the D-B091 LSQR to istop 2 (4,863 iterations) is within 0.006 of it "
              "in every region except Axial (-0.03); its largest event error is 0.18. On the v4.1 pick set (the stored "
              "per-pick table was not kept, so a 12-thread legacy rerun stands in) the same LSQR is within 0.02 except "
@@ -398,9 +479,9 @@ def sections(t, tab, img, pi):
              "because the two stored runs stopped at different points; both converged runs agree (v5.1 - v4.1 = "
              "+0.005). The JdF plate has 4 ComCat anchors in total, so its level rests on the cross-links "
              "(7D Y1 stiffness about 400, s.e. 0.03) with no external check.</li>"
-             "<li>The two gauge rows force the mean P term and the mean S term to be zero separately, which is one "
-             "constraint more than the single null direction of the problem. It is kept (unchanged objective), but it "
-             "makes the P-S level difference a fixed choice rather than a fitted one.</li>"
+             "<li>Model uncertainty of the thinly tied levels: the 100 km pick-selection test moves Axial by -0.15, "
+             "Explorer by +0.13 and Endeavour by -0.11 (verifier). These regions carry about 0.1 of uncertainty "
+             "beyond the formal errors.</li>"
              "<li>'Mapped' events (3,522 in v4.1) follow the Theil-Sen map fitted to the near events; the map changed "
              "(slope 1.15 -> 1.01), so mapped ML above about 3.5 dropped more than the region shift. Their tensor "
              "comparison (ML - Mw about -0.2 at Mw 3-4.5) is worse than before.</li>"

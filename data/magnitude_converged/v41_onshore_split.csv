@@ -1,0 +1,3 @@
+part,n,median,p25,p75,mean
+"onshore labels, north of 42 N",39700,0.0090,0.0070,0.0140,0.0068
+"onshore labels, south of 42 N (northern California)",4527,-0.1840,-0.1870,-0.1780,-0.1809

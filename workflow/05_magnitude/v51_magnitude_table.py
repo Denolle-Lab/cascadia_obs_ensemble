@@ -87,9 +87,11 @@ def near_inversion(ds):
     near = ds[ds.dist_hypo_km <= RMAX]
     cnt = near.sp.value_counts()
     near = near[near.sp.isin(cnt[cnt >= p19.MIN_STA_OBS].index)]
+    near = p19.phase19_solver.main_component(near, p19.SOLVER)
     M, C, res = p19.invert(near)
     mad = 1.4826 * np.median(np.abs(res - np.median(res)))
     near = near[np.abs(res) < p19.REJECT_MAD * mad]
+    near = p19.phase19_solver.main_component(near, p19.SOLVER)
     M, C, res = p19.invert(near)
     near = near.assign(res=res, C=C.reindex(near.sp).to_numpy(), M_ev=M.reindex(near.event_id).to_numpy())
     return near, M, C

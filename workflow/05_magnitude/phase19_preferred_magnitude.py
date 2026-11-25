@@ -35,8 +35,12 @@ Mw: MW_MT_UNC; Mw_cal: std of (Mw - ML - offset) of its pairs.
 
 Solver (D-B091): the inversion is solved exactly (phase19_solver.py, method "exact":
 events eliminated, Schur complement of the station-phase terms solved directly, with a
-convergence test that raises NotConverged). Until D-B091 it used LSQR stopped at 3000
-iterations without converging (istop 7); --solver legacy3000 reproduces that.
+convergence test that raises NotConverged). Picks not linked to the main network are
+dropped before each pass (phase19_solver.main_component; they have fewer than 3 picks per
+event) and one gauge row is used (sum of the P terms = 0), checked against the number of
+null directions. Until D-B091 it used LSQR stopped at 3000 iterations without converging
+(istop 7), with two gauge rows of which one was absorbed by an isolated term;
+--solver legacy3000 reproduces that.
 
 Writes ../../data/magnitude/cascadia_catalog_M_routeA.csv (same events as
 cascadia_catalog_ML_routeA.csv; ML_inv keeps the inversion ML); with --data/--suffix,
@@ -91,8 +95,9 @@ def invert(d):
     print(f"  solver {info['method']}: {info['n_picks']:,} picks, {info['n_events']:,} events, "
           f"{info['n_terms']:,} terms; istop {info['istop']}, itn {info['itn']}, refinement step "
           f"{info['refine_step']}, relative normal-equation residual {info['normal_res_rel']:.2e}, "
-          f"residual norm {info['r_norm']:.4f}; components {info['n_components']} "
-          f"(terms outside the main one: {info['terms_outside_main']})", flush=True)
+          f"residual norm {info['r_norm']:.4f}; gauge {info['gauge']} ({info['n_gauge_rows']} row(s)), "
+          f"connected pieces {info['n_components']}, numerical null directions {info.get('n_null_numerical')} "
+          f"(terms outside the main piece: {info['terms_outside_main']})", flush=True)
     return M, C, res
 
 
@@ -100,9 +105,11 @@ def event_ml(ds):
     near = ds[ds.dist_hypo_km <= RMAX]
     cnt = near.sp.value_counts()
     near = near[near.sp.isin(cnt[cnt >= MIN_STA_OBS].index)]
+    near = phase19_solver.main_component(near, SOLVER)     # one connected network: one gauge row
     M, C, res = invert(near)
     mad = 1.4826 * np.median(np.abs(res - np.median(res)))
     near = near[np.abs(res) < REJECT_MAD * mad]
+    near = phase19_solver.main_component(near, SOLVER)
     M, C, res = invert(near)
     near = near.assign(res=res)
     g = near.groupby("event_id").res
@@ -196,6 +203,7 @@ def main():
     prov = dict(output=fo, solver=SOLVER, data=os.path.abspath(D), suffix=SUFFIX, matched=os.path.abspath(MATCHED),
                 rmax_km=RMAX, min_sta_obs=MIN_STA_OBS, reject_mad=REJECT_MAD, m_switch=M_SWITCH,
                 fit_min=FIT_MIN, theil_max=THEIL_MAX, damp=phase19_solver.DAMP, gauge_w=phase19_solver.GAUGE_W,
+                gauge=("PS" if SOLVER == "legacy3000" else phase19_solver.GAUGE),
                 anchor_offset=float(off), n_anchors=int(len(an)), anchor_std=float(np.std(an.ml - an.m - off)),
                 s_anchor=float(s_anchor), mapped_fit=dict(intercept=float(ic), slope=float(sl), std=float(s_map)),
                 mw_cal_offset={k: float(v) for k, v in off_m.items()},

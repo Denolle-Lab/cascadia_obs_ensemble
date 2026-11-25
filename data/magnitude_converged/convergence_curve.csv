@@ -1,15 +1,20 @@
 solver,iter_lim,istop,itn,max_abs,p99_abs,median_abs,normal_res_rel
-LSQR (phase19 settings),500,7,500,5.4686e+00,1.4489e+00,9.6009e-01,3.8146e-03
-LSQR (phase19 settings),1000,7,1000,6.2232e+00,1.2317e+00,8.5622e-01,9.1112e-05
-LSQR (phase19 settings),2000,7,2000,1.8858e+00,9.2537e-01,3.4803e-01,5.1112e-06
-LSQR (phase19 settings),3000,7,3000,1.4486e+00,6.5402e-01,6.8961e-02,3.5644e-06
-LSQR (phase19 settings),4000,7,4000,3.7995e-01,1.0755e-01,1.7561e-02,1.7610e-06
-LSQR (phase19 settings),5000,2,4591,1.4759e-01,6.3835e-02,8.1929e-04,2.8157e-07
-LSQR (phase19 settings),6000,2,4591,1.4759e-01,6.3835e-02,8.1929e-04,2.8157e-07
-LSQR (phase19 settings),8000,2,4591,1.4759e-01,6.3835e-02,8.1929e-04,2.8157e-07
-LSQR (phase19 settings),12000,2,4591,1.4759e-01,6.3835e-02,8.1929e-04,2.8157e-07
-LSQR column-scaled,50,7,50,5.7821e+00,5.1232e-01,1.2361e-01,1.8752e-05
-LSQR column-scaled,100,7,100,2.7263e+00,1.5045e-01,5.2279e-02,4.2527e-06
-LSQR column-scaled,200,7,200,2.6647e-02,1.6728e-02,4.5194e-03,2.3343e-06
-LSQR column-scaled,300,7,300,5.2151e-03,5.2113e-03,5.4244e-05,7.0943e-06
-LSQR column-scaled,400,2,350,2.9040e-09,4.4750e-10,2.6689e-10,3.9863e-12
+"LSQR (phase19 settings, stored system: two gauge rows)",500,7,500,5.4174e+00,1.4481e+00,9.6007e-01,1.3271e-05
+"LSQR (phase19 settings, stored system: two gauge rows)",1000,7,1000,6.2779e+00,1.2303e+00,8.5466e-01,7.0715e-06
+"LSQR (phase19 settings, stored system: two gauge rows)",2000,7,2000,1.8842e+00,9.2506e-01,3.4926e-01,4.7365e-06
+"LSQR (phase19 settings, stored system: two gauge rows)",3000,7,3000,1.4461e+00,6.5528e-01,6.8762e-02,4.1764e-06
+"LSQR (phase19 settings, stored system: two gauge rows)",4000,7,4000,3.7322e-01,1.0482e-01,1.6927e-02,2.2159e-06
+"LSQR (phase19 settings, stored system: two gauge rows)",5000,2,4600,1.4420e-01,6.3560e-02,7.3800e-04,2.5262e-07
+"LSQR (phase19 settings, stored system: two gauge rows)",6000,2,4600,1.4420e-01,6.3560e-02,7.3800e-04,2.5262e-07
+"LSQR (phase19 settings, stored system: two gauge rows)",8000,2,4600,1.4420e-01,6.3560e-02,7.3800e-04,2.5262e-07
+"LSQR (phase19 settings, stored system: two gauge rows)",12000,2,4600,1.4420e-01,6.3560e-02,7.3800e-04,2.5262e-07
+"LSQR (phase19 tolerances, new system: one gauge row)",1000,7,1000,1.0093e+00,1.0055e+00,6.1954e-01,1.9418e-04
+"LSQR (phase19 tolerances, new system: one gauge row)",2000,7,2000,6.6627e-01,2.9413e-01,1.4611e-02,2.4260e-06
+"LSQR (phase19 tolerances, new system: one gauge row)",3000,7,3000,2.2591e-01,2.2513e-01,3.8454e-03,7.1241e-07
+"LSQR (phase19 tolerances, new system: one gauge row)",4000,2,3097,2.2382e-01,2.2327e-01,4.1913e-03,2.8526e-07
+"LSQR (phase19 tolerances, new system: one gauge row)",6000,2,3097,2.2382e-01,2.2327e-01,4.1913e-03,2.8526e-07
+LSQR column-scaled (new system),50,7,50,2.7812e+00,1.4885e-01,4.6980e-02,1.2369e-03
+LSQR column-scaled (new system),100,7,100,1.7611e-01,5.8149e-02,2.2844e-02,9.2089e-07
+LSQR column-scaled (new system),200,7,200,1.3232e-02,1.3230e-02,5.9853e-04,1.3572e-07
+LSQR column-scaled (new system),300,2,252,1.6357e-08,5.5523e-10,3.4472e-10,3.0342e-12
+LSQR column-scaled (new system),400,2,252,1.6357e-08,5.5523e-10,3.4472e-10,3.0342e-12

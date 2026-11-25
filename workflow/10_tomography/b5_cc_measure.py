@@ -88,7 +88,9 @@ def prepped(cache, eid, sta, ph, cha, tr, sr_target, cfg):
         return cache.pre[key]
     sr = tr.stats.sampling_rate
     x = tr.data.astype(np.float64)
-    if sr != sr_target:
+    if abs(sr - sr_target) <= 1e-3 * sr:
+        sr_target = sr
+    else:
         x = _resample(x - x.mean(), sr, sr_target)
     y = C.prep(x, sr_target, cfg["band"], cfg["taper"])
     out = (y, tr.stats.starttime.timestamp)
@@ -125,9 +127,10 @@ def measure(row, cache, cfg):
     t2s = ev2[(sta, ph)]
     sr1 = t1s[c1[0]].stats.sampling_rate
     sr2 = t2s[c2[0]].stats.sampling_rate
-    sr = min(sr1, sr2)
+    rate_mismatch = bool(abs(sr1 - sr2) > 1e-3 * max(sr1, sr2))   # 199.99998 vs 200 Hz is not a mismatch
+    sr = min(sr1, sr2) if rate_mismatch else sr1
     out.update(comps=comps, channel1=",".join(c1), channel2=",".join(c2), rate1=sr1, rate2=sr2, rate=sr,
-               chan_mismatch=bool(c1 != c2 or sr1 != sr2))
+               chan_mismatch=bool(c1 != c2 or rate_mismatch), rate_mismatch=rate_mismatch)
     band = cfg["band"]
     pre = cfg["p_pre"] if ph == "P" else cfg["s_pre"]
     post = cfg["p_post"] if ph == "P" else cfg["s_post"]

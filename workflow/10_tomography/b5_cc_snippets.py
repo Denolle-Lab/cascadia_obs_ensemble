@@ -10,8 +10,13 @@ Output (cache, so a rerun does not re-read): /wd1/mdenolle_data/tomo_v1/cc_dt/sn
 The meta file is written last: an event with a meta file is done (resumable).
 
   python b5_cc_snippets.py --set msh [--workers 12] [--sample-pairs N --seed 0] [--ids 1,2,3]
+  python b5_cc_snippets.py --set msh --band-map snippets/msh/band_map.json --redo-band-map   (consistent band)
+
+Band per station (--band-map, from b5_cc_bandmap.py): the band with a vertical at the most picks of that station in
+the set, so both events of a pair use the same channel (XD: BH at every pick instead of HH on some days).
 """
 import argparse
+import json
 import os
 import sys
 import time
@@ -29,7 +34,8 @@ import b5_cc_common as C  # noqa: E402
 
 
 def event_snippets(args):
-    name, eid, picks = args
+    name, eid, picks = args[:3]
+    band_map = args[3] if len(args) > 3 else {}
     d = C.SNIP / name
     fmeta = d / f"{eid}.meta.csv"
     if fmeta.exists():
@@ -54,7 +60,7 @@ def event_snippets(args):
             err = f"index_error:{type(e).__name__}"
         else:
             err = None
-        ch = C.choose_band(rows) if len(rows) else None
+        ch = C.choose_band(rows, band_map.get(sta)) if len(rows) else None
         if ch is None:
             for _, pk in g.iterrows():
                 rows_out.append({**base, "phase": pk.phase, "status": err or "no_data"})
@@ -113,7 +119,11 @@ def main():
     ap.add_argument("--sample-pairs", type=int, default=0, help="only the events of N random given pairs")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--ids", default="")
+    ap.add_argument("--band-map", default="", help="json {station: band}: one band per station for the set")
+    ap.add_argument("--redo-band-map", action="store_true",
+                    help="delete (then re-read) the cached events whose band differs from --band-map")
     a = ap.parse_args()
+    band_map = json.loads(Path(a.band_map).read_text()) if a.band_map else {}
     out = C.OUT / a.set
     picks = pd.read_parquet(out / "picks.parquet")
     if a.ids:
@@ -124,7 +134,20 @@ def main():
         ids = sorted(set(pr.ID1) | set(pr.ID2))
     else:
         ids = sorted(picks.ID.unique())
-    tasks = [(a.set, int(i), picks[picks.ID == i]) for i in ids]
+    if a.redo_band_map and band_map:
+        n_redo = 0
+        for i in ids:
+            f = C.SNIP / a.set / f"{i}.meta.csv"
+            if not f.exists():
+                continue
+            m = pd.read_csv(f)
+            m = m[(m.comp == "Z") & m.station.isin(list(band_map))]
+            if (m.band != m.station.map(band_map)).any():
+                for x in (f, f.with_name(f"{i}.P.mseed"), f.with_name(f"{i}.S.mseed")):
+                    x.unlink(missing_ok=True)
+                n_redo += 1
+        print(f"{n_redo} events re-read for the band map", flush=True)
+    tasks = [(a.set, int(i), picks[picks.ID == i], band_map) for i in ids]
     (C.SNIP / a.set).mkdir(parents=True, exist_ok=True)
     print(f"{time.strftime('%H:%M:%S')} {a.set}: {len(tasks)} events, {a.workers} workers", flush=True)
     t1 = time.time()

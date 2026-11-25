@@ -4,9 +4,10 @@
    known pick offset: recovered dt must equal the imposed dt (sign convention dt_cc = dt_cat - lag_s) and the
    parabolic sub-sample bias is measured per sampling rate and band.
 2. 20-pair test: 5 random given pairs per set (seed 1), all common station-phases, wide max lag (1 s), plots of
-   the waveform pairs (filtered windows, event 2 shifted by the CC lag) -> <out>/check/.
+   the waveform pairs (filtered windows, event 2 shifted by the CC lag) -> <out>/check/pairs20 (first test);
+   with --params b5_cc_params.yaml the final parameters per set -> <out>/check/pairs20_final.
 
-  python b5_cc_check.py [--synthetic] [--pairs]
+  python b5_cc_check.py [--synthetic] [--pairs [--params b5_cc_params.yaml]]
 """
 import argparse
 import json
@@ -113,10 +114,13 @@ def plot_pair(r, cache, cfg, ax):
     ax.tick_params(labelsize=6)
 
 
-def pairs_test(cfg_over=None):
-    cfg = {**M.DEFAULT, "p_maxlag": 1.0, "s_maxlag": 1.0, **(cfg_over or {})}
+def pairs_test(cfg_over=None, params="", sub="pairs20"):
     allr = []
     for name in C.SETS:
+        if params:
+            cfg = {**M.DEFAULT, **M.load_params(params, name), **(cfg_over or {})}
+        else:
+            cfg = {**M.DEFAULT, "p_maxlag": 1.0, "s_maxlag": 1.0, **(cfg_over or {})}
         obs = M.load_obs(name, sample_pairs=5, seed=1)
         r = M.run(name, obs, cfg, workers=1)
         r["set"] = name
@@ -134,11 +138,11 @@ def pairs_test(cfg_over=None):
             fig.suptitle(f"{name} pair {g.ID1.iloc[0]}-{g.ID2.iloc[0]} band {cfg['band']} Hz: black ev1, red ev2 "
                          f"shifted by CC lag, grey ev2 at catalog pick; yellow = CC window", fontsize=8)
             fig.tight_layout()
-            (OUTC / "pairs20").mkdir(parents=True, exist_ok=True)
-            fig.savefig(OUTC / "pairs20" / f"{name}_{g.ID1.iloc[0]}_{g.ID2.iloc[0]}.png", dpi=110)
+            (OUTC / sub).mkdir(parents=True, exist_ok=True)
+            fig.savefig(OUTC / sub / f"{name}_{g.ID1.iloc[0]}_{g.ID2.iloc[0]}.png", dpi=110)
             plt.close(fig)
     df = pd.concat(allr, ignore_index=True)
-    df.to_csv(OUTC / "pairs20_results.csv", index=False)
+    df.to_csv(OUTC / f"{sub}_results.csv", index=False)
     cols = ["set", "ID1", "ID2", "station", "phase", "comps", "rate", "timing1", "timing2", "dt_cat", "dt_cc",
             "lag_s", "cc_max", "cc_2nd", "snr1", "snr2", "status"]
     with pd.option_context("display.width", 250, "display.max_rows", 500):
@@ -151,12 +155,13 @@ def main():
     ap.add_argument("--synthetic", action="store_true")
     ap.add_argument("--pairs", action="store_true")
     ap.add_argument("--cfg", default="{}")
+    ap.add_argument("--params", default="", help="b5_cc_params.yaml: final parameters per set -> check/pairs20_final")
     a = ap.parse_args()
     OUTC.mkdir(parents=True, exist_ok=True)
     if a.synthetic:
         synthetic()
     if a.pairs:
-        pairs_test(json.loads(a.cfg))
+        pairs_test(json.loads(a.cfg), a.params, "pairs20_final" if a.params else "pairs20")
 
 
 if __name__ == "__main__":

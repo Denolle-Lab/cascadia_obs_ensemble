@@ -8,9 +8,12 @@ Output in /wd1/mdenolle_data/tomo_v1/cc_dt:
       # ID1 ID2 0.0
       STA DT CC PHA
   DT = dt_cc = (t1 - T0_1) - (t2 - T0_2) with v5.1 origin times (OTC 0), STA = STA.NET of the pick file,
-  CC = cc_max; only rows with above = True. Rows with an un-re-timable pick (D-B072 off_grid / rate_not_100)
+  CC = cc_max; only rows with above = True (status ok, peak not at the lag edge, cc_max >= cc_min,
+  cc_max - cc_2nd >= margin_min, same sampling rate for both records). Rows with an un-re-timable pick (D-B072 off_grid / rate_not_100)
   are in these files and flagged in the parquet; dt_<set>_no_unretimable.cc (+ _added) leave them out.
 * qc/<set>_*.csv, qc/<set>_qc.png, qc/summary_<set>.json.
+Per-row triangle closure (accepted rows): n_tri = closed triangles (same station-phase, all three legs accepted)
+the row is a leg of, n_tri_fail20 = of those, how many have |dt_AB + dt_BC - dt_AC| > 20 ms.
 
   python b5_cc_write.py --set msh [--params b5_cc_params.yaml]
 """
@@ -48,7 +51,13 @@ def build(name, P):
     d["obs_class"] = np.where(d.net.isin(OBS_NETS), "seafloor", "land")
     d["edge"] = d.edge.fillna(False).astype(bool)
     d["margin"] = d.cc_max - d.cc_2nd
-    d["above"] = ((d.status == "ok") & ~d.edge & (d.cc_max >= th["cc_min"]) & (d.margin >= th["margin_min"]))
+    d["rate_mismatch"] = d.rate_mismatch.astype("boolean").fillna(False).astype(bool)
+    d["chan_mismatch"] = d.chan_mismatch.astype("boolean").fillna(False).astype(bool)
+    # rate_mismatch: the two records have different sampling rates (100 vs 50 Hz: SEP/SUG EHZ digitizer change
+    # 2014, XD days with HH 100 Hz only vs BH 50 Hz only): different acquisition filter chains, triangle
+    # closure failures 4-7x higher -> not accepted (kept in the parquet)
+    d["above"] = ((d.status == "ok") & ~d.edge & (d.cc_max >= th["cc_min"]) & (d.margin >= th["margin_min"])
+                  & ~d.rate_mismatch)
     d["filter"] = np.where(d.status == "ok", "Butterworth band-pass 4 poles zero-phase "
                            + d.band_lo.round(2).astype(str) + "-" + d.band_hi.round(2).astype(str) + " Hz", "")
     d["window"] = np.where(d.win_pre.notna(), "[-" + d.win_pre.round(3).astype(str) + ", +"
@@ -58,14 +67,28 @@ def build(name, P):
     d["retimed_any"] = (d.timing1 == "retimed") | (d.timing2 == "retimed")
     d["unretimable_any"] = (d.timing1 == "unretimable") | (d.timing2 == "unretimable")
     d["dt_diff"] = d.dt_cc - d.dt_cat
+    # per-measurement triangle closure among the accepted rows (same station-phase): how many closed
+    # triangles the row is a leg of, and how many of them miss closure by > 20 ms
+    cl = closure(d[d.above])
+    legs = []
+    for x, y in (("A", "B"), ("B", "Cc"), ("A", "Cc")):
+        legs.append(pd.DataFrame({"k1": np.minimum(cl[x], cl[y]), "k2": np.maximum(cl[x], cl[y]),
+                                  "station": cl.station, "phase": cl.phase, "fail": cl.e.abs() > 0.02}))
+    legs = pd.concat(legs, ignore_index=True)
+    lg = legs.groupby(["k1", "k2", "station", "phase"]).fail.agg(n_tri="size", n_tri_fail20="sum").reset_index()
+    d["k1"] = np.minimum(d.ID1, d.ID2)
+    d["k2"] = np.maximum(d.ID1, d.ID2)
+    d = d.merge(lg, on=["k1", "k2", "station", "phase"], how="left").drop(columns=["k1", "k2"])
+    d["n_tri"] = d.n_tri.fillna(0).astype(int)
+    d["n_tri_fail20"] = d.n_tri_fail20.fillna(0).astype(int)
     d = d.rename(columns={"source": "pair_source", "flag1": "retime_flag1", "flag2": "retime_flag2",
                           "T01": "T0_1", "T02": "T0_2"})
     cols = ["set", "pair", "pair_source", "ID1", "ID2", "sep_km", "station", "net", "obs_class", "phase", "status",
             "above", "cc_max", "cc_2nd", "margin", "edge", "lag_s", "dt_cat", "dt_cc", "dt_diff", "comps",
-            "channel1", "channel2", "chan_mismatch", "rate1", "rate2", "rate", "filter", "band_lo", "band_hi",
+            "channel1", "channel2", "chan_mismatch", "rate_mismatch", "rate1", "rate2", "rate", "filter", "band_lo", "band_hi",
             "window", "win_pre", "win_post", "maxlag_s", "pick_time1", "pick_time2", "t_pick1", "t_pick2",
             "T0_1", "T0_2", "timing1", "timing2", "retime_flag1", "retime_flag2", "retimed_any", "unretimable_any",
-            "snr1", "snr2", "pick_row1", "pick_row2", "pick_prob1", "pick_prob2"]
+            "snr1", "snr2", "n_tri", "n_tri_fail20", "pick_row1", "pick_row2", "pick_prob1", "pick_prob2"]
     d = d[cols]
     d.to_parquet(C.OUT / f"cc_{name}.parquet", index=False)
     return d
@@ -103,6 +126,31 @@ def repeaters(d, nmin=6, ccmin=0.95):
     return s.reset_index()
 
 
+def drift_slopes(a, nmax=1500, seed=0):
+    """Time-base check of the picks with the CC dt (record-header time base): per station, phase and timing
+    class pair, Theil-Sen slope of dt_cc - dt_cat against f1 - f2 (UTC fraction of day of the two picks).
+    If the catalog picks of a channel are early by r * f (whole-day count drift at r s/day, as the UW analog
+    channels after 2013-10-22: r ~ +0.5 s/day), dt_cat = dt_true - r (f1 - f2) and the slope is +r; picks on
+    the header time base give ~0 (data restarts within a day reset the drift, so |slope| is a lower bound)."""
+    from scipy.stats import theilslopes
+    f1 = (a.t_pick1 % 86400) / 86400
+    f2 = (a.t_pick2 % 86400) / 86400
+    b = a.assign(df=f1 - f2, cls=np.where(a.timing1 == a.timing2, a.timing1, "mixed"))
+    b = b[b.dt_diff.abs() < 0.5]
+    rows = []
+    rng = np.random.default_rng(seed)
+    for (sta, ph, cls), g in b.groupby(["station", "phase", "cls"]):
+        if len(g) < 10 or g["df"].std() < 0.05:
+            continue
+        if len(g) > nmax:
+            g = g.iloc[rng.choice(len(g), nmax, replace=False)]
+        s, i, lo, hi = theilslopes(g.dt_diff.values, g["df"].values)
+        rows.append(dict(station=sta, phase=ph, timing=cls, n=len(g), slope_s_per_day=s, lo95=lo, hi95=hi,
+                         intercept_ms=i * 1e3))
+    return pd.DataFrame(rows, columns=["station", "phase", "timing", "n", "slope_s_per_day", "lo95", "hi95",
+                                       "intercept_ms"])
+
+
 def qc(name, d, P, nfiles):
     out = C.OUT / "qc"
     out.mkdir(parents=True, exist_ok=True)
@@ -136,7 +184,7 @@ def qc(name, d, P, nfiles):
     ur = d[d.unretimable_any]
     S["unretimable"] = dict(obs=int(len(ur)), ok=int((ur.status == "ok").sum()), above=int(ur.above.sum()),
                             pairs_with_above=int(ur[ur.above].pair.nunique()),
-                            by_station=ur[ur.above].groupby(["station", "phase"]).size().to_dict() if len(ur) else {},
+                            by_station={f"{k[0]}:{k[1]}": int(v) for k, v in ur[ur.above].groupby(["station", "phase"]).size().items()},
                             diff_mad_ms=mad(ur[ur.above].dt_diff) * 1e3 if ur.above.any() else np.nan,
                             diff_median_ms=float(ur[ur.above].dt_diff.median() * 1e3) if ur.above.any() else np.nan,
                             abs_diff_gt100=float((ur[ur.above].dt_diff.abs() > 0.1).mean()) if ur.above.any() else np.nan)
@@ -159,6 +207,9 @@ def qc(name, d, P, nfiles):
                        snr_median=float(np.nanmedian(np.r_[g.snr1, g.snr2]))))
     st = pd.DataFrame(st).sort_values(["phase", "n_above"], ascending=[True, False])
     st.to_csv(out / f"{name}_by_station.csv", index=False, float_format="%.4g")
+    dr = drift_slopes(a)
+    dr.to_csv(out / f"{name}_drift_slopes.csv", index=False, float_format="%.4g")
+    S["drift_slopes"] = dr[dr.n >= 30].round(4).to_dict("records")
     rp = repeaters(d)
     rp.to_csv(out / f"{name}_repeaters.csv", index=False, float_format="%.5g")
     S["repeaters"] = dict(n=len(rp), dt_cc_std_median_ms=float(rp.dt_cc_std.median() * 1e3) if len(rp) else np.nan,

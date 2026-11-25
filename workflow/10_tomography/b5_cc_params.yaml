@@ -1,0 +1,24 @@
+# CC differential times (D-B040) for the D-B078 test sets: parameters chosen with b5_cc_study.py on the sets' own
+# data (triangle closure of CC dt, CC dt - catalog dt, lag distribution); numbers in
+# /wd1/mdenolle_data/tomo_v1/cc_dt/README.md and study/study_<set>.csv.
+common:
+  band: [3.0, 15.0]     # Hz, 4-pole zero-phase Butterworth; axial, blanco, jdf: most accepted rows at low closure failure
+  p_pre: 0.2            # s before the P pick
+  p_post: 0.6           # s after the P pick, cut to (S-P) - sp_margin
+  sp_margin: 0.1
+  s_pre: 0.3            # s before the S pick
+  s_post: 1.0           # s after the S pick
+  p_maxlag: 0.4         # s; closure failures rise for |lag| > 0.4 s (jdf P: 9 % at 0.4-0.6 s, 40 % above)
+  s_maxlag: 0.4
+  lag_sp_frac: 0.3      # max lag <= 0.3 * (S-P): at Axial halves the P closure failures (2.9 % -> 1.6 %)
+  min_lag: 0.05
+  min_win: 0.3          # s, shortest P window kept (S-P < ~0.4 s gives no P window)
+  taper: 1.0
+sets:
+  axial: {band: [3.0, 15.0]}
+  blanco: {band: [3.0, 15.0]}
+  msh: {band: [2.0, 12.0]}   # 2-12 Hz: P closure failures 3.7 % vs 6.0 % at 3-15 Hz, +18 % S rows
+  jdf: {band: [3.0, 15.0]}
+threshold:
+  cc_min: 0.7           # cc_max >= 0.7
+  margin_min: 0.1       # cc_max - (best CC outside +-0.6 period of the peak) >= 0.1 (cycle-skip guard)

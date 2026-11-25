@@ -12,6 +12,7 @@ data of the set itself:
 
   python b5_cc_study.py --set jdf --grid bands [--workers 4]
   python b5_cc_study.py --set jdf --grid windows --band 3,15
+  python b5_cc_study.py --set jdf --grid lags --band 3,15      (max lag x S-P fraction, chosen windows)
   python b5_cc_study.py --set jdf --report      (tables + figures from the saved runs)
 Output: /wd1/mdenolle_data/tomo_v1/cc_dt/study/<set>/<tag>.parquet, study_<set>.csv, figures.
 """
@@ -40,7 +41,8 @@ CC_BINS = [0, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.01]
 
 def tag_of(cfg):
     return (f"b{cfg['band'][0]:g}-{cfg['band'][1]:g}_p{cfg['p_pre']:g}-{cfg['p_post']:g}"
-            f"_s{cfg['s_pre']:g}-{cfg['s_post']:g}_l{cfg['p_maxlag']:g}-{cfg['s_maxlag']:g}")
+            f"_s{cfg['s_pre']:g}-{cfg['s_post']:g}_l{cfg['p_maxlag']:g}-{cfg['s_maxlag']:g}"
+            + (f"_f{cfg['lag_sp_frac']:g}" if cfg.get("lag_sp_frac", 0.5) != 0.5 else ""))
 
 
 def closure(d):
@@ -69,7 +71,7 @@ def mad(x):
 
 
 def accepted(df, cc_min, margin_min):
-    ok = (df.status == "ok") & ~df.edge.fillna(False).astype(bool)
+    ok = (df.status == "ok") & ~df.edge.astype("boolean").fillna(False).astype(bool)
     return ok & (df.cc_max >= cc_min) & ((df.cc_max - df.cc_2nd) >= margin_min)
 
 
@@ -111,6 +113,10 @@ def run_grid(name, grid, band, workers):
                         ((0.1, 0.5), (0.2, 0.8))):
             cfgs.append({**M.DEFAULT, "band": band, "p_pre": pp[0], "p_post": pp[1], "s_pre": sp_[0],
                          "s_post": sp_[1], "p_maxlag": 1.0, "s_maxlag": 1.0})
+    elif grid == "lags":
+        for ml, fr in ((1.0, 0.5), (0.4, 0.5), (0.4, 0.3), (0.3, 0.3)):
+            cfgs.append({**M.DEFAULT, "band": band, "p_pre": 0.2, "p_post": 0.6, "s_pre": 0.3, "s_post": 1.0,
+                         "p_maxlag": ml, "s_maxlag": ml, "lag_sp_frac": fr})
     for cfg in cfgs:
         tag = tag_of(cfg)
         f = out / f"{tag}.parquet"

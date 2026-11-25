@@ -104,13 +104,14 @@ def index_rows(net, sta, t_lo, t_hi):
 BANDS = ("HH", "BH", "EH")   # picker rule (elep_picker.select_channels hh_bh_eh): first band with a vertical
 
 
-def choose_band(rows):
-    """Band and component channels: the picker's rule HH > BH > EH (first band with a Z). Returns
+def choose_band(rows, prefer=None):
+    """Band and component channels: `prefer` (the station's band for the whole set, see b5_cc_snippets
+    --band-map) when it has a vertical, else the picker's rule HH > BH > EH (first band with a Z). Returns
     (band, z_channel, [horizontal channels]) or None. Horizontals: E/N or 1/2 of the same band."""
     if len(rows) == 0:
         return None
     ch = set(rows.channel)
-    for b in BANDS:
+    for b in ([prefer] if prefer else []) + list(BANDS):
         z = [c for c in ch if c[:2] == b and c[2] in "Z3"]
         if z:
             zc = b + "Z" if b + "Z" in ch else sorted(z)[0]

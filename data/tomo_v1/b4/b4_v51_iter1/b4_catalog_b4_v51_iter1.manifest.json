@@ -1,0 +1,154 @@
+{
+ "name": "b4_catalog_b4_v51_iter1",
+ "script": "/home/mdenolle/wt_v51_int/workflow/10_tomography/b4_catalog.py",
+ "argv": [
+  "b4_v51_iter1"
+ ],
+ "utc": "2026-11-25T11:15:11.560584+00:00",
+ "git_commit": "97f9d1da845388c0c23694cbaa7959c0f31c60b8",
+ "git_dirty": false,
+ "params_md5": "84d5e1413d5de3f9317c6812994a216e",
+ "params": {
+  "depth_flags": {
+   "unconstrained_regions": [
+    "Endeavour",
+    "Explorer",
+    "JdF ridge/plate"
+   ],
+   "blanco_window": [
+    "2012-09-20",
+    "2013-10-05"
+   ],
+   "gorda_biased_dist_km": 15
+  },
+  "quarry": {
+   "name": "Texada Island",
+   "lat": [
+    49.4,
+    49.85
+   ],
+   "lon": [
+    -124.75,
+    -124.25
+   ],
+   "weekday_hours_local": [
+    7,
+    19
+   ],
+   "tz": "America/Vancouver"
+  },
+  "surface": "merged",
+  "surface_source": "D-B068 merged solid surface (b4_surface.py, /wd1/mdenolle_data/reloc_v5/topo): first covering source of [gmrt_-129.55_-128.75_47.65_48.35_high.nc (41 m, md5 7bcc9e645a3cb1b276fbdea079460c2b); gmrt_-130.35_-129.75_45.75_46.2_high.nc (42 m, md5 d2653715b20e7bc172bf88f2bdf48b54); gmrt_-129.7_-127.9_48.55_49.4_med.nc (80 m, md5 077056a5725bd1f92a6ee6d8c38bf7cc); gmrt_-129.3_-127.3_43.3_44.6_med.nc (88 m, md5 0dd4eda9525b07f4323d8255a4f33b94); gmrt_-130.4_-127.2_47.4_49.8_med.nc (162 m, md5 67f460ee394d9b575bc624fd0e8edd93); gmrt_-123.6_-121.4_46.6_48.6_med.nc (165 m, md5 1419d851c3112ef96228a4a3df54ec25); gmrt_-130.6_-126.6_42.6_45.3_med.nc (176 m, md5 9145fd1d13d7d2c0301596b44207fbb1); gmrt_-125.6_-123.2_39.6_41.4_med.nc (186 m, md5 8b0aef3b02017a3eb57f422637b7dac3); gmrt_-127.6_-123.2_46.2_49.2_med.nc (329 m, md5 96b54b1805c70ae9f22223384d558baa); gmrt_-126.8_-123.2_42.8_46.4_med.nc (348 m, md5 9b27b0947fd9bd495e7a1abecbbcd4aa); gmrt_-128.8_-123.8_40.0_43.2_med.nc (366 m, md5 98c18c8677c4bb705eaea0a0afb575d0); earth_relief_01m_g (1558 m, md5 fba0fa3df82fd1b39069850540f55a8f)] (GMRT finest first, then earth_relief 01m gridline; covering = inside the source's grid lines with 4 finite bilinear nodes), bilinear on that source's grid, no blending",
+  "floor_files": [
+   "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin"
+  ],
+  "floor_cells": 1.5,
+  "runs": [
+   "b4_v51_deep",
+   "b4_v51_iter1"
+  ]
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_b4_v51_iter1.csv",
+   "size": 46257752,
+   "mtime": "2026-11-25T11:15:03.493870+00:00",
+   "md5": "02796c5c24ceba911a8a1bed33cfebbc"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "size": 50695776,
+   "mtime": "2026-11-22T21:27:14.064885+00:00",
+   "md5": "de44780c3dbe49b404d785914e132459"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_iter1/locations.csv",
+   "size": 65920880,
+   "mtime": "2026-11-25T11:14:57.497922+00:00",
+   "md5": "16c630a14fb02044fa1638c1060c00f9"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+   "size": 18155178,
+   "mtime": "2026-11-23T04:30:00.638894+00:00",
+   "md5": "722975b82ac5f3e6761c7f1f57cd346d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin",
+   "size": 110651528,
+   "mtime": "2026-11-25T05:55:16.788487+00:00",
+   "md5": "aaf46fe4321b016c9f993c404d12ce22"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_deep/arrivals_used.csv",
+   "size": 11929,
+   "mtime": "2026-11-25T11:14:49.421993+00:00",
+   "md5": "a1733565c1b3aae1e371cede03b19a4b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_v51_iter1/arrivals_used.csv",
+   "size": 3610099,
+   "mtime": "2026-11-25T11:14:33.431094+00:00",
+   "md5": "c28da35cbdf6b1f9226daff58c9332af"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+   "size": 61837532,
+   "mtime": "2026-11-25T11:15:10.080835+00:00",
+   "md5": "8435e4c63af3a3abff11a8a136ac331c"
+  },
+  {
+   "path": "/home/mdenolle/wt_v51_int/data/tomo_v1/b4/b4_v51_iter1/compare.md",
+   "size": 5730,
+   "mtime": "2026-11-25T11:15:10.798831+00:00",
+   "md5": "ecbb42cbcaffd4b8f145186e5600ef65"
+  },
+  {
+   "path": "/home/mdenolle/wt_v51_int/data/tomo_v1/b4/b4_v51_iter1/compare_by_region.csv",
+   "size": 867,
+   "mtime": "2026-11-25T11:15:10.635832+00:00",
+   "md5": "997e8cdcfbca57e3442d5124bb2bca22"
+  },
+  {
+   "path": "/home/mdenolle/wt_v51_int/data/tomo_v1/b4/b4_v51_iter1/depth_hist.png",
+   "size": 50545,
+   "mtime": "2026-11-25T11:15:11.536828+00:00",
+   "md5": "45b28546ad917e53f71029a89a9a7d48"
+  }
+ ],
+ "counts": {
+  "events": 172340,
+  "nll3d": 171717,
+  "both": 156872,
+  "none": 623,
+  "v4_1_added_left_out": 2,
+  "depth_quality": {
+   "ok": 137590,
+   "unconstrained": 24939,
+   "biased_deep": 9188,
+   "": 623
+  },
+  "quarry_blast_likely": 1573,
+  "above_surface": 0,
+  "above_surface_not_nll3d": 0,
+  "flags": {
+   "floor_limited": 8682,
+   "far_only": 624,
+   "deep_pass": 356,
+   "five_phase": 11978
+  },
+  "floor_within_1_cell": 7917,
+  "above_floor_file": 0,
+  "u_reason": {
+   "rejected: max likelihood on box face 31": 305,
+   "rejected: max likelihood on box face 10": 185,
+   "rejected: max likelihood on box face 20": 74,
+   "rejected: max likelihood on box face 21": 32,
+   "rejected: max likelihood on box face 11": 27
+  },
+  "publishable": true
+ },
+ "notes": null
+}

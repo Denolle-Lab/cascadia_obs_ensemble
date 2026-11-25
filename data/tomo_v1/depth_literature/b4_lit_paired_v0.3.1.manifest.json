@@ -1,0 +1,76 @@
+{
+ "name": "b4_lit_paired_v0.3.1",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b4_lit_paired.py",
+ "argv": [
+  "v0.3.1=/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+  "v0.3.0=/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv",
+  "NLL3D=/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv"
+ ],
+ "utc": "2026-11-24T18:46:38.978847+00:00",
+ "git_commit": "1464b4f8284ab5f85cd8d4b8147a1d2c0ae920c0",
+ "git_dirty": true,
+ "params_md5": "b6577a18337b9cc6ceb40c931ce59986",
+ "params": {
+  "catalogs": {
+   "v0.3.1": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "v0.3.0": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv",
+   "NLL3D": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv",
+   "size": 50711269,
+   "mtime": "2026-11-24T06:57:22.913524+00:00",
+   "md5": "a8b560faaa581fd1eba3b74136348003"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "size": 50695776,
+   "mtime": "2026-11-22T21:27:14.064885+00:00",
+   "md5": "de44780c3dbe49b404d785914e132459"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv",
+   "size": 1042674,
+   "mtime": "2026-11-24T18:46:13.229669+00:00",
+   "md5": "cf70ec527af3b4f7bb78db938d8e5d53"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_rel_pairs.csv",
+   "size": 933819,
+   "mtime": "2026-11-24T18:46:13.262669+00:00",
+   "md5": "9a1f7083827fad9c1a1a74889ad4deb9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/msh_hirao2025_pairs.csv",
+   "size": 248846,
+   "mtime": "2026-11-24T18:46:13.190669+00:00",
+   "md5": "fc334714358bfadc7cb79f36d9ec795b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/depth_literature/paired_v0.3.1.md",
+   "size": 4829,
+   "mtime": "2026-11-24T18:46:38.977538+00:00",
+   "md5": "858dbeb070ba8b3de2cdec63246a1a06"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/depth_literature/paired_v0.3.1.csv",
+   "size": 11616,
+   "mtime": "2026-11-24T18:46:38.955538+00:00",
+   "md5": "97864179c62be5c094aa2df3aeb3b839"
+  }
+ ],
+ "counts": {
+  "rows": 117
+ },
+ "notes": null
+}

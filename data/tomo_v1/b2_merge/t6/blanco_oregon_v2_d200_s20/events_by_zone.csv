@@ -1,0 +1,7 @@
+tile,zone,n,dh_med,dh_p90,dz_med,absdz_med,absdz_p90,tile_shift_h_med,tile_shift_absz_med
+blanco,blanco only,4229,0.245,0.6696,0.02,0.458,2.063,0.941,1.75
+blanco,near seam blanco,66,0.48,0.9987,0.276,0.9485,3.675,1.034,1.694
+blanco,overlap,76,0.843,3.24,0.085,1.115,4.01,1.487,1.712
+oregon,near seam oregon,9,0.6769,1.521,-0.404,1.266,6.826,2.394,1.21
+oregon,oregon only,3264,0.266,0.812,0.017,0.341,1.378,0.9535,1.109
+oregon,overlap,76,1.092,2.76,-0.568,1.724,6.227,1.459,1.592

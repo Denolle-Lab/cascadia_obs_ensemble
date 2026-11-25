@@ -1,0 +1,26 @@
+{
+ "region":"margin_m0_v2",
+ "events":6943,
+ "stations":518,
+ "obs_stations":242,
+ "picks":229308,
+ "P":118325,
+ "S":110983,
+ "dt_pairs":15194,
+ "dt_data":371263,
+ "max_sta_per_event":109,
+ "air_dep_km":-2.318,
+ "center_lat":44.75,
+ "center_lon":-126.0,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"box",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_margin_m0.csv",
+  "p1_reference":"margin_m0_v2\/p1_reference"
+ },
+ "nx":34,
+ "ny":42,
+ "nz":23,
+ "npar":53760
+}

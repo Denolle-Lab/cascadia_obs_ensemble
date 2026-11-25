@@ -1,0 +1,205 @@
+{
+ "name": "b2_m0_report",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_report.py",
+ "argv": [],
+ "utc": "2026-11-24T00:06:28.001147+00:00",
+ "git_commit": "0772f4ed4d23199397f0b444361bcb429adf8103",
+ "git_dirty": true,
+ "params_md5": "ceacfc1b7cb88c6ac4141477b35dc5a7",
+ "params": {
+  "region": {
+   "b1b": "b1b_balanced_c",
+   "bins": {
+    "bin": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt",
+    "bin_check": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt"
+   },
+   "limits": {
+    "MAXSTA": 560,
+    "MAXOBS": 130
+   },
+   "events_boxes": [
+    [
+     39.5,
+     43.1,
+     -127.5,
+     -122.5
+    ],
+    [
+     42.6,
+     45.2,
+     -130.6,
+     -125.6
+    ],
+    [
+     42.6,
+     46.4,
+     -126.2,
+     -121.0
+    ],
+    [
+     45.8,
+     49.8,
+     -126.4,
+     -121.0
+    ],
+    [
+     44.4,
+     50.0,
+     -131.0,
+     -126.6
+    ]
+   ],
+   "events_lat": [
+    39.5,
+    50.0
+   ],
+   "events_lon": [
+    -131.0,
+    -121.0
+   ],
+   "station_margin_deg": [
+    0.5,
+    0.7
+   ],
+   "node_lon": [
+    -131.75,
+    -120.125,
+    0.375
+   ],
+   "node_lat": [
+    38.9,
+    50.6,
+    0.3
+   ],
+   "decluster": {
+    "cell_km": 10,
+    "depth_cell_km": 10,
+    "keep_per_cell": 2
+   },
+   "model_box_avg_km": 31,
+   "weights_scale": "dataset",
+   "damp": 200,
+   "forward": {
+    "coords": "ellipsoid",
+    "mod": "box",
+    "station_corr": true,
+    "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv",
+    "p1_reference": "margin_m0_v2/p1_reference"
+   }
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d1000_s20/Output_Files/model_geo.npz",
+   "size": 97174,
+   "mtime": "2026-11-23T22:58:18.352385+00:00",
+   "md5": "7fc61c35e3829a41ef82eca279e3626a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s120/Output_Files/model_geo.npz",
+   "size": 96974,
+   "mtime": "2026-11-23T23:46:34.189121+00:00",
+   "md5": "449d6baa8d1151a6e3bae196f7f651f3"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s1920/Output_Files/model_geo.npz",
+   "size": 94463,
+   "mtime": "2026-11-24T00:05:36.798948+00:00",
+   "md5": "3aae7563f181bbb1c451d217eb7f32bb"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s20/Output_Files/model_geo.npz",
+   "size": 99015,
+   "mtime": "2026-11-23T23:01:41.919123+00:00",
+   "md5": "e05976047b27cdf1377ccd789e122f40"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s240/Output_Files/model_geo.npz",
+   "size": 96308,
+   "mtime": "2026-11-23T23:46:07.878283+00:00",
+   "md5": "7ae9f74e53528a9795b86e9d30ffe1f4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s480/Output_Files/model_geo.npz",
+   "size": 95703,
+   "mtime": "2026-11-24T00:06:10.897735+00:00",
+   "md5": "c0f091322fcc65b2b67c97a57fbf9c52"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s60/Output_Files/model_geo.npz",
+   "size": 97409,
+   "mtime": "2026-11-23T23:47:12.755878+00:00",
+   "md5": "8bdaa34c0c3a8012fb6b0039d7d606b6"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s960/Output_Files/model_geo.npz",
+   "size": 95202,
+   "mtime": "2026-11-24T00:05:50.729861+00:00",
+   "md5": "37779d8656f79d75f0dd058c2b27b88a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d1000_s20.png",
+   "size": 86571,
+   "mtime": "2026-11-24T00:06:26.084641+00:00",
+   "md5": "dc0a4f5002574951f53d933739438c17"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s120.png",
+   "size": 85453,
+   "mtime": "2026-11-24T00:06:26.339639+00:00",
+   "md5": "e6958326956e6caa97aa33aebb52da16"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s1920.png",
+   "size": 68410,
+   "mtime": "2026-11-24T00:06:26.571637+00:00",
+   "md5": "d34ab17c9ca06d7fbb070e8ccfcf09f3"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s20.png",
+   "size": 83732,
+   "mtime": "2026-11-24T00:06:26.839636+00:00",
+   "md5": "2d78d6156bab8d8789637df028330fbe"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s240.png",
+   "size": 83713,
+   "mtime": "2026-11-24T00:06:27.069634+00:00",
+   "md5": "34120f2f87fef904028d9856ebfe4183"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s480.png",
+   "size": 79985,
+   "mtime": "2026-11-24T00:06:27.300633+00:00",
+   "md5": "1239e12039ccd7176b5fdb6c1c76150e"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s60.png",
+   "size": 85904,
+   "mtime": "2026-11-24T00:06:27.579631+00:00",
+   "md5": "27e9cb8e0525777726dafbb8c0c464a6"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/maps_d200_s960.png",
+   "size": 75019,
+   "mtime": "2026-11-24T00:06:27.808630+00:00",
+   "md5": "2305461b3fa31e7aca896cb85dddffc9"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/start_vp.png",
+   "size": 47390,
+   "mtime": "2026-11-24T00:06:27.996629+00:00",
+   "md5": "bc784b7f8a1be5da1a98fb626a634953"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/m0/summary.md",
+   "size": 2600,
+   "mtime": "2026-11-24T00:06:27.999629+00:00",
+   "md5": "532d13004ec28b254075249f6ac67c4a"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

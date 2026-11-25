@@ -101,3 +101,6 @@ paper_sciadv/*.blg
 paper_sciadv/*.bbl
 paper_sciadv/*.aux
 paper_sciadv/*_body.tex
+
+# Track B relocation (v5) binary intermediates
+data/reloc_v5/**/*.npz

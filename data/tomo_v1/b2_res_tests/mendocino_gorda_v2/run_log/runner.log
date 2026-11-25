@@ -1,0 +1,97 @@
+21:49:16 start mendocino_gorda_v2/res_tests/spike_null inv_d1000_s20
+21:49:18 start mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s20
+21:49:20 start mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s20
+21:49:22 start mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s20
+21:49:24 start mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s20
+21:49:26 start mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s20
+21:49:28 start mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s20
+21:49:30 start mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s20
+21:51:12 start mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s20
+21:51:14 start mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s20
+21:51:16 start mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s20
+21:51:18 start mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s20
+21:51:20 start mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s20
+21:51:22 start mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s20
+21:51:24 start mendocino_gorda_v2/res_tests/chk_L060_p1_noise inv_d1000_s20
+21:51:26 start mendocino_gorda_v2/res_tests/chk_L040_p1_noise inv_d1000_s20
+21:51:28 start mendocino_gorda_v2/res_tests/chk_L100_p1_noise inv_d1000_s20
+21:51:30 start mendocino_gorda_v2/res_tests/chk_L060_p0_noise_ploc inv_d1000_s20
+21:51:32 start mendocino_gorda_v2/res_tests/chk_L040_p0_noise_ploc inv_d1000_s20
+21:51:34 start mendocino_gorda_v2/res_tests/chk_L100_p0_noise_ploc inv_d1000_s20
+22:17:54 done rc=0 mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s20
+22:18:05 done rc=0 mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s20
+22:18:06 start mendocino_gorda_v2/res_tests/spike_null inv_d1000_s10
+22:18:08 start mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s10
+22:18:13 done rc=0 mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s20
+22:18:18 done rc=0 mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s20
+22:18:20 done rc=0 mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s20
+22:18:25 start mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s10
+22:18:27 start mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s10
+22:18:29 start mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s10
+22:18:40 done rc=0 mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s20
+22:18:46 start mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s10
+22:18:54 done rc=0 mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s20
+22:19:03 start mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s10
+22:19:08 done rc=0 mendocino_gorda_v2/res_tests/spike_null inv_d1000_s20
+22:19:20 start mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s10
+22:23:34 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s20
+22:23:37 start mendocino_gorda_v2/res_tests/spike_null inv_d1000_s40
+22:23:41 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s20
+22:23:52 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s20
+22:23:54 start mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s40
+22:23:56 start mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s40
+22:24:09 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p1_noise inv_d1000_s20
+22:24:13 start mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s40
+22:24:33 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s20
+22:24:39 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s20
+22:24:45 start mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s40
+22:24:47 start mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s40
+22:24:58 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p1_noise inv_d1000_s20
+22:25:01 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s20
+22:25:05 start mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s40
+22:25:07 start mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s40
+22:25:59 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_noise_ploc inv_d1000_s20
+22:26:09 start mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s10
+22:26:19 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p1_noise inv_d1000_s20
+22:26:26 start mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s10
+22:27:15 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_noise_ploc inv_d1000_s20
+22:27:26 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_noise_ploc inv_d1000_s20
+22:27:28 start mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s10
+22:27:30 start mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s10
+22:44:12 done rc=0 mendocino_gorda_v2/res_tests/spike_null inv_d1000_s10
+22:44:17 start mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s10
+22:44:22 done rc=0 mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s10
+22:44:27 done rc=0 mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s10
+22:44:31 done rc=0 mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s10
+22:44:34 start mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s10
+22:44:36 start mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s40
+22:44:37 done rc=0 mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s10
+22:44:38 start mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s40
+22:44:40 start mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s40
+22:44:43 done rc=0 mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s10
+22:44:57 start mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s40
+22:45:06 done rc=0 mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s10
+22:45:13 done rc=0 mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s10
+22:45:14 start mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s40
+22:45:16 start mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s40
+22:48:25 done rc=0 mendocino_gorda_v2/res_tests/spike_zp021 inv_d1000_s40
+22:48:35 done rc=0 mendocino_gorda_v2/res_tests/spike_null inv_d1000_s40
+22:48:36 done rc=0 mendocino_gorda_v2/res_tests/spike_zp034 inv_d1000_s40
+22:48:37 done rc=0 mendocino_gorda_v2/res_tests/spike_zp007 inv_d1000_s40
+22:48:58 done rc=0 mendocino_gorda_v2/res_tests/spike_zp003 inv_d1000_s40
+22:49:00 done rc=0 mendocino_gorda_v2/res_tests/spike_zp012 inv_d1000_s40
+22:49:21 done rc=0 mendocino_gorda_v2/res_tests/spike_zm001 inv_d1000_s40
+22:49:55 done rc=0 mendocino_gorda_v2/res_tests/spike_zp055 inv_d1000_s40
+22:52:48 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s10
+22:53:37 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s10
+22:53:51 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s10
+22:54:40 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s10
+23:09:31 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_noise inv_d1000_s40
+23:09:41 done rc=0 mendocino_gorda_v2/res_tests/chk_L060_p0_clean inv_d1000_s40
+23:09:43 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s10
+23:09:53 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s10
+23:09:57 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_noise inv_d1000_s40
+23:09:57 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_noise inv_d1000_s40
+23:10:10 done rc=0 mendocino_gorda_v2/res_tests/chk_L100_p0_clean inv_d1000_s40
+23:10:15 done rc=0 mendocino_gorda_v2/res_tests/chk_L040_p0_clean inv_d1000_s40
+ALL DONE 23:10:15

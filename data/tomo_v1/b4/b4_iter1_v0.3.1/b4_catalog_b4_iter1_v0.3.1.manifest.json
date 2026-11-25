@@ -1,0 +1,108 @@
+{
+ "name": "b4_catalog_b4_iter1_v0.3.1",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b4_catalog.py",
+ "argv": [
+  "b4_iter1_v0.3.1"
+ ],
+ "utc": "2026-11-24T18:44:40.568670+00:00",
+ "git_commit": "c54bf40e2422a95473682b298cb10da0261a924b",
+ "git_dirty": false,
+ "params_md5": "b6577a18337b9cc6ceb40c931ce59986",
+ "params": {
+  "depth_flags": {
+   "unconstrained_regions": [
+    "Endeavour",
+    "Explorer",
+    "JdF ridge/plate"
+   ],
+   "blanco_window": [
+    "2012-09-20",
+    "2013-10-05"
+   ],
+   "gorda_biased_dist_km": 15
+  },
+  "quarry": {
+   "name": "Texada Island",
+   "lat": [
+    49.4,
+    49.85
+   ],
+   "lon": [
+    -124.75,
+    -124.25
+   ],
+   "weekday_hours_local": [
+    7,
+    19
+   ],
+   "tz": "America/Vancouver"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_b4_iter1_v0.3.1.csv",
+   "size": 44220216,
+   "mtime": "2026-11-24T18:44:34.033183+00:00",
+   "md5": "77af170ecbe83386b2f02bd85123b782"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "size": 50695776,
+   "mtime": "2026-11-22T21:27:14.064885+00:00",
+   "md5": "de44780c3dbe49b404d785914e132459"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter1_v0.3.1/locations.csv",
+   "size": 52810885,
+   "mtime": "2026-11-24T18:44:29.374208+00:00",
+   "md5": "fd7511053ff27edb382f887dc59d42a7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv",
+   "size": 18154975,
+   "mtime": "2026-11-21T19:00:12.013022+00:00",
+   "md5": "33239b547040add3e1dd7ae3252764b2"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.1/compare.md",
+   "size": 2602,
+   "mtime": "2026-11-24T18:44:39.775151+00:00",
+   "md5": "af87359914a2624f18021b7749e6abfe"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.1/compare_by_region.csv",
+   "size": 876,
+   "mtime": "2026-11-24T18:44:39.695151+00:00",
+   "md5": "9474f57f1f60b2cdf8a05f36b16fb5c5"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.1/depth_hist.png",
+   "size": 50411,
+   "mtime": "2026-11-24T18:44:40.561146+00:00",
+   "md5": "b147150f572f085c9a074e76c98342ad"
+  }
+ ],
+ "counts": {
+  "events": 172340,
+  "nll3d": 157269,
+  "both": 157226,
+  "depth_quality": {
+   "ok": 139503,
+   "unconstrained": 24989,
+   "biased_deep": 7848
+  },
+  "quarry_blast_likely": 1573,
+  "above_surface": 4078,
+  "above_surface_tier_U": 4078,
+  "publishable": false
+ },
+ "notes": null
+}

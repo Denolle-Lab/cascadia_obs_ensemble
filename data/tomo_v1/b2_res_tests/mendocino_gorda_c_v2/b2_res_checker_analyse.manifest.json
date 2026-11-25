@@ -1,0 +1,331 @@
+{
+ "name": "b2_res_checker_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_res_checker.py",
+ "argv": [
+  "analyse"
+ ],
+ "utc": "2026-11-23T19:07:59.199839+00:00",
+ "git_commit": "7220d6ef01ed982b93cc603ae0b677ebed52c59f",
+ "git_dirty": false,
+ "params_md5": "8de1272f412743dc234ef0d7d2d99210",
+ "params": {
+  "amp": 0.08,
+  "cell_km": [
+   40,
+   60,
+   100
+  ],
+  "bands_km": [
+   -10,
+   12,
+   25,
+   40,
+   65
+  ],
+  "phase_shift": 0.5,
+  "noise_seed": 20261122,
+  "loc_h_from_68": 1.515,
+  "window_cells": 1.5,
+  "resolved": {
+   "corr": 0.7,
+   "amp": 0.5
+  },
+  "mask_smooth": 20
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:07:45.023098+00:00",
+   "md5": "2755f75a695eefd8a95d1e6b22f790ed"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:49:53.350600+00:00",
+   "md5": "cb11d9fe969615ea12e2908c370fd05b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T19:02:07.384022+00:00",
+   "md5": "43d600ea4ed8903983db5f8c4786c987"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:07:16.122252+00:00",
+   "md5": "4f1a774a24cd20abc2d60d78dfae4b09"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:50:07.587517+00:00",
+   "md5": "05511cb08c754e2b48a5d34df982f51a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T19:02:03.179046+00:00",
+   "md5": "5d23d6b07bb929a3eae338379a7e2cd7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:56:42.071210+00:00",
+   "md5": "e4389d29d49c5ffc5e4f846a2ab0dbb0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:52:06.464826+00:00",
+   "md5": "9cf6c8e0a35bf76b9858cbc04c24571e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L040_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:01:48.108937+00:00",
+   "md5": "56198109296317b57e86cab0db227f71"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:30:44.731083+00:00",
+   "md5": "663d879bb819a5473b1fe14bc11a4203"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:56:59.738865+00:00",
+   "md5": "f42a00ad2a127f482da515862b444f01"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:03:07.327515+00:00",
+   "md5": "fc043d57441660b3e0489efbd1abf11e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:31:47.592736+00:00",
+   "md5": "f2682d83352adccd8f7aec96338f140d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:46:24.840650+00:00",
+   "md5": "5ef33d2a5b17a1b9302347ab79b3b0ab"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:51:46.389942+00:00",
+   "md5": "1114227dca2e647b55e0647c76b76b96"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T16:32:28.838505+00:00",
+   "md5": "7ae73a74a93ed8b64a3ff139942717f4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L060_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:12:38.210561+00:00",
+   "md5": "22fb2aaef118d8e935ef0ab1426759ed"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T17:02:01.227346+00:00",
+   "md5": "4ba1d24fd7ab7021804ee4ddb2306cda"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T19:07:52.988941+00:00",
+   "md5": "7609020dfe69d8b577fa53e71a64fb59"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T18:12:17.588671+00:00",
+   "md5": "dd5c3f46fa8d63645a2ead80a314b5eb"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T17:00:18.906944+00:00",
+   "md5": "6fdb3e8b77dd4aa066bd51c760b4b979"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T19:07:23.631117+00:00",
+   "md5": "975644e6c9720c0c9029a5d1f32dccfa"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T17:29:03.973406+00:00",
+   "md5": "fbd7cd0d8d6be97ad3e1fb1e05372892"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T17:00:51.971751+00:00",
+   "md5": "34fcc30e4c9e5a74e18a961cadce90e1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_c_v2/res_tests/chk_L100_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/checker_by_depth.csv",
+   "size": 69880,
+   "mtime": "2026-11-23T19:07:55.842925+00:00",
+   "md5": "a8dc594e8ffa48cf66c625a0132786a2"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/checker_maps_p_s20.png",
+   "size": 798618,
+   "mtime": "2026-11-23T19:07:57.071917+00:00",
+   "md5": "47a6c79f0897d742ef7cf77889021279"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/checker_maps_s_s20.png",
+   "size": 810243,
+   "mtime": "2026-11-23T19:07:58.000912+00:00",
+   "md5": "c060091f20ac5c674bf90ee384c113ff"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/coast_i.txt",
+   "size": 9704,
+   "mtime": "2026-11-23T19:07:56.133923+00:00",
+   "md5": "46696edf4f160f468751bce88a0c3c01"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/resolution_mask.npz",
+   "size": 4500,
+   "mtime": "2026-11-23T19:07:55.846925+00:00",
+   "md5": "2515572a0937906f22340faeb193f2dc"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/resolution_mask_maps_s20.png",
+   "size": 82161,
+   "mtime": "2026-11-23T19:07:58.529908+00:00",
+   "md5": "c3b80b593a35877207471c3eb974f3f0"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/resolution_sections_s20.png",
+   "size": 307344,
+   "mtime": "2026-11-23T19:07:59.197905+00:00",
+   "md5": "b0fb79828decb926f85eff4e4969f841"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/summary_tables.md",
+   "size": 6336,
+   "mtime": "2026-11-23T19:07:55.854924+00:00",
+   "md5": "a23eeedec72c1a8f08a1dbbc00dfd56f"
+  }
+ ],
+ "counts": {
+  "runs": 24
+ },
+ "notes": null
+}

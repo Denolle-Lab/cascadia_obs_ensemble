@@ -1,0 +1,46 @@
+{
+ "joint": [
+  "blanco_oregon_v2",
+  "d200_s20"
+ ],
+ "tile_a": [
+  "blanco_v2",
+  "d200_s20"
+ ],
+ "tile_b": [
+  "oregon_v2g",
+  "d200_s20"
+ ],
+ "overlap_width_km": 48.073008517977286,
+ "masks": [
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/resolution_mask.npz",
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/resolution_mask.npz"
+ ],
+ "taper_km": 15,
+ "floor": 0.1,
+ "grid_points": 43197,
+ "events_in_tile_not_in_joint": {
+  "blanco": 3,
+  "oregon": 13
+ },
+ "yardsticks": {
+  "damp200_vs_300_A": [
+   "blanco_v2",
+   "d200_s20",
+   "blanco_v2",
+   "d300_s20"
+  ],
+  "damp200_vs_300_B": [
+   "oregon_v2",
+   "d200_s20",
+   "oregon_v2",
+   "d300_s20"
+  ],
+  "weightscale_B": [
+   "oregon_v2",
+   "d200_s20",
+   "oregon_v2g",
+   "d200_s20"
+  ]
+ }
+}

@@ -1,0 +1,89 @@
+{
+ "output": "/wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_M_v51_converged.csv",
+ "solver": "exact",
+ "data": "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag",
+ "suffix": "_v51",
+ "matched": "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/comcat_mt_matched_v51.csv",
+ "rmax_km": 150.0,
+ "min_sta_obs": 8,
+ "reject_mad": 4.0,
+ "m_switch": 4.5,
+ "fit_min": 3.5,
+ "theil_max": 5000,
+ "damp": 0.001,
+ "gauge_w": 1000.0,
+ "gauge": "P",
+ "anchor_offset": 0.3428290375135815,
+ "n_anchors": 3414,
+ "anchor_std": 0.17484816760227626,
+ "s_anchor": 0.16585021115989826,
+ "mapped_fit": {
+  "intercept": -0.2887279878153515,
+  "slope": 0.9990928361846003,
+  "std": 0.6506392326764628
+ },
+ "mw_cal_offset": {
+  "mapped": 1.5072279455358297,
+  "near": 0.16868508034961893
+ },
+ "m_type": {
+  "ML": 130246,
+  "Mw": 75,
+  "Mw_cal": 25
+ },
+ "ml_method": {
+  "near": 126840,
+  "mapped": 3506
+ },
+ "threads": {
+  "OMP_NUM_THREADS": "12",
+  "OPENBLAS_NUM_THREADS": "12",
+  "MKL_NUM_THREADS": "12"
+ },
+ "inversions": [
+  {
+   "method": "exact",
+   "refine_step": 5.336392757705832e-15,
+   "normal_res_rel": 1.5405215916840298e-13,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.724100019446683,
+    0.912418271052362,
+    1.3770573489509923
+   ],
+   "n_components": 1,
+   "terms_outside_main": [],
+   "n_null_numerical": 1,
+   "n_gauge_rows": 1,
+   "gauge_null_sv": 0.7084336856772447,
+   "n_picks": 1363142,
+   "n_events": 160582,
+   "n_terms": 1331,
+   "gauge": "P",
+   "r_norm": 286.6559856007244
+  },
+  {
+   "method": "exact",
+   "refine_step": 1.524542669297754e-14,
+   "normal_res_rel": 5.177892284045154e-14,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.704690722767421,
+    0.8376470256218409,
+    1.3709830699786105
+   ],
+   "n_components": 1,
+   "terms_outside_main": [],
+   "n_null_numerical": 1,
+   "n_gauge_rows": 1,
+   "gauge_null_sv": 0.7084336856772419,
+   "n_picks": 1356935,
+   "n_events": 160500,
+   "n_terms": 1331,
+   "gauge": "P",
+   "r_norm": 267.9018853157469
+  }
+ ]
+}

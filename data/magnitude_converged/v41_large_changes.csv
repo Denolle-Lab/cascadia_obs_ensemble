@@ -1,0 +1,4 @@
+event_id,region,ML_method_s,n_ML_s,ML_s,ML_c,dML,M_type_s,M_type_c,dist_min
+93091,Offshore forearc,near,3.0000,0.2890,1.3000,1.0110,ML,ML,25.9974
+89576,Offshore forearc,near,3.0000,1.5110,2.5240,1.0130,ML,ML,9.3765
+91940,Offshore forearc,near,3.0000,0.4540,1.8250,1.3710,ML,ML,16.4834

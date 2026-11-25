@@ -1,0 +1,3 @@
+solver,n_events_t1,n_events_t12,n_common,max_abs,p99_abs,median_abs,share_gt_1e4,share_gt_0p1
+exact,127247,127247,127247,6.217e-15,5.440e-15,6.661e-16,0.000e+00,0.000e+00
+legacy3000,127251,127251,127250,8.636e-01,7.502e-02,1.050e-02,9.879e-01,2.358e-04

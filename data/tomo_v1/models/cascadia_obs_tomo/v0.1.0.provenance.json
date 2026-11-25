@@ -1,0 +1,89 @@
+{
+ "model": "cascadia_obs_tomo",
+ "version": "0.1.0",
+ "description": "M0, coarse whole-margin tomoDD model, damping 200, smoothing 480 (D-B044, D-B046); common start of the tiles",
+ "status": "intermediate",
+ "created": "2026-11-24T00:44:14+00:00",
+ "files": {
+  "zarr": {
+   "path": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.1.0.zarr",
+   "sha256": "94a326446a1c7155ae3cb3237d443c55a9edb5ba1176efeabbf7cfcaab58320d"
+  },
+  "netcdf": {
+   "path": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.1.0.nc",
+   "sha256": "4e812e20231385742c1d2bcbed1f6bfc2a3ad65d348ed41eb1dcdd75058384d9"
+  },
+  "nll_P": {
+   "path": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.1.0_nll/model.P.mod.buf",
+   "sha256": "d495e6e8c0cb1b267c06543f69dec76af899b48eaff180a6353f4036061cda05"
+  },
+  "nll_S": {
+   "path": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.1.0_nll/model.S.mod.buf",
+   "sha256": "7b474598b23db21aff979d6daea56c6f9d901d04538729599cdd3e3dd824eab0"
+  }
+ },
+ "netcdf_in_git": "data/tomo_v1/models/cascadia_obs_tomo/v0.1.0.nc",
+ "attributes": {
+  "keywords": "seismic, tomography, P wave velocity, S wave velocity, Vp/Vs, Cascadia, Juan de Fuca plate, Gorda, OBS",
+  "Conventions": "CF-1.0",
+  "Metadata_Conventions": "Unidata Dataset Discovery v1.0",
+  "repository_name": "EMC",
+  "repository_institution": "EarthScope DS",
+  "repository_pid": "TO FILL (assigned by EMC on acceptance)",
+  "author_name": "TO FILL (PI)",
+  "author_institution": "TO FILL (PI)",
+  "author_email": "TO FILL (PI)",
+  "author_url": "https://github.com/Denolle-Lab/cascadia_obs_ensemble",
+  "reference": "TO FILL (peer-reviewed paper, required by EMC and CRESCENT CVM)",
+  "reference_pid": "TO FILL (paper DOI)",
+  "model_type": "3D velocity model",
+  "model_subtype": "local-earthquake double-difference tomography (tomoDD-SE), Vp and Vs",
+  "title": "cascadia_obs_tomo v0.1.0: M0, coarse whole-margin tomoDD model, damping 200, smoothing 480 (D-B044, D-B046); common start of the tiles",
+  "id": "cascadia_obs_tomo.v0.1.0",
+  "model": "cascadia_obs_tomo",
+  "version": "v0.1.0",
+  "data_revision": "r0.1.0",
+  "grid_dim": "3D",
+  "summary": "M0, coarse whole-margin tomoDD model, damping 200, smoothing 480 (D-B044, D-B046); common start of the tiles. Three-dimensional Vp and Vs of the Cascadia margin and Juan de Fuca / Gorda plates from double-difference local-earthquake tomography (tomoDD-SE) of the offshore-onshore ensemble catalog (OBS and land picks), on the tomoDD node grid (interior nodes). Depth in km below sea level, positive down.",
+  "year": 2026,
+  "history": "2026-11-24T00:43:40+00:00 b2_model_export.py from margin_m0_v2/d200_s480",
+  "grid_ref": "latitude_longitude",
+  "data_layout": "vertex",
+  "geospatial_lat_units": "degrees_north",
+  "geospatial_lon_units": "degrees_east",
+  "geospatial_lat_min": 38.90002069424479,
+  "geospatial_lat_max": 50.59997930575521,
+  "geospatial_lon_min": -131.74998499500913,
+  "geospatial_lon_max": -120.12496330218576,
+  "geospatial_lat_resolution": 0.299984,
+  "geospatial_lon_resolution": 0.374956,
+  "geospatial_vertical_units": "km",
+  "geospatial_vertical_positive": "down",
+  "geospatial_vertical_min": -3.0,
+  "geospatial_vertical_max": 125.0,
+  "provenance_run": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/d200_s480",
+  "provenance_region": "margin_m0_v2",
+  "provenance_tag": "d200_s480",
+  "provenance_git_commit": "1072aecc2073f9ce2c65b5fa77fb17c85f09dd7a",
+  "provenance_start_model": "/wd1/mdenolle_data/reloc_v5/model_vpvs176",
+  "provenance_region_json": "{\"b1b\": \"b1b_balanced_c\", \"bins\": {\"bin\": \"/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_m_fmt\", \"bin_check\": \"/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_m_fmt\"}, \"damp\": 200, \"decluster\": {\"cell_km\": 10, \"depth_cell_km\": 10, \"keep_per_cell\": 2}, \"events_boxes\": [[39.5, 43.1, -127.5, -122.5], [42.6, 45.2, -130.6, -125.6], [42.6, 46.4, -126.2, -121.0], [45.8, 49.8, -126.4, -121.0], [44.4, 50.0, -131.0, -126.6]], \"events_lat\": [39.5, 50.0], \"events_lon\": [-131.0, -121.0], \"forward\": {\"coords\": \"ellipsoid\", \"mod\": \"box\", \"p1_reference\": \"margin_m0_v2/p1_reference\", \"statics_file\": \"data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv\", \"station_corr\": true}, \"limits\": {\"MAXOBS\": 130, \"MAXSTA\": 560}, \"model_box_avg_km\": 31, \"node_lat\": [38.9, 50.6, 0.3], \"node_lon\": [-131.75, -120.125, 0.375], \"station_margin_deg\": [0.5, 0.7], \"weights_scale\": \"dataset\"}",
+  "provenance_model_geo_sha256": "68a8dcc89373b060c4ecdb480841a52e560fdf93cc78da4d48991804150d6d94",
+  "emc_check": "pending (placeholder) author_institution; pending (placeholder) author_name; pending (placeholder) reference_pid; pending (placeholder) reference; pending (placeholder) repository_pid"
+ },
+ "variables": [
+  "Vp",
+  "Vs",
+  "VpVs",
+  "Vp_start",
+  "Vs_start",
+  "Vp_perturbation",
+  "Vs_perturbation",
+  "dws_p",
+  "dws_s"
+ ],
+ "shape": {
+  "depth": 21,
+  "latitude": 40,
+  "longitude": 32
+ }
+}

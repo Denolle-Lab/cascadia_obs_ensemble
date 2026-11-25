@@ -1,0 +1,133 @@
+{
+ "name": "b2_m0_report",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_m0_report.py",
+ "argv": [
+  "oregon_m0",
+  "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon"
+ ],
+ "utc": "2026-11-24T01:33:48.521638+00:00",
+ "git_commit": "4cd156850a259016e3e64d87a4d88cbc446ba925",
+ "git_dirty": false,
+ "params_md5": "d33dd776b1069776e04d82c6b6e4a061",
+ "params": {
+  "region": {
+   "b1b": "b1b_balanced_c",
+   "bins": {
+    "bin": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_O3nofs_e10k_fmt",
+    "bin_check": "/wd1/mdenolle_data/tomo_v1/bin/tomoDD-SE_chk_e10k_fmt"
+   },
+   "events_lat": [
+    42.6,
+    46.4
+   ],
+   "events_lon": [
+    -126.2,
+    -121.0
+   ],
+   "station_margin_deg": [
+    0.5,
+    0.7
+   ],
+   "node_lon": [
+    -126.95,
+    -120.375,
+    0.125
+   ],
+   "node_lat": [
+    42.1,
+    46.9,
+    0.1
+   ],
+   "forward": {
+    "coords": "ellipsoid",
+    "mod": "nearest",
+    "station_corr": true,
+    "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_oregon.csv",
+    "p1_reference": "oregon_v2/p1_reference",
+    "station_corr_from": "oregon_v2"
+   },
+   "weights_scale": "dataset",
+   "start_model": "margin_m0_v2/d200_s480",
+   "start_model_mode": "change",
+   "damp": 200
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/d200_s120/Output_Files/model_geo.npz",
+   "size": 201053,
+   "mtime": "2026-11-24T00:51:45.866991+00:00",
+   "md5": "fb8c8a9f717e172d01490887b3fb1498"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/d200_s20/Output_Files/model_geo.npz",
+   "size": 204207,
+   "mtime": "2026-11-24T00:51:11.785179+00:00",
+   "md5": "9fbde4961d8056aa56d35d0ed9ce2ab7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/d200_s240/Output_Files/model_geo.npz",
+   "size": 200549,
+   "mtime": "2026-11-24T00:51:39.967024+00:00",
+   "md5": "3ee02bda2d9b8ae959b4846bf446e072"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/d200_s480/Output_Files/model_geo.npz",
+   "size": 199995,
+   "mtime": "2026-11-24T00:51:47.669981+00:00",
+   "md5": "6811f403884194959a3988036c4656aa"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_m0/d200_s60/Output_Files/model_geo.npz",
+   "size": 201881,
+   "mtime": "2026-11-24T00:51:57.913925+00:00",
+   "md5": "e4decb42d66f98b5659b47acec5880d3"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/maps_d200_s120.png",
+   "size": 91512,
+   "mtime": "2026-11-24T01:33:47.361087+00:00",
+   "md5": "7f249bb6798e9cd3ebf66544c2a2f9b2"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/maps_d200_s20.png",
+   "size": 102145,
+   "mtime": "2026-11-24T01:33:47.622086+00:00",
+   "md5": "c04bcb1c877fb26f647a23646e214343"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/maps_d200_s240.png",
+   "size": 83221,
+   "mtime": "2026-11-24T01:33:47.859084+00:00",
+   "md5": "7af3588b72992d90bc2dc00adb45fa7d"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/maps_d200_s480.png",
+   "size": 73773,
+   "mtime": "2026-11-24T01:33:48.096083+00:00",
+   "md5": "b6a1f0b7e0658ec8302dd34ed75759cf"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/maps_d200_s60.png",
+   "size": 98191,
+   "mtime": "2026-11-24T01:33:48.367081+00:00",
+   "md5": "ea219cc62fc94b9ba917acbba11119f4"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/start_vp.png",
+   "size": 56054,
+   "mtime": "2026-11-24T01:33:48.518080+00:00",
+   "md5": "9f1dbbd4b6355d6e3e99cb86d24920c1"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_merge/tiles_m0/oregon/summary.md",
+   "size": 1811,
+   "mtime": "2026-11-24T01:33:48.521080+00:00",
+   "md5": "a1bd3e913fc8c26d7242e4845c7e82f8"
+  }
+ ],
+ "counts": {},
+ "notes": null
+}

@@ -1,0 +1,45 @@
+{
+ "name": "b4_acceptance_b4_iter1_v0.3.1",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b4_acceptance.py",
+ "argv": [
+  "b4_iter1_v0.3.1"
+ ],
+ "utc": "2026-11-24T18:45:30.712092+00:00",
+ "git_commit": "1464b4f8284ab5f85cd8d4b8147a1d2c0ae920c0",
+ "git_dirty": true,
+ "params_md5": "b6577a18337b9cc6ceb40c931ce59986",
+ "params": null,
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv",
+   "size": 50711269,
+   "mtime": "2026-11-24T06:57:22.913524+00:00",
+   "md5": "a8b560faaa581fd1eba3b74136348003"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+   "size": 50695776,
+   "mtime": "2026-11-22T21:27:14.064885+00:00",
+   "md5": "de44780c3dbe49b404d785914e132459"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b4/b4_iter1_v0.3.1/acceptance.md",
+   "size": 1367,
+   "mtime": "2026-11-24T18:45:30.710885+00:00",
+   "md5": "348953cdbb6b586f72769f8595ed3a94"
+  }
+ ],
+ "counts": {
+  "axial_AB": 3474,
+  "events_compared": 157218
+ },
+ "notes": null
+}

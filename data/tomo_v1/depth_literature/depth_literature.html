@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Depths Against Literature</title>
+<meta name="description" content="Earthquake depths by region in the Cascadia OBS ensemble catalog (B4 and v4-NLL3D) compared with verified published depth constraints.">
+<style>
+:root{
+  --bg:#fbfbf9; --fg:#1d1f21; --muted:#5a6067; --rule:#d8dbde; --card:#ffffff; --head:#eef1f3;
+  --link:#1d5ea8; --accent:#3a6ea5;
+  --deep-bg:#fbe3dc; --deep-fg:#8f2610;
+  --ok-bg:#dff1e3; --ok-fg:#1b6630;
+  --mix-bg:#fbefd2; --mix-fg:#7d5400;
+  --unc-bg:#e9ebed; --unc-fg:#3d4247;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --fg:#e3e5e8; --muted:#9aa1a9; --rule:#33383e; --card:#1b1e22; --head:#22262b;
+    --link:#8bb9ef; --accent:#6d9fd6;
+    --deep-bg:#4a1e15; --deep-fg:#ffb3a1;
+    --ok-bg:#16361f; --ok-fg:#9fdeb0;
+    --mix-bg:#3e3113; --mix-fg:#f2cf7c;
+    --unc-bg:#2b2f34; --unc-fg:#c8cdd2;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --fg:#e3e5e8; --muted:#9aa1a9; --rule:#33383e; --card:#1b1e22; --head:#22262b;
+  --link:#8bb9ef; --accent:#6d9fd6;
+  --deep-bg:#4a1e15; --deep-fg:#ffb3a1;
+  --ok-bg:#16361f; --ok-fg:#9fdeb0;
+  --mix-bg:#3e3113; --mix-fg:#f2cf7c;
+  --unc-bg:#2b2f34; --unc-fg:#c8cdd2;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 72px}
+h1{font-size:1.8rem;line-height:1.2;margin:0 0 .35em}
+h2{font-size:1.4rem;line-height:1.3;margin:2.4em 0 .5em;padding-top:.6em;border-top:2px solid var(--rule)}
+h3{font-size:1.05rem;margin:1.5em 0 .4em}
+h4{font-size:.95rem;margin:1.2em 0 .3em;color:var(--muted)}
+p,li{max-width:78ch}
+ul,ol{padding-left:1.3em}
+li{margin:.25em 0}
+a{color:var(--link);text-underline-offset:2px}
+a.c{text-decoration:none;border-bottom:1px dotted var(--link)}
+.meta{color:var(--muted);font-size:.92rem}
+.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--accent);
+  padding:10px 16px;border-radius:4px;margin:16px 0}
+.note p{margin:.4em 0}
+.lead{font-size:1.02rem}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0 18px;
+  border:1px solid var(--rule);border-radius:6px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.86rem}
+th,td{padding:6px 9px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+thead th{background:var(--head);font-weight:600}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap}
+table.summary{min-width:1100px}
+table.summary thead th.num{white-space:normal}
+table.summary th:nth-child(6){min-width:240px}
+table.summary th:nth-child(7){min-width:120px}
+table.summary th:nth-child(8){min-width:200px}
+table.summary td:first-child,table.summary th:first-child{position:sticky;left:0;z-index:1;background:var(--card)}
+table.summary thead th:first-child{background:var(--head)}
+table.summary td:first-child{font-weight:600;white-space:nowrap}
+table.summary .rng{display:block;color:var(--muted);font-size:.8rem;white-space:nowrap}
+table.stats{min-width:640px}
+table.stats td:first-child{white-space:nowrap}
+.chip{display:inline-block;padding:1px 9px;border-radius:11px;font-size:.78rem;font-weight:600;
+  white-space:nowrap;vertical-align:middle;line-height:1.6}
+.deep{background:var(--deep-bg);color:var(--deep-fg)}
+.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.mixed{background:var(--mix-bg);color:var(--mix-fg)}
+.unc{background:var(--unc-bg);color:var(--unc-fg)}
+.conf{background:transparent;color:var(--muted);border:1px solid var(--rule);font-weight:500}
+h2 .chip{margin-left:6px;font-size:.75rem}
+nav.toc{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:10px 16px;margin:18px 0}
+nav.toc ol{margin:.3em 0;columns:2;column-gap:32px}
+nav.toc li{break-inside:avoid}
+.facts{font-size:.9rem;color:var(--fg)}
+.facts li{margin:.2em 0}
+.refs li{margin:.45em 0}
+.tag{color:var(--muted);font-size:.8rem}
+.small{font-size:.88rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em;
+  background:var(--head);padding:0 3px;border-radius:3px;overflow-wrap:anywhere}
+footer{margin-top:48px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padding-top:12px}
+@media (max-width:640px){
+  h1{font-size:1.45rem}
+  h2{font-size:1.2rem}
+  nav.toc ol{columns:1}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Earthquake depths by region: our catalog against the literature</h1>
+<p class="meta">Cascadia OBS ensemble catalog, 2010–2016, 172,340 events. Compares B4 (after the tomography) and v4-NLL3D (before) with verified published depth constraints. Draft for the PI and co-authors, 24 November 2026. Scratch analysis only: no repository file or catalog was changed.</p>
+</header>
+
+<div class="note">
+<p><b>Conventions.</b> Depths are in km. <b>bsl</b> = below sea level, positive down. <b>Below surface</b> = below the local seafloor offshore (<b>bsf</b>) or below the ground onshore, computed as <code>depth + surface_km</code>, where <code>surface_km</code> is the local elevation, positive up. Ranges are p10–p90 around the median (p50). <b>A-D</b> = all located events; <b>A-C</b> drops tier D; tiers A-B have depth constrained by a nearby station. <b>v4-NLL3D</b> (NLL3D below) is NonLinLoc in the 3D starting model, before the tomography. <b>B4</b> is NonLinLoc in the merged tomoDD model v0.3.0 with new station terms, after the tomography. “Offset” is B4 minus the literature: positive means our events are deeper.</p>
+</div>
+
+<h3>In short</h3>
+<ul>
+<li>B4 is too deep at Axial Seamount by about 2–2.5 km below the seafloor, on the same events and stations that Waldhauser et al. (2020) located. The cause is the v0.3.0 model under the caldera, where Vp/Vs falls to 1.35–1.40. NLL3D agreed with the literature there; the tomography moved events away from it.</li>
+<li>On the Endeavour, Explorer and Juan de Fuca plates the depth is not constrained (median sig_z about 11 km, nearest station 28–58 km). B4 puts many of these events 15–45 km below the seafloor, under a crust only 6–10 km thick. These depths should not be reported.</li>
+<li>B4 is also too deep in the Gorda interior (+8 to +12 km at the median, +3 to +6 km near an OBS), on the Blanco Ridge (+3 to +5 km) and at Mendocino (+2 to +4 km against NCSN and the slab literature). The tomography reduced the Gorda and Blanco offsets. The Mendocino offset was already in NLL3D.</li>
+<li>B4 agrees with the literature within about 1 km in Puget/Georgia, at the offshore-forearc benchmarks (Fortuna, Newport), in Oregon and SW Washington, and at Mount St Helens.</li>
+<li>The depth datum does not explain the offsets. Where the literature gives depth below the seafloor we convert with <code>surface_km</code>; at Axial that conversion is good to about 0.1 km. Onshore and on the coast the surface is within 0.5 km of sea level.</li>
+<li>Next: QC the merged model (reject Vp/Vs below about 1.6 and nodes with no resolution), add depth-quality flags, and run the diagnostic relocations and event-level benchmarks listed in <a href="#overall">Overall findings</a> before GrowClust3D (B5).</li>
+</ul>
+
+<nav class="toc" aria-label="Contents">
+<b>Contents</b>
+<ol>
+<li><a href="#summary">Summary table</a></li>
+<li><a href="#axial">Axial Seamount</a></li>
+<li><a href="#endeavour">Endeavour</a></li>
+<li><a href="#explorer">Explorer</a></li>
+<li><a href="#jdf">Juan de Fuca ridge and plate</a></li>
+<li><a href="#blanco">Blanco</a></li>
+<li><a href="#gorda">Gorda</a></li>
+<li><a href="#mendocino">Mendocino</a></li>
+<li><a href="#forearc">Offshore forearc</a></li>
+<li><a href="#puget">Puget/Georgia</a></li>
+<li><a href="#onshore">Other onshore</a></li>
+<li><a href="#cascades">Cascades</a></li>
+<li><a href="#overall">Overall findings</a></li>
+<li><a href="#methods">Methods</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</nav>
+
+<h2 id="summary">1. Summary table</h2>
+<p>B4 and NLL3D statistics are for all located events (tiers A-D). Each region section gives the A-C numbers and the subsets used for the verdict. The literature column gives the depth range that each verdict was judged against, with its datum. Offsets are for the comparison basis named in that row.</p>
+<div class="table-wrap">
+<table class="summary">
+<thead>
+<tr>
+<th>Region</th>
+<th class="num">n located (B4)</th>
+<th class="num">B4 median bsl<br><span class="small">p10–p90</span></th>
+<th class="num">B4 median below surface<br><span class="small">p10–p90</span></th>
+<th class="num">NLL3D median<br><span class="small">bsl / below surface</span></th>
+<th>Literature range (datum)</th>
+<th>Verdict</th>
+<th>Offset (B4 − literature)</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#axial">Axial</a></td>
+<td class="num">26,371</td>
+<td class="num">5.0<span class="rng">2.2 to 6.4</span></td>
+<td class="num">3.4<span class="rng">0.5 to 4.8</span></td>
+<td class="num">3.0 / 1.5</td>
+<td>Ring-fault seismicity 0–2 km; 85 % above 1.6 km and 90 % above 2.0 km; sparse events to 2.9 km (below seafloor)</td>
+<td><span class="chip deep">too deep</span></td>
+<td>+2 to +2.5 km at the median; +2.8 to +2.9 km at p85/p90</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="#endeavour">Endeavour</a></td>
+<td class="num">95</td>
+<td class="num">29.6<span class="rng">2.5 to 44.8</span></td>
+<td class="num">27.0<span class="rng">0.0 to 42.3</span></td>
+<td class="num">2.8 / 0.3</td>
+<td>Axial seismicity 1.2–3.5 km above a magma lens at 2.1–3.3 km; Moho 5.9–7.7 km (below seafloor)</td>
+<td><span class="chip deep">too deep</span> <span class="chip unc">unconstrained</span></td>
+<td>About +25 km (A-D), +14 km (A-C); not a calibrated bias</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="#explorer">Explorer</a></td>
+<td class="num">845</td>
+<td class="num">34.9<span class="rng">22.7 to 51.0</span></td>
+<td class="num">32.4<span class="rng">20.8 to 48.7</span></td>
+<td class="num">32.9 / 31.1</td>
+<td>Seaward of the deformation front 5–22 km (bsl); centroids 4–15 km (below seafloor); 2014 Nootka sequence 5–36 km (bsl)</td>
+<td><span class="chip deep">too deep</span> <span class="chip unc">unconstrained</span></td>
+<td>Seaward median about 16 km below the 22 km bound; Nootka SE +2 to +4 km, NW consistent</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="#jdf">JdF ridge/plate</a></td>
+<td class="num">2,167</td>
+<td class="num">7.2<span class="rng">2.5 to 38.3</span></td>
+<td class="num">4.8<span class="rng">0.0 to 35.7</span></td>
+<td class="num">2.9 / 0.5</td>
+<td>Above the axial magma chamber at 2.0–2.7 km; nothing below the Moho at 6.7–8 km (below seafloor; indirect)</td>
+<td><span class="chip deep">too deep</span> <span class="chip unc">unconstrained</span></td>
+<td>A-C median +7 km; deep mode about +30 km; Cleft about 0</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#blanco">Blanco</a></td>
+<td class="num">36,286</td>
+<td class="num">9.9<span class="rng">4.7 to 25.0</span></td>
+<td class="num">6.9<span class="rng">1.5 to 21.9</span></td>
+<td class="num">10.1 / 7.1</td>
+<td>West 0–8 km, east 3–13 km (below seafloor); Lange et al. catalog p5–p95 4.7–11.3 km (datum not stated, probably bsl)</td>
+<td><span class="chip deep">too deep</span> on Blanco Ridge, Gorda Depression and in the tail</td>
+<td>+2.2 to +2.4 km against Lange (A-C, event-paired); Blanco Ridge +3.6; Gorda Depression +8 to +10</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#gorda">Gorda</a></td>
+<td class="num">9,667</td>
+<td class="num">24.8<span class="rng">8.2 to 33.1</span></td>
+<td class="num">21.8<span class="rng">5.1 to 29.9</span></td>
+<td class="num">27.3 / 24.2</td>
+<td>Interior faulting limit about 9.5–15 km (below seafloor, thermal); large events median 14.6 km (datum not stated); ridge 3–7 km (below seafloor)</td>
+<td><span class="chip deep">too deep</span> in the interior; ridge consistent</td>
+<td>+8 to +12 km at the median; +3 to +6 km with an OBS within 10 km; ridge about 0</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#mendocino">Mendocino</a></td>
+<td class="num">23,232</td>
+<td class="num">23.2<span class="rng">9.7 to 31.2</span></td>
+<td class="num">22.8<span class="rng">9.6 to 30.7</span></td>
+<td class="num">23.6 / 23.5</td>
+<td>Slab double zone 15–25 km; Ferndale aftershocks 17–20 km; onshore slab-mantle events near 25 km (datum not stated; NCSN depth scale)</td>
+<td><span class="chip deep">too deep</span></td>
+<td>+2 to +4 km onshore and near-shore (paired against NCSN +3.4 km)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#forearc">Offshore forearc</a></td>
+<td class="num">14,195</td>
+<td class="num">18.8<span class="rng">5.3 to 30.0</span></td>
+<td class="num">18.9<span class="rng">5.3 to 29.7</span></td>
+<td class="num">19.0 / 19.2</td>
+<td>Fortuna cluster 17–23 km (datum not stated); Newport events 8–13 km (bsl)</td>
+<td><span class="chip ok">consistent</span></td>
+<td>About 0 ± 1.5 km at the benchmarks; north (Washington, Vancouver Island) not resolved</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#puget">Puget/Georgia</a></td>
+<td class="num">14,165</td>
+<td class="num">15.0<span class="rng">2.4 to 23.6</span></td>
+<td class="num">15.1<span class="rng">2.7 to 23.7</span></td>
+<td class="num">15.4 / 15.6</td>
+<td>Crust 15–25 km, mean 17.6 km; slab 40–65 km (datum not stated; surface near sea level)</td>
+<td><span class="chip ok">consistent</span></td>
+<td>+0.3 km in the mean (night-time A-B events in the Puget Lowland)</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="#onshore">Other onshore</a></td>
+<td class="num">14,194</td>
+<td class="num">15.8<span class="rng">0.8 to 30.2</span></td>
+<td class="num">16.2<span class="rng">1.3 to 30.9</span></td>
+<td class="num">15.7 / 16.2</td>
+<td>Scotts Mills 13–15.1 km; NW California slab 15–30 km, nothing below about 40 km (datum mostly not stated)</td>
+<td><span class="chip ok">consistent</span></td>
+<td>About 0 in Oregon and SW Washington; 0 to +3 km in N California (+2.6 against NCSN)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><a href="#cascades">Cascades</a></td>
+<td class="num">16,053</td>
+<td class="num">7.3<span class="rng">−0.5 to 18.8</span></td>
+<td class="num">8.3<span class="rng">1.0 to 19.4</span></td>
+<td class="num">7.0 / 8.0</td>
+<td>Mount St Helens: −2.2 to 2 km, deeper events at 2–8 km from 2016 (bsl)</td>
+<td><span class="chip ok">consistent</span> at Mount St Helens</td>
+<td>+0.5 to +0.8 km (event-paired with Hirao et al. 2025); Mount Hood +7 km (tier C/D only)</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="small">Confidence refers to the verdict, not to our depths. “High” at Endeavour and Explorer means we are confident B4 is wrong there, not that a correction is known. “Unconstrained” marks regions where neither B4 nor NLL3D resolves depth.</p>
+
+<h2 id="axial">2. Axial Seamount <span class="chip deep">too deep</span> <span class="chip conf">confidence: high</span></h2>
+<p class="lead">B4 puts Axial caldera events about 2–2.5 km deeper than the published catalogs of the same events. NLL3D was close to the literature. The tomography moved the depths away from it.</p>
+
+<h3>What the literature says</h3>
+<p>Datum: below the seafloor (caldera floor). The caldera floor is at 1.5 km bsl (<a class="c" href="#r-levy2018">Levy et al. 2018</a>).</p>
+<ul>
+<li><a class="c" href="#r-wilcock2016">Wilcock et al. (2016)</a>: about 60,000 events before the April 2015 eruption, located by double difference. Outward-dipping ring faults (60–70°) run from near the surface to about 2 km, with about five times more events under the east wall. Fig. 1C shows a sparse east-wall tail to 2.5–2.9 km. The datum is read from the figure axis, where 0 km follows the caldera floor. Tan et al. (2019), on the same catalog: depths mostly less than 2 km.</li>
+<li><a class="c" href="#r-waldhauser2020">Waldhauser et al. (2020)</a>, real-time double difference, 22 Jan 2015 to 31 Jan 2017, same cabled array: 85 % of events within the network lie above 1.6 km and 90 % above 2 km. The faults reach the top of the magma reservoir at about 1.6 km. Absolute NonLinLoc depth errors are about 800 m (median).</li>
+<li><a class="c" href="#r-levy2018">Levy et al. (2018)</a>: seismicity before, during and after the eruption lies mostly above about 2.5 km, with sparse events to about 2.8 km under the eastern chamber roof.</li>
+<li><a class="c" href="#r-west2001">West et al. (2001)</a>: caldera microearthquakes do not extend deeper than 2 km.</li>
+<li>Magma reservoir roof: 1.1–2.3 km (<a class="c" href="#r-arnulf2014">Arnulf et al. 2014</a>), 1.1–2.0 km (<a class="c" href="#r-carbotte2020">Carbotte et al. 2020</a>), about 1.7 km (<a class="c" href="#r-yang2024">Yang et al. 2024</a>). The melt body is up to 1 km thick. The largest melt fraction is at 2.5–3.5 km (<a class="c" href="#r-west2001">West et al. 2001</a>). A stacked-sill conduit reaches about 5 km (<a class="c" href="#r-carbotte2020">Carbotte et al. 2020</a>).</li>
+<li>Not verified: <a class="c" href="#r-baillard2019">Baillard et al. (2019)</a>, the 3-D Vp/Vs model and relocation of more than 76,000 events; datum not confirmed. <a class="c" href="#r-arnulf2018">Arnulf et al. (2018)</a>.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">26,371</td><td class="num">2.2</td><td class="num">5.0</td><td class="num">6.4</td><td class="num">0.5</td><td class="num">3.4</td><td class="num">4.8</td></tr><tr><td>B4</td><td>A-C</td><td class="num">6,629</td><td class="num">3.0</td><td class="num">5.4</td><td class="num">6.2</td><td class="num">1.5</td><td class="num">3.8</td><td class="num">4.7</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">26,371</td><td class="num">2.3</td><td class="num">3.0</td><td class="num">4.5</td><td class="num">0.8</td><td class="num">1.5</td><td class="num">2.9</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">21,289</td><td class="num">2.5</td><td class="num">3.0</td><td class="num">4.1</td><td class="num">0.9</td><td class="num">1.5</td><td class="num">2.6</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">26,731</td><td class="num">−2.3</td><td class="num">0.3</td><td class="num">4.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">26,371</td><td class="num">−2.3</td><td class="num">0.3</td><td class="num">4.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">6,629</td><td class="num">−2.3</td><td class="num">−1.2</td><td class="num">4.3</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −1.55 km. Tiers A/B/C/D/U: B4 237/1,049/5,343/19,742/360; v4-NLL3D 4,549/8,595/8,145/5,082/360. Median sig_z: B4 1.83 km, v4-NLL3D 1.18 km. Median nearest station (B4 located): 2.9 km. Paired B4 − v4-NLL3D: median +1.82 km over 26,371 events located in both (p10 −0.77, p90 +2.99); +2.36 km over 6,599 events tier A-C in both. Above the surface: B4 0.7 %, v4-NLL3D 0.1 % of A-D events. v4 read as bsl would put 70 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>96 % of our Axial events fall in 2014–2016 (23,377 in 2015). They come from the same cabled stations and the same period as Wilcock et al. (2016) and Waldhauser et al. (2020). Median nearest station is 2.9 km in B4 and 0.58 km for NLL3D A-B events.</li>
+<li>Datum: our median <code>surface_km</code> is −1.55 km, against a caldera floor at 1.5 km bsl. Converting to depth below seafloor adds about 0.1 km of uncertainty.</li>
+<li>B4 below seafloor: median 3.42 km (A-D), 3.84 (A-C), 3.70 (A-B), 3.95 (sig_z &lt; 1 km). Only 20 % of A-D events lie above 1.6 km and 23 % above 2.0 km. p85 and p90 are 4.53 and 4.82 km.</li>
+<li>NLL3D below seafloor: median 1.49 km. 57 % (A-D) and 61 % (A-B) lie above 1.6 km; 71 % (A-D) and 79 % (A-B) above 2 km. A-B p85/p90 are 2.20/2.39 km.</li>
+<li>ANSS: one match, a <code>us</code> event fixed at 10 km. Not usable.</li>
+<li>v4 cannot be used. Read as bsl, its median is 0.3 km and 70 % of events would sit above the seafloor.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep by about +2 to +2.5 km at the median</b> (at least +1.8 km), and +2.8 to +2.9 km at p85/p90. This is a like-for-like comparison: same events, same stations, same years. Magnitude bias and different structures play no part.</p>
+<p>B4 puts 77 % of located events below 2 km bsf. Its median of 3.4 km (3.8 km for A-C) sits inside or under the melt reservoir, where brittle failure is not expected. The error is systematic. The best-constrained B4 events are the deepest: the sig_z &lt; 1 km subset (n = 1,243) has a median of 3.95 km and 95 % of it lies below 2 km. Events within 1 km of a station have a median of 3.83 km, so station geometry is not the cause. B4 does not fit the data better (median RMS 0.060 s against 0.054 s). Its tiers collapsed: A plus B fell from 13,144 to 1,286 events, and median sig_z rose from 1.18 to 1.83 km. Epicentres moved too, by a median 2.7 km and mostly north. The east-to-west event ratio across the caldera fell from 9.6 (NLL3D) to 2.8 (B4), against about 5 in Wilcock et al. (2016). <code>exp_depth</code> makes it worse (3.86 km bsf).</p>
+<p><b>Cause: the v0.3.0 model under the caldera.</b> It comes from the <code>ridges_north_m0/d200_s60</code> tile (smoothing 60, against 480 for the onshore tiles). At the node 46.0°N, 130.0°W, 3 km bsl, Vp fell from 5.40 to 4.79 km/s while Vs rose from 3.16 to 3.43 km/s. That gives Vp/Vs = 1.40, and 1.35 at 5 km. Both are below √2, which implies a negative Poisson’s ratio, impossible for isotropic rock. S coverage is thin (dws_s 77–236 against dws_p 665–1,610). In the NonLinLoc grids, the S−P time per km of path beneath the caldera dropped from 0.30 to 0.11–0.18 s/km at 1–2 km grid depth, and from 0.13 to 0.09 s/km at 3–4 km. With a station almost overhead, the same observed S−P time then needs a path 1.5–2 times longer. That matches the shift from about 1.5 to about 3.5 km bsf.</p>
+<p>NLL3D has its own limits. 10 % of its located events sit at one grid node (3.006 km bsl, about 1.46 km bsf). Its starting model has no magma-chamber low-velocity zone. Its A-B p90 is 2.39 km against 2.0 km in the literature. This small deep tail is within the 800 m absolute error that Waldhauser et al. (2020) report for NonLinLoc at Axial.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Away from the literature, by about 2 km.</b> Paired B4 − NLL3D over the same 26,371 events: median +1.82 km (p10 −0.77, p90 +2.99). On the 6,599 events tier A-C in both: +2.36 km. For the 13,144 events that are tier A-B in NLL3D, the median moves from 1.48 to 3.62 km bsf, and only 1,272 of them stay A-B in B4.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not adopt B4 hypocentres at Axial, epicentres included. Keep the v4-NLL3D locations for this region for now.</li>
+<li>Fix v0.3.0 before re-running B4 here. In the merge or QC gate, reject nodes with Vp/Vs below about 1.6 and require a minimum dws_s; where either test fails, revert Vs to the starting model. The merged model has 57 nodes in the upper 10 km with Vp/Vs &lt; 1.5 and some S coverage. Besides Axial (45.9–46.0°N, 129.9–130.0°W, 3–5 km) they include Endeavour (48.0°N, 129.0–129.1°W, 1–5 km), Gorda/Mendocino (41.2–41.3°N, 125.25–125.38°W, 3–7 km) and the Blanco area (44.2–44.4°N).</li>
+<li>Re-run the <code>ridges_north</code> inversion with stronger smoothing, or with Vs damped more than Vp.</li>
+<li>Check the new S station terms at the Axial stations.</li>
+<li>Match our events one by one with the Waldhauser et al. (2020) catalog for 2015–2016. It uses the same stations, so matching on origin time gives the depth offset directly.</li>
+<li>Acceptance test for any new model: at least 85 % of A-B Axial events above 2 km bsf. NLL3D has 79 %, B4 12 %.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/axial/</code> (axial.py, axial2.py, model.py, model2.py, model3.py, nllmod.py).</p>
+
+<h2 id="endeavour">3. Endeavour <span class="chip deep">too deep</span> <span class="chip unc">depth unconstrained</span> <span class="chip conf">confidence: high</span></h2>
+<p class="lead">Neither catalog constrains depth here. NLL3D pins half the events at the seafloor; B4 pushes most of them 15–45 km down, below a crust that is 6–8 km thick. Do not report Endeavour depths.</p>
+
+<h3>What the literature says</h3>
+<p>Datum: below the seafloor in every study. The seafloor is 2.1–2.75 km bsl.</p>
+<ul>
+<li><a class="c" href="#r-wilcock2002">Wilcock et al. (2002)</a>, 1995 OBS experiment (55 days, 1,750 events): axial earthquakes concentrate at 1.5–3.5 km. Relocated events near the seismic lines lie at 1.5–2.7 km (<a class="c" href="#r-vanark2007">Van Ark et al. 2007</a>).</li>
+<li><a class="c" href="#r-vanark2007">Van Ark et al. (2007)</a>: the axial magma chamber (AMC) reflector is at 2.1–3.3 km; 2.1–2.4 km under the vent fields and 2.5–3.1 km under Mothra. Most axial earthquakes lie just above it.</li>
+<li><a class="c" href="#r-wilcock2009">Wilcock et al. (2009)</a>, 2003–2004 network: hypocentres form a layer a few hundred metres thick above or beside the AMC, about 1.2–3.0 km (read from Fig. 2).</li>
+<li><a class="c" href="#r-weekly2013">Weekly et al. (2013)</a>, 2003–2006: a band about 1 km thick above the AMC. Events more than 3 km from the nearest station were fixed at 3 km depth because depth is not resolved there.</li>
+<li><a class="c" href="#r-krauss2023">Krauss et al. (2023)</a>, 3-D NonLinLoc relocation: vent-field medians of 0.8–1.9 km; the constrained-depth ONC events (2016–2021) lie mostly above 2 km.</li>
+<li><a class="c" href="#r-arnoux2017">Arnoux et al. (2017)</a>: a low-velocity zone at 2–3 km under the vent fields.</li>
+<li>Crustal thickness 5.9–7.7 km (<a class="c" href="#r-soule2016">Soule et al. 2016</a>) and 6.4–7.6 km (<a class="c" href="#r-arnoux2019">Arnoux et al. 2019</a>) across the whole 90 × 120 km region.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">95</td><td class="num">2.5</td><td class="num">29.6</td><td class="num">44.8</td><td class="num">0.0</td><td class="num">27.0</td><td class="num">42.3</td></tr><tr><td>B4</td><td>A-C</td><td class="num">41</td><td class="num">2.5</td><td class="num">18.4</td><td class="num">40.0</td><td class="num">0.0</td><td class="num">16.2</td><td class="num">37.4</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">96</td><td class="num">2.6</td><td class="num">2.8</td><td class="num">32.5</td><td class="num">0.1</td><td class="num">0.3</td><td class="num">30.2</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">47</td><td class="num">2.7</td><td class="num">2.8</td><td class="num">22.4</td><td class="num">0.1</td><td class="num">0.3</td><td class="num">19.9</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">179</td><td class="num">−2.7</td><td class="num">1.4</td><td class="num">38.2</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">95</td><td class="num">−3.3</td><td class="num">−0.5</td><td class="num">23.9</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">41</td><td class="num">−2.7</td><td class="num">−0.5</td><td class="num">20.5</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −2.58 km. Tiers A/B/C/D/U: B4 0/2/39/54/84; v4-NLL3D 0/2/45/49/83. Median sig_z: B4 10.95 km, v4-NLL3D 11.21 km. Median nearest station (B4 located): 27.6 km. Paired B4 − v4-NLL3D: median +6.78 km over 95 events located in both (p10 −0.22, p90 +36.88); +7.41 km over 40 events tier A-C in both. Above the surface: B4 5.3 %, v4-NLL3D 1.0 % of A-D events. v4 read as bsl would put 64 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>179 events, 84 of them tier U. B4 has no tier A and 2 tier B. Our events date from 2011–2014 only, with median v4 magnitude 2.3 and a median of 6 phases.</li>
+<li>The only local stations are KEMF.NV and NCHR.NV, 3 km apart at Main Endeavour and High Rise. The next nearest are J55A/C (48 km) and J54A/C (59 km).</li>
+<li>B4 A-D: median 27.0 km bsf; 66 % below the Moho (deeper than 8 km bsf); only 5 % in the 1–3.5 km band.</li>
+<li>The 26 events within 15 km of KEMF/NCHR have a B4 median of 1.45 km bsf. That is not an agreement: 31 % sit within 0.25 km of the seafloor, 31 % are deeper than 8 km, 12 % fall in 1.5–3.5 km, and their <code>exp_depth</code> median is 8.5 km.</li>
+<li>The 36 events of the southern swarms (47.66–47.78°N, Dec 2011 and Feb 2014) have a B4 median of 33.0 km bsf; 78 % are deeper than 8 km.</li>
+<li>NLL3D A-D: median 0.27 km bsf, 46 % within 0.25 km of the seafloor (the grid top), 2 % in 1–3.5 km.</li>
+<li>No ANSS matches.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep, but not as a calibrated offset.</b> Against a reference of about 2 km bsf, B4 is about +25 km too deep for A-D and +14 km for A-C. With one tight station pair and everything else 50–130 km away, depth trades off freely with origin time. Both catalogs land on boundaries: NLL3D at the seafloor, B4 either at the seafloor (19 % of A-D) or 25–45 km deep. Earthquakes 15–55 km deep are physically implausible anywhere in this region, on axis or at the segment ends, because the crust is 6–8 km thick and the lithosphere is young.</p>
+<p>Likely cause, inferred and not tested: v0.3.0 has zero resolution (resolution_p = 0) at every depth from 1 to 12 km in the box 47.5–48.4°N, 129.6–128.8°W, with dws_s of 55 or less. It still carries perturbations of −15 to +19 % in Vp and −8 to +16 % in Vs, and Vp/Vs as low as 1.28–1.47. At the node nearest the vent fields (48.0°N, 129.125°W) Vp/Vs is 1.47–1.56 at 1–5 km bsl. Weekly et al. (2013) used 1.72 below 0.4 km. The B4 S station terms also grew: KEMF +0.21 s (NLL3D +0.03), NCHR +0.34 s (+0.14), J55C +0.32 s (+0.04). A too-fast S model shortens the predicted S−P time at KEMF and NCHR and pushes hypocentres away from them, here downward.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Away from the literature.</b> Paired B4 − NLL3D: median +6.8 km (p90 +37 km) for A-D and +7.4 km for A-C; +29.6 km for events more than 15 km from KEMF/NCHR. The median distance from 2 km bsf grew from 1.8 km (NLL3D) to 25.0 km (B4) for A-D. NLL3D was also wrong, by about 1.7 km too shallow, but its error is a shallow pin near the true band. Among the 26 near-station events, B4 raised the share in the 1.5–3.5 km band from 8 % to 12 % and the share below the Moho from 8 % to 31 %.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not report or interpret Endeavour depths from B4 or NLL3D, including the 2 tier-B and 39 tier-C events. Add catalog flags for sig_z &gt; 3 km, for maximum-likelihood depths at the grid top, and for depths below the Moho at a ridge.</li>
+<li>For the catalog, fix depth by the Endeavour convention (2 km bsf within 2 km of the vent fields, 3 km elsewhere; Krauss et al. 2023, Weekly et al. 2013) and relocate epicentres with depth fixed. Or use a depth prior of about 0–8 km bsf.</li>
+<li>Before the next B4 iteration, reset v0.3.0 to the starting model wherever resolution is zero. The pattern here suggests the D-B046 merge keeps reference-model changes outside resolved areas. Then rebuild the time grids and compare the KEMF, NCHR and J55C S station terms.</li>
+<li>Optional: check whether the Krauss and Wilcock (2024) ONC archive (<a href="https://doi.org/10.26022/IEDA/330498">doi:10.26022/IEDA/330498</a>) holds 2011–2014 events near KEMF for a one-to-one match.</li>
+</ol>
+<p class="small">Scratch files: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/endeavour/picks2.py</code>, <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/endeavour/endeavour_located.csv</code>.</p>
+
+<h2 id="explorer">4. Explorer <span class="chip deep">too deep</span> <span class="chip unc">depth unconstrained</span> <span class="chip conf">confidence: high</span></h2>
+<p class="lead">Seaward of the deformation front, B4 puts events at a median 38 km bsl, about 25 km below the oceanic Moho. The literature caps seismicity there at about 22 km bsl. The landward 2014 Nootka sequence is roughly consistent.</p>
+
+<h3>What the literature says</h3>
+<ul>
+<li><a class="c" href="#r-hutchinson2019">Hutchinson et al. (2019)</a>, SeaJade I (33 OBS, July–September 2010), bsl: 15–20 km on the primary Nootka fault zone (NFZ) faults and 6–15 km on the conjugate faults; event groups span 6–22 km. The Moho is at 12–14 km bsl seaward of the front. Faulting stops at about 20 km bsl on the primary faults.</li>
+<li><a class="c" href="#r-hutchinson2023">Hutchinson et al. (2023)</a>, SeaJade II, bsl: every event group seaward of the front lies at 5–22 km. Landward, the Nootka sequence lies at 9–17 km (overriding plate) and 20–36 km (subducting plate). Moho 13–15 km bsl.</li>
+<li><a class="c" href="#r-hutchinson2020">Hutchinson et al. (2020)</a>, 2014 Mw 6.4 Nootka sequence, bsl by implication: SE segment 5–15 km (overriding plate) and 19–26 km (subducting plate); NW segment mostly 20–36 km.</li>
+<li><a class="c" href="#r-braunmiller2002">Braunmiller and Nábělek (2002)</a>, below seafloor: regional moment-tensor centroids, about three quarters at 4–10 km and about 14 offshore events at 12–15 km; seismogenic width about 10 km.</li>
+<li><a class="c" href="#r-hyndman1981">Hyndman and Rogers (1981)</a>: 12 OBS-located events at 2–6 km below the top of the crust. <a class="c" href="#r-cassidy1995">Cassidy and Rogers (1995)</a>: the main subevent of the 1992 Ms 6.8 Revere-Dellwood-Wilson earthquake at 4.3 km bsf.</li>
+<li>Crust: 8–10 km (<a class="c" href="#r-malecek1978">Malecek and Clowes 1978</a>) and 6.4–11 km (<a class="c" href="#r-au1982">Au and Clowes 1982</a>) below seafloor.</li>
+<li><a class="c" href="#r-schaeffer2026">Schaeffer et al. (2026)</a>, conference abstract, datum not stated: PACSAFE OBS relocations from near the seafloor to about 20 km, most at 5–10 km. <a class="c" href="#r-merrill2022">Merrill et al. (2022)</a>, datum not stated: the 2014 mainshock deeper than 35 km.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">845</td><td class="num">22.7</td><td class="num">34.9</td><td class="num">51.0</td><td class="num">20.8</td><td class="num">32.4</td><td class="num">48.7</td></tr><tr><td>B4</td><td>A-C</td><td class="num">634</td><td class="num">24.8</td><td class="num">36.2</td><td class="num">51.0</td><td class="num">22.4</td><td class="num">33.9</td><td class="num">48.5</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">842</td><td class="num">10.1</td><td class="num">32.9</td><td class="num">49.7</td><td class="num">7.6</td><td class="num">31.1</td><td class="num">47.6</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">608</td><td class="num">16.9</td><td class="num">34.7</td><td class="num">50.1</td><td class="num">14.3</td><td class="num">32.5</td><td class="num">47.6</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">1,523</td><td class="num">−1.2</td><td class="num">8.9</td><td class="num">35.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">845</td><td class="num">−0.4</td><td class="num">10.7</td><td class="num">28.9</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">634</td><td class="num">−0.2</td><td class="num">12.2</td><td class="num">29.5</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −2.47 km. Tiers A/B/C/D/U: B4 0/4/630/211/678; v4-NLL3D 0/3/605/234/681. Median sig_z: B4 11.63 km, v4-NLL3D 11.85 km. Median nearest station (B4 located): 58.5 km. Paired B4 − v4-NLL3D: median +1.53 km over 841 events located in both (p10 −5.97, p90 +13.23); +1.83 km over 599 events tier A-C in both. Above the surface: B4 0.2 %, v4-NLL3D 0.0 % of A-D events. v4 read as bsl would put 22 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>1,523 events, 678 tier U. Located events are mostly tier C; B4 has no tier A and 4 tier B. Median nearest station 58 km; median sig_z 11.6 km. The SeaJade OBS are not in our data.</li>
+<li>Sampling: we have no located events on Explorer Ridge or the Revere-Dellwood-Wilson fault. Only 1 seaward located event lies north of 49.5°N, and all 40 events north of 50°N are tier U. About 358 seaward events lie in the northern JdF plate near Middle Valley and the Sovanco fault, about 292 in the southern Explorer plate and NFZ (48.9–49.5°N), and about 194 landward, mostly the April–May 2014 Nootka aftershocks.</li>
+<li>Seaward events (surface below −1.5 km; 651 A-D, 77 % of located): B4 21.1/37.8/52.5 km bsl (18.6/35.4/49.9 km bsf). A-C: 24.8/39.2/51.8 km bsl. Only 11 % of A-D and 7 % of A-C lie at or above 22 km bsl.</li>
+<li>Seaward events with a station within 30 km (n = 33): median 25.0 km bsl (22.5 km bsf). The 4 tier-B events, 11–31 km from OBS J69C, sit at 28.5–33.7 km bsl.</li>
+<li>Depth grows with distance to the nearest station: about 25 km bsl when it is closer than 30 km, 44–46 km when it is 60–100 km away.</li>
+<li>Landward Nootka box (49.4–50.2°N, 128.3–126.8°W, 182 events): 24.4/27.8/35.3 km bsl. NW part (n = 35) median 31.1 km; SE part (n = 147) 27.2 km. Only 2 of 182 lie in the 5–15 km overriding-plate range, against 117 of 182 in v4.</li>
+<li>ANSS: 8 <code>us</code> events, all fixed at 10 km. Not usable.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep seaward of the front.</b> The B4 seaward median (37.8 km bsl) is about 16 km below the deepest literature bound (22 km bsl) and 20–25 km below the central values (about 12–16 km bsl, 9–10 km bsf). The Moho is at 12–15 km bsl, the seismogenic uppermost mantle is 5–7 km thick, and temperatures pass 500 °C by about 12 km bsl. Together these cap oceanic seismicity at about 20–22 km bsl. B4 puts the median event about 25 km below the Moho in lithosphere 0–5 Myr old. Even the best-placed subset is 5–10 km too deep. For the Nootka sequence, the NW part is consistent with Hutchinson et al. (2020) and the SE part is 2–4 km too deep at the median.</p>
+<p>The dependence on station distance points to geometry-driven bias, not structure. Residuals are small (median P about 0 s, S +0.03 to +0.15 s), so the data do not resolve depth. One hypothesis: the model has no low-Vs sediment under the OBS, with water directly on 4.7 km/s crust. For tier-B event 77042, J69C at 10.9 km epicentral distance records S−P = 3.74 s. Even at 28.5 km bsl with a +0.25 s S−P station term, the S residual is +0.33 s. Unmodelled sediment S delays of 1–2 s would map into roughly 10–20 km of extra depth. This is a hypothesis to test, not a result.</p>
+<p>Why B4 went deeper than NLL3D: under the seaward events (48.5–49.5°N, 130–128°W) v0.3.0 is about 0.5 km/s faster at 8 km bsl and about 0.1 km/s slower at 10–25 km, and mantle Vp/Vs at 10–30 km dropped from 1.775 to 1.73–1.75. Lower Vp/Vs means less S−P time per km, so the same S−P needs a longer path. For a source about 35 km deep that is roughly +1 km, the same order as the observed +2.3 km.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Away from the literature.</b> Paired B4 − NLL3D is +1.5 km for the region (A-D) and +2.3 km for seaward events (A-D, n = 647; 69 % deeper), +2.5 km for seaward A-C. The seaward p10 went from 9.5 to 21.1 km bsl. The share of seaward events in the 5–22 km bsl range halved, from 12 % to 6 % (A-D) and from 11 % to 4 % (A-C). The 107 seaward events that NLL3D placed above 15 km now have a B4 median of 25.9 km with sig_z 16.3 km. For the landward Nootka events the change is only +0.3 km. v4, whose datum is uncertain, was closer: median 9–12 km, with 48 % of events in 5–22 km bsl, although 22 % would plot above the seafloor.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not report B4 depths for seaward Explorer events. Publish epicentres only, or flag depth as unresolved when the nearest station is beyond about 30 km (about 95 % of seaward events). Alternatively relocate with a depth prior of about 3–20 km bsf.</li>
+<li>Diagnose the deep bias on the 33 events within 30 km of a station and the 4 tier-B events: relocate P-only or with S down-weighted; add a sediment layer or S static at J69C, J68C, J63C and KEMF; use mantle Vp/Vs of about 1.71 (Hyndman and Rogers 1981). See whether depths come back above about 20 km bsl.</li>
+<li>Mask v0.3.0 back to the starting model outside the resolved volume, at least in the Explorer and NFZ mantle at 10–30 km bsl.</li>
+<li>For ground truth, request the SeaJade II relocations (1,557 events, 17 April–30 May 2014) and match them with our 167 located events in that window. Also try SeaJade I (2010) and the Merrill et al. (2022) catalog.</li>
+<li>For the 2014 Nootka sequence, B4 depths can be used at the subducting-plate level (NW 26–36 km, SE 24–35 km bsl). Do not claim that the overriding plate (5–15 km) lacks seismicity.</li>
+</ol>
+<p class="small">Scratch files: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/explorer/parse_hyp.py</code>, <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/explorer/b4_phases.csv</code>.</p>
+
+<h2 id="jdf">5. Juan de Fuca ridge and plate <span class="chip deep">too deep</span> <span class="chip unc">depth unconstrained</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">B4 depths here have two modes: about a third pinned at the seafloor and almost half 8–40 km below it. Only the Cleft segment agrees with the magma-chamber bound. Neither catalog resolves depth on most of the ridge.</p>
+
+<h3>What the literature says</h3>
+<p>No verified study gives earthquake depths on these segments. The constraints are indirect. Datum: below the seafloor unless stated.</p>
+<ul>
+<li>Axial magma chamber (AMC), segment averages: Cleft 2.06 km, Vance 2.50, CoAxial 2.21, Northern Symmetric 2.46, Endeavour 2.58 km (<a class="c" href="#r-carbotte2008">Carbotte et al. 2008</a>). Cleft 2.0–2.3 km and Vance 2.4–2.7 km (<a class="c" href="#r-canales2005">Canales et al. 2005</a>). A low-velocity zone under CoAxial at 2–3 km bsf, 4–5 km bsl (<a class="c" href="#r-menke2002">Menke et al. 2002</a>).</li>
+<li>Endeavour analog: axial earthquakes at 1.5–3.5 km, none below 4 km, consistent with a 600 °C brittle limit (<a class="c" href="#r-wilcock2002">Wilcock et al. 2002</a>).</li>
+<li>Crust 6.7–7.0 km thick on the flanks (<a class="c" href="#r-carbotte2008">Carbotte et al. 2008</a>), about 8 km near CoAxial (<a class="c" href="#r-menke2002">Menke et al. 2002</a>). Faults on the young plate are imaged to about 6–7 km, near the Moho (<a class="c" href="#r-nedimovic2009">Nedimović et al. 2009</a>; datum not stated).</li>
+<li>Under 0.5–2.7 Ma crust, mantle reflectors at 11 and 14.5 km bsf; the lithosphere is 11 km thick if they are melt sills and 20–25 km if they are frozen sills (<a class="c" href="#r-qin2020">Qin et al. 2020</a>).</li>
+<li>Faults reaching 6–7 km into the mantle occur only within about 40 km of the deformation front (<a class="c" href="#r-han2016">Han et al. 2016</a>), where we have no events. Sediment near the front is 1.8–3.0 km thick (<a class="c" href="#r-han2018">Han et al. 2018</a>).</li>
+<li>Global context: slow-ridge centroid depths 1–6 km bsf, with the maximum decreasing as spreading rate increases (<a class="c" href="#r-huang1988">Huang and Solomon 1988</a>).</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">2,167</td><td class="num">2.5</td><td class="num">7.2</td><td class="num">38.3</td><td class="num">0.0</td><td class="num">4.8</td><td class="num">35.7</td></tr><tr><td>B4</td><td>A-C</td><td class="num">1,078</td><td class="num">2.5</td><td class="num">12.0</td><td class="num">37.2</td><td class="num">0.0</td><td class="num">9.4</td><td class="num">34.5</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">2,166</td><td class="num">2.7</td><td class="num">2.9</td><td class="num">18.1</td><td class="num">0.1</td><td class="num">0.5</td><td class="num">16.0</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">1,033</td><td class="num">2.7</td><td class="num">3.0</td><td class="num">6.7</td><td class="num">0.1</td><td class="num">0.5</td><td class="num">4.1</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">2,851</td><td class="num">−2.0</td><td class="num">5.1</td><td class="num">28.2</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">2,167</td><td class="num">−2.0</td><td class="num">4.2</td><td class="num">25.9</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">1,078</td><td class="num">−1.8</td><td class="num">4.3</td><td class="num">23.2</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −2.56 km. Tiers A/B/C/D/U: B4 0/21/1,057/1,089/684; v4-NLL3D 0/1/1,032/1,133/685. Median sig_z: B4 11.00 km, v4-NLL3D 11.79 km. Median nearest station (B4 located): 33.7 km. Paired B4 − v4-NLL3D: median +0.88 km over 2,164 events located in both (p10 −1.24, p90 +34.47); +3.09 km over 985 events tier A-C in both. Above the surface: B4 3.4 %, v4-NLL3D 0.6 % of A-D events. v4 read as bsl would put 45 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>2,851 events, 684 tier U. No tier A; B4 has 21 tier B (NLL3D 1). Median nearest station 34 km, median 7 phases, median gap 164°, median sig_z 11 km. Small events (median v4 ML 2.2). No ANSS matches.</li>
+<li>Located events lie along Cleft, Vance, CoAxial and Northern Symmetric (44.6–48.3°N), where the AMC was imaged.</li>
+<li>B4 below seafloor: 31 % of events lie within 0.25 km of the seafloor (grid top), 46 % deeper than 8 km, only 18 % in 0.25–4 km. The 1,007 events deeper than 8 km have a median of 34.9 km bsl (about 32 km bsf); 41 % of all located events are deeper than 15 km.</li>
+<li>By segment (unpinned events, bsf medians): Cleft 1.8 km; CoAxial 4.8; Vance 9.7; Northern Symmetric south of 47.45°N 25.8; the 405-event cluster at 47.5–47.7°N, 129.2–129.4°W 33.1 km, with 90 % deeper than 25 km.</li>
+<li>NLL3D: median 0.5 km bsf, 27 % pinned at the seafloor, 12 % deeper than 8 km.</li>
+<li>All 21 B4 tier-B events lie at 14–59 km bsf, most at 31–36 km. In NLL3D the same events are tier C at 0.03–0.2 km, apart from three already deep. They pass the nearest-station test (2 × z*) only because v4 also placed this cluster deep (v4 median 15.4 km bsl), so min(B4, v4) stays deep. The safeguard in <code>a2_build_catalog.py</code> fails here.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep for most of the region</b>: about +7 km at the A-C median against a 2–3 km reference, and about +30 km for the deep mode. Against the AMC bound by segment: Cleft −0.3 km (consistent), CoAxial about +2 km, Vance about +7 km, Northern Symmetric south about +23 km, the 47.5–47.7°N cluster about +30 km. Brittle earthquakes 30–35 km below the seafloor at a ridge lie below the base of the lithosphere in both of Qin et al.’s readings.</p>
+<p>This is a depth–origin-time trade-off. With the nearest station about 31–38 km away and about 8 phases, a seafloor solution and a 33 km solution are both acceptable minima. The deep one fits worse: for the 381 events that flipped from the seafloor to deeper than 15 km, median RMS rose from 0.116 to 0.148 s. A small sig_z does not identify good depths: events with sig_z of 3–6 km have a median of 32.2 km. Cleft has the best geometry (nearest station 22 km) and is the only segment where B4 matches the AMC bound. Confidence is medium because the literature bound is indirect.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Away from the literature, except at Cleft.</b> Events in the expected 0.25–4 km bsf range fell from 56 % (NLL3D) to 18 % (B4). Events deeper than 8 km rose from 12 % to 46 %, and deeper than 15 km from 10 % to 41 %. Paired change (bsf, A-D in both, n = 2,164): median +0.8 km, mean +10.4 km, p90 +34 km. By segment: Northern Symmetric +25.2 km; Vance and CoAxial near 0 at the median but +15 to +16 km at p90; Cleft −0.6 km. The 589 events that NLL3D pinned at the seafloor do not move to the AMC level: their B4 median is 32.2 km and only 23 % stay pinned. NLL3D was too shallow by about 2 km, but its seafloor pin was never a depth measurement.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not report B4 or NLL3D depths for this region. Publish epicentres only and cap the region at tier C.</li>
+<li>Demote the 21 B4 tier-B events. Fix the z* safeguard in <code>a2_build_catalog.py</code>: when v4 is also deep, min(depth, v4_depth) does not protect against a deep trap. Use a fixed regional z*, or require dist_min below about 15 km offshore.</li>
+<li>Diagnose the deep mode starting with the 405-event cluster. Check the v0.3.0 Vp and Vp/Vs column at 20–40 km under the ridge, probably outside tomoDD resolution, for a layer that could create a false minimum. Check whether the new terms at the nearest OBS shift the origin time.</li>
+<li>Re-run NonLinLoc for ridge-axis events with a depth prior, for example Gaussian at 3 km bsf with σ = 2 km, or a hard cap at 8 km bsf. Run fixed-depth tests at 3 km and 33 km on the cluster to see whether the data can tell them apart.</li>
+<li>Use Cleft (1.4–1.8 km bsf against an AMC at 2.0–2.3 km) as the only local check.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/jdf/</code> (a2.py, a3.py, a4.py).</p>
+
+<h2 id="blanco">6. Blanco <span class="chip deep">too deep</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">An event-by-event match with the Lange et al. OBS catalog (11,298 events) puts B4 about 2.2–2.4 km deeper overall if that catalog is in km bsl. The Blanco Ridge and Gorda Depression are too deep under any reading. The western segments are within the published ranges.</p>
+
+<h3>What the literature says</h3>
+<ul>
+<li><a class="c" href="#r-kuna2019">Kuna et al. (2019)</a>, 55 OBS (X9, Sept 2012–Oct 2013), hypoDD, 1,626 events, below seafloor: on the Blanco Ridge, crustal events at 3–7 km, mantle events at 8–13 km, a quiet zone at 7–8 km. The 600 °C isotherm is at 9–10 km.</li>
+<li><a class="c" href="#r-ren2023">Ren et al. (2023)</a>, NonLinLoc, 138 events, below seafloor: eastern segments 4–10 km (more than half below 8 km), western segments 0–8 km, outliers to about 16 km. Moho at 7 km. 68 % depth error 1.4 km.</li>
+<li><a class="c" href="#r-lange2026">Lange et al. (2026)</a>, ML picks, NonLinLoc and hypoDD on the same deployment (13,503 absolute and 12,731 relative events). Depth sentences come from the preprint; statistics are recomputed from the data release. Relative catalog: median 7.7 km, p5–p95 4.7–11.3 km, p99 13.9 km; segment medians 6.8–9.5 km. The datum is not stated; we read it as bsl (see below).</li>
+<li><a class="c" href="#r-liu2025">Liu and Tan (2025)</a>, PickBlue picks, hypoDD, datum not stated: west 0–8 km, east 0–12 km, Cascadia Depression to about 20 km with large errors. Maximum about 10 km under the central Blanco Ridge. A false cluster at about 20 km near 127.9°W came from misidentified P and S picks at station BB200.</li>
+<li><a class="c" href="#r-adimah2024">Adimah et al. (2024)</a>, ambient-noise Vs, below seafloor: Moho at about 6 km; western seismicity no deeper than about 8–9 km.</li>
+<li>Not verified: <a class="c" href="#r-braunmiller2008">Braunmiller and Nábělek (2008)</a>, centroid depths 4–9 km.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">36,286</td><td class="num">4.7</td><td class="num">9.9</td><td class="num">25.0</td><td class="num">1.5</td><td class="num">6.9</td><td class="num">21.9</td></tr><tr><td>B4</td><td>A-C</td><td class="num">33,903</td><td class="num">4.8</td><td class="num">9.9</td><td class="num">24.7</td><td class="num">1.6</td><td class="num">6.9</td><td class="num">21.5</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">36,287</td><td class="num">5.1</td><td class="num">10.1</td><td class="num">26.2</td><td class="num">2.0</td><td class="num">7.1</td><td class="num">23.2</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">33,589</td><td class="num">5.3</td><td class="num">10.1</td><td class="num">25.9</td><td class="num">2.2</td><td class="num">7.1</td><td class="num">22.9</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">42,385</td><td class="num">1.2</td><td class="num">9.2</td><td class="num">21.8</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">36,286</td><td class="num">1.5</td><td class="num">9.2</td><td class="num">20.7</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">33,903</td><td class="num">1.6</td><td class="num">9.1</td><td class="num">20.1</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −3.1 km. Tiers A/B/C/D/U: B4 829/3,313/29,761/2,383/6,099; v4-NLL3D 789/3,484/29,316/2,698/6,098. Median sig_z: B4 6.24 km, v4-NLL3D 6.01 km. Median nearest station (B4 located): 23.3 km. Paired B4 − v4-NLL3D: median −0.33 km over 36,281 events located in both (p10 −7.39, p90 +5.55); −0.38 km over 33,252 events tier A-C in both. Above the surface: B4 0.3 %, v4-NLL3D 0.1 % of A-D events. v4 read as bsl would put 20 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>42,385 events, 6,099 tier U. Median sig_z about 6 km; median nearest station 23 km. We use the 30 X9 broadband OBS but not the 25 short-period OBS that the literature catalogs also used.</li>
+<li>53 % of A-C events fall in the X9 window (2012-09-20 to 2013-10-05). The rest, mostly 2014–2015, have their nearest station 21–47 km away and sig_z 6–9 km, so their depths are not constrained.</li>
+<li>Match with Lange et al.: 11,298 of 13,503 absolute events (10,706 of 12,731 relative), median Δt 0.16 s, median distance 1.7 km.</li>
+<li>B4 − Lange (Lange read as bsl), A-C: +2.2 km (absolute) and +2.4 km (relative); A-B +3.2 and +3.3 km. By segment (absolute/relative): West +2.8/+3.1, Surveyor +2.1/+1.9, Cascadia Depression −0.8/−0.8, Blanco Ridge +3.6/+3.7, Gorda Depression +7.9/+9.6.</li>
+<li>If Lange is instead below seafloor: overall −0.5 to −0.7 km, but Blanco Ridge +0.8/+0.9 and Gorda Depression +4.2/+5.9 km.</li>
+<li>On our bsf depths against the bsf studies: Blanco Ridge A-C median 12.7 km (A-B 12.1) against about 8–9.5 km central and a 10–13 km maximum; Gorda Depression 14.3 km against 4–10 km. West, Surveyor and Cascadia Depression medians are 5.4, 6.8 and 5.2 km bsf, inside the 0–8 km western range.</li>
+<li>Deep tail: 20 % of A-C events are deeper than 16 km bsf (14 % in the X9 window) and 29 % deeper than 13 km. Lange’s relative catalog has 0.33 % deeper than 16 km. The tail follows the uncertainty: p90 is 11 km bsf for sig_z 1–2 km and 29.5 km for sig_z 8–15 km.</li>
+<li>ANSS: 18 events, 78 % possibly fixed (mostly at 10 km). Not informative.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep on the Blanco Ridge, in the Gorda Depression and in the deep tail.</b> These hold under either reading of the Lange datum and against every study. The Blanco Ridge median (12.7 km bsf) sits at the deepest limit of the literature. The Gorda Depression result rests on 30 tier A-B events (nearest station 27 km). West, Surveyor and Cascadia Depression medians fit the literature ranges. Paired with Lange read as bsl, West and Surveyor are still 2–3 km deeper, and A-B events about 3 km deeper; if Lange is bsf, these segments agree within about 1 km.</p>
+<p>The Lange datum is probably bsl but not proven. For bsl: the absolute catalog has a hard floor at exactly 3.0 km (299 events), about the mean water depth; the text places the Moho at about 10 km bsl and gives “13 km below the sea surface” as an example. An S−P test on 165 matched events within 3 km of an X9 station correlates better with Lange read as bsl (r = 0.80) than as bsf (r = 0.64), but site delays confound it. For bsf: Ren et al. (2023), same group and data, put more than half of the eastern events below 8 km bsf, which fits Lange’s raw Blanco Ridge median of 9.5–10 km better if it is bsf.</p>
+<p>Likely causes. v0.3.0 is not resolved at Blanco above 15 km: resolution_p is 0 at every node at 12 km or shallower in all six columns sampled, and the Blanco tile used weak smoothing (s20). The model carries oscillating Vp perturbations at unresolved nodes, for example in the Cascadia Depression +10.8 % at 5 km, −10.1 % at 7 km, +14.8 % at 9 km and −10.2 % at 12 km, and +21 % at 5 km on the Blanco Ridge. Vp/Vs is 1.7–1.9 in the crust, while Lange et al. imaged Vp/Vs above 2 in the fault zone. Using 1.76 instead of 2.0 maps S−P times to about 30 % larger distances, about 2 km at 7 km depth, the size of the A-B offset. Near 127.9°W (BB200), B4 A-C events have a median of 14.1 km bsf and 41 % are deeper than 16 km, which resembles the false cluster Liu and Tan traced to bad picks there. Events directly under stations look right: at BB140, an S−P of 1.85 s goes with 9.3 km below the station, in line with Kuna et al. (1.8 s at about 9 km bsf under BB200).</p>
+<p>v4, datum uncertain, matches Lange as given at the median (−0.2/+0.2 km) with a wide spread (p10/p90 −6/+7 km).</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Toward the literature overall, away for the best-located events.</b> Paired B4 − NLL3D over the region is −0.33 km (A-D) and −0.38 km (A-C).</p>
+<ul>
+<li>Toward, against Lange (bsl reading, absolute/relative): all A-C from +3.1/+3.1 to +2.2/+2.4 km; Blanco Ridge from +5.7/+5.9 to +3.6/+3.7; Gorda Depression from +12.2/+14.3 to +7.9/+9.6; West from +3.6/+4.1 to +2.8/+3.1. The share of A-C events deeper than 16 km bsf fell from 25 % to 20 %. Most of this gain is tier C (all C against Lange: +3.3 to +1.8 km).</li>
+<li>Away: tier A-B against Lange went from +2.8/+2.9 to +3.2/+3.3 km, and the A-B median moved from 7.7 to 9.0 km bsf. Surveyor A-C went from +1.6/+1.2 to +2.1/+1.9 km.</li>
+<li>Cascadia Depression tier C went from about +1.0 to about −1.0 km against Lange; the size of the offset barely changed.</li>
+</ul>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not interpret B4 Blanco depths as they stand. Flag the Blanco Ridge, the Gorda Depression and every event deeper than about 13 km bsf as unreliable. For depth statements use only tier A-B events from the X9 window with sig_z below about 3 km, and state a possible +2–3 km offset against Lange et al.</li>
+<li>Treat 2014–2015 Blanco events (no X9 stations) as epicentre-only.</li>
+<li>In the next model, stop the Blanco tile from perturbing nodes above its resolved depth (15 km): mask it to the starting model there, or redo the tile with smoothing stronger than s20.</li>
+<li>Test Vp/Vs. Relocate the X9-window events with a fault-zone Vp/Vs of 1.9–2.1, and with the seafloor-referenced 1-D model of Ren et al. (2023) as a control (Vp 4.6 km/s in the top 1.5 km, Moho at 7 km bsf). Target: paired offset against Lange below 1 km and the share deeper than 16 km near 1 %.</li>
+<li>Audit the BB200 P and S picks.</li>
+<li>Add the 25 X9 short-period OBS if their data can be obtained.</li>
+<li>Settle the Lange datum from the published JGR text or with the authors. It decides whether West and Surveyor are about 2.5 km too deep or consistent.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/blanco/</code> (lange_match.py, compare.py, final.py, segs.py, sp.py, sp_an.py, model.py). Segments are longitude bins: West &lt; −129.3°, Surveyor −129.3 to −128.75°, Cascadia Depression −128.75 to −128.45°, Blanco Ridge −128.45 to −127.1°, Gorda Depression &gt; −127.1°.</p>
+
+<h2 id="gorda">7. Gorda <span class="chip deep">too deep</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">B4 puts the Gorda plate interior at a median 22 km below the seafloor, about 8–12 km below the thermal limit for faulting. The excess shrinks to 3–6 km for events with an OBS within 10 km, so most of it is a station-distance bias. The northern Gorda Ridge agrees with the literature.</p>
+
+<h3>What the literature says</h3>
+<p>No peer-reviewed OBS hypocentre study of the Gorda interior is among the verified sources. The interior constraints are thermal and from large events.</p>
+<ul>
+<li><a class="c" href="#r-vanderbeek2019">VanderBeek and Toomey (2019)</a>, datum the oceanic Moho: in the ~4 Myr interior the 500 °C isotherm is about 3 km below the Moho; bend faulting reaches 6–7 km below the Moho in older lithosphere; deformation appears confined to the crust. With the Moho at about 6.5–8 km bsf, this puts the limit at about 9.5–11 km bsf in the interior and 13–15 km near the deformation front.</li>
+<li><a class="c" href="#r-rollins2010">Rollins and Stein (2010)</a>: assumed seismogenic thickness 9–10 km. Catalog depths for the 12 Gorda-zone M5.9–7.3 events of 1976–2010 have a median of about 14.6 km (range 10–30 km). These come from land networks, several NEIC depths are fixed at 10 km, and no datum is stated.</li>
+<li><a class="c" href="#r-jones1978">Jones and Johnson (1978)</a>, sonobuoys on the northern Gorda Ridge: 2.5–6.5 km below a 3.5 km datum on the linear ridge, about 3–7 km bsf if that datum is 3.5 km bsl; 6.5–10 km near the Blanco intersection.</li>
+<li><a class="c" href="#r-ren2025">Ren et al. (2025)</a>, conference abstract, same OBS data and PickBlue picks: events deepen away from the ridge toward the deformation front; clusters reach 40 km along the Mendocino transform. No numbers for the interior and no datum.</li>
+<li>Near-coast slab studies (<a class="c" href="#r-shelly2024">Shelly et al. 2024</a>, <a class="c" href="#r-hellweg2025">Hellweg et al. 2025</a>, <a class="c" href="#r-wang1994">Wang and Rogers 1994</a>, <a class="c" href="#r-smith1993">Smith et al. 1993</a>, <a class="c" href="#r-gong2021">Gong and McGuire 2021</a>) describe the subducted slab. Those events fall in our Mendocino, Offshore forearc and Other onshore regions, not in Gorda. Measured from the plate top, they place slab seismicity mostly in the upper 2–9 km of the slab, with a maximum of about 13–15 km.</li>
+<li>Not verified: <a class="c" href="#r-wei2014">Wei and McGuire (2014)</a> on the 2010 Mw 6.5 event (29.3 km NEIC, 28.7 km nc).</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">9,667</td><td class="num">8.2</td><td class="num">24.8</td><td class="num">33.1</td><td class="num">5.1</td><td class="num">21.8</td><td class="num">29.9</td></tr><tr><td>B4</td><td>A-C</td><td class="num">8,398</td><td class="num">10.0</td><td class="num">25.0</td><td class="num">32.5</td><td class="num">6.7</td><td class="num">22.0</td><td class="num">29.4</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">9,664</td><td class="num">3.8</td><td class="num">27.3</td><td class="num">37.4</td><td class="num">0.6</td><td class="num">24.2</td><td class="num">34.4</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">8,208</td><td class="num">5.1</td><td class="num">27.6</td><td class="num">36.2</td><td class="num">2.2</td><td class="num">24.5</td><td class="num">33.3</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">11,378</td><td class="num">−0.7</td><td class="num">21.2</td><td class="num">29.9</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">9,667</td><td class="num">−0.6</td><td class="num">21.8</td><td class="num">29.5</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">8,398</td><td class="num">−0.6</td><td class="num">22.1</td><td class="num">29.0</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −3.07 km. Tiers A/B/C/D/U: B4 373/2,303/5,722/1,269/1,711; v4-NLL3D 112/2,057/6,039/1,456/1,714. Median sig_z: B4 6.55 km, v4-NLL3D 7.38 km. Median nearest station (B4 located): 30.4 km. Paired B4 − v4-NLL3D: median −1.32 km over 9,658 events located in both (p10 −9.19, p90 +5.98); −1.44 km over 8,129 events tier A-C in both. Above the surface: B4 0.8 %, v4-NLL3D 0.9 % of A-D events. v4 read as bsl would put 22 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>11,378 events, 1,711 tier U. 97 % of events have a seafloor deeper than 2.5 km. Median nearest station 30 km; median sig_z 6.5 km (2.2–3.8 km for tiers A-B). Only 29 % of events have a station closer than their depth below seafloor.</li>
+<li>B4 by subarea, km bsf (p10/p50/p90): northern ridge (n = 1,215) 0.0/5.2/27.1; Escanaba (1,326) 10.2/19.0/28.7; interior (2,160) 12.7/21.8/30.5, A-B median 21.3; SE Gorda (3,044) 15.6/23.3/28.2, A-B 21.2/23.6/26.1; western Mendocino Fault Zone (794) 15.8/25.4/33.9.</li>
+<li>Within every subarea, depth increases with distance to the nearest station. Interior medians: 16.2 km (station within 10 km), 17.4 (10–15 km), 19.6 (15–20), 21.9 (20–30), 23.0 (30–50), 25.8 (beyond 50). Escanaba: 11.8 km within 10 km against 22.9 at 20–30 km. SE Gorda: 17.9 against 24.2 at 30–50 km.</li>
+<li>B4 depth barely changes with magnitude: the median is 20–22.5 km bsf in every v4 magnitude bin.</li>
+<li>Northern ridge tier A-B: median 6.4 km bsf (IQR 3.9–8.2, n = 202).</li>
+<li>ANSS: 215 matches (nc 181, us 25, uw 9). Medians ANSS 21.6, B4 27.3, NLL3D 31.8 km. Paired B4 − ANSS +6.5 km (nc +5.8), NLL3D − ANSS +12.6 km. ANSS depth errors for these offshore events have a median of about 11 km, and the matched events are larger (median v4 magnitude 2.8 against 2.0), so ANSS is a weak reference.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep in the plate interior, consistent on the ridge.</b> Interior B4 (A-C median 22.0 km bsf) is about 8–12 km below the thermal limit and the 9–10 km seismogenic thickness. On the catalog-depth basis (read as bsl), B4 A-C 25.0 km against 14.6 km for the large events is about +10 km. With an OBS within 10 km the excess drops to +3 to +6 km (interior 16.2, SE Gorda 17.9, Escanaba 11.8 km bsf). The rise of depth with station distance in every subarea points to a trade-off with station geometry, not to real seismicity at 22–25 km. Tier A-B labels do not remove it (SE Gorda A-B median 23.6 km with the nearest station at 25 km). The difference in event size between our M~2 events and the literature’s M5.9–7.3 events does not explain the offset either, because B4 depth does not depend on magnitude. On the northern ridge, B4 A-B (6.4 km bsf) matches Jones and Johnson (about 3–7 km bsf).</p>
+<p>Ren et al. (2025) report the same deepening pattern that B4 shows (ridge 5, interior 22, SE 23, western MFZ 25 km bsf). It is a conference abstract that uses the same OBS data and the same picks, so it is not an independent check and may share the same geometry bias. Confidence is medium: the direction is clear, but the size of the offset rests on thermal inference and on land-network depths.</p>
+<p>A candidate model cause: v0.3.0 Vp/Vs is 1.66–1.71 at 12–29 km under the interior, Escanaba and the ridge. Against 1.76, that lengthens the hypocentral distance inferred from S−P by about 10 %.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Toward the literature everywhere, but the interior is still too deep.</b> Paired B4 − NLL3D: −1.32 km overall (A-D; p10 −9.2, p90 +6.0), −3.67 km in SE Gorda (the 2014 Mw 6.8 sequence), −1.96 km in the interior, −0.75 km at Escanaba, −0.67 km on the western Mendocino Fault Zone. Events deeper than 25 km bsf fell from 47 % to 27 %, deeper than 30 km from 22 % to 10 %. The share at 15 km or shallower in non-ridge areas barely changed (18 % to 19 %). The gain is mostly for events far from stations: SE Gorda events with the nearest station 30–50 km away went from 28.3 to 24.2 km bsf, and those beyond 50 km from 30.7 to 21.4 km. Events with an OBS within 10 km barely moved (interior 15.6 to 16.2 km, SE 18.6 to 17.9 km). On the northern ridge, B4 lifted events off the seafloor into the literature range: the all-tier median went from 0.5 to 5.2 km bsf and tier A-B from 0.8 to 6.4 km. About 25 % of B4 ridge events are still within 0.1 km of the seafloor.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Do not interpret the Gorda interior depths as mantle seismicity in the manuscript yet. Flag the interior as biased deep by roughly 5–10 km, with the bias growing with distance to the nearest OBS.</li>
+<li>For any depth statement, use events with an OBS within about 10–15 km. Their medians: ridge 6 km, Escanaba 12 km, interior 16–17 km, SE Gorda about 18 km bsf.</li>
+<li>Before B5, run a synthetic recovery test with the real Gorda OBS geometry and v0.3.0, with sources at 8, 12 and 16 km bsf, to measure the bias as a function of station distance.</li>
+<li>Relocate a Gorda subset with Vp/Vs fixed at 1.76–1.80 below the Moho in place of v0.3.0’s 1.66–1.71.</li>
+<li>Relative relocation (GrowClust3D or tomoDD) will not remove this absolute bias.</li>
+<li>Keep B4 over NLL3D for Gorda; it improved both the ridge and the deep tail.</li>
+<li>Compare the near-coast slab studies with the Mendocino region, not Gorda. Recheck when a full paper from Ren et al. appears.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/gorda/</code> (g1.py to g8.py).</p>
+
+<h2 id="mendocino">8. Mendocino <span class="chip deep">too deep</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">Onshore and near the coast, where both our catalog and the literature are well constrained, B4 is 2–4 km deeper than NCSN and the slab literature. The offset was already in NLL3D; the tomography did not change it. The datum cannot explain it because the surface is at sea level.</p>
+
+<h3>What the literature says</h3>
+<p>Datums are not stated. Most depths are NCSN 1-D hypoDD or Waldhauser–Schaff double-difference depths, so they share the NCSN depth scale. The median surface here is −0.06 km, so sea level and the local surface differ by less than 0.4 km.</p>
+<ul>
+<li>Slab top at about 15 km near Cape Mendocino (<a class="c" href="#r-verdonck1994">Verdonck and Zandt 1994</a>; slip below 15 km in <a class="c" href="#r-shelly2024">Shelly et al. 2024</a>).</li>
+<li>Double seismic zone at 15–25 km (<a class="c" href="#r-wang1994">Wang and Rogers 1994</a>); shallow Benioff zone 10–40 km (<a class="c" href="#r-smith1993">Smith et al. 1993</a>); double-difference double zone beneath NW California (<a class="c" href="#r-mccrory2012">McCrory et al. 2012</a>).</li>
+<li>2022 Ferndale: most aftershocks at 17–20 km, in the upper 2–4 km of the slab; normal-faulting events at 22–24 km; an Mw 5.4 at about 30 km (<a class="c" href="#r-shelly2024">Shelly et al. 2024</a>). A 3-D hypoTD relocation gives a median of 17.2 km, 5–95 % 15.8–24.4 km (<a class="c" href="#r-guo2025">Guo et al. 2025</a>, data release recomputed).</li>
+<li>2021 sequence: near-shore seismicity near 20 km, onshore aftershocks near 25 km in the slab mantle (<a class="c" href="#r-yeck2023">Yeck et al. 2023</a>); NCSS hypocentres at 16.5 km (offshore) and 27 km (onshore) (<a class="c" href="#r-hellweg2025">Hellweg et al. 2025</a>).</li>
+<li>Repeating earthquakes on the eastern Mendocino Fault Zone: upper cluster 10–17 km, lower cluster 18–25 km (<a class="c" href="#r-materna2018">Materna et al. 2018</a>).</li>
+<li>Garberville swarm at about 22 km; LFEs at 22–29 km (<a class="c" href="#r-shelly2026">Shelly et al. 2026</a>; <a class="c" href="#r-shelly2025">Shelly et al. 2025</a>).</li>
+<li>2024 Mw 7.0 rupture began at 20–30 km in the oceanic mantle (<a class="c" href="#r-pollitz2025">Pollitz et al. 2025</a>). 1992 M7.1 thrust initiated at 10.5 km (<a class="c" href="#r-oppenheimer1993">Oppenheimer et al. 1993</a>).</li>
+<li>Converted phases at 10–20 km bsl; Slab2 consistent (<a class="c" href="#r-gong2021">Gong and McGuire 2021</a>).</li>
+<li><a class="c" href="#r-kummerfeldt2026">Kummerfeldt et al. (2026)</a>, ComCat depths not relocated: no slab-like velocities shallower than about 20 km near Ferndale. This conflicts with four other studies.</li>
+<li>Not verified: <a class="c" href="#r-yoon2024">Yoon and Shelly (2024)</a>. Their GrowClust data release gives Ferndale aftershocks a median of 18.8 km and onshore Petrolia events 25.6 km.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">23,232</td><td class="num">9.7</td><td class="num">23.2</td><td class="num">31.2</td><td class="num">9.6</td><td class="num">22.8</td><td class="num">30.7</td></tr><tr><td>B4</td><td>A-C</td><td class="num">17,971</td><td class="num">11.3</td><td class="num">23.7</td><td class="num">31.2</td><td class="num">11.3</td><td class="num">23.4</td><td class="num">30.7</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">23,227</td><td class="num">10.0</td><td class="num">23.6</td><td class="num">33.4</td><td class="num">9.9</td><td class="num">23.5</td><td class="num">32.2</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">17,917</td><td class="num">11.3</td><td class="num">24.0</td><td class="num">32.9</td><td class="num">11.3</td><td class="num">23.9</td><td class="num">31.8</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">24,643</td><td class="num">6.7</td><td class="num">21.1</td><td class="num">26.9</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">23,232</td><td class="num">8.0</td><td class="num">21.1</td><td class="num">26.7</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">17,971</td><td class="num">10.1</td><td class="num">21.4</td><td class="num">26.5</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation −0.06 km. Tiers A/B/C/D/U: B4 5,430/4,846/7,695/5,261/1,411; v4-NLL3D 4,922/4,999/7,996/5,310/1,416. Median sig_z: B4 2.70 km, v4-NLL3D 2.80 km. Median nearest station (B4 located): 13.5 km. Paired B4 − v4-NLL3D: median −0.18 km over 23,216 events located in both (p10 −4.39, p90 +1.68); −0.13 km over 17,674 events tier A-C in both. Above the surface: B4 0.2 %, v4-NLL3D 0.1 % of A-D events. v4 read as bsl would put 4 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>24,643 events, 1,411 tier U; 5,430 tier A. Median nearest station 13.5 km; median sig_z 2.7 km. 28 % of located events lie offshore of 124.6°W, 41 % near-shore, 31 % onshore.</li>
+<li>B4 A-C by sub-area, km bsl (p10/p50/p90): onshore 9.9/23.1/30.6 (dist_min 10.0 km, sig_z 1.8 km); near-shore 10.8/22.2/29.7 (10.7, 1.7); offshore 18.8/27.5/35.0 (27.4, 3.9).</li>
+<li>Paired with NCSN (ANSS <code>nc</code>) on the same events: +3.4 km overall (n = 1,730), +1.7 onshore (633), +4.0 near-shore (764), +8.8 offshore (219).</li>
+<li>Coastal slab box (40.35–40.9°N, 124.6–123.9°W): B4 A-C resolves two layers at 20.5 and 28.8 km (n = 5,486; tier A 20.9 and 29.0). NCSN gives 18.6 and 24.8 km for all its events, and 19.1 and 25.1 km for the matched ones (B4 20.9 and 28.8). The B4 layers sit 4.8 and 14.1 km below Slab2; the NCSN layers 2.5 and 9.6 km.</li>
+<li>Ferndale volume (within 10 km of the 2022 epicentre, n = 684): B4 A-C median 23.7 km, with modes at 18–22 and 26–30 km; paired +2.6 km against NCSN (49 events).</li>
+<li>Eastern MFZ repeater zone (40.25–40.40°N): B4 22.0 against NCSN 19.0 km, paired +4.0 km. Garberville: B4 median 23.8 km against about 22 km, paired +1.9 km (98 events); B4 also has 186 events at 29–33 km that NCSN does not show.</li>
+<li>The offset holds for the best events: sig_z &lt; 1 km +2.8 km (n = 671); dist_min &lt; 5 km +2.9 (205); tier A onshore +1.6, near-shore +4.0. It is steady from 2010 to 2015 (+3.1 to +3.8) and grows offshore and with sig_z (+9.8 km for sig_z &gt; 5 km).</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Too deep by about 2–4 km onshore and near-shore</b>: upper layer of the double zone +1.5 to +3 km, lower layer about +4 km, Garberville about +1.8 km. Offshore of 124.6°W the offset may be 5–10 km, but both our catalog and the literature constrain depth poorly there (Yeck et al. 2023; Materna et al. 2018), so B4 offshore is only probably too deep. The 2022, 2021 and 2024 sequences fall outside 2010–2016, so we compared structures, not events: the double zone, the Garberville swarm and the eastern MFZ are active in both periods.</p>
+<p>Every independent benchmark puts B4 deeper, and the offset does not come from station geometry. The independent 3-D relocation (Guo et al. 2025) came out shallower than the 1-D results, not deeper (median 17.2 against 18.8 km; mainshock 15.8 against 17.9 km). Only Kummerfeldt et al. (2026) argue for a deeper slab top, from unrelocated catalog hypocentres. The literature as a whole does not support depths 3–4 km below NCSN.</p>
+<p>Possible model causes, not tested. In v0.3.0, Vp/Vs beneath Ferndale is 1.63–1.68 at 9–15 km, while Guo et al. (2025) and Gong and McGuire (2021) find a high-Vp/Vs slab crust there. Low Vp/Vs lengthens the source distance implied by S−P and pushes events down. The lower B4 layer at 28.8 ± 1.4 km sits on the 29 km model node, where Vp peaks at 7.8–8.0 km/s before decreasing at 34 km and DWS drops from about 830–1,090 to about 140–170. It could be a node artefact.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Almost none; toward the literature only offshore.</b> Paired B4 − NLL3D is −0.18 km (A-D) and −0.13 km (A-C), and the offset from NCSN is unchanged (B4 − ANSS and NLL3D − ANSS both +3.4 km). By sub-area (A-C in both): offshore −2.0 km (median 30.7 to 27.6 km; against NCSN +11.6 to +8.8; western MFZ −3.3 km); near-shore +0.12 km (against NCSN +3.7 to +4.0); onshore +0.02 km (+1.7 unchanged); coastal slab box +0.26 km (layers 20.3/28.4 to 20.5/28.8 km); Ferndale −0.17 km; Garberville −0.26 km. The 2–4 km offset was already in v4-NLL3D (3-D starting model, Vp/Vs 1.76, station terms).</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Treat Mendocino B4 depths as about 2–4 km too deep onshore and near-shore. Do not interpret absolute depths, such as which events lie in the slab crust and which in the mantle, until the bias is explained. Separation within a cluster, such as the double-zone geometry, can still be used. Offshore of 124.6°W use only sig_z &lt; 3 km events and mark them as uncertain.</li>
+<li>Relocate the onshore and near-shore tier A events (about 4,500) with the same picks and station terms in three models: (a) the Castillo and Ellsworth (1993) MEN 1-D model; (b) v0.3.0 Vp with Vp/Vs fixed at 1.76–1.78; (c) v0.3.0 without station terms. This separates the effects of the model, of Vp/Vs and of the station terms. Also check the sign and size of the S terms at the coastal NC and BK stations.</li>
+<li>Build event-paired comparisons on the literature’s own scale: the NCEDC double-difference catalog (the basis of Materna et al. 2018 and McCrory et al. 2012), and the Guo et al. (2025) hypoTD catalog as a 3-D benchmark near Ferndale.</li>
+<li>Test whether the 28.8 km layer is an artefact of the 29 km node: relocate with a finer vertical grid or inspect the NonLinLoc PDFs.</li>
+<li>If the tests point to Vp/Vs or station terms, fix them before GrowClust3D (B5), then report the remaining offset in the manuscript as one bullet.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/mendo/</code> (mendo.py, an1.py to an4.py).</p>
+
+<h2 id="forearc">9. Offshore forearc <span class="chip ok">consistent</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">Where published studies constrain individual events (the Fortuna cluster near Cape Mendocino and the Newport shelf clusters off Oregon), B4 agrees within about 1.5 km. The region also holds 1,605 quarry blasts in the Strait of Georgia, which B4 places about 6 km deep.</p>
+
+<h3>What the literature says</h3>
+<ul>
+<li><a class="c" href="#r-alongi2021">Alongi et al. (2021)</a>, Cascadia Initiative OBS and land stations, July 2014–September 2015, 40–41°N east of 125°W, datum not stated: near-interface events have a mean depth of 20.8 ± 3.2 km; the Fortuna cluster lies at 17–23 km in two sub-clusters centred at 17 and 22 km; little seismicity above 15 km.</li>
+<li><a class="c" href="#r-trehu2018">Tréhu et al. (2018)</a>, stations normalized to sea level: the 25–26 June 2015 M2.5 events on the central Oregon shelf lie at 8–13 km, set by OBS J25D about 17 km away. PNSN had them at about 30 km. A 2017 M3.8 event has a moment-tensor depth of 12 km (PNSN 38 km).</li>
+<li><a class="c" href="#r-trehu2008">Tréhu et al. (2008)</a>: the 2004 M4.9 and M4.8 events at 9–11 and 15–17 km by pP and PmP modelling. The regional bulletin had 29 and 28 km (<a class="c" href="#r-williams2011">Williams et al. 2011</a>).</li>
+<li>Mendocino coast slab: subducted crust at 10–20 km bsl (<a class="c" href="#r-gong2021">Gong and McGuire 2021</a>); events in the upper 2–4 km of the slab (<a class="c" href="#r-shelly2024">Shelly et al. 2024</a>).</li>
+<li><a class="c" href="#r-morton2023">Morton et al. (2023)</a>, Hypoinverse with blended 1-D models, datum not stated: 5,282 events at 0–65 km; we matched their data release.</li>
+<li><a class="c" href="#r-carbotte2024">Carbotte et al. (2024)</a>, reflection imaging: the plate top is about 5 km at the deformation front and 15–16.5 km under the shelf at 43.3–47°N; the interface is shallower than Slab2, by more than 8 km off the Olympic Peninsula.</li>
+<li><a class="c" href="#r-hutchinson2019">Hutchinson et al. (2019)</a>, bsl: 15–20 km on the primary Nootka faults, 6–15 km on the conjugate faults. <a class="c" href="#r-hayes2018">Slab2</a> sampled at named sites; its uncertainty under the shelf is 10–12 km.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">14,195</td><td class="num">5.3</td><td class="num">18.8</td><td class="num">30.0</td><td class="num">5.3</td><td class="num">18.9</td><td class="num">29.7</td></tr><tr><td>B4</td><td>A-C</td><td class="num">11,089</td><td class="num">5.5</td><td class="num">18.8</td><td class="num">29.3</td><td class="num">5.7</td><td class="num">19.0</td><td class="num">29.0</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">14,197</td><td class="num">4.9</td><td class="num">19.0</td><td class="num">32.1</td><td class="num">4.8</td><td class="num">19.2</td><td class="num">31.6</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">11,081</td><td class="num">5.8</td><td class="num">18.8</td><td class="num">31.2</td><td class="num">5.9</td><td class="num">19.0</td><td class="num">30.8</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">15,422</td><td class="num">0.4</td><td class="num">18.1</td><td class="num">27.1</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">14,195</td><td class="num">0.6</td><td class="num">18.3</td><td class="num">26.8</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">11,089</td><td class="num">0.5</td><td class="num">18.2</td><td class="num">26.0</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation 0.01 km. Tiers A/B/C/D/U: B4 1,617/3,938/5,534/3,106/1,227; v4-NLL3D 1,218/4,240/5,623/3,116/1,225. Median sig_z: B4 4.28 km, v4-NLL3D 4.42 km. Median nearest station (B4 located): 21.8 km. Paired B4 − v4-NLL3D: median −0.32 km over 14,193 events located in both (p10 −4.58, p90 +2.90); −0.30 km over 10,922 events tier A-C in both. Above the surface: B4 0.2 %, v4-NLL3D 0.0 % of A-D events. v4 read as bsl would put 7 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>15,422 events, 1,227 tier U. Median surface +0.01 km and only 45 % of located epicentres lie below sea level, so bsl and below-surface depths differ by at most 0.3 km at the benchmark sites. Median nearest station 21.8 km; median sig_z 4.3 km.</li>
+<li>The region mixes structures: 55 % of located events are on the Mendocino coast (40–41°N, east of 125°W; median 19.6 km), 5 % in central Oregon, about 5 % in Washington, 8 % off west Vancouver Island.</li>
+<li>11.3 % of located events (14 % of A-C) are one cluster of 1,605 events at 49.72°N, 124.54°W near Texada Island. 97 % occur on weekdays between 07 and 17 PST, so these are almost certainly quarry blasts. B4 places them 3.7/6.3/12.2 km below ground (NLL3D median 7.5 km) when the true depth is about 0. They also produce the region’s shallow p10. Without them B4 A-C is 8.8/19.5/30.0 km.</li>
+<li>Fortuna (within 5 km of 40.6°N, 124.1°W; A-C n = 1,631; 73 % tier A-B; sig_z 1.6 km): 17.1/18.8/20.1 km bsl; 89 % of events in 17–23 km. B4 shows a single peak at 18–19 km and does not resolve the 22 km sub-cluster.</li>
+<li>Alongi’s box and period (A-C n = 2,458): B4 mean 20.1 ± 5.5 km against 20.8 ± 3.2 km.</li>
+<li>Newport: the 2015-06-25/26 pair at 11.8 and 11.6 km (sig_z 1.1–1.2 km; nearest station 18 km); the 2012-03-20 pair at 13.8 and 14.8 km; the 2013-01-25 events at 10.6–12.0 km. All lie inside 8–17 km. PNSN gave 29–39 km.</li>
+<li>Paired with Morton et al. (1,616 A-C matches), B4 − Morton median: −1.45 km over the region; −2.9 km on the Mendocino coast; −0.2 km in central Oregon; +3.8 km in Washington (+1.4 km where Morton’s depth error is ≤ 2 km); +2.1 km off west Vancouver Island.</li>
+<li>ANSS (915 matches): B4 − ANSS +2.3 km (uw +2.2, nc +2.3). On the Mendocino coast NCSN is itself shallower than Alongi and Morton. In central Oregon B4 is 3.0 km shallower than PNSN (n = 48), the direction in which Tréhu et al. show PNSN to be wrong.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Consistent, about 0 ± 1.5 km, where verified studies constrain event depths.</b> At Fortuna B4 is about 1 km above the middle of Alongi’s range but inside it. On the Newport shelf B4 matches the OBS-constrained 8–13 km of Tréhu et al. (2018) and the 9–17 km of the 2004 clusters. On the Mendocino coast B4 sits between NCSN (B4 +2.2 km, n = 370) and Morton (B4 −2.9 km, n = 1,073). B4 events average 3.3 km below the Slab2 plate top, consistent with Shelly et al. (2024) and Gong and McGuire (2021), who find Slab2 about 2 km too deep there. Offshore Mendocino events at about 26 km sit about 16 km below Slab2, in the Gorda mantle; no verified study constrains their depth.</p>
+<p>In the north, only Morton and PNSN constrain depths, and B4 is 1.1–3.8 km deeper than both. The 214 A-C events landward of the Nootka fault zone sit at a median 27.9 km (38 tier A-B; nearest station 39 km). That is deeper than the 15–20 km of the NFZ faults, but those faults are a different structure. The north is not resolved by the literature.</p>
+<p>The overall +2.3 km against ANSS does not mean B4 is too deep: it comes from NCSN, which is shallower than both OBS-based catalogs on the Mendocino coast, and in Oregon B4 is shallower than PNSN where PNSN is known to be too deep.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Slightly toward the literature, or no change; nowhere away.</b> Region-wide paired change −0.3 km. Fortuna: +0.27 km deeper but tighter (standard deviation 2.6 to 2.1 km; 84 % to 89 % of events in 17–23 km; 8 % to 4 % shallower than 15 km). Newport events: 0–2 km shallower (2012 pair 15.8/16.4 to 13.8/14.8 km). Against Morton: the median absolute difference fell from 5.2 to 4.8 km and B4 is closer in 67 % of pairs; Washington +6.0 to +3.8 km, west Vancouver Island +3.4 to +2.1 km, Mendocino coast −3.3 to −2.9 km. Offshore Mendocino events moved 2.5 km shallower (28.4 to 26.0 km).</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Keep the B4 depths for this region; no shift is needed.</li>
+<li>Flag or remove the Texada Island blast cluster (49.4–49.85°N, 124.25–124.75°W; 1,605 events) and exclude it from depth statistics. Its depth of about 6 km instead of 0 is a useful test of the shallow model and station terms near the Strait of Georgia.</li>
+<li>Report forearc depths by subregion (Mendocino coast, central Oregon, Washington, Vancouver Island), not as one regional median.</li>
+<li>Use the Fortuna cluster (B4 18.8 km against 17–23 km) and the 2015 Newport pair (B4 11.6–11.8 km against 8–13 km) as named depth benchmarks.</li>
+<li>In Washington and off Vancouver Island, check depth resolution (OBS coverage by year, station terms) before calling those events intraslab.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/forearc/</code> (slabrel.py, morton.py, anss.py, targets.py, trehu.py, nootka.py, blasts.py, fortuna2.py).</p>
+
+<h2 id="puget">10. Puget/Georgia <span class="chip ok">consistent</span> <span class="chip conf">confidence: high</span></h2>
+<p class="lead">B4 matches the published crustal depths in the Puget Lowland (mean 17.6 km, most events at 15–25 km) and the slab depths beneath the Strait of Georgia. It also matches PNSN within 0.2 km. This is the control region.</p>
+
+<h3>What the literature says</h3>
+<p>No study states a datum. The median surface here is +0.09 km, so the datum changes depths by 0.1–0.2 km at most.</p>
+<ul>
+<li><a class="c" href="#r-vanwagoner2002">Van Wagoner et al. (2002)</a>, 3-D tomography and 912 relocated events: the densest crustal seismicity is at 15–25 km in the Crescent basement. Events shallower than 10 km are nearly absent north of the Seattle fault zone. East of Lake Washington events spread from near the surface to more than 25 km.</li>
+<li><a class="c" href="#r-blakely2002">Blakely et al. (2002)</a>, same relocations: nearly 60 % between 15 and 25 km, mean 17.6 km; a near-vertical zone in the Seattle fault zone reaching close to the surface.</li>
+<li><a class="c" href="#r-merrill2020">Merrill et al. (2020)</a>: a diffuse layer of seismicity at 15–25 km beneath Siletzia. Rogers (1998), cited by <a class="c" href="#r-cassidy2000">Cassidy et al. (2000)</a>: small crustal events in the Georgia Strait–Puget lowland mostly at 15–25 km.</li>
+<li><a class="c" href="#r-balfour2012">Balfour et al. (2012)</a>: San Juan Islands seismicity at 10–25 km with none shallower than 10 km; Fraser Valley streaks to about 15–20 km.</li>
+<li><a class="c" href="#r-cassidy2000">Cassidy et al. (2000)</a>: the 1997 ML 4.6 Strait of Georgia thrust at 2–4 km.</li>
+<li>Slab: 40–65 km beneath the Strait of Georgia, most at 50–62 km (<a class="c" href="#r-cassidy2003">Cassidy and Waldhauser 2003</a>); to 60 km, bulk deeper than 50 km under SW British Columbia and shallower than 40 km under SW Washington (<a class="c" href="#r-preston2003">Preston et al. 2003</a>); 25–95 km at 47–48°N (<a class="c" href="#r-abers2009">Abers et al. 2009</a>); Nisqually asperity at 59–62 km and 1949 Olympia at 60 km (<a class="c" href="#r-ichinose2004">Ichinose et al. 2004</a>, <a class="c" href="#r-ichinose2006">2006</a>); a nest at 60–70 km (<a class="c" href="#r-merrill2019">Merrill and Bostock 2019</a>).</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">14,165</td><td class="num">2.4</td><td class="num">15.0</td><td class="num">23.6</td><td class="num">2.7</td><td class="num">15.1</td><td class="num">23.7</td></tr><tr><td>B4</td><td>A-C</td><td class="num">11,770</td><td class="num">3.8</td><td class="num">15.2</td><td class="num">23.3</td><td class="num">4.1</td><td class="num">15.4</td><td class="num">23.4</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">14,172</td><td class="num">1.6</td><td class="num">15.4</td><td class="num">23.8</td><td class="num">1.8</td><td class="num">15.6</td><td class="num">23.9</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">11,803</td><td class="num">3.1</td><td class="num">15.9</td><td class="num">23.4</td><td class="num">3.5</td><td class="num">16.0</td><td class="num">23.5</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">14,854</td><td class="num">−0.9</td><td class="num">14.3</td><td class="num">23.3</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">14,165</td><td class="num">−0.7</td><td class="num">14.4</td><td class="num">23.1</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">11,770</td><td class="num">−0.7</td><td class="num">14.6</td><td class="num">22.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation 0.09 km. Tiers A/B/C/D/U: B4 2,286/3,953/5,531/2,395/689; v4-NLL3D 2,152/4,077/5,574/2,369/682. Median sig_z: B4 3.16 km, v4-NLL3D 3.19 km. Median nearest station (B4 located): 15.1 km. Paired B4 − v4-NLL3D: median −0.30 km over 14,163 events located in both (p10 −3.12, p90 +3.00); −0.30 km over 11,675 events tier A-C in both. Above the surface: B4 0.7 %, v4-NLL3D 0.1 % of A-D events. v4 read as bsl would put 12 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>14,854 events, 689 tier U. Tier A median sig_z 1.3 km, median nearest station 9.8 km. The densest land network in the catalog.</li>
+<li>Van Wagoner’s model box (46.9–48.35°N, 123.4–121.5°W), crust shallower than 35 km, night-time events only (17:00–07:00 local, to drop blasts), depth below surface: B4 A-B (n = 2,627) mean 17.9 km, median 18.0 km, 71 % in 15–25 km. A-C (n = 4,719) mean 16.6 km, 62 % in 15–25 km. All hours and bsl: A-B mean 17.4, median 17.9 km.</li>
+<li>North of the Seattle fault zone: 0 % of A-B and 4 % of A-C events shallower than 10 km; A-B median 19.6 km. Seattle fault zone: A-C median 18.5 km with 12 % shallower than 10 km. East of Lake Washington: A-C 7.8/16.6/25.7 km. San Juan Islands: A-B 12.9/15.0/21.4 km, 1 % shallower than 10 km.</li>
+<li>The crust–slab gap is visible: A-C counts fall to 37 events at 30–35 km and rise again at 35–65 km.</li>
+<li>Slab (A-C, 30 km or deeper): 48.5–49°N (n = 87) median 55.9 km (p10/p90 48.0/63.8); 49–49.5°N (n = 32) 61.4 km; 47–48.5°N 42.7–44.1 km.</li>
+<li>ANSS (4,282 matches, nearly all PNSN): paired B4 − ANSS −0.1 km (A-C, n = 4,179), +0.0 km for crustal events (3,930).</li>
+<li>Quarry blasts: 75 % of events shallower than 5 km occur in daytime; in the Fraser Valley 89 % are in daytime and 92 % on weekdays. Removing daytime events raises the region’s A-C p10 from 3.8 to 9.1 km. The 46 events ANSS labels as explosions sit 3.8 km (B4) and 2.9 km (NLL3D) below the surface.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Consistent.</b> The offset is +0.3 km in the mean for night-time A-B events (17.9 against 17.6 km), and −1.0 km for A-C. This is smaller than the 1–2 km vertical uncertainty of both our catalog and the studies. The sub-area patterns match: few shallow events north of the Seattle fault zone, a near-vertical zone in it, a broad spread east of Lake Washington, nothing shallower than 10 km under the San Juan Islands. Slab depths fall inside the published bands. Four independent sources agree on the crustal band, and our tier A-B events have close stations, so confidence is high.</p>
+<p>Caveats. Our matched events are small (median ML 1.0) against M ≥ 2 for Van Wagoner’s events, but both are network-located crustal events. Several studies cannot be tested: the 1997 shallow thrust (27 events in our box), the Merrill and Bostock nest (outside the region polygon) and Van Wagoner’s note of no seismicity south of the Tacoma basin (most of our 1,136 events south of 47.1°N are the western Rainier zone near 46.8°N, 122.0°W, at the edge of the model box, plus daytime clusters). Binned by ANSS depth, B4 − ANSS is +5.4 km below 10 km and −2.3 km at 20–30 km; that pattern is regression to the mean from binning on one catalog, not a datum offset.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Essentially none; slightly toward the literature and PNSN.</b> Central Puget crust: paired −0.10 km (A-B, n = 3,933), −0.17 km (A-C). Night-time A-B mean 18.1 to 17.9 km; share in 15–25 km 73 % to 71 %. San Juan Islands: A-B median 16.3 to 15.0 km, both inside 10–25 km; against PNSN +3.2 to +1.9 km. Slab events 0.2–1.3 km deeper, still inside 40–65 km (B4 − ANSS −1.9 to −1.5 km). Over the region the median absolute B4 − ANSS difference fell from 3.0 to 2.5 km.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Keep the B4 depths; no correction is needed and there is no sign of over-deepening here.</li>
+<li>Use Puget/Georgia as the control in the manuscript: the tomography left depths unchanged (−0.1 to −0.3 km) and they agree with the literature and PNSN.</li>
+<li>Flag likely quarry blasts before quoting regional statistics: depth below surface under about 5 km on weekday daytimes, the Fraser Valley clusters, and the ANSS explosion matches. Report crustal statistics on blast-filtered A-B events.</li>
+<li>Do not cite the Merrill and Bostock nest or the 1997 shallow thrust as checks; the region does not sample them.</li>
+<li>Very shallow sources sit about 3 km too deep at tier C (ANSS explosions). This is a tier-C resolution limit, not an effect of the tomography (paired change −0.07 km).</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/puget/</code> (p1.py to p5.py).</p>
+
+<h2 id="onshore">11. Other onshore <span class="chip ok">consistent</span> <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">In Oregon and SW Washington, B4 agrees with PNSN within 0.2 km and with the verified studies. In northern California the Gorda slab sits 2.6 km deeper than NCSN, the same offset as at Mendocino, but still inside the broad published ranges.</p>
+
+<h3>What the literature says</h3>
+<p>Datums are mostly not stated. The median ground elevation is +0.41 km (0.2–0.8 km in the sub-areas tested), so the datum adds at most about 1 km of ambiguity. The verdict holds on either datum.</p>
+<ul>
+<li><a class="c" href="#r-mccrory2012">McCrory et al. (2012)</a>: beneath NW California a double seismic zone at about 15–30 km (slab top 10–25 km) and a single zone to about 45 km; slab seismicity almost absent from 47°N to 42°N; a band of forearc events at 45–47°N attributed to crustal faults.</li>
+<li><a class="c" href="#r-bostock2019">Bostock et al. (2019)</a>: north of California, events shallower than 26 km are counted as crust and deeper than 30 km as slab (a working split). Slab seismicity in northern California is limited to about 40 km; intraslab events are rare beneath Oregon; a nest at 60–70 km beneath the Georgia Strait.</li>
+<li><a class="c" href="#r-smith1993">Smith et al. (1993)</a>: shallow Benioff zone at 10–40 km. <a class="c" href="#r-wang1994">Wang and Rogers (1994)</a>: double zone at 15–25 km. <a class="c" href="#r-wong2005">Wong (2005)</a>: slab seismicity to about 40 km in the Gorda block, essentially none in central Cascadia. <a class="c" href="#r-castillo1993">Castillo and Ellsworth (1993)</a>: up to 40 km near Cape Mendocino.</li>
+<li>1993 Scotts Mills earthquake: 13–15 km (<a class="c" href="#r-nabelek1995">Nábělek and Xia 1995</a>) and 15.1 km (<a class="c" href="#r-thomas1996">Thomas et al. 1996</a>).</li>
+<li><a class="c" href="#r-weaver1987">Weaver et al. (1987)</a>: the base of the St Helens seismic zone (SHZ) at about 16 km, 20 km under the north slope in May 1980; events south of the volcano above 12 km (1980–1985 data).</li>
+<li><a class="c" href="#r-miller1997">Miller et al. (1997)</a>: in the NW Cascades and Puget Lowland most seismicity lies below a 5–10 km boundary and continues to 20–30 km; in the Cascades 0–20 km. <a class="c" href="#r-trehu1994">Tréhu et al. (1994)</a>: Siletzia is 25–35 km thick under the Oregon Coast Range (a thickness, not an event depth).</li>
+<li><a class="c" href="#r-melosh2024">Melosh et al. (2024)</a>: a Maacama microseismicity cluster at 4–10 km. We cannot test it (18 events, 17 tier D).</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">14,194</td><td class="num">0.8</td><td class="num">15.8</td><td class="num">30.2</td><td class="num">1.3</td><td class="num">16.2</td><td class="num">30.9</td></tr><tr><td>B4</td><td>A-C</td><td class="num">11,154</td><td class="num">1.6</td><td class="num">15.8</td><td class="num">29.1</td><td class="num">2.0</td><td class="num">16.2</td><td class="num">29.8</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">14,193</td><td class="num">0.9</td><td class="num">15.7</td><td class="num">31.3</td><td class="num">1.3</td><td class="num">16.2</td><td class="num">32.0</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">11,166</td><td class="num">1.8</td><td class="num">15.9</td><td class="num">30.5</td><td class="num">2.3</td><td class="num">16.4</td><td class="num">31.3</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">15,094</td><td class="num">−0.1</td><td class="num">14.2</td><td class="num">26.1</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">14,194</td><td class="num">0.1</td><td class="num">14.3</td><td class="num">25.5</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">11,154</td><td class="num">0.9</td><td class="num">14.5</td><td class="num">24.6</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation 0.41 km. Tiers A/B/C/D/U: B4 2,632/3,143/5,379/3,040/900; v4-NLL3D 2,499/3,228/5,439/3,027/901. Median sig_z: B4 3.67 km, v4-NLL3D 3.76 km. Median nearest station (B4 located): 18.1 km. Paired B4 − v4-NLL3D: median −0.12 km over 14,191 events located in both (p10 −2.88, p90 +3.00); −0.19 km over 11,028 events tier A-C in both. Above the surface: B4 1.1 %, v4-NLL3D 0.2 % of A-D events. v4 read as bsl would put 8 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>15,094 events, 900 tier U. Tier C depth is not constrained by definition, so the verdict rests mainly on tiers A-B (5,775 events).</li>
+<li>Gorda slab beneath Humboldt (40–42°N, west of 123.4°W; 2,343 located, 1,531 A-B; sig_z 1.6 km; dist_min 17.8 km): A-B 20.1/25.6/31.0 km bsl; 0.1 % deeper than 40 km. By longitude band the B4 medians are 21.0, 23.4 and 27.3 km going east, where Slab2 puts the slab top at 18.5, 20.3 and 27.6 km. Tier A events lie 0–8 km below the Slab2 top, peaking at +1 to +3 km. Against NCSN, B4 is +2.6 km deeper (A-B, n = 244), about the same at every station distance under 30 km.</li>
+<li>Northern California inland (east of 123.4°W): crustal events near 122.7°W are 1.4 km shallower than NCSN; slab events near 123.3°W at 25–40 km are 2.5 km deeper. A-B p95 is 40.3 km.</li>
+<li>Oregon (A-C n = 3,582): −0.1/13.2/23.2 km bsl; 94 % shallower than 26 km; B4 − PNSN −0.17 km (n = 672). The 126 events deeper than 30 km look real: PNSN puts the 22 matched ones at a median 50.6 km against 51.8 km in B4.</li>
+<li>Scotts Mills (within 10 km of the 1993 epicentre, A-C n = 180, 2010–2016 background seismicity): median 15.1 km bsl (15.4 km below ground).</li>
+<li>SW Washington (46–47°N; A-B n = 1,835; sig_z 1.3 km; dist_min 9 km): median 15 km, while Slab2 lies 38–52 km down, so these are crustal events.</li>
+<li>SHZ, 46.2–46.7°N (n = 968): median 16.3 km, p90 20.7 km bsl; 51 % deeper than 16 km and 14 % deeper than 20 km. PNSN agrees on the same 346 events (both medians 17.8 km).</li>
+<li>Olympic Peninsula (n = 84) and Vancouver Island (n = 26), A-B: B4 is 3.2 and 3.9 km deeper than PNSN, and 6.5 km deeper where PNSN puts Olympic events at 0–15 km.</li>
+<li>Coast Ranges south of 40°N: no tier A, 4 tier B, median dist_min 56 km, sig_z 7–10 km; B4 − NCSN +5.2 km (231 events).</li>
+<li>Georgia Strait deep cluster (n = 62): median 62.4 km (p10/p90 56.7/65.8).</li>
+<li>ANSS overall (2,904 matches): B4 − ANSS +0.5 km (uw +0.1, nc +2.5).</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Consistent.</b> In Oregon and SW Washington the offset is about 0 km: Scotts Mills background seismicity at 15.1 km against a 13–15.1 km mainshock depth, 94 % of Oregon crustal events above the 26 km split, and PNSN agreement within 0.2 km. The Georgia Strait cluster (62.4 km) matches 60–70 km. In northern California the slab events fall inside the published ranges (15–30 km, at most about 40 km) but sit 2.6 km deeper than NCSN. Those ranges are 5–10 km wide, so they cannot tell a 2.6 km bias from no bias. The offset is the same as at Gorda and Mendocino, which points to a shared velocity or station-term cause, not a sampling difference: our events are small (median ML 1.1), but the matched events (median M 2.0) show the same offset.</p>
+<p>Two sub-areas are not resolved. The SHZ base in B4 is 1–5 km deeper than Weaver et al. (1987) found with 1980–1985 data and a 1-D model, but modern PNSN depths agree with B4, so the difference is with that study’s era and model. The Olympic and Vancouver Island crust is 3–4 km deeper than PNSN, and no verified study tests a 3–6 km offset in that shallow crust.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Slightly toward the literature in most places; negligible for the region</b> (paired −0.12 km A-D, −0.19 km A-C).</p>
+<ul>
+<li>Gorda slab beneath Humboldt: −0.57 km (A-B). Events deeper than 30 km fell from 21.6 % to 12.7 % (A-C) and deeper than 40 km from 1.1 % to 0.2 %. Offset from NCSN +3.6 to +2.6 km.</li>
+<li>Northern California inland slab: events deeper than 40 km fell from 8.7 % to 5.5 % (A-B); offset from NCSN +3.3 to +1.8 km.</li>
+<li>Scotts Mills: median 17.2 to 15.1 km, now inside the published 13–15.1 km.</li>
+<li>Olympic and Vancouver Island crust: offset from PNSN +5.0 to +3.2 km and +5.3 to +3.9 km.</li>
+<li>Exception, the SHZ: 0.4 km deeper than NLL3D (A-B median 15.6 to 16.3 km, p90 19.7 to 20.7 km), further from Weaver’s 16 km base but closer to PNSN (−1.0 to −0.1 km).</li>
+<li>The Georgia Strait cluster deepened about 1 km (61.3 to 62.4 km), still inside 60–70 km.</li>
+</ul>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Keep the B4 depths for tier A-B events in Oregon and SW Washington. This region does not support the suspicion that events went too deep.</li>
+<li>Treat the northern California offset (+2.6 km against NCSN, A-B) as part of the Gorda and Mendocino issue. Relocate the Humboldt A-B events with the NCSN 1-D model and the same picks, and check v0.3.0 Vp and Vp/Vs at 15–30 km beneath 40–41.5°N. If the cause is the model, correct it everywhere at once.</li>
+<li>Flag the Coast Ranges south of 40°N as not usable for depth (tiers C/D, nearest station about 56 km), and do not compare them with Melosh et al. (2024).</li>
+<li>For the Olympic and Vancouver Island crust, review station geometry and the depth–origin-time trade-off for events PNSN puts shallower than 15 km.</li>
+<li>A verified modern relocation study for the SHZ and for the Olympic and Vancouver Island crust is needed to judge those sub-areas to better than about 3 km.</li>
+</ol>
+<p class="small">Scratch scripts: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/onshore/</code> (sub.py, anss.py, focus.py, focus2.py, ab.py). Slab2 is used here only as a geometric reference.</p>
+
+<h2 id="cascades">12. Cascades <span class="chip ok">consistent</span> at Mount St Helens <span class="chip conf">confidence: medium</span></h2>
+<p class="lead">Matched event by event with the Hirao et al. (2025) Mount St Helens catalog (2,369 events), B4 is 0.5–0.8 km deeper, within the combined depth errors, and closer to it than NLL3D or PNSN. Depths at distant volcanoes (Hood, Shasta, Lassen) are tier C/D and should not be used.</p>
+
+<h3>What the literature says</h3>
+<ul>
+<li><a class="c" href="#r-hirao2025">Hirao et al. (2025)</a>, bsl, 31,133 events from 2008–2023, NonLinLoc and GrowClust3D in 3-D Vp/Vs models with topography: persistent shallow seismicity at −2.2 to 2 km bsl (0–4.2 km below the surface), deeper events at 2–8 km bsl from 2016, about 87 % above 2 km bsl, nearly all between the crater floor and about 7.5 km bsl. We matched their data release.</li>
+<li><a class="c" href="#r-zhang2022">Zhang et al. (2022)</a>, bsl: relocated events form a band from sea level to about 1 km above it; PNSN catalog depths after 2008 are on average 2.16 km too deep.</li>
+<li><a class="c" href="#r-moran2008">Moran et al. (2008)</a>, datum about 1.1 km asl: after 1998 most seismicity sat about 2 km below the crater floor; deep (&gt; 3 km) swarms in 1987–2004; deep events to 20 km right after 18 May 1980.</li>
+<li>Magma reservoir: 5.5–10 km (<a class="c" href="#r-musumeci2002">Musumeci et al. 2002</a>, datum unclear), 3.5–14 km (<a class="c" href="#r-kiser2018">Kiser et al. 2018</a>), 4–13 km (<a class="c" href="#r-kiser2016">Kiser et al. 2016</a>), 6–15 km bsl (<a class="c" href="#r-ulberg2020">Ulberg et al. 2020</a>). Ulberg et al. note SHZ seismicity is shallower than about 20 km.</li>
+<li><a class="c" href="#r-jones2005">Jones and Malone (2005)</a>, Mount Hood: one cluster at 3.5–4.5 km, a very shallow cluster under the summit, catalog and 1973-array depths of 5–10 km.</li>
+<li><a class="c" href="#r-moran1999">Moran et al. (1999)</a>, Rainier: a low-velocity body 5–18 km below the summit. <a class="c" href="#r-janik2010">Janik and McLaren (2010)</a>, Lassen: three zones shallower than 6 km and one at 5–10 km. <a class="c" href="#r-dzurisin2009">Dzurisin et al. (2009)</a>, Three Sisters: deformation source 4.9–5.4 km below the surface.</li>
+<li>Not verified: <a class="c" href="#r-nichols2011">Nichols et al. (2011)</a>, deep long-period events at 10–42 km; <a class="c" href="#r-stanley1996">Stanley et al. (1996)</a>, southern Washington Cascades.</li>
+</ul>
+
+<h3>Our numbers</h3>
+<div class="table-wrap"><table class="stats">
+<thead><tr><th>Catalog</th><th>Events</th><th class="num">n</th><th class="num">bsl p10</th><th class="num">bsl p50</th><th class="num">bsl p90</th><th class="num">below surface p10</th><th class="num">p50</th><th class="num">p90</th></tr></thead>
+<tbody><tr><td>B4</td><td>A-D</td><td class="num">16,053</td><td class="num">−0.5</td><td class="num">7.3</td><td class="num">18.8</td><td class="num">1.0</td><td class="num">8.3</td><td class="num">19.4</td></tr><tr><td>B4</td><td>A-C</td><td class="num">12,915</td><td class="num">−0.2</td><td class="num">7.8</td><td class="num">18.1</td><td class="num">1.5</td><td class="num">8.7</td><td class="num">18.8</td></tr><tr><td>v4-NLL3D</td><td>A-D</td><td class="num">16,052</td><td class="num">−0.6</td><td class="num">7.0</td><td class="num">18.8</td><td class="num">0.7</td><td class="num">8.0</td><td class="num">19.4</td></tr><tr><td>v4-NLL3D</td><td>A-C</td><td class="num">12,848</td><td class="num">−0.1</td><td class="num">7.4</td><td class="num">18.1</td><td class="num">1.3</td><td class="num">8.5</td><td class="num">18.8</td></tr><tr><td>v4 (datum unknown)</td><td>all, incl. tier U</td><td class="num">17,280</td><td class="num">−2.3</td><td class="num">4.7</td><td class="num">16.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-D events</td><td class="num">16,053</td><td class="num">−2.3</td><td class="num">5.0</td><td class="num">16.4</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr><tr><td>v4 (datum unknown)</td><td>B4 A-C events</td><td class="num">12,915</td><td class="num">−2.1</td><td class="num">5.4</td><td class="num">15.7</td><td class="num">n/a</td><td class="num">n/a</td><td class="num">n/a</td></tr></tbody></table></div>
+<p class="small">Median surface elevation 1.04 km. Tiers A/B/C/D/U: B4 4,488/2,855/5,572/3,138/1,227; v4-NLL3D 4,463/2,820/5,565/3,204/1,228. Median sig_z: B4 2.11 km, v4-NLL3D 2.15 km. Median nearest station (B4 located): 5.1 km. Paired B4 − v4-NLL3D: median −0.00 km over 16,052 events located in both (p10 −1.40, p90 +1.75); −0.00 km over 12,747 events tier A-C in both. Above the surface: B4 1.6 %, v4-NLL3D 2.0 % of A-D events. v4 read as bsl would put 16 % of B4 A-D events above the surface.</p>
+<ul class="facts">
+<li>17,280 events, 1,227 tier U; 4,488 tier A. Median nearest station 5.1 km; median surface +1.04 km, so a negative bsl depth can still be below the ground.</li>
+<li>Mount St Helens dominates: 4,374 B4 events within 5 km of the crater (1,643 tier A, 773 B; nearest station 1.0 km; sig_z 0.8 km). The SHZ and nearby crust hold about 3,250 A-C events. Rainier has about 250 events within 10 km, mostly tier C. Hood has 347, all tier C/D (nearest station 54 km, gap 224°, sig_z 4.9 km). Shasta (69), Lassen (9 within 20 km) and Three Sisters (4) are too few to test.</li>
+<li>Match with Hirao et al. (|Δt| ≤ 2 s, ≤ 5 km, one-to-one greedy): 2,369 events, median Δt 0.5 s, median distance 0.75 km. Both catalogs are in km bsl, so no datum conversion. B4 − Hirao: +0.54 km (A-D; p10 −1.55, p90 +2.01), +0.60 (A-C, n = 2,118), +0.71 (A-B, 1,704), +0.82 (tier A, 1,270). Medians: Hirao 0.36, B4 0.88, NLL3D 1.11 km bsl.</li>
+<li>On the 950 of these events that PNSN also catalogued: PNSN − Hirao +1.37 km, B4 − Hirao +0.91 km, B4 − PNSN −0.46 km.</li>
+<li>B4 does not resolve structure finer than about 1 km: for Hirao depth bins from −0.8 to +0.7 km bsl, B4 medians stay at 0.55–0.81 km. The offset is largest for Hirao’s shallowest events (+1.4 km above −0.5 km bsl) and smallest at 1–2 km bsl (+0.17 km).</li>
+<li>B4 follows the timing: its share of events deeper than 2 km bsl within 3 km of the crater rises to 35 % in 2016, from 6–17 % in 2010–2015; Hirao’s rises from 2–8 % to 16 %. No B4 event lies above the crater floor (−2.2 km bsl).</li>
+<li>Region-wide B4 − ANSS is +1.0 km (5,305 matches; uw +0.9, nc +4.1). It does not come from Mount St Helens (−0.46 km) but from the SHZ (+0.94), Hood (+6.9), Shasta (+5.3) and Lassen (+3.9).</li>
+<li>Hood: B4 median 11.4 km bsl against 3.5–4.5 km and 5–10 km in Jones and Malone (2005) and an ANSS median of 4.5 km.</li>
+</ul>
+
+<h3>Verdict and reasoning</h3>
+<p><b>Consistent at Mount St Helens</b>, with a small deep bias of 0.5–0.8 km. That is less than the combined 1σ depth error of the two catalogs (B4 sig_z 0.93 km, Hirao 0.72 km on the matches). B4 is also about 0.5 km shallower than PNSN, which both Hirao et al. and Zhang et al. show to be biased deep. Hirao et al. used 3-D Vp/Vs models on a 0.25 km grid with topography; our merged model is much coarser, which probably explains the residual bias and the loss of structure finer than 1 km. The other studies give velocity anomalies or deformation sources, not event depths, so they do not test our hypocentres. Hood, Shasta and Lassen events are tier C/D with no station within 30–80 km; their 4–7 km offsets reflect missing constraint, not a model error we can measure. Confidence is medium because only Mount St Helens is tested event by event.</p>
+
+<h3>Effect of the tomography</h3>
+<p><b>Toward the literature at Mount St Helens and Hood; away in the SHZ.</b> On the matched Mount St Helens events, B4 is 0.22 km shallower than NLL3D (0.26 km for A-B, 0.28 km for tier A). The offset from Hirao shrank from +0.75 to +0.54 km (A-D), +0.96 to +0.71 km (A-B) and +1.12 to +0.82 km (tier A). B4 is closer to Hirao than NLL3D for 73 % (A-D), 77 % (A-B) and 82 % (tier A) of events. At Hood, B4 moved about 5 km shallower (16.6 to 11.4 km bsl), still too deep. In the SHZ north-northwest of the volcano, B4 deepened: +0.41 km paired (A-C, n = 3,240), +0.5–0.6 km at 10–20 km depth; the share below 20 km bsl rose from 4.8 % to 7.6 %, and B4 − PNSN went from +0.12 to +0.94 km. No verified study constrains SHZ event depths. Region-wide the paired change is 0.00 km.</p>
+
+<h3>Recommended action</h3>
+<ol>
+<li>Accept B4 depths at Mount St Helens. Use the Hirao et al. (2025) match as the Cascades depth benchmark in the validation section, and state that our depths resolve nothing finer than about 1 km and carry a residual deep bias of about 0.5–0.8 km.</li>
+<li>Do not interpret depths at Hood, Shasta, Lassen or other distant volcanoes. Flag them as epicentre-only, and check whether PNSN stations close to Hood are missing from our station set.</li>
+<li>The SHZ deepening is the Cascades candidate for the PI’s concern that events went too deep in places. Before accepting it, compare B4 with a published SHZ relocation, or with any SHZ events in the Hirao catalog. This needs a further literature search.</li>
+</ol>
+<p class="small">Scratch scripts and the downloaded catalog: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/cascades/</code> (c1.py to c6.py, hirao_dl/final_MSH_catalog_v2.csv, hirao_matches.csv).</p>
+
+<h2 id="overall">13. Overall findings</h2>
+
+<h3>Where depths look too deep</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Where</th><th>Size (B4 − literature)</th><th>Tomography</th><th>Main cause (see below)</th></tr></thead>
+<tbody>
+<tr><td>Axial caldera</td><td>+2 to +2.5 km at the median</td><td>Made it worse (+1.8 km)</td><td>Vp/Vs 1.35–1.40 in v0.3.0</td></tr>
+<tr><td>Endeavour, Explorer seaward, JdF plate</td><td>Many events 15–45 km below the seafloor; medians +7 to +25 km</td><td>Made it worse (+0.9 to +6.8 km paired, much more in the tails)</td><td>No depth resolution; trade-off with origin time; unresolved model perturbations</td></tr>
+<tr><td>Gorda interior</td><td>+8 to +12 km (median); +3 to +6 km near an OBS</td><td>Improved (−1 to −4 km)</td><td>Distance to the nearest OBS; Vp/Vs 1.66–1.71</td></tr>
+<tr><td>Blanco Ridge, Gorda Depression, deep tail</td><td>+3 to +5 km (Ridge); +4 to +10 km (Depression); +2.2 to +2.4 km overall against Lange if bsl</td><td>Improved overall; A-B events 0.4 km worse</td><td>Unresolved tile above 15 km; Vp/Vs too low for the fault zone; BB200 picks</td></tr>
+<tr><td>Mendocino and N California slab</td><td>+2 to +4 km against NCSN and the slab literature</td><td>No change (already in NLL3D)</td><td>Not yet isolated: Vp/Vs 1.63–1.68 under Ferndale, station terms, 29 km node</td></tr>
+<tr><td>Smaller cases</td><td>SHZ +0.4 km against NLL3D (+0.9 against PNSN); Washington and Vancouver Island forearc +1 to +4 km against Morton and PNSN; Olympic and Vancouver Island crust +3 to +4 km against PNSN; Hood, Shasta, Lassen +4 to +7 km (tier C/D)</td><td>Mixed</td><td>Not resolved by the literature</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Where depths look too shallow</h3>
+<p>No region has a B4 median more than about 1 km shallower than the literature. The shallow errors are pins at the top of the grid. NLL3D places 27–47 % of ridge events within 0.25 km of the seafloor at Endeavour and on the JdF ridge, and its northern Gorda Ridge median was 0.5 km bsf. B4 still pins 31 % of JdF events and about 25 % of northern Gorda Ridge events there. These are not depth measurements. Two smaller cases: B4 is 2.9 km shallower than Morton et al. (2023) on the Mendocino coast, but deeper than NCSN on the same events; and it is 0.8 km shallower than Lange et al. in the Cascadia Depression. Surface sources go the other way: quarry blasts near Texada Island sit at about 6 km and Puget explosions at about 3 km.</p>
+
+<h3>Where depths agree</h3>
+<p>Puget/Georgia (+0.3 km), the forearc benchmarks at Fortuna and Newport (0 ± 1.5 km), Oregon and SW Washington (within 0.2 km of PNSN and inside the published ranges), Mount St Helens (+0.5 to +0.8 km), the Cleft segment and the northern Gorda Ridge. In all of these, depth is controlled by close stations. The pattern across the catalog is that B4 agrees with the literature within about 1 km where stations are close and the S model is reasonable, and the error grows with distance to the nearest station and with weak S constraint. Axial is the exception: the stations are close but the model is non-physical.</p>
+
+<h3>Likely causes</h3>
+<ol>
+<li><b>Velocity model v0.3.0.</b> This is the main cause where the tomography moved events away from the literature.
+  <ul>
+  <li>Vp/Vs below about 1.6 at nodes with weak S coverage: 1.35–1.40 at Axial, 1.28–1.56 at Endeavour. 57 nodes in the upper 10 km have Vp/Vs below 1.5, at Axial, Endeavour, Gorda/Mendocino (41.2–41.3°N) and near Blanco (44.2–44.4°N). Low Vp/Vs reduces the S−P time per km, so a given S−P needs a longer path, and events under or near a station move down.</li>
+  <li>Moderately low Vp/Vs elsewhere: 1.66–1.71 at 12–29 km under Gorda; 1.63–1.68 at 9–15 km under Ferndale, where the literature finds high Vp/Vs; 1.73–1.75 in the Explorer mantle; 1.7–1.9 at Blanco, where the fault zone has more than 2.</li>
+  <li>Perturbations at nodes with zero resolution: Endeavour (dVp −15 to +19 %), Blanco above 15 km (±10–21 %). This points to the D-B046 merge keeping changes outside the resolved volume.</li>
+  <li>Weak smoothing in the offshore tiles: s60 for <code>ridges_north</code> and s20 for Blanco, against s480 onshore.</li>
+  <li>Hypothesis for Explorer: no low-velocity sediment under the OBS.</li>
+  </ul></li>
+<li><b>Station geometry.</b> Offshore, depth increases with distance to the nearest station: Gorda interior from 16 to 26 km bsf, Explorer from 25 to 45 km bsl. Outside OBS deployments (Blanco in 2014–2015, south of Endeavour, most of Explorer) depth is not constrained at all.</li>
+<li><b>Depth–origin-time trade-off.</b> With 4–8 phases and the nearest station 30 km or more away, a seafloor solution and a 30–35 km solution both fit (JdF: RMS 0.116 s against 0.148 s). Tier labels and sig_z do not catch this: 21 JdF events are tier B at 31–36 km bsf, because the z* safeguard fails when v4 is also deep.</li>
+<li><b>Station terms.</b> New S terms grew at Endeavour (KEMF +0.21 s, NCHR +0.34 s, J55C +0.32 s). They have not yet been checked at Axial or on the Mendocino coast.</li>
+<li><b>Datum.</b> Not a cause of the main offsets. <code>surface_km</code> is elevation, positive up: the catalogs’ <code>above_surface</code> flag equals <code>depth &lt; −surface_km</code> for 99.98 % (B4) and 99.99 % (NLL3D) of located events. Onshore and on the coast the surface is within 0.5 km of sea level, so the Mendocino offset cannot be a datum effect. Offshore studies mostly report depth below the seafloor, and the conversion is good to about 0.1 km at Axial. Open datum questions: Lange et al. (2026), which decides the Blanco West and Surveyor verdicts; most land-network studies, which do not state one; and v4, whose offset from NLL3D is larger than the water depth offshore.</li>
+<li><b>Picks, events and grids.</b> Misidentified picks at BB200 (Blanco, near 127.9°W). Quarry blasts (1,605 at Texada Island, more in Puget and the Fraser Valley) in shallow statistics. Grid-node pile-ups: 10 % of NLL3D Axial events at 3.006 km bsl; the B4 Mendocino lower layer at the 29 km node.</li>
+</ol>
+
+<h3>What to do next</h3>
+<ol>
+<li><b>Model QC before any further B4 iteration.</b> In the merge, reject or revert to the starting model every node with Vp/Vs below about 1.6, low dws_s, or zero resolution. Mask the Blanco tile above 15 km and the Explorer/NFZ mantle at 10–30 km. Re-run <code>ridges_north</code> with stronger smoothing or heavier Vs damping. Rebuild the time grids and recheck the S station terms (Axial stations; KEMF, NCHR, J55C; coastal NC and BK).</li>
+<li><b>Catalog choice for now.</b> Keep v4-NLL3D at Axial. Elsewhere use B4 with flags: B4 is better than NLL3D at Gorda, Blanco overall, Mount St Helens and the forearc, and equal in Puget, Mendocino and onshore.</li>
+<li><b>Depth-quality flags.</b> Flag sig_z &gt; 3 km, maximum-likelihood depths at the grid top, depths below the Moho at a ridge, and offshore events with the nearest station beyond about 30 km. Fix the z* safeguard in <code>a2_build_catalog.py</code> and demote the 21 JdF tier-B events. Treat as epicentre-only: Endeavour, seaward Explorer, the JdF ridge and plate, Blanco 2014–2015, Hood, Shasta, Lassen and the Coast Ranges south of 40°N.</li>
+<li><b>Blast flags.</b> Texada Island cluster, Fraser Valley clusters, Puget weekday daytime events shallower than about 5 km, and ANSS explosion matches.</li>
+<li><b>Diagnostic relocations (scratch).</b> Mendocino tier A in the MEN 1-D model, with Vp/Vs fixed at 1.76–1.78, and without station terms. Blanco X9 events with fault-zone Vp/Vs 1.9–2.1 and with the Ren et al. (2023) 1-D model. Gorda with Vp/Vs 1.76–1.80 below the Moho. Explorer near-station events P-only and with a sediment static. JdF cluster at fixed depths of 3 and 33 km.</li>
+<li><b>Synthetic recovery test</b> with the real Gorda OBS geometry and v0.3.0, sources at 8, 12 and 16 km bsf.</li>
+<li><b>Event-level benchmarks still to do:</b> Waldhauser et al. (2020) at Axial; the NCEDC double-difference catalog and Guo et al. (2025) at Mendocino; SeaJade II at Explorer; the Krauss and Wilcock ONC archive at Endeavour; a published SHZ relocation. Already done: Lange et al. (2026) at Blanco, Hirao et al. (2025) at Mount St Helens, Morton et al. (2023) in the forearc, and ANSS everywhere.</li>
+<li><b>GrowClust3D (B5)</b> will not remove an absolute depth bias. Run it after the model fix.</li>
+</ol>
+
+<h2 id="methods">14. Methods</h2>
+
+<h3>Our statistics</h3>
+<p>Script: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/depths/depth_stats.py</code>. Results: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/depths/region_stats.json</code>. Run with the pixi environment Python. No repository file or catalog was modified.</p>
+<h4>Inputs</h4>
+<ul>
+<li>B4: <code>/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv</code>.</li>
+<li>v4-NLL3D: <code>/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv</code>.</li>
+<li>v4: <code>/wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_relocated_catalog_v4.csv</code>.</li>
+<li>ANSS (ComCat) 2010–2016: <code>/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/anss_2010-16.csv</code>; 173,581 rows (nc 132,281, nn 23,842, uw 16,707, us 750).</li>
+<li>All three of our catalogs have 172,340 rows in the same ID order (checked row by row). The <code>v4_depth</code> column in B4 and NLL3D equals <code>depth(km)</code> in the original v4 file to within 0.5 m. The <code>region</code> column is identical for every ID in B4 and NLL3D, so each event has a fixed region.</li>
+</ul>
+<h4>Depth column</h4>
+<ul>
+<li>Depth is the <code>depth</code> column: the NonLinLoc maximum-likelihood hypocentre, in km bsl, positive down. <code>exp_depth</code> (the PDF expectation) was not used; for B4 it runs about 0.4–0.5 km deeper (Axial median 5.43 against 4.96 km).</li>
+<li>B4’s <code>depth_frame</code> column reads “true depth (EFT undone, b4_catalog.py)” for every nll3d row.</li>
+<li>Depths are quantized on grid steps of about 0.07–0.15 km.</li>
+</ul>
+<h4>Event sets and percentiles</h4>
+<ul>
+<li>Located = tier A, B, C or D in each catalog’s own tier column (B4 157,270; NLL3D 157,267). A-C = tiers A, B, C. Tier U is excluded: those rows carry the v4 location and have <code>surface_km</code> = NaN.</li>
+<li>Percentiles are p10/p50/p90 from <code>numpy.percentile</code> (linear interpolation) over finite values.</li>
+</ul>
+<h4>Sign of surface_km</h4>
+<ul>
+<li><code>surface_km</code> is elevation, positive up. Region medians: Axial −1.55, Blanco −3.10, Gorda −3.07, Endeavour −2.58, Cascades +1.04 km.</li>
+<li>Check: the catalogs’ <code>above_surface</code> flag equals <code>depth &lt; −surface_km</code> for 99.98 % (B4) and 99.99 % (NLL3D) of located events. The opposite reading, <code>depth &lt; surface_km</code>, matches only 95.7–96.0 %.</li>
+<li>Depth below the local ground or seafloor is therefore <code>depth + surface_km</code>; negative values mean the event sits above the surface. Each catalog’s <code>surface_km</code> is sampled at its own epicentre; B4 and NLL3D differ by a median 0.03 km. The surface median quoted per region is over B4 located events.</li>
+</ul>
+<h4>v4 depths (datum unknown)</h4>
+<ul>
+<li><code>v4_depth</code> is reported as given for all region events including tier U, for the B4 A-D events, and for the B4 A-C events. “Read as bsl, X % above surface” is the share of B4 A-D events with <code>v4_depth + surface_km &lt; 0</code>.</li>
+<li>Datum test: v4 minus NLL3D depth for NLL3D tier A-B events (about 54,000), against <code>surface_km</code>. A least-squares fit gives intercept −2.35 km and slope +0.95, but the binned medians are not linear. For surface between −0.2 and +1.5 km the offset is flat at −1.2 to −1.5 km; for +1.5 to +3 km it is −2.3 km. Offshore it is −2.8 km at −0.6, −3.7 km at −1.75 and −6.2 km where the surface is below −2.5 km.</li>
+<li>v4 is therefore shallower than NLL3D by more than the water depth offshore. Neither a sea-level nor a local-surface datum reconciles v4 with the 3-D locations. We treat v4 depths as datum-ambiguous and do not judge them against the literature.</li>
+</ul>
+<h4>Paired change</h4>
+<p>B4 depth minus NLL3D depth for IDs located (A-D) in both catalogs, and separately for IDs tier A-C in both.</p>
+<h4>ANSS matching</h4>
+<ul>
+<li>ANSS <code>time</code> is parsed as UTC. For our catalogs we used the relocated origin time (<code>time</code>, UTC without “Z”), not <code>v4_time</code>.</li>
+<li>Each catalog is matched separately, using its located (A-D) events only. Candidate pairs: |Δt| ≤ 3 s and haversine epicentral distance (R = 6371 km) ≤ 20 km between our relocated epicentre and the ANSS epicentre.</li>
+<li>Assignment is one-to-one. Pairs are sorted by |Δt|, then by distance; each of our events keeps its best pair, then each ANSS event keeps its best remaining partner.</li>
+<li>Matches: 15,635 for B4 and 15,648 for NLL3D. 15,588 IDs matched the same ANSS event in both catalogs; this common set is used. Median |Δt| is 0.3–0.4 s and median distance 1.9–2.4 km.</li>
+<li>Further filters: ANSS <code>type</code> = earthquake, and the event is located (A-D) in both catalogs. Region comes from our catalog.</li>
+<li>ANSS depth is ComCat <code>depth</code> as given, not converted. ComCat’s datum varies by network (sea level or geoid, or average station elevation). “Possibly fixed” flags ANSS rows with depthError = 0, or with depth an exact integer above 0 (for example <code>us</code> 10.0 km).</li>
+<li>We report median ANSS, B4, NLL3D and v4 depths over the same matched events, plus median paired differences (B4 − ANSS, NLL3D − ANSS), and again for events tier A-C in both catalogs.</li>
+<li>Matched events are biased to larger magnitudes (Gorda: matched median v4 magnitude 2.8 against 2.0 for all located events), so matched medians are not regional medians.</li>
+<li>Global ANSS − NLL3D check on tier A-B events (n = 9,446): median by network uw −0.2 km, nc −2.9 km, us −5.9 km (us offshore depths are mostly fixed at 10 km). Where the surface is between −0.2 and +3 km, ANSS − NLL3D shows no consistent trend with elevation (−0.3, −0.5, −1.4, +0.0 km by bin), so no simple datum offset appears.</li>
+</ul>
+<h4>Region-specific analyses</h4>
+<ul>
+<li>Sub-areas, segments and boxes are defined in each region section (latitude and longitude limits, or nearest-station and sig_z bins).</li>
+<li>Event-level matches with published catalogs: Lange et al. (2026) data release for Blanco (11,298 of 13,503 absolute events; median Δt 0.16 s, distance 1.7 km); Hirao et al. (2025) data release for Mount St Helens (|Δt| ≤ 2 s, ≤ 5 km, one-to-one greedy; 2,369 events); Morton et al. (2023) data release for the forearc (1,616 A-C matches). Statistics quoted for Guo et al. (2025) and Yoon and Shelly (2024) were recomputed from their data releases.</li>
+<li>Model diagnostics (Vp, Vs, Vp/Vs, dws, resolution at nodes; S−P per km in the NonLinLoc grids) were read from the v0.3.0 model files and the B4 time grids.</li>
+<li>All region scripts are in the scratch folders named in each section. Nothing in the repository or in the catalogs was changed.</li>
+</ul>
+
+<h3>How the literature was found and verified</h3>
+<ul>
+<li>For each region, candidate studies were collected by searching the web and bibliographic databases (Crossref, OpenAlex, Semantic Scholar) and by following reference lists. The aim was studies that report earthquake depths, or depths of structures that bound seismicity (magma chambers, Moho, slab top, thermal limits), for the same area.</li>
+<li>Each study was then checked in a separate pass. The DOI was resolved and the Crossref record compared with the citation (title, authors, journal, volume, pages, year). The text was read where we could reach it: the published paper, an accepted manuscript, an author copy, a PMC or NSF-PAR copy, or a dissertation chapter that reprints the paper. Every number we use was searched for in that text, and corrections were recorded (for example a range that turned out to be a magma-chamber depth, not a seismicity limit).</li>
+<li>The datum of each study was recorded as stated in the text, read from figure axes (Wilcock et al. 2016, Waldhauser et al. 2020, Levy et al. 2018), inferred (for example a velocity model with no water layer), or “not stated”.</li>
+<li>A study is listed as verified when the depth numbers we use were seen in its text or abstract; each reference shows which. It is listed as not verified when the main depth numbers could not be seen in the paper itself (paywall, blocked download, or the search budget ran out), even if the DOI and abstract were confirmed.</li>
+<li>Two sources are conference abstracts and are not peer reviewed (Ren et al. 2025; Schaeffer et al. 2026). Lange et al. (2026) is published, but its depth sentences were checked in the arXiv preprint and its statistics come from the data release.</li>
+<li>The searches, checks and comparisons were done by AI research agents (Claude) under the PI’s direction. No person has yet re-read the papers for this report. Numbers that go into the manuscript should be spot-checked against the papers.</li>
+</ul>
+
+<h2 id="references">15. References</h2>
+<p class="small">Verified studies only. The tag after each entry gives the regions where it is used and what was checked: “full text” (published paper or author copy), “accepted manuscript”, “dissertation chapter” (a thesis chapter that reprints the paper), “preprint”, or “abstract” (only the abstract and DOI metadata). Unverified studies are listed separately below.</p>
+<ol class="refs">
+<li id="r-abers2009">Abers, G. A., MacKenzie, L. S., Rondenay, S., Zhang, Z., Wech, A. G., &amp; Creager, K. C. (2009). Imaging the source region of Cascadia tremor and intermediate-depth earthquakes. <i>Geology</i>, 37(12), 1119–1122. <a href="https://doi.org/10.1130/G30143A.1">doi:10.1130/G30143A.1</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-adimah2024">Adimah, N. I., Tan, Y. J., &amp; Russell, J. B. (2024). Shear-wave velocity structure of the Blanco oceanic transform fault zone. <i>Geophysical Journal International</i>, 239(2), 1287–1312. <a href="https://doi.org/10.1093/gji/ggae318">doi:10.1093/gji/ggae318</a> <span class="tag">Blanco · full text</span></li>
+<li id="r-alongi2021">Alongi, T., Schwartz, S. Y., Shaddox, H. R., &amp; Small, D. T. (2021). Probing the southern Cascadia plate interface with the dense amphibious Cascadia Initiative seismic array. <i>Journal of Geophysical Research: Solid Earth</i>, 126(7), e2021JB022180. <a href="https://doi.org/10.1029/2021JB022180">doi:10.1029/2021JB022180</a> <span class="tag">Offshore forearc · full text</span></li>
+<li id="r-arnoux2017">Arnoux, G. M., Toomey, D. R., Hooft, E. E. E., Wilcock, W. S. D., Morgan, J., Warner, M., &amp; VanderBeek, B. P. (2017). Seismic evidence that black smoker heat flux is influenced by localized magma replenishment and associated increases in crustal permeability. <i>Geophysical Research Letters</i>, 44(4), 1687–1695. <a href="https://doi.org/10.1002/2016GL071990">doi:10.1002/2016GL071990</a> <span class="tag">Endeavour · full text</span></li>
+<li id="r-arnoux2019">Arnoux, G. M., Toomey, D. R., Hooft, E. E. E., &amp; Wilcock, W. S. D. (2019). Seismic imaging and physical properties of the Endeavour Segment: Evidence that skew between mantle and crustal magmatic systems governs spreading center processes. <i>Geochemistry, Geophysics, Geosystems</i>, 20(3), 1319–1339. <a href="https://doi.org/10.1029/2018GC007978">doi:10.1029/2018GC007978</a> <span class="tag">Endeavour · full text</span></li>
+<li id="r-arnulf2014">Arnulf, A. F., Harding, A. J., Kent, G. M., Carbotte, S. M., Canales, J. P., &amp; Nedimović, M. R. (2014). Anatomy of an active submarine volcano. <i>Geology</i>, 42(8), 655–658. <a href="https://doi.org/10.1130/G35629.1">doi:10.1130/G35629.1</a> <span class="tag">Axial · full text</span></li>
+<li id="r-au1982">Au, D., &amp; Clowes, R. M. (1982). Crustal structure from an OBS survey of the Nootka fault zone off western Canada. <i>Geophysical Journal of the Royal Astronomical Society</i>, 68(1), 27–47. <a href="https://doi.org/10.1111/j.1365-246X.1982.tb06960.x">doi:10.1111/j.1365-246X.1982.tb06960.x</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-balfour2012">Balfour, N. J., Cassidy, J. F., &amp; Dosso, S. E. (2012). Identifying active structures using double-difference earthquake relocations in southwest British Columbia and the San Juan Islands, Washington. <i>Bulletin of the Seismological Society of America</i>, 102(2), 639–649. <a href="https://doi.org/10.1785/0120110056">doi:10.1785/0120110056</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-blakely2002">Blakely, R. J., Wells, R. E., Weaver, C. S., &amp; Johnson, S. Y. (2002). Location, structure, and seismicity of the Seattle fault zone, Washington: Evidence from aeromagnetic anomalies, geologic mapping, and seismic-reflection data. <i>GSA Bulletin</i>, 114, 169–177. <a href="https://doi.org/10.1130/0016-7606(2002)114%3C0169:LSASOT%3E2.0.CO;2">doi:10.1130/0016-7606(2002)114&lt;0169:LSASOT&gt;2.0.CO;2</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-bostock2019">Bostock, M. G., Christensen, N. I., &amp; Peacock, S. M. (2019). Seismicity in Cascadia. <i>Lithos</i>, 332–333, 55–66. <a href="https://doi.org/10.1016/j.lithos.2019.02.019">doi:10.1016/j.lithos.2019.02.019</a> <span class="tag">Other onshore, Puget/Georgia · full text</span></li>
+<li id="r-braunmiller2002">Braunmiller, J., &amp; Nábělek, J. (2002). Seismotectonics of the Explorer region. <i>Journal of Geophysical Research</i>, 107(B10), 2208. <a href="https://doi.org/10.1029/2001JB000220">doi:10.1029/2001JB000220</a> <span class="tag">Explorer · abstract and dissertation chapter (Braunmiller 1998)</span></li>
+<li id="r-canales2005">Canales, J. P., Detrick, R. S., Carbotte, S. M., Kent, G. M., Diebold, J. B., Harding, A., Babcock, J., Nedimović, M. R., &amp; van Ark, E. (2005). Upper crustal structure and axial topography at intermediate spreading ridges: Seismic constraints from the southern Juan de Fuca Ridge. <i>Journal of Geophysical Research</i>, 110, B12104. <a href="https://doi.org/10.1029/2005JB003630">doi:10.1029/2005JB003630</a> <span class="tag">JdF · full text</span></li>
+<li id="r-carbotte2008">Carbotte, S. M., Nedimović, M. R., Canales, J. P., Kent, G. M., Harding, A. J., &amp; Marjanović, M. (2008). Variable crustal structure along the Juan de Fuca Ridge: Influence of on-axis hot spots and absolute plate motions. <i>Geochemistry, Geophysics, Geosystems</i>, 9, Q08001. <a href="https://doi.org/10.1029/2007GC001922">doi:10.1029/2007GC001922</a> <span class="tag">JdF · full text</span></li>
+<li id="r-carbotte2020">Carbotte, S. M., Arnulf, A., Spiegelman, M., Lee, M., Harding, A., Kent, G., Canales, J. P., &amp; Nedimović, M. (2020). Stacked sills forming a deep melt-mush feeder conduit beneath Axial Seamount. <i>Geology</i>, 48(7), 693–697. <a href="https://doi.org/10.1130/G47223.1">doi:10.1130/G47223.1</a> <span class="tag">Axial · accepted manuscript</span></li>
+<li id="r-carbotte2024">Carbotte, S. M., Boston, B., Han, S., Shuck, B., Beeson, J., Canales, J. P., Tobin, H., Miller, N., Nedimović, M., Tréhu, A., et al. (2024). Subducting plate structure and megathrust morphology from deep seismic imaging linked to earthquake rupture segmentation at Cascadia. <i>Science Advances</i>, 10(23), eadl3198. <a href="https://doi.org/10.1126/sciadv.adl3198">doi:10.1126/sciadv.adl3198</a> <span class="tag">Offshore forearc · full text</span></li>
+<li id="r-cassidy1995">Cassidy, J. F., &amp; Rogers, G. C. (1995). The rupture process and aftershock distribution of the 6 April 1992 MS 6.8 earthquake, offshore British Columbia. <i>Bulletin of the Seismological Society of America</i>, 85(3), 716–735. <a href="https://doi.org/10.1785/BSSA0850030716">doi:10.1785/BSSA0850030716</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-cassidy2000">Cassidy, J. F., Rogers, G. C., &amp; Waldhauser, F. (2000). Characterization of active faulting beneath the Strait of Georgia, British Columbia. <i>Bulletin of the Seismological Society of America</i>, 90(5), 1188–1199. <a href="https://doi.org/10.1785/0120000044">doi:10.1785/0120000044</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-cassidy2003">Cassidy, J. F., &amp; Waldhauser, F. (2003). Evidence for both crustal and mantle earthquakes in the subducting Juan de Fuca plate. <i>Geophysical Research Letters</i>, 30(2), 1095. <a href="https://doi.org/10.1029/2002GL015511">doi:10.1029/2002GL015511</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-castillo1993">Castillo, D. A., &amp; Ellsworth, W. L. (1993). Seismotectonics of the San Andreas fault system between Point Arena and Cape Mendocino in northern California: Implications for the development and evolution of a young transform. <i>Journal of Geophysical Research</i>, 98(B4), 6543–6560. <a href="https://doi.org/10.1029/92JB02866">doi:10.1029/92JB02866</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-dzurisin2009">Dzurisin, D., Lisowski, M., &amp; Wicks, C. W. (2009). Continuing inflation at Three Sisters volcanic center, central Oregon Cascade Range, USA, from GPS, leveling, and InSAR observations. <i>Bulletin of Volcanology</i>, 71(10), 1091–1110. <a href="https://doi.org/10.1007/s00445-009-0296-4">doi:10.1007/s00445-009-0296-4</a> <span class="tag">Cascades · abstract</span></li>
+<li id="r-gong2021">Gong, J., &amp; McGuire, J. J. (2021). Constraints on the geometry of the subducted Gorda plate from converted phases generated by local earthquakes. <i>Journal of Geophysical Research: Solid Earth</i>, 126(2), e2020JB019962. <a href="https://doi.org/10.1029/2020JB019962">doi:10.1029/2020JB019962</a> <span class="tag">Gorda, Mendocino, Offshore forearc · author manuscript</span></li>
+<li id="r-guo2025">Guo, H., Atterholt, J. W., McGuire, J. J., &amp; Thurber, C. (2025). Evidence for low effective stress within the crust of the subducted Gorda plate from the 2022 December Mw 6.4 Ferndale earthquake sequence. <i>Seismological Research Letters</i>, 96(3), 1504–1520 (online 2024). <a href="https://doi.org/10.1785/0220240078">doi:10.1785/0220240078</a> <span class="tag">Mendocino · abstract and data release (recomputed)</span></li>
+<li id="r-han2016">Han, S., Carbotte, S. M., Canales, J. P., Nedimović, M. R., Carton, H., Gibson, J. C., &amp; Horning, G. (2016). Seismic reflection imaging of the Juan de Fuca plate from ridge to trench: New constraints on the distribution of faulting and evolution of the crust prior to subduction. <i>Journal of Geophysical Research: Solid Earth</i>, 121, 1849–1872. <a href="https://doi.org/10.1002/2015JB012416">doi:10.1002/2015JB012416</a> <span class="tag">JdF · abstract</span></li>
+<li id="r-han2018">Han, S., Carbotte, S. M., Canales, J. P., Nedimović, M. R., &amp; Carton, H. (2018). Along-trench structural variations of the subducting Juan de Fuca plate from multichannel seismic reflection imaging. <i>Journal of Geophysical Research: Solid Earth</i>, 123, 3122–3146. <a href="https://doi.org/10.1002/2017JB015059">doi:10.1002/2017JB015059</a> <span class="tag">JdF · abstract</span></li>
+<li id="r-hayes2018">Hayes, G. P., Moore, G. L., Portner, D. E., Hearne, M., Flamme, H., Furtney, M., &amp; Smoczyk, G. M. (2018). Slab2, a comprehensive subduction zone geometry model. <i>Science</i>, 362(6410), 58–61. <a href="https://doi.org/10.1126/science.aat4723">doi:10.1126/science.aat4723</a> <span class="tag">Offshore forearc, Mendocino, Other onshore · metadata; depths sampled from the local Slab2 grids</span></li>
+<li id="r-hellweg2025">Hellweg, M., Dreger, D. S., Lomax, A., McPherson, R. C., &amp; Dengler, L. (2025). The 2021 and 2022 North Coast California earthquake sequences and fault complexity in the vicinity of the Mendocino Triple Junction. <i>Bulletin of the Seismological Society of America</i>, 115(1), 140–162 (online 2024). <a href="https://doi.org/10.1785/0120240023">doi:10.1785/0120240023</a> <span class="tag">Gorda, Mendocino · author proof (Gorda check); the Mendocino check reached only the abstract and ComCat</span></li>
+<li id="r-hirao2025">Hirao, B. W., Thomas, A. M., Shelly, D. R., Thelen, W. A., &amp; Journeau, C. (2025). Magmatic volatile flux drives non-eruptive volcano-tectonic seismicity at Mount St. Helens, USA from 2008–2024. <i>Journal of Geophysical Research: Solid Earth</i>, 130(12), e2025JB031278. <a href="https://doi.org/10.1029/2025JB031278">doi:10.1029/2025JB031278</a> <span class="tag">Cascades · full text and data release (matched)</span></li>
+<li id="r-huang1988">Huang, P. Y., &amp; Solomon, S. C. (1988). Centroid depths of mid-ocean ridge earthquakes: Dependence on spreading rate. <i>Journal of Geophysical Research</i>, 93(B11), 13445–13477. <a href="https://doi.org/10.1029/JB093iB11p13445">doi:10.1029/JB093iB11p13445</a> <span class="tag">JdF · abstract</span></li>
+<li id="r-hutchinson2019">Hutchinson, J., Kao, H., Spence, G., Obana, K., Wang, K., &amp; Kodaira, S. (2019). Seismic characteristics of the Nootka fault zone: Results from the Seafloor Earthquake Array Japan–Canada Cascadia Experiment (SeaJade). <i>Bulletin of the Seismological Society of America</i>, 109(6), 2252–2276. <a href="https://doi.org/10.1785/0120190008">doi:10.1785/0120190008</a> <span class="tag">Explorer, Offshore forearc · abstract and dissertation chapter (Hutchinson 2020)</span></li>
+<li id="r-hutchinson2020">Hutchinson, J., Kao, H., Riedel, M., Obana, K., Wang, K., Kodaira, S., Takahashi, T., &amp; Yamamoto, Y. (2020). Significant geometric variation of the subducted plate beneath the northernmost Cascadia subduction zone and its tectonic implications as revealed by the 2014 M 6.4 earthquake sequence. <i>Earth and Planetary Science Letters</i>, 551, 116569. <a href="https://doi.org/10.1016/j.epsl.2020.116569">doi:10.1016/j.epsl.2020.116569</a> <span class="tag">Explorer · abstract and dissertation chapter</span></li>
+<li id="r-hutchinson2023">Hutchinson, J., Kao, H., Riedel, M., Obana, K., Wang, K., Kodaira, S., Takahashi, T., &amp; Yamamoto, Y. (2023). Tectonic evolution of the Nootka fault zone and deformation of the shallow subducted Explorer plate in northern Cascadia as revealed by earthquake distributions and seismic tomography. <i>Scientific Reports</i>, 13, 7873. <a href="https://doi.org/10.1038/s41598-023-33310-z">doi:10.1038/s41598-023-33310-z</a> <span class="tag">Explorer · full text</span></li>
+<li id="r-hyndman1981">Hyndman, R. D., &amp; Rogers, G. C. (1981). Seismicity surveys with ocean bottom seismographs off western Canada. <i>Journal of Geophysical Research</i>, 86(B5), 3867–3880. <a href="https://doi.org/10.1029/JB086iB05p03867">doi:10.1029/JB086iB05p03867</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-ichinose2004">Ichinose, G. A., Thio, H. K., &amp; Somerville, P. G. (2004). Rupture process and near-source shaking of the 1965 Seattle-Tacoma and 2001 Nisqually, intraslab earthquakes. <i>Geophysical Research Letters</i>, 31(10), L10604. <a href="https://doi.org/10.1029/2004GL019668">doi:10.1029/2004GL019668</a> <span class="tag">Puget/Georgia · abstract</span></li>
+<li id="r-ichinose2006">Ichinose, G. A., Thio, H. K., &amp; Somerville, P. G. (2006). Moment tensor and rupture model for the 1949 Olympia, Washington, earthquake and scaling relations for Cascadia and global intraslab earthquakes. <i>Bulletin of the Seismological Society of America</i>, 96(3), 1029–1037. <a href="https://doi.org/10.1785/0120050132">doi:10.1785/0120050132</a> <span class="tag">Puget/Georgia · abstract</span></li>
+<li id="r-janik2010">Janik, C. J., &amp; McLaren, M. K. (2010). Seismicity and fluid geochemistry at Lassen Volcanic National Park, California: Evidence for two circulation cells in the hydrothermal system. <i>Journal of Volcanology and Geothermal Research</i>, 189(3–4), 257–277. <a href="https://doi.org/10.1016/j.jvolgeores.2009.11.014">doi:10.1016/j.jvolgeores.2009.11.014</a> <span class="tag">Cascades · abstract</span></li>
+<li id="r-jones1978">Jones, P. R., &amp; Johnson, S. H. (1978). Sonobuoy array measurements of active faulting on the Gorda Ridge. <i>Journal of Geophysical Research</i>, 83(B7), 3435–3440. <a href="https://doi.org/10.1029/JB083iB07p03435">doi:10.1029/JB083iB07p03435</a> <span class="tag">Gorda · abstract</span></li>
+<li id="r-jones2005">Jones, J., &amp; Malone, S. D. (2005). Mount Hood earthquake activity: Volcanic or tectonic origins? <i>Bulletin of the Seismological Society of America</i>, 95(3), 818–832. <a href="https://doi.org/10.1785/0120040019">doi:10.1785/0120040019</a> <span class="tag">Cascades · full text</span></li>
+<li id="r-kiser2016">Kiser, E., Palomeras, I., Levander, A., Zelt, C., Harder, S., Schmandt, B., Hansen, S., Creager, K., &amp; Ulberg, C. (2016). Magma reservoirs from the upper crust to the Moho inferred from high-resolution Vp and Vs models beneath Mount St. Helens, Washington State, USA. <i>Geology</i>, 44(6), 411–414. <a href="https://doi.org/10.1130/G37591.1">doi:10.1130/G37591.1</a> <span class="tag">Cascades · abstract</span></li>
+<li id="r-kiser2018">Kiser, E., Levander, A., Zelt, C., Schmandt, B., &amp; Hansen, S. (2018). Focusing of melt near the top of the Mount St. Helens (USA) magma reservoir and its relationship to major volcanic eruptions. <i>Geology</i>, 46(9), 775–778. <a href="https://doi.org/10.1130/G45140.1">doi:10.1130/G45140.1</a> <span class="tag">Cascades · abstract</span></li>
+<li id="r-krauss2023">Krauss, Z., Wilcock, W. S. D., Heesemann, M., Schlesinger, A., Kukovica, J., &amp; Farrugia, J. J. (2023). A long-term earthquake catalog for the Endeavour Segment: Constraints on the extensional cycle and evidence for hydrothermal venting supported by propagating rifts. <i>Journal of Geophysical Research: Solid Earth</i>, 128(2), e2022JB025662. <a href="https://doi.org/10.1029/2022JB025662">doi:10.1029/2022JB025662</a> <span class="tag">Endeavour · dissertation chapter (Krauss 2024)</span></li>
+<li id="r-kummerfeldt2026">Kummerfeldt, S. R., Furlong, K. P., &amp; McKenzie, K. A. (2026). Redefining the 3-D plate boundary structure of the Mendocino Triple Junction (MTJ) with earthquakes and seismic tomography. <i>Geoscience Letters</i>, 13, 69. <a href="https://doi.org/10.1186/s40562-026-00520-y">doi:10.1186/s40562-026-00520-y</a> <span class="tag">Mendocino · full text</span></li>
+<li id="r-kuna2019">Kuna, V. M., Nábělek, J. L., &amp; Braunmiller, J. (2019). Mode of slip and crust–mantle interaction at oceanic transform faults. <i>Nature Geoscience</i>, 12(2), 138–142. <a href="https://doi.org/10.1038/s41561-018-0287-1">doi:10.1038/s41561-018-0287-1</a> <span class="tag">Blanco · full text</span></li>
+<li id="r-lange2026">Lange, D., Ren, Y., &amp; Grevemeyer, I. (2026). Seismicity, repeating earthquakes, and tomographic imaging of the Blanco Transform Fault System, Northeast Pacific. <i>Journal of Geophysical Research: Solid Earth</i>, 131(5), e2025JB031584. <a href="https://doi.org/10.1029/2025JB031584">doi:10.1029/2025JB031584</a> <span class="tag">Blanco · metadata; depth text from arXiv:2503.17148; statistics from the data release (matched)</span></li>
+<li id="r-levy2018">Levy, S., Bohnenstiehl, D. R., Sprinkle, P., Boettcher, M. S., Wilcock, W. S. D., Tolstoy, M., &amp; Waldhauser, F. (2018). Mechanics of fault reactivation before, during, and after the 2015 eruption of Axial Seamount. <i>Geology</i>, 46(5), 447–450. <a href="https://doi.org/10.1130/G39978.1">doi:10.1130/G39978.1</a> <span class="tag">Axial · full text</span></li>
+<li id="r-liu2025">Liu, M., &amp; Tan, Y. J. (2025). Evaluating the performance of machine-learning-based phase pickers when applied to ocean bottom seismic data: Blanco oceanic transform fault as a case study. <i>Geophysical Journal International</i>, 242(3), ggaf256. <a href="https://doi.org/10.1093/gji/ggaf256">doi:10.1093/gji/ggaf256</a> <span class="tag">Blanco · preprint (arXiv:2410.18041)</span></li>
+<li id="r-malecek1978">Malecek, S. J., &amp; Clowes, R. M. (1978). Crustal structure near Explorer Ridge from a marine deep seismic sounding survey. <i>Journal of Geophysical Research</i>, 83(B12), 5899–5912. <a href="https://doi.org/10.1029/JB083iB12p05899">doi:10.1029/JB083iB12p05899</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-materna2018">Materna, K., Taira, T., &amp; Bürgmann, R. (2018). Aseismic transform fault slip at the Mendocino Triple Junction from characteristically repeating earthquakes. <i>Geophysical Research Letters</i>, 45(2), 699–707. <a href="https://doi.org/10.1002/2017GL075899">doi:10.1002/2017GL075899</a> <span class="tag">Mendocino · full text</span></li>
+<li id="r-mccrory2012">McCrory, P. A., Blair, J. L., Waldhauser, F., &amp; Oppenheimer, D. H. (2012). Juan de Fuca slab geometry and its relation to Wadati-Benioff zone seismicity. <i>Journal of Geophysical Research: Solid Earth</i>, 117(B9), B09306. <a href="https://doi.org/10.1029/2012JB009407">doi:10.1029/2012JB009407</a> <span class="tag">Mendocino, Other onshore · full text</span></li>
+<li id="r-melosh2024">Melosh, B. L., McLaughlin, R. J., &amp; Ohlin, H. N. (2024). The geometry of fault reactivation and uplift along the central part of the Maacama Fault Zone, Northern California Coast Ranges (USA). <i>Geosphere</i>, 20(6), 1511–1532. <a href="https://doi.org/10.1130/GES02750.1">doi:10.1130/GES02750.1</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-menke2002">Menke, W., West, M., &amp; Tolstoy, M. (2002). Shallow-crustal magma chamber beneath the axial high of the Coaxial segment of Juan de Fuca Ridge at the source site of the 1993 eruption. <i>Geology</i>, 30(4), 359–362. <a href="https://doi.org/10.1130/0091-7613(2002)030%3C0359:SCMCBT%3E2.0.CO;2">doi:10.1130/0091-7613(2002)030&lt;0359:SCMCBT&gt;2.0.CO;2</a> <span class="tag">JdF · author manuscript</span></li>
+<li id="r-merrill2019">Merrill, R. J., &amp; Bostock, M. G. (2019). An earthquake nest in Cascadia. <i>Bulletin of the Seismological Society of America</i>, 109(5), 2021–2035. <a href="https://doi.org/10.1785/0120190055">doi:10.1785/0120190055</a> <span class="tag">Puget/Georgia · abstract</span></li>
+<li id="r-merrill2020">Merrill, R. J., Bostock, M. G., Peacock, S. M., Calvert, A. J., &amp; Christensen, N. I. (2020). A double difference tomography study of the Washington forearc: Does Siletzia control crustal seismicity? <i>Journal of Geophysical Research: Solid Earth</i>, 125(10), e2020JB019750. <a href="https://doi.org/10.1029/2020JB019750">doi:10.1029/2020JB019750</a> <span class="tag">Puget/Georgia · abstract</span></li>
+<li id="r-merrill2022">Merrill, R. J., Bostock, M. G., Peacock, S. M., Schaeffer, A. J., &amp; Roecker, S. W. (2022). Complex structure in the Nootka fault zone revealed by double-difference tomography and a new earthquake catalog. <i>Geochemistry, Geophysics, Geosystems</i>, 23(2), e2021GC010205. <a href="https://doi.org/10.1029/2021GC010205">doi:10.1029/2021GC010205</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-miller1997">Miller, K. C., Keller, G. R., Gridley, J. M., Luetgert, J. H., Mooney, W. D., &amp; Thybo, H. (1997). Crustal structure along the west flank of the Cascades, western Washington. <i>Journal of Geophysical Research</i>, 102(B8), 17857–17873. <a href="https://doi.org/10.1029/97JB00882">doi:10.1029/97JB00882</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-moran1999">Moran, S. C., Lees, J. M., &amp; Malone, S. D. (1999). P wave crustal velocity structure in the greater Mount Rainier area from local earthquake tomography. <i>Journal of Geophysical Research</i>, 104(B5), 10775–10786. <a href="https://doi.org/10.1029/1999JB900036">doi:10.1029/1999JB900036</a> <span class="tag">Cascades · full text</span></li>
+<li id="r-moran2008">Moran, S. C., Malone, S. D., Qamar, A. I., Thelen, W. A., Wright, A. K., &amp; Caplan-Auerbach, J. (2008). Seismicity associated with renewed dome building at Mount St. Helens, 2004–2005. In <i>A Volcano Rekindled</i>, U.S. Geological Survey Professional Paper 1750, chap. 2, 27–60. <a href="https://doi.org/10.3133/pp17502">doi:10.3133/pp17502</a> <span class="tag">Cascades · full text</span></li>
+<li id="r-morton2023">Morton, E. A., Bilek, S. L., &amp; Rowe, C. A. (2023). Cascadia subduction zone fault heterogeneities from newly detected small magnitude earthquakes. <i>Journal of Geophysical Research: Solid Earth</i>, 128(6), e2023JB026607. <a href="https://doi.org/10.1029/2023JB026607">doi:10.1029/2023JB026607</a> <span class="tag">Offshore forearc · accepted manuscript and data release (matched)</span></li>
+<li id="r-musumeci2002">Musumeci, C., Gresta, S., &amp; Malone, S. D. (2002). Magma system recharge of Mount St. Helens from precise relative hypocenter location of microearthquakes. <i>Journal of Geophysical Research</i>, 107(B10). <a href="https://doi.org/10.1029/2001JB000629">doi:10.1029/2001JB000629</a> <span class="tag">Cascades · abstract</span></li>
+<li id="r-nabelek1995">Nábělek, J., &amp; Xia, G. (1995). Moment-tensor analysis using regional data: Application to the 25 March, 1993, Scotts Mills, Oregon, earthquake. <i>Geophysical Research Letters</i>, 22(1), 13–16. <a href="https://doi.org/10.1029/94GL02760">doi:10.1029/94GL02760</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-nedimovic2009">Nedimović, M. R., Bohnenstiehl, D. R., Carbotte, S. M., Canales, J. P., &amp; Dziak, R. P. (2009). Faulting and hydration of the Juan de Fuca plate system. <i>Earth and Planetary Science Letters</i>, 284, 94–102. <a href="https://doi.org/10.1016/j.epsl.2009.04.013">doi:10.1016/j.epsl.2009.04.013</a> <span class="tag">JdF · full text</span></li>
+<li id="r-oppenheimer1993">Oppenheimer, D., Eaton, J., Jayko, A., Lisowski, M., et al. (1993). The Cape Mendocino, California, earthquakes of April 1992: Subduction at the triple junction. <i>Science</i>, 261(5120), 433–438. <a href="https://doi.org/10.1126/science.261.5120.433">doi:10.1126/science.261.5120.433</a> <span class="tag">Mendocino · abstract</span></li>
+<li id="r-pollitz2025">Pollitz, F. F., Guns, K., &amp; Yoon, C. E. (2025). Rupture process of the Mw7.0 December 5, 2024 offshore Cape Mendocino earthquake. <i>Geophysical Research Letters</i>, 52(14), e2025GL115613. <a href="https://doi.org/10.1029/2025GL115613">doi:10.1029/2025GL115613</a> <span class="tag">Mendocino · abstract</span></li>
+<li id="r-preston2003">Preston, L. A., Creager, K. C., Crosson, R. S., Brocher, T. M., &amp; Trehu, A. M. (2003). Intraslab earthquakes: Dehydration of the Cascadia slab. <i>Science</i>, 302(5648), 1197–1200. <a href="https://doi.org/10.1126/science.1090751">doi:10.1126/science.1090751</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-qin2020">Qin, Y., Singh, S. C., Grevemeyer, I., Marjanović, M., &amp; Buck, W. R. (2020). Discovery of flat seismic reflections in the mantle beneath the young Juan de Fuca Plate. <i>Nature Communications</i>, 11, 4122. <a href="https://doi.org/10.1038/s41467-020-17946-3">doi:10.1038/s41467-020-17946-3</a> <span class="tag">JdF · full text</span></li>
+<li id="r-ren2023">Ren, Y., Lange, D., &amp; Grevemeyer, I. (2023). Seismotectonics of the Blanco Transform Fault System, Northeast Pacific: Evidence for an immature plate boundary. <i>Journal of Geophysical Research: Solid Earth</i>, 128(3), e2022JB026045. <a href="https://doi.org/10.1029/2022JB026045">doi:10.1029/2022JB026045</a> <span class="tag">Blanco · full text</span></li>
+<li id="r-ren2025">Ren, Y., Lange, D., &amp; Grevemeyer, I. (2025). Intraplate deformation and mantle shear zones in the Gorda plate driven by the northward migration of the Mendocino triple junction. EGU General Assembly 2025, EGU25-17345 (conference abstract, not peer reviewed). <a href="https://doi.org/10.5194/egusphere-egu25-17345">doi:10.5194/egusphere-egu25-17345</a> <span class="tag">Gorda · abstract</span></li>
+<li id="r-rollins2010">Rollins, J. C., &amp; Stein, R. S. (2010). Coulomb stress interactions among M ≥ 5.9 earthquakes in the Gorda deformation zone and on the Mendocino Fault Zone, Cascadia subduction zone, and northern San Andreas Fault. <i>Journal of Geophysical Research</i>, 115, B12306. <a href="https://doi.org/10.1029/2009JB007117">doi:10.1029/2009JB007117</a> <span class="tag">Gorda · full text</span></li>
+<li id="r-schaeffer2026">Schaeffer, A., Bostock, M., &amp; the PACSAFE Team (2026). High-resolution seismicity and fault imaging of the Queen Charlotte Triple Junction region from the PACSAFE Leg1 ocean-bottom seismometer network. EGU General Assembly 2026, EGU26-15321 (conference abstract, not peer reviewed). <a href="https://doi.org/10.5194/egusphere-egu26-15321">doi:10.5194/egusphere-egu26-15321</a> <span class="tag">Explorer · abstract</span></li>
+<li id="r-shelly2024">Shelly, D. R., Goldberg, D. E., Materna, K. Z., Skoumal, R. J., Hardebeck, J. L., Yoon, C. E., Yeck, W. L., &amp; Earle, P. S. (2024). Subduction intraslab-interface fault interactions in the 2022 Mw 6.4 Ferndale, California, earthquake sequence. <i>Science Advances</i>, 10(10), eadl1226. <a href="https://doi.org/10.1126/sciadv.adl1226">doi:10.1126/sciadv.adl1226</a> <span class="tag">Gorda, Mendocino, Offshore forearc · full text</span></li>
+<li id="r-shelly2025">Shelly, D. R., Goldberg, D. E., Wech, A. G., &amp; Thomas, A. M. (2025). A northeast-dipping zone of low-frequency earthquakes at the southern edge of Cascadia subduction. <i>Geophysical Research Letters</i>, 52(12), e2025GL116116. <a href="https://doi.org/10.1029/2025GL116116">doi:10.1029/2025GL116116</a> <span class="tag">Mendocino · abstract</span></li>
+<li id="r-shelly2026">Shelly, D. R., Thomas, A. M., Materna, K. Z., &amp; Skoumal, R. J. (2026). Low-frequency earthquakes track the motion of a captured slab fragment. <i>Science</i>, 391(6782), 294–299. <a href="https://doi.org/10.1126/science.aeb2407">doi:10.1126/science.aeb2407</a> <span class="tag">Mendocino · full text (USGS copy)</span></li>
+<li id="r-smith1993">Smith, S. W., Knapp, J. S., &amp; McPherson, R. C. (1993). Seismicity of the Gorda Plate, structure of the continental margin, and an eastward jump of the Mendocino Triple Junction. <i>Journal of Geophysical Research</i>, 98(B5), 8153–8171. <a href="https://doi.org/10.1029/93JB00026">doi:10.1029/93JB00026</a> <span class="tag">Gorda, Mendocino, Other onshore · abstract</span></li>
+<li id="r-soule2016">Soule, D., Wilcock, W. S. D., Toomey, D. R., Hooft, E. E. E., &amp; Weekly, R. T. (2016). Near-axis crustal structure and thickness of the Endeavour Segment, Juan de Fuca Ridge. <i>Geophysical Research Letters</i>, 43(11), 5688–5695. <a href="https://doi.org/10.1002/2016GL068182">doi:10.1002/2016GL068182</a> <span class="tag">Endeavour · full text</span></li>
+<li id="r-thomas1996">Thomas, G. C., Crosson, R. S., Carver, D. L., &amp; Yelin, T. S. (1996). The 25 March 1993 Scotts Mills, Oregon, earthquake and aftershock sequence: Spatial distribution, focal mechanisms, and the Mount Angel fault. <i>Bulletin of the Seismological Society of America</i>, 86(4), 925–935. <a href="https://doi.org/10.1785/BSSA0860040925">doi:10.1785/BSSA0860040925</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-trehu1994">Tréhu, A. M., Asudeh, I., Brocher, T. M., Luetgert, J. H., Mooney, W. D., Nábělek, J. L., &amp; Nakamura, Y. (1994). Crustal architecture of the Cascadia forearc. <i>Science</i>, 266(5183), 237–243. <a href="https://doi.org/10.1126/science.266.5183.237">doi:10.1126/science.266.5183.237</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-trehu2008">Tréhu, A. M., Braunmiller, J., &amp; Nábělek, J. L. (2008). Probable low-angle thrust earthquakes on the Juan de Fuca–North America plate boundary. <i>Geology</i>, 36(2), 127–130. <a href="https://doi.org/10.1130/G24145A.1">doi:10.1130/G24145A.1</a> <span class="tag">Offshore forearc · abstract</span></li>
+<li id="r-trehu2018">Tréhu, A. M., Wilcock, W. S. D., Hilmo, R., Bodin, P., Connolly, J., Roland, E. C., &amp; Braunmiller, J. (2018). The role of the Ocean Observatories Initiative in monitoring the offshore earthquake activity of the Cascadia subduction zone. <i>Oceanography</i>, 31(1), 104–113. <a href="https://doi.org/10.5670/oceanog.2018.116">doi:10.5670/oceanog.2018.116</a> <span class="tag">Offshore forearc · full text</span></li>
+<li id="r-ulberg2020">Ulberg, C. W., Creager, K. C., Moran, S. C., Abers, G. A., Thelen, W. A., Levander, A., Kiser, E., Schmandt, B., Hansen, S. M., &amp; Crosson, R. S. (2020). Local source Vp and Vs tomography in the Mount St. Helens region with the iMUSH broadband array. <i>Geochemistry, Geophysics, Geosystems</i>, 21(3), e2019GC008888. <a href="https://doi.org/10.1029/2019GC008888">doi:10.1029/2019GC008888</a> <span class="tag">Cascades · full text</span></li>
+<li id="r-vanark2007">Van Ark, E. M., Detrick, R. S., Canales, J. P., Carbotte, S. M., Harding, A. J., Kent, G. M., Nedimović, M. R., Wilcock, W. S. D., Diebold, J. B., &amp; Babcock, J. M. (2007). Seismic structure of the Endeavour Segment, Juan de Fuca Ridge: Correlations with seismicity and hydrothermal activity. <i>Journal of Geophysical Research</i>, 112, B02401. <a href="https://doi.org/10.1029/2005JB004210">doi:10.1029/2005JB004210</a> <span class="tag">Endeavour · full text</span></li>
+<li id="r-vanwagoner2002">Van Wagoner, T. M., Crosson, R. S., Creager, K. C., Medema, G., Preston, L., Symons, N. P., &amp; Brocher, T. M. (2002). Crustal structure and relocated earthquakes in the Puget Lowland, Washington, from high-resolution seismic tomography. <i>Journal of Geophysical Research</i>, 107(B12), 2381. <a href="https://doi.org/10.1029/2001JB000710">doi:10.1029/2001JB000710</a> <span class="tag">Puget/Georgia · full text</span></li>
+<li id="r-vanderbeek2019">VanderBeek, B. P., &amp; Toomey, D. R. (2019). Pn tomography of the Juan de Fuca and Gorda plates: Implications for mantle deformation and hydration in the oceanic lithosphere. <i>Journal of Geophysical Research: Solid Earth</i>, 124(8), 8565–8583. <a href="https://doi.org/10.1029/2019JB017707">doi:10.1029/2019JB017707</a> <span class="tag">Gorda · abstract and dissertation chapter (VanderBeek 2018)</span></li>
+<li id="r-verdonck1994">Verdonck, D., &amp; Zandt, G. (1994). Three-dimensional crustal structure of the Mendocino Triple Junction region from local earthquake travel times. <i>Journal of Geophysical Research</i>, 99(B12), 23843–23858. <a href="https://doi.org/10.1029/94JB01238">doi:10.1029/94JB01238</a> <span class="tag">Mendocino · abstract</span></li>
+<li id="r-waldhauser2020">Waldhauser, F., Wilcock, W. S. D., Tolstoy, M., Baillard, C., Tan, Y. J., &amp; Schaff, D. P. (2020). Precision seismic monitoring and analysis at Axial Seamount using a real-time double-difference system. <i>Journal of Geophysical Research: Solid Earth</i>, 125(5), e2019JB018796. <a href="https://doi.org/10.1029/2019JB018796">doi:10.1029/2019JB018796</a> <span class="tag">Axial · full text</span></li>
+<li id="r-wang1994">Wang, K., &amp; Rogers, G. C. (1994). An explanation for the double seismic layers north of the Mendocino Triple Junction. <i>Geophysical Research Letters</i>, 21(2), 121–124. <a href="https://doi.org/10.1029/93GL03538">doi:10.1029/93GL03538</a> <span class="tag">Gorda, Mendocino, Other onshore · abstract</span></li>
+<li id="r-weaver1987">Weaver, C. S., Grant, W. C., &amp; Shemeta, J. E. (1987). Local crustal extension at Mount St. Helens, Washington. <i>Journal of Geophysical Research</i>, 92(B10), 10170–10178. <a href="https://doi.org/10.1029/JB092iB10p10170">doi:10.1029/JB092iB10p10170</a> <span class="tag">Other onshore · full text</span></li>
+<li id="r-weekly2013">Weekly, R. T., Wilcock, W. S. D., Hooft, E. E. E., Toomey, D. R., McGill, P. R., &amp; Stakes, D. S. (2013). Termination of a 6 year ridge-spreading event observed using a seafloor seismic network on the Endeavour Segment, Juan de Fuca Ridge. <i>Geochemistry, Geophysics, Geosystems</i>, 14(5), 1375–1398. <a href="https://doi.org/10.1002/ggge.20105">doi:10.1002/ggge.20105</a> <span class="tag">Endeavour · dissertation chapter (Weekly 2013)</span></li>
+<li id="r-west2001">West, M., Menke, W., Tolstoy, M., Webb, S., &amp; Sohn, R. (2001). Magma storage beneath Axial volcano on the Juan de Fuca mid-ocean ridge. <i>Nature</i>, 413(6858), 833–836. <a href="https://doi.org/10.1038/35101581">doi:10.1038/35101581</a> <span class="tag">Axial · full text</span></li>
+<li id="r-wilcock2002">Wilcock, W. S. D., Archer, S. D., &amp; Purdy, G. M. (2002). Microearthquakes on the Endeavour segment of the Juan de Fuca Ridge. <i>Journal of Geophysical Research</i>, 107(B12), 2336. <a href="https://doi.org/10.1029/2001JB000505">doi:10.1029/2001JB000505</a> <span class="tag">Endeavour, JdF · full text (JdF check); abstract and secondary sources (Endeavour check)</span></li>
+<li id="r-wilcock2009">Wilcock, W. S. D., Hooft, E. E. E., Toomey, D. R., McGill, P. R., Barclay, A. H., Stakes, D. S., &amp; Ramirez, T. M. (2009). The role of magma injection in localizing black-smoker activity. <i>Nature Geoscience</i>, 2(7), 509–513. <a href="https://doi.org/10.1038/ngeo550">doi:10.1038/ngeo550</a> <span class="tag">Endeavour · full text</span></li>
+<li id="r-wilcock2016">Wilcock, W. S. D., Tolstoy, M., Waldhauser, F., Garcia, C., Tan, Y. J., Bohnenstiehl, D. R., Caplan-Auerbach, J., Dziak, R. P., Arnulf, A. F., &amp; Mann, M. E. (2016). Seismic constraints on caldera dynamics from the 2015 Axial Seamount eruption. <i>Science</i>, 354(6318), 1395–1399. <a href="https://doi.org/10.1126/science.aah5563">doi:10.1126/science.aah5563</a> <span class="tag">Axial · full text</span></li>
+<li id="r-williams2011">Williams, M. C., Tréhu, A. M., &amp; Braunmiller, J. (2011). Seismicity at the Cascadia plate boundary beneath the Oregon continental shelf. <i>Bulletin of the Seismological Society of America</i>, 101(3), 940–950. <a href="https://doi.org/10.1785/0120100198">doi:10.1785/0120100198</a> <span class="tag">Offshore forearc · abstract</span></li>
+<li id="r-wong2005">Wong, I. G. (2005). Low potential for large intraslab earthquakes in the central Cascadia subduction zone. <i>Bulletin of the Seismological Society of America</i>, 95(5), 1880–1902. <a href="https://doi.org/10.1785/0120040132">doi:10.1785/0120040132</a> <span class="tag">Other onshore · abstract</span></li>
+<li id="r-yang2024">Yang, J., Zhu, H., Zhao, Z., Huang, J., Lumley, D., Stern, R. J., Dunn, R. A., Arnulf, A. F., &amp; Ma, J. (2024). Asymmetric magma plumbing system beneath Axial Seamount based on full waveform inversion of seismic data. <i>Nature Communications</i>, 15, 4767. <a href="https://doi.org/10.1038/s41467-024-49188-y">doi:10.1038/s41467-024-49188-y</a> <span class="tag">Axial · full text</span></li>
+<li id="r-yeck2023">Yeck, W. L., Shelly, D. R., Materna, K. Z., Goldberg, D. E., &amp; Earle, P. S. (2023). Dense geophysical observations reveal a triggered, concurrent multi-fault rupture at the Mendocino Triple Junction. <i>Communications Earth &amp; Environment</i>, 4, 94. <a href="https://doi.org/10.1038/s43247-023-00752-2">doi:10.1038/s43247-023-00752-2</a> <span class="tag">Mendocino · full text</span></li>
+<li id="r-zhang2022">Zhang, H., Glasgow, M., Schmandt, B., Thelen, W. A., Moran, S. C., &amp; Thomas, A. M. (2022). Revisiting the depth distribution of seismicity before and after the 2004–2008 eruption of Mount St. Helens. <i>Journal of Volcanology and Geothermal Research</i>, 430, 107629. <a href="https://doi.org/10.1016/j.jvolgeores.2022.107629">doi:10.1016/j.jvolgeores.2022.107629</a> <span class="tag">Cascades · full text</span></li>
+</ol>
+
+<h3>Not verified</h3>
+<p class="small">The DOI and metadata resolve for each of these, but the depth numbers we would use could not be seen in the paper itself. They are cited in the region sections only with that caveat.</p>
+<ul class="refs">
+<li id="r-arnulf2018">Arnulf, A. F., Harding, A. J., Kent, G. M., &amp; Wilcock, W. S. D. (2018). Structure, seismicity, and accretionary processes at the hot spot-influenced Axial Seamount on the Juan de Fuca Ridge. <i>Journal of Geophysical Research: Solid Earth</i>, 123(6), 4618–4646. <a href="https://doi.org/10.1029/2017JB015131">doi:10.1029/2017JB015131</a> <span class="tag">Axial · abstract only; full text blocked. The ~1.6 km reservoir top and its datum are known only from secondary citations.</span></li>
+<li id="r-baillard2019">Baillard, C., Wilcock, W. S. D., Arnulf, A. F., Tolstoy, M., &amp; Waldhauser, F. (2019). A joint inversion for three-dimensional P and S wave velocity structure and earthquake locations beneath Axial Seamount. <i>Journal of Geophysical Research: Solid Earth</i>, 124(12), 12997–13020. <a href="https://doi.org/10.1029/2019JB017970">doi:10.1029/2019JB017970</a> <span class="tag">Axial · abstract only; datum and depth distribution of the relocations not confirmed. Catalog and models on MGDS: <a href="https://doi.org/10.1594/IEDA/324822">doi:10.1594/IEDA/324822</a>, <a href="https://doi.org/10.1594/IEDA/324821">doi:10.1594/IEDA/324821</a>.</span></li>
+<li id="r-braunmiller2008">Braunmiller, J., &amp; Nábělek, J. (2008). Segmentation of the Blanco Transform Fault Zone from earthquake analysis: Complex tectonics of an oceanic transform fault. <i>Journal of Geophysical Research</i>, 113, B07108. <a href="https://doi.org/10.1029/2007JB005213">doi:10.1029/2007JB005213</a> <span class="tag">Blanco · abstract and secondary citations only; depth grid, quality classes and datum not checked.</span></li>
+<li id="r-nichols2011">Nichols, M. L., Malone, S. D., Moran, S. C., Thelen, W. A., &amp; Vidale, J. E. (2011). Deep long-period earthquakes beneath Washington and Oregon volcanoes. <i>Journal of Volcanology and Geothermal Research</i>, 200(3–4), 116–128. <a href="https://doi.org/10.1016/j.jvolgeores.2010.12.005">doi:10.1016/j.jvolgeores.2010.12.005</a> <span class="tag">Cascades · abstract has no depths; the per-volcano depth ranges were not confirmed.</span></li>
+<li id="r-stanley1996">Stanley, W. D., Johnson, S. Y., Qamar, A. I., Weaver, C. S., &amp; Williams, J. M. (1996). Tectonics and seismicity of the southern Washington Cascade Range. <i>Bulletin of the Seismological Society of America</i>, 86(1A), 1–18. <a href="https://doi.org/10.1785/BSSA08601A0001">doi:10.1785/BSSA08601A0001</a> <span class="tag">Cascades · abstract has no depths; full text not reached.</span></li>
+<li id="r-wei2014">Wei, M., &amp; McGuire, J. J. (2014). The Mw 6.5 offshore Northern California earthquake of 10 January 2010: Ordinary stress drop on a high-strength fault. <i>Geophysical Research Letters</i>, 41(18), 6367–6373. <a href="https://doi.org/10.1002/2014GL061043">doi:10.1002/2014GL061043</a> <span class="tag">Gorda · abstract only; the 29.3 km hypocentre is confirmed in Rollins and Stein (2010), not in this paper.</span></li>
+<li id="r-yoon2024">Yoon, C. E., &amp; Shelly, D. R. (2024). Distinct yet adjacent earthquake sequences near the Mendocino Triple Junction: 20 December 2021 Mw 6.1 and 6.0 Petrolia, and 20 December 2022 Mw 6.4 Ferndale. <i>The Seismic Record</i>, 4(1), 81–92. <a href="https://doi.org/10.1785/0320230053">doi:10.1785/0320230053</a> <span class="tag">Mendocino · abstract only; the depths quoted in this report were recomputed from the authors’ data release.</span></li>
+</ul>
+
+<h3>Data releases used</h3>
+<ul class="refs small">
+<li id="d-lange">Lange, D. (2025). Data release for Lange et al. (2026): absolute and relative Blanco catalogs. Zenodo. <a href="https://doi.org/10.5281/zenodo.16879726">doi:10.5281/zenodo.16879726</a>. Matched event by event (Blanco).</li>
+<li id="d-hirao">Data release for Hirao et al. (2025): Mount St Helens catalog. Zenodo. <a href="https://doi.org/10.5281/zenodo.17089016">doi:10.5281/zenodo.17089016</a>. Matched event by event (Cascades).</li>
+<li id="d-morton">Data release for Morton et al. (2023): earthquake catalog. Zenodo. <a href="https://doi.org/10.5281/zenodo.7877487">doi:10.5281/zenodo.7877487</a>. Matched event by event (Offshore forearc).</li>
+<li id="d-guo">Guo et al. Earthquake relocation catalog of the 2022 December Mw 6.4 Ferndale earthquake sequence (hypoTD). Zenodo record <a href="https://zenodo.org/records/13978434">13978434</a>. Statistics recomputed (Mendocino).</li>
+<li id="d-yoon">Data release for Yoon and Shelly (2024), Data Set S2 (GrowClust catalog). Zenodo. <a href="https://doi.org/10.5281/zenodo.10621116">doi:10.5281/zenodo.10621116</a>. Statistics recomputed (Mendocino).</li>
+<li id="d-krauss">Krauss, Z., &amp; Wilcock, W. S. D. (2024). Microseismicity earthquake catalog, Endeavour Segment, Juan de Fuca ridge, 1995–2023. <a href="https://doi.org/10.26022/IEDA/330498">doi:10.26022/IEDA/330498</a>. Not yet used; proposed benchmark (Endeavour).</li>
+</ul>
+
+<footer>
+<p>Report file: <code>/wd1/mdenolle_data/tomo_v1/depth_literature/depth_literature.html</code>. Statistics: <code>/tmp/claude-39101/-home-mdenolle-cascadia-obs-ensemble/06a5cbfb-0ae0-4565-b809-72812014f122/scratchpad/depths/region_stats.json</code>. Scratch folders under <code>/tmp</code> may be cleared on reboot. Prepared 24 November 2026.</p>
+</footer>
+</main>
+</body>
+</html>

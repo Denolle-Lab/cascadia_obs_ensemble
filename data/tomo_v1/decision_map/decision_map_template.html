@@ -1,0 +1,305 @@
+<title>Track B Decision Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: a decision log read like a git graph. Main threads first (question -> chain of decisions -> paths not taken),
+   then the full register with a lane gutter (one lane per theme) and relation curves between decisions. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #18212c; --muted: #5a6573; --faint: #8b96a3; --line: #d6dde4; --line-soft: #e6ebf0;
+  --accent: #b5452f;
+  --t-data: #23806f; --t-code: #6a55c9; --t-regions: #b8620f; --t-uncertainty: #b2336a;
+  --t-relocation: #1c69ad; --t-relative: #7f6a12; --t-products: #56606d; --t-science: #a23f33;
+  --superseded: #a7b0ba; --chip-bg: #eef2f5;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --row-h: 36px; --lane-w: 15px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1319; --surface: #151c24; --fg: #e2e8ee; --muted: #9aa6b3; --faint: #6d7987; --line: #2a343f; --line-soft: #202932;
+  --accent: #e07a62;
+  --t-data: #4cc2a9; --t-code: #a594f0; --t-regions: #e9943f; --t-uncertainty: #ec6fa0;
+  --t-relocation: #5aa7ec; --t-relative: #cdb24a; --t-products: #9ba6b3; --t-science: #e57b6c;
+  --superseded: #56616d; --chip-bg: #1d2630; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1319; --surface: #151c24; --fg: #e2e8ee; --muted: #9aa6b3; --faint: #6d7987; --line: #2a343f; --line-soft: #202932;
+  --accent: #e07a62;
+  --t-data: #4cc2a9; --t-code: #a594f0; --t-regions: #e9943f; --t-uncertainty: #ec6fa0;
+  --t-relocation: #5aa7ec; --t-relative: #cdb24a; --t-products: #9ba6b3; --t-science: #e57b6c;
+  --superseded: #56616d; --chip-bg: #1d2630; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+header.top { padding-block: 36px 20px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+header.top h1 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; }
+header.top p { margin: 0; max-width: 68ch; color: var(--muted); }
+.eyebrow { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--f-mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--fg); font-weight: 500; }
+section { padding-block: 28px 8px; display: grid; gap: 16px; }
+section > h2 { font-size: 1.5rem; font-weight: 600; }
+section > .lede { margin: 0; color: var(--muted); max-width: 70ch; }
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw.hollow { background: transparent !important; border: 2px solid var(--faint); width: 8px; height: 8px; }
+.sw.gone { background: var(--superseded); }
+.ln { width: 22px; height: 0; border-top: 2px solid var(--fg); display: inline-block; }
+.ln.dash { border-top-style: dashed; } .ln.dot { border-top-style: dotted; border-top-width: 3px; }
+
+/* threads */
+.threads { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
+.thread { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 16px 14px; display: grid; gap: 10px; min-width: 0; }
+.thread h3 { font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px; }
+.chain .arrow { color: var(--faint); font-size: 0.85rem; padding-inline: 1px; }
+.chip { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--line); background: var(--chip-bg); border-radius: 4px;
+  padding: 3px 7px 3px 6px; font-size: 0.8rem; line-height: 1.3; color: var(--fg); cursor: pointer; text-align: left; max-width: 100%; font-family: var(--f-body); }
+.chip:hover, .chip:focus-visible { border-color: var(--c, var(--fg)); outline: none; }
+.chip .id { font-family: var(--f-mono); font-size: 0.74rem; color: var(--c, var(--muted)); font-weight: 500; white-space: nowrap; }
+.chip.superseded { color: var(--muted); }
+.chip.superseded .t { text-decoration: line-through; text-decoration-color: var(--faint); }
+.chip.proposed { border-style: dashed; }
+.chip .t { overflow-wrap: anywhere; }
+.not-taken { display: grid; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+.not-taken .lbl, .now .lbl { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.not-taken ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.not-taken li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.not-taken li s { text-decoration-color: var(--faint); color: var(--fg); opacity: .8; }
+.oc { font-family: var(--f-mono); font-size: 0.68rem; padding: 0 5px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; color: var(--muted); }
+.not-taken .src { font-family: var(--f-mono); font-size: .72rem; color: var(--faint); white-space: nowrap; }
+.not-taken details summary { cursor: pointer; font-size: .78rem; color: var(--muted); margin-block: 2px; }
+.not-taken details summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.now { font-size: 0.86rem; display: grid; gap: 2px; border-top: 1px dashed var(--line); padding-top: 8px; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toggle { font: 500 0.8rem var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px;
+  padding: 4px 11px 4px 9px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.toggle[aria-pressed="false"] { color: var(--faint); background: transparent; }
+.toggle[aria-pressed="false"] .sw { opacity: .3; }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 22px; background: var(--line); margin-inline: 4px; }
+
+/* register */
+.register-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.register { position: relative; min-width: 360px; }
+.register svg.gutter { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.day { position: relative; z-index: 1; font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 10px 12px 6px calc(var(--gut) + 12px); border-top: 1px solid var(--line); background: transparent; }
+.day:first-child { border-top: 0; }
+.row { position: relative; z-index: 1; display: block; padding-left: var(--gut); }
+.row > button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 4.6rem 1fr auto; gap: 10px; align-items: center; width: 100%;
+  min-height: var(--row-h); padding: 6px 12px 6px 10px; cursor: pointer; border-radius: 3px; }
+.row > button:hover { background: var(--line-soft); }
+.row > button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.row .rid { font-family: var(--f-mono); font-size: 0.78rem; color: var(--c); font-weight: 500; }
+.row .rt { font-size: 0.9rem; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.row.superseded .rt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+.row.key .rt { font-weight: 600; }
+.row .rmeta { display: flex; gap: 6px; align-items: center; }
+.badge { font-family: var(--f-mono); font-size: 0.66rem; letter-spacing: .04em; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.badge.pi { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.row.selected > button { background: var(--line-soft); }
+.detail { display: grid; gap: 8px; padding: 2px 14px 14px 10px; font-size: 0.87rem; max-width: 86ch; }
+.detail p { margin: 0; }
+.detail .k { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 6px; }
+.detail .rels { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.detail ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.detail li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.empty { padding: 18px; color: var(--muted); }
+footer { margin-top: 28px; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--line); padding-top: 12px; }
+@media (max-width: 560px) {
+  .row > button { grid-template-columns: 1fr; gap: 2px; }
+  .row .rmeta { order: 3; }
+  :root { --lane-w: 11px; }
+}
+@media (prefers-reduced-motion: no-preference) { .chip, .toggle, .row > button { transition: background-color .12s, border-color .12s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Cascadia OBS ensemble · Track B · 22–25 Nov 2026</span>
+    <h1>Track B Decision Map</h1>
+    <p>How the tomography, relocation and catalog choices branched since Sunday: the main questions and the chain of decisions that answered each one, then every recorded decision with what it amended, superseded or implemented. Grey, struck-through entries were replaced later; dashed entries were proposed but never adopted.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section aria-labelledby="h-threads">
+    <h2 id="h-threads">Main threads</h2>
+    <p class="lede">Each card is one question that came back several times. Decisions are in the order they were made; the paths not taken are the options the register names as rejected, tested and dropped, or deferred. Select a decision to open it in the register below.</p>
+    <div class="threads" id="threads"></div>
+  </section>
+
+  <section aria-labelledby="h-reg">
+    <h2 id="h-reg">Full register</h2>
+    <p class="lede">One row per decision; the dot sits in its theme's lane. Curves link a decision to the earlier one it supersedes, amends or implements. Select a row to see the trigger, the alternatives and the links.</p>
+    <div class="legend" id="legend"></div>
+    <div class="controls" id="controls"></div>
+    <div class="register-scroll"><div class="register" id="register"></div></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+const THEMES = [
+  ["data", "Data and picks"], ["code", "Code and forward model"], ["regions", "Regions, merge"], ["uncertainty", "Uncertainty"],
+  ["relocation", "Absolute relocation, surface"], ["relative", "Relative relocation"], ["products", "Versions, products"], ["science", "Science, scope"]
+];
+const TI = Object.fromEntries(THEMES.map((t, i) => [t[0], i]));
+const tc = th => `var(--t-${th})`;
+const byId = Object.fromEntries(DATA.decisions.map(d => [d.id, d]));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const DAYN = {"2026-11-22":"Sunday 22 November","2026-11-23":"Monday 23 November","2026-11-24":"Tuesday 24 November","2026-11-25":"Wednesday 25 November"};
+const isPI = d => /^PI/.test(d.by || "");
+const REL_STYLE = { supersedes: "", replaces: "", amends: "5 4", implements: "1.5 3.5", resolves: "1.5 3.5", follows_from: "6 3 1.5 3" };
+
+// stats
+(function () {
+  const ds = DATA.decisions, n = ds.length;
+  const sup = ds.filter(d => d.status === "superseded").length, prop = ds.filter(d => d.status === "proposed").length;
+  const pi = ds.filter(isPI).length, alts = ds.reduce((a, d) => a + (d.alternatives || []).length, 0);
+  const rels = ds.reduce((a, d) => a + (d.relations || []).length, 0);
+  document.getElementById("stats").innerHTML =
+    `<span><b>${n}</b> decisions</span><span><b>${pi}</b> by the PI</span><span><b>${sup}</b> superseded</span>` +
+    `<span><b>${prop}</b> never adopted</span><span><b>${alts}</b> paths not taken</span><span><b>${rels}</b> links between decisions</span>`;
+})();
+
+function chip(id) {
+  const d = byId[id]; if (!d) return `<span class="chip"><span class="id">${esc(id)}</span></span>`;
+  return `<button class="chip ${d.status}" style="--c:${tc(d.theme)}" data-goto="${esc(id)}" title="${esc(d.summary)}">` +
+    `<span class="id">${esc(d.id)}</span><span class="t">${esc(d.title)}</span></button>`;
+}
+
+// threads
+(function () {
+  const box = document.getElementById("threads");
+  box.innerHTML = (DATA.forks || []).map(f => {
+    const chain = f.chain.filter(id => byId[id]);
+    const nt = [];
+    chain.forEach(id => (byId[id].alternatives || []).forEach(a => nt.push({ id, ...a })));
+    const li = a => `<li><span class="oc">${esc(a.outcome.replace(/_/g, " "))}</span><span><s>${esc(a.option)}</s> · ${esc(a.reason)} <span class="src">${esc(a.id)}</span></span></li>`;
+    const first = nt.slice(0, 4), rest = nt.slice(4);
+    const ntHtml = nt.length ? `<div class="not-taken"><span class="lbl">Paths not taken (${nt.length})</span><ul>${first.map(li).join("")}</ul>` +
+      (rest.length ? `<details><summary>${rest.length} more</summary><ul>${rest.map(li).join("")}</ul></details>` : "") + `</div>` : "";
+    return `<article class="thread"><span class="eyebrow">${esc(f.name)}</span><h3>${esc(f.question)}</h3>` +
+      `<div class="chain">${chain.map(chip).join('<span class="arrow" aria-hidden="true">→</span>')}</div>${ntHtml}` +
+      `<div class="now"><span class="lbl">Where it stands</span><span>${esc(f.current)}</span></div></article>`;
+  }).join("");
+})();
+
+// legend + controls
+const state = { themes: new Set(THEMES.map(t => t[0])), keyOnly: false, piOnly: false, selected: null };
+document.getElementById("legend").innerHTML =
+  `<span><i class="sw" style="background:var(--fg)"></i>adopted</span><span><i class="sw hollow"></i>proposed only</span>` +
+  `<span><i class="sw gone"></i>superseded</span><span><i class="sw" style="background:var(--fg);box-shadow:0 0 0 3px var(--line)"></i>turning point</span>` +
+  `<span><i class="ln"></i>supersedes / replaces</span><span><i class="ln dash"></i>amends</span><span><i class="ln dot"></i>implements / resolves</span>`;
+(function () {
+  const c = document.getElementById("controls");
+  c.innerHTML = THEMES.map(([k, l]) => `<button class="toggle" aria-pressed="true" data-theme-k="${k}"><i class="sw" style="background:${tc(k)}"></i>${esc(l)}</button>`).join("") +
+    `<span class="sep" aria-hidden="true"></span><button class="toggle" aria-pressed="false" id="t-key">Turning points only</button>` +
+    `<button class="toggle" aria-pressed="false" id="t-pi">PI decisions only</button>`;
+  c.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.themeK) { const k = b.dataset.themeK; state.themes.has(k) ? state.themes.delete(k) : state.themes.add(k); b.setAttribute("aria-pressed", state.themes.has(k)); }
+    else if (b.id === "t-key") { state.keyOnly = !state.keyOnly; b.setAttribute("aria-pressed", state.keyOnly); }
+    else if (b.id === "t-pi") { state.piOnly = !state.piOnly; b.setAttribute("aria-pressed", state.piOnly); }
+    render();
+  });
+})();
+
+const reg = document.getElementById("register");
+function visible(d) { return state.themes.has(d.theme) && (!state.keyOnly || d.key) && (!state.piOnly || isPI(d)); }
+
+function detailHtml(d) {
+  const rels = (d.relations || []).filter(r => byId[r.target]);
+  const back = DATA.decisions.filter(x => (x.relations || []).some(r => r.target === d.id));
+  const alts = d.alternatives || [];
+  return `<div class="detail">` +
+    `<p>${esc(d.summary)}</p>` +
+    (d.trigger ? `<p><span class="k">Trigger</span>${esc(d.trigger)}</p>` : "") +
+    `<p><span class="k">Decided by</span>${esc(d.by)} · ${esc(d.date)}${d.time ? " " + esc(d.time) : ""} · ${esc(d.status)}</p>` +
+    (rels.length ? `<div class="rels"><span class="k">Links to</span>${rels.map(r => `<span class="oc">${esc(r.type.replace(/_/g, " "))}</span>${chip(r.target)}`).join("")}</div>` : "") +
+    (back.length ? `<div class="rels"><span class="k">Later</span>${back.map(x => chip(x.id)).join("")}</div>` : "") +
+    (alts.length ? `<div><span class="k">Alternatives</span><ul>${alts.map(a => `<li><span class="oc">${esc(a.outcome.replace(/_/g, " "))}</span><span><s>${esc(a.option)}</s> · ${esc(a.reason)}</span></li>`).join("")}</ul></div>` : "") +
+    `</div>`;
+}
+
+function render() {
+  const lanes = THEMES.filter(t => state.themes.has(t[0])).map(t => t[0]);
+  const laneW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lane-w")) || 15;
+  const gut = 14 + lanes.length * laneW + 10;
+  reg.style.setProperty("--gut", gut + "px");
+  const vis = DATA.decisions.filter(visible);
+  if (!vis.length) { reg.innerHTML = `<div class="empty">No decision matches these filters. Turn a theme back on above.</div>`; return; }
+  let html = "", day = null;
+  vis.forEach(d => {
+    if (d.date !== day) { day = d.date; html += `<div class="day">${esc(DAYN[day] || day)}</div>`; }
+    const sel = state.selected === d.id;
+    html += `<div class="row ${d.status}${d.key ? " key" : ""}${sel ? " selected" : ""}" id="r-${esc(d.id)}" data-id="${esc(d.id)}" style="--c:${tc(d.theme)}">` +
+      `<button aria-expanded="${sel}"><span class="rid">${esc(d.id)}</span><span class="rt">${esc(d.title)}</span>` +
+      `<span class="rmeta">${isPI(d) ? '<span class="badge pi">PI</span>' : `<span class="badge">${esc((d.by || "").split(" ")[0])}</span>`}` +
+      `${d.status !== "adopted" ? `<span class="badge">${esc(d.status)}</span>` : ""}</span></button>` +
+      (sel ? detailHtml(d) : "") + `</div>`;
+  });
+  reg.innerHTML = html + `<svg class="gutter" aria-hidden="true"></svg>`;
+  drawGutter(lanes, laneW, vis);
+}
+
+function drawGutter(lanes, laneW, vis) {
+  const svg = reg.querySelector("svg.gutter");
+  const H = reg.scrollHeight, NS = "http://www.w3.org/2000/svg";
+  svg.setAttribute("width", 14 + lanes.length * laneW + 10); svg.setAttribute("height", H);
+  const lx = th => 14 + lanes.indexOf(th) * laneW + laneW / 2;
+  const pos = {};
+  vis.forEach(d => { const el = document.getElementById("r-" + d.id); if (el) pos[d.id] = { x: lx(d.theme), y: el.offsetTop + Math.min(18, el.firstElementChild.offsetHeight / 2) }; });
+  let s = "";
+  lanes.forEach(th => { s += `<line x1="${lx(th)}" x2="${lx(th)}" y1="0" y2="${H}" stroke="${tc(th)}" stroke-opacity=".18" stroke-width="1.5"/>`; });
+  const sel = state.selected;
+  vis.forEach(d => (d.relations || []).forEach(r => {
+    const a = pos[d.id], b = pos[r.target]; if (!a || !b) return;
+    const hot = sel && (d.id === sel || r.target === sel);
+    const my = (a.y + b.y) / 2;
+    const dash = REL_STYLE[r.type] ?? "";
+    s += `<path d="M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}" fill="none" stroke="${tc(d.theme)}" stroke-width="${hot ? 2.4 : 1.3}"` +
+      ` stroke-opacity="${sel ? (hot ? 1 : .12) : .55}"${dash ? ` stroke-dasharray="${dash}"` : ""} stroke-linecap="round"/>`;
+  }));
+  vis.forEach(d => {
+    const p = pos[d.id]; if (!p) return;
+    const r = d.key ? 5.2 : 4;
+    const fill = d.status === "superseded" ? "var(--superseded)" : d.status === "proposed" || d.status === "rejected" ? "var(--surface)" : tc(d.theme);
+    if (d.key) s += `<circle cx="${p.x}" cy="${p.y}" r="${r + 3}" fill="var(--surface)" stroke="${tc(d.theme)}" stroke-width="1.2"/>`;
+    s += `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${tc(d.theme)}" stroke-width="${d.status === "adopted" ? 0 : 1.8}"/>`;
+  });
+  svg.innerHTML = s;
+}
+
+function goTo(id) {
+  const d = byId[id]; if (!d) return;
+  let changed = false;
+  if (!state.themes.has(d.theme)) { state.themes.add(d.theme); document.querySelector(`[data-theme-k="${d.theme}"]`).setAttribute("aria-pressed", "true"); changed = true; }
+  if (state.keyOnly && !d.key) { state.keyOnly = false; document.getElementById("t-key").setAttribute("aria-pressed", "false"); changed = true; }
+  if (state.piOnly && !isPI(d)) { state.piOnly = false; document.getElementById("t-pi").setAttribute("aria-pressed", "false"); changed = true; }
+  state.selected = id; render();
+  const el = document.getElementById("r-" + id);
+  if (el) { el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); el.querySelector("button").focus({ preventScroll: true }); }
+}
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]"); if (g) { e.preventDefault(); goTo(g.dataset.goto); return; }
+  const rb = e.target.closest(".row > button");
+  if (rb) { const id = rb.parentElement.dataset.id; state.selected = state.selected === id ? null : id; render();
+    const el = document.getElementById("r-" + id); el && el.querySelector("button").focus({ preventScroll: true }); }
+});
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+document.getElementById("foot").textContent = DATA.footer || "";
+render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+</script>

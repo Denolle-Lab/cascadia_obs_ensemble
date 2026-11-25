@@ -33,22 +33,32 @@ between neighbouring tiles). Here, per station-phase:
    fine region through the fine grid's 1 km node in between, so wide = fine on the lower half of that 2 km cell):
    with 2 km nodes the water/air time of such a node pulled interpolated times of events 1-2 km below the surface
    late (wide-served arrivals at events with z' <= 0: median +0.28 s against the fine grid before this rule).
+Tests at real hypocentres (w05: 208 station-phases, production B4 iter1 v0.3.1 located events inside the fine grid):
+the 17,084 arrivals the wide grid serves |wide - fine| median 0.0014 s, p95 0.009 s, p99 0.13 s (the tail: events
+above sea level, where the fine grid's own node above is in the air); per station-phase median <= 0.005 s. Deep pass
+of round 2's 30 deep events and 10 controls (w08/w09): 29 of 30 located (16 of the 17 production-REJECTED, at
+79-103 km), controls |dz| <= 0.12 km. Below z' 80 against the fine recipe extended to depth on a +-150 km crop
+(w06, JCW.UW P and S): |wide - ref| p95 <= 0.05 s, max 0.09 s.
 Velocity field: the fine build's whole-lattice 1 km field (work_<TIME_NAME>/field_1.<ph>.buf of b4_time_grids.py:
 cell-centred, Earth-flattened SLOW_LEN, merged-surface water/air mask of that build) copied unchanged for z' -5..81 km
-(cells 0..85),
-extended to z' = 123 km (params b4.wide.z_max_km + 2) with the same recipe: inside the tomography box the model
-version of that build (v<version>.nc reaches 125 km), outside it the deepest D-B005 layer (80 km) blended linearly in
-true depth into ak135 (Kennett et al. 1995; data/tomo_v1/ref_models/ak135_0-410km.csv) over b4.wide.blend_km; the 2 km
+(cells 0..85), extended to z' = 123 km (params b4.wide.z_max_km + 2) with the same recipe: inside the tomography box
+the model version of that build (v<version>.nc reaches 125 km), outside it the deepest D-B005 layer (80 km) blended
+linearly in true depth into ak135 (Kennett et al. 1995; data/tomo_v1/ref_models/ak135_0-410km.csv) over b4.wide.blend_km; the 2 km
 field is the mean slowness of the 2 x 2 x 2 1 km cells. Earth-flattening as b4_time_grids.py (z' = Re ln(Re/(Re-z)),
 v' = v exp(z'/Re)).
 Grid: 2 km nodes of the D-B005 lattice x -513..457, y -709..725, z' -5..121 (486 x 718 x 64, 89 MB).
 
 Builds are never mixed: the grids go to /wd1/mdenolle_data/reloc_v5/wide_<TIME_NAME>/ with a manifest
 b4_wide_grids_<TIME_NAME>.manifest.json whose params name the fine build (time_name, its manifest's utc and git commit,
-md5 of its 1 km fields); a rerun into a folder stamped for another fine build or other parameters, a fine build that
-is incomplete, or a fine field that changed since the stamp, is refused.
+md5 of its fields) and the md5 of this script; a rerun into a folder stamped for another fine build, other
+parameters or other code, a fine build that is incomplete, or a fine field that changed since the stamp, is refused.
+Needs from the fine build: reloc_v5/<TIME_NAME>/b4_time_grids_<TIME_NAME>.manifest.json (counts ok = station_phases),
+work_<TIME_NAME>/params.json (= the manifest's params; "version"), field_1.<P|S>.buf (971 x 1434 x 86) and
+field_0.5.P.buf (1941 x 2867 x 171), and the fine grids (their headers give each source position).
+Cost (test, 11 processes on a loaded machine): 95-148 s per station-phase (median 114 s), ~2 GB memory per process,
+0.8 GB transient disk per running job, 89.3 MB per grid (1,392 station-phases: 124 GB), fields 1.6 GB.
 
-  pixi run -e models python workflow/10_tomography/b4_wide_grids.py TIME_NAME [--nproc 12] [--stations A,B]
+  pixi run -e models python workflow/10_tomography/b4_wide_grids.py TIME_NAME [--nproc 12] [--stations A,B:P]
                                                                                [--phases P,S] [--out DIR]
   -> /wd1/mdenolle_data/reloc_v5/wide_<TIME_NAME>/cascadia3d.<P|S>.<STA>.time.{hdr,buf}, the fields in work/, manifest
 """

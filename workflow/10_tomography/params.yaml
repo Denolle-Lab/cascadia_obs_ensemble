@@ -778,9 +778,9 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # members, prior, synthetic truth, statistics, chain state, RESUME.md
     bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24          # D-B054: frozen binaries only (tomoDD-SE_<class>, _syn_<class>)
     runtime_files: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24/runtime_files   # ak135.15.SKS, layer-16.dat
-    max_procs: 56                  # concurrent tomoDD processes of the chain (sessions -18 up to 40, another workflow 16)
+    max_procs: 64                  # concurrent tomoDD processes of the chain (PI 2026-11-25: whole machine; v6 grid chain 36, cc job up to 48 I/O workers)
     nice: 10
-    min_avail_gb: 40               # MemAvailable must stay above this after a new process (mem_per_run_gb) starts
+    min_avail_gb: 30               # MemAvailable must stay above this after a new process (mem_per_run_gb) starts (the throttle)
     mem_per_run_gb: 3.5             # max RSS of the deterministic runs: washington 3.5, mendocino_gorda_c 3.3, M0 2.6 GB
     members: {synth: 100, real: 100, floor: 5}   # D-B032; floor = clones of synth member 0 with a 1e-6 s data perturbation
     config: v0.4.1                 # the configuration the chain runs (key of configs; B2_ENS_CONFIG overrides)
@@ -808,7 +808,11 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         runtime_files: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-25_inv/bin   # ak135.15.SKS, layer-16.dat (md5 = the 2026-11-24 runtime_files)
         floor: true                # D-B083: surface.dat per member stage (tomodd.floor, regions' floor_spacing_s), Air_dep tomodd.floor.air_dep_km
         merge_product: product_v041   # merge grid, taper, floor, reference margin_m0_v4/d200_s480 (tomodd.merge.product_v041)
-        calibration_root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # D-B030 gate for this real phase: the v0.3.2 synthetic calibration (P-E11, PI to confirm)
+        calibration_root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # D-B030 gate for this real phase: the v0.3.2 synthetic calibration (P-E11, accepted in D-B094)
+        calibration:               # D-B094 (PI 2026-11-25 15:37): that calibration FAILED (Vp, Vs too narrow) and is accepted with inflated spreads
+          accepted: D-B094         # the chain proceeds after the failed calibrate only with this entry (b2_ens_common.calibration_acceptance)
+          inflation: {Vp: 1.40, Vs: 1.35}   # b2_ens_inflate.py: max(f68, f95) on the resolved nodes rounded up to 0.05 (Vp 1.301 / 1.366, Vs 1.245 / 1.335)
+          coverage_md5: 30d524003e05f2c02f5a0afa9aedfdf5   # md5 of calibration_root/synth/coverage.json (97 members, FAIL): the accepted verdict
         m0: {region: margin_m0_v4, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: m}
         tiles:                     # v0.4.0 smoothing (= v0.3.1's choice); masks of the v0.3.1 tiles (as product_v041's choice.csv)
           mendocino_gorda_c: {region: mendocino_gorda_c_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e13k, mask_region: mendocino_gorda_c_m0}

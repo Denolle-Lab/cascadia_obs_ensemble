@@ -6,7 +6,8 @@ deterministic run, smoothing, damping, frozen binary class, mask region), so the
 a later one (v0.4.1: re-timed picks and the D-B081 floor in every stage). Optional per configuration: root (output
 root), bin_dir (frozen binaries), runtime_files, floor (D-B083 surface.dat per member stage, Air_dep
 tomodd.floor.air_dep_km), merge_product (tomodd.merge.<key>: grid, taper, floor, reference of the merge),
-calibration_root (the root whose passed synthetic calibration gates this configuration's real phase), dataset (the b1b
+calibration_root (the root whose passed synthetic calibration gates this configuration's real phase), calibration (the
+explicit acceptance of a failed calibration with inflated Vp / Vs spreads, D-B094: calibration_acceptance), dataset (the b1b
 dataset every stage must use, checked), prior (overrides of tomodd.ensemble.prior, merged key by key: e.g. the start
 model's random-field width rf.std / rf.len_lat_km / rf.len_z_km / rf.long, a pending PI decision).
 Environment overrides: B2_ENS_CONFIG (configuration), B2_ENS_ROOT (output root).
@@ -117,6 +118,59 @@ def check_config():
 def product_version():
     """Model version of the configuration's products (product_version before any '+'), e.g. 0.4.1."""
     return str(CFG["product_version"]).split("+")[0]
+
+
+# ---------------------------------------------------------------- calibration of the real phase (D-B030, D-B094)
+INFLATABLE = ("Vp", "Vs")        # D-B094: only the velocity spreads; hypocentres and Vp/Vs are never inflated
+
+
+def calibration_root():
+    """Root whose synthetic calibration gates this configuration's real phase (configs.<c>.calibration_root, else ROOT)."""
+    return Path(CFG.get("calibration_root") or ROOT)
+
+
+def calibration_entry():
+    """configs.<c>.calibration (D-B094): the explicit acceptance of a FAILED synthetic calibration with inflated spreads,
+    {accepted: <decision>, inflation: {Vp: f, Vs: f}, coverage_md5: <md5 of the accepted synth/coverage.json>}, or {}."""
+    return CFG.get("calibration") or {}
+
+
+def inflation():
+    """{quantity: factor} the products apply to the Vp / Vs spreads (D-B094), {} without an accepted calibration."""
+    return {k: float(v) for k, v in (calibration_entry().get("inflation") or {}).items()}
+
+
+def calibration_acceptance(cov, cov_path):
+    """Why the accepted-calibration entry does NOT let the real phase start after a failed calibration (None = it does).
+    cov: the calibration root's synth/coverage.json. Conditions: a decision id in `accepted`; factors for Vp and/or Vs
+    only, each finite and >= 1; every failed verdict item inflated (so a failed hypocentre or any other item still
+    stops the chain); coverage_md5 = the md5 of that coverage.json (the acceptance holds for that verdict only)."""
+    acc = calibration_entry()
+    if not acc:
+        return f"no configs.{CONFIG}.calibration entry (an accepted failure needs the PI's decision, e.g. D-B094)"
+    if not str(acc.get("accepted") or "").strip():
+        return f"configs.{CONFIG}.calibration.accepted (decision id) missing"
+    fac = acc.get("inflation") or {}
+    if not fac:
+        return f"configs.{CONFIG}.calibration.inflation missing"
+    bad = [k for k in fac if k not in INFLATABLE]
+    if bad:
+        return f"inflation of {bad}: only {list(INFLATABLE)} may be inflated (D-B094)"
+    badf = [k for k, v in fac.items() if not (isinstance(v, (int, float)) and np.isfinite(v) and v >= 1.0)]
+    if badf:
+        return f"inflation factors of {badf} not finite numbers >= 1"
+    if not cov:
+        return f"{cov_path} missing (the calibration has not run)"
+    failed = sorted(k for k, v in (cov.get("verdict") or {}).items() if not v)
+    if cov.get("result") == "FAIL" and not failed:
+        return f"{cov_path}: result FAIL without a failed verdict item"
+    not_inflated = [k for k in failed if k not in fac]
+    if not_inflated:
+        return f"failed items not covered by the inflation: {not_inflated}"
+    if acc.get("coverage_md5") != md5(cov_path):
+        return (f"coverage_md5 {acc.get('coverage_md5')} != md5 of {cov_path} ({md5(cov_path)}): the acceptance "
+                "was for another calibration verdict")
+    return None
 
 
 def md5(path):

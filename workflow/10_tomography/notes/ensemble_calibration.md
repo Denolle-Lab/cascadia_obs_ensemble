@@ -314,3 +314,76 @@ RESUME.md, logs/).
   surface and the floor are stopped by their first upward update, as in the deterministic runs.
 * P-E14 Pick-noise class factors per tile, M0 out of the pooling, 30-event minimum, picks by home tile.
 * P-E15 Prior width as parameters (values unchanged pending the PI); a changed prior needs a new root.
+
+### 8.4 Calibration by inflation (D-B094, PI 2026-11-25 15:37) and the real-phase launch
+
+The v0.3.2 synthetic calibration (ensemble_v0.3.2/synth/coverage.json, md5 30d52400..., 97 synthetic members of 102
+merged, FAIL by the D-B030 rule) has the hypocentres (68 % 0.70-0.73, 95 % 0.95-0.96 in every tile and coordinate) and
+Vp/Vs (0.75 / 0.96) calibrated, and Vp and Vs too narrow on the resolved nodes (Vp 0.565 / 0.849, rms z 1.28; Vs 0.581 /
+0.863, rms z 1.22). D-B094: run the real phase on v0.4.1 and multiply the Vp and Vs spreads by factors from the
+synthetic members, rounded up to the next 0.05; hypocentres and Vp/Vs not inflated.
+
+**Derivation** (b2_ens_inflate.py, B2_ENS_CONFIG=v0.4.1; output ensemble_v0.4.1/calibration/inflation.{json,md}).
+Inflated members x' = median + f (x - median) node by node, so every percentile interval widens by f about the
+ensemble median and the std by f. Per node the smallest covering f is (truth - median) / (q_hi - median) above the
+median, (median - truth) / (median - q_lo) below it; f68 = the smallest f with 16-84 % coverage >= 0.68 on the resolved
+nodes, f95 = the smallest f with 2.5-97.5 % coverage >= 0.95; factor = max(f68, f95) rounded up to the next 0.05. Same
+members, truth and masks as b2_ens_coverage.py; at f = 1 the script reproduces coverage.json exactly (it refuses
+otherwise). Quantities: the merged member models before the D-B073 node rule against the truth.
+
+| item | nodes | 68 % / 95 % raw | f68 | f95 | factor | 68 % / 95 % after (used factor) | rms z raw / after |
+|---|---|---|---|---|---|---|---|
+| **resolved Vp** | 888 | 0.565 / 0.849 | 1.301 | 1.366 | **1.40** | 0.707 / 0.956 | 1.28 / 0.92 |
+| **resolved Vs** | 320 | 0.581 / 0.863 | 1.245 | 1.335 | **1.35** | 0.722 / 0.953 | 1.22 / 0.90 |
+| sampled Vp (check) | 3,521 | 0.569 / 0.849 | 1.280 | 1.437 | 1.45 | 0.716 / 0.945 | 1.33 / 0.95 |
+| sampled Vs (check) | 736 | 0.598 / 0.871 | 1.228 | 1.235 | 1.25 | 0.719 / 0.965 | 1.18 / 0.88 |
+
+Per tile (node -> tile of largest merge weight; check only):
+
+| tile | resolved Vp: nodes, factor, after 68 / 95 | sampled Vp: nodes, factor, after | sampled Vs: nodes, factor, after |
+|---|---|---|---|
+| mendocino_gorda_c | 83, 1.25, 0.759 / 0.988 | 1,096, 1.55, 0.669 / 0.925 | 274, 1.25, 0.719 / 0.971 |
+| blanco | 346, 1.35, 0.720 / 0.960 | 294, 1.40, 0.694 / 0.952 | 54, 1.30, 0.722 / 0.982 |
+| oregon | 29, 1.80, 0.586 / 0.897 | 470, 1.30, 0.785 / 0.970 | 78, 1.35, 0.795 / 0.962 |
+| washington | 430, 1.40, 0.695 / 0.951 | 1,661, 1.45, 0.732 / 0.949 | 330, 1.35, 0.700 / 0.958 |
+
+All 320 resolved Vs nodes are in Blanco (no other tile has resolved S nodes), so the Vs factor is Blanco's; the sampled
+Vs nodes of the other tiles need 1.25-1.35, not more. The resolved-node factors are taken as the rule says: the
+sampled-node Vp factor is 0.05 higher (1.45; with 1.40 its coverage is 0.716 / 0.945), Mendocino-Gorda's sampled Vp
+needs 1.55 (0.669 / 0.925 with 1.40), Oregon's 29 resolved Vp nodes 1.80 (N_eff of a tile is a few: noisy). Gaussian
+version (mean +- f std): resolved Vp f68 / f95 1.267 / 1.275, Vs 1.199 / 1.232; with the used factors 0.733 / 0.965
+(Vp) and 0.719 / 0.963 (Vs). After inflation the four pooled items (resolved and sampled, Vp and Vs) are inside the
+D-B030 bands (68 % 0.60-0.76, 95 % 0.90-0.98). Per tile, 8 of 13 items are inside; outside: Oregon resolved Vp 0.586 /
+0.897 (29 nodes, still narrow), Mendocino-Gorda resolved Vp 95 % 0.988 (83 nodes, wide), Oregon sampled Vp 68 % 0.785
+and Vs 68 % 0.795 (wide), Blanco sampled Vs 95 % 0.982 (54 nodes, wide). One factor per quantity for the whole margin,
+as D-B094 says; the tile differences are reported, not used.
+
+**Products** (b2_ens_stats.py products; stats.npz stays raw): with configs.<c>.calibration.inflation set, Vp_std,
+Vs_std, Vp_tomography_std, Vs_tomography_std -> f std; their p05 / p95 -> median + f (p - median); the tomography
+std_total from the inflated std and the (not inflated) tile disagreement. Raw values kept as <name>_raw (14 variables).
+Mean, median, n, VpVs not changed. Attributes: the title / summary name the factors; provenance_uncertainty_calibration
+(decision, factors, rule, source coverage.json and md5, derivation file md5 and whether its factors equal the
+configuration's, resolved coverages before / after); each inflated variable carries calibration and inflation_factor.
+The report has an "Uncertainty calibration" section (factors, rule, source, derivation table, all items) and labels the
+std maps "calibrated x f"; its synthetic coverage table now comes from the calibration root. provenance_prior is the
+effective prior (C.PR). Tested: inflate() equals inflating random members about their median (std, p05, p95); raw kept;
+VpVs, mean, median, n untouched; dry run on the r000 statistics (15.4 MB with the raw variables, 11.0 MB before).
+
+**Gate.** params tomodd.ensemble.configs.v0.4.1.calibration = {accepted: D-B094, inflation: {Vp: 1.40, Vs: 1.35},
+coverage_md5: 30d524003e05f2c02f5a0afa9aedfdf5}. After a failed calibration the chain goes on only when this entry
+has a decision id, factors for Vp and/or Vs only (finite, >= 1), covers every failed verdict item, and its md5 equals
+the calibration root's coverage.json (b2_ens_common.calibration_acceptance); the calibration root is read only. Scratch
+root test (prep, then B2_ENS_STOP_AFTER=calibrate): with the entry, "ACCEPTED ... (D-B094)", exit 0; without it exit 2;
+wrong md5, Vp only (Vs failed and not inflated), a hypocentre key, no decision id, a factor 0.9: exit 2 each; no
+member started. The scratch prep reproduced the real root's prior files byte for byte (only root paths in floor.json
+and prior.json differ), so the chain's prep on the real root (its chain.state had no prep) leaves r000 valid.
+
+**Resources** (PI: the whole machine today): max_procs 64 (was 56), min_avail_gb 30 (was 40), mem_per_run_gb 3.5:
+a tomoDD stage starts only while MemAvailable - 3.5 GB x (stages started in the last 5 min) >= 33.5 GB. Beside it:
+the v6 grid chain (36 x ~1.6 GB), NLLoc runs and the cross-correlation job (up to 48 I/O workers).
+
+**Launch** (real members r000..r099, r000 reused; then stats and products as a dry run + report; registration only
+with B2_ENS_REGISTER=1 after the PI's go):
+
+    cd /home/mdenolle/wt_ens41
+    B2_ENS_CONFIG=v0.4.1 LD_LIBRARY_PATH=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib setsid nohup /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python workflow/10_tomography/b2_ens_run.py chain >> /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.1/chain.log 2>&1 < /dev/null &

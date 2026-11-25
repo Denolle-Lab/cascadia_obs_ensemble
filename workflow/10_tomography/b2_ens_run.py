@@ -17,11 +17,14 @@ Chain stages (ROOT/chain.state records the finished ones; rerunning the same com
   calibrate  b2_ens_coverage.py: the D-B030 gate. FAIL -> the chain stops with exit 2 (real members not started)
              With configs.<c>.calibration_root set (v0.4.1: the v0.3.2 synthetic calibration), truth, synth and
              calibrate are not run here: the gate is that root's passed calibration (chain.state has calibrate and
-             synth/coverage.json result PASS); otherwise exit 2 before any real member.
+             synth/coverage.json result PASS), or its failed calibration explicitly accepted by configs.<c>.calibration
+             (D-B094: decision id, Vp / Vs inflation factors covering every failed item, coverage.json md5);
+             otherwise exit 2 before any real member.
   real       real-data members r000..r(N-1)
   stats      b2_ens_stats.py stats real (per-node statistics)
   products   b2_ens_stats.py products real (dry-run netCDF + HTML report; with B2_ENS_REGISTER=1, after the PI's go,
-             the immutable version <model>+ens.<members> is registered, read-back checked first)
+             the immutable version <model>+ens.<members> is registered, read-back checked first); the Vp / Vs
+             spreads are multiplied by configs.<c>.calibration.inflation when set (D-B094), raw spreads kept
 Scheduler: per member M0 first, then its tiles (all four at once), then the merge; at most tomodd.ensemble.max_procs
 tomoDD processes of this chain, each started only while MemAvailable, minus mem_per_run_gb for every process started in
 the last 5 minutes (still allocating), stays above min_avail_gb + mem_per_run_gb; tile
@@ -218,9 +221,15 @@ def mark(s):
 def resume_md():
     N = E["members"]
     cr = CFG.get("calibration_root")
+    acc = C.calibration_entry()
+    acc_txt = (f" A failed calibration is accepted only by configs.{C.CONFIG}.calibration (now: {acc.get('accepted')}, "
+               f"inflation {json.dumps(acc.get('inflation'))}, coverage_md5 {acc.get('coverage_md5')}; every failed item "
+               f"must be inflated and the md5 must match): the products then multiply the Vp / Vs spreads by these "
+               f"factors (raw spreads kept as *_raw; derivation b2_ens_inflate.py -> {ROOT}/calibration/inflation.md)"
+               if acc else f" A failed calibration needs an explicit configs.{C.CONFIG}.calibration entry (PI decision)")
     gate = (f"the synthetic calibration of {cr} (its chain.state has calibrate, synth/coverage.json PASS); this root "
-            f"runs no synthetic members. If it has not passed, the chain stops with exit 2 before any real member"
-            if cr else f"if the stage calibrate fails, the chain stops with exit 2 and the real members are not "
+            f"runs no synthetic members. If it has not passed, the chain stops with exit 2 before any real member."
+            + acc_txt if cr else f"if the stage calibrate fails, the chain stops with exit 2 and the real members are not "
                        f"started; see {ROOT}/synth/coverage.md. Do not remove 'calibrate' from the state by hand "
                        f"without the PI's decision")
     stages = "prep calibrate(gate) real stats products" if cr else "prep truth synth calibrate real stats products"
@@ -276,16 +285,29 @@ def check_prepared():
 
 
 def calibration_gate():
-    """Real phase gated on another root's synthetic calibration (configs.<c>.calibration_root): exit 2 unless it passed."""
+    """Real phase gated on another root's synthetic calibration (configs.<c>.calibration_root): go if it passed; after a
+    failed calibration only with the explicit acceptance configs.<c>.calibration (D-B094; b2_ens_common
+    calibration_acceptance: decision id, Vp / Vs inflation factors covering every failed item, md5 of the accepted
+    coverage.json); otherwise exit 2 before any real member. Read-only on the calibration root."""
     cr = Path(CFG["calibration_root"])
     st, cj = cr / "chain.state", cr / "synth" / "coverage.json"
     done_ = st.exists() and "calibrate" in st.read_text().split()
-    res = json.loads(cj.read_text()).get("result") if cj.exists() else None
-    if not (done_ and res == "PASS"):
-        log(f"CALIBRATION GATE NOT PASSED: {cr} (chain.state calibrate: {done_}, coverage.json result: {res}); "
-            "real-data ensemble not started")
-        sys.exit(2)
-    log(f"calibration gate: {cj} result PASS")
+    cov = json.loads(cj.read_text()) if cj.exists() else {}
+    res = cov.get("result")
+    if done_ and res == "PASS":
+        log(f"calibration gate: {cj} result PASS")
+        return
+    why = C.calibration_acceptance(cov, cj)
+    if why is None:
+        acc = C.calibration_entry()
+        failed = sorted(k for k, v in cov["verdict"].items() if not v)
+        log(f"calibration gate: {cj} result {res} (failed: {failed}), ACCEPTED by configs.{C.CONFIG}.calibration "
+            f"({acc['accepted']}): products inflate the spreads {json.dumps(C.inflation())}; coverage.json md5 "
+            f"{acc['coverage_md5']}")
+        return
+    log(f"CALIBRATION GATE NOT PASSED: {cr} (chain.state calibrate: {done_}, coverage.json result: {res}; "
+        f"acceptance: {why}); real-data ensemble not started")
+    sys.exit(2)
 
 
 def chain():

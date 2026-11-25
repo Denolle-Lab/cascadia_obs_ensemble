@@ -28,6 +28,10 @@ three folds (full table in section 3):
   is about neutral, and D = 1 and 0.5 km degrade it in every set while the misfit at the training stations keeps
   falling (median event rms in the full runs, it0 -> it4: axial 77 -> 46 ms, blanco 102 -> 41, msh 116 -> 78, jdf
   130 -> 53; section 4). nllssst ends worse than nllbase, except P in blanco and jdf (within 3 ms).
+* Diagnostic, found on the held-out scores (so not a fair entry): the coherence step on top of SSST stopped at
+  D = 2 km does better than nllcoh in every set (P / S MAD axial 32 / 38, blanco 50 / 64, msh 17 / 17, jdf 63 / 79;
+  msh rms 79 / 56 ms, at or below v5.1 on the same events) and thins axial, blanco and msh further (section 4).
+  Coherence with no SSST at all is close behind.
 * Axial and blanco stay well behind v5.1 (axial P 33 vs 28 ms, S 41 vs 28 ms; blanco 60 vs 43 / 79 vs 54). This is
   mostly the test design: an absolute code relocating without the held-out stations starts far behind (nllbase vs
   v5.1), while v5.1 and anything that starts from it keep what the held-out stations told v5.1 (section 5).
@@ -201,9 +205,70 @@ nllbase, it4 nllssst, coh nllcoh. `var_coh0` and `var_coh2` are the coherence pa
 v5.1 static terms) and on top of it2 (SSST stopped at D = 2 km) instead of it4 (`--variant 0`, `--variant 2`).
 These are diagnostics, not leg outputs; the schedule of the leg was fixed before any score was seen.
 
-__TABLE3__
+| set | pass | P rms / MAD ms | S rms / MAD ms |
+|---|---|---|---|
+| axial | v5.1 | 73 / 28 (10157) | 62 / 29 (4999) |
+| axial | v5.1, nllcoh events | 72 / 28 (9523) | 62 / 28 (4802) |
+| axial | it0 | 116 / 51 (9523) | 181 / 78 (4802) |
+| axial | it1 | 112 / 50 (9523) | 185 / 76 (4802) |
+| axial | it2 | 111 / 51 (9523) | 187 / 79 (4802) |
+| axial | it3 | 114 / 52 (9523) | 193 / 83 (4802) |
+| axial | it4 | 123 / 56 (9523) | 224 / 91 (4802) |
+| axial | coh | 80 / 33 (9523) | 101 / 41 (4802) |
+| axial | var_coh0 | 76 / 32 (9523) | 85 / 37 (4802) |
+| axial | var_coh2 | 77 / 32 (9523) | 87 / 38 (4802) |
+| blanco | v5.1 | 95 / 44 (7764) | 95 / 53 (8859) |
+| blanco | v5.1, nllcoh events | 93 / 43 (4453) | 99 / 54 (5222) |
+| blanco | it0 | 463 / 149 (3933) | 656 / 191 (4771) |
+| blanco | it1 | 394 / 134 (4155) | 557 / 177 (4946) |
+| blanco | it2 | 405 / 125 (4390) | 600 / 178 (5178) |
+| blanco | it3 | 443 / 139 (4413) | 659 / 199 (5177) |
+| blanco | it4 | 451 / 151 (4455) | 673 / 221 (5222) |
+| blanco | coh | 155 / 60 (4453) | 202 / 79 (5222) |
+| blanco | var_coh0 | 167 / 53 (3929) | 210 / 69 (4761) |
+| blanco | var_coh2 | 122 / 50 (4390) | 141 / 64 (5178) |
+| msh | v5.1 | 80 / 24 (31042) | 64 / 32 (13043) |
+| msh | v5.1, nllcoh events | 79 / 23 (30505) | 63 / 31 (12692) |
+| msh | it0 | 143 / 44 (30507) | 162 / 54 (12692) |
+| msh | it1 | 134 / 39 (30498) | 152 / 49 (12691) |
+| msh | it2 | 142 / 39 (30505) | 158 / 47 (12692) |
+| msh | it3 | 153 / 42 (30505) | 178 / 50 (12692) |
+| msh | it4 | 172 / 49 (30505) | 199 / 60 (12692) |
+| msh | coh | 86 / 18 (30505) | 66 / 19 (12692) |
+| msh | var_coh0 | 81 / 18 (30507) | 57 / 19 (12692) |
+| msh | var_coh2 | 79 / 17 (30505) | 56 / 17 (12692) |
+| jdf | v5.1 | 121 / 70 (2829) | 162 / 95 (2779) |
+| jdf | v5.1, nllcoh events | 119 / 68 (1444) | 162 / 93 (992) |
+| jdf | it0 | 280 / 124 (1444) | 331 / 160 (992) |
+| jdf | it1 | 272 / 100 (1442) | 345 / 145 (992) |
+| jdf | it2 | 282 / 102 (1442) | 361 / 146 (992) |
+| jdf | it3 | 298 / 113 (1444) | 376 / 162 (992) |
+| jdf | it4 | 307 / 121 (1444) | 400 / 200 (992) |
+| jdf | coh | 139 / 65 (1444) | 198 / 79 (992) |
+| jdf | var_coh0 | 149 / 72 (1444) | 189 / 86 (992) |
+| jdf | var_coh2 | 130 / 63 (1442) | 179 / 79 (992) |
 
-__DIAG__
+What the passes show:
+
+* Static terms re-estimated on the set (it1) lower the held-out MAD in every set; D = 2 km (it2) holds that level;
+  D = 1 and 0.5 km lose it and more, while the training-station misfit keeps falling. The small-scale SSST field
+  absorbs mislocation along with path effects, in all four sets (6 to 72 training stations).
+* The coherence step is robust to what sits under it: on the it0 baseline (no SSST at all) it already gives most of
+  the gain. Its rms is lower than nllcoh's in axial and msh (S: 85 vs 101 ms, 57 vs 66 ms) and its MAD lower in
+  axial and blanco; its MAD is higher than nllcoh's in jdf (P 72 vs 65 ms, S 86 vs 79 ms). (blanco var_coh0 is
+  scored on fewer rows: 85 fold0 events are REJECTED at the bottom face in it0.)
+* Coherence on it2 (SSST stopped at D = 2 km) is the best of the three in blanco, msh and jdf and within 2 ms of the
+  best in axial: P / S MAD 32 / 38 (axial), 50 / 64 (blanco), 17 / 17 (msh), 63 / 79 (jdf), and rms 79 / 56 ms in
+  msh, i.e. at or below v5.1 on the same events in all four msh numbers. In the full runs it is the thinnest of the
+  three coherence versions in axial, blanco and msh (smallest-axis thickness 0.16 km axial, 0.51 blanco, 0.19 msh,
+  0.08 jdf; v5.1 0.20, 0.62, 0.32, 0.08), with no event above the surface.
+* This ranking was found on the held-out scores themselves, so it is not a fair entry for the comparison; it says
+  the schedule chosen a priori (down to 0.5 km) is too fine for these station counts. A rerun with the schedule
+  static + 2 km (D not below about the set extent) would give exactly the var_coh2 positions; they are in
+  `nll_work/<set>/<run>/var_coh2/locs.csv` (LOCATED rows; `depth` = true depth km bsl).
+* var_coh0 collapses jdf to a near-plane in the full run (thickness 0.015 km against 0.08 km for v5.1): stacking
+  broad PDFs (Len3 median 7 km) without SSST can pull a whole cluster onto one surface; whether that is the fault or
+  an artefact is not tested here.
 
 ## 5. Caveats and doubts
 
@@ -222,10 +287,10 @@ __DIAG__
   "v5.1 on the nllcoh events" scores v5.1 on the same rows as nllcoh and differs from the full v5.1 score by 0-5 ms.
   Every event is located in the full runs.
 * **SSST at small D does not help here.** Each pass lowers the misfit at the training stations (axial full: median
-  rms 77 ms at it0, 46 ms at it4) while the held-out fit gets worse below D = 2 km (section 4). With 6-9 stations
-  (axial, jdf), a correction field that varies over the cluster trades off with the event positions; Loc2ssst cannot
-  tell a path effect from a mislocation, and the cluster drifts and spreads (axial full: median 3D shift from v5.1
-  58 m at it0, 175 m at it1, 365 m at it4; cluster thickness 0.20 km at it0, 0.27 km at it4). The static pass
+  rms 77 ms at it0, 46 ms at it4) while the held-out fit gets worse below D = 2 km (section 4), in all four sets
+  (6 to 72 training stations). A correction field that varies over the cluster trades off with the event positions;
+  Loc2ssst cannot tell a path effect from a mislocation, and the cluster drifts and spreads (axial full: median 3D
+  shift from v5.1 58 m at it0, 175 m at it1, 365 m at it4; thickness 0.20 km at it0, 0.27 km at it4). The static pass
   (D = 9999) alone already moves events by ~0.2 km because the set-wide station terms differ from the catalog-wide
   b4_v51_iter0 terms by tens of ms at stations 1-3 km from the events.
 * **Oct-tree resolution.** With the production search (40,000 nodes, 0.02 km minimum never reached) the
@@ -254,8 +319,9 @@ __DIAG__
   located them deep. Listed in run.json as REJECTED (or "no oct-tree in the last SSST pass" for nllcoh).
 * **Thickness is a standard deviation.** blanco nllbase is 0.89 km thick against 0.62 km for v5.1 although its
   positions differ from v5.1 by 70 m (median 3D) because two events moved more than 2 km (one 13 km).
-* **Static terms.** b4_v51_iter0 terms were computed by production from the whole catalog, held-out stations
-  included; in a fold run only the training stations' terms are used, so this does not leak held-out data.
+* **Static terms.** b4_v51_iter0 terms were computed by production from the whole catalog; in a fold run only the
+  training stations' terms are used, so held-out data enter only indirectly (the terms are mean residuals at
+  locations that used every station). The SSST legs replace them in their first pass.
 * **Loc2ssst LSSTATIONS** matches station codes by substring (`strstr`); stations whose code is contained in another
   are put in the same Loc2ssst instance, so no grid is written twice.
 
@@ -269,3 +335,7 @@ $PY b5_cmp_nll.py --score                       # -> cmp/nllcoh/scores.json
 $PY b5_cmp_nll.py axial jdf msh blanco --pass-scores
 $PY b5_cmp_nll.py axial jdf blanco msh --variant 0   # and --variant 2 (diagnostics)
 ```
+
+Scratch kept (22 GB): per-pass hyps and locs.csv, the SSST grids T2 and T4 (inputs of var_coh2 and nllcoh), the
+it4 / var_it oct-trees, the stream_coherences files and logs; the grid buffers of T1 and T3 were deleted (their
+done.json is kept, so a rerun still resumes). Tables of this note: `pass_scores.json` per set and `scores.json`.

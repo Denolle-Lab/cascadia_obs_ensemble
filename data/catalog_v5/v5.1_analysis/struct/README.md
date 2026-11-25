@@ -3,9 +3,10 @@
 2026-11-25, revised the same day after an adversarial review. Private working product; not peer reviewed. Report
 with figures, numbers and proposed decisions: `v51_structure_seismicity_report.html`.
 
-Model v0.3.1 (`/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.1.nc`), resolved nodes only: Vp where
-resolution_p > 0, Vs where resolution_s > 0 and vs_reverted == 0, Vp/Vs where both (D-B018, D-B049, D-B051). The
-D-B073 shallow-crust rule is not used (it is not in v0.3.1); the v0.3.2 `medium` flag is read only to check that no
+Model v0.3.1 (`/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.1.nc`), resolved nodes only (D-B018,
+D-B049, D-B051): Vp where resolution_p > 0; Vs and Vp/Vs both on the nodes resolved for both phases (resolution_p >
+0, resolution_s > 0 and vs_reverted == 0), so the Vs and Vp/Vs tests use the same nodes and strata. The 55 nodes
+resolved for S but not P (591 located earthquakes) are not used. The D-B073 shallow-crust rule is not used (it is not in v0.3.1); the v0.3.2 `medium` flag is read only to check that no
 resolved node is in water or air (none is). Catalog v5.1 located earthquakes (623 rows without a hypocentre and 3,313
 non-earthquakes left out), v5.1 magnitudes (mag piece), v5.1 clustering (clusters piece) and fault surfaces v1
 (faults piece), read from the sibling worktrees after their review fixes; the commits and checksums of every input
@@ -31,7 +32,7 @@ blocks, tiles, v4), `v51_struct_report.py` and `v51_struct_text.py` (figures, HT
 |---|---|
 | coverage_fraction.csv, coverage_by_zone_depth.csv, coverage_region_depthband.csv | events in resolved cells by group, zone x depth node (with resolved area and number of independent checkerboard cells), region x depth band |
 | flags_resolved_by_zone.csv | catalog flags (tier D, depth_quality, far_only, ...) and waveform-review sets of the events in resolved cells |
-| nodes_resolved_v031.csv | every node resolved for Vp or Vs: values, changes, DWS, strata, coverage-matched anomalies (`*_res`) |
+| nodes_resolved_v031.csv | every node resolved for P or S (masks resP, resS, resPS; Vs statistics use resPS): values, changes, DWS, strata, coverage-matched anomalies (`*_res`) |
 | events_in_resolved_cells.csv.gz | events in resolved cells with the sampled values, flags and review labels |
 | t1_swarm_vs_ma.csv, t1_families_*.csv, t1_event_swarm_share.csv | Q1: family types against Vp/Vs, Vp and Vs (sets resPS, resPS_dg, resPS_strict, resP, ...) |
 | t2_density.csv, t2_bvalue.csv, t2_bvalue_checks.csv | Q2: count-velocity correlations within strata, event-weighted and occupancy anomalies, randomized-catalog nulls; b-value splits and their checks by box, node depth and Mc + 0.2 |

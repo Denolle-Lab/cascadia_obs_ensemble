@@ -43,6 +43,9 @@ def build_html(c: dict) -> str:
     wa12 = czd[(czd.node_zone == "WA") & (czd.node_depth == 12)]
     n12_nodes = int(wa12.nodes_P.iloc[0]) if len(wa12) else 0
     n12_ev = int(wa12.n_resP.iloc[0]) if len(wa12) else 0
+    eq_all = ev[ev.located & ev.is_earthquake]
+    n_s_only_nodes = int((model.mS & ~model.mP).sum())
+    n_s_only_ev = int((eq_all.resS & ~eq_all.resP).sum())
 
     def t2row(zone, var, events="all"):
         r = t2[(t2.zone == zone) & (t2["var"] == var) & (t2.events == events)]
@@ -373,10 +376,13 @@ def build_html(c: dict) -> str:
       "surface flags, not the surfaces' geometry or stable flags.</li>")
     A(f"<li>Model v0.3.1 ({model.shape[2]} x {model.shape[1]} x {model.shape[0]} = "
       f"{model.shape[0] * model.shape[1] * model.shape[2]:,} nodes, 0.125 x 0.1 deg, depth -3 to "
-      "125 km). Resolved Vp: resolution_p &gt; 0. Resolved Vs: resolution_s &gt; 0 and vs_reverted = 0. Vp/Vs needs both. "
+      "125 km). Vp and its change are sampled where resolution_p &gt; 0. Vs, Vp/Vs and their changes are all sampled "
+      "on one node set, the nodes resolved for both phases (resolution_p &gt; 0, resolution_s &gt; 0 and "
+      "vs_reverted = 0), so the Vs and Vp/Vs tests use the same nodes and strata. "
       "These are the D-B018 checkerboard criteria (local correlation &gt;= 0.7 and amplitude &gt;= 0.5 at 40, 60 or 100 km "
       "cells, with pick noise, both pattern phases), merged under D-B049, and D-B051 for Vs. "
-      f"Resolved nodes: {int(model.mP.sum())} for Vp, {int(model.mS.sum())} for Vs, {int(model.mPS.sum())} for both. "
+      f"Resolved nodes: {int(model.mP.sum())} for P, {int(model.mS.sum())} for S, {int(model.mPS.sum())} for both. "
+      f"The {n_s_only_nodes} nodes resolved for S but not P (holding {n_s_only_ev} located earthquakes) are not used. "
       f"Resolved nodes in water or air by the v0.3.2 medium flag: {model.n_res_not_rock}. The D-B073 shallow-crust "
       "rule is not in v0.3.1 and is not used. Only the medium flag is read from v0.3.2. The masks are empty at 21 "
       f"and 25 km everywhere; at 12 km only {n12_nodes} Washington nodes are resolved (holding {n12_ev} events), and "
@@ -747,9 +753,9 @@ def build_html(c: dict) -> str:
 
 
 PROPOSED = [
-    "Resolved means resolution_p > 0 for Vp, resolution_s > 0 and vs_reverted == 0 for Vs, and both for Vp/Vs, "
-    "on v0.3.1 as published. The 12/21/25 km mask gaps are not bridged, and no DWS-only or tile-weight criterion "
-    "is added.",
+    "Resolved means resolution_p > 0 for Vp; Vs and Vp/Vs both use the nodes resolved for both phases "
+    "(resolution_p > 0, resolution_s > 0 and vs_reverted == 0), on v0.3.1 as published. The 12/21/25 km mask gaps "
+    "are not bridged, and no DWS-only or tile-weight criterion is added.",
     "Events are sampled at the nearest node (voxel). The all-eight-corners rule is reported as a stricter count, not "
     "used for the tests.",
     "Circularity control: coverage-matched anomalies within zone x depth node x DWS tercile (P DWS for Vp, S DWS for "

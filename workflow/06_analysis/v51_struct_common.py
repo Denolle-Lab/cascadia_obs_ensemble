@@ -3,8 +3,12 @@
 Inputs (read only):
 * catalog v5.1 (/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv), the v5.1 magnitudes (mag piece),
   the v5.1 nearest-neighbour clustering (clusters piece) and the fault surfaces v1 (faults piece);
-* velocity model v0.3.1 (netCDF). Only nodes that pass the checkerboard tests are used: resolution_p > 0 for Vp,
-  resolution_s > 0 and vs_reverted == 0 for Vs, both for Vp/Vs (D-B018, D-B049, D-B051). The D-B073 shallow-crust
+* velocity model v0.3.1 (netCDF). Only nodes that pass the checkerboard tests are used (D-B018, D-B049, D-B051).
+  Vp and dVp are sampled where resolution_p > 0 (mask mP, column resP). Vs, dVs, Vp/Vs and dVp/Vs are all sampled
+  on one node set, the nodes resolved for both phases: resolution_p > 0, resolution_s > 0 and vs_reverted == 0
+  (mask mPS, column resPS), so the Vs and Vp/Vs tests use the same nodes and the same strata. The S-only mask
+  (mS, column resS: resolution_s > 0 and vs_reverted == 0 without resolution_p > 0) is counted and kept in the node
+  and event tables but is not used for any statistic. The D-B073 shallow-crust
   rule is not in v0.3.1 and is never applied here. The `medium` flag of v0.3.2 (rock/water/air against the merged
   solid surface, D-B068) is read only to check that no resolved node lies in water or air.
 
@@ -193,11 +197,14 @@ class Model:
         return ix, iy, iz, inside
 
     def corners_resolved(self, lon, lat, depth, mask):
-        """True when every corner node of the trilinear cell around the point is resolved (strict variant)."""
+        """True when every corner node of the trilinear cell around the point is resolved (strict variant).
+        A point outside the node grid in longitude, latitude or depth (above the top or below the bottom depth
+        node, or with no depth) has no enclosing cell and is False."""
         lon, lat, depth = (np.asarray(x, float) for x in (lon, lat, depth))
         fx = (lon - self.lon[0]) / DLON
         fy = (lat - self.lat[0]) / DLAT
-        fz = np.interp(depth, self.dep, np.arange(len(self.dep)))
+        in_z = np.isfinite(depth) & (depth >= self.dep[0]) & (depth <= self.dep[-1])
+        fz = np.interp(np.where(in_z, depth, self.dep[0]), self.dep, np.arange(len(self.dep)))
         x0 = np.clip(np.floor(fx).astype(int), 0, len(self.lon) - 2)
         y0 = np.clip(np.floor(fy).astype(int), 0, len(self.lat) - 2)
         z0 = np.clip(np.floor(fz).astype(int), 0, len(self.dep) - 2)
@@ -206,7 +213,7 @@ class Model:
             for dy in (0, 1):
                 for dx in (0, 1):
                     ok &= mask[z0 + dz, y0 + dy, x0 + dx]
-        inside = (fx >= 0) & (fx <= len(self.lon) - 1) & (fy >= 0) & (fy <= len(self.lat) - 1)
+        inside = (fx >= 0) & (fx <= len(self.lon) - 1) & (fy >= 0) & (fy <= len(self.lat) - 1) & in_z
         return ok & inside
 
     def node_table(self) -> pd.DataFrame:
@@ -366,14 +373,37 @@ def attach_nodes(c: pd.DataFrame, model: Model, lon=None, lat=None, depth=None, 
 
 # ---------------------------------------------------------------- statistics
 def block_bootstrap(blocks: np.ndarray, stat, n: int = 2000, seed: int = RNG_SEED, strata=None):
-    """Resample whole blocks with replacement (within `strata` of blocks when given); stat(idx) -> float or array.
-    Returns an array [n, ...] of the statistic."""
+    """Resample whole blocks with replacement; stat(idx) -> float or array. Returns an array [n, ...].
+
+    strata: optional label per row (same length as `blocks`). The resampling unit is then a block within a stratum
+    (a block that spans several strata is split into its parts), and each stratum keeps its own number of units:
+    units are drawn with replacement only among the units of the same stratum. Without strata, all blocks are
+    drawn from one pool (the same draws as before strata were supported)."""
     rng = np.random.default_rng(seed)
-    ub, inv = np.unique(blocks, return_inverse=True)
+    blocks = np.asarray(blocks).ravel()
+    if strata is None:
+        ub, inv = np.unique(blocks, return_inverse=True)
+        pools = None
+    else:
+        strata = np.asarray(strata).ravel()
+        if strata.shape != blocks.shape:
+            raise ValueError(f"strata {strata.shape} and blocks {blocks.shape} differ in length")
+        _, sinv = np.unique(strata, return_inverse=True)
+        _, binv = np.unique(blocks, return_inverse=True)
+        nb = int(binv.max()) + 1 if len(binv) else 1
+        ub, inv = np.unique(sinv.astype(np.int64) * nb + binv, return_inverse=True)
+        unit_stratum = ub // nb
+        pools = [np.flatnonzero(unit_stratum == s) for s in np.unique(unit_stratum)]
+    inv = np.asarray(inv).ravel()
     members = [np.flatnonzero(inv == i) for i in range(len(ub))]
     out = []
     for _ in range(n):
-        pick = rng.integers(0, len(ub), len(ub))
+        if pools is None:
+            pick = rng.integers(0, len(ub), len(ub))
+        elif pools:
+            pick = np.concatenate([p[rng.integers(0, len(p), len(p))] for p in pools])
+        else:
+            pick = np.array([], int)
         idx = np.concatenate([members[i] for i in pick]) if len(pick) else np.array([], int)
         out.append(stat(idx))
     return np.array(out, dtype=float)

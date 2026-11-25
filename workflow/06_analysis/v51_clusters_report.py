@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import base64
 import html
+import json
 import sys
 from pathlib import Path
 
@@ -87,8 +88,10 @@ def load():
               "validation_sequences", "volcano_families", "volcano_local_zbz", "setting_stats",
               "faults_v1_cluster_counts", "v4_families_status", "v51_families_status", "dbscan_clusters_v51",
               "dbscan_v4_status", "dbscan_v51_status", "faults_v1_daytime_surfaces_events",
-              "v4_dissolved_members_fate"]:
+              "v4_dissolved_members_fate", "null_test", "null_test_summary", "tierD_by_region", "mc_edge_check",
+              "depth_swarm_vs_ma_families", "review_sets_in_clusters", "review_P1_families"]:
         d[k] = pd.read_csv(OUT / f"{k}.csv")
+    d["input_commits"] = json.loads((OUT / "input_commits.json").read_text())
     d["classes"] = pd.read_csv(OUT / "v4_vs_v51_event_classes.csv", index_col=0)
     d["ev4"] = pd.read_csv(V4 / "events_zbz.csv.gz")
     d["fam4"] = pd.read_csv(V4 / "families_zbz.csv")
@@ -467,8 +470,46 @@ def write_html(d, out):
     nmig = int(tb(fam10.mig_migrating).sum())
     nres = int(tb(fam10.mig_resolvable).sum())
     sw10 = fam10[fam10.type == "swarm"]
+    nmig_sp = int(tb(fam10.mig_migrating_spearman_p).sum())
     day = d["faults_v1_daytime_surfaces_events"].iloc[0]
     cls_t = d["classes"]
+    # null test (time-shuffled catalogs at the real thresholds)
+    ns = d["null_test_summary"]
+    nreg = ns[ns.null == "region"].set_index("region").reindex(REG_ORDER)
+    nyr = ns[ns.null == "region_year"].set_index("region").reindex(REG_ORDER)
+    nmo = ns[ns.null == "region_month"].set_index("region").reindex(REG_ORDER)
+    lr = nreg.link_ratio_null_over_real
+    low = [r for r in REG_ORDER if r not in ("AX", "OR", "MT", "BL")]
+    valley = [r for r in REG_ORDER if bool(nreg.real_kde_valley[r])]
+    novalley = [r for r in REG_ORDER if r not in valley]
+    dmax = nreg.D_max
+    # largest D over every shuffled catalog (null step: 3 kinds of shuffle; shuffle step: 3 seeds)
+    nt = d["null_test"]
+    dall = pd.concat([nt[nt.null != "real"][["region", "ashman_D"]],
+                      d["shuffle_test"][["region", "ashman_D"]]]).groupby("region").ashman_D.max().reindex(REG_ORDER)
+    near = [r for r in REG_ORDER if dall[r] >= 2]
+    d_above_txt = ("with the v4 mixture fit no shuffled catalog reaches the real D, but shuffled D depends on the seed "
+                   "and the kind of shuffle and reaches "
+                   + ", ".join(f"{r} {dall[r]:.2f} (real {reg.ashman_D[r]:.2f})" for r in near)
+                   + "; with a multi-start fit the reviewer found shuffled D of 5.35 at AX and 3.0 at OR")
+    # swarm counts in shuffled catalogs
+    swr = (nreg.n_swarm_mean / nreg.real_n_swarm.replace(0, np.nan)).reindex(REG_ORDER)
+    sw_half = [r for r in REG_ORDER if swr.get(r, np.nan) >= 0.5]
+    ry0, ry1 = 100 * nyr.link_ratio_null_over_real.min(), 100 * nyr.link_ratio_null_over_real.max()
+    shs = d["shuffle_test"]
+    sh_seed_max_en = float(shs[shs.region == "EN"].ashman_D.max())
+    # tier D
+    td = d["tierD_by_region"].set_index("region")
+    tdo = td.drop(index=["AX", "MT", "all"]).h_max_med_tierD_km
+    # Axial background range across the variants
+    axr = piv_bg.loc["AX"].dropna()
+    # review sets
+    rsc = d["review_sets_in_clusters"].set_index(["problem", "role"])
+    p1d = rsc.loc[("P1", "deep")]
+    p1f = d["review_P1_families"]
+    nwed = int(tb(p1f.wednesday_local_noon).sum())
+    wt = p1f[tb(p1f.wednesday_local_noon)].time_local.sort_values()
+    wed_t0, wed_t1 = (wt.iloc[0], wt.iloc[-1]) if len(wt) else ("", "")
 
     h = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' "
          f"content='width=device-width,initial-scale=1'><title>Catalog v5.1 clusters</title><style>{CSS}</style>"
@@ -478,7 +519,18 @@ def write_html(d, out):
              f"magnitudes (piece <i>mag</i>). Method of Zaliapin &amp; Ben-Zion (2013a, 2016), same code and "
              f"parameters as the catalog v4 analysis. Code: <code>workflow/06_analysis/v51_clusters_zbz.py</code>, "
              f"<code>v51_swarms.py</code>, <code>v51_clusters_report.py</code>, branch "
-             f"<code>analysis/v51-clusters</code>, 2026-11-25. Private working product; not peer reviewed.</p>")
+             f"<code>analysis/v51-clusters</code>, 2026-11-25. Private working product; not peer reviewed. Revised "
+             f"the same day after an independent review (null test, tier D errors, permutation migration test, "
+             f"family-level depth test, fault surfaces after their own fixes).</p>")
+    h.append("<p class='muted'><b>Context.</b> Catalog v5.1 is located in model v0.3.1. The PI has adopted model "
+             "v0.4.0 (D-B082); v0.4.1 (surface floor in the inversion, D-B083) is being built; catalog v6.0 (D-B079, "
+             "NonLinLoc with SSST station terms) will supersede v5.1 and these products will be redone on it. A "
+             "waveform review of four v5.1 location problems exists: Mount St Helens deep events (P1, probably false "
+             "events from a weekly artificial signal on the analog UW channels HSR, EDM and STD, 2011-05 to 2013-08), "
+             "Brookings 2012 (P2, NonLinLoc took the deeper of two S-P depth minima), tensor events (P3, a median "
+             "13.7 km deeper than ComCat) and far_only events (P4, moved from near the surface in v4 to 44-64 km). The "
+             "main run uses epicentres only, so P2-P4 do not change links; P1 events are in the analysis set and "
+             "their families are flagged.</p>")
 
     # ---------------- summary
     h.append("<h2>Summary</h2>")
@@ -492,15 +544,25 @@ flagged as explosions, quarry blasts or other non-earthquakes. Above the regiona
 (v4: {tf4.get('multiplet', 0)}). With the events below Mc attached, {nfam_ev:,} events
 ({100 * nfam_ev / nrow:.1f}% of all rows) are in a family (v4: {nfam_ev4:,}).</p>
 <ol>
-<li><b>The v4 picture holds.</b> All nine regions are bimodal in the (T, R) plane and lose it in time-shuffled
-catalogs (Ashman D {reg.ashman_D.min():.1f}-{reg.ashman_D.max():.1f}, shuffled
-{sh.ashman_D.min():.1f}-{sh.ashman_D.max():.1f}). Background shares order by setting as in v4: about 50-62% at
-Axial, Endeavour-Explorer, the Blanco and the Gorda plate, 58% at the Mendocino triple junction, 70-84% onshore, in
-the Puget Lowland and offshore Washington and Oregon. Swarms make
+<li><b>Background shares order by setting as in v4</b>: about 50-62% at Axial, Endeavour-Explorer, the Blanco and
+the Gorda plate, 58% at the Mendocino triple junction, 70-84% onshore, in the Puget Lowland and offshore Washington
+and Oregon. Swarms make
 {st.pct_swarm_of_ge5[['AX', 'BL', 'ON']].min():.0f}-{st.pct_swarm_of_ge5[['AX', 'BL', 'ON']].max():.0f}% of
 the families with 5 or more events at Axial, the Blanco and in ON, against {st.pct_swarm_of_ge5['MT']:.0f}% at the
 Mendocino triple junction, where trees are still the shallowest (median leaf depth
 {st.median_leaf_depth_ge5['MT']:.2f}; v4 {st4.median_leaf_depth_ge5['MT']:.2f}).</li>
+<li><b>Time-shuffled catalogs reproduce many of the links, most of them at Axial.</b> At the real thresholds and
+caps, catalogs whose event times are permuted within each region (mean of {int(nreg.n_seeds.iloc[0])} seeds) link
+{100 * lr['AX']:.0f}% as many events as the real catalog at Axial, {100 * lr['OR']:.0f}% offshore Oregon,
+{100 * lr['MT']:.0f}% at the Mendocino triple junction, {100 * lr['BL']:.0f}% on the Blanco and
+{100 * lr[low].min():.0f}-{100 * lr[low].max():.0f}% in {', '.join(low)}. Most Axial links therefore come from the
+concentration of events in the caldera, not from clustering in time. The Axial swarm count is reproduced less: a
+shuffled catalog forms {nreg.n_swarm_mean['AX']:.1f} swarms on average against {int(nreg.real_n_swarm['AX'])} in the
+real catalog.{(" Shuffled catalogs form at least half of the real swarm count in " + ", ".join(f"{r} ({nreg.n_swarm_mean[r]:.0f} against {int(nreg.real_n_swarm[r])})" for r in sw_half) + ".") if sw_half else ""}
+Shuffles within the same calendar month reproduce {100 * nmo.link_ratio_null_over_real.min():.0f}-{100 * nmo.link_ratio_null_over_real.max():.0f}%
+of the links. The mixture separation is not a test of clustering: Ashman D is below 2 in
+{', '.join(r for r in REG_ORDER if nreg.real_ashman_D[r] < 2)}, the log eta density has a valley between its two
+modes only in {', '.join(valley)}, and {d_above_txt}.</li>
 <li><b>Families are stable between versions.</b> Matching families by shared event IDs,
 {(s4.status == 'kept').sum():,} of the {len(s4):,} v4 families are kept one-to-one,
 {(s4.status == 'split').sum()} split, {(s4.status == 'merged').sum()} merged with another v4 family,
@@ -515,21 +577,34 @@ v4.1 magnitudes give {piv_bg.loc['AX', 'v41M']:.1f}%). The v5.1 Axial epicentres
 nearest-neighbour distance {nn5['AX']:.2f} km against {nn4['AX']:.2f} km), so every eta drops, but the mixture
 threshold dropped further ({thr.log_eta0['AX']:.2f} against {thr4.log_eta0['AX']:.2f}) and now cuts more links.
 With the conservative threshold (5% of shuffled links) the two versions agree
-({piv_bg.loc['AX', 'eta0_shuf5']:.1f}% against 82.2%). The 2015 eruption is still one chain-like swarm, starting
-2015-04-24 05:13 UTC, with {int(val[val.label.str.contains('Axial')].n.iloc[0])} events above Mc
-(v4: 632).</li>
-<li><b>Location quality matters most at Axial.</b> {nax_d:,} of the {nax:,} Axial events above Mc are tier D (most
-outside the caldera network: median nearest station 4.3 km, azimuthal gap 327 deg); {100 * ax_tier.get('D', np.nan):.0f}%
-of them are background, against {100 * ax_tier.get('A', np.nan):.0f}% of tier A events. Taking tier D out of the
-analysis set lowers the Axial background share to {piv_bg.loc['AX', 'tierABC']:.1f}%. Elsewhere the tierABC variant
-changes the background/clustered label of at most {100 * (1 - piv_ag.drop(index='AX')['tierABC'].min()):.1f}% of
-events.</li>
+({piv_bg.loc['AX', 'eta0_shuf5']:.1f}% against 82.2%). Across the sensitivity variants the Axial background share
+ranges from {axr.min():.1f}% ({axr.idxmin()}) to {axr.max():.1f}% ({axr.idxmax()}): read the Axial clustered share as
+a range, not a number. The 2015 eruption is still one chain-like swarm, starting 2015-04-24 05:13 UTC, with
+{int(val[val.label.str.contains('Axial')].n.iloc[0])} events above Mc (v4: 632).</li>
+<li><b>Tier D epicentres are poor outside Axial.</b> {nax_d:,} of the {nax:,} Axial events above Mc are tier D (most
+outside the caldera network: median nearest station 4.3 km, azimuthal gap 327 deg, median 68% horizontal semi-axis
+h_max {td.h_max_med_tierD_km['AX']:.1f} km); {100 * ax_tier.get('D', np.nan):.0f}% of them are background, against
+{100 * ax_tier.get('A', np.nan):.0f}% of tier A events. Elsewhere tier D epicentres are much worse: median h_max
+{td.h_max_med_tierD_km['MT']:.0f} km at the Mendocino triple junction and {tdo.min():.0f}-{tdo.max():.0f} km in the
+other regions. {td.pct_links_tierD_end['all']:.0f}% of all links have a tier D end ({td.pct_links_tierD_end['ON']:.0f}%
+in ON). Taking tier D out of the analysis set (variant tierABC) lowers the Axial background share to
+{piv_bg.loc['AX', 'tierABC']:.1f}%; elsewhere it changes the background/clustered label of at most
+{100 * (1 - piv_ag.drop(index='AX')['tierABC'].min()):.1f}% of events, and it removes the tier D foreshock that merges
+the 2014 Vancouver Island family with a 2013 event (validation section).</li>
 <li><b>Migration is rarely resolved.</b> Of {len(fam10)} families with 10 or more tier A-C members, {nres} have a
 spread (90% of distances from the first 10% of events) larger than twice their median horizontal error, and {nmig}
-migrate by our test (Spearman rho &ge; 0.5, p &lt; 0.01, positive Theil-Sen slope, resolvable). Only
-{int(tb(sw10.mig_resolvable).sum())} of the {len(sw10)} swarms of this size are resolvable, so the
-sqrt(t) diffusion fits (D90) mostly describe location scatter, not a triggering front. The 90% distance envelope
-grows with time as t^p with median p = {sw10.env_p.median():.2f} for swarms, i.e. no growth.</li>
+migrate by our test (Spearman rho &ge; 0.5, permutation p &lt; 0.01, positive Theil-Sen slope, resolvable). By
+construction about {0.01 * nres:.1f} of the {nres} resolvable families pass the permutation test by chance. The first
+build used the Spearman p-value and found {nmig_sp}; that p-value is biased toward migration because the origin is
+taken from the same events. Only {int(tb(sw10.mig_resolvable).sum())} of the {len(sw10)} swarms of this size are
+resolvable, so the sqrt(t) diffusion fits (D90) mostly describe location scatter, not a triggering front. The 90%
+distance envelope grows with time as t^p with median p = {sw10.env_p.median():.2f} for swarms, i.e. no growth.</li>
+<li><b>Mount St Helens deep events (waveform review P1).</b> {int(p1d.in_analysis)} of the {int(p1d.n)} deep P1 events
+are above Mc, and {int(p1d.in_families)} are in {int(p1d.n_families)} families. {nwed} of these families start on a
+Wednesday between {wed_t0} and {wed_t1} Pacific time, i.e. at local noon in both standard and daylight time; the
+review found a weekly artificial signal on Wednesdays on the analog UW channels HSR, EDM and STD. These families are
+probably not earthquake sequences; they carry the flag <code>n_review_P1_msh_deep</code> until the human review is
+done.</li>
 <li><b>Swarm scan (DBSCAN).</b> {len(db)} short space-time clusters (v4: {len(db4)}); {(db4s.status == 'kept').sum()}
 of the v4 clusters are kept, {(db4s.status == 'dissolved').sum()} dissolved, mostly into clusters now longer than 30
 days or smaller than 15 events.</li>
@@ -575,9 +650,9 @@ small everywhere except at Axial (+{piv_bg.loc['AX', 'v41M'] - reg4.pct_backgrou
 Oregon (+{piv_bg.loc['OR', 'v41M'] - reg4.pct_background['OR']:.1f} points, on {int(reg.n_analysis['OR'])} events).
 At Axial, the mixture threshold moved because the clustered and background modes of log eta moved by different
 amounts ({thr4.mu1['AX']:.2f} to {thr.mu1['AX']:.2f} and {thr4.mu2['AX']:.2f} to {thr.mu2['AX']:.2f}) and the
-clustered weight dropped from {thr4.w1['AX']:.2f} to {thr.w1['AX']:.2f}. The shuffled false-link rate at Axial
-dropped from 34% to {100 * sh.frac_linked['AX']:.0f}%: the v5.1 split is cleaner, but at a stricter
-threshold.</li>
+clustered weight dropped from {thr4.w1['AX']:.2f} to {thr.w1['AX']:.2f}. The share of events linked in
+time-shuffled catalogs at Axial dropped from 34% to {100 * sh.frac_linked['AX']:.0f}%, but the real linked share
+dropped too: a shuffled catalog still links {100 * lr['AX']:.0f}% as many Axial events as the real one.</li>
 </ul>""")
     # event classes
     h.append("<h3>Event labels, v4 against v5.1 (all rows)</h3>")
@@ -627,6 +702,17 @@ members moved by a few km and their links crossed eta0. Large families that spli
     nfar = int(tb(used.far_only).sum())
     ndp = int(tb(used.deep_pass).sum())
     ndg = int(tb(used.depth_good).sum())
+    td_tab = tab(td.reset_index(), ["region", "n_analysis", "n_tierD", "pct_tierD", "h_max_med_tierD_km",
+                                    "h_max_med_tierABC_km", "n_five_phase", "h_max_med_five_phase_km",
+                                    "pct_background_tierD", "pct_background_tierABC", "n_links", "pct_links_tierD_end",
+                                    "pct_links_hmax_ge10", "n_families_tierD_largest"],
+                 rename={"n_analysis": "events &ge; Mc", "n_tierD": "tier D", "pct_tierD": "% tier D",
+                         "h_max_med_tierD_km": "h_max tier D (km)", "h_max_med_tierABC_km": "h_max tier A-C (km)",
+                         "n_five_phase": "five-phase", "h_max_med_five_phase_km": "h_max five-phase (km)",
+                         "pct_background_tierD": "% bg tier D", "pct_background_tierABC": "% bg tier A-C",
+                         "n_links": "links", "pct_links_tierD_end": "% links with a tier D end",
+                         "pct_links_hmax_ge10": "% links with h_max &ge; 10 km",
+                         "n_families_tierD_largest": "families led by a tier D event"}, fmt=lambda x: f"{x:.1f}")
     h.append(f"""<p><b>Events.</b> Catalog v5.1 ({nrow:,} rows). Used: {n_used:,} located earthquakes (171,717 NonLinLoc
 locations and the 2 ComCat hypocentres of the v4.1 additions, minus {nx.get('not_earthquake', 0):,} events with
 <code>is_earthquake</code> False: anss_explosion 1,665, quarry_blast_likely 1,572, anss_quarry_blast 74, both
@@ -634,11 +720,20 @@ flags 1, anss_other_event 1). The {nx.get('no_hypocentre', 0)} rows without a hy
 role <code>excluded</code> and are not used anywhere.</p>
 <p><b>Poorly constrained depths.</b> floor_limited ({nfl:,} used events), far_only ({nfar}) and deep_pass ({ndp})
 events enter through their epicentres only: the main run uses epicentral distance, as in v4. Their depths are not
-used: depth ranges, depth migration and the 3-D variant <code>d3q</code> use only <i>depth_good</i> events (tier
-A-C, depth_quality ok, not floor_limited, far_only or deep_pass; {ndg:,} events). depth_quality
-'unconstrained' (ridge regions, Blanco outside the 2012-13 OBS deployment) and 'biased_deep' (Gorda) are also left
-out of depth statistics. Tier D events stay in the analysis set (as all events did in v4); variant
-<code>tierABC</code> takes them out of it and attaches them afterwards.</p>
+used in the main run or in any depth statistic: depth ranges, depth migration and the 3-D variant <code>d3q</code>
+use only <i>depth_good</i> events (tier A-C, depth_quality ok, not floor_limited, far_only or deep_pass; {ndg:,}
+events). depth_quality 'unconstrained' (ridge regions, Blanco outside the 2012-13 OBS deployment) and 'biased_deep'
+(Gorda) are also left out of depth statistics. Three outputs do use every depth and are labelled so: variant
+<code>d3</code> (3-D distance with all depths, a sensitivity test), the family column
+<code>depth_main_any_quality</code> (depth of the largest event; check <code>depth_main_good</code>) and the DBSCAN
+columns <code>depth_any_quality_med</code> and <code>_iqr</code>. Because the main run uses epicentres only, the
+depth problems found by the waveform review (P2 Brookings, P3 tensor events a median 13.7 km deeper than ComCat, P4
+far_only events moved from near the surface to 44-64 km) do not change any link; they enter depth statistics only
+where those events are depth_good.</p>
+<p><b>Tier D.</b> Tier D events stay in the analysis set, as all events did in v4; variant <code>tierABC</code> takes
+them out of it and attaches them afterwards. Their epicentres are reliable only at Axial. Median 68% horizontal
+semi-axis (h_max) of the events above Mc, links with a tier D end, and background shares:</p>
+{td_tab}
 <p><b>Magnitudes.</b> The v5.1 Route A preferred magnitude M (ML calibrated to ComCat, tensor Mw above 4.5,
 Mw_cal). {int(used.M.isna().sum()):,} used events have no M; they cannot be parents and are attached after the
 clustering (variant <code>noM_floor</code> gives them M = Mc).</p>
@@ -654,6 +749,22 @@ year; it is variant <code>mc_best</code>.</p>""")
     h.append(tab(ct, rename={"n": "events", "n_M": "with M", "Mc_all": "Mc (all years)", "Mc_bstab": "Mc (b-stab.)",
                              "Mc": "Mc used", "Mc_best": "Mc_best (mag piece)", "years_used": "years setting Mc",
                              "n_above": "events &ge; Mc", "b_err": "b error", "df_est": "D2 epicentres"}))
+    mce = d["mc_edge_check"].set_index("region").reindex(REG_ORDER)
+    mdiff = mce[np.abs(mce.Mc_v4_float - mce.Mc_exact) > 1e-6]
+    mdiff_txt = "; ".join(f"{r} {row.Mc_v4_float:.2f} to {row.Mc_exact:.2f} ({int(row.n_above_v4_float):,} to "
+                          f"{int(row.n_above_exact):,} events above Mc; the {int(row.year_v4_float)} histogram that "
+                          f"sets Mc has two largest bins of {row.modal_counts_v4_float.replace(';', ' and ')} events "
+                          f"with the v4 edges and {row.modal_counts_exact.replace(';', ' and ')} with exact edges)"
+                          for r, row in mdiff.iterrows())
+    h.append(f"""<p><b>The Mc rule depends on the bin edges.</b> The v4 code bins M with
+<code>np.arange(-2, 8, 0.1)</code>, whose edges are not exact decimals, so the few magnitudes that fall exactly on a
+0.1 value go to the bin below. With exact edges (-2.0, -1.9, ...) Mc changes in {len(mdiff)} regions:
+{mdiff_txt}. Two near-equal modal bins decide Mc there. The run keeps the v4 edges so that v4 and v5.1 stay
+comparable; an exact-edge rerun would have to redo v4 the same way (<code>mc_edge_check.csv</code>).</p>""")
+    ic = d["input_commits"]
+    h.append("<p><b>Inputs from the other v5.1 pieces</b> are read from their pushed branches, not from their "
+             "worktrees: " + "; ".join(f"<code>{html.escape(k)}</code> at {v['ref']} {v['commit'][:8]}"
+                                        for k, v in sorted(ic.items())) + ".</p>")
     h.append("""<p><b>Proximity, threshold, families, classification.</b> Unchanged from v4: eta = t r^1.6
 10^(-b m) (Baiesi &amp; Paczuski 2004; Zaliapin et al. 2008) with t in years and r epicentral in km floored at 0.5 km, q = 0.5; parents in another region only within
 the rupture-length cap r &le; max(10 km, 3 L(m)) (Wells &amp; Coppersmith 1994); threshold eta0 where the two
@@ -675,7 +786,7 @@ semi-axis (h_max) of the members. <i>Migrating</i>: rho &ge; 0.5, p &lt; 0.01, p
 resolvable.</p>""")
 
     # ---------------- bimodality
-    h.append("<h2>Bimodality and threshold</h2>")
+    h.append("<h2>Threshold and null test</h2>")
     h.append(img(out / "fig_TR_density.png", "T-R density per region"))
     h.append("<p class='muted'>Density of rescaled time T and distance R of each event's nearest neighbour, events "
              "above Mc. Blue contours: one time-shuffled catalog (80% and 95% density levels). Red: threshold.</p>")
@@ -692,15 +803,57 @@ resolvable.</p>""")
                              "n_cut_by_cap": "cut by cap", "log_eta0_v4": "log eta0 v4",
                              "pct_linked_shuffled": "% linked, shuffled",
                              "pct_linked_shuffled_v4": "% linked, shuffled v4"}))
-    h.append(f"""<p>The clustered mode is clear in EN, BL, GO, MT and ON (D {reg.ashman_D[['EN', 'BL', 'GO', 'MT',
-'ON']].min():.1f}-{reg.ashman_D[['EN', 'BL', 'GO', 'MT', 'ON']].max():.1f}) and weaker offshore Washington, offshore
-Oregon and in Puget (D {reg.ashman_D[['WA', 'OR', 'PU']].min():.1f}-{reg.ashman_D[['WA', 'OR', 'PU']].max():.1f}),
-where background dominates. In three time-shuffled catalogs the share of events that pass the real threshold and cap
-is {100 * sh.frac_linked.drop('AX').min():.0f}-{100 * sh.frac_linked.drop('AX').max():.0f}% outside Axial and
-{100 * sh.frac_linked['AX']:.0f}% at Axial (v4: 34%), against real clustered shares of
-{100 - reg.pct_background.max():.0f}-{100 - reg.pct_background.min():.0f}%. Axial remains the weakest test: its
-events above Mc sit in a 5 km caldera and most occur during the months of rising rate before the April 2015
-eruption (Wilcock et al. 2016), which shuffling keeps.</p>""")
+    h.append(f"""<p><b>The mixture is not a test of clustering.</b> The threshold is where the two fitted Gaussian
+components of log eta cross. Their separation (Ashman D) is above 2 in
+{', '.join(r for r in REG_ORDER if reg.ashman_D[r] >= 2)} and below 2 in
+{', '.join(r for r in REG_ORDER if reg.ashman_D[r] < 2)}. A density valley between the two modes (kernel density
+minimum strictly between the two means) exists only in {', '.join(valley)}; in {', '.join(novalley)} the clustered
+component is a shoulder of one peak (column 'KDE valley' equals 'mu clust.'). As for shuffled catalogs,
+{d_above_txt}. The first build said that all nine regions are bimodal and lose it when
+shuffled; that compared real D with the range of per-region means of three shuffles and does not hold seed by seed
+(its own seed 1 gave EN D = {sh_seed_max_en:.2f}).</p>
+<p><b>Null test of the links.</b> The test that holds compares the share of events above Mc that are linked (below
+eta0 and within the cap) in the real catalog with the same share in time-shuffled catalogs at the real thresholds.
+Shuffled catalogs link fewer events in every region, but the ratio varies (table below): a shuffle over the whole
+period reproduces {100 * lr['AX']:.0f}% of the Axial links, {100 * lr['OR']:.0f}% offshore Oregon,
+{100 * lr['MT']:.0f}% at the Mendocino triple junction, {100 * lr['BL']:.0f}% on the Blanco and
+{100 * lr[low].min():.0f}-{100 * lr[low].max():.0f}% in {', '.join(low)}. Shuffled catalogs also form families and
+swarms: at Axial {nreg.n_families_mean['AX']:.0f} families (real {int(nreg.real_n_families['AX'])}) and
+{nreg.n_swarm_mean['AX']:.1f} swarms on average (real {int(nreg.real_n_swarm['AX'])}), on the Blanco
+{nreg.n_swarm_mean['BL']:.1f} swarms (real {int(nreg.real_n_swarm['BL'])}), at the Mendocino triple junction
+{nreg.n_swarm_mean['MT']:.1f} (real {int(nreg.real_n_swarm['MT'])}). Axial events above Mc sit in a 5 km caldera and
+most occur in the months of rising rate before the April 2015 eruption (Wilcock et al. 2016); a whole-period shuffle
+keeps the location and the event count of that period, so most Axial links and families are not evidence of
+clustering in time; the Axial swarm count is less affected. Shuffles that keep events in the same calendar year or
+month keep slow rate changes (network deployments, long sequences, the pre-eruption rise) and reproduce more:
+{ry0:.0f}-{ry1:.0f}% of the links within the year and
+{100 * nmo.link_ratio_null_over_real.min():.0f}-{100 * nmo.link_ratio_null_over_real.max():.0f}% within the month. At
+these thresholds most links join events that are close in space and fall in the same month; the timing within the
+month accounts for {100 * (1 - nmo.link_ratio_null_over_real.max()):.0f}-{100 * (1 - nmo.link_ratio_null_over_real.min()):.0f}%
+of the links (most in {nmo.link_ratio_null_over_real.idxmin()}). The links measure space-time concentration at the
+scale of weeks to months; on their own they are not evidence of short-term triggering.</p>""")
+    nt_tab = pd.DataFrame(dict(
+        region=REG_ORDER, real_pct_linked=100 * nreg.real_frac_linked.values,
+        shuf_pct_linked=100 * nreg.frac_linked_mean.values, ratio_region=lr.values,
+        ratio_year=nyr.link_ratio_null_over_real.values, ratio_month=nmo.link_ratio_null_over_real.values,
+        real_D=nreg.real_ashman_D.values, shuf_D_min=nreg.D_min.values, shuf_D_max=nreg.D_max.values,
+        real_valley=np.where(nreg.real_kde_valley.astype(bool), "yes", "no"),
+        shuf_valley=100 * nreg.kde_valley_frac.values,
+        real_fam=nreg.real_n_families.values, shuf_fam=nreg.n_families_mean.values,
+        real_sw=nreg.real_n_swarm.values, shuf_sw=nreg.n_swarm_mean.values, shuf_sw_max=nreg.n_swarm_max.values))
+    h.append(tab(nt_tab, rename={
+        "real_pct_linked": "% linked, real", "shuf_pct_linked": "% linked, shuffled",
+        "ratio_region": "shuffled / real (whole period)", "ratio_year": "shuffled / real (same year)",
+        "ratio_month": "shuffled / real (same month)", "real_D": "D real", "shuf_D_min": "D shuffled min",
+        "shuf_D_max": "D shuffled max", "real_valley": "KDE valley real", "shuf_valley": "% shuffles with valley",
+        "real_fam": "families real", "shuf_fam": "families shuffled", "real_sw": "swarms real",
+        "shuf_sw": "swarms shuffled (mean)", "shuf_sw_max": "swarms shuffled (max)"}))
+    h.append(f"<p class='muted'>Shuffles at the real thresholds and caps: {int(nreg.n_seeds.iloc[0])} permutations of "
+             f"the event times within each region over 2010-2016, {int(nyr.n_seeds.iloc[0])} within region and "
+             f"calendar year, {int(nmo.n_seeds.iloc[0])} within region and month (step nulls, "
+             "<code>null_test.csv</code>, <code>null_test_summary.csv</code>). Shuffled columns are means unless "
+             "marked. The three shuffles of the shuffle step set the conservative threshold eta0_shuf5 and the figures "
+             "above.</p>")
 
     # ---------------- validation
     h.append("<h2>Validation: known sequences</h2>")
@@ -712,15 +865,63 @@ eruption (Wilcock et al. 2016), which shuffling keeps.</p>""")
                  rename={"n": "n &ge; Mc", "n_v4": "v4", "n_all": "n all", "n_all_v4": "v4 ", "M2_v4": "M2 v4",
                          "duration90_days": "t90 (d)", "duration90_days_v4": "t90 v4", "extent_km": "extent (km)",
                          "mean_leaf_depth": "leaf depth", "mean_leaf_depth_v4": "leaf depth v4"}))
-    h.append("""<p>All six large tectonic mainshocks are again mainshock-aftershock families, and the two Blanco pairs and
-triplets are again swarms with M1-M2 near 0.1. Two changes come from single links near the threshold. (1) The
-2010-02-04 Mw 5.9 event, 44 km south of the 2010-01-10 Mw 6.5 Gorda event in v4, is 54 km from it in v5.1; its
-link (log eta -5.27) now misses the MT threshold (-5.39) and it heads its own family, so the 2010 family has M2 4.95
-instead of 5.88 and 579 instead of 824 events above Mc. (2) The 2013-08-04 M 5.5 event near the epicentre of the
-2014-04-24 Mw 6.5 Vancouver Island event (1 km apart) is now linked to it as a foreshock 8.7 months earlier,
-merging the two v4
-families: t90 grows from 24 to 280 days and the mean leaf depth from 1.05 to 2.1. The 2016-12-08 Mw 6.6 event
-(added in v4.1) has only 23 days of catalog after it and 4 events above Mc in its family.</p>""")
+    vi = v.set_index("event_id")
+    w = vi.loc[89617] if 89617 in vi.index else None
+    vi_txt = ""
+    if w is not None and str(w.get("other_tier", "")) == "D":
+        vi_txt = (f"(2) The 2014-04-24 Mw 6.5 Vancouver Island family now starts with the 2013-08-04 M "
+                  f"{w.other_M:.1f} event (ID {int(w.other_id)}), linked as a foreshock 263 days earlier: t90 grows "
+                  f"from {w.duration90_days_v4:.0f} to {w.duration90_days:.0f} days and the mean leaf depth from "
+                  f"{w.mean_leaf_depth_v4:.2f} to {w.mean_leaf_depth:.2f}. This link is a location artefact. Event "
+                  f"{int(w.other_id)} is tier D (h_max {w.other_h_max_km:.0f} km, {int(w.other_n_sta)} stations, "
+                  f"azimuthal gap {w.other_gap:.0f} deg). It sits {w.other_dist_v51_km:.1f} km from the mainshock "
+                  f"epicentre in v5.1 but {w.other_dist_v4_km:.1f} km away in v4; the small v5.1 separation is far "
+                  f"inside its location error. In variant tierABC the 2014 family is an ordinary "
+                  f"{w.tierABC_type} sequence without it ({int(w.tierABC_n)} events above Mc, t90 "
+                  f"{w.tierABC_duration90_days:.0f} days, mean leaf depth {w.tierABC_mean_leaf_depth:.2f}).")
+    other = []
+    for eid, row in vi.iterrows():
+        if eid in (262, 89617) or not np.isfinite(row.get("duration90_days", np.nan)):
+            continue
+        ch = []
+        t5, t4 = row.duration90_days, row.get("duration90_days_v4", np.nan)
+        if np.isfinite(t4) and max(t5, t4) > 1 and (t5 > 2 * t4 or t5 < 0.5 * t4):
+            ch.append(f"t90 {t4:.0f} to {t5:.0f} days")
+        l5, l4 = row.mean_leaf_depth, row.get("mean_leaf_depth_v4", np.nan)
+        if np.isfinite(l4) and abs(l5 - l4) >= 1:
+            ch.append(f"mean leaf depth {l4:.2f} to {l5:.2f}")
+        n5, n4 = row.n, row.get("n_v4", np.nan)
+        if np.isfinite(n4) and (n5 > 1.5 * n4 or n5 < n4 / 1.5):
+            ch.append(f"{n4:.0f} to {n5:.0f} events above Mc")
+        if ch:
+            # the same family without tier D (variant tierABC)
+            ta = []
+            tt, tl = row.get("tierABC_duration90_days", np.nan), row.get("tierABC_mean_leaf_depth", np.nan)
+            if np.isfinite(tt) and np.isfinite(t4) and any("t90" in c for c in ch):
+                ta.append(f"t90 {tt:.0f} days")
+            if np.isfinite(tl) and np.isfinite(l4) and any("leaf" in c for c in ch):
+                ta.append(f"leaf depth {tl:.2f}")
+            other.append(f"{row.label}: {', '.join(ch)}" + (f" (without tier D: {', '.join(ta)})" if ta else ""))
+    h.append(f"""<p>All six large tectonic mainshocks are again mainshock-aftershock families, and the two Blanco pairs and
+triplets are again swarms with M1-M2 near 0.1. Two links changed. (1) The 2010-02-04 Mw 5.9 event, 44 km south of
+the 2010-01-10 Mw 6.5 Gorda event in v4, is 54 km from it in v5.1; its link (log eta -5.27) now misses the MT
+threshold (-5.39) and it heads its own family, so the 2010 family has M2 4.95 instead of 5.88 and 579 instead of 824
+events above Mc. {vi_txt} The 2016-12-08 Mw 6.6 event (added in v4.1) has only 23 days of catalog after it and 4
+events above Mc in its family.</p>
+<p>Other known sequences changed shape without changing type: {'; '.join(other) if other else 'none'}. Where the
+values without tier D (variant tierABC) are close to v4, tier D members drive the change; elsewhere it comes from
+links of tier A-C events near the threshold. The table below gives the largest other member of each family, its
+location quality, and the same family without tier D.</p>""")
+    h.append(tab(v, ["label", "type", "n", "other_id", "other_M", "other_time", "other_tier", "other_h_max_km",
+                     "other_n_sta", "other_gap", "other_dist_v51_km", "other_dist_v4_km", "tierABC_type", "tierABC_n",
+                     "tierABC_duration90_days", "tierABC_mean_leaf_depth"],
+                 rename={"n": "n &ge; Mc", "other_id": "largest other member", "other_M": "its M",
+                         "other_time": "its time", "other_tier": "tier", "other_h_max_km": "h_max (km)",
+                         "other_n_sta": "stations", "other_gap": "gap (deg)",
+                         "other_dist_v51_km": "distance v5.1 (km)", "other_dist_v4_km": "distance v4 (km)",
+                         "tierABC_type": "type, tierABC", "tierABC_n": "n, tierABC",
+                         "tierABC_duration90_days": "t90, tierABC (d)",
+                         "tierABC_mean_leaf_depth": "leaf depth, tierABC"}))
     h.append(img(out / "fig_examples.png", "example sequences"))
     h.append("<p class='muted'>Magnitude and distance from the largest event against time. Coloured: events above Mc; "
              "grey: attached events below Mc (missing M at -0.5).</p>")
@@ -742,25 +943,53 @@ families: t90 grows from 24 to 280 days and the mean leaf depth from 1.05 to 2.1
     pu = used[(used.region == "PU") & used.in_analysis & tb(used.depth_good)]
     pu_sh = pu[pu.depth < 30].background.mean() * 100
     pu_dp = pu[pu.depth >= 30].background.mean() * 100
-    h.append(f"""<p>Swarm members are shallower than mainshock-aftershock members in every region with enough
-depth_good events except Axial, where everything is within the upper 4 km: Gorda plate {dt.loc['GO', 'swarm']:.1f}
-against {dt.loc['GO', 'mainshock-aftershock']:.1f} km (ridge and Escanaba Trough swarms against plate-interior
-sequences; most Gorda depths are 'biased_deep' and left out), ON {dt.loc['ON', 'swarm']:.1f} against
-{dt.loc['ON', 'mainshock-aftershock']:.1f} km (volcanic and upper-crustal swarms), Mendocino
-{dt.loc['MT', 'swarm']:.1f} against {dt.loc['MT', 'mainshock-aftershock']:.1f} km. In the Puget box,
+    dsm = d["depth_swarm_vs_ma_families"]
+    da = dsm[dsm.events == "all"].set_index("region")
+    dw = dsm[dsm.events == "without_P1_P3"].set_index("region")
+    sig = [r for r in REG_ORDER if da.p_mannwhitney.get(r, np.nan) < 0.05]
+    sigb = [r for r in REG_ORDER if da.p_bonferroni.get(r, np.nan) < 0.05]
+    nsig = [r for r in REG_ORDER if np.isfinite(da.p_mannwhitney.get(r, np.nan)) and r not in sig]
+    h.append(f"""<p><b>Swarm and mainshock-aftershock depths.</b> Events of one family are not independent, so the
+comparison uses families as the unit: the median depth of each family's depth_good members (families with at least
+3), compared by a Mann-Whitney test per region. Swarm families are shallower than mainshock-aftershock families in
+{', '.join(f"{r} ({da.swarm_family_median_km[r]:.1f} against {da.MA_family_median_km[r]:.1f} km, "
+           f"{int(da.n_swarm_families[r])} and {int(da.n_MA_families[r])} families, p = {da.p_mannwhitney[r]:.3f})"
+           for r in sig)}. After a Bonferroni correction over the {int(da.n_tests.iloc[0])} regions tested only
+{', '.join(sigb) if sigb else 'none'} stays below 0.05. {', '.join(nsig)} show no significant difference
+(p {', '.join(f"{da.p_mannwhitney[r]:.2f}" for r in nsig)}). Without the review sets P1 (Mount St Helens deep events)
+and P3 (tensor events) the p-values are {', '.join(f"{r} {dw.p_mannwhitney[r]:.3f}" for r in sig)}. The event-level
+medians of the first build (GO {dt.loc['GO', 'swarm']:.1f} against {dt.loc['GO', 'mainshock-aftershock']:.1f} km,
+ON {dt.loc['ON', 'swarm']:.1f} against {dt.loc['ON', 'mainshock-aftershock']:.1f}, MT {dt.loc['MT', 'swarm']:.1f}
+against {dt.loc['MT', 'mainshock-aftershock']:.1f}) weight large families heavily and are not a test. In the Puget box,
 {pu_dp:.0f}% of the depth_good events above Mc at 30 km or deeper (intraslab) are background, against
 {pu_sh:.0f}% above 30 km.</p>""")
+    h.append(tab(dsm, ["events", "region", "n_swarm_families", "n_MA_families", "swarm_family_median_km",
+                       "MA_family_median_km", "swarm_event_median_km", "MA_event_median_km", "p_mannwhitney",
+                       "p_bonferroni"],
+                 rename={"events": "events used", "n_swarm_families": "swarm families", "n_MA_families": "MA families",
+                         "swarm_family_median_km": "swarm (median of family medians, km)",
+                         "MA_family_median_km": "MA (median of family medians, km)",
+                         "swarm_event_median_km": "swarm events (km)", "MA_event_median_km": "MA events (km)",
+                         "p_mannwhitney": "p", "p_bonferroni": "p Bonferroni"}, fmt=lambda x: f"{x:.3g}"))
     h.append("<h3>Migration and diffusion</h3>")
     h.append(img(out / "fig_migration.png", "migration examples"))
     h.append("<p class='muted'>Distance from the centroid of the first 10% of events (grey) against time for the "
              "migrating families and the largest swarms. Red: the sqrt(4 pi D90 t) front; blue band: twice the "
              "median horizontal error, below which distances are not resolved.</p>")
     mig = fam[tb(fam.mig_migrating)]
-    h.append(f"<p>Families that migrate by our test ({len(mig)}):</p>")
+    lost = fam[tb(fam.mig_migrating_spearman_p) & ~tb(fam.mig_migrating)]
+    h.append(f"""<p>Families that migrate by our test ({len(mig)}). The test uses a one-sided permutation p-value of
+the radial Spearman rho (2,000 permutations of the positions against the times, the origin recomputed each time),
+because taking the origin from the first 10% of the same events biases the ordinary Spearman p-value toward
+migration. {' '.join(f"Family {int(r.family_id)} ({r.region}, {pd.Timestamp(r.start):%Y-%m-%d}, {r.type}, "
+                     f"{int(r.mig_n)} tier A-C members) passes with the Spearman p-value ({r.mig_p:.3f}) but not "
+                     f"with the permutation test (p = {r.mig_p_perm:.3f})." for r in lost.itertuples())}</p>""")
     h.append(tab(mig, ["family_id", "region", "region_v51", "type", "start", "n", "n_all", "mig_n", "Mmax",
-                       "duration_all_days", "mig_rho", "mig_v_radial_km_day", "mig_az", "mig_v_dir_km_day",
-                       "mig_vz_km_day", "D90_m2s", "env_p", "h_err_med_km", "mig_r90_km", "mig_style", "v4_status"],
-                 rename={"mig_n": "n A-C", "duration_all_days": "days", "mig_rho": "rho",
+                       "duration_all_days", "mig_rho", "mig_p", "mig_p_perm", "mig_v_radial_km_day", "mig_az",
+                       "mig_v_dir_km_day", "mig_vz_km_day", "D90_m2s", "env_p", "h_err_med_km", "mig_r90_km",
+                       "mig_style", "v4_status"],
+                 rename={"mig_n": "n A-C", "duration_all_days": "days", "mig_rho": "rho", "mig_p": "Spearman p",
+                         "mig_p_perm": "permutation p",
                          "mig_v_radial_km_day": "radial km/d", "mig_az": "azimuth", "mig_v_dir_km_day": "speed km/d",
                          "mig_vz_km_day": "vz km/d", "h_err_med_km": "h err", "mig_r90_km": "r90 km",
                          "mig_style": "style"}))
@@ -832,12 +1061,27 @@ same test as our swarm type.</p>""")
     h.append(tab(vv, rename={"n_all": "events 20 km", "n_above": "&ge; local Mc", "ashman_D_shuffled": "D shuffled",
                              "n_all_v4": "events v4", "n_above_v4": "&ge; Mc v4",
                              "ashman_D_shuffled_v4": "D shuffled v4"}))
-    h.append(f"""<p>Zoomed analysis within 20 km with a local Mc. At Mount St. Helens the shuffled catalog is now less
-bimodal than the real one (D {vl.set_index('volcano').loc['Mount St. Helens', 'ashman_D_shuffled']:.2f} against
-{vl.set_index('volcano').loc['Mount St. Helens', 'ashman_D']:.2f}; v4 1.91 against 2.23), so the test is a little
-stronger than in v4, but none of the volcano families meets two swarm indicators: they are small bursts of
-near-equal events. At Mount Hood the shuffled catalog is more bimodal than the real one (76 events), so the Hood result
-is not meaningful. Within 15 km of the summits (regional Mc):</p>""")
+    vs = vl.set_index("volcano")
+    ms = vs.loc["Mount St. Helens"] if "Mount St. Helens" in vs.index else None
+    weak = [f"{v} ({int(r.n_above)} events above the local Mc; {int(r.n_shuffles_D_ge_real)} of {int(r.n_shuffles)} "
+            f"shuffles reach the real D of {r.ashman_D:.2f}, up to {r.ashman_D_shuffled_max:.2f})"
+            for v, r in vs.iterrows() if r.n_shuffles_D_ge_real > 0]
+    ms_txt = ""
+    if ms is not None:
+        ms_txt = (f"At Mount St. Helens the real D is {ms.ashman_D:.2f}; over {int(ms.n_shuffles)} time shuffles D has "
+                  f"a median of {ms.ashman_D_shuffled_med:.2f} and a maximum of {ms.ashman_D_shuffled_max:.2f} "
+                  f"({int(ms.n_shuffles_D_ge_real)} of {int(ms.n_shuffles)} at or above the real value; the first "
+                  f"build used one shuffle, D {ms.ashman_D_shuffled:.2f}). The zoom contains suspect events: "
+                  f"{int(ms.n_review_P1_above)} of its {int(ms.n_above)} events above the local Mc are Mount St Helens "
+                  f"deep events of review P1, {int(ms.n_review_P1_in_families)} of them in families. ")
+    sw_txt = ("None of the volcano families meets two swarm indicators: they are small bursts of near-equal events."
+              if vs.n_swarm.sum() == 0 else
+              f"{int(vs.n_swarm.sum())} volcano families meet two swarm indicators "
+              f"({', '.join(f'{v} {int(r.n_swarm)}' for v, r in vs.iterrows() if r.n_swarm > 0)}).")
+    weak_txt = ("Shuffled catalogs are as bimodal as the real one at " + "; ".join(weak)
+                + ", so the test is not meaningful there." if weak else "")
+    h.append(f"""<p>Zoomed analysis within 20 km with a local Mc. {ms_txt}{sw_txt} {weak_txt} Within 15 km of the
+summits (regional Mc):</p>""")
     h.append(tab(d["volcano_families"].merge(d["volcano_families_v4"][["volcano", "n_events_15km", "pct_background",
                                                                       "n_families", "n_swarm"]],
                                              on="volcano", suffixes=("", "_v4"), how="left"), fmt=lambda x: f"{x:.1f}"))
@@ -867,7 +1111,16 @@ ascending=False).head(3).items())}. Taking tier D out lowers the Axial backgroun
 {piv_bg.loc['AX', 'main'] - piv_bg.loc['AX', 'tierABC']:.0f} points and offshore Oregon by
 {piv_bg.loc['OR', 'main'] - piv_bg.loc['OR', 'tierABC']:.0f} points, where tier D is
 {100 * ((a.region == 'OR') & (a.tier == 'D')).sum() / max((a.region == 'OR').sum(), 1):.0f}% of the events above
-Mc.</p>""")
+Mc.</p>
+<p><b>Axial is the least robust region.</b> Its background share ranges over the variants from {axr.min():.1f}%
+({axr.idxmin()}) to {axr.max():.1f}% ({axr.idxmax()}). The variants that move it most: noM_floor
+{piv_bg.loc['AX', 'noM_floor']:.1f}% (M = Mc for the {int((used[used.region == 'AX'].M.isna()).sum()):,} Axial events
+without M, label agreement with the main run {100 * piv_ag.loc['AX', 'noM_floor']:.1f}%), tierABC
+{piv_bg.loc['AX', 'tierABC']:.1f}%, mc_best {piv_bg.loc['AX', 'mc_best']:.1f}% (Mc {comp.Mc_best['AX']:.2f}
+instead of {comp.Mc['AX']:.2f}) and
+eta0_shuf5 {piv_bg.loc['AX', 'eta0_shuf5']:.1f}%. With the null test above (a shuffled catalog reproduces
+{100 * lr['AX']:.0f}% of the Axial links), the Axial clustered share should be read as a range of about
+{100 - axr.max():.0f}-{100 - axr.min():.0f}%, most of it spatial concentration.</p>""")
 
     # ---------------- topology
     h.append("<h2>Topology and tectonic setting</h2>")
@@ -902,56 +1155,137 @@ and transform settings and the Mendocino triple junction holds; the forearc and 
 
     # ---------------- faults
     h.append("<h2>Families on the fault surfaces v1</h2>")
-    h.append(f"""<p>Join with <code>fault_surfaces_v1_assignment.csv.gz</code> of the faults piece (142 surfaces;
-fit members and uniquely assigned events; ambiguous events count as off-fault). Rerun with
-<code>v51_clusters_zbz.py --steps faults,compare</code> if the surfaces change. Half of the families have at least
-{100 * fam.frac_on_faults.median():.0f}% of their events on a surface (swarms
-{100 * fam[fam.type == 'swarm'].frac_on_faults.median():.0f}%, mainshock-aftershock
-{100 * fam[fam.type == 'mainshock-aftershock'].frac_on_faults.median():.0f}%).</p>""")
+    ic = d["input_commits"]
+    fc = next((v["commit"][:8] for k, v in ic.items() if "faults" in k), "?")
+    fam_fit = fam[fam.frac_on_faults.notna()]
+    n_ax_only = int(fam.frac_on_faults.isna().sum())
+    h.append(f"""<p>Join with <code>fault_surfaces_v1_assignment.csv.gz</code> of the faults piece after its review
+fixes (142 surfaces, commit {fc} of analysis/v51-faults). An event is on a surface when the faults piece marks it
+<code>on_surface_strict</code>: a fit member, or a tier A-C event compatible with exactly one surface and within 2 km
+of it, without floor_limited, far_only or deep_pass. The first build also counted every 'assigned' event, of which
+45% are tier D and 4,899 lie more than 5 km from their surface; that looser fraction is kept as
+<code>frac_on_faults_loose</code>. Axial Seamount was not fitted, so its events are neither on nor off a surface:
+fractions leave them out, and the {n_ax_only} families with no member in a fitted region have no value. Half of the
+other {len(fam_fit):,} families have at least {100 * fam_fit.frac_on_faults.median():.0f}% of their events on a
+surface (swarms {100 * fam_fit[fam_fit.type == 'swarm'].frac_on_faults.median():.0f}%, mainshock-aftershock
+{100 * fam_fit[fam_fit.type == 'mainshock-aftershock'].frac_on_faults.median():.0f}%; loose join
+{100 * fam_fit.frac_on_faults_loose.median():.0f}%). Rerun with <code>v51_clusters_zbz.py --steps faults</code> and
+this report if the surfaces change.</p>""")
     h.append(img(out / "fig_faults.png", "faults"))
-    pfs = pf[pf.n_analysis >= 30].sort_values("pct_swarm", ascending=False)
+
+    def short_flags(s):
+        s = "" if pd.isna(s) else str(s)
+        out_ = []
+        if "Mount St Helens deep" in s:
+            out_.append("review P1: members may be false events")
+        if "Brookings" in s:
+            out_.append("review P2: depth probably wrong")
+        if "unstable" in s:
+            out_.append("unstable in detection reruns")
+        if "moved a median" in s:
+            out_.append("members moved > 10 km in depth from v4")
+        if "depth poorly constrained" in s:
+            out_.append("depth poorly constrained")
+        return "; ".join(out_)
+
+    pfs = pf[pf.n_analysis >= 30].sort_values("pct_swarm", ascending=False).copy()
+    pfs["flags_short"] = pfs["flags"].map(short_flags)
     pft = pfs.head(15).copy()
-    pft["literature"] = pft.lit_match.fillna("").str.slice(0, 80)
-    h.append(tab(pft, ["surface_id", "region", "kind", "n_analysis", "pct_background", "pct_swarm",
-                       "n_families", "v0_surfaces", "literature"],
+    pft["literature"] = pft.lit_match.fillna("").str.slice(0, 60)
+    h.append(tab(pft, ["surface_id", "region", "kind", "stable", "n_analysis", "pct_background", "pct_swarm",
+                       "n_families", "n_swarm_families", "swarm_share_top1", "swarm_share_top2", "v0_surfaces",
+                       "flags_short", "literature"],
                  rename={"n_analysis": "events &ge; Mc", "v0_surfaces": "v0 surfaces",
+                         "n_swarm_families": "swarm families", "swarm_share_top1": "share of swarm events, largest family",
+                         "swarm_share_top2": "share, two largest", "flags_short": "flags (faults piece, shortened)",
                          "literature": "literature match (carried from v0, truncated)"}))
-    ps = pfs.set_index("surface_id").pct_swarm
-    h.append(f"""<p>The highest swarm shares (surfaces with 30 or more events above Mc) are on v1_ON016, the recurring
-swarm source about 19 km north of Mount McLoughlin (v0 ON027; {ps.get('v1_ON016', np.nan):.0f}%), v1_ON010 on the
-Mount Hood fault zone (v0 ON015; {ps.get('v1_ON010', np.nan):.0f}%), the two western Blanco strands v1_BL001 and
-v1_BL002, which combine the v0 West Blanco Depression and Surveyor Depression strands BL004a-BL018a
-({ps.get('v1_BL001', np.nan):.0f}% and {ps.get('v1_BL002', np.nan):.0f}%), the northern Escanaba Trough axis
-(v1_GO004, v0 GO002; {ps.get('v1_GO004', np.nan):.0f}%) and the Gorda Ridge axis near the President Jackson
-Seamounts (v1_GO002; {ps.get('v1_GO002', np.nan):.0f}%). These are the same places as in v4 (ON027, the West Blanco
-Depression strands, GO002). The faults piece removed surfaces whose events occur mostly on weekday daytime (possible
-unflagged blasts): {int(day.n):,} events, of which {int(day.in_analysis)} are above Mc and {int(day.in_families)}
-are in families here; they are kept in this analysis because the catalog does not flag them.</p>""")
+    top = pfs[pfs.pct_swarm > 0].head(8)
+    conc = pfs[pfs.n_swarm > 0]
+    top_txt = "; ".join(
+        f"{r.surface_id} ({r.region}, {r.pct_swarm:.0f}% of {int(r.n_analysis)} events, {int(r.n_swarm_families)} "
+        f"swarm famil{'y' if r.n_swarm_families == 1 else 'ies'}, the largest giving {100 * r.swarm_share_top1:.0f}% "
+        f"of the swarm events{'' if bool(r.stable) else ', unstable surface'})" for r in top.itertuples())
+    h.append(f"""<p>Highest swarm shares among the surfaces with 30 or more events above Mc (ranked from the table):
+{top_txt}. The swarm events of a surface
+are concentrated in few families: over the {len(conc)} surfaces with swarm events, the largest swarm family gives a
+median of {100 * conc.swarm_share_top1.median():.0f}% of them and the two largest
+{100 * conc.swarm_share_top2.median():.0f}%. The surfaces were also fitted to these same events, so a surface's swarm
+share is not an independent property of a fault: it mostly says which one or two swarms built the surface.
+{int((~top.stable.astype(bool)).sum())} of these {len(top)} surfaces are unstable in the faults piece's detection
+reruns.</p>""")
+    h.append(f"""<p><b>Flagged events.</b> The faults piece removed surfaces whose events occur mostly on weekday daytime
+(possible unflagged blasts). After its fix, the weekday-daytime members of those surfaces form their own class
+({int(day.n):,} events, the first build had 1,137 because it counted every member of the removed surfaces); here
+{int(day.in_analysis)} of them are above Mc and {int(day.in_families)} are in {int(day.n_families)} families. They
+stay in the analysis because the catalog does not flag them; families holding them carry
+<code>n_daytime_screened</code> &gt; 0 ({int((fam.n_daytime_screened > 0).sum())} families). Families with events
+of the waveform-review sets carry <code>n_review_P1_msh_deep</code> ({int((fam.n_review_P1_msh_deep > 0).sum())}
+families) and <code>n_review_P2_brookings</code> ({int((fam.n_review_P2_brookings > 0).sum())} families); the faults
+piece marks v1_ON028 (Mount St Helens deep population) and v1_GO022 (Brookings 2012) as not usable until that review
+is done.</p>""")
+
+    # ---------------- proposed decisions
+    h.append("<h2>Proposed decisions for the PI</h2><ol>")
+    for li in [
+        "Run the main analysis on tier A-C events and attach tier D afterwards, as the PI chose for the fault "
+        f"surfaces; keep the all-tier run as a variant. Outside Axial, tier D epicentres have median errors of "
+        f"{td.h_max_med_tierD_km['MT']:.0f}-{tdo.max():.0f} km, {td.pct_links_tierD_end['all']:.0f}% of the links "
+        "have a tier D end, and the tierABC variant changes at most "
+        f"{100 * (1 - piv_ag.drop(index='AX')['tierABC'].min()):.1f}% of the labels outside Axial while it removes the "
+        "2014 Vancouver Island artefact. (Not applied here: the main run is unchanged from the first build.)",
+        "Report the null test (shuffled-to-real link ratio per region) with every clustered share, and give the Axial "
+        f"clustered share as a range ({100 - axr.max():.0f}-{100 - axr.min():.0f}%) rather than one number.",
+        "Leave the Mount St Helens deep events (review P1) out of the next run if the human review confirms that they "
+        "are false events; until then their families are flagged.",
+        "Do these on catalog v6.0 (D-B079, NonLinLoc with SSST station terms), which supersedes v5.1, with 3-D distance "
+        "restricted to well-constrained depths (d3q) as the main run, and relocate the swarms relatively (double "
+        "difference) before interpreting migration or diffusivity."]:
+        h.append(f"<li>{li}</li>")
+    h.append("</ol>")
 
     # ---------------- limits
     h.append("<h2>Limits and open issues</h2><ul>")
     for li in [
         f"Completeness changes in space and time. The constant regional Mc keeps {len(a):,} of {n_used:,} events in "
-        "the analysis set; volcano microswarms and the Axial events below M 0.65 are only attached afterwards.",
+        "the analysis set; volcano microswarms and the Axial events below M 0.65 are only attached afterwards. The Mc "
+        f"rule depends on floating-point bin edges in {len(mdiff)} regions ({', '.join(mdiff.index)}).",
         "The main run uses epicentral distance, so slab and crustal events that share an epicentre can link. With "
         "v5.1 depths the d3q variant (3-D only between well-constrained depths) changes few labels, so a 3-D main run "
         "is possible in a next version.",
-        "Tier D epicentres (median 68% semi-axis about 5 km at Axial, shift from v4 4-23 km by region) enter the "
-        "analysis set. At Axial they are a third of the events above Mc and mostly background; the Axial clustered "
-        "share depends on this choice (variant tierABC) and on the threshold (eta0_shuf5).",
+        f"Tier D epicentres enter the analysis set. Their median h_max is {td.h_max_med_tierD_km['AX']:.1f} km at "
+        f"Axial, {td.h_max_med_tierD_km['MT']:.0f} km at the Mendocino triple junction and "
+        f"{tdo.min():.0f}-{tdo.max():.0f} km elsewhere ({', '.join(f'{r} {v:.0f}' for r, v in tdo.items())}); the "
+        f"five-phase events have {td.h_max_med_five_phase_km['all']:.0f} km. {td.pct_links_tierD_end['all']:.0f}% of "
+        f"the links have a tier D end ({td.pct_links_tierD_end['ON']:.0f}% in ON). Links between tier D events "
+        "tens of km apart can be artefacts, as the 2014 Vancouver Island foreshock shows.",
+        f"Time-shuffled catalogs reproduce {100 * lr.min():.0f}-{100 * lr.max():.0f}% of the links ({100 * lr['AX']:.0f}% "
+        "at Axial), and within-month shuffles more. The clustered shares mix triggering with spatial concentration "
+        "and slow rate changes.",
         f"Location errors (median h_max {sw10.h_err_med_km.median():.1f} km for tier A-C swarm members) are as large "
         "as most swarms, so "
         "migration and sqrt(t) fits are unresolved for most families. Relative (double-difference) relocation of the "
         "swarms is needed before diffusivities can be interpreted.",
-        "Magnitudes: offshore ML is 0.3-0.5 above ComCat ML at Mendocino, Blanco and Gorda (mag piece); M1-M2 gaps of "
+        "Magnitudes: in its own review the mag piece found that its phase19 station-term inversion stops at 3,000 "
+        "iterations without converging; converged, ML would move by -0.68 on the Blanco, -0.51 in its Juan de Fuca "
+        "region and -0.28 at Gorda, Mendocino and the offshore forearc (onshore +0.01) and agree better with ComCat "
+        "offshore. Production M is unchanged (PI decision), so offshore Mc and M1-M2 here inherit that offset. "
+        "Offshore ML is 0.3-0.5 above ComCat ML at Mendocino, Blanco and Gorda (mag piece); M1-M2 gaps of "
         "a few tenths drive the swarm and multiplet rules and are close to the ML uncertainty (about 0.2). "
         f"{int(used.M.isna().sum()):,} located earthquakes have no M and cannot be parents.",
         "Swarm criteria are thresholds on continuous properties; families near them switch type between versions "
         f"({100 - _kept_same_type(s4):.0f}% of the kept families changed type).",
         "Rate changes from network changes (OBS deployments 2011-2015, NC/BK pick gap in 2016) are not modelled; Mc is "
         "the worst yearly value per region to limit their effect.",
-        "1,137 events on surfaces the faults piece removed for weekday-daytime timing are kept; they may be unflagged "
-        "blasts."]:
+        f"{int(day.n):,} weekday-daytime members of surfaces the faults piece removed for their timing are kept; they "
+        f"may be unflagged blasts ({int(day.in_families)} in {int(day.n_families)} families, flag "
+        "n_daytime_screened).",
+        f"Mount St Helens deep events (review P1): {int(p1d.in_analysis)} above Mc, {int(p1d.in_families)} in "
+        f"{int(p1d.n_families)} families, {nwed} of which start on a Wednesday near local noon. They are probably false "
+        "events from the weekly artificial signal on the analog UW channels; pending human review.",
+        "Catalog v5.1 is located in model v0.3.1. The PI has adopted model v0.4.0 (v0.3.1 re-inverted with the "
+        "re-timed picks, D-B082), v0.4.1 (with a surface floor in the inversion, D-B083) is being built, and catalog "
+        "v6.0 (D-B079, NonLinLoc with SSST station terms) will supersede v5.1. These products will be redone on "
+        "v6.0."]:
         h.append(f"<li>{li}</li>")
     h.append("</ul>")
 
@@ -963,9 +1297,11 @@ are in families here; they are kept in this analysis because the catalog does no
          "linked, family_id, family_type, role, background, cls, excluded (full file adds time, lat, lon, depth, tier, "
          "flags)"),
         ("families_zbz_v51.csv", "every family: type, size above Mc and in all, magnitude range, start/end, durations, "
-         "extent, depth ranges (depth_good), swarm indicators, topology, v4-style migration, v5.1 migration "
-         "(rho, radial speed, velocity vector and azimuth, vz), D90, D50, envelope exponent, resolvable, style, "
-         "fault fractions, v4 status"),
+         "extent, depth ranges (depth_good), depth_main_any_quality (any depth quality; see depth_main_good), swarm "
+         "indicators, topology, v4-style migration, v5.1 migration (rho, Spearman and permutation p, radial speed, "
+         "velocity vector and azimuth, vz), D90, D50, envelope exponent, resolvable, style, fault fractions (strict "
+         "and loose, Axial left out), flags n_daytime_screened, n_review_P1_msh_deep, n_review_P2_brookings, v4 "
+         "status"),
         ("regions_zbz.csv, thresholds_zbz.csv, completeness_b_df.csv, completeness_by_year.csv",
          "per-region summary, mixture fits and thresholds, Mc and b"),
         ("sensitivity_zbz.csv; /wd1/.../clusters/variants/", "variant summaries; per-variant event and family tables"),
@@ -976,7 +1312,14 @@ are in families here; they are kept in this analysis because the catalog does no
          "DBSCAN swarm scan and its comparison with v4"),
         ("validation_sequences.csv, volcano_families.csv, volcano_local_zbz.csv, volcano_local_families.csv, "
          "setting_stats.csv", "validation and setting tables"),
-        ("faults_v1_cluster_counts.csv, faults_v1_daytime_surfaces_events.csv", "fault surfaces v1 join")]:
+        ("faults_v1_cluster_counts.csv, faults_v1_daytime_surfaces_events.csv", "fault surfaces v1 join"),
+        ("null_test.csv, null_test_summary.csv", "null test: time-shuffled catalogs at the real thresholds (links, D, "
+         "families, swarms)"),
+        ("tierD_by_region.csv, mc_edge_check.csv, depth_swarm_vs_ma_families.csv",
+         "tier D errors and links; Mc with float and exact bin edges; family-level depth test"),
+        ("review_sets_in_clusters.csv, review_P1_families.csv", "waveform-review sets P1-P4 in the clustering; families "
+         "with Mount St Helens deep events"),
+        ("input_commits.json", "commits of the other pieces' products read by the run")]:
         h.append(f"<li><code>{html.escape(fn)}</code>: {html.escape(desc)}</li>")
     h.append("</ul>")
     h.append("<h2>References</h2><p class='muted'>Reference list of the v4 clustering report (DOIs checked there "

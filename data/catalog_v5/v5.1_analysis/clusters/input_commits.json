@@ -1,0 +1,14 @@
+{
+ "data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_assignment.csv.gz": {
+  "commit": "6ebe0230361de47bc211bfd80570bbecabadb0fc",
+  "ref": "origin/analysis/v51-faults"
+ },
+ "data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_summary.csv": {
+  "commit": "6ebe0230361de47bc211bfd80570bbecabadb0fc",
+  "ref": "origin/analysis/v51-faults"
+ },
+ "data/catalog_v5/v5.1_analysis/mag/mc_b/mc_b_regional.csv": {
+  "commit": "cd0334d6ae61b85c1db2461e4710f369ca9bd5c9",
+  "ref": "origin/analysis/v51-mag"
+ }
+}

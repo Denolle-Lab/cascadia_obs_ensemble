@@ -6,9 +6,11 @@ duration of at most 30 days, each compared with the rate within 10 km over the 9
 Events: the located earthquakes of catalog v5.1 (no rows without a hypocentre, no explosions or quarry
 blasts), all magnitudes. n_qc counts tier A-C events (v4: events with >= 4 P and >= 4 S picks).
 
-Added for v5.1: depth range from well-constrained depths only (depth_good, see v51_clusters_zbz.py), tier
-mix, migration and sqrt(t) diffusion fit from the tier A-C members, overlap with the v5.1 nearest-neighbour
-families, and the match with the v4 clusters (kept, split, merged, new, dissolved) by shared event IDs.
+Added for v5.1: depth range from well-constrained depths only (depth_good, see v51_clusters_zbz.py; the v4
+columns depth_med / depth_iqr use every depth and are renamed depth_any_quality_med / _iqr), tier
+mix, migration and sqrt(t) diffusion fit from the tier A-C members (permutation p-value, mig_p_perm), overlap
+with the v5.1 nearest-neighbour families, and the match with the v4 clusters (kept, split, merged, new,
+dissolved) by shared event IDs.
 
 Outputs in data/catalog_v5/v5.1_analysis/clusters/: dbscan_clusters_v51.csv, dbscan_members_v51.csv,
 dbscan_v4_status.csv, dbscan_v51_status.csv.
@@ -55,6 +57,9 @@ def main(argv=None):
     c = load()
     lab = S.cluster(c, a.eps, a.kmday, a.core)
     t = S.describe(c, lab, a.rad, a.bg, a.min_n, a.max_dur)
+    # v4_swarms.describe takes depth_med / depth_iqr over every member, whatever its depth quality
+    # (floor_limited, far_only, deep_pass included): labelled here; use depth_good_* for depths
+    t = t.rename(columns={"depth_med": "depth_any_quality_med", "depth_iqr": "depth_any_quality_iqr"})
     keep = np.isin(lab, t["cluster"].to_numpy())
     mem = pd.DataFrame({"event_id": c["event_id"][keep].values, "cluster": lab[keep]})
     # extra columns per cluster

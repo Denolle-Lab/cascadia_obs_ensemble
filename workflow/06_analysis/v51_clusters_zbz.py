@@ -11,20 +11,33 @@ Events
   earthquakes (is_earthquake False: ComCat explosions / quarry blasts / other, Texada quarry_blast_likely).
   They are kept in the event table with role "excluded" and the reason.
 * floor_limited, far_only and deep_pass events enter through their epicentres: the main run uses
-  epicentral (2-D) distance, as in v4. Their depths are not used anywhere: depth ranges, depth
-  migration and the 3-D variant d3q use only events with a well-constrained depth (depth_good: tier A-C,
-  depth_quality ok, not floor_limited / far_only / deep_pass). Tier D events (epicentre errors of several
-  km, one degree of freedom for five-phase events) are in the main analysis set; variant tierABC leaves
-  them out of it (they are then attached afterwards, like events below Mc).
+  epicentral (2-D) distance, as in v4. Their depths are not used in the main run or in any depth
+  statistic: depth ranges, depth migration and the 3-D variant d3q use only events with a well-constrained
+  depth (depth_good: tier A-C, depth_quality ok, not floor_limited / far_only / deep_pass). Exceptions,
+  labelled as such: variant d3 (3-D distance with every depth, a sensitivity test only), the family column
+  depth_main_any_quality (depth of the largest event, any quality; see depth_main_good) and the DBSCAN
+  columns depth_any_quality_med / _iqr.
+* Tier D events are in the main analysis set, as all events were in v4; variant tierABC leaves them out of
+  it (they are then attached afterwards, like events below Mc). Tier D epicentres are poor outside Axial:
+  the median 68 % horizontal semi-axis (h_max) of the tier D events above Mc is 4.8 km at Axial but 9 km at
+  the Mendocino triple junction and 23-45 km elsewhere (GO 23, BL 28, ON 32, OR 34, EN 36, PU 38, WA 45);
+  the five-phase events (one degree of freedom) have a median of 42 km. 16 % of the links of the main run
+  have a tier D end (48 % in ON). Step checks writes these numbers (tierD_by_region.csv).
 * Regions: the nine boxes of v4 applied to the v5.1 epicentres; Mc per box from the v5.1 magnitudes with the
-  v4 rule (maximum curvature + 0.2, largest yearly value over years with >= 200 events).
+  v4 rule (maximum curvature + 0.2, largest yearly value over years with >= 200 events). The rule bins M
+  with np.arange(-2, 8, 0.1) edges, as in v4; with exact decimal edges BL and OR change by 0.1 (step checks,
+  mc_edge_check.csv). Kept for comparability with v4.
+* Inputs of the other v5.1 pieces (fault surfaces v1, the mag piece's Mc_best) are read from their pushed
+  branches (FAULTS_REF, MAG_REF; commits written to input_commits.json), not from the other worktrees.
 
 Per family, in addition to the v4 fields: magnitude range of all members, duration of all members, depth
 range of the well-constrained depths, migration from the tier A-C members (radial speed, Theil-Sen velocity
 vector and azimuth, depth migration) and a sqrt(t) diffusion fit (Shapiro et al. 1997: r = sqrt(4 pi D t);
 D90 is the diffusivity of the front that encloses 90 % of the events, and the exponent p of the 90 %
 distance envelope against time in log bins tells sqrt(t)-like (p near 0.5) from linear (p near 1)
-migration).
+migration). The migration test uses a permutation p-value (mig_p_perm): the origin is the centroid of the
+first 10 % of the same events, which biases the Spearman p-value (mig_p, kept for reference) toward
+migration.
 
 Variants (sensitivity): d3 (3-D distance, all depths), d3q (3-D only between two depth_good events), mc+0.3,
 mc_best (Mc_best of the mag piece), df_est, df1.3, df2.0, noM_floor, mc_year, eta0_shuf5, tierABC, v41M
@@ -34,17 +47,24 @@ Steps (each caches its output; rerun skips what exists unless --force):
     main      main run, completeness table, events and families
     shuffle   time-shuffled catalogs and eta0_shuf5 thresholds
     variants  sensitivity variants (one file each on /wd1)
-    faults    join with the fault surfaces v1 (piece "faults")
+    faults    join with the fault surfaces v1 (piece "faults"), family flags (daytime-screened surfaces,
+              waveform-review sets P1 Mount St Helens deep events and P2 Brookings 2012)
+    nulls     null test of the links: time-shuffled catalogs (within region, region-year, region-month) at
+              the real thresholds; linked fraction, families and swarms against the real catalog
+    checks    tier D by region, Mc bin-edge check, swarm/mainshock-aftershock depth with families as the
+              unit, waveform-review sets in the clustering
     compare   comparison with the v4 results, known sequences, volcano zoom, setting statistics
 
 Run (from this folder):
-    python v51_clusters_zbz.py --steps main,shuffle,variants,faults,compare --workers 14
+    python v51_clusters_zbz.py --steps main,shuffle,variants,faults,nulls,checks,compare --workers 12
 """
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import multiprocessing as mp
+import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -54,7 +74,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
-from scipy.stats import spearmanr, theilslopes
+from scipy.stats import mannwhitneyu, rankdata, spearmanr, theilslopes
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -64,8 +84,15 @@ from v4_clusters_zbz import (REGIONS, REGION_NAMES, REG_ORDER, RE, Q, mc_maxc, b
 ROOT = HERE.parents[1]
 CAT = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
 MAG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv")
-MCB = Path("/home/mdenolle/wt_a51_mag/data/catalog_v5/v5.1_analysis/mag/mc_b/mc_b_regional.csv")
-FAULTS = Path("/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults")
+# products of the other v5.1 pieces, read from their pushed branches (git objects are shared by all worktrees of
+# the repository); switch the refs to origin/main once those branches are merged
+MAG_REF = "origin/analysis/v51-mag"
+MCB = "data/catalog_v5/v5.1_analysis/mag/mc_b/mc_b_regional.csv"
+FAULTS_REF = "origin/analysis/v51-faults"
+FAULTS = "data/catalog_v5/v5.1_analysis/faults"
+# waveform review of four v5.1 location problems (P1 Mount St Helens deep events, P2 Brookings 2012,
+# P3 tensor events, P4 deep_pass / far_only), review/v51-locations
+REVIEW = Path("/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv")
 V4 = ROOT / "data/catalog_v4/clusters_zbz"
 OUT = ROOT / "data/catalog_v5/v5.1_analysis/clusters"
 BIG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/clusters")
@@ -103,11 +130,29 @@ def _bool(s: pd.Series) -> pd.Series:
     return s.astype(str).str.strip().str.lower().eq("true")
 
 
+def git_csv(ref: str, path: str, **kw) -> pd.DataFrame:
+    """Read a CSV committed on branch `ref` and record the commit in input_commits.json."""
+    sha = subprocess.run(["git", "-C", str(ROOT), "rev-parse", ref], check=True, capture_output=True,
+                         text=True).stdout.strip()
+    blob = subprocess.run(["git", "-C", str(ROOT), "show", f"{sha}:{path}"], check=True,
+                          capture_output=True).stdout
+    f = OUT / "input_commits.json"
+    try:
+        rec = json.loads(f.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        rec = {}
+    rec[path] = dict(ref=ref, commit=sha)
+    OUT.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps(rec, indent=1, sort_keys=True))
+    return pd.read_csv(io.BytesIO(blob), compression="gzip" if path.endswith(".gz") else None, **kw)
+
+
 # ---------------------------------------------------------------- loading
 def load_all() -> pd.DataFrame:
     """All 172,342 catalog rows with the v5.1 magnitudes and the exclusion reason ('' = used)."""
     cols = ["ID", "time", "lat", "lon", "depth", "loc_source", "tier", "region", "h_min", "h_max", "sig_z",
-            "depth_quality", "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase", "M"]
+            "depth_quality", "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase", "M", "n_sta",
+            "gap"]
     c = pd.read_csv(CAT, usecols=cols, low_memory=False).rename(
         columns={"ID": "event_id", "region": "region_v51", "M": "M_v41"})
     m = pd.read_csv(MAG, usecols=["ID", "M", "M_type", "is_earthquake"]).rename(columns={"ID": "event_id"})
@@ -146,10 +191,10 @@ def completeness(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     ctab["Mc_year"] = [ytab[ytab.region == r].set_index("year").Mc_maxc.to_dict() for r in ctab.region]
     # Mc_best of the mag piece (v5.1 magnitudes, v5.1 locations, whole period), for variant mc_best
     try:
-        mb = pd.read_csv(MCB)
+        mb = git_csv(MAG_REF, MCB)
         mb = mb[(mb.version == "C_v51M_v51loc") & (mb.period == "all")].set_index("region")
         ctab["Mc_best"] = ctab.region.map(mb.mc_best)
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         ctab["Mc_best"] = np.nan
     bb = [b_aki(df.M.values[df.region.values == r], m)[0] if np.isfinite(m) else np.nan
           for r, m in zip(ctab.region, ctab.Mc_best)]
@@ -254,8 +299,12 @@ def select(df, ctab, variant):
     return sel, mm, mc, dfe, be
 
 
-def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None):
-    """v4_clusters_zbz.build for v5.1: same links, families and classification; extra event columns."""
+def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None, null="region", null_families=False):
+    """v4_clusters_zbz.build for v5.1: same links, families and classification; extra event columns.
+
+    shuffle_seed: permute the event times within groups (null 'region': whole period, as v4; 'region_year',
+    'region_month': within the same calendar year or month, which keeps slow rate changes). null_families: also
+    form and classify the families of the shuffled catalog (returned as 'fam')."""
     sel, mm, mcv, dfe, be = select(df, ctab, variant)
     d3 = variant in ("d3", "d3q")
     A = df[sel].copy()
@@ -263,7 +312,10 @@ def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None):
     A["dfe"], A["be"] = dfe[sel], be[sel]
     if shuffle_seed is not None:
         rng = np.random.default_rng(shuffle_seed)
-        for r, g in A.groupby("region"):
+        key = {"region": A.region,
+               "region_year": A.region + "_" + A.year.astype(str),
+               "region_month": A.region + "_" + A.time.dt.strftime("%Y-%m")}[null]
+        for _, g in A.groupby(key):
             A.loc[g.index, "t_yr"] = rng.permutation(g.t_yr.values)
         A = A.sort_values("t_yr", kind="stable")
     A = A.reset_index().rename(columns={"index": "row"})
@@ -285,7 +337,7 @@ def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None):
     cap = rupture_cap(m[np.maximum(par, 0)], a.rcap_min)
     below = np.isfinite(o[:, 0]) & (o[:, 0] < le0)
     linked = below & (o[:, 3] <= cap)
-    if shuffle_seed is not None:
+    if shuffle_seed is not None and not null_families:
         return dict(log_eta=o[:, 0], log_T=o[:, 1], log_R=o[:, 2], region=reg, below=below, linked=linked)
     n = len(A)
     ii = np.where(linked)[0]
@@ -328,7 +380,8 @@ def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None):
             start=A.time.values[mem[0]], end=A.time.values[mem[-1]], duration_days=float(tday[-1]),
             duration90_days=float(np.quantile(tday, 0.9)),
             lon=float(lo.mean()), lat=float(la.mean()), lon_main=float(lo[k]), lat_main=float(la[k]),
-            depth_main=float(A.depth.values[mem[k]]), depth_main_good=bool(A.depth_good.values[mem[k]]),
+            depth_main_any_quality=float(A.depth.values[mem[k]]),
+            depth_main_good=bool(A.depth_good.values[mem[k]]),
             extent_km=float(2 * np.quantile(dc, 0.95)), type=typ,
             S1_no_dominant=flags[0], S2_late_peak=flags[1], S3_chain=flags[2],
             frac_before_largest=frac_before, t_largest_days=float(tday[k]),
@@ -337,6 +390,9 @@ def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None):
             migration_km_day=v, migration_rho=rho, migration_p=p,
             migrating=bool(np.isfinite(rho) and rho >= 0.5 and p < 0.01 and v > 0)))
     fam = pd.DataFrame(fam_rows)
+    if shuffle_seed is not None:
+        return dict(log_eta=o[:, 0], log_T=o[:, 1], log_R=o[:, 2], region=reg, below=below, linked=linked,
+                    fam=fam, n_in_family=pd.Series(reg[fid > 0]).value_counts())
     ev = pd.DataFrame(dict(
         event_id=A.event_id.values, region=reg, in_analysis=True, M=m,
         parent_id=np.where(par >= 0, A.event_id.values[np.maximum(par, 0)], -1),
@@ -408,6 +464,29 @@ def summarize(ev, fam, reg):
 
 
 # ---------------------------------------------------------------- per-family details
+def perm_p_rho(t, x, y, k0, rho_obs, nperm=2000, seed=1, batch=250):
+    """One-sided permutation p-value of the radial Spearman rho: event positions are permuted against the times,
+    and the origin (centroid of the first k0 events) is recomputed for every permutation, so the test includes
+    the bias of taking the origin from the same events."""
+    rng = np.random.default_rng(seed)
+    n = len(t)
+    rt = rankdata(t)
+    rt = rt - rt.mean()
+    rt = rt / np.sqrt((rt ** 2).sum())
+    hits = 0
+    for b0 in range(0, nperm, batch):
+        m = min(batch, nperm - b0)
+        P = np.argsort(rng.random((m, n)), axis=1)
+        xs, ys = x[P], y[P]
+        r = np.hypot(xs - xs[:, :k0].mean(1, keepdims=True), ys - ys[:, :k0].mean(1, keepdims=True))
+        rr = rankdata(r, axis=1)
+        rr = rr - rr.mean(1, keepdims=True)
+        nr = np.sqrt((rr ** 2).sum(1))
+        rho = np.where(nr > 0, (rr @ rt) / np.where(nr > 0, nr, 1), 0.0)
+        hits += int((rho >= rho_obs - 1e-12).sum())
+    return (hits + 1) / (nperm + 1)
+
+
 def migration_details(s: pd.DataFrame, nmin: int = 10, nmax: int = 3000) -> dict:
     """Migration and sqrt(t) diffusion fit on the members s (time-sorted; tier A-C epicentres)."""
     out = dict(mig_n=len(s))
@@ -431,6 +510,14 @@ def migration_details(s: pd.DataFrame, nmin: int = 10, nmax: int = 3000) -> dict
     idx = np.sort(rng.choice(len(s), nmax, replace=False)) if len(s) > nmax else np.arange(len(s))
     rho, p = spearmanr(t, r)
     out.update(mig_rho=float(rho), mig_p=float(p), mig_v_radial_km_day=float(theilslopes(r[idx], t[idx])[0]))
+    # permutation p-value, on the subsample idx when there are more than nmax events
+    if np.isfinite(rho):
+        ts, xs, ys = t[idx], x[idx], y[idx]
+        ks = max(3, len(idx) // 10)
+        rho_s = rho if len(idx) == len(s) else spearmanr(ts, np.hypot(xs - xs[:ks].mean(), ys - ys[:ks].mean()))[0]
+        out["mig_p_perm"] = float(perm_p_rho(ts, xs, ys, ks, rho_s))
+    else:
+        out["mig_p_perm"] = np.nan
     vx, vy = theilslopes(x[idx], t[idx])[0], theilslopes(y[idx], t[idx])[0]
     out.update(mig_vx_km_day=float(vx), mig_vy_km_day=float(vy), mig_v_dir_km_day=float(np.hypot(vx, vy)),
                mig_az=float(np.degrees(np.arctan2(vx, vy)) % 360))
@@ -468,9 +555,12 @@ def migration_details(s: pd.DataFrame, nmin: int = 10, nmax: int = 3000) -> dict
             for tag, sl in [("sqrt", 0.5), ("lin", 1.0)]:
                 c0 = np.mean(by - sl * bx)
                 out[f"env_rms_{tag}"] = float(np.sqrt(np.mean((by - (sl * bx + c0)) ** 2)))
-    mig = bool(np.isfinite(out.get("mig_rho", np.nan)) and out["mig_rho"] >= 0.5 and out["mig_p"] < 0.01
-               and out["mig_v_radial_km_day"] > 0 and out["mig_resolvable"])
+    passes = (np.isfinite(out.get("mig_rho", np.nan)) and out["mig_rho"] >= 0.5
+              and out["mig_v_radial_km_day"] > 0 and out["mig_resolvable"])
+    mig = bool(passes and out["mig_p_perm"] < 0.01)
     out["mig_migrating"] = mig
+    # the builder's first test (Spearman p), kept for comparison
+    out["mig_migrating_spearman_p"] = bool(passes and out["mig_p"] < 0.01)
     # style of a migrating family from the exponent p of its 90 % distance envelope, r90 ~ t^p
     style = ""
     if mig:
@@ -497,8 +587,6 @@ def family_details(ev: pd.DataFrame, fam: pd.DataFrame, df: pd.DataFrame) -> pd.
             d.update(depth_good_min=float(z.min()), depth_good_q10=float(z.quantile(0.1)),
                      depth_good_med=float(z.median()), depth_good_q90=float(z.quantile(0.9)),
                      depth_good_max=float(z.max()))
-        d.update(depth_all_min=float(g.depth.min()), depth_all_med=float(g.depth.median()),
-                 depth_all_max=float(g.depth.max()))
         d.update(migration_details(g[g.tierABC]))
         rows.append(d)
     return fam.merge(pd.DataFrame(rows), on="family_id", how="left")
@@ -573,6 +661,67 @@ def step_shuffle(df, ctab, thr, a):
     log("\n" + sh.groupby("region").mean(numeric_only=True).to_string())
 
 
+def kde_valley_interior(g: dict, tol: float = 1e-6) -> bool:
+    """gmm1d puts log_eta0_kde at the KDE minimum between the two means; at an end point there is no valley."""
+    return bool(abs(g["log_eta0_kde"] - g["mu1"]) > tol and abs(g["log_eta0_kde"] - g["mu2"]) > tol)
+
+
+def step_nulls(df, ctab, a, seeds=(10, 5, 5)):
+    """Null test of the links. Time-shuffled catalogs, run at the REAL thresholds and caps: the share of events
+    linked, the mixture separation D, and the families and swarms they form. Shuffles: within region over the
+    whole period (as v4 and the shuffle step), within region and calendar year, within region and month (these
+    two keep slow rate changes such as network changes and long sequences)."""
+    reg = pd.read_csv(OUT / "thresholds_zbz.csv").set_index("region")
+    thr0 = reg.log_eta0.to_dict()
+    ev = pd.read_csv(OUT / "events_zbz_v51.csv.gz", usecols=["event_id", "region", "in_analysis", "linked",
+                                                            "family_id"])
+    ea = ev[ev.in_analysis.astype(bool)]
+    fam = pd.read_csv(OUT / "families_zbz_v51.csv", usecols=["family_id", "region", "type"])
+    rows = []
+    for r in REG_ORDER:
+        e = ea[ea.region == r]
+        f = fam[fam.region == r]
+        rows.append(dict(null="real", seed=-1, region=r, n=len(e), frac_linked=float(e.linked.astype(bool).mean()),
+                         frac_in_family=float((e.family_id > 0).mean()), ashman_D=reg.ashman_D[r],
+                         kde_valley=bool(abs(reg.log_eta0_kde[r] - reg.mu1[r]) > 1e-6
+                                         and abs(reg.log_eta0_kde[r] - reg.mu2[r]) > 1e-6),
+                         n_families=len(f), n_swarm=int((f.type == "swarm").sum()),
+                         n_MA=int((f.type == "mainshock-aftershock").sum()), n_multiplet=int((f.type == "multiplet").sum())))
+    for k_null, (null, ns) in enumerate(zip(["region", "region_year", "region_month"], seeds)):
+        for sd in range(ns):
+            t0 = time.time()
+            s = build(df, ctab, "main", a, thr_override=thr0, shuffle_seed=2000 + 1000 * k_null + sd, null=null,
+                      null_families=True)
+            fs = s["fam"]
+            for r in REG_ORDER:
+                k = s["region"] == r
+                g = gmm1d(s["log_eta"][k])
+                f = fs[fs.region == r] if len(fs) else fs
+                rows.append(dict(null=null, seed=sd, region=r, n=int(k.sum()), frac_linked=float(s["linked"][k].mean()),
+                                 frac_in_family=float(s["n_in_family"].get(r, 0) / max(k.sum(), 1)),
+                                 ashman_D=g["ashman_D"], kde_valley=kde_valley_interior(g), n_families=len(f),
+                                 n_swarm=int((f.type == "swarm").sum()) if len(f) else 0,
+                                 n_MA=int((f.type == "mainshock-aftershock").sum()) if len(f) else 0,
+                                 n_multiplet=int((f.type == "multiplet").sum()) if len(f) else 0))
+            log(f"null {null} seed {sd}: {time.time() - t0:.0f} s")
+    R = pd.DataFrame(rows)
+    R.to_csv(OUT / "null_test.csv", index=False, float_format="%.4f")
+    real = R[R.null == "real"].set_index("region")
+    S = R[R.null != "real"].groupby(["null", "region"]).agg(
+        n_seeds=("seed", "size"), frac_linked_mean=("frac_linked", "mean"), frac_linked_max=("frac_linked", "max"),
+        frac_in_family_mean=("frac_in_family", "mean"), D_mean=("ashman_D", "mean"), D_min=("ashman_D", "min"),
+        D_max=("ashman_D", "max"), kde_valley_frac=("kde_valley", "mean"), n_families_mean=("n_families", "mean"),
+        n_swarm_mean=("n_swarm", "mean"), n_swarm_max=("n_swarm", "max"), n_MA_mean=("n_MA", "mean")).reset_index()
+    for col in ["frac_linked", "frac_in_family", "ashman_D", "kde_valley", "n_families", "n_swarm", "n_MA"]:
+        S[f"real_{col}"] = S.region.map(real[col])
+    S["link_ratio_null_over_real"] = S.frac_linked_mean / S.real_frac_linked
+    S["swarm_ratio_null_over_real"] = S.n_swarm_mean / S.real_n_swarm.replace(0, np.nan)
+    S["family_ratio_null_over_real"] = S.n_families_mean / S.real_n_families.replace(0, np.nan)
+    S.to_csv(OUT / "null_test_summary.csv", index=False, float_format="%.4f")
+    log("\n" + S[["null", "region", "frac_linked_mean", "real_frac_linked", "link_ratio_null_over_real", "D_mean",
+                  "D_max", "real_ashman_D", "kde_valley_frac", "n_swarm_mean", "real_n_swarm"]].round(3).to_string())
+
+
 def step_variants(c, df, ctab, a):
     vdir = BIG / "variants"
     vdir.mkdir(parents=True, exist_ok=True)
@@ -610,26 +759,50 @@ def step_variants(c, df, ctab, a):
     pd.concat(rows).to_csv(OUT / "sensitivity_zbz.csv", index=False)
 
 
+FLAG_COLS = ["frac_on_faults", "frac_on_faults_loose", "frac_not_fitted", "main_fault", "main_fault_frac",
+             "fault_ids", "n_daytime_screened", "n_review_P1_msh_deep", "n_review_P2_brookings"]
+
+
 def step_faults(ev, fam):
-    """Join families with the fault surfaces v1 (fit members and uniquely assigned events)."""
-    asg = pd.read_csv(FAULTS / "fault_surfaces_v1_assignment.csv.gz",
-                      usecols=["event_id", "assignment", "surface_id"])
-    summ = pd.read_csv(FAULTS / "fault_surfaces_v1_summary.csv",
-                       usecols=["surface_id", "region", "n_events", "strike", "dip", "kind", "change_from_v0",
-                                "v0_surfaces", "lit_match"])
-    on = asg[asg.assignment.isin(["fit member", "assigned"])][["event_id", "surface_id", "assignment"]]
+    """Join families with the fault surfaces v1 and flag families with events of the daytime-screened surfaces or
+    of the waveform-review sets P1 and P2 (catalog_note of the assignment table).
+
+    On a surface = on_surface_strict of the faults piece (fit members plus tier A-C 'assigned' events within 2 km,
+    without floor_limited, far_only or deep_pass), as its README asks; the looser join of the first build (fit
+    members plus every 'assigned' event) is kept as frac_on_faults_loose. Fractions leave out events at Axial
+    Seamount, which was not fitted (NaN for families with no member in a fitted region)."""
+    asg = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_assignment.csv.gz",
+                  usecols=["event_id", "assignment", "surface_id", "on_surface_strict", "removed_surface",
+                           "catalog_note"])
+    summ = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_summary.csv",
+                   usecols=["surface_id", "region", "n_events", "strike", "dip", "kind", "stable", "flags",
+                            "change_from_v0", "v0_surfaces", "lit_match"])
+    asg["strict"] = _bool(asg.on_surface_strict)
+    a2 = asg.set_index("event_id")
+    on = asg[asg.strict][["event_id", "surface_id", "assignment"]]
+    loose = asg[asg.assignment.isin(["fit member", "assigned"])].set_index("event_id").surface_id
     e = ev[ev.excluded.fillna("").eq("")].merge(on, on="event_id", how="left")
+    e["surface_loose"] = e.event_id.map(loose)
+    e["not_fitted"] = e.event_id.map(a2.assignment).fillna("").str.startswith("not fitted")
+    e["daytime"] = e.event_id.map(a2.assignment).fillna("").str.startswith("non-earthquake timing")
+    note = e.event_id.map(a2.catalog_note).fillna("")
+    e["P1"] = note.str.contains("review P1")
+    e["P2"] = note.str.contains("review P2")
     rows = []
     for F, g in e[e.family_id > 0].groupby("family_id"):
-        vc = g.surface_id.value_counts()
-        fr = (vc / len(g)).round(3)
-        rows.append(dict(family_id=F, frac_on_faults=round(g.surface_id.notna().mean(), 3),
+        gf = g[~g.not_fitted]
+        vc = gf.surface_id.value_counts()
+        fr = (vc / len(gf)).round(3) if len(gf) else vc
+        rows.append(dict(family_id=F, frac_on_faults=round(gf.surface_id.notna().mean(), 3) if len(gf) else np.nan,
+                         frac_on_faults_loose=round(gf.surface_loose.notna().mean(), 3) if len(gf) else np.nan,
+                         frac_not_fitted=round(g.not_fitted.mean(), 3),
                          main_fault=vc.index[0] if len(vc) else "",
                          main_fault_frac=float(fr.iloc[0]) if len(fr) else 0.0,
-                         fault_ids=";".join(f"{k}:{v}" for k, v in fr.items())))
+                         fault_ids=";".join(f"{k}:{v}" for k, v in fr.items()),
+                         n_daytime_screened=int(g.daytime.sum()), n_review_P1_msh_deep=int(g.P1.sum()),
+                         n_review_P2_brookings=int(g.P2.sum())))
     fj = pd.DataFrame(rows)
-    fam2 = fam.drop(columns=[c for c in ["frac_on_faults", "main_fault", "main_fault_frac", "fault_ids"]
-                             if c in fam]).merge(fj, on="family_id", how="left")
+    fam2 = fam.drop(columns=[c for c in FLAG_COLS if c in fam]).merge(fj, on="family_id", how="left")
     ea = e[e.surface_id.notna()]
     pf = []
     for sid, g in ea.groupby("surface_id"):
@@ -640,18 +813,165 @@ def step_faults(ev, fam):
         d["pct_background"] = round(100 * d["n_background"] / len(an), 1) if len(an) else np.nan
         d["pct_swarm"] = round(100 * d["n_swarm"] / len(an), 1) if len(an) else np.nan
         d["n_families"] = int(an.family_id[an.family_id > 0].nunique())
+        sw = an[an.cls == "swarm"].family_id.value_counts()
+        d["n_swarm_families"] = len(sw)
+        # how concentrated the swarm events of a surface are: share of its swarm events above Mc in its
+        # largest one and two swarm families
+        d["swarm_top1_family"] = int(sw.index[0]) if len(sw) else -1
+        d["swarm_share_top1"] = round(sw.iloc[0] / sw.sum(), 3) if len(sw) else np.nan
+        d["swarm_share_top2"] = round(sw.iloc[:2].sum() / sw.sum(), 3) if len(sw) else np.nan
         d["n_swarm_families_all"] = int(g[g.family_type.eq("swarm")].family_id.nunique())
+        d["n_analysis_loose"] = int((e.surface_loose.eq(sid) & e.in_analysis.astype(bool)).sum())
         pf.append(d)
     pf = pd.DataFrame(pf).rename(columns={"n_events": "n_events_joined"}).merge(summ, on="surface_id", how="left")
     pf.to_csv(OUT / "faults_v1_cluster_counts.csv", index=False)
-    # events of surfaces the faults piece removed for weekday-daytime timing (possible unflagged blasts)
+    # events of surfaces the faults piece removed for weekday-daytime timing (possible unflagged blasts): the
+    # weekday-daytime members of those surfaces; their other members are assigned like any event
     ndt = asg[asg.assignment.str.startswith("non-earthquake timing")][["event_id"]]
     x = ndt.merge(ev, on="event_id", how="left")
     pd.DataFrame([dict(n=len(x), in_analysis=int(x.in_analysis.astype(bool).sum()),
                        in_families=int((x.family_id > 0).sum()),
+                       n_families=int(x.family_id[x.family_id > 0].nunique()),
                        **{f"cls_{k}": int(v) for k, v in x.cls.value_counts().items()})]).to_csv(
         OUT / "faults_v1_daytime_surfaces_events.csv", index=False)
     return fam2, pf
+
+
+# ---------------------------------------------------------------- checks asked by the review
+def review_ids(problem: str, role: str | None = None) -> set:
+    try:
+        rv = pd.read_csv(REVIEW, usecols=["ID", "problem", "role"])
+    except FileNotFoundError:
+        return set()
+    rv = rv[rv.problem.eq(problem) & (rv.role.eq(role) if role else True)]
+    return set(rv.ID.astype(int))
+
+
+def maxc_edges(m: np.ndarray, edges: np.ndarray) -> float:
+    """v4 maximum-curvature Mc (left edge of the modal bin + 0.05 + 0.2) with the given bin edges."""
+    m = m[np.isfinite(m)]
+    if len(m) < 50:
+        return np.nan
+    h, e = np.histogram(m, bins=edges)
+    return float(e[np.argmax(h)] + 0.05 + 0.2)
+
+
+def step_checks(c, df):
+    ev = pd.read_csv(BIG / "events_zbz_v51.csv.gz", low_memory=False)
+    fam = pd.read_csv(OUT / "families_zbz_v51.csv")
+    cc = c.set_index("event_id")
+    ev["h_max"] = ev.event_id.map(cc.h_max)
+    ev["five_phase"] = ev.event_id.map(cc.five_phase).fillna(False).astype(bool)
+    ev["depth_good"] = _bool(ev.depth_good)
+    an = ev[ev.in_analysis.astype(bool)]
+    # ---- tier D by region: epicentre errors and links with a tier D end
+    tier, hm = ev.set_index("event_id").tier, ev.set_index("event_id").h_max
+    lk = an[an.linked.astype(bool)].copy()
+    lk["tier_par"] = lk.parent_id.map(tier)
+    lk["h_par"] = lk.parent_id.map(hm)
+    lk["anyD"] = lk.tier.eq("D") | lk.tier_par.eq("D")
+    lk["h10"] = np.maximum(lk.h_max, lk.h_par) >= 10
+    rows = []
+    for r in REG_ORDER + ["all"]:
+        e = an if r == "all" else an[an.region == r]
+        li = lk if r == "all" else lk[lk.region == r]
+        dd, ab = e[e.tier == "D"], e[e.tier != "D"]
+        rows.append(dict(region=r, n_analysis=len(e), n_tierD=len(dd), pct_tierD=round(100 * len(dd) / max(len(e), 1), 1),
+                         h_max_med_tierD_km=round(dd.h_max.median(), 1), h_max_med_tierABC_km=round(ab.h_max.median(), 1),
+                         n_five_phase=int(e.five_phase.sum()),
+                         h_max_med_five_phase_km=round(e[e.five_phase].h_max.median(), 1),
+                         pct_background_tierD=round(100 * dd.background.mean(), 1) if len(dd) else np.nan,
+                         pct_background_tierABC=round(100 * ab.background.mean(), 1) if len(ab) else np.nan,
+                         n_links=len(li), pct_links_tierD_end=round(100 * li.anyD.mean(), 1) if len(li) else np.nan,
+                         pct_links_hmax_ge10=round(100 * li.h10.mean(), 1) if len(li) else np.nan,
+                         n_families_tierD_largest=int((fam[fam.region == r] if r != "all" else fam).mainshock_id
+                                                      .map(tier).eq("D").sum())))
+    T = pd.DataFrame(rows)
+    T.to_csv(OUT / "tierD_by_region.csv", index=False)
+    log("\n" + T.to_string())
+    # ---- Mc: v4 floating-point bin edges against exact decimal edges
+    edges = {"v4_float": np.arange(-2, 8, 0.1), "exact": np.round(np.arange(-20, 81) / 10, 1)}
+    rows = []
+    for r in REG_ORDER:
+        d = df[df.region == r]
+        rr = dict(region=r)
+        for tag, ed in edges.items():
+            mcy = {y: maxc_edges(g.M.values, ed) for y, g in d.groupby("year") if len(g) >= 200}
+            mcy = {y: v for y, v in mcy.items() if np.isfinite(v)}
+            y0 = max(mcy, key=mcy.get)
+            mc = round(mcy[y0], 2)
+            # the two largest bins of the year that sets Mc with the v4 edges, counted with these edges
+            yv4 = rr.get("year_v4_float", y0)
+            hh, _ = np.histogram(d[d.year == yv4].M.dropna().values, bins=ed)
+            top2 = np.sort(hh)[::-1][:2]
+            rr.update({f"Mc_{tag}": mc, f"year_{tag}": y0, f"n_above_{tag}": int((d.M >= mc - 1e-9).sum()),
+                       f"modal_counts_{tag}": f"{top2[0]};{top2[1]}"})
+        # events exactly on the 0.1 grid (they fall in the bin below with the float edges)
+        m = d.M.dropna().values
+        rr["frac_M_on_0.1_grid"] = round(float(np.isclose(np.round(m, 1), m, atol=1e-9).mean()), 3)
+        rows.append(rr)
+    M = pd.DataFrame(rows)
+    M.to_csv(OUT / "mc_edge_check.csv", index=False)
+    log("\n" + M.to_string())
+    # ---- depth of swarm and mainshock-aftershock families, families as the unit (Mann-Whitney on family
+    # medians of depth_good members, families with >= 3 of them); also without the review sets P1 and P3
+    p1, p3 = review_ids("P1", "deep"), review_ids("P3")
+    freg = fam.set_index("family_id").region
+    g0 = ev[ev.excluded.fillna("").eq("") & ev.depth_good & (ev.family_id > 0)]
+    rows = []
+    for tag, g in [("all", g0), ("without_P1_P3", g0[~g0.event_id.isin(p1 | p3)])]:
+        f = g.groupby("family_id").agg(typ=("family_type", "first"), z=("depth", "median"), k=("depth", "size"))
+        f["region"] = f.index.map(freg)
+        f = f[f.k >= 3]
+        rr = []
+        for r in REG_ORDER:
+            s_ = f[(f.region == r) & (f.typ == "swarm")].z
+            m_ = f[(f.region == r) & (f.typ == "mainshock-aftershock")].z
+            ge = g[g.family_id.map(freg).eq(r)]
+            p = mannwhitneyu(s_, m_, alternative="two-sided").pvalue if len(s_) >= 2 and len(m_) >= 2 else np.nan
+            rr.append(dict(events=tag, region=r, n_swarm_families=len(s_), n_MA_families=len(m_),
+                           swarm_family_median_km=round(s_.median(), 1) if len(s_) else np.nan,
+                           MA_family_median_km=round(m_.median(), 1) if len(m_) else np.nan,
+                           swarm_event_median_km=round(ge[ge.family_type == "swarm"].depth.median(), 1),
+                           MA_event_median_km=round(ge[ge.family_type == "mainshock-aftershock"].depth.median(), 1),
+                           p_mannwhitney=p))
+        rr = pd.DataFrame(rr)
+        ntest = int(rr.p_mannwhitney.notna().sum())
+        rr["n_tests"] = ntest
+        rr["p_bonferroni"] = np.minimum(1.0, rr.p_mannwhitney * ntest)
+        rows.append(rr)
+    Dp = pd.concat(rows, ignore_index=True)
+    Dp.to_csv(OUT / "depth_swarm_vs_ma_families.csv", index=False, float_format="%.4f")
+    log("\n" + Dp.to_string())
+    # ---- the waveform-review sets in the clustering
+    try:
+        rv = pd.read_csv(REVIEW, usecols=["ID", "problem", "role"])
+    except FileNotFoundError:
+        rv = pd.DataFrame(columns=["ID", "problem", "role"])
+    rows = []
+    ei = ev.set_index("event_id")
+    for (p, role), g in rv.groupby(["problem", "role"]):
+        x = ei.reindex(g.ID.astype(int))
+        inf = x[x.family_id > 0]
+        rows.append(dict(problem=p, role=role, n=len(g), excluded=int(x.excluded.fillna("").ne("").sum()),
+                         in_analysis=int(x.in_analysis.astype(bool).sum()), depth_good=int(x.depth_good.sum()),
+                         in_families=len(inf), n_families=inf.family_id.nunique(),
+                         families_by_type=";".join(f"{k}:{v}" for k, v in
+                                                   fam[fam.family_id.isin(inf.family_id)].type.value_counts().items())))
+    pd.DataFrame(rows).to_csv(OUT / "review_sets_in_clusters.csv", index=False)
+    # families holding Mount St Helens deep events (P1): start weekday and local time (the review found a weekly
+    # artificial signal on Wednesdays on the analog UW channels HSR, EDM and STD)
+    x = ev[ev.event_id.isin(p1) & (ev.family_id > 0)]
+    f = fam[fam.family_id.isin(x.family_id)][["family_id", "region", "type", "n", "n_all", "Mmax", "start", "lon",
+                                               "lat"]].copy()
+    st = pd.to_datetime(f.start, utc=True, format="ISO8601").dt.tz_convert("America/Los_Angeles")
+    f["weekday_local"] = st.dt.day_name()
+    f["time_local"] = st.dt.strftime("%H:%M")
+    f["n_P1_deep"] = f.family_id.map(x.family_id.value_counts())
+    hh = st.dt.hour + st.dt.minute / 60
+    f["wednesday_local_noon"] = (st.dt.dayofweek == 2) & (hh >= 11.75) & (hh < 12.5)
+    f.to_csv(OUT / "review_P1_families.csv", index=False)
+    log(f"P1 families: {len(f)}, Wednesday 11:45-12:30 local: {int(f.wednesday_local_noon.sum())}")
 
 
 # ---------------------------------------------------------------- comparison with v4
@@ -778,16 +1098,32 @@ def step_compare(c, df, ctab, a):
     sh[["event_id", "dh_km", "dz_km", "depth_good"]].to_csv(BIG / "v4_v51_shift.csv.gz", index=False,
                                                             float_format="%.3f")
     # ---- validation, volcano zoom, setting stats
-    validate(ev, fam)
+    validate(ev, fam, c, e4)
     volcano_local(df, a)
     setting_stats(ev, fam, ctab)
 
 
-def validate(ev, fam):
+def validate(ev, fam, c, e4):
     rows = []
     fi = fam.set_index("family_id")
     ev = ev.copy()
     ev["time"] = pd.to_datetime(ev.time, utc=True, format="ISO8601")
+    cc = c.set_index("event_id")
+    p4 = e4.set_index("event_id")[["lat", "lon"]]
+    pv = ev.set_index("event_id")[["lat", "lon"]]
+    # the same families in variant tierABC (tier D out of the analysis set)
+    try:
+        vt = pd.read_csv(BIG / "variants/events_tierABC.csv.gz", usecols=["event_id", "family_id"]).set_index(
+            "event_id").family_id
+        fv = pd.read_csv(BIG / "variants/families_tierABC.csv").set_index("family_id")
+    except FileNotFoundError:
+        vt, fv = pd.Series(dtype=int), pd.DataFrame()
+
+    def dist(i, j, P):
+        if i not in P.index or j not in P.index:
+            return np.nan
+        return round(float(km(P.lon[i], P.lat[i], P.lon[j], P.lat[j])), 1)
+
     for eid, label, expect in KNOWN:
         e = ev[ev.event_id == eid]
         if not len(e):
@@ -800,6 +1136,20 @@ def validate(ev, fam):
             d.update(type=f.type, n=int(f.n), n_all=int(f.n_all), Mmax=f.Mmax, M2=f.M2,
                      duration90_days=round(f.duration90_days, 1), extent_km=round(f.extent_km, 1),
                      mean_leaf_depth=round(f.mean_leaf_depth, 2), regions=f.regions)
+            # largest other member: its location quality and distance from this event in v5.1 and v4
+            mem = ev[(ev.family_id == e.family_id) & (ev.event_id != eid)].sort_values("M", ascending=False)
+            if len(mem):
+                o = int(mem.event_id.iloc[0])
+                d.update(other_id=o, other_M=mem.M.iloc[0], other_time=str(mem.time.iloc[0])[:19],
+                         other_tier=cc.tier.get(o), other_h_max_km=round(float(cc.h_max.get(o, np.nan)), 1),
+                         other_n_sta=cc.n_sta.get(o), other_gap=round(float(cc.gap.get(o, np.nan)), 0),
+                         other_dist_v51_km=dist(eid, o, pv), other_dist_v4_km=dist(eid, o, p4))
+            Fv = vt.get(eid, -1)
+            if Fv > 0 and len(fv):
+                g = fv.loc[Fv]
+                d.update(tierABC_type=g.type, tierABC_n=int(g.n), tierABC_M2=g.M2,
+                         tierABC_duration90_days=round(g.duration90_days, 1),
+                         tierABC_mean_leaf_depth=round(g.mean_leaf_depth, 2))
         rows.append(d)
     ax = ev[(ev.region == "AX") & ev.in_analysis.astype(bool) & (ev.time >= "2015-04-23") & (ev.time < "2015-05-31")]
     big = ax[ax.family_id > 0].family_id.value_counts().head(1)
@@ -832,8 +1182,10 @@ def km(lon, lat, lon0, lat0):
     return np.hypot((lon - lon0) * KM * np.cos(np.radians(lat0)), (lat - lat0) * KM)
 
 
-def volcano_local(df, a, radius=20.0, names=("Mount St. Helens", "Mount Hood", "Mount Rainier")):
-    """Zoomed analysis around volcanoes with a local Mc (as in v4_clusters_zbz_report.volcano_local)."""
+def volcano_local(df, a, radius=20.0, names=("Mount St. Helens", "Mount Hood", "Mount Rainier"), nshuf=10):
+    """Zoomed analysis around volcanoes with a local Mc (as in v4_clusters_zbz_report.volcano_local). The
+    shuffled D is given for the v4 seed and as median and maximum over nshuf seeds."""
+    p1 = review_ids("P1", "deep")
     rows, frows = [], []
     for v in names:
         lo, la = VOLCANOES[v]
@@ -856,6 +1208,11 @@ def volcano_local(df, a, radius=20.0, names=("Mount St. Helens", "Mount Hood", "
         par, o = res["real"]
         g = gmm1d(o[:, 0])
         gs = gmm1d(res["shuffled"][1][:, 0])
+        dsh = [gs["ashman_D"]]
+        for k in range(1, nshuf):  # more shuffles: positions permuted against the times
+            uu = u[np.random.default_rng(100 + k).permutation(n)]
+            dsh.append(gmm1d(nn_search(t, uu, z, np.full(n, 1.6), t, uu, z, b * m, 0.5, False, True,
+                                       min(a.workers, 8), zero, zero, cap)[1][:, 0])["ashman_D"])
         linked = np.isfinite(o[:, 0]) & (o[:, 0] < g["log_eta0"]) & (o[:, 3] <= cap[np.maximum(par, 0)])
         ii = np.where(linked)[0]
         _, lab = connected_components(coo_matrix((np.ones(len(ii)), (ii, par[ii])), shape=(n, n)), directed=False)
@@ -870,11 +1227,17 @@ def volcano_local(df, a, radius=20.0, names=("Mount St. Helens", "Mount Hood", "
             zg = A.depth.values[mem][A.depth_good.values[mem]]
             frows.append(dict(volcano=v, n=len(mem), Mmax=ms[0], M2=ms[1], type=typ, start=A.time.values[mem[0]],
                               duration_days=(t[mem[-1]] - t[mem[0]]) * YR, mean_leaf_depth=tm["mean_leaf_depth"],
-                              depth_good_med=float(np.median(zg)) if len(zg) else np.nan, n_depth_good=len(zg)))
+                              depth_good_med=float(np.median(zg)) if len(zg) else np.nan, n_depth_good=len(zg),
+                              n_review_P1_msh_deep=int(A.event_id.iloc[mem].isin(p1).sum())))
         ty = pd.Series(types, dtype=object)
+        inP1 = A.event_id.isin(p1).values
         rows.append(dict(volcano=v, radius_km=radius, n_all=len(sub), Mc_local=mc, b_local=round(b, 2), n_above=n,
                          log_eta0=round(g["log_eta0"], 2), ashman_D=round(g["ashman_D"], 2),
                          ashman_D_shuffled=round(gs["ashman_D"], 2),
+                         ashman_D_shuffled_med=round(float(np.median(dsh)), 2),
+                         ashman_D_shuffled_max=round(float(np.max(dsh)), 2),
+                         n_shuffles_D_ge_real=int((np.array(dsh) >= g["ashman_D"]).sum()), n_shuffles=len(dsh),
+                         n_review_P1_above=int(inP1.sum()), n_review_P1_in_families=int((inP1 & (sz[lab] >= 2)).sum()),
                          pct_background=round(100 * (sz[lab] == 1).mean(), 1),
                          n_families=len(types), n_swarm=int((ty == "swarm").sum()),
                          n_MA=int((ty == "mainshock-aftershock").sum()), n_multiplet=int((ty == "multiplet").sum())))
@@ -919,10 +1282,10 @@ def setting_stats(ev, fam, ctab):
 # ---------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--steps", default="main,shuffle,variants,faults,compare")
+    ap.add_argument("--steps", default="main,shuffle,variants,faults,nulls,checks,compare")
     ap.add_argument("--rmin", type=float, default=0.5, help="distance floor (km)")
     ap.add_argument("--rcap-min", type=float, default=10.0, help="minimum link distance cap (km)")
-    ap.add_argument("--workers", type=int, default=14)
+    ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--nshuffle", type=int, default=3)
     ap.add_argument("--variants", default=",".join(VARIANTS))
     ap.add_argument("--force", action="store_true", help="recompute cached steps")
@@ -947,6 +1310,10 @@ def main():
         fam, pf = step_faults(ev, fam)
         fam.to_csv(OUT / "families_zbz_v51.csv", index=False, float_format="%.4f")
         log(f"faults: {len(pf)} surfaces with events")
+    if "nulls" in steps and (a.force or not (OUT / "null_test_summary.csv").exists()):
+        step_nulls(df, ctab, a)
+    if "checks" in steps:
+        step_checks(c, df)
     if "compare" in steps:
         step_compare(c, df, ctab, a)
         log("compare done")

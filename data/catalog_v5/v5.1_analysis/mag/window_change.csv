@@ -1,0 +1,14 @@
+,value
+n_common,2495920
+n_changed,803484
+share_changed,0.3219189717619155
+n_one_step,713338
+share_changed_one_step,0.8878061044152715
+med_abs_dw_s,0.25
+n_changed_amp,798742
+n_amp_gt001,42374
+share_amp_gt001_all,0.017049077960081482
+mean_dlogA_changed,0.0008963357665680117
+same_window_identical,True
+n_longer,491565
+n_shorter,311919

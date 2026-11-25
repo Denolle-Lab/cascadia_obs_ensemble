@@ -1,0 +1,5 @@
+group,n,tier_D,deep_pass,in_P1_deep_msh_review,dML_median,shift_h_km_median,shift_z_km_median,sig_z_median,depth_v4_median,depth_v51_median
+all,639,529,102,115,0.63,15.25,23.40,15.99,4.96,30.93
+Mount St. Helens box,208,173,76,115,0.67,8.09,49.75,19.82,4.24,55.99
+"onshore labels, outside the Mount St. Helens box",239,235,24,0,0.66,56.32,30.01,15.59,9.77,42.96
+offshore and coastal labels,192,121,2,0,0.54,6.12,5.58,9.03,2.12,7.13

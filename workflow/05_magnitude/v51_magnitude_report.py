@@ -2,9 +2,10 @@
 """
 Catalog v5.1 magnitudes: comparisons, pick-timing check and the HTML report.
 
-Inputs: the outputs of scale/run_magnitude_v51.sh in --data, the v4 Route A run in
-/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4, the v3 run (data/magnitude) for
-the v3 continuity line, and the Mc / b tables of workflow/06_analysis/v51_mc_b.py in --out.
+Inputs: the outputs of scale/run_magnitude_v51.sh in --data, the v4 Route A run
+(data/magnitude_v4 of the main checkout), the v3 run (data/magnitude) for the v3
+continuity line, and the Mc / b tables of workflow/06_analysis/v51_mc_b.py in --out.
+Input paths and their defaults: v51_paths.py (each can be set on the command line).
 
 Writes into --out (worktree, small files):
   v51_vs_v4_by_region.csv, v51_vs_v4_by_mag.csv, v51_vs_v4_by_dist.csv, v51_vs_v4_by_flag.csv,
@@ -27,15 +28,12 @@ import numpy as np
 import pandas as pd
 
 import phase19_preferred_magnitude as p19
+import v51_paths as vp
 from phase18_moment_tensor_match import hutton_boore
 from v51_magnitude_table import near_inversion
 
-V4 = "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4"
-V3 = "/home/mdenolle/cascadia_obs_ensemble/data/magnitude"
-V3V4 = "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/report/v3_v4_match.csv"
-V4MC = "/home/mdenolle/wt_a51_mag/data/catalog_v4/mc_maps/mc_regional.csv"
-STA = "/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv"
-PICKS41T = "/wd1/mdenolle_data/catalog_v5/v5.1/Cascadia_picks_catalog_v4.1t.csv.gz"
+# Input paths, set in main() from the command line (defaults in v51_paths.py).
+V4 = V3 = V3V4 = V4MC = STA = PICKS41T = AMPS = V51CAT = REVIEW_SETS = None
 BOX_ORDER = ["AX", "EN", "BL", "GO", "MT", "WA", "OR", "PU", "ON"]  # v4_mc_maps.REG_ORDER
 REG_ORDER = ["Axial", "Endeavour", "Explorer", "JdF ridge/plate", "Blanco", "Gorda", "Mendocino",
              "Offshore forearc", "Puget/Georgia", "Cascades", "Other onshore"]
@@ -281,9 +279,7 @@ def offshore_splits(d, out):
 
 
 MSH_BOX = (-122.4, -122.0, 46.0, 46.4)   # lon0, lon1, lat0, lat1 (as v51_mc_b.py)
-P1_TABLE = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P1_table.csv"
-P2_VIEWS = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P2_views.csv"
-P4_TABLE = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P4_table.csv"
+REVIEW_FILES = dict(P1="P1_table.csv", P2="P2_views.csv", P4="P4_table.csv")   # in REVIEW_SETS (read only)
 
 
 def large_changes(d, out, thr=0.5):
@@ -291,7 +287,8 @@ def large_changes(d, out, thr=0.5):
     big = d[d.dML.abs() > thr].copy()
     big["msh"] = big.lon.between(MSH_BOX[0], MSH_BOX[1]) & big.lat.between(MSH_BOX[2], MSH_BOX[3])
     big["onshore_lbl"] = big.region.isin(["Cascades", "Other onshore"])
-    p1 = pd.read_csv(P1_TABLE, usecols=["ID"]).ID if os.path.exists(P1_TABLE) else pd.Series([], dtype=int)
+    rf = {k: os.path.join(REVIEW_SETS, f) for k, f in REVIEW_FILES.items()}
+    p1 = pd.read_csv(rf["P1"], usecols=["ID"]).ID if os.path.exists(rf["P1"]) else pd.Series([], dtype=int)
     big["p1_deep_msh"] = big.ID.isin(p1)
     rows = []
     for name, s in (("all", big), ("Mount St. Helens box", big[big.msh]),
@@ -307,8 +304,8 @@ def large_changes(d, out, thr=0.5):
     t.to_csv(f"{out}/v51_vs_v4_large_changes.csv", index=False, float_format="%.2f")
     # the event sets of the v5.1 waveform review (read only), ML change on the shared events
     rev = {}
-    for key, f in (("P1 Mount St. Helens deep", P1_TABLE), ("P2 Brookings 2012", P2_VIEWS),
-                   ("P4 deep-pass and far_only", P4_TABLE)):
+    for key, f in (("P1 Mount St. Helens deep", rf["P1"]), ("P2 Brookings 2012", rf["P2"]),
+                   ("P4 deep-pass and far_only", rf["P4"])):
         if os.path.exists(f):
             ids = pd.read_csv(f, usecols=["ID"]).ID
             s = d[d.ID.isin(ids)]
@@ -394,7 +391,7 @@ def whatif_window(D, out, nmax=60000):
         n = n.sample(nmax, random_state=0)
     raw = pd.read_csv(f"{D}/raw_wa_amplitudes_v51.csv", usecols=["pick_id", "station", "window_s"])
     n = n.merge(raw, on="pick_id")
-    files = sorted({f"/wd1/mdenolle_data/amps_v6_all/{f}" for f in os.listdir("/wd1/mdenolle_data/amps_v6_all")
+    files = sorted({os.path.join(AMPS, f) for f in os.listdir(AMPS)
                     if f.endswith(".parquet") and any(f"_{s.split('.')[0]}.{s.split('.')[1]}." in f
                                                       for s in n.station.unique())})
     vs = pa.array(n.pick_id.to_numpy())
@@ -652,20 +649,34 @@ def fig(name, cap):
 
 
 def main(argv=None):
-    global CAT, CATF, DATA
+    global CAT, CATF, DATA, MCB, V4, V3, V3V4, V4MC, STA, PICKS41T, AMPS, V51CAT, REVIEW_SETS
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--mcb", default=None, help="v51_mc_b.py output dir (default <out>/mc_b)")
     ap.add_argument("--skip-whatif", action="store_true")
+    ap.add_argument("--v4", default=None, help="v4 Route A run (default data/magnitude_v4 of the main checkout)")
+    ap.add_argument("--v3", default=None, help="v3 Route A run (default data/magnitude of the main checkout)")
+    ap.add_argument("--v3v4", default=None,
+                    help="v3 -> v4 event match (default data/catalog_v4/report/v3_v4_match.csv of the main checkout)")
+    ap.add_argument("--v4mc", default=str(vp.REPO / "data/catalog_v4/mc_maps/mc_regional.csv"),
+                    help="v4 regional Mc / b table (tracked; default in this checkout)")
+    ap.add_argument("--catalog", default=str(vp.V51_CATALOG), help="catalog v5.1 csv")
+    ap.add_argument("--picks", default=str(vp.V41T_PICKS), help="v4.1t pick file")
+    ap.add_argument("--stations", default=str(vp.STATIONS))
+    ap.add_argument("--amps", default=str(vp.AMPS), help="per-station-day amplitude tables")
+    ap.add_argument("--review-sets", default=str(vp.REVIEW_SETS), help="event sets of the v5.1 waveform review")
     a = ap.parse_args(argv)
     DATA, out = a.data, a.out
+    V4 = str(a.v4 or vp.main_data("magnitude_v4"))
+    V3 = str(a.v3 or vp.main_data("magnitude"))
+    V3V4 = str(a.v3v4 or vp.main_data("catalog_v4/report/v3_v4_match.csv"))
+    V4MC, V51CAT, PICKS41T, STA, AMPS, REVIEW_SETS = a.v4mc, a.catalog, a.picks, a.stations, a.amps, a.review_sets
     os.makedirs(out, exist_ok=True)
-    mcb = a.mcb or os.path.join(out, "mc_b")
-    CAT = pd.read_csv("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+    mcb = MCB = a.mcb or os.path.join(out, "mc_b")
+    CAT = pd.read_csv(V51CAT,
                       usecols=["ID", "dist_min", "shift_z_km", "shift_h_km", "u_reason", "sig_z", "v4_depth"])
-    CATF = pd.read_csv("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
-                       usecols=["ID", "far_only", "shift_h_km", "shift_z_km", "tier", "region"])
+    CATF = pd.read_csv(V51CAT, usecols=["ID", "far_only", "shift_h_km", "shift_z_km", "tier", "region"])
     m = pd.read_csv(f"{DATA}/cascadia_catalog_v5.1_magnitudes.csv", low_memory=False)
     m["offshore"] = m.offshore.map({1.0: "True", 0.0: "False", True: "True", False: "False",
                                     "True": "True", "False": "False"}).fillna("")
@@ -1336,13 +1347,13 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              "250 events within 50 km of each 0.1 deg node (150 for the periods). Events: located in v5.1, with M, "
              "earthquakes only (C). B uses the v4.1 magnitudes on the same events and epicentres, A the v4.1 "
              "magnitudes on the v4 epicentres with every event (the v4 Mc maps).</p>")
-    h.append(f"<p>{img_tag(f'{out}/mc_b/fig1_mc_three_methods_v51.png', 'Mc maps')}</p>"
+    h.append(f"<p>{img_tag(f'{MCB}/fig1_mc_three_methods_v51.png', 'Mc maps')}</p>"
              "<p class='muted'>Mc from the three estimators, v5.1 magnitudes. White inverted triangles: seafloor "
              "stations; dark triangles: land stations.</p>")
-    h.append(f"<p>{img_tag(f'{out}/mc_b/fig2_b_and_change_v51.png', 'b and change')}</p>"
+    h.append(f"<p>{img_tag(f'{MCB}/fig2_b_and_change_v51.png', 'b and change')}</p>"
              "<p class='muted'>a) b above Mc_best; b) change of Mc_best and c) of b when the v4.1 magnitudes are "
              "replaced by the v5.1 ones on the same events.</p>")
-    h.append(f"<p>{img_tag(f'{out}/mc_b/fig3_mc_periods_v51.png', 'Mc periods')}</p>"
+    h.append(f"<p>{img_tag(f'{MCB}/fig3_mc_periods_v51.png', 'Mc periods')}</p>"
              "<p class='muted'>Mc_best per deployment period, with the stations open in each period.</p>")
     cols = ["region", "n", "mc_maxc", "mc_mbs", "mc_gft90", "mc_gft95", "mc_best", "sigma_boot", "b", "b_sigma",
             "b_sigma_boot", "b_maxc", "b_maxc_sigma_boot"]

@@ -60,9 +60,9 @@ import numpy as np
 import pandas as pd
 
 import phase19_preferred_magnitude as p19
+import v51_paths as vp
 from phase18_moment_tensor_match import hutton_boore, RMAX
 
-V51 = "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
 NONQUAKE = ("anss_explosion", "anss_quarry_blast", "anss_other_event", "anss_sonic_boom",
             "quarry_blast_likely")
 R_EARTH_KM = 6371.0
@@ -116,11 +116,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", required=True)
     ap.add_argument("--suffix", default="_v51")
+    ap.add_argument("--catalog", default=str(vp.V51_CATALOG), help="catalog v5.1 csv")
     a = ap.parse_args(argv)
     D, S = a.data, a.suffix
     p19.D, p19.SUFFIX = D, S
 
-    cat = pd.read_csv(V51)
+    cat = pd.read_csv(a.catalog)
     pm = pd.read_csv(f"{D}/cascadia_catalog_M{S}.csv")
     anchors = pd.read_csv(f"{D}/route_b_ml_anchors{S}.csv")
     inv = pd.read_csv(f"{D}/cascadia_catalog_ML{S}.csv", usecols=["event_id", "n_obs"])

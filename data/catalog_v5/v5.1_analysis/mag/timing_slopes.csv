@@ -1,0 +1,5 @@
+test,slope_per_s,slope_sigma,n
+"re-timed picks, residual vs |correction|, P",-0.0280,0.0061,49667
+"re-timed picks, residual vs |correction|, S",-0.0290,0.0058,47700
+"control (stations never re-timed), residual vs 0.53 s x day fraction, P",-0.0136,0.0024,441972
+"control (stations never re-timed), residual vs 0.53 s x day fraction, S",0.0161,0.0018,717348

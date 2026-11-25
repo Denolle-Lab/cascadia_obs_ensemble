@@ -137,6 +137,7 @@ def main():
     global D, SUFFIX, MATCHED, SOLVER, OUTDIR, TAG
     a = parse_args()
     D, SUFFIX, MATCHED, SOLVER, OUTDIR, TAG = a.data, a.suffix, a.matched, a.solver, a.outdir or a.data, a.tag
+    os.makedirs(OUTDIR, exist_ok=True)
     cat = pd.read_csv(f"{D}/cascadia_catalog_ML{SUFFIX}.csv")
     ev = event_ml(station_ml())
     an = pd.read_csv(f"{D}/route_b_ml_anchors{SUFFIX}.csv")[["event_id", "ml"]].join(ev, on="event_id", how="inner")

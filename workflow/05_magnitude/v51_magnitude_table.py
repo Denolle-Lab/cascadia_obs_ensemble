@@ -134,6 +134,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     D, S = a.data, a.suffix
     O, T = a.out or a.data, a.tag
+    os.makedirs(O, exist_ok=True)
     p19.D, p19.SUFFIX = D, S
     if a.solver:
         p19.SOLVER = a.solver

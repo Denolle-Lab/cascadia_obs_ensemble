@@ -51,7 +51,8 @@ def img(path_or_name, cap, width="100%"):
     if path_or_name in FIGS:
         data = FIGS[path_or_name]
     elif os.path.exists(path_or_name):
-        data = base64.b64encode(open(path_or_name, "rb").read()).decode()
+        with open(path_or_name, "rb") as fh:
+            data = base64.b64encode(fh.read()).decode()
     else:
         return f"<p class='miss'>(figure not available: {html.escape(path_or_name)})</p>"
     return (f"<figure><img src='data:image/png;base64,{data}' style='width:{width}'>"
@@ -92,7 +93,7 @@ def fig_convergence():
         ax.plot(g.itn, g.median_abs, "o-", color=col, label=f"{sol}: median")
         ax.plot(g.itn, g.p99_abs, "s--", color=col, alpha=.7, label=f"{sol}: 99th percentile")
     ax.axvline(3000, color="0.4", lw=.8)
-    ax.text(3050, ax.get_ylim()[1] if False else 1.5, "phase19 iter_lim 3000", fontsize=7, color="0.3")
+    ax.text(3050, 1.5, "phase19 iter_lim 3000", fontsize=7, color="0.3")
     ax.axhline(1e-4, color="0.6", lw=.6, ls=":")
     ax.set_yscale("log")
     ax.set_xscale("log")
@@ -116,8 +117,6 @@ def fig_map():
         .drop_duplicates("station")
     st["dep"] = [mc.deployment(a, b) for a, b in zip(st.station, st.stel_m)]
     fig, ax = plt.subplots(1, 2, figsize=(11, 6.2), sharey=True)
-    for k, (col, lab, lim) in enumerate((("dML", "ML converged - ML stored (v4.1)", 0.8),)):
-        pass
     e = e.sort_values("dML", key=np.abs)
     sc = ax[0].scatter(e.evlo, e.evla, c=e.dML, s=1.2, cmap="RdBu_r", vmin=-0.8, vmax=0.8, rasterized=True)
     fig.colorbar(sc, ax=ax[0], shrink=.7, label="ML converged - ML stored (v4.1, near events)")
@@ -486,7 +485,8 @@ def main():
             f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>Converged Route A magnitudes</title><style>{CSS}</style></head><body>{body}</body></html>")
     fo = f"{SMALL}/magnitude_converged_report.html"
-    open(fo, "w").write(page)
+    with open(fo, "w") as fh:
+        fh.write(page)
     print(f"wrote {fo} ({len(page) / 1e6:.1f} MB)")
 
 

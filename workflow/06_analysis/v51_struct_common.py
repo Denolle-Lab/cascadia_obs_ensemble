@@ -31,6 +31,9 @@ MODEL = MODELS / "v0.3.1.nc"
 MODEL_MEDIUM = MODELS / "v0.3.2.nc"          # only its `medium` flag (rock / water / air) is read
 SLAB = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
 TOMO_RUNS = Path("/wd1/mdenolle_data/tomo_v1/b2_tomodd")
+# waveform review of four v5.1 location problems (P1 Mount St Helens deep events, P2 Brookings 2012, P3 tensor
+# events, P4 deep_pass / far_only); read only to flag events, never to change them
+REVIEW = Path("/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv")
 EXT_MODELS = Path("/home/mdenolle/cascadia_obs_ensemble/data/tomography")
 V4_CAT = Path("/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4")
 OUT = ROOT / "data/catalog_v5/v5.1_analysis/struct"
@@ -263,8 +266,9 @@ def load_events(model: Model) -> pd.DataFrame:
             "depth_quality", "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase", "surface_km",
             "v4_lat", "v4_lon", "v4_depth", "dist_min", "gap"]
     c = pd.read_csv(CAT, usecols=cols, low_memory=False)
-    m = pd.read_csv(MAG, usecols=["ID", "M", "M_type", "is_earthquake"])
+    m = pd.read_csv(MAG, usecols=["ID", "M", "M_type", "is_earthquake", "ml_caution"])
     c = c.merge(m, on="ID", how="left", validate="1:1")
+    c["review"] = review_labels(c.ID)
     for f in ("floor_limited", "far_only", "deep_pass", "five_phase"):
         c[f] = _bool(c[f])
     c["is_earthquake"] = _bool(c["is_earthquake"])
@@ -290,6 +294,46 @@ def load_events(model: Model) -> pd.DataFrame:
     c["sigma_h"] = np.sqrt((c.h_min ** 2 + c.h_max ** 2) / 2) / 1.515
     attach_nodes(c, model)
     return c
+
+
+def review_labels(ids: pd.Series) -> pd.Series:
+    """'P1:deep;P4:deep_pass'-style labels of the waveform-review sets an event belongs to ('' when none)."""
+    try:
+        rv = pd.read_csv(REVIEW, usecols=["ID", "problem", "role"])
+    except FileNotFoundError:
+        log("review list not found:", REVIEW)
+        return pd.Series("", index=ids.index)
+    lab = (rv.problem + ":" + rv.role).groupby(rv.ID).agg(lambda s: ";".join(sorted(set(s))))
+    return ids.map(lab).fillna("")
+
+
+def input_provenance() -> dict:
+    """Git commit of each sibling worktree and size / mtime / md5 of every input file (written by the prep step)."""
+    import hashlib
+    import subprocess
+    out = {}
+    for name, p in (("clusters", CLU), ("faults", FLT), ("this piece", ROOT)):
+        try:
+            out[f"{name} commit"] = subprocess.run(["git", "-C", str(p), "rev-parse", "--short", "HEAD"],
+                                                   capture_output=True, text=True, check=True).stdout.strip()
+        except Exception as e:  # noqa: BLE001
+            out[f"{name} commit"] = f"unknown ({e})"
+    files = [CAT, MAG, CLU / "events_zbz_v51.csv.gz", CLU / "regions_zbz.csv", CLU / "families_zbz_v51.csv",
+             FLT / "fault_surfaces_v1_assignment.csv.gz", FLT / "fault_surfaces_v1_summary.csv",
+             FLT_BIG / "fault_surfaces_v1_vertices.csv.gz", MODEL, MODEL_MEDIUM, REVIEW, SLAB]
+    import time as _t
+    for f in files:
+        if not f.exists():
+            out[str(f)] = "missing"
+            continue
+        h = hashlib.md5()
+        with open(f, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 22), b""):
+                h.update(chunk)
+        st = f.stat()
+        out[str(f)] = dict(bytes=st.st_size, mtime=_t.strftime("%Y-%m-%dT%H:%M:%S", _t.localtime(st.st_mtime)),
+                           md5=h.hexdigest())
+    return out
 
 
 def attach_nodes(c: pd.DataFrame, model: Model, lon=None, lat=None, depth=None, prefix=""):

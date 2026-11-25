@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import html
 import io
+import json
 import sys
 from pathlib import Path
 
@@ -68,58 +69,97 @@ def bh(p):
     return q
 
 
+T1_VARS = ["VpVs_res", "dVpVs_res", "dVp_res", "dVs_res"]
+SIGNAL = {"dVp": "Vp", "Vp": "Vp", "dVs": "Vs", "Vs": "Vs", "VpVs": "Vp/Vs", "dVpVs": "Vp/Vs"}
+
+
 def tests_summary():
+    """Every test with a p value, in two multiple-testing families.
+
+    primary: the main event sets of Q1-Q5, including the background-only b-value splits (they were computed and
+             one of them passes, so they cannot be left out).
+    variant: every other computed set with a p value (Q1 depth_good / strict / Vp-only families; Q2 density for
+             depth_good, above-Mc and background events; Q3 without the review sets P1/P2; Q5 area tests).
+    q_BH is Benjamini-Hochberg within the primary family; q_BH_all over primary + variant together.
+    'signal' groups tests that measure the same thing (e.g. Vp change and absolute Vp at the same nodes, each as an
+    event-weighted mean and a stratified Spearman correlation): passes within one signal are not independent."""
     rows = []
     t1 = rd("t1_swarm_vs_ma.csv")
-    for _, r in t1[(t1.set == "resPS") & t1["var"].isin(["VpVs_res", "dVpVs_res", "dVp_res", "dVs_res"])].iterrows():
-        rows.append(dict(question="Q1 swarms vs mainshock-aftershock", zone=r.zone, test=f"{r.contrast}: {r['var']}",
+    for _, r in t1[t1["var"].isin(T1_VARS)].iterrows():
+        rows.append(dict(family="primary" if r.set == "resPS" else "variant",
+                         question="Q1 swarms vs mainshock-aftershock", zone=r.zone,
+                         test=f"{r.contrast}: {r['var']}" + ("" if r.set == "resPS" else f" (set {r.set})"),
+                         signal=f"Q1 {r.zone} {r.contrast}",
                          n=f"{r.n_swarm} vs {r.n_other} families, {r.n_blocks} blocks", effect=r["diff"],
                          ci_lo=r.ci_lo, ci_hi=r.ci_hi, null_lo=r.null_lo, null_hi=r.null_hi, p=r.p_perm))
     t2 = rd("t2_density.csv")
-    for _, r in t2[t2.events == "all"].iterrows():
-        rows.append(dict(question="Q2 seismicity density", zone=r.zone,
-                         test=f"event-weighted coverage-matched {r['var']}",
+    for _, r in t2[~t2.events.str.startswith("all, field")].iterrows():
+        fam = "primary" if r.events == "all" else "variant"
+        sfx = "" if r.events == "all" else f" ({r.events} events)"
+        sig = f"Q2 {r.zone} {SIGNAL[r['var']]} node scale"
+        rows.append(dict(family=fam, question="Q2 seismicity density", zone=r.zone,
+                         test=f"event-weighted coverage-matched {r['var']}{sfx}", signal=sig,
                          n=f"{r.n_events} events, {r.n_nodes} nodes, {r.n_blocks} blocks", effect=r.event_mean_res,
                          ci_lo=r.res_ci_lo, ci_hi=r.res_ci_hi, null_lo=r.res_null_lo, null_hi=r.res_null_hi,
                          p=r.res_p))
-        rows.append(dict(question="Q2 seismicity density", zone=r.zone,
-                         test=f"stratified Spearman(count, {r['var']}_res)",
+        rows.append(dict(family=fam, question="Q2 seismicity density", zone=r.zone,
+                         test=f"stratified Spearman(count, {r['var']}_res){sfx}", signal=sig,
                          n=f"{r.n_nodes} nodes, {r.n_strata} strata", effect=r.rho_cov, ci_lo=r.rho_ci_lo,
                          ci_hi=r.rho_ci_hi, null_lo=r.rho_null_lo, null_hi=r.rho_null_hi, p=r.rho_p))
     for _, r in t2[t2.events == "all, field smoothed 20 km"].iterrows():
-        rows.append(dict(question="Q2 seismicity density, resolved scale", zone=r.zone,
+        rows.append(dict(family="primary", question="Q2 seismicity density, resolved scale", zone=r.zone,
                          test=f"event-weighted coverage-matched {r['var']}, field smoothed 20 km",
+                         signal=f"Q2 {r.zone} {SIGNAL[r['var']]} smoothed",
                          n=f"{r.n_events} events, {r.n_nodes} nodes, {r.n_blocks} blocks", effect=r.event_mean_res,
                          ci_lo=r.res_ci_lo, ci_hi=r.res_ci_hi, null_lo=r.res_null_lo, null_hi=r.res_null_hi,
                          p=r.res_p))
     tb = rd("t2_bvalue.csv")
-    for _, r in tb[tb.events == "all above Mc"].iterrows():
-        rows.append(dict(question="Q2 b-value", zone=r.zone, test=f"b(high {r['var']}_res) - b(low)",
+    for _, r in tb.iterrows():
+        bg = r.events == "background"
+        rows.append(dict(family="primary", question="Q2 b-value" + (" (background events)" if bg else ""),
+                         zone=r.zone, test=f"b(high {r['var']}_res) - b(low)" + (", background only" if bg else ""),
+                         signal=f"Q2 {r.zone} b vs {SIGNAL[r['var']]}" + (" background" if bg else ""),
                          n=f"{r.n_high} vs {r.n_low} events, {r.n_blocks} blocks", effect=r.db_high_minus_low,
                          ci_lo=r.ci_lo, ci_hi=r.ci_hi, null_lo=r.null_lo, null_hi=r.null_hi, p=r.p_perm))
     t3 = rd("t3_depth_extent.csv")
     for _, r in t3[t3.sd_real.notna()].iterrows():
-        rows.append(dict(question="Q3 depth extent", zone=r.zone, test=f"{r.test} (smaller than null?)",
+        rv = "without review" in str(r.zone)
+        rows.append(dict(family="variant" if rv else "primary", question="Q3 depth extent", zone=r.zone,
+                         test=f"{r.test} (smaller than null?)", signal=f"Q3 {str(r.zone).split()[0]} {r.test}",
                          n=f"{int(r.n_columns)} columns", effect=r.sd_real, ci_lo=r.sd_ci_lo, ci_hi=r.sd_ci_hi,
                          null_lo=r.sd_null_lo, null_hi=r.sd_null_hi, p=r.p_smaller))
     t4 = rd("t4_pooled.csv")
     for _, r in t4[t4.align_mean.notna()].iterrows():
-        rows.append(dict(question="Q4 fault surfaces", zone="all resolved", test=f"alignment |n.grad {r['var']}| "
-                         f"({r.subset} surfaces)", n=f"{int(r.n_surfaces)} surfaces, {int(r.n_blocks)} blocks",
+        rows.append(dict(family="primary", question="Q4 fault surfaces", zone="all resolved",
+                         test=f"alignment |n.grad {r['var']}| ({r.subset} surfaces)",
+                         signal=f"Q4 {SIGNAL[r['var']]} {r.subset}",
+                         n=f"{int(r.n_surfaces)} surfaces, {int(r.n_blocks)} blocks",
                          effect=r.align_mean, ci_lo=r.align_ci_lo, ci_hi=r.align_ci_hi, null_lo=r.align_null_lo,
                          null_hi=r.align_null_hi, p=r.align_p_greater))
     t5 = rd("t5_blanco_segment_corr.csv")
     for _, r in t5.iterrows():
-        rows.append(dict(question="Q5 Blanco segments", zone="BL", test=f"Spearman({r.x}, {r.y})",
-                         n=f"{r.n_segments} segments", effect=r.spearman, p=r.p_exact))
+        rows.append(dict(family="primary", question="Q5 Blanco segments", zone="BL", test=f"Spearman({r.x}, {r.y})",
+                         signal="Q5 Blanco segments", n=f"{r.n_segments} segments", effect=r.spearman, p=r.p_exact))
+    ar = rd("t5_areas_dvp.csv")
+    for _, r in ar[ar.p_perm.notna()].iterrows():
+        rows.append(dict(family="variant", question="Q5 areas", zone=r.area,
+                         test=f"event mean coverage-matched dVp at the {r.node_depth:g} km node",
+                         signal=f"Q5 {r.area}", n=f"{int(r.n)} events, {int(r.n_nodes)} nodes, {int(r.n_blocks)} "
+                         "blocks", effect=r.dVp_res_mean, ci_lo=r.ci_lo, ci_hi=r.ci_hi, null_lo=r.null_lo,
+                         null_hi=r.null_hi, p=r.p_perm))
     df = pd.DataFrame(rows)
-    df["q_BH"] = bh(df.p.values)
+    prim = df.family.eq("primary").values
+    df["q_BH"] = np.nan
+    df.loc[prim, "q_BH"] = bh(df.p.values[prim])
+    df["q_BH_all"] = bh(df.p.values)
     # reference value of "no effect": 0 for differences, anomalies and correlations (Q1, Q2, Q5), the middle of the
     # null range for spreads and alignments (Q3, Q4). A test counts as passed only when q < 0.05 AND its block-
     # bootstrap interval excludes that reference (the permutation p is too optimistic for autocorrelated fields).
     ref = np.where(df.question.str.startswith(("Q3", "Q4")), 0.5 * (df.null_lo + df.null_hi), 0.0)
     df["ref"] = ref
-    df["passed"] = (df.q_BH < 0.05) & ((df.ci_lo > ref) | (df.ci_hi < ref))
+    excl = (df.ci_lo > ref) | (df.ci_hi < ref)
+    df["passed"] = (df.q_BH < 0.05) & excl
+    df["passed_all"] = (df.q_BH_all < 0.05) & excl
     df.to_csv(OUT / "tests_summary.csv", index=False, float_format="%.4g")
     return df
 
@@ -406,6 +446,14 @@ def main():
     syns = rd("synth_artifact_summary.csv")
     mc = rd("mc_location_summary.csv")
     v4 = rd("v4_counterpart_external_vs.csv")
+    fl = rd("flags_resolved_by_zone.csv")
+    v4h = rd("t2_v4hypo.csv")
+    blk = rd("t2_block_offsets_summary.csv")
+    tiles = rd("t2_tile_runs.csv")
+    bchk = rd("t2_bvalue_checks.csv")
+    t4s = rd("t4_surfaces.csv")
+    t3c = rd("t3_columns.csv")
+    prov = json.loads((OUT / "input_commits.json").read_text())
     ts = tests_summary()
     fam_ps = rd("t1_families_resPS.csv")
     nd = pd.read_parquet(BIG / "nodes_v031.parquet")

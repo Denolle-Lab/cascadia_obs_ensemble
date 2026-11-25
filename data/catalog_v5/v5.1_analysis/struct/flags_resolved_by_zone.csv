@@ -1,0 +1,5 @@
+mask,zone,n,pct_tier_D,pct_depth_unconstrained,pct_depth_biased_deep,pct_depth_good,n_far_only,n_deep_pass,n_floor_limited,n_review_P1_deep,n_review_P1_other,n_review_P2,n_review_P3,n_review_P4_far_only,n_review_P4_deep_pass,n_ml_caution,tierD_h_max_med_km,sig_z_med_km
+resP,BL,5881,18.6023,33.8208,0,54.6506,29,0,0,0,0,0,3,29,0,9,27.8395,5.4437
+resP,MTJ,1938,15.0155,0,39.6285,48.452,1,0,0,0,0,0,5,1,0,12,19.105,3.71295
+resP,WA,10741,20.985,0,0,79.015,0,0,60,0,10,0,2,0,0,32,35.7685,1.964
+resPS,BL,4825,17.8031,29.9482,0,58.6114,18,0,0,0,0,0,3,18,0,4,28.926,5.2484

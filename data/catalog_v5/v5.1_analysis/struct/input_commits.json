@@ -1,0 +1,65 @@
+{
+ "clusters commit": "f904659b",
+ "faults commit": "6ebe0230",
+ "this piece commit": "9e69d848",
+ "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv": {
+  "bytes": 65732303,
+  "mtime": "2026-11-25T03:22:07",
+  "md5": "5035f0ee6c6494eed764f1733290d5bd"
+ },
+ "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv": {
+  "bytes": 34244298,
+  "mtime": "2026-11-25T08:19:56",
+  "md5": "c5f4cf63452c2728668c0ace0c51b967"
+ },
+ "/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters/events_zbz_v51.csv.gz": {
+  "bytes": 4398920,
+  "mtime": "2026-11-25T09:06:34",
+  "md5": "0fef9bea7f1aea429d572c4b0cb6a890"
+ },
+ "/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters/regions_zbz.csv": {
+  "bytes": 736,
+  "mtime": "2026-11-25T09:06:23",
+  "md5": "1ccc47c50265d10b0ab2139bbe55fc8f"
+ },
+ "/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters/families_zbz_v51.csv": {
+  "bytes": 1046725,
+  "mtime": "2026-11-25T09:15:17",
+  "md5": "01ae6afd43114ec2e4909628e2a566d6"
+ },
+ "/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_assignment.csv.gz": {
+  "bytes": 3185471,
+  "mtime": "2026-11-25T08:24:46",
+  "md5": "af35a2956a01d5b86e1b752c03049c6f"
+ },
+ "/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_summary.csv": {
+  "bytes": 150003,
+  "mtime": "2026-11-25T08:23:25",
+  "md5": "eb69956273f3f7e4aa10fb2777277210"
+ },
+ "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_vertices.csv.gz": {
+  "bytes": 2431480,
+  "mtime": "2026-11-25T08:23:27",
+  "md5": "6a3750ebd00723b27a432bb0b777c027"
+ },
+ "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.1.nc": {
+  "bytes": 3208434,
+  "mtime": "2026-11-24T07:05:23",
+  "md5": "04ef7a30ac27f1812f99bfa3309ccdbb"
+ },
+ "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.2.nc": {
+  "bytes": 4174393,
+  "mtime": "2026-11-25T05:42:05",
+  "md5": "0487b11d61919fa9245b7142c9aceb9c"
+ },
+ "/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv": {
+  "bytes": 463856,
+  "mtime": "2026-11-25T08:02:18",
+  "md5": "b7b0d1d714f2a93b332b83361743d33a"
+ },
+ "/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz": {
+  "bytes": 2461361,
+  "mtime": "2026-09-29T07:23:27",
+  "md5": "f8cd3d54319ee7058e0a33e26c64858d"
+ }
+}

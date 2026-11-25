@@ -38,9 +38,10 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from v51_struct_common import (BIG, BLANCO_SEGMENTS, CLU, EXT_MODELS, FLT, FLT_BIG, KM, OUT, RNG_SEED,  # noqa: E402
-                               TOMO_RUNS, ZONES, Model, attach_nodes, b_aki, block_bootstrap, block_of, ci,
-                               load_events, log, perm_p, permute_within, slab_depth_fn)
+from v51_struct_common import (BIG, BLANCO_SEGMENTS, CLU, COSREF, EXT_MODELS, FLT, FLT_BIG, KM, LAT0,  # noqa: E402
+                               LON0, OUT, RNG_SEED, TOMO_RUNS, ZONES, Model, attach_nodes, b_aki, block_bootstrap,
+                               block_of, ci, input_provenance, load_events, log, perm_p, permute_within,
+                               slab_depth_fn)
 
 EV = BIG / "events_struct_v51.parquet"
 NODES = BIG / "nodes_v031.parquet"
@@ -76,9 +77,13 @@ def step_prep(model: Model, a):
     log(f"prep: {len(ev)} rows, {ev.located.sum()} located, {int((ev.located & ev.is_earthquake).sum())} located "
         f"earthquakes; resolved nodes P {int(model.mP.sum())}, S {int(model.mS.sum())}, PS {int(model.mPS.sum())}; "
         f"resolved nodes not in rock: {model.n_res_not_rock}  ({time.time() - t0:.0f} s)")
+    prov = input_provenance()
+    (OUT / "input_commits.json").write_text(json.dumps(prov, indent=1))
+    log("inputs:", json.dumps(prov, indent=1))
     keep = nodes[nodes.resP | nodes.resS]
     save(keep.drop(columns=["node"]), "nodes_resolved_v031.csv")
-    cols = ["ID", "time", "lon", "lat", "depth", "tier", "depth_good", "region", "box", "zone", "node_zone", "M",
+    cols = ["ID", "time", "lon", "lat", "depth", "tier", "depth_good", "depth_quality", "far_only", "review",
+            "ml_caution", "region", "box", "zone", "node_zone", "M",
             "Mc_box", "cls", "family_id", "family_type", "assignment", "surface_id", "slab_km", "node_depth",
             "resP", "resPS", "resP8", "resPS8", "dws_p", "dws_s"] + PVARS + SVARS + \
            [v + "_res" for v in PVARS + SVARS]
@@ -104,7 +109,7 @@ def step_coverage(model: Model, a):
     add("located earthquakes, M >= Mc of box", eq[eq.M >= eq.Mc_box])
     for c in ["background", "mainshock-aftershock", "swarm", "multiplet", "linked_to_single"]:
         add(f"class: {c}", eq[eq.cls == c])
-    for c in ["fit member", "assigned", "ambiguous", "none"]:
+    for c in sorted(eq.assignment.dropna().unique()):
         add(f"fault assignment: {c}", eq[eq.assignment == c])
     for r, d in eq.groupby("region"):
         add(f"region: {r}", d)
@@ -142,6 +147,31 @@ def step_coverage(model: Model, a):
     save(tab, "coverage_region_depthband.csv")
     log(cov.to_string())
     log(nz.to_string())
+    # catalog flags of the events in resolved cells, by zone: how many depths are poorly constrained, and which
+    # events belong to the waveform-review sets (P1 Mount St Helens deep, P2 Brookings, P3 tensors, P4 deep/far)
+    rows = []
+    for mask in ("resP", "resPS"):
+        for zone, d in eq[eq[mask]].groupby("node_zone"):
+            rv = d.review.fillna("")
+            mlc = d.ml_caution.fillna("")
+            rows.append(dict(mask=mask, zone=zone, n=len(d),
+                             pct_tier_D=100 * d.tier.eq("D").mean(),
+                             pct_depth_unconstrained=100 * d.depth_quality.eq("unconstrained").mean(),
+                             pct_depth_biased_deep=100 * d.depth_quality.eq("biased_deep").mean(),
+                             pct_depth_good=100 * d.depth_good.mean(), n_far_only=int(d.far_only.sum()),
+                             n_deep_pass=int(d.deep_pass.sum()), n_floor_limited=int(d.floor_limited.sum()),
+                             n_review_P1_deep=int(rv.str.contains("P1:deep").sum()),
+                             n_review_P1_other=int((rv.str.contains("P1:") & ~rv.str.contains("P1:deep")).sum()),
+                             n_review_P2=int(rv.str.contains("P2:").sum()),
+                             n_review_P3=int(rv.str.contains("P3:").sum()),
+                             n_review_P4_far_only=int(rv.str.contains("P4:far_only").sum()),
+                             n_review_P4_deep_pass=int(rv.str.contains("P4:deep_pass").sum()),
+                             n_ml_caution=int(mlc.ne("").sum()),
+                             tierD_h_max_med_km=float(d.loc[d.tier.eq("D"), "h_max"].median()),
+                             sig_z_med_km=float(d.sig_z.median())))
+    fl = pd.DataFrame(rows)
+    save(fl, "flags_resolved_by_zone.csv")
+    log(fl.to_string())
 
 
 # ======================================================================== t1
@@ -300,6 +330,10 @@ def step_t2(model: Model, a):
                     bl = nz_.block.values
                     boot_rho = block_bootstrap(bl, lambda i: stratified_spearman(y[i], x[i], strata[i]), n=a.nboot)
                     boot_an = block_bootstrap(bl, lambda i: weighted_anom(y[i], x[i]), n=a.nboot)
+                    # occupancy: each node holding events counts once (how much of the event-weighted value comes
+                    # from a few busy nodes)
+                    occ = (y > 0).astype(float)
+                    boot_occ = block_bootstrap(bl, lambda i: weighted_anom(occ[i], x[i]), n=a.nboot)
                     null_rho, null_an = [], []
                     for _ in range(a.nperm):
                         yp = permute_within(y, strata, rng)
@@ -324,6 +358,8 @@ def step_t2(model: Model, a):
                                      event_mean_res=anom, res_ci_lo=ci(boot_an)[0], res_ci_hi=ci(boot_an)[1],
                                      res_null_lo=ci(null_an)[0], res_null_hi=ci(null_an)[1],
                                      res_p=perm_p(anom, null_an),
+                                     occ_mean_res=weighted_anom(occ, x), occ_ci_lo=ci(boot_occ)[0],
+                                     occ_ci_hi=ci(boot_occ)[1],
                                      node_sd=float(np.nanstd(x))))
     # variant: the field smoothed laterally (Gaussian sigma 20 km, i.e. the 40 km resolved cell) before the
     # coverage-matched anomaly, so only structure on the resolved scale is compared with the events
@@ -393,24 +429,57 @@ def step_t2(model: Model, a):
     bres = pd.DataFrame(brow)
     save(bres, "t2_bvalue.csv")
     log(bres.to_string())
+    # checks of each split (point values only): by Mc box, by depth group of the node, and with Mc + 0.2
+    crow = []
+    for mask_col, vars_ in (("resP", PVARS), ("resPS", SVARS)):
+        for bgonly in (False, True):
+            e = e0[e0[mask_col]]
+            if bgonly:
+                e = e[e.cls == "background"]
+            e = e.assign(dgroup=pd.cut(e.node_depth, [-5, 10, 20, 40], labels=["1-9 km", "12-18 km", "29 km"]))
+            for zone, ez in e.groupby("node_zone"):
+                for v in vars_:
+                    for kind, grp in (("all", None), ("box", "box"), ("node depth", "dgroup")):
+                        parts = [("all", ez)] if grp is None else list(ez.groupby(grp, observed=True))
+                        for key, d in parts:
+                            for extra in (0.0, 0.2):
+                                dd = d[d.excess >= extra]
+                                hi = dd[v + "_res"].values >= 0
+                                ex = dd.excess.values - extra
+                                crow.append(dict(mask=mask_col, events="background" if bgonly else "all above Mc",
+                                                 zone=zone, var=v, split_by=kind, group=str(key), mc_plus=extra,
+                                                 n_low=int((~hi).sum()), n_high=int(hi.sum()),
+                                                 b_low=b_aki(ex[~hi]), b_high=b_aki(ex[hi]),
+                                                 db_high_minus_low=b_aki(ex[hi]) - b_aki(ex[~hi]),
+                                                 n_ML=int(dd.M_type.eq("ML").sum()), n_review=int(dd.review.ne("")
+                                                                                                    .sum())))
+    save(pd.DataFrame(crow), "t2_bvalue_checks.csv")
 
 
 # ======================================================================== t3
 def step_t3(model: Model, a):
     ev, nodes = load()
     e = ev[ev.located & ev.is_earthquake & ev.depth_good].copy()
-    g = e.groupby(["iy", "ix"])
-    col = pd.DataFrame(dict(n=g.size(), d50=g.depth.median(), d90=g.depth.quantile(0.9),
-                            d95=g.depth.quantile(0.95), d10=g.depth.quantile(0.1), dmax=g.depth.max(),
-                            box=g.box.agg(lambda s: s.mode().iloc[0] if s.notna().any() else ""))).reset_index()
-    col = col[col.n >= a.min_col].copy()
-    col["lon"] = model.lon[col.ix]
-    col["lat"] = model.lat[col.iy]
-    col["zone"] = model.zone2[col.iy, col.ix]
-    col["block"] = block_of(col.lon, col.lat)
+    e["rv_P1P2"] = e.review.fillna("").str.contains("P1:deep|P2:")
     sl = slab_depth_fn()
-    col["slab_km"] = sl(col.lon.values, col.lat.values)
-    col["d95_minus_slab"] = col.d95 - col.slab_km
+
+    def columns(e):
+        g = e.groupby(["iy", "ix"])
+        col = pd.DataFrame(dict(n=g.size(), d50=g.depth.median(), d90=g.depth.quantile(0.9),
+                                d95=g.depth.quantile(0.95), d10=g.depth.quantile(0.1), dmax=g.depth.max(),
+                                n_review_P1deep=g.review.agg(lambda s: int(s.fillna("").str.contains("P1:deep")
+                                                                           .sum())),
+                                n_review_P2=g.review.agg(lambda s: int(s.fillna("").str.contains("P2:").sum())),
+                                box=g.box.agg(lambda s: s.mode().iloc[0] if s.notna().any() else ""))).reset_index()
+        col = col[col.n >= a.min_col].copy()
+        col["lon"] = model.lon[col.ix]
+        col["lat"] = model.lat[col.iy]
+        col["zone"] = model.zone2[col.iy, col.ix]
+        col["block"] = block_of(col.lon, col.lat)
+        col["slab_km"] = sl(col.lon.values, col.lat.values)
+        col["d95_minus_slab"] = col.d95 - col.slab_km
+        return col
+    col = columns(e)
 
     # Vp at a depth z in a column, from the two resolved nodes that bracket it (adjacent depth nodes only)
     def vp_at(iy, ix, z, var="Vp"):
@@ -453,21 +522,31 @@ def step_t3(model: Model, a):
                              p_smaller=float((1 + np.sum(null <= real_sd)) / (1 + len(null))) if len(null) else np.nan,
                              depth_sd=float(np.std(ok[q]))))
     # (b) slab: spread of D95 - slab depth against D95 - slab depth of other columns (slab depths permuted)
-    for zone, cz in col.groupby("box"):
-        ok = cz[np.isfinite(cz.slab_km)]
-        if len(ok) < 5:
-            continue
-        real = float(np.std(ok.d95 - ok.slab_km))
-        null = np.array([np.std(ok.d95.values - rng.permutation(ok.slab_km.values)) for _ in range(a.nperm)])
-        boot = block_bootstrap(ok.block.values, lambda i: np.std(ok.d95.values[i] - ok.slab_km.values[i]), n=a.nboot)
-        from scipy.stats import spearmanr
-        rows.append(dict(test="slab: sd(D95 - slab)", zone=zone, n_columns=len(ok), n_blocks=ok.block.nunique(),
-                         median=float(np.median(ok.d95 - ok.slab_km)), sd_real=real, sd_ci_lo=ci(boot)[0],
-                         sd_ci_hi=ci(boot)[1], sd_null_med=float(np.median(null)), sd_null_lo=ci(null)[0],
-                         sd_null_hi=ci(null)[1], p_smaller=float((1 + np.sum(null <= real)) / (1 + len(null))),
-                         depth_sd=float(np.std(ok.d95)),
-                         rho_d95_slab=float(spearmanr(ok.d95, ok.slab_km).statistic),
-                         frac_d95_below_slab=float((ok.d95 > ok.slab_km).mean())))
+    from scipy.stats import spearmanr
+
+    def slab_rows(col, label=""):
+        for zone, cz in col.groupby("box"):
+            ok = cz[np.isfinite(cz.slab_km)]
+            if len(ok) < 5:
+                continue
+            real = float(np.std(ok.d95 - ok.slab_km))
+            null = np.array([np.std(ok.d95.values - rng.permutation(ok.slab_km.values)) for _ in range(a.nperm)])
+            boot = block_bootstrap(ok.block.values, lambda i: np.std(ok.d95.values[i] - ok.slab_km.values[i]),
+                                   n=a.nboot)
+            rows.append(dict(test="slab: sd(D95 - slab)", zone=zone + label, n_columns=len(ok),
+                             n_blocks=ok.block.nunique(),
+                             median=float(np.median(ok.d95 - ok.slab_km)), sd_real=real, sd_ci_lo=ci(boot)[0],
+                             sd_ci_hi=ci(boot)[1], sd_null_med=float(np.median(null)), sd_null_lo=ci(null)[0],
+                             sd_null_hi=ci(null)[1], p_smaller=float((1 + np.sum(null <= real)) / (1 + len(null))),
+                             depth_sd=float(np.std(ok.d95)),
+                             rho_d95_slab=float(spearmanr(ok.d95, ok.slab_km).statistic),
+                             frac_d95_below_slab=float((ok.d95 > ok.slab_km).mean())))
+    slab_rows(col)
+    # variant: the waveform-review sets P1 (Mount St Helens deep events, likely false) and P2 (Brookings 2012, two
+    # depth solutions) left out, in the boxes that hold any of them (flagged, not removed from the main result)
+    boxes_rv = set(e.loc[e.rv_P1P2, "box"].dropna())
+    col_rv = columns(e[~e.rv_P1P2])
+    slab_rows(col_rv[col_rv.box.isin(boxes_rv)], " (without review P1/P2)")
     res = pd.DataFrame(rows)
     save(res, "t3_depth_extent.csv")
     log(res.to_string())
@@ -523,7 +602,8 @@ def step_t4(model: Model, a):
             nodes_v = np.unique(np.ravel_multi_index((vs.iz.values[ok], vs.iy.values[ok], vs.ix.values[ok]),
                                                      model.shape))
             rows.append(dict(var=var, surface_id=sid, region=s.region, stable=bool(s.stable), strike=s.strike,
-                             dip=s.dip, n_vertices=int(ok.sum()), n_nodes=len(nodes_v),
+                             dip=s.dip, flags=s["flags"] if isinstance(s["flags"], str) else "",
+                             n_vertices=int(ok.sum()), n_nodes=len(nodes_v),
                              depth_med=float(np.median(vs.depth_km.values[ok])),
                              align_med=float(np.median(align)), align_null_med=float(np.median(null_al)),
                              align_p_greater=float((1 + np.sum(null_al >= np.median(align))) / (1 + len(null_al))),
@@ -851,6 +931,145 @@ def step_mc(model: Model, a):
     log(summ.to_string())
 
 
+# ======================================================================== v4hypo
+V4HYPO_POS = {"v5.1 (all located earthquakes)": ("lon", "lat", "depth", False),
+              "v5.1 (events with a v4 hypocentre)": ("lon", "lat", "depth", True),
+              "v4": ("v4_lon", "v4_lat", "v4_depth", True),
+              "v4 epicentre, v5.1 depth": ("v4_lon", "v4_lat", "depth", True),
+              "v5.1 epicentre, v4 depth": ("lon", "lat", "v4_depth", True)}
+
+
+def step_v4hypo(model: Model, a):
+    """Q2 control: the catalog v4 hypocentres of the same events (GraphDD, not located in v0.3.1) sampled in the
+    same model, and the two mixed positions, to see which coordinate carries the event-velocity association."""
+    ev, nodes = load()
+    rng = np.random.default_rng(RNG_SEED + 7)
+    e0 = ev[ev.located & ev.is_earthquake].copy()
+    rows = []
+    for name, (lo, la, z, need_v4) in V4HYPO_POS.items():
+        e = e0[e0.v4_depth.notna()].copy() if need_v4 else e0.copy()
+        attach_nodes(e, model, e[lo].values, e[la].values, e[z].values, prefix="h_")
+        for mask_col, vars_, st in (("resP", PVARS, "stratum_P"), ("resPS", SVARS, "stratum_S")):
+            cnt = e[e["h_" + mask_col]].groupby("h_node").size()
+            n = nodes[nodes[mask_col]].copy()
+            n["count"] = n.node.map(cnt).fillna(0).values
+            for zone in ZONES:
+                nz_ = n[n.zone == zone]
+                if len(nz_) < 6 or nz_["count"].sum() == 0:
+                    continue
+                y = nz_["count"].values.astype(float)
+                bl, strata = nz_.block.values, nz_[st].values
+                occ = (y > 0).astype(float)
+                for v in vars_:
+                    x = nz_[v + "_res"].values
+                    anom = weighted_anom(y, x)
+                    boot = block_bootstrap(bl, lambda i: weighted_anom(y[i], x[i]), n=a.nboot)
+                    null = [weighted_anom(permute_within(y, strata, rng), x) for _ in range(a.nperm)]
+                    rows.append(dict(positions=name, mask=mask_col, zone=zone, var=v, n_events=int(y.sum()),
+                                     n_nodes_with_events=int((y > 0).sum()), n_blocks=int(pd.Series(bl).nunique()),
+                                     event_mean_res=anom, res_ci_lo=ci(boot)[0], res_ci_hi=ci(boot)[1],
+                                     res_null_lo=ci(null)[0], res_null_hi=ci(null)[1], res_p=perm_p(anom, null),
+                                     occ_mean_res=weighted_anom(occ, x),
+                                     rho_cov=stratified_spearman(y, x, strata)))
+    res = pd.DataFrame(rows)
+    save(res, "t2_v4hypo.csv")
+    log(res[res.zone == "BL"].to_string())
+
+
+# ======================================================================== blocks
+_BLK = {}
+
+
+def _blocks_task(args):
+    var, size, fx, fy, nboot = args
+    y, x, st, xk, yk = _BLK[var]
+    blk = np.floor((xk + fx * size) / size).astype(int) * 1000 + np.floor((yk + fy * size) / size).astype(int)
+    seed = RNG_SEED + int(size * 100 + fx * 40 + fy * 4)
+    bw = block_bootstrap(blk, lambda i: weighted_anom(y[i], x[i]), n=nboot, seed=seed)
+    bs = block_bootstrap(blk, lambda i: stratified_spearman(y[i], x[i], st[i]), n=nboot, seed=seed)
+    return dict(var=var, block_km=size, shift_x=fx, shift_y=fy, n_blocks=len(np.unique(blk)),
+                w_ci_lo=ci(bw)[0], w_ci_hi=ci(bw)[1], s_ci_lo=ci(bs)[0], s_ci_hi=ci(bs)[1])
+
+
+def step_blocks(model: Model, a):
+    """Q2 Blanco: do the block-bootstrap intervals of the event-weighted anomaly and of the stratified Spearman
+    correlation depend on where the 40 / 60 km block grid falls? 16 placements per block size (origin shifted by
+    0, 1/4, 1/2, 3/4 of a block in x and y)."""
+    import multiprocessing as mp
+    ev, nodes = load()
+    e = ev[ev.located & ev.is_earthquake]
+    for mask_col, vars_, stc in (("resP", ["Vp", "dVp"], "stratum_P"), ("resPS", ["Vs", "dVs"], "stratum_S")):
+        n = nodes[nodes[mask_col] & (nodes.zone == "BL")]
+        y = n.node.map(e[e[mask_col]].groupby("node").size()).fillna(0).values.astype(float)
+        xk = (n.lon.values - LON0) * KM * COSREF
+        yk = (n.lat.values - LAT0) * KM
+        for v in vars_:
+            _BLK[v] = (y, n[v + "_res"].values, n[stc].values, xk, yk)
+    tasks = [(v, s, fx, fy, a.nboot) for v in _BLK for s in (40, 60) for fx in (0, .25, .5, .75)
+             for fy in (0, .25, .5, .75)]
+    with mp.get_context("fork").Pool(min(a.nproc, len(tasks))) as pool:
+        rows = pool.map(_blocks_task, tasks)
+    res = pd.DataFrame(rows)
+    save(res, "t2_block_offsets.csv")
+    summ = res.groupby(["var", "block_km"]).agg(
+        n_placements=("w_ci_hi", "size"),
+        w_excludes_0=("w_ci_hi", lambda s: int(((s < 0) | (res.loc[s.index, "w_ci_lo"] > 0)).sum())),
+        w_ci_hi_min=("w_ci_hi", "min"), w_ci_hi_max=("w_ci_hi", "max"),
+        s_excludes_0=("s_ci_hi", lambda s: int(((s < 0) | (res.loc[s.index, "s_ci_lo"] > 0)).sum())),
+        s_ci_hi_min=("s_ci_hi", "min"), s_ci_hi_max=("s_ci_hi", "max")).reset_index()
+    save(summ, "t2_block_offsets_summary.csv")
+    log(summ.to_string())
+
+
+# ======================================================================== tiles
+TILE_RUNS = [("blanco_m0", "d200_s20", "the run merged into v0.3.1"),
+             ("blanco_m0", "d200_s60", "smoothing 60"),
+             ("blanco_m0", "d200_s120", "smoothing 120"),
+             ("blanco_m0t", "d200_s20", "re-timed picks; the Blanco tile of v0.4.0"),
+             ("blanco_m0t", "d200_s60", "re-timed picks, smoothing 60"),
+             ("blanco_m0tnf", "d200_s20", "re-timed picks, start from the margin_m0_v3nf reference")]
+
+
+def step_tiles(model: Model, a):
+    """Q2 Blanco: the same event statistic on Blanco tile inversions with stronger smoothing and with the re-timed
+    picks (v0.4.0's Blanco tile), on the v0.3.1 resolved nodes and strata (fields interpolated trilinearly from the
+    tile lattice, interior nodes only, as in the synth step)."""
+    from scipy.interpolate import RegularGridInterpolator
+    ev, nodes = load()
+    e = ev[ev.located & ev.is_earthquake]
+    rows = []
+    Z, LA, LO = np.meshgrid(model.dep, model.lat, model.lon, indexing="ij")
+    pts = np.column_stack([Z.ravel(), LA.ravel(), LO.ravel()])
+    for tile, inv, note in TILE_RUNS:
+        f = TOMO_RUNS / tile / inv / "Output_Files" / "model_geo.npz"
+        if not f.exists():
+            log("missing", f)
+            continue
+        vp0, vpvs0 = read_mod_file(TOMO_RUNS / tile / "inputs" / "MOD")
+        m = np.load(f)
+        vp = np.transpose(m["vp"], (2, 1, 0))
+        vs = np.transpose(m["vs"], (2, 1, 0))
+        zi, la, lo = m["z"][1:-1], m["lat"][1:-1], m["lon"][1:-1]
+        for nm, arr, a0, mask_col, st in (("dVp", vp, vp0, "resP", "stratum_P"),
+                                          ("dVs", vs, vp0 / vpvs0, "resPS", "stratum_S")):
+            d = 100 * (arr / a0 - 1)
+            F = RegularGridInterpolator((zi, la, lo), d[1:-1, 1:-1, 1:-1], bounds_error=False,
+                                        fill_value=np.nan)(pts)
+            n = nodes[nodes[mask_col] & (nodes.zone == "BL")].copy()
+            n["d"] = F[n.node.values]
+            n = n[np.isfinite(n.d)]
+            n["d_res"] = n.d - n.groupby(st).d.transform("mean")
+            y = n.node.map(e[e[mask_col]].groupby("node").size()).fillna(0).values.astype(float)
+            x = n.d_res.values
+            boot = block_bootstrap(n.block.values, lambda i: weighted_anom(y[i], x[i]), n=a.nboot)
+            rows.append(dict(tile=tile, run=inv, note=note, var=nm, n_nodes=len(n), n_events=int(y.sum()),
+                             event_mean_res=weighted_anom(y, x), res_ci_lo=ci(boot)[0], res_ci_hi=ci(boot)[1],
+                             node_sd=float(n.d.std()), corr_with_v031=float(np.corrcoef(n.d, n[nm])[0, 1])))
+    res = pd.DataFrame(rows)
+    save(res, "t2_tile_runs.csv")
+    log(res.to_string())
+
+
 # ======================================================================== v4
 def step_v4(model: Model, a):
     """The earlier counterpart (phase13_tomography.py: dlnVs from the depth-mean of an external Vs model at the
@@ -875,11 +1094,17 @@ def step_v4(model: Model, a):
         for grp, g in [("all located earthquakes", both)] + list(both.groupby("region")):
             if len(g) < 30:
                 continue
+            # the same group without the restriction to events inside the external model at both positions
+            ga = e if grp == "all located earthquakes" else e[e.region == grp]
             rows.append(dict(model=fname, group=grp, n=len(g), baseline_median=float(np.median(base)),
                              median_v4=g.dln_v4.median(), median_v51=g["dln_v5.1"].median(),
                              change=g["dln_v5.1"].median() - g.dln_v4.median(),
                              depth_med_v4=g.v4_depth.median(), depth_med_v51=g.depth.median(),
-                             frac_slow_v4=(g.dln_v4 < 0).mean(), frac_slow_v51=(g["dln_v5.1"] < 0).mean()))
+                             depth_shift_med=(g.depth - g.v4_depth).median(),
+                             frac_slow_v4=(g.dln_v4 < 0).mean(), frac_slow_v51=(g["dln_v5.1"] < 0).mean(),
+                             n_group_all=len(ga), depth_med_v4_all=ga.v4_depth.median(),
+                             depth_med_v51_all=ga.depth.median(),
+                             depth_shift_med_all=(ga.depth - ga.v4_depth).median()))
         # on the resolved cells of v0.3.1: external dlnVs against our coverage-matched dVs (Blanco) and dVp
         r = both[both.resPS]
         if len(r) > 30:
@@ -902,7 +1127,9 @@ def main():
     ap.add_argument("--min-col", dest="min_col", type=int, default=30)
     ap.add_argument("--min-vert", dest="min_vert", type=int, default=10)
     ap.add_argument("--nmc", type=int, default=50)
+    ap.add_argument("--nproc", type=int, default=8, help="worker processes of the blocks step (at most 12)")
     a = ap.parse_args()
+    a.nproc = max(1, min(a.nproc, 12))
     OUT.mkdir(parents=True, exist_ok=True)
     BIG.mkdir(parents=True, exist_ok=True)
     model = Model()

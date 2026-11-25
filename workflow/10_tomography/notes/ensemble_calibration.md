@@ -217,3 +217,100 @@ configs.v0.4.x, set `config` (or B2_ENS_CONFIG) and a new root (B2_ENS_ROOT), th
   Options: class factors per stage and class (each stage's picks drawn with its own factor; a pick shared by two
   stages would then need one value, e.g. the factor of the stage that holds most of its picks), or per station
   network. Decide before the real-data members.
+
+## 8. Real phase on model v0.4.1 (D-B083, P-F3): driver changes, test member, proposed decisions
+
+Agent note, 2026-11-25 (worktree ~/wt_ens41, branch tomo/ensemble-v041 from tomo/v041-floor). The running v0.3.2
+synthetic calibration (~/wt_ens, root ensemble_v0.3.2) was not touched. Outputs of this work:
+/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.1/ (prior/, real/r000, verify/nullmerge.json, test_r000/products/,
+RESUME.md, logs/).
+
+### 8.1 What changed in the driver
+
+* **Floor (configs.<c>.floor, D-B083).** Per member and stage, after the member's inputs are built (its drawn start
+  hypocentres rescaled into event.dat), surface.dat is written in the stage's own rescaled frame
+  (b2_tomodd_floor.write_surface, refactored out of `write` without the manifest: centre from the member's
+  forward.json, floor grid read from the pinned copy in prior/floor/) and copied into the run; its md5 must equal the
+  prior's surface.dat of that stage, which prep checks byte-identical to the surface.dat of the deterministic v0.4.1
+  run (all five stages identical). Air_dep = tomodd.floor.air_dep_km (-1000 km). Binaries: configs.<c>.bin_dir
+  (frozen_2026-11-25_inv/bin, P-F1), runtime files from the same folder (md5 = the 2026-11-24 runtime_files).
+  Recorded per stage: run/floor_hits.csv.gz (every >>>Floor line: iteration, ID, attempted depth, floor),
+  run/floor_end.csv (events whose final tomoDD-frame depth lies within [-2 m, 5 m) of the floor, with region and
+  number of stops), and DONE["floor"] (start hypocentres above tomoDD's floor, stops, events hit, events ending on
+  the floor by region, not-met lines, air-quake lines, final positions above the floor by > 2 m = errors). MERGED
+  carries the per-stage summary; stats.json and the report a min / median / max table over the members. The
+  parser reproduces the deterministic v0.4.1 counts exactly (stops / events hit / end on the floor: M0
+  2,090 / 266 / 156, mendocino_gorda_c 503 / 70 / 48, blanco 100 / 21 / 11, oregon 1,724 / 218 / 125, washington
+  2,008 / 278 / 154).
+* **Configuration v0.4.1** (params tomodd.ensemble.configs.v0.4.1; default config now v0.4.1, each config has its
+  own root): dataset b1b_balanced_ct (checked against every stage's region), M0 margin_m0_v4/d200_s480, tiles
+  <tile>_m0f (mendocino_gorda_c and oregon, washington d200_s480, blanco d200_s20: v0.4.0 smoothing), damping 200,
+  masks of the v0.3.1 tiles (mask_region, as product_v041's choice.csv), merge settings tomodd.merge.product_v041,
+  node model 0.4.1, product_version 0.4.1 -> products 0.4.1+ens.<merged members>, floor on,
+  calibration_root = ensemble_v0.3.2 (8.4, P-E11).
+* **Pick-noise class factors per tile** (prior.noise_groups tile): one factor per tile and class from that tile's
+  deterministic run; M0's residuals are left out (reported only); a pick belongs to the tile holding most picks of
+  its event among the tiles that hold it (4,361 M0-only picks use the factor pooled over the four tiles); a
+  tile-class with < 30 events (prior.class_factor_min_events) uses the pooled factor (only blanco land, which has no
+  picks). Each used group-class gets its own inverse-gamma draw per member. Configuration v0.3.1 keeps
+  `pooled_with_m0` (the rule its running calibration drew with; its draws are unchanged). Check of the code on the
+  v0.3.1 runs: OBS P 0.900 Oregon / 3.035 Washington, OBS S 1.129 Blanco / 3.359 Washington (the reviewer's
+  numbers). On the v0.4.1 runs (1.4826 MAD of residual / sigma):
+
+  | group | land P | land S | OBS P | OBS S |
+  |---|---|---|---|---|
+  | mendocino_gorda_c | 1.60 | 1.96 | 1.60 | 1.80 |
+  | blanco | (pooled) | (pooled) | 1.05 | 1.13 |
+  | oregon | 1.45 | 1.60 | 0.86 (310 events) | 1.38 (305) |
+  | washington | 1.69 | 1.82 | 2.37 (61 events) | 2.67 (84) |
+  | pooled over the tiles | 1.62 | 1.81 | 1.27 | 1.49 |
+  | M0 (not used) | 2.02 | 2.19 | 1.82 | 2.06 |
+
+  Picks by group: washington 284,282, mendocino_gorda_c 266,502, oregon 102,261, blanco 85,170, pooled 4,361.
+* **Pinned prep inputs.** prep copies the five OBS S statics files, Delph2018.nc and (with the floor) the 30 s / 45 s
+  floor grids (.bin + .hdr) into prior/ and records source and md5 in prior.json ("pins"); statics and Delph are
+  read from the copies. A re-prep is refused if any source md5 changed, or if prior.json has no pins (a root made by
+  an older driver, e.g. ensemble_v0.3.2). Members refuse to draw, and the chain refuses to run, when the effective
+  prior or a member-relevant configuration key (m0, tiles, dataset, bin_dir, runtime_files, floor, merge_product,
+  node_model, mask_damp) differs from what prep recorded: members of one root share one prior. Prep is
+  deterministic (a second root reproduced every prior file byte for byte).
+* **Locks and process group.** Each member stage runs under <member>/<stage>/LOCK (flock held for the process
+  lifetime + pid, pgid, host, start; the merge under merge.LOCK); a second process on the same stage is refused (tested
+  on the running M0 stage), the scheduler does not start a locked stage, and one chain runs per root (chain.lock). The
+  chain and the members command make themselves process-group leaders; on an exception, SIGTERM or SIGINT they
+  SIGTERM the group (SIGKILL after 10 s), so no member stage or tomoDD is left running (tested: exception and
+  SIGTERM, child and grandchild processes all gone), and exit non-zero.
+* **FAILED_MEMBER.** At the start of a run, a marker of a member that has merged since is stale: renamed to
+  FAILED_MEMBER.cleared.<time> and logged. Other markers are listed with the command to clear them; `b2_ens_run.py
+  clear-failed KIND NAME..|--all` clears them explicitly (renamed, stage FAILED markers removed).
+* **Prior width as parameters (pending PI decision, unchanged values).** prior.rf: std 0.03, len_lat_km 30, len_z_km 8,
+  taper, lattice, and rf.long, an optional independent long-wavelength component (std 0 = off; own std, lengths,
+  optional taper) drawn from its own random stream, so the rf draws are unchanged whatever rf.long is. Any key can
+  also be overridden per configuration (configs.<c>.prior, merged key by key). Changing it needs no code change but
+  a new root (the members of a root share one prior; the test member r000 was drawn with 3 %, 30 km / 8 km).
+* Smaller: RESUME.md title "Ensemble of model v<version> (configuration <c>; products <version>+ens.<members>)" (was
+  "Ensemble v0.3.1"); its launch line carries B2_ENS_CONFIG; tomoDD niceness is absolute (tomodd.ensemble.nice) also
+  when the driver itself is niced; `b2_ens_member.py nullmerge`; notes/bayes_design.md corrected: dt.ct is not
+  rebuilt from the perturbed absolute times, the code adds each pick's shift to t1 and t2.
+
+### 8.2 Tests (2026-11-25)
+
+* Null draws: `b2_ens_member.py nullmerge` (deterministic v0.4.1 runs, start and reference, D-B073 at 2.1 / 2.5 km)
+  against the registered v0.4.1.nc: Vp_tomography, Vs_tomography, Vp, Vp_start, Vs_start, dws_p, dws_s,
+  tile_weight_p/s and vs_reverted identical; Vs (rule) differs by 1 float32 ulp at 1,347 nodes (max 2.4e-7 km/s);
+  rule lowered Vs at 8,739 nodes as v0.4.1 (ROOT/verify/nullmerge.json).
+* Chain path on a scratch root: prep (55 s), prior files byte-identical to the real root's, then exit 2 at the
+  calibration gate (the v0.3.2 calibration has not run yet), no member started.
+* Test member r000 (real, v0.4.1, floor, at most 4 tomoDD, nice 10): M0 22.7 min, 2.45 GB, abs rms 0.446 s,
+  floor 1,577 stops on 212 events, 148 end on the floor, 9 start hypocentres above the floor, 0 above it by > 2 m at
+  the end, 0 not met, 0 air quakes, 6,942 of 6,943 events kept. Tiles were still running at hand-back (started 11:38).
+
+### 8.3 Proposed decisions (for the main session; none adopted here)
+
+* P-E11 The v0.4.1 real phase is gated on the v0.3.2 synthetic calibration (calibration_root); no synthetic phase for
+  v0.4.1 (its freeze has no syn build). That calibration drew pooled class factors and ran without the floor.
+* P-E12 Floor per member stage as in 8.1 (surface.dat md5-locked to the deterministic run's, Air_dep -1000 km).
+* P-E13 Start hypocentres stay truncated at the exact merged surface (P-E6), not at tomoDD's floor; starts between the
+  surface and the floor are stopped by their first upward update, as in the deterministic runs.
+* P-E14 Pick-noise class factors per tile, M0 out of the pooling, 30-event minimum, picks by home tile.
+* P-E15 Prior width as parameters (values unchanged pending the PI); a changed prior needs a new root.

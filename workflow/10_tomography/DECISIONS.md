@@ -851,3 +851,20 @@ scan of every station for similar clock problems, each candidate confirmed by a 
 modelling, correction, re-timing (D-B072/D-B075) and reporting steps become one documented toolkit with a command line, an
 HTML review report and an agent instruction file, so the same procedure can be run on other pick datasets. Numbering: this
 session uses D-B090..D-B099 from here on; session -18 continues from D-B084.
+
+### D-B091 Run the Route A magnitude station-term inversion to convergence and recompute the v4.1 and v5.1 magnitudes (adopted, 2026-11-25 10:24, PI)
+Found in the v5.1 magnitude fix round (branch analysis/v51-mag cd0334d6, workflow/05_magnitude/v51_phase19_convergence.py):
+phase19's LSQR (damp 1e-3) stops at iter_lim 3000 without converging (istop 7) in v4.1 (the paper's magnitudes) and v5.1.
+Run to convergence (4,863 iterations, istop 2), final ML moves by Blanco -0.68, JdF ridge/plate -0.51, Gorda, Mendocino and
+offshore forearc -0.28, Explorer -0.08, Axial -0.04, onshore +0.01, with the residual norm almost unchanged (268.37 -> 267.86):
+the picks only weakly tie the offshore level to the onshore network. The converged solution agrees better with both outside
+references: ComCat ML anchor gaps Blanco +0.59 -> +0.10, Gorda +0.33 -> +0.02, Mendocino +0.54 -> +0.26, anchor std 0.230 ->
+0.176; offshore ML - tensor Mw (Mw 3-4.5) +0.26 -> -0.01. Both the v4.1 (paper) and v5.1 magnitudes are recomputed with a
+converged solver that checks istop, together with a map of how strongly each offshore deployment is tied to the onshore
+network; Mc, b and every paper figure or number that uses offshore ML are updated (manuscript: bullets only).
+
+### D-B092 Prepare the catalog v6.0 relocation now: v0.4.1 travel-time grids and NonLinLoc SSST (adopted, 2026-11-25 10:24, PI; implements D-B079)
+Build the travel-time grids of model v0.4.1 (D-B083; field rule, merged surface, wide and deep grids as for v5.1) and implement
+and test NLL-SSST (source-specific station terms, Lomax & Savvaidis 2022) against the D-B014/D-B069 static station terms on a
+few clusters. Picks: Cascadia_picks_catalog_v4.1tc.csv (D-B090; MH07/MG07 corrected). The full relocation runs after the PI's
+review of the other clock-candidate epochs; the location-review flags are applied when the catalog is built.

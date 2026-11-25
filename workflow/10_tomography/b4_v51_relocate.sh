@@ -123,7 +123,8 @@ stage_deep() { (cd $TA && $PY a2_run_nlloc.py $RD "${NLL_OPTS[@]}" --stat $RELOC
 stage_catalog() {
   (cd $TA && $PY a2_parse_hyp.py $R1 --deep $RD && $PY a2_build_catalog.py $R1) || return 1
   mkdir -p $CODE/data/tomo_v1/b4/$R1
-  cp $CODE/data/reloc_v5/catalog_v5_trackA_${R1}_tiers.md $CODE/data/tomo_v1/b4/$R1/ 2>/dev/null || true
+  # a2_build_catalog.py writes the tier summary into the Track A repo (REPO/data/reloc_v5), not into CODE
+  cp $TA/../../data/reloc_v5/catalog_v5_trackA_${R1}_tiers.md $CODE/data/tomo_v1/b4/$R1/ || return 1
   (cd $CODE && $PY $W/b4_catalog.py $R1 && $PY $W/b4_acceptance.py $R1 --old b4_iter1_v0.3.1 &&
    $PY $W/b4_lit_paired.py v5.1=$RELOC/catalog/catalog_b4_$R1.csv v0.3.1=$RELOC/catalog/catalog_b4_b4_iter1_v0.3.1.csv)
 }

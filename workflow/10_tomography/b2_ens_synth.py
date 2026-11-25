@@ -1,131 +1,161 @@
-"""Track B Bayesian ensemble (D-B030): synthetic truth for the calibration (notes/bayes_design.md section 5).
+"""Track B Bayesian ensemble (D-B030 gate): synthetic truth and synthetic data for the calibration
+(notes/bayes_design.md section 5, with P-M5: one truth for the whole margin, shared by M0 and every tile).
 
-  python b2_ens_synth.py truth [ENS]        (default ENS = synth -> <runs>/mendocino_gorda_v2/ensemble_synth/)
+  python b2_ens_synth.py truth        -> ROOT/synth/truth/ and ROOT/synth/{abs,dt}_synth_<stage>.parquet
 
-Truth
-* model: the v4-NLL3D MOD of mendocino_gorda_v2 (Vp/Vs 1.76, nearest column) times (1 + f) with one draw of the
-  3% Vp and Vs random fields of item 1 (seed TRUTH_SEED); boundary nodes re-padded as the builder does
-* hypocentres: the baseline relocations d1000_s20 (tomoDD.reloc, tomoDD's rescaled frame; truth in geographic
-  coordinates = tomoDD.reloc_geo); the 2 events tomoDD dropped keep their v4-NLL3D position
-* times: tomoDD-SE_syn (params tomodd.bin_syn) on the real event/station geometry and the real pick list (v2
-  conventions: ellipsoid-rescaled coordinates, same MOD node layout, same air depth), as b2_smooth_spike_test.py
-* "known" statics, forward-error offsets and pick noise: one draw of items 2-5 (seed TRUTH_SEED) with lambda_c at
-  its point estimate; added to the synthetic times (no P-4 correction: the synthetic forward is tomoDD itself)
-Writes <ens>/truth/{MOD_true, truth_model.npz, truth_hypo.csv, truth.json, syn/} and <ens>/base/picks.parquet
-(t_abs = t_dt = synthetic time + truth perturbation; weights, sigma and pick set as the real data).
+Truth (seed prior.truth_seed, the member draw functions of b2_ens_member.py):
+* model on the merge grid: the tomography nodes of configs.<c>.truth_model (v0.3.1: Vp, Vs as inverted, no surface,
+  no D-B073 rule, like the inversion's own model space) times (1 + f) with one draw of the 3 % Vp and Vs random fields
+  (30 km / 8 km correlation, tapered below 50-60 km); per stage the truth MOD = this model sampled at the stage's
+  nodes with tomoDD's trilinear lookup (clamped at the grid edges), boundary nodes padded as the builder does. M0's
+  30 km nodes see a node-sampled truth: its synthetic data are computed in that coarser truth (a simplification; M0
+  only provides the tiles' starting model).
+* hypocentres: v4-NLL3D + one draw of the starting-hypocentre prior (truncated at the merged solid surface), by event
+  ID for every stage; members start from their own draws around v4-NLL3D, not around the truth.
+* data: tomoDD-SE_syn (frozen syn binary of the stage's class) on the real event/station geometry, the real pick list
+  and pair list, in the truth MOD at the truth hypocentres; + one draw of statics, forward offsets and pick noise
+  (lambda_c at its point estimate). No P-4 correction: the synthetic forward is tomoDD itself.
 """
 import json
 import shutil
 import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from b2_ens_common import (BASELINE, INPUTS, PRIOR, PRIOR_CFG as C, T, ens_dir, random_field, read_reloc,  # noqa: E402
-                           repad, rng)
-from b2_ens_member import draw_data  # noqa: E402
-from b2_fwd_common import read_mod, write_mod  # noqa: E402
+import b2_ens_common as C  # noqa: E402
+import b2_ens_member as EM  # noqa: E402
+from b2_ens_common import CFG, PR, PRIOR, STAGES, T  # noqa: E402
+from b2_fwd_common import mod_velocity, read_mod, write_mod  # noqa: E402
+from b2_fwd_mods import ellipsoid_coords  # noqa: E402
 from b2_smooth_spike_test import SYN_INP  # noqa: E402
-from manifest import write_manifest  # noqa: E402
 
-TRUTH_SEED = 100_000
+SD = C.ROOT / "synth"
+TD = SD / "truth"
 
 
-def truth(ens="synth"):
-    E = ens_dir(ens)
-    td = E / "truth"
-    sd = td / "syn"
-    (sd / "Input_Files").mkdir(parents=True, exist_ok=True)
-    (E / "base").mkdir(parents=True, exist_ok=True)
-    summ = json.loads((INPUTS / "summary.json").read_text())
-    # model
-    m = read_mod(INPUTS / "MOD")
-    s = np.load(INPUTS / "start_model.npz")
-    args = (s["lon"], s["lat"], s["z"], C["rf_std"], C["rf_len_lat_km"], C["rf_len_z_km"], C["rf_taper_km"])
-    fp = random_field(rng(TRUTH_SEED, "rf_p"), *args)
-    fs = random_field(rng(TRUTH_SEED, "rf_s"), *args)
-    m["vp"][1:-1, 1:-1, 1:-1] *= 1 + fp
-    m["vs"][1:-1, 1:-1, 1:-1] *= 1 + fs
-    m = repad(m)
-    write_mod(td / "MOD_true", m)
-    mt = read_mod(td / "MOD_true")                  # as tomoDD reads it (4/5 decimals)
-    np.savez_compressed(td / "truth_model.npz", vp=mt["vp"], vs=mt["vs"], fp=fp, fs=fs)
-    # hypocentres: baseline relocations (rescaled frame for the syn run, geographic for the truth table)
-    rel = read_reloc(BASELINE / "Output_Files" / "tomoDD.reloc")
-    relg = read_reloc(BASELINE / "Output_Files" / "tomoDD.reloc_geo")
-    lines = (INPUTS / "event.dat").read_text().splitlines()
-    out, n_keep = [], 0
-    for l in lines:
-        t = l.split()
-        eid = int(t[9])
-        if eid in rel.index:
-            r = rel.loc[eid]
-            out.append(f"{t[0]}  {t[1]} {r.lat:10.6f} {r.lon:11.6f} {r.depth:8.3f} {' '.join(t[5:])}")
-        else:
-            out.append(l)
-            n_keep += 1
-    (sd / "Input_Files" / "event.dat").write_text("\n".join(out) + "\n")
-    ev = pd.read_csv(INPUTS / "events.csv").set_index("ID")
-    th = ev[["lat", "lon", "depth_bsl_km"]].rename(columns={"depth_bsl_km": "depth"}).copy()
-    th.loc[relg.index.intersection(th.index), ["lat", "lon", "depth"]] = relg.loc[relg.index.intersection(th.index)].values
-    th["from_baseline"] = th.index.isin(relg.index)
-    th.reset_index().to_csv(td / "truth_hypo.csv", index=False)
-    # synthetic times
+def truth_model():
+    nd = xr.open_dataset(Path(T["models"]["store"]) / T["models"]["name"] / f"v{CFG['truth_model']}.nc")
+    vpn = "Vp_tomography" if "Vp_tomography" in nd else "Vp"
+    vsn = "Vs_tomography" if "Vs_tomography" in nd else "Vs"
+    lon, lat, z = nd.longitude.values, nd.latitude.values, nd.depth.values
+    vp, vs = (nd[v].values.transpose(2, 1, 0).astype(float) for v in (vpn, vsn))
+    seed = int(PR["truth_seed"])
+    fp, fs = C.random_field(C.rng(seed, "rf_p")), C.random_field(C.rng(seed, "rf_s"))
+    vp = vp * (1 + EM.field_at(fp, lon, lat, z))
+    vs = vs * (1 + EM.field_at(fs, lon, lat, z))
+    return dict(lon=lon, lat=lat, z=z, vp=vp, vs=vs), fp, fs
+
+
+def stage_truth_mod(stage, tm):
+    m = read_mod(C.det_inputs(stage) / "MOD")
+    R = EM.region_cfg(stage)
+    import b2_tomodd_inputs as TI
+    lon, lat, zi = TI.nodes(R["node_lon"]), TI.nodes(R["node_lat"]), np.array(R.get("node_z", T["node_z"]), float)
+    LO, LA, Z = np.meshgrid(lon, lat, zi, indexing="ij")
+    vp = mod_velocity(tm, "P", LO.ravel(), LA.ravel(), Z.ravel(), clamp_surface=False).reshape(LO.shape)
+    vs = mod_velocity(tm, "S", LO.ravel(), LA.ravel(), Z.ravel(), clamp_surface=False).reshape(LO.shape)
+    VP, R_ = m["vp"].copy(), (m["vp"] / m["vs"]).copy()
+    VP[1:-1, 1:-1, 1:-1], R_[1:-1, 1:-1, 1:-1] = vp, vp / vs
+    for a in (VP, R_):
+        a[0], a[-1] = a[1], a[-2]
+        a[:, 0], a[:, -1] = a[:, 1], a[:, -2]
+        a[:, :, 0] = a[:, :, 1]
+    R_[:, :, -1] = R_[:, :, -2]
+    return {**m, "vp": VP, "vs": VP / R_}
+
+
+def syn_stage(stage, tm, hyp):
+    wd = TD / f"syn_{stage}"
+    if (wd / "absolute.syn").exists() and (wd / "DONE").exists():
+        return stage, "exists"
+    if wd.exists():
+        shutil.rmtree(wd)
+    (wd / "Input_Files").mkdir(parents=True)
+    det = C.det_inputs(stage)
+    write_mod(wd / "MOD", stage_truth_mod(stage, tm))
+    fw = json.loads((det / "forward.json").read_text())
+    h = hyp.set_index("ID")
+    la, lo = ellipsoid_coords(h.lat.values, h.lon.values, *fw["center"])
+    C.write_event_dat(wd / "Input_Files" / "event.dat", det / "event.dat",
+                      pd.DataFrame({"lat": la, "lon": lo, "depth": h.depth.values}, index=h.index))
     for f in ("station.dat", "absolute.dat", "dt.ct"):
-        dst = sd / "Input_Files" / f
-        if not dst.exists():
-            dst.symlink_to(INPUTS / f)
-    shutil.copy(td / "MOD_true", sd / "MOD")
+        (wd / "Input_Files" / f).symlink_to(det / f)
     for f in ("ak135.15.SKS", "layer-16.dat"):
-        shutil.copy(Path(T["bin"]).parent / f, sd / f)
-    (sd / "tomoDD-SE_syn.inp").write_text(SYN_INP.format(air=summ["air_dep_km"], stepl=T["inp"]["stepl_km"],
+        shutil.copy(Path(C.E["runtime_files"]) / f, wd / f)
+    summ = json.loads((det / "summary.json").read_text())
+    (wd / "tomoDD-SE_syn.inp").write_text(SYN_INP.format(air=summ["air_dep_km"], stepl=T["inp"]["stepl_km"],
                                                          clat=summ["center_lat"], clon=summ["center_lon"]))
-    if not (sd / "absolute.syn").exists():
-        with open(sd / "stdout.txt", "w") as so:
-            rc = subprocess.run(["/usr/bin/time", "-f", "%e s %M KB", T["bin_syn"], "tomoDD-SE_syn.inp"], cwd=sd,
-                                stdout=so, stderr=subprocess.STDOUT).returncode
-        if rc:
-            raise SystemExit(f"tomoDD-SE_syn exit {rc}")
-    a = pd.read_csv(sd / "absolute.syn", sep=r"\s+", header=None, names=["event_ID", "code", "t_syn", "wsyn", "phase"])
-    pk = pd.read_parquet(PRIOR / "picks_real.parquet")
-    n0 = len(pk)
-    pk = pk.merge(a[["event_ID", "code", "phase", "t_syn"]], on=["event_ID", "code", "phase"], how="left")
-    miss = int(pk.t_syn.isna().sum())
-    if miss:
-        raise SystemExit(f"{miss} picks without a synthetic time")
-    # check against dt.syn (first 200k lines): same times per pick?
-    d = pd.read_csv(sd / "dt.syn", sep=r"\s+", header=None, nrows=200_000,
-                    names=["e1", "e2", "code", "t1", "t2", "w", "phase"])
-    chk = d.merge(a, left_on=["e1", "code", "phase"], right_on=["event_ID", "code", "phase"])
-    dmax = float(np.abs(chk.t1 - chk.t_syn).max())
-    lam = pd.read_csv(PRIOR / "class_factors.csv").set_index("cls").lam_mad.to_dict()
-    pk = pk.sort_values(["event_ID", "phase", "code"], kind="stable").reset_index(drop=True)
-    delta, info = draw_data(TRUTH_SEED, pk, lam_scale=lam)
-    pk["delta_true"] = delta
-    pk["t_abs"] = pk.t_syn + delta
-    pk["t_dt"] = pk.t_abs
-    pk.to_parquet(E / "base" / "picks.parquet")
-    # residual of the real data vs the synthetic (sanity: same order as the real misfit)
-    real = pd.read_parquet(PRIOR / "picks_real.parquet").set_index(["event_ID", "code", "phase"]).t_abs
-    dr = pk.set_index(["event_ID", "code", "phase"]).t_syn - real
-    tinfo = dict(seed=TRUTH_SEED, rf_p_std_pct=float(100 * fp[:, :, s["z"] <= 50].std()),
-                 rf_s_std_pct=float(100 * fs[:, :, s["z"] <= 50].std()), events_kept_v4=n_keep, picks=n0,
-                 dt_syn_vs_abs_syn_maxdiff_s=dmax, syn_minus_real_median_s=float(dr.median()),
-                 syn_minus_real_mad_s=float(1.4826 * (dr - dr.median()).abs().median()),
-                 truth_noise=info)
-    (td / "truth.json").write_text(json.dumps(tinfo, indent=1))
-    print(json.dumps({k: v for k, v in tinfo.items() if k != "truth_noise"}, indent=1))
-    print("truth lambda", info["lambda_c"], "delta sd", round(info["delta_sd"], 4))
-    write_manifest("b2_ens_synth_truth", td, inputs=[INPUTS / "MOD", BASELINE / "Output_Files" / "tomoDD.reloc",
-                                                     T["bin_syn"], PRIOR / "picks_real.parquet"],
-                   outputs=[td / "MOD_true", td / "truth_model.npz", td / "truth_hypo.csv", E / "base" / "picks.parquet"],
-                   params={"truth_seed": TRUTH_SEED, "cfg": C}, counts={k: v for k, v in tinfo.items() if k != "truth_noise"})
+    t0 = time.time()
+    env = {"PATH": "/usr/bin:/bin", "HOME": str(Path.home()), "OMP_NUM_THREADS": "1"}
+    with open(wd / "stdout.txt", "w") as so, open(wd / "time.txt", "w") as se:
+        rc = subprocess.run(["nice", "-n", str(C.E["nice"]), "/usr/bin/time", "-f", "%e s %U user %M KB",
+                             C.binary(stage, "syn"), "tomoDD-SE_syn.inp"], cwd=wd, stdout=so, stderr=se,
+                            env=env).returncode
+    if rc or not (wd / "absolute.syn").exists():
+        raise SystemExit(f"tomoDD-SE_syn {stage}: exit {rc}")
+    C.jdump(wd / "DONE", dict(wall_min=round((time.time() - t0) / 60, 2), time=(wd / "time.txt").read_text()[-120:]))
+    return stage, "done"
+
+
+def truth():
+    TD.mkdir(parents=True, exist_ok=True)
+    seed = int(PR["truth_seed"])
+    tm, fp, fs = truth_model()
+    np.savez_compressed(TD / "truth_model.npz", lon=tm["lon"], lat=tm["lat"], z=tm["z"], vp=tm["vp"].astype("f4"),
+                        vs=tm["vs"].astype("f4"), rf_p=fp, rf_s=fs)
+    ev = pd.read_parquet(PRIOR / "events.parquet")
+    hyp, hinfo = EM.draw_hypo(seed, ev)
+    hyp.to_parquet(TD / "truth_hypo.parquet")
+    lam = pd.read_parquet(PRIOR / "class_factors.parquet").set_index("cls").lam_mad.to_dict()
+    delta, stat, dinfo = EM.draw_delta(seed, lam_scale=lam)
+    np.save(TD / "delta_true.npy", delta)
+    with ThreadPoolExecutor(len(STAGES)) as ex:
+        res = list(ex.map(lambda s: syn_stage(s, tm, hyp), STAGES))
+    print(res, flush=True)
+    chk = {}
+    for s in STAGES:
+        wd = TD / f"syn_{s}"
+        a = pd.read_csv(wd / "absolute.syn", sep=r"\s+", header=None, names=["event_ID", "code", "t_syn", "w", "phase"])
+        syn = a.set_index(["event_ID", "code", "phase"]).t_syn
+        syn = syn[~syn.index.duplicated()]
+        ab, dt = pd.read_parquet(PRIOR / f"abs_real_{s}.parquet"), pd.read_parquet(PRIOR / f"dt_real_{s}.parquet")
+        t = pd.MultiIndex.from_frame(ab[["event_ID", "code", "phase"]]).map(syn).values.astype(float)
+        miss = int(np.isnan(t).sum())
+        if miss:
+            raise SystemExit(f"{s}: {miss} picks without a synthetic time")
+        ab["t"] = t + delta[ab.pidx.values]
+        t1 = pd.MultiIndex.from_frame(dt[["ev1", "code", "phase"]]).map(syn).values.astype(float)
+        t2 = pd.MultiIndex.from_frame(dt[["ev2", "code", "phase"]]).map(syn).values.astype(float)
+        if np.isnan(t1).any() or np.isnan(t2).any():
+            raise SystemExit(f"{s}: dt picks without a synthetic time")
+        dt["t1"], dt["t2"] = t1 + delta[dt.pidx1.values], t2 + delta[dt.pidx2.values]
+        ab.to_parquet(SD / f"abs_synth_{s}.parquet")
+        dt.to_parquet(SD / f"dt_synth_{s}.parquet")
+        real = pd.read_parquet(PRIOR / f"abs_real_{s}.parquet").t.values
+        d = t - real
+        # dt.syn consistency on its first 100k lines
+        ds = pd.read_csv(wd / "dt.syn", sep=r"\s+", header=None, nrows=100_000,
+                         names=["e1", "e2", "code", "t1", "t2", "w", "phase"])
+        k = ds.merge(a, left_on=["e1", "code", "phase"], right_on=["event_ID", "code", "phase"])
+        chk[s] = dict(picks=len(ab), dt=len(dt), syn_minus_real_median_s=round(float(np.median(d)), 4),
+                      syn_minus_real_mad_s=round(float(1.4826 * np.median(np.abs(d - np.median(d)))), 4),
+                      dt_syn_vs_abs_syn_maxdiff_s=float(np.abs(k.t1 - k.t_syn).max()),
+                      run=json.loads((wd / "DONE").read_text()))
+    info = dict(seed=seed, config=C.CONFIG, truth_model=f"v{CFG['truth_model']} tomography nodes x (1 + f)",
+                rf_p_std_pct=float(100 * fp[:, :, :12].std()), rf_s_std_pct=float(100 * fs[:, :, :12].std()),
+                hypo=hinfo, data=dinfo, stages=chk)
+    C.jdump(TD / "truth.json", info)
+    print(json.dumps({k: v for k, v in info.items() if k != "data"}, indent=1, default=str), flush=True)
 
 
 if __name__ == "__main__":
     if sys.argv[1] == "truth":
-        truth(sys.argv[2] if len(sys.argv) > 2 else "synth")
+        truth()

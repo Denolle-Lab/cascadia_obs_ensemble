@@ -1,160 +1,251 @@
-"""Track B Bayesian ensemble (D-B030/D-B032): run members in parallel, restartable.
+"""Track B Bayesian ensemble (D-B030, D-B032): the detached, resumable chain and its member scheduler.
 
-  python b2_ens_run.py launch ENS --members 0-19 [--clones 5 --clone-of 0] [-j 30]
-  python b2_ens_run.py one ENS m007            (one member: build, tomoDD, back-transform, trim)
-  python b2_ens_run.py one ENS nf2 --clone-of 0
+  python b2_ens_run.py chain                       full chain (launch detached, see RESUME.md in ROOT)
+  python b2_ens_run.py members KIND NAME [NAME ..]  run these members end to end (tests), same scheduler
+  python b2_ens_run.py status                      counts of done / failed stages per kind
 
-One member = b2_ens_member.py build -> b2_tomodd_run.py <region>/ensemble_<ENS>/<member> run --damp --smooth
-(same binary, flags and host for every member, D-B026) -> b2_tomodd_backtransform.py -> trim.
-Members with <member>/DONE are skipped, so `launch` can be rerun after a failure or interruption; a failed member
-gets <member>/FAILED (reason) and is retried on the next launch. Log: <ens>/run_log.jsonl (one line per member).
-
-Trim keeps (~1 MB per member): run/Output_Files/{model_geo.npz, tomoDD.reloc_geo, tomoDD.sta_geo}, dws.npz (final
-P and S DWS on all nodes), resid.json (final absolute residuals per class, log summary), run/{tomoDD-SE.inp,
-tomoDD-SE.log, stdout.txt, time.txt, manifest}, inputs/{draws.json, start_hypo.csv, start_model.npz}. Everything
-else (copied inputs, tomoDD.res/.vel/.src, per-iteration relocations, res.ini) is deleted.
+Chain stages (ROOT/chain.state records the finished ones; rerunning the same command resumes):
+  prep       b2_ens_member.py prep (prior ingredients)
+  truth      b2_ens_synth.py truth (synthetic truth, tomoDD-SE_syn per stage)
+  synth      synthetic members s000..s(N-1) and the noise-floor clones nf0..nf(K-1) of s000
+  calibrate  b2_ens_coverage.py: the D-B030 gate. FAIL -> the chain stops with exit 2 (real members not started)
+  real       real-data members r000..r(N-1)
+  stats      b2_ens_stats.py stats real (per-node statistics)
+  products   b2_ens_stats.py products real (versioned ensemble product, HTML report)
+Scheduler: per member M0 first, then its tiles (all four at once), then the merge; at most tomodd.ensemble.max_procs
+tomoDD processes of this chain, each started only while MemAvailable stays above min_avail_gb + mem_per_run_gb; tile
+stages of started members go before new M0 stages (members finish early), longest tiles first. A failed stage is
+retried once; a second failure marks the member failed (FAILED_MEMBER) and the chain carries on. Every tomoDD run is
+niced (tomodd.ensemble.nice) and uses the frozen binaries (D-B054).
 """
-import argparse
 import json
-import shutil
+import os
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-
-import numpy as np
-import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from b2_ens_common import INPUTS, PY, REGION, REPO, ens_dir, read_dws, read_res_abs  # noqa: E402
-from b2_fwd_common import read_mod  # noqa: E402
-from b2_tomodd_summary import parse_log  # noqa: E402
+import b2_ens_common as C  # noqa: E402
+from b2_ens_common import E, ROOT, STAGES  # noqa: E402
 
-ENV = {"LD_LIBRARY_PATH": str(REPO / ".pixi/envs/default/lib"), "PATH": "/usr/bin:/bin", "OMP_NUM_THREADS": "1",
-       "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "HOME": str(Path.home())}
-
-
-# tomoDD must load the system libgfortran (gcc 8.5, the build compiler): the pixi libgfortran on LD_LIBRARY_PATH is
-# stricter and stops at tomoDD's malformed FORMAT in the "Location summary" write (tomoDD-SE.f line 2324) after the
-# first LSQR. b2_tomodd_run.py needs only yaml, so it runs without LD_LIBRARY_PATH.
-ENV_TOMODD = {k: v for k, v in ENV.items() if k != "LD_LIBRARY_PATH"}
+PYD = [f"{C.PY_DEFAULT}/bin/python"]
+PYM = [f"{C.PY_MODELS}/bin/python"]
+ENVD = {**os.environ, "LD_LIBRARY_PATH": f"{C.PY_DEFAULT}/lib", "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"}
+ENVM = {**ENVD, "LD_LIBRARY_PATH": f"{C.PY_MODELS}/lib"}
+TILE_ORDER = ["washington", "mendocino_gorda_c", "oregon", "blanco"]      # longest first (observed run times)
+STATE = ROOT / "chain.state"
 
 
-def sh(cmd, log, env=None):
-    with open(log, "a") as f:
-        f.write(f"$ {' '.join(map(str, cmd))}\n")
+def log(*a):
+    print(time.strftime("%F %T"), "[ens]", *a, flush=True)
+
+
+def mem_avail_gb():
+    for line in open("/proc/meminfo"):
+        if line.startswith("MemAvailable:"):
+            return int(line.split()[1]) / 1e6
+    return 0.0
+
+
+def done(kind, name, stage):
+    md = C.member_dir(kind, name)
+    return (md / "MERGED").exists() if stage == "merge" else (md / stage / "DONE").exists()
+
+
+def run_members(kind, names, max_procs=None):
+    """Run members to their merge. Returns (merged, failed) name lists."""
+    max_procs = int(max_procs or E["max_procs"])
+    need_gb = float(E["min_avail_gb"]) + float(E["mem_per_run_gb"])
+    order = ["m0"] + [t for t in TILE_ORDER if t in STAGES] + [t for t in STAGES[1:] if t not in TILE_ORDER]
+    tries, running, failed = {}, {}, set()
+    for n in names:
+        if (C.member_dir(kind, n) / "FAILED_MEMBER").exists():
+            failed.add(n)
+    t0, last = time.time(), 0
+    rl = ROOT / kind / "run_log.jsonl"
+    rl.parent.mkdir(parents=True, exist_ok=True)
+    while True:
+        for key, (p, t_s, lf) in list(running.items()):          # reap finished jobs
+            rc = p.poll()
+            if rc is None:
+                continue
+            del running[key]
+            n, st = key
+            ok = rc == 0 and done(kind, n, st)
+            with open(rl, "a") as f:
+                f.write(json.dumps(dict(member=n, stage=st, rc=rc, ok=ok, wall_min=round((time.time() - t_s) / 60, 2),
+                                        end=time.strftime("%F %T"))) + "\n")
+            if not ok:
+                tries[key] = tries.get(key, 0) + 1
+                log(f"{kind}/{n}/{st} failed (rc {rc}, try {tries[key]}); log {lf}")
+                if tries[key] >= 2:
+                    failed.add(n)
+                    C.jdump(C.member_dir(kind, n) / "FAILED_MEMBER", dict(stage=st, rc=rc, log=str(lf)))
+        pending = []                                             # (priority, member, stage)
+        for i, n in enumerate(names):
+            if n in failed or done(kind, n, "merge"):
+                continue
+            if not done(kind, n, "m0"):
+                if (n, "m0") not in running:
+                    pending.append((1, i, n, "m0"))
+                continue
+            tiles_left = [s for s in order[1:] if not done(kind, n, s)]
+            for s in tiles_left:
+                if (n, s) not in running:
+                    pending.append((0, i * 10 + order.index(s), n, s))
+            if not tiles_left and (n, "merge") not in running:
+                pending.append((-1, i, n, "merge"))
+        if not pending and not running:
+            break
+        pending.sort()
+        n_tdd = sum(1 for (n, s) in running if s != "merge")
+        for pr, _, n, s in pending:
+            if s == "merge":
+                if sum(1 for (_, s2) in running if s2 == "merge") >= 4:
+                    continue
+                cmd = PYD + [str(HERE / "b2_ens_member.py"), "merge", kind, n]
+            else:
+                if n_tdd >= max_procs or mem_avail_gb() < need_gb:
+                    continue
+                cmd = PYD + [str(HERE / "b2_ens_member.py"), "stage", kind, n, s]
+                n_tdd += 1
+            md = C.member_dir(kind, n)
+            md.mkdir(parents=True, exist_ok=True)
+            lf = md / f"{s}.log"
+            fh = open(lf, "a")
+            fh.write(f"\n{time.strftime('%F %T')} $ {' '.join(cmd)}\n")
+            fh.flush()
+            running[(n, s)] = (subprocess.Popen(cmd, stdout=fh, stderr=subprocess.STDOUT, env=ENVD, cwd=HERE,
+                                                start_new_session=False), time.time(), lf)
+            if s != "merge" and mem_avail_gb() < need_gb + 5:
+                time.sleep(20)                                   # let the new process allocate before the next check
+        if time.time() - last > 600:
+            nd = sum(done(kind, n, "merge") for n in names)
+            log(f"{kind}: {nd}/{len(names)} merged, {len(failed)} failed, {len(running)} running "
+                f"({sum(1 for (_, s) in running if s != 'merge')} tomoDD), MemAvailable {mem_avail_gb():.0f} GB, "
+                f"{(time.time() - t0) / 3600:.2f} h")
+            last = time.time()
+        time.sleep(15)
+    merged = [n for n in names if done(kind, n, "merge")]
+    log(f"{kind}: finished, {len(merged)} merged, {len(failed)} failed ({sorted(failed)}), "
+        f"{(time.time() - t0) / 3600:.2f} h")
+    return merged, sorted(failed)
+
+
+def sh(cmd, env, name):
+    lf = ROOT / "logs" / f"{name}.log"
+    lf.parent.mkdir(parents=True, exist_ok=True)
+    with open(lf, "a") as f:
+        f.write(f"\n{time.strftime('%F %T')} $ {' '.join(map(str, cmd))}\n")
         f.flush()
-        return subprocess.run(list(map(str, cmd)), cwd=REPO, stdout=f, stderr=subprocess.STDOUT,
-                              env=env or ENV).returncode
+        rc = subprocess.run(list(map(str, cmd)), stdout=f, stderr=subprocess.STDOUT, env=env, cwd=HERE).returncode
+    log(f"{name}: exit {rc} (log {lf})")
+    return rc
 
 
-def trim(md):
-    run = md / "run"
-    o = run / "Output_Files"
-    g = np.load(o / "model_geo.npz")
-    dp, ds = read_dws(o / "tomoDD.vel", g["vp"].shape)
-    np.savez_compressed(md / "dws.npz", p=dp.astype("f4"), s=ds.astype("f4"))
-    r = read_res_abs(o / "tomoDD.res")
-    codes = pd.read_csv(INPUTS / "station_codes.csv").set_index("code").is_obs
-    r["cls"] = np.where(r.code.map(codes).values, "obs_", "land_") + r.phase.values
-    res = {c: dict(n=int(len(x)), rms=float(np.sqrt(np.mean(x.res ** 2))),
-                   mad=float(1.4826 * np.median(np.abs(x.res - x.res.median()))), median=float(x.res.median()))
-           for c, x in r.groupby("cls")}
-    info = dict(resid_abs=res, log=parse_log(run / "tomoDD-SE.log"), time=(run / "time.txt").read_text().strip())
-    (md / "resid.json").write_text(json.dumps(info, indent=1, default=float))
-    m = read_mod(md / "inputs" / "MOD")
-    np.savez_compressed(md / "inputs" / "start_model.npz", vp=m["vp"].astype("f4"), vs=m["vs"].astype("f4"))
-    keep_out = {"model_geo.npz", "tomoDD.reloc_geo", "tomoDD.sta_geo"}
-    for f in o.iterdir():
-        if f.name not in keep_out:
-            f.unlink()
-    shutil.rmtree(run / "Input_Files", ignore_errors=True)
-    for f in ("MOD", "ak135.15.SKS", "layer-16.dat", "grid.dat", "tomoDD-SE.res.ini"):
-        (run / f).unlink(missing_ok=True)
-    for f in ("absolute.dat", "dt.ct", "event.dat", "MOD", "station.dat", "summary.json"):
-        (md / "inputs" / f).unlink(missing_ok=True)
-    return info
+def stage_done(s):
+    return STATE.exists() and s in STATE.read_text().split()
 
 
-def one(ens, mname, clone_of=None):
-    E = ens_dir(ens)
-    md = E / mname
-    if (md / "DONE").exists():
-        return "skip"
-    md.mkdir(parents=True, exist_ok=True)
-    for f in ("FAILED", "member.log"):
-        (md / f).unlink(missing_ok=True)
-    shutil.rmtree(md / "run", ignore_errors=True)
-    log = md / "member.log"
-    t0 = time.time()
-    rec = dict(member=mname, clone_of=clone_of, start=time.strftime("%Y-%m-%d %H:%M:%S"))
-    try:
-        cmd = PY + [HERE / "b2_ens_member.py", "build", ens, mname] + (["--clone-of", clone_of] if clone_of is not None else [])
-        if sh(cmd, log):
-            raise RuntimeError("build failed")
-        reg = json.loads((md / "inputs" / "draws.json").read_text())["reg"]
-        rel = f"{REGION}/ensemble_{ens}/{mname}"
-        rc = sh(PY + [HERE / "b2_tomodd_run.py", rel, "run", "--damp", reg["damp"], "--smooth", *reg["smooth"]], log,
-                env=ENV_TOMODD)
-        if rc or not (md / "run" / "Output_Files" / "tomoDD.reloc").exists():
-            raise RuntimeError(f"tomoDD exit {rc}")
-        if sh(PY + [HERE / "b2_tomodd_backtransform.py", rel, "run"], log):
-            raise RuntimeError("backtransform failed")
-        info = trim(md)
-        rec.update(status="done", wall_min=round((time.time() - t0) / 60, 2), time=info["time"],
-                   rms_abs_final=info["log"]["rms_abs_final"], cnd_last=info["log"]["cnd_last"], **reg)
-        (md / "DONE").write_text(json.dumps(rec))
-    except Exception as ex:                                             # noqa: BLE001
-        rec.update(status="failed", reason=str(ex), wall_min=round((time.time() - t0) / 60, 2))
-        (md / "FAILED").write_text(json.dumps(rec))
-    with open(E / "run_log.jsonl", "a") as f:
-        f.write(json.dumps(rec, default=str) + "\n")
-    du = sum(p.stat().st_size for p in md.rglob("*") if p.is_file() and not p.is_symlink()) / 1e6
-    print(f"{ens}/{mname}: {rec['status']} {rec.get('reason', '')} {rec['wall_min']} min, {du:.1f} MB kept", flush=True)
-    return rec["status"]
+def mark(s):
+    with open(STATE, "a") as f:
+        f.write(s + "\n")
+    log(f"stage {s} done")
 
 
-def parse_range(s):
-    out = []
-    for part in s.split(","):
-        a, _, b = part.partition("-")
-        out += list(range(int(a), int(b or a) + 1))
-    return out
+def resume_md():
+    N = E["members"]
+    txt = f"""# Ensemble {C.CONFIG} (Track B, D-B030/D-B032): how to resume
+
+Written by b2_ens_run.py at the start of every chain run ({time.strftime('%F %T')}).
+
+* Configuration: tomodd.ensemble.configs.{C.CONFIG} in params.yaml (M0 {E['configs'][C.CONFIG]['m0']['region']}/{E['configs'][C.CONFIG]['m0']['tag']}, tiles {', '.join(f"{t['region']}/{t['tag']}" for t in E['configs'][C.CONFIG]['tiles'].values())}).
+* Chain state: {STATE} (one finished stage per line: prep truth synth calibrate real stats products).
+* Log: {ROOT}/chain.log; per member {ROOT}/<synth|real>/<member>/<stage>.log; run log <kind>/run_log.jsonl.
+* Members: synth {N['synth']} + {N['floor']} noise-floor clones, real {N['real']}; at most {E['max_procs']} tomoDD processes,
+  nice {E['nice']}, MemAvailable kept above {E['min_avail_gb']} GB.
+* Resume after a crash or reboot: run the launch command again (same command). Finished stages and finished member
+  stages are skipped; an interrupted member stage is rerun from its inputs.
+* Calibration gate: if the stage calibrate fails, the chain stops with exit 2 and the real members are not started;
+  see {ROOT}/synth/coverage.md. Do not remove 'calibrate' from the state by hand without the PI's decision.
+* Stop: kill the process group of the chain (pgid in {ROOT}/chain.pid).
+
+Launch (from the code worktree):
+
+    cd {HERE.parents[1]}
+    setsid nohup {PYD[0]} workflow/10_tomography/b2_ens_run.py chain >> {ROOT}/chain.log 2>&1 < /dev/null &
+"""
+    (ROOT / "RESUME.md").write_text(txt)
 
 
-def launch(a):
-    jobs = [(f"m{i:03d}", None) for i in parse_range(a.members)] if a.members else []
-    jobs += [(f"nf{i}", a.clone_of) for i in range(a.clones)]
-    print(f"{a.ens}: {len(jobs)} members, {a.j} at once", flush=True)
-    E = ens_dir(a.ens)
-    E.mkdir(parents=True, exist_ok=True)
+def chain():
+    ROOT.mkdir(parents=True, exist_ok=True)
+    (ROOT / "chain.pid").write_text(f"pid {os.getpid()} pgid {os.getpgid(0)}\n")
+    resume_md()
+    N = E["members"]
+    log(f"chain start, config {C.CONFIG}, root {ROOT}")
+    if not stage_done("prep"):
+        if sh(PYD + [HERE / "b2_ens_member.py", "prep"], ENVD, "prep"):
+            sys.exit(1)
+        mark("prep")
+    if not stage_done("truth"):
+        if sh(PYD + [HERE / "b2_ens_synth.py", "truth"], ENVD, "truth"):
+            sys.exit(1)
+        mark("truth")
+    if not stage_done("synth"):
+        names = [f"s{i:03d}" for i in range(N["synth"])] + [f"nf{i}" for i in range(N["floor"])]
+        merged, failed = run_members("synth", names)
+        if len(failed) > 0.1 * len(names):
+            log(f"too many failed synthetic members ({len(failed)}): stop")
+            sys.exit(3)
+        mark("synth")
+    if not stage_done("calibrate"):
+        rc = sh(PYD + [HERE / "b2_ens_coverage.py"], ENVD, "calibrate")
+        if rc == 2:
+            log("CALIBRATION FAILED: real-data ensemble not started (see synth/coverage.md)")
+            sys.exit(2)
+        if rc:
+            sys.exit(1)
+        mark("calibrate")
+    if not stage_done("real"):
+        names = [f"r{i:03d}" for i in range(N["real"])]
+        merged, failed = run_members("real", names)
+        if len(failed) > 0.1 * len(names):
+            log(f"too many failed real members ({len(failed)}): stop")
+            sys.exit(3)
+        mark("real")
+    if not stage_done("stats"):
+        if sh(PYD + [HERE / "b2_ens_stats.py", "stats", "real"], ENVD, "stats"):
+            sys.exit(1)
+        mark("stats")
+    if not stage_done("products"):
+        if sh(PYM + [HERE / "b2_ens_stats.py", "products", "real"], ENVM, "products"):
+            sys.exit(1)
+        mark("products")
+    log("chain finished")
 
-    def work(j):
-        cmd = PY + [HERE / "b2_ens_run.py", "one", a.ens, j[0]] + (["--clone-of", j[1]] if j[1] is not None else [])
-        return subprocess.run(list(map(str, cmd)), cwd=REPO, env=ENV).returncode
 
-    with ThreadPoolExecutor(max_workers=a.j) as ex:
-        list(ex.map(work, jobs))
-    st = [json.loads(l) for l in open(E / "run_log.jsonl")] if (E / "run_log.jsonl").exists() else []
-    print(f"{a.ens}: done {sum((E / m / 'DONE').exists() for m, _ in jobs)} / {len(jobs)}; log lines {len(st)}")
+def status():
+    for kind in ("synth", "real"):
+        d = ROOT / kind
+        if not d.exists():
+            continue
+        ms = sorted(p.name for p in d.iterdir() if p.is_dir() and p.name[0] in "srn")
+        cnt = {s: sum(done(kind, m, s) for m in ms) for s in STAGES + ["merge"]}
+        print(kind, len(ms), "members:", cnt, "failed:", sum((d / m / "FAILED_MEMBER").exists() for m in ms))
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["launch", "one"])
-    ap.add_argument("ens")
-    ap.add_argument("member", nargs="?")
-    ap.add_argument("--members")
-    ap.add_argument("--clones", type=int, default=0)
-    ap.add_argument("--clone-of", type=int, default=0)
-    ap.add_argument("-j", type=int, default=30)
-    a = ap.parse_args()
-    if a.cmd == "one":
-        one(a.ens, a.member, a.clone_of if a.member.startswith("nf") else None)
+    cmd = sys.argv[1]
+    if cmd == "chain":
+        chain()
+    elif cmd == "members":
+        run_members(sys.argv[2], sys.argv[3:])
     else:
-        launch(a)
+        status()
 
 
 if __name__ == "__main__":

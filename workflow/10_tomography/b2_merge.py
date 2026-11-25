@@ -132,50 +132,44 @@ def reference(lon, lat, z):
     return VP, VS                                      # [x, y, z]
 
 
-def run_fields(region, tag):
-    run = RUNS / region / tag
+def run_fields(run):
+    run = Path(run)
     g = np.load(run / "Output_Files" / "model_geo.npz")
     s = read_mod(run / "MOD")
     base = dict(lon=g["lon"], lat=g["lat"], z=g["z"])
-    D = EX.dws(run, g["vp"].shape)
+    if (run / "dws.npz").exists():                  # ensemble members keep the last DWS blocks only (b2_ens_member.trim);
+        z = np.load(run / "dws.npz")                  # tomoDD's '****' overflow there is inf: a large finite value here
+        D = {ph: np.where(np.isfinite(z[ph]), z[ph], 1e9).astype(float) for ph in ("p", "s") if z[ph].ndim == 3}
+    else:
+        D = EX.dws(run, g["vp"].shape)
     return (run, dict(base, vp=s["vp"], vs=s["vs"]), dict(base, vp=g["vp"], vs=g["vs"]),
             {ph: dict(base, vp=D[ph], vs=D[ph]) for ph in D})
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("version", nargs="?")
-    ap.add_argument("description", nargs="?")
-    ap.add_argument("--nll", action="store_true")
-    ap.add_argument("--status", default="candidate")
-    ap.add_argument("--dry-run", help="write the merged netCDF here, do not register")
-    ap.add_argument("--runs", help='test: "region:tag:maskregion:damp,..." instead of the phase-1 choice')
-    a = ap.parse_args()
-    assert 0 <= C["floor"] < 1, f"tomodd.merge.product.floor = {C['floor']}: must be in [0, 1) (R divides by 1 - floor)"
+def grid_axes():
     G = C["grid"]
     lon = np.round(np.arange(G["lon"][0], G["lon"][1] + G["lon"][2] / 2, G["lon"][2]), 4)
     lat = np.round(np.arange(G["lat"][0], G["lat"][1] + G["lat"][2] / 2, G["lat"][2]), 4)
-    z = np.array(T["node_z"], float)
-    VP0, VS0 = reference(lon, lat, z)
+    return lon, lat, np.array(T["node_z"], float)
+
+
+def geometry(tiles, lon, lat, z, allow_nomask=False):
+    """Merge weights that depend only on the tile boxes and the resolution masks (the same for every ensemble member):
+    per tile the grid points it covers (sel), w_k = t_k u_k and u'_k per phase, the finest resolved cell; plus
+    n_tiles. tiles: [dict(region, run, mask_region, mask_damp, tag)]; region gives the events box."""
     LO, LA, Z = np.meshgrid(lon, lat, z, indexing="ij")
     flo, fla, fz = LO.ravel(), LA.ravel(), Z.ravel()
-    tiles, dropped = tile_runs(a.runs)
-    boxes = {t: box(t) for t, *_ in tiles}
-    num = {ph: np.zeros(flo.size) for ph in "PS"}      # sum_k w_k V_k
-    num0 = {ph: np.zeros(flo.size) for ph in "PS"}     # sum_k w_k V0_k
-    den = {ph: np.zeros(flo.size) for ph in "PS"}
-    dws_acc = {ph: np.zeros(flo.size) for ph in "ps"}
-    res = {ph: np.full(flo.size, np.inf) for ph in "PS"}
-    R = {ph: np.zeros(flo.size) for ph in "PS"}        # max_k u'_k (D-B049)
+    boxes = {t["region"]: box(t["region"]) for t in tiles}
     ncov = np.zeros(flo.size, int)
-    used, nomask = [], []
-    for region, tag, mreg, damp in tiles:
-        mk, mf = load_mask(mreg, damp, tag)
+    geo, nomask = [], []
+    for tl in tiles:
+        region, tag = tl["region"], tl["tag"]
+        mk, mf = load_mask(tl["mask_region"], tl["mask_damp"], tag)
         gated = smooth_w1(tag) <= GATE                  # D-B049 as amended: gate only lightly smoothed tiles
         if mk is None and gated:  # D-B049: no mask -> u' = 0, R = 0: the tile's velocities would drop out everywhere
-            msg = (f"{region} {tag}: no resolution mask for {mreg} at damping {damp:g} under {RES}; with R = 0 its "
-                   "velocities would be dropped everywhere (D-B049)")
-            if not a.runs:
+            msg = (f"{region} {tag}: no resolution mask for {tl['mask_region']} at damping {tl['mask_damp']:g} under "
+                   f"{RES}; with R = 0 its velocities would be dropped everywhere (D-B049)")
+            if not allow_nomask:
                 raise SystemExit(msg)
             print(f"WARNING: {msg}", flush=True)
             nomask.append(region)
@@ -192,37 +186,61 @@ def main():
             edge = facing_edge_points(bk, bj)
             if len(edge):
                 t[ink] *= np.sin(0.5 * np.pi * np.minimum(1.0, dist_km(fla[ink], flo[ink], edge) / W)) ** 2
-        run, m0, m1, D = run_fields(region, tag)
+        sel = ink & (t > 0)
+        g = dict(tile=tl, sel=sel, gated=bool(gated), mask=str(mf) if mf else None, n_box=int(ink.sum()),
+                 mask_sha256=EX.sha256(mf) if mf else None)
         for ph in "PS":
-            sel = ink & (t > 0)
             if gated:
                 u, _ = res_window(mk, ph, fla[sel], flo[sel], fz[sel], C["taper_km"], C["floor"])
             else:                                       # not gated: full weight in its box (u = u' = 1)
                 u = np.ones(int(sel.sum()))
-            v0 = mod_velocity(m0, ph, flo[sel], fla[sel], fz[sel], clamp_surface=False)
-            v1 = mod_velocity(m1, ph, flo[sel], fla[sel], fz[sel], clamp_surface=False)
-            w = t[sel] * u
+            g[f"w_{ph}"] = t[sel] * u
             # u'_k = the window without the floor: u = r + (1 - r) u' (res_window), 0 where the tile has no mask
-            R[ph][sel] = np.maximum(R[ph][sel], np.clip((u - C["floor"]) / (1 - C["floor"]), 0, 1))
-            num[ph][sel] += w * v1
-            num0[ph][sel] += w * v0
-            den[ph][sel] += w
-            dws_acc[ph.lower()][sel] += w * mod_velocity(D[ph.lower()], "P", flo[sel], fla[sel], fz[sel],
-                                                          clamp_surface=False) if ph.lower() in D else 0.0
+            g[f"r_{ph}"] = np.clip((u - C["floor"]) / (1 - C["floor"]), 0, 1)
+            g[f"fin_{ph}"] = None
             if mk is not None:
                 a_ = mk["finest_p" if ph == "P" else "finest_s"]
                 ix = np.abs(mk["lon"][None, :] - flo[sel][:, None]).argmin(1)
                 iy = np.abs(mk["lat"][None, :] - fla[sel][:, None]).argmin(1)
                 iz = np.abs(mk["z"][None, :] - fz[sel][:, None]).argmin(1)
-                f = a_[ix, iy, iz].astype(float)
-                cur = res[ph][sel]
-                res[ph][sel] = np.where(f > 0, np.minimum(cur, f), cur)
-        used.append(dict(region=region, tag=tag, run=str(run), mask=str(mf) if mf else None, gated=bool(gated),
-                         model_geo_sha256=EX.sha256(run / "Output_Files" / "model_geo.npz"),
-                         mask_sha256=EX.sha256(mf) if mf else None))
+                g[f"fin_{ph}"] = a_[ix, iy, iz].astype(float)
+        geo.append(g)
         print(f"{region} {tag}: {int(ink.sum())} grid points in its box; mask {mf}; "
               f"{'gated by its mask' if gated else 'not gated (smoothing > ' + format(GATE, 'g') + ')'}", flush=True)
-    shp = LO.shape
+    return dict(geo=geo, ncov=ncov, shape=LO.shape, flo=flo, fla=fla, fz=fz, nomask=nomask)
+
+
+def blend(GEO, VP0, VS0, quiet=False):
+    """D-B049 blend of the tiles' runs (each tile's run = tl['run']) on the reference VP0/VS0 [x, y, z], then the
+    D-B051 Vs check. Returns out (P, S), start (P, S), Rg, dsum, res, fall, vs_rev and the check counts."""
+    flo, fla, fz, shp = GEO["flo"], GEO["fla"], GEO["fz"], GEO["shape"]
+    num = {ph: np.zeros(flo.size) for ph in "PS"}      # sum_k w_k V_k
+    num0 = {ph: np.zeros(flo.size) for ph in "PS"}     # sum_k w_k V0_k
+    den = {ph: np.zeros(flo.size) for ph in "PS"}
+    dws_acc = {ph: np.zeros(flo.size) for ph in "ps"}
+    res = {ph: np.full(flo.size, np.inf) for ph in "PS"}
+    R = {ph: np.zeros(flo.size) for ph in "PS"}        # max_k u'_k (D-B049)
+    used = []
+    for g in GEO["geo"]:
+        tl, sel = g["tile"], g["sel"]
+        run, m0, m1, D = run_fields(tl["run"])
+        for ph in "PS":
+            v0 = mod_velocity(m0, ph, flo[sel], fla[sel], fz[sel], clamp_surface=False)
+            v1 = mod_velocity(m1, ph, flo[sel], fla[sel], fz[sel], clamp_surface=False)
+            w = g[f"w_{ph}"]
+            R[ph][sel] = np.maximum(R[ph][sel], g[f"r_{ph}"])
+            num[ph][sel] += w * v1
+            num0[ph][sel] += w * v0
+            den[ph][sel] += w
+            dws_acc[ph.lower()][sel] += w * mod_velocity(D[ph.lower()], "P", flo[sel], fla[sel], fz[sel],
+                                                          clamp_surface=False) if ph.lower() in D else 0.0
+            if g[f"fin_{ph}"] is not None:
+                f = g[f"fin_{ph}"]
+                cur = res[ph][sel]
+                res[ph][sel] = np.where(f > 0, np.minimum(cur, f), cur)
+        used.append(dict(region=tl["region"], tag=tl["tag"], run=str(run), mask=g["mask"], gated=g["gated"],
+                         model_geo_sha256=EX.sha256(run / "Output_Files" / "model_geo.npz"),
+                         mask_sha256=g["mask_sha256"]))
     out, start, Rg, fall = {}, {}, {}, {}
     for ph, VR in (("P", VP0), ("S", VS0)):
         cov = (den[ph] > 0).reshape(shp)
@@ -232,9 +250,9 @@ def main():
         out[ph] = np.where(cov, Rg[ph] * num[ph].reshape(shp) / dd + (1 - Rg[ph]) * VR, VR)
         start[ph] = np.where(cov, Rg[ph] * num0[ph].reshape(shp) / dd + (1 - Rg[ph]) * VR, VR)
         fall[ph] = (float((Rg[ph][cov] == 0).mean()), float(((Rg[ph][cov] > 0) & (Rg[ph][cov] < 1)).mean()))
-        print(f"{ph}: {int(cov.sum())} covered nodes, {100 * fall[ph][0]:.1f} % on the reference (R = 0), "
-              f"{100 * fall[ph][1]:.1f} % partly (0 < R < 1)", flush=True)
-    tr = lambda a: np.ascontiguousarray(np.asarray(a).reshape(shp).transpose(2, 1, 0)).astype("float32")
+        if not quiet:
+            print(f"{ph}: {int(cov.sum())} covered nodes, {100 * fall[ph][0]:.1f} % on the reference (R = 0), "
+                  f"{100 * fall[ph][1]:.1f} % partly (0 < R < 1)", flush=True)
     dsum = {ph: np.where(den[ph.upper()] > 0, dws_acc[ph] / np.where(den[ph.upper()] > 0, den[ph.upper()], 1), 0)
             for ph in "ps"}
     # D-B051 (replaces the Vp/Vs floor of 1.5): the tiles pass on Vp/Vs down to 1.22 at unresolved nodes (v0.3.0),
@@ -253,9 +271,36 @@ def main():
     # D-B051 asks for uint8; int8 ("byte") here, so the Zarr store and the netCDF-4 Classic file (no unsigned types,
     # b2_model_export.write) hold the same type; values 0-2 either way
     vs_rev = chg.astype("int8") + cap.astype("int8")
-    print(f"Vs check (Vp/Vs < {vmin:g} or dws_s < {dmin:g}): met at {int(rev.sum())} covered nodes; Vs changed at "
-          f"{int(chg.sum())} ({int((chg & low_r).sum())} on Vp/Vs, {int((chg & low_d).sum())} on dws_s), "
-          f"{int(cap.sum())} of them capped at Vp / {vmin:g}", flush=True)
+    if not quiet:
+        print(f"Vs check (Vp/Vs < {vmin:g} or dws_s < {dmin:g}): met at {int(rev.sum())} covered nodes; Vs changed at "
+              f"{int(chg.sum())} ({int((chg & low_r).sum())} on Vp/Vs, {int((chg & low_d).sum())} on dws_s), "
+              f"{int(cap.sum())} of them capped at Vp / {vmin:g}", flush=True)
+    return dict(out=out, start=start, Rg=Rg, dsum=dsum, res=res, fall=fall, vs_rev=vs_rev, used=used, den=den,
+                rev=rev, chg=chg, cap=cap, low_r=low_r, low_d=low_d, vmin=vmin, dmin=dmin)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("version", nargs="?")
+    ap.add_argument("description", nargs="?")
+    ap.add_argument("--nll", action="store_true")
+    ap.add_argument("--status", default="candidate")
+    ap.add_argument("--dry-run", help="write the merged netCDF here, do not register")
+    ap.add_argument("--runs", help='test: "region:tag:maskregion:damp,..." instead of the phase-1 choice')
+    a = ap.parse_args()
+    assert 0 <= C["floor"] < 1, f"tomodd.merge.product.floor = {C['floor']}: must be in [0, 1) (R divides by 1 - floor)"
+    lon, lat, z = grid_axes()
+    VP0, VS0 = reference(lon, lat, z)
+    tiles, dropped = tile_runs(a.runs)
+    tl = [dict(region=r, tag=t, run=RUNS / r / t, mask_region=m, mask_damp=d) for r, t, m, d in tiles]
+    GEO = geometry(tl, lon, lat, z, allow_nomask=bool(a.runs))
+    B = blend(GEO, VP0, VS0)
+    out, start, Rg, dsum, res, fall, vs_rev, used = (B[k] for k in ("out", "start", "Rg", "dsum", "res", "fall",
+                                                                     "vs_rev", "used"))
+    den, rev, chg, cap, low_r, low_d, vmin, dmin = (B[k] for k in ("den", "rev", "chg", "cap", "low_r", "low_d",
+                                                                   "vmin", "dmin"))
+    ncov, nomask, shp = GEO["ncov"], GEO["nomask"], GEO["shape"]
+    tr = lambda a: np.ascontiguousarray(np.asarray(a).reshape(shp).transpose(2, 1, 0)).astype("float32")
     vp, vs, vp0, vs0 = out["P"], out["S"], start["P"], start["S"]
     src = "data-derived: merge of tomoDD-SE tile inversions (b2_merge.py)"
     start_src = {ph: f"D-B049: R x (the tiles' starts, D-B005 x (1 + change of {C['reference']}) at their own nodes, "

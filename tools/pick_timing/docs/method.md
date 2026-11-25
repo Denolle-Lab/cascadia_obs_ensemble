@@ -78,7 +78,7 @@ every row; writes `<output>.provenance.json` (inputs with md5, model epochs, cod
 |---|---|---|
 | neighbor_km | 100 | close enough for similar paths, far enough to have >= 3 stations in sparse networks |
 | bin_picks / bin_max_days | 20 / 7 | medians of 20 picks are near-Gaussian; a week resolves epoch ends to days |
-| dbic_min | 30 | above the largest T (25.5) of 1,164 synthetic clean stations in a 700-station calibration |
+| dbic_min | 30 | a pre-screen: in a 700-station calibration 1 of 1,164 synthetic clean stations reached it (T 31.1) and the permutation test rejected it |
 | amp_min_s | 0.05 | about the pick uncertainty; smaller errors are not worth a correction |
 | p_max / n_perm | 0.01 / 200 | per-station false-alarm rate of order 0.2 % on shuffled real data |
 | drift_threshold_s, apply_threshold_s | 0.005 | half a sample at 100 Hz |

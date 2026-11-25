@@ -7,7 +7,7 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
-## STAGE MARKER 2026-11-24 21:10 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+## STAGE MARKER 2026-11-24 20:55 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
 
 Still stage 1 of 5 (last verifications). PI 20:50: D-B072 (verify the pick drift on pnwstore, then re-time each pick
 from short ObsPy reads around it; v5.1 uses the re-timed picks; other products unchanged for now): agent running ->

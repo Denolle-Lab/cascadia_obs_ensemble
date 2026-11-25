@@ -620,31 +620,44 @@ def variant(s, run, k, nproc):
 
 
 def score():
+    """CMP/nllcoh/scores.json: per set, score_set("nllcoh") as the other legs write it ("v5.1", "nllcoh", "full"),
+    plus "nllssst" / "full_nllssst" and "nllbase" / "full_nllbase" from score_set of those legs."""
     out = {}
     for s in C.SETS:
         out[s] = {}
-        for leg in ("nllbase", "nllssst", "nllcoh"):
-            if C.read_reloc(leg, s, "full") is not None:
-                out[s][leg] = C.score_set(leg, s)
-                print(s, leg, json.dumps(out[s][leg]), flush=True)
+        for leg in ("nllcoh", "nllssst", "nllbase"):
+            if C.read_reloc(leg, s, "full") is None:
+                continue
+            r = C.score_set(leg, s)
+            print(s, leg, json.dumps(r), flush=True)
+            if leg == "nllcoh":
+                out[s].update(r)
+            else:
+                out[s].setdefault("v5.1", r.get("v5.1"))
+                out[s][leg] = r.get(leg)
+                out[s][f"full_{leg}"] = r.get("full")
     f = safe(C.CMP / "nllcoh" / "scores.json")
     f.write_text(json.dumps(out, indent=1) + "\n")
     print("->", f)
 
 
 def pass_scores(s):
-    """diagnostic: held-out CC scores (as score_set, pooled over the folds) of every NLLoc pass it0..it<N> and of the
-    coherence pass, from the scratch folders -> WORK/<set>/pass_scores.json."""
+    """diagnostic: held-out CC scores (as score_set, pooled over the folds) of every NLLoc pass it0..it<N>, of the
+    coherence pass and of the variants, from the scratch folders -> WORK/<set>/pass_scores.json. "v5.1_same" scores
+    the v5.1 positions on the events the coherence pass located in each fold (the same CC rows as "coh")."""
     cc = C.cc_rows(s)
     ev = C.events(s).set_index("ID")
     tags = [f"it{k}" for k in range(len(SCHEDULE) + 1)] + ["coh"]
     tags += [f"var_coh{k}" for k in range(len(SCHEDULE))]
     out = {}
-    for tag in ["v5.1"] + tags:
+    for tag in ["v5.1", "v5.1_same"] + tags:
         rows, n = [], []
         for run in C.runs()[1:]:
             if tag == "v5.1":
                 pos = ev
+            elif tag == "v5.1_same":
+                c = pd.read_csv(WORK / s / run / "coh" / "locs.csv")
+                pos = ev.loc[c[c.status == "LOCATED"].ID]
             else:
                 f = WORK / s / run / tag / "locs.csv"
                 if not f.exists():

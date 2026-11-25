@@ -21,6 +21,9 @@ parameters in params b4.depth_flags and b4.quarry (empty on rows without a hypoc
   with dist_min > 15 km; "ok" otherwise (rows without dist_min, e.g. ComCat rows, are not tested by the Gorda rule);
 * event_flag: "quarry_blast_likely" for events in the Texada Island box (lat 49.40-49.85, lon -124.75 to -124.25)
   on a weekday between 07:00 and 19:00 America/Vancouver time, "" otherwise.
+  D-B071 (PI 2026-11-24): plus "anss_explosion", "anss_quarry_blast", "anss_other_event" or "anss_sonic_boom" for
+  located events within 3 s and 20 km of a ComCat event of that type (data/tomo_v1/ref_models/comcat_nonquake_2010-2016.csv),
+  joined with ";" to the Texada flag; a surface depth is right for these events (19 % of onshore floor-held events).
 Surface check (D-B055, PI 2026-11-24; D-B068): an event above the solid surface (land or seafloor) is a computation
 error, never corrected by moving it, and a catalog with any such event is not publishable. surface_km (km, positive up)
 is the solid surface at the final epicentre of every event with a hypocentre (empty otherwise): params
@@ -231,7 +234,43 @@ def flags(c):
     tl = t.dt.tz_convert(QB["tz"])
     qb = (c.lat.between(*QB["lat"]) & c.lon.between(*QB["lon"]) & (tl.dt.weekday < 5)
           & (tl.dt.hour >= QB["weekday_hours_local"][0]) & (tl.dt.hour < QB["weekday_hours_local"][1]))
-    return q, np.where(qb, "quarry_blast_likely", "")
+    flag = np.where(qb, "quarry_blast_likely", "").astype(object)
+    an = anss_nonquake(c, t)                       # D-B071
+    both = (flag != "") & (an != "")
+    flag[both] = flag[both] + ";" + an[both]
+    flag[(flag == "") & (an != "")] = an[(flag == "") & (an != "")]
+    return q, flag
+
+
+NONQUAKE = REPO / "data" / "tomo_v1" / "ref_models" / "comcat_nonquake_2010-2016.csv"   # ComCat non-earthquakes (README)
+ANSS_DT_S, ANSS_DX_KM = 3.0, 20.0
+
+
+def anss_nonquake(c, t):
+    """D-B071: 'anss_<type>' (explosion, quarry_blast, other_event, sonic_boom) for rows within ANSS_DT_S seconds and
+    ANSS_DX_KM km of an ANSS/ComCat event that is not an earthquake (nearest in time among those within the distance);
+    '' otherwise and for rows without a time or epicentre."""
+    a = pd.read_csv(NONQUAKE)
+    out = np.full(len(c), "", dtype=object)
+    if a.empty:
+        return out
+    ta = a["t"].to_numpy(float)
+    o = np.argsort(ta)
+    ta, la, lo = ta[o], a["lat"].to_numpy(float)[o], a["lon"].to_numpy(float)[o]
+    ty = a["type"].str.replace(" ", "_").to_numpy()[o]
+    ok = t.notna().to_numpy() & c.lat.notna().to_numpy() & c.lon.notna().to_numpy()
+    tc = (t - pd.Timestamp("1970-01-01", tz="UTC")).dt.total_seconds().to_numpy()      # NaN where the row has no time
+    lat, lon = c.lat.to_numpy(float), c.lon.to_numpy(float)
+    for i in np.flatnonzero(ok):
+        j0, j1 = np.searchsorted(ta, tc[i] - ANSS_DT_S), np.searchsorted(ta, tc[i] + ANSS_DT_S, side="right")
+        best, bdt = "", np.inf
+        for j in range(j0, j1):
+            p1, p2 = np.radians(lat[i]), np.radians(la[j])
+            h = np.sin((p2 - p1) / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(np.radians(lo[j] - lon[i]) / 2) ** 2
+            if 2 * 6371.0 * np.arcsin(np.sqrt(h)) <= ANSS_DX_KM and abs(ta[j] - tc[i]) < bdt:
+                best, bdt = f"anss_{ty[j]}", abs(ta[j] - tc[i])
+        out[i] = best
+    return out
 
 
 def main():
@@ -376,12 +415,15 @@ def main():
           "catalog_version.py): u_reason", "", "| u_reason | n |", "|---|---|"]
     L += [f"| {k} | {v} |" for k, v in ur.items()]
     fq = pd.crosstab(c.region, c.depth_quality.replace("", "(no hypocentre)"), margins=True, margins_name="all")
-    nq = int((c.event_flag == "quarry_blast_likely").sum())
+    nq = int(c.event_flag.str.contains("quarry_blast_likely", regex=False).sum())
+    na_ = {k: int(c.event_flag.str.contains(k, regex=False).sum()) for k in
+           ("anss_explosion", "anss_quarry_blast", "anss_other_event", "anss_sonic_boom")}
     L += ["", "## Flags (rule 4 of D-B049..D-B051)", "", "| region | " + " | ".join(fq.columns) + " |",
           "|---" * (len(fq.columns) + 1) + "|"]
     L += [f"| {k} | " + " | ".join(str(v) for v in row) + " |" for k, row in fq.iterrows()]
     L += ["", f"event_flag quarry_blast_likely: {nq} events ({QB['name']} box, weekdays "
-          f"{QB['weekday_hours_local'][0]:02d}:00-{QB['weekday_hours_local'][1]:02d}:00 {QB['tz']})."]
+          f"{QB['weekday_hours_local'][0]:02d}:00-{QB['weekday_hours_local'][1]:02d}:00 {QB['tz']}).",
+          "event_flag ANSS non-earthquakes (D-B071, within 3 s and 20 km): " + ", ".join(f"{k} {v}" for k, v in na_.items()) + "."]
     (od / "compare.md").write_text("\n".join(L) + "\n")
     import matplotlib
     matplotlib.use("Agg")

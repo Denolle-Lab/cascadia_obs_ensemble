@@ -652,6 +652,7 @@ b4:                                # B4 NonLinLoc relocation in the merged model
     weekday_hours_local: [7, 19]   # D-B049..D-B051, rule 4: Monday-Friday, 07:00-19:00 local
     tz: America/Vancouver          # D-B049..D-B051, rule 4: time zone of the local hours
   surface:                         # D-B068 merged solid surface (b4_surface.py, interface I1): GMRT patches, earth_relief elsewhere
+    source: merged                 # surface of b4_catalog.py's above-surface test (D-B055): must match the run's NLLoc floor (b4.surface.floor.file)
     dir: /wd1/mdenolle_data/reloc_v5/topo          # pinned sources read by surface_m: gmrt/<file>, <earth_relief.cache> (b4_surface.py install); env B4_SURFACE_DIR overrides (tests)
     gmrt_src: /home/mdenolle/wt_atlas/data/gmrt    # install copies from here (atlas data can change: md5 below are checked)
     gmrt_var: altitude
@@ -715,7 +716,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       model: 0.3.1
       note: "Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre."
       tier_u: none                 # D-B057: no v4 hypocentre outside the v4_* columns; u_reason says why
-      decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068]   # README header
+      decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072]   # README header
       flags: [floor_limited, far_only, deep_pass, five_phase]   # boolean columns of b4_catalog.py counted in the README
       columns:                     # README descriptions added or changed for v5.1 (override catalog_version.py COLUMNS by key)
         u_reason: "why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events"
@@ -728,12 +729,16 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         tier: "location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules in a2_build_catalog.py; counts in b4_catalog_v5_trackA_*_tiers.md)"
         depth_quality: "ok, unconstrained (ridge regions, Blanco outside the 2012-13 OBS deployment), biased_deep (Gorda, nearest station > 15 km); empty without a hypocentre"
         depth_frame: "how depth was obtained (true depth: the Earth-flattening of the NonLinLoc grids undone; ComCat for v4.1 additions); empty without a hypocentre"
+        event_flag: "quarry_blast_likely (Texada Island box, weekday working hours) and/or anss_explosion, anss_quarry_blast, anss_other_event, anss_sonic_boom (within 3 s and 20 km of a ComCat event of that type, D-B071; a surface depth is right for these), joined with ';'; empty otherwise"
         "tile, region": "NonLinLoc tile (workdir of the main or deep pass; empty when not located here); region label of the v4 epicentre (box rules of a2_parse_hyp.py), also for rows without a hypocentre"
       method_notes:                # README bullets after the hypocentre line
         - "Every arrival is used: each station and phase has a fine travel-time grid (1 km, within about 250 km of the station) and a coarse wide grid over the whole model, which NonLinLoc uses when the search box is not inside the fine grid (v5.0 dropped the arrivals beyond about 160 km)."
         - "Deep pass (D-B067): events rejected at the bottom face of the 80 km grids or located at 78 km or deeper (flattened depth) are located again in wide grids extended to about 121 km; below 80 km and outside the tomography box the velocities are ak135, blended under the deepest model layer (deep_pass). Events seen only by distant stations (far_only) are not sent to the deep pass."
         - "Solid surface (D-B068): one merged surface, GMRT multibeam where available and GMT earth_relief 01m elsewhere, defines NonLinLoc's topography floor (each 15 s node holds the minimum of the bilinear surface over its cell, minus 1 m, Earth-flattened; D-B056), the above-surface test (surface_km, above_surface; D-B055) and the water/rock boundary of the velocity model."
         - "Events with 5 picks are located with a 5-phase minimum (D-B066): one degree of freedom, tier D (five_phase)."
+        - "Model error (D-B069): a constant 0.2 s for every phase (no travel-time-dependent term, which acted as a pull toward short travel times in NonLinLoc's EDT likelihood); station terms recomputed with it."
+        - "Pick timing (D-B072): picks on analog short-period channels that sample at 99.99939 Hz labelled 100 Hz (34 UW stations from 2013-10-22, KOS to 2013-11-18, UO IRO, HUO, FRIS to about 2015-01) were early by up to about 0.5 s late in each UTC day, because the picker read whole days; each such pick was re-timed from a short read of the waveform around it (pick file Cascadia_picks_catalog_v4.1t.csv, column timing_corrected)."
+        - "event_flag also marks events that ComCat lists as explosions, quarry blasts or other non-earthquakes (D-B071)."
         - "The v4.1 additions 900001-900003 carry their ComCat hypocentre (loc_source comcat, tier U) when NonLinLoc does not locate them."
       known_limits:                # README lines ({axial}: computed Axial seafloor sentence; no other braces)
         - "floor_limited events (count above) have depths set by NonLinLoc's topography floor, not by the data (in round 2 such events had sigma_z about 9 km and expectation depths about 13 km below the best point)."

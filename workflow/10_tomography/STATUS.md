@@ -7,6 +7,18 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## PROGRESS 2026-11-24 21:27 (PI: "go continuously from 1 to 5")
+
+* Integration branches (not merged into tomo/tiles or reloc/track-a yet): v51/integration (worktree ~/wt_v51_int:
+  surface + field + wide + catalog-b; params conflict resolved by keeping both blocks; D-B071 ComCat non-earthquake
+  event_flag with data/tomo_v1/ref_models/comcat_nonquake_2010-2016.csv; b4.surface.source merged; 5.1 params with
+  D-B069/D-B071/D-B072 notes; chain b4_v51_relocate.sh; shallow-crust rule params b4.shallow_crust (off by default);
+  field verifier should-fixes) and v51/integration-reloc (worktree ~/wt_v51_int_reloc: runner + catalog-a). Both pushed.
+* Field verifier: ready, no must_fix (v51_build/verify_field/). Wide verifier running. Shallow-crust rule-on test
+  build running (v51_build/sc_test/, compare_sc.py).
+* Waiting: V4 of the slower-S test (~midnight), pick re-timing (checks/pick_retiming/). Then step 1 (model rule
+  decision, D-B073), step 2 (accept re-timed picks), merge integration branches, launch b4_v51_relocate.sh.
+
 ## STAGE MARKER 2026-11-24 20:55 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
 
 Still stage 1 of 5 (last verifications). PI 20:50: D-B072 (verify the pick drift on pnwstore, then re-time each pick

@@ -2,7 +2,7 @@
 
 Catalog /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv; compared with b4_iter1_v0.3.1 and v4-NLL3D iter1_vpvs176.
 
-Located 171,717; above the surface: located 0, tier U at the v4 position 623.
+Located 171,717; above the surface: located 0, tier U at the v4 position 0; tier U without a hypocentre 623.
 
 ## Axial (Waldhauser et al. 2020: 85 % within 1.6 km, 90 % within 2.0 km below the seafloor)
 

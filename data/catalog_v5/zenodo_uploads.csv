@@ -1,3 +1,4 @@
 date,zenodo_draft,file,md5,size_bytes,versions,note
 2026-11-24,23084158,catalog_v5.zip,5965b11b032a8baf63091815c06463c1,19689021,5.0,"private draft (not submitted); catalog v5.0 (interim, D-B058/D-B059); replaced at each new version"
 2026-11-24,23084158,catalog_v5.zip,257a425b5e6df73dbca5b970b40e10f5,19690913,5.0,"replaces 5965b11b: v5.0 README known limits (Mt St Helens, Blanco event-paired) and paired_v0.3.1.md added; catalog CSV unchanged"
+2026-11-25,23084158,catalog_v5.zip,2cf6f0a30c45e596c469cc17ed7b2b59,103177324,"5.0,5.1","replaces 257a425b: adds catalog v5.1 (b4_v51_iter1; re-timed picks v4.1t bundled, md5 762f18e8 uncompressed); v5.0 folder unchanged"

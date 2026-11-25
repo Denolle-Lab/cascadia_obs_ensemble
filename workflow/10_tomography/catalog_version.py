@@ -17,6 +17,12 @@ Rules:
 * columns: every column of the B4 catalog is carried; the build stops on a column the README does not describe
   (COLUMNS below, plus the version's params `columns`, which add or override descriptions). Boolean flag columns
   listed in the version's params `flags` are counted in the README.
+* picks (params versions.<v>.picks_file, picks_md5, picks_note): when a version was located with a pick file that is
+  not in the Zenodo record (v5.1: the re-timed v4.1t picks, D-B072/D-B075), the file is checked against its md5 and
+  bundled gzipped (header time 0, so the same bytes at each build); picks_note replaces the README's picks sentence.
+* surface (params versions.<v>.surface_source, b4_catalog.py's b4.surface.source values): the solid surface of the
+  version's B4 run, also used for the ComCat rows (v5.0 earth_relief_01m, v5.1 merged, D-B068).
+* extra_files: repository paths or absolute paths, or {path, name} to copy under another name.
 * magnitudes = the v4.1 Route A table (M, M_type, ML, ...), computed with the v4 hypocentres (STATUS step 9 redoes
   them with the new hypocentres). Ian's v4 magnitude column is not carried (runs +0.3 high offshore).
 Outputs: <out>/v<version>/ (catalog CSV '%.8g', README, station terms of the run, B4 comparison, MD5SUMS),
@@ -24,6 +30,7 @@ Outputs: <out>/v<version>/ (catalog CSV '%.8g', README, station terms of the run
 data/catalog_v5/registry.csv and data/catalog_v5/v<version>/ (README copy, summary, manifest) in the repository.
 """
 import argparse
+import gzip
 import hashlib
 import shutil
 import sys
@@ -37,6 +44,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from manifest import REPO, load_params, write_manifest  # noqa: E402
+import b4_catalog  # noqa: E402
 from b4_catalog import CAT, RUNS, flags, surface_km  # noqa: E402
 
 P = load_params()["catalog_versions"]
@@ -98,6 +106,7 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     run, model = V["b4_run"], V["model"]
     tier_u = V.get("tier_u", "none")
     flag_cols = V.get("flags", [])
+    b4_catalog.SURFACE = V["surface_source"]       # surface_km reads it at each call
     src = CAT / f"catalog_b4_{run}.csv"
     c = pd.read_csv(src, dtype={"tier": str})
     # rows without a hypocentre are exactly the loc_source 'none' rows; every other row carries the surface check
@@ -155,8 +164,17 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     for f in ("compare.md", "acceptance.md", f"catalog_v5_trackA_{run}_tiers.md"):
         if (b4d / f).exists():
             shutil.copy(b4d / f, vd / f"b4_{f}")
+    extra = []
     for f in V.get("extra_files", []):
-        shutil.copy(REPO / f, vd / Path(f).name)
+        f = f if isinstance(f, dict) else {"path": f}
+        extra.append(REPO / f["path"])                # an absolute path stays absolute
+        shutil.copy(extra[-1], vd / f.get("name", Path(f["path"]).name))
+    picks = Path(V["picks_file"]) if V.get("picks_file") else None
+    if picks:
+        assert md5(picks) == V["picks_md5"], f"{picks}: md5 differs from params picks_md5"
+        with open(picks, "rb") as fi, open(vd / f"{picks.name}.gz", "wb") as raw, \
+                gzip.GzipFile(fileobj=raw, mode="wb", filename="", mtime=0) as fo:
+            shutil.copyfileobj(fi, fo, 1 << 24)
 
     above = c.above_surface.fillna(False).astype(bool)
     ab = c[above]
@@ -171,6 +189,8 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     axial = (f"{100 * (axz <= 2.0).mean():.0f} % of the {len(ax):,} tier A-B Axial events are within 2 km of the seafloor "
              f"(median {axz.median():.1f} km below it), against 90 % in Waldhauser et al. (2020)")
     dec = ", ".join(V.get("decisions", ["D-B058"]))
+    picks_txt = V.get("picks_note", "Picks are not repeated\n  here: they are Cascadia_picks_catalog_v4.csv.gz in this "
+                                    "record, with the v4.1 patch.")
     ls_rows = "".join(f"| {LOC_SOURCE[k][1]} | {ls.get(k, 0):,} |\n" for k in LOC_SOURCE if k == "nll3d" or ls.get(k, 0))
     flag_rows = "".join(f"| {f} | {v:,} |\n" for f, v in nflag.items())
     col_rows = "".join(f"| {k} | {v} |\n" for k, v in cols.items() if any(x in c.columns for x in k.split(", ")))
@@ -184,8 +204,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 ## What it is
 
 * Events and picks: catalog v4.1 (association catalog of I. McBrearty with the v4.1 patch: event 172113 removed as
-  mis-associated, events 900001-900003 added with ComCat hypocentres and repicked phases). Picks are not repeated
-  here: they are Cascadia_picks_catalog_v4.csv.gz in this record, with the v4.1 patch.
+  mis-associated, events 900001-900003 added with ComCat hypocentres and repicked phases). {picks_txt}
 * Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model}
   (velocity_models.zip in this record), with static station terms from a first pass (station_terms_v{version}.in),
   run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone).
@@ -246,7 +265,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
     (od / "summary.md").write_text(f"# Catalog v{version}: events by region and hypocentre source\n\n" + "\n".join(tab)
                                    + f"\n\nBundle {zp} md5 {md5(zp)} ({zp.stat().st_size:,} bytes)\n")
     write_manifest(f"catalog_v{version}", od,
-                   inputs=[src, P["v4_1_events"], P["v4_1_magnitudes"], terms],
+                   inputs=[src, P["v4_1_events"], P["v4_1_magnitudes"], terms, *extra, *([picks] if picks else [])],
                    outputs=[csv, vd / f"README_v{version}.md", vd / "MD5SUMS", zp, reg_f],
                    params={"version": version, **V, "v4_1_removed": drop, "v4_1_added": add},
                    counts={"events": len(c), "loc_source": ls, "tiers": tiers, "above_surface": len(ab),

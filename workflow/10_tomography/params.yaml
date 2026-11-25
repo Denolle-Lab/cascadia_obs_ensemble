@@ -701,6 +701,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       terms_run: b4_iter0_v0.3.1   # station_terms.in used by b4_run
       model: 0.3.1
       note: "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059)."
+      surface_source: earth_relief_01m   # the surface of b4_iter1_v0.3.1 (before D-B068)
       tier_u: v4                   # D-B059: tier U keeps the v4 hypocentre (v5.0 only); later versions: none (no hypocentre)
       decisions: [D-B058, D-B059]  # README header
       extra_files:                 # copied into the version folder (repository paths)
@@ -718,9 +719,18 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       terms_run: b4_v51_iter0      # station_terms.in used by b4_run
       model: 0.3.1
       note: "Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre."
+      surface_source: merged       # D-B068, as b4.surface.source of the b4_v51 runs
       tier_u: none                 # D-B057: no v4 hypocentre outside the v4_* columns; u_reason says why
       decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075]   # README header
       flags: [floor_limited, far_only, deep_pass, five_phase]   # boolean columns of b4_catalog.py counted in the README
+      picks_file: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv   # D-B072/D-B075 re-timed picks used by b4_v51_*; bundled gzipped (catalog_version.py)
+      picks_md5: 762f18e8f181eaaaa247d367c2d2c302
+      picks_note: "Picks: Cascadia_picks_catalog_v4.1t.csv.gz in this folder, the v4.1 picks re-timed on drifting channels (Pick timing below; columns timing_corrected, timing_correction_s = new minus old time, s). The 45,879 picks that could not be re-timed keep their v4.1 times: the rows of pick_retiming_corrections.csv.gz with applied False and flag off_grid, rate_not_100 or error. Method and checks: pick_retiming_README.md, pick_retiming_report.html. Cascadia_picks_catalog_v4.csv.gz elsewhere in this record has the original pick times."
+      extra_files:                 # copied into the version folder (repository or absolute paths; name = copy name)
+        - data/tomo_v1/depth_literature/paired_v5.1.md
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/corrections.csv.gz, name: pick_retiming_corrections.csv.gz}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/README.md, name: pick_retiming_README.md}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/report.html, name: pick_retiming_report.html}
       columns:                     # README descriptions added or changed for v5.1 (override catalog_version.py COLUMNS by key)
         u_reason: "why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events"
         floor_limited: "True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here"

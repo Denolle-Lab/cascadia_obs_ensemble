@@ -744,3 +744,16 @@ v4.1. Not re-timed, kept unchanged and flagged: 45,879 picks (off_grid 23,331, m
 SEP/SUG EHZ from 2014-01-18 on, whose picks are no longer on the 100 Hz grid; rate_not_100 22,541; error 7). v5.1 pick
 file: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv (md5 762f18e8f181eaaaa247d367c2d2c302; a2_make_obs.py
 reads it: 2,503,381 picks of 172,342 events in 1,206 tiles; spot check HUO.UO event 41 P 0.772 s later).
+
+### D-B080 Catalog bundle carries the pick file it was located with; atlas tests the second catalog against its own surface (adopted, 2026-11-25, session -18; implements D-B058 for v5.1; PI may revise)
+* catalog_v5.zip: a version located with picks that are not in the Zenodo record carries them in its folder: v5.1 has
+  Cascadia_picks_catalog_v4.1t.csv.gz (re-timed picks, D-B072/D-B075, md5 762f18e8 uncompressed, checked at build) and
+  the re-timing corrections, README and report; the draft holds 100 files, so they go inside catalog_v5.zip.
+* catalog_version.py pins the solid surface per version (surface_source: v5.0 earth_relief_01m, v5.1 merged), so a
+  rebuild of v5.0 still reproduces its published CSV (md5 23781b52).
+* Atlas (atlas/model-layer 3f661608): events without a hypocentre (loc_source none) are drawn in the v4 view only;
+  the above-surface flag of the second catalog uses the catalog's surface_km (the atlas terrain has gaps and differs by
+  ~30 m), and its depths are stored exactly (float32), so the atlas reports the catalog's own count (v5.1: 0).
+* b4_acceptance.py bug fixed: above_surface.astype(bool) turned empty values (no hypocentre) into True, so v5.1's
+  acceptance.md listed 623 tier U events "at the v4 position" above the surface; it now reports 0, and 623 without a
+  hypocentre. Located counts were unaffected.

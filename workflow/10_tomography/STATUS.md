@@ -2,10 +2,25 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-25 04:10 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## CATALOG v5.1 BUILT, ON ZENODO DRAFT AND ATLAS 2026-11-25 04:10 (session -18)
+
+* /wd1/mdenolle_data/catalog_v5/v5.1 (catalog_version.py 5.1): 172,342 events = 171,717 NLLoc (b4_v51_iter1) + 2 ComCat
+  (900001-3 not located) + 623 without a hypocentre; tiers A 21,325, B 33,896, C 73,464, D 43,032, U 625; 0 above the
+  surface (publishable by D-B055); flags floor_limited 8,682, far_only 624, deep_pass 356, five_phase 11,978. CSV md5
+  5035f0ee. Folder also has the re-timed picks (gz), re-timing corrections/README/report, station terms, B4 reports.
+* catalog_v5.zip md5 2cf6f0a3 (103 MB; v5.0 folder unchanged) replaced on the private Zenodo draft 23084158 (remote md5
+  verified; draft not submitted). Registry data/catalog_v5/registry.csv, data/catalog_v5/v5.1/.
+* Atlas gh-pages e0e32e6e shows v5.1 (atlas/model-layer 3f661608): 0 events above the surface in its view, 623 hidden.
+* D-B080 (bundle carries the re-timed picks; surface pinned per version; atlas air test against the catalog surface;
+  b4_acceptance.py NaN bug fixed). D-B073 (shallow crust) is under "go continuously": PI may revise it before v5.1 is
+  published outside the private draft.
+* Next: B5 on v5.1 with D-B061..D-B064 (catalog dt from the re-timed picks) -> v5.2; CC dt only from re-timed
+  waveform reads (D-B072 note).
 
 ## v5.1 RELOCATION DONE 2026-11-25 03:18 (round-2 session; stages 1-5 of the handoff)
 

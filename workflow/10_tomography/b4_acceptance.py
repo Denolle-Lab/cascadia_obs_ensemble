@@ -27,9 +27,11 @@ f_new, f_old, f_ref = (CAT / f"catalog_b4_{a.run}.csv", CAT / f"catalog_b4_{a.ol
                        CAT / f"catalog_v5_trackA_{a.ref}.csv")
 new, old, ref = (pd.read_csv(f, dtype={"tier": str}).set_index("ID") for f in (f_new, f_old, f_ref))
 loc = new.loc_source == "nll3d"
+ab = new.above_surface.astype("boolean").fillna(False)   # empty (no hypocentre, v5.1 tier U) is not above
 L = [f"# Acceptance checks of {a.run}", "", f"Catalog {f_new}; compared with {a.old} and v4-NLL3D {a.ref}.", "",
-     f"Located {int(loc.sum()):,}; above the surface: located {int((new.above_surface.astype(bool) & loc).sum()):,}, "
-     f"tier U at the v4 position {int((new.above_surface.astype(bool) & ~loc).sum()):,}.", "",
+     f"Located {int(loc.sum()):,}; above the surface: located {int((ab & loc).sum()):,}, "
+     f"tier U at the v4 position {int((ab & (new.loc_source == 'v4')).sum()):,}; "
+     f"tier U without a hypocentre {int((new.loc_source == 'none').sum()):,}.", "",
      "## Axial (Waldhauser et al. 2020: 85 % within 1.6 km, 90 % within 2.0 km below the seafloor)", "",
      "| set | n | median bsf | p10-p90 | <= 1.6 km | <= 2.0 km | pass (>= 85 % within 2.0 km) |", "|---|---|---|---|---|---|---|"]
 ax = new[loc & (new.region == "Axial")]

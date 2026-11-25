@@ -1,0 +1,84 @@
+{
+ "counts": {
+  "P1": {
+   "rows": 343,
+   "any_rule": 216,
+   "by_rule": {
+    "P1_common_mode": 194,
+    "none": 127,
+    "P1_calibration": 74,
+    "P1_wed_window": 24
+   },
+   "by_role": {
+    "deep": 331,
+    "reference": 10,
+    "wednesday_shallow": 2
+   },
+   "with_view": 74
+  },
+  "P2": {
+   "rows": 39,
+   "any_rule": 18,
+   "by_rule": {
+    "none": 21,
+    "P2_v4_fits_better": 16,
+    "P2_nearest_downweighted": 14,
+    "P2_sp_mismatch": 9
+   },
+   "by_role": {
+    "v1_GO022": 39
+   },
+   "with_view": 39
+  },
+  "P3": {
+   "rows": 150,
+   "any_rule": 75,
+   "by_rule": {
+    "none": 75,
+    "P3_deeper_20km": 60,
+    "P3_large_move": 56,
+    "P3_comcat_fits_better": 2,
+    "no_hypocentre": 2
+   },
+   "by_role": {
+    "tensor_v51_match": 139,
+    "large_mover": 8,
+    "no_hypocentre": 2,
+    "v4.1_addition": 1
+   },
+   "with_view": 148
+  },
+  "P4": {
+   "rows": 980,
+   "any_rule": 927,
+   "by_rule": {
+    "P4_sigz_gt_10km": 877,
+    "P4_depth_change_30km": 634,
+    "P4_v4_fits_better": 89,
+    "P4_two_cluster": 77,
+    "none": 53
+   },
+   "by_role": {
+    "far_only": 624,
+    "deep_pass": 356
+   },
+   "with_view": 81
+  }
+ },
+ "rules": {
+  "P1_common_mode": "P1: share of P picks at UW stations >= 0.9 AND P-pick time spread <= 0.5 s (farthest P pick > 8 km from the v5.1 epicentre) AND no S pick",
+  "P1_calibration": "P1: the weekly calibration-type signal at HSR.UW, EDM.UW or STD.UW within 30 s before to 90 s after the v5.1 origin time (a quiet stretch >= 10 s of the 2-15 Hz trace AND a step of the raw trace >= 30 times the median 1-s standard deviation)",
+  "P1_wed_window": "P1: origin time on a Wednesday 19:14:00-19:20:59 UTC",
+  "P2_nearest_downweighted": "P2: NonLinLoc weight < 0.1 for an arrival at the nearest station",
+  "P2_sp_mismatch": "P2: |observed - predicted (v5.1) S-P| > 0.5 s at one of KBO.NC, KSXB.NC, L02D.TA, L02E.TA",
+  "P2_v4_fits_better": "P2: residual rms (OT refit) of the v4 hypocentre < that of v5.1 - 0.05 s",
+  "P3_large_move": "P3: v5.1 more than 30 km (3-D) or more than 4 s from the ComCat origin",
+  "P3_deeper_20km": "P3: v5.1 more than 20 km deeper than ComCat",
+  "P3_comcat_fits_better": "P3: residual rms (OT refit) of the ComCat hypocentre < that of v5.1 - 0.05 s",
+  "P4_two_cluster": "P4: the NonLinLoc scatter depths form two clusters (two peaks of a 2-km Gaussian kernel density, at least 10 km apart, the smaller at least 25 % of the larger, the density between them below 50 % of the smaller peak)",
+  "P4_depth_change_30km": "P4: |v5.1 depth - v4 depth| > 30 km",
+  "P4_v4_fits_better": "P4: residual rms (OT refit) of the v4 hypocentre < that of v5.1 - 0.05 s",
+  "P4_sigz_gt_10km": "P4: catalog sig_z > 10 km",
+  "no_hypocentre": "no v5.1 hypocentre (NonLinLoc did not locate the event)"
+ }
+}

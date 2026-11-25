@@ -452,3 +452,35 @@ if __name__ == "__main__":
     od = Path(sys.argv[1])
     for e in sys.argv[2:]:
         print(e, make_all(int(e), od, force=True))
+
+
+def fig_thumb(eid, out, nmax=12):
+    """Compact record-section thumbnail for the viewer: vertical only, nearest stations with data, picks and predicted
+    P/S ticks (v5.1 blue, v4 orange, ComCat aqua), no labels beyond the distance."""
+    J, P, _ = _load(eid)
+    W = E.load_waveforms(eid)
+    band = tuple(J["band"])
+    rel_lo, rel_hi = J["window_rel"]
+    order, dist = _station_order(J, P)
+    sts = [s for s in order if any(c[-1] in "Z3" for c in W.get(s, {}))][:nmax]
+    n = max(len(sts), 1)
+    fig, ax = plt.subplots(figsize=(4.2, 2.8))
+    fig.subplots_adjust(left=0.1, right=0.99, top=0.97, bottom=0.12)
+    for k, st in enumerate(sts):
+        y0 = n - 1 - k
+        zc = [c for c in W[st] if c[-1] in "Z3"][0]
+        pcs = _prep(W[st][zc], band, rel_lo, rel_hi)
+        a = _norm(pcs)
+        for t, yy in pcs:
+            ax.plot(t, y0 + 0.45 * yy / a, color=INK, lw=0.3)
+        _ticks(ax, y0, _pred_times(J, P, st), _obs_times(J, P, st))
+        ax.text(rel_lo, y0 + 0.25, f"{dist[st]:.0f}", fontsize=5, color=MUTED, ha="right")
+    ax.set_xlim(rel_lo, rel_hi)
+    ax.set_ylim(-0.8, n - 0.2)
+    ax.set_yticks([])
+    ax.tick_params(labelsize=5.5, length=2, pad=1)
+    for t in ax.texts:
+        if t.get_text() in ("P", "S"):
+            t.set_fontsize(4.5)
+    fig.savefig(out, dpi=85, format="webp", pil_kwargs={"quality": 55, "method": 6})
+    plt.close(fig)

@@ -556,7 +556,10 @@ def top(counts):
     body = (f"<h1>Catalog v5.1 location review</h1><p class='sub'>Built {BUILT}. Four reports with waveform moveouts for "
             "human review (PI request, 2026-11-25 07:08 PST). Each folder works on its own (zip and share); answers are "
             "stored per report in the browser and downloaded as CSV from each report.</p><div class='cards'>"
-            + "".join(cards) + "</div>" + legend_html())
+            + "".join(cards) + "</div><div class='note'><b>All events in one table:</b> <a href='review_v51_viewer.html'>"
+            "review_v51_viewer.html</a> (summaries, filters, answer fields, CSV load and download) and "
+            "<a href='review_v51_events.csv'>review_v51_events.csv</a>; how to review and return answers: "
+            "<a href='README_review.md'>README_review.md</a>.</div>" + legend_html())
     (C.OUT / "index.html").write_text(page("v5.1 location review", "top", "", body, bar=False))
 
 

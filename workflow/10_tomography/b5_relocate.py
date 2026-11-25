@@ -3,7 +3,7 @@ double-difference relocation of the whole catalog with tomoDD-SE in relocation-o
 frozen), variant `dd` of the D-B048 test (differential times only, WTCD = 0), LSQR damping 100, frozen D-B054
 binaries. Parameters: params.yaml block `b5`. Notes: notes/b5_relocation.md.
 
-  python b5_relocate.py STAGE --version 0.3.1 [--run NAME] [--b4-run R1] [--iter0 R0] [--time T]
+  python b5_relocate.py STAGE --version 0.3.1 [--run NAME] [--b4-run R1] [--iter0 R0] [--time T] [--picks CSV]
                               [--nproc N] [--only CID[,CID]] [--nboot K]
   STAGE: prep | split | run | collect (b5_relocate.sh runs them in order, detached, with a state file)
 
@@ -16,7 +16,8 @@ prep (rules 1-3 of the B5 brief, as b5_prep.py of the D-B048 test, for the whole
   undone (z = Re (1 - exp(-z'/Re)), as b4_catalog.py); IDs, tiers and regions from the B4 catalog
   (catalog_b4_<R1>.csv), checked against it to its 5th digit. Tier U (v4 hypocentre kept) is not relocated.
   b5.exclude_ids (172113, mis-associated in v4.0, removed in v4.1) are left out everywhere, catalog included.
-* Picks: catalog v4.0 picks (the B4 input) of those events, travel time = pick - B4 origin time, kept where the
+* Picks: the pick file of the B4 run (--picks, default b5.picks = the catalog v4.0 picks; catalog v5.1: the re-timed
+  v4.1t picks of D-B072/D-B075) of those events, travel time = pick - B4 origin time, kept where the
   event lies >= grid_margin_km inside the station's B4 time grid (x, y, z'), at stations with a grid. Weight
   (0.05/sigma)^2, D-B008 sigma of the pick_prob class (b5_common). A repeated event-station-phase keeps the pick
   with the highest pick_prob.
@@ -49,7 +50,7 @@ Bootstrap (--nboot K, default b5.nboot = 0): K extra runs per cluster with the d
 collect (rules 5-7): per cluster, the centroid of the relocated core events is put back on their B4 centroid
 (D-B053; the shift removed, and the mean origin-time shift, are recorded), origin time = B4 time + tomoDD's shift
 (10 ms steps in tomoDD.reloc) - the cluster mean shift. Events never relocated keep the B4 (loc_source nll3d) or v4
-(tier U, loc_source v4) position; relocated events get loc_source b5_tomodd. surface_km / above_surface as
+(tier U, loc_source v4) position, or no position (tier U, loc_source none: catalog v5.1 on); relocated events get loc_source b5_tomodd. surface_km / above_surface as
 b4_catalog.py (D-B055: counted and reported, never corrected). Catalog '%.8g'; cluster summary; compare.md;
 dt residual rms in the B4 time grids before (B4) and after (B5), per-pair median removed (as b5_compare.py).
 """
@@ -87,7 +88,7 @@ def config(a):
     v = a.version
     D = {k: s.format(v=v) for k, s in B["defaults"].items()}
     C = dict(version=v, run=a.run or D["run"], b4_run=a.b4_run or D["b4_run"], iter0=a.iter0 or D["b4_iter0"],
-             time_grids=a.time or D["time_grids"])
+             time_grids=a.time or D["time_grids"], picks=a.picks or B["picks"])
     rv = Path(B["reloc_v5"])
     C.update(dir=str(Path(B["out"]) / C["run"]), catalog_b4=str(rv / "catalog" / f"catalog_b4_{C['b4_run']}.csv"),
              locations=str(rv / "runs" / C["b4_run"] / "locations.csv"),
@@ -100,7 +101,8 @@ def config(a):
     f = Path(C["dir"]) / "config.json"
     if f.exists():
         old = json.loads(f.read_text())
-        diff = {k: (old.get(k), C[k]) for k in C if old.get(k) != C[k]}
+        dflt = {"picks": B["picks"]}               # keys added later: runs made before them used the default
+        diff = {k: (old.get(k, dflt.get(k)), C[k]) for k in C if old.get(k, dflt.get(k)) != C[k]}
         assert not diff, f"{f} disagrees with the command line: {diff}"
     else:
         Path(C["dir"]).mkdir(parents=True, exist_ok=True)
@@ -198,10 +200,10 @@ def stage_prep(C):
                        "zf_km": eft_depth(l.depth.values), "tier": c.tier.values, "region": c.region.values})
     ev = ev.sort_values("ID").reset_index(drop=True)
     log(f"start: {len(ev)} B4 events located in 3D ({int(nll.sum())} in the catalog, excluded {excl}); "
-        f"tier U {int((cat.loc_source != B['loc_source']).sum())} keep their v4 hypocentre")
+        f"not relocated (tier U): {cat.loc_source[cat.loc_source != B['loc_source']].value_counts().to_dict()}")
 
     # picks
-    pk = pd.read_csv(B["picks"], skipinitialspace=True)
+    pk = pd.read_csv(C["picks"], skipinitialspace=True)
     pk.columns = [s.strip() for s in pk.columns]
     pk = pk[["event_ID", "pick_datetime", "station", "phase", "pick_prob"]]
     n_v4 = len(pk)
@@ -238,7 +240,7 @@ def stage_prep(C):
     pk["sp"] = (2 * pk.sta + (pk.phase == "S")).astype(np.int16)         # station-phase index
     pk = pk[["ev", "sta", "sp", "phase", "tt", "cls", "sigma", "w", "pick_prob"]].reset_index(drop=True)
     del pos
-    log(f"picks: v4.0 {n_v4}, of these events {n_ev}, at stations without a grid {n_nogrid}, outside the grid "
+    log(f"picks: file {n_v4}, of these events {n_ev}, at stations without a grid {n_nogrid}, outside the grid "
         f"margin {n_out}, repeated {n_dup}; kept {len(pk)} at {len(st)} stations")
 
     # differential times
@@ -320,7 +322,7 @@ def stage_prep(C):
                   largest_components=[int(v) for v in np.sort(cs)[::-1][:10]],
                   max_sta_per_event=int(ev.n_sta.max()), max_picks_per_event=int(ev.n_picks.max()))
     (d / "prep.json").write_text(json.dumps(counts, indent=1))
-    write_manifest("b5_prep", d, inputs=[C["catalog_b4"], C["locations"], B["picks"], gtsrce],
+    write_manifest("b5_prep", d, inputs=[C["catalog_b4"], C["locations"], C["picks"], gtsrce],
                    outputs=[d / f for f in ("events.parquet", "picks.parquet", "dt.parquet", "pairs.parquet",
                                             "stations.csv", "prep.json")],
                    params={"b5": B, "config": {k: str(v) for k, v in C.items()}}, counts=counts)
@@ -1140,7 +1142,7 @@ def stage_collect(C, nproc, partial=False):
     # full-precision B4 (nll3d) and v4 (tier U) positions, as b4_catalog.py
     cat.loc[nll, ["lat", "lon", "depth"]] = E.loc[cat.ID[nll], ["lat", "lon", "depth"]].values
     v4 = pd.read_csv(V4, skipinitialspace=True).set_index("ID")
-    u = ~nll
+    u = (cat.loc_source == "v4").values            # tier U with the v4 hypocentre (v5.0); 'none' rows have no position
     for k, s in (("lat", "latitude"), ("lon", "longitude"), ("depth", "depth(km)")):
         new = v4[s].reindex(cat.ID[u]).to_numpy(float)
         old = cat.loc[u, k].to_numpy(float)
@@ -1183,12 +1185,21 @@ def stage_collect(C, nproc, partial=False):
     cat["b5_shift_h_km"] = np.where(reloc, np.hypot((cat.lat - cat.b4_lat) * KM_DEG, (cat.lon - cat.b4_lon) * KM_DEG
                                                     * np.cos(np.radians(cat.b4_lat))), np.nan)
     cat["b5_shift_z_km"] = np.where(reloc, cat.depth - cat.b4_depth, np.nan)
-    cat["b4_surface_km"] = surface_km(cat.b4_lat, cat.b4_lon)       # at the start position (B4 or v4)
-    cat["b4_above_surface"] = cat.b4_depth < -cat.b4_surface_km
-    cat["surface_km"] = surface_km(cat.lat, cat.lon)
-    cat["above_surface"] = cat.depth < -cat.surface_km
-    cat["depth_frame"] = np.where(cat.loc_source == "v4", "v4", "true depth (km bsl; B4 EFT undone)")
-    cat["depth_quality"], cat["event_flag"] = flags(cat)
+    pos = cat[["lat", "lon", "depth"]].notna().all(axis=1).values   # rows without a hypocentre (loc_source none) stay empty
+    assert (~pos == (cat.loc_source == "none").values).all(), "only loc_source none rows may lack a hypocentre"
+    for pre in ("b4_", ""):                                         # b4_: at the start position (B4 or v4)
+        sk = np.full(len(cat), np.nan)
+        sk[pos] = surface_km(cat[f"{pre}lat"][pos], cat[f"{pre}lon"][pos])
+        cat[f"{pre}surface_km"] = sk
+        cat[f"{pre}above_surface"] = pd.array(np.where(pos, cat[f"{pre}depth"].values < -sk, False), dtype="boolean")
+        cat.loc[~pos, f"{pre}above_surface"] = pd.NA
+    cat["depth_frame"] = np.where(cat.loc_source == "v4", "v4",
+                                  np.where(pos, "true depth (km bsl; B4 EFT undone)", ""))
+    q, f = flags(cat[pos])
+    for k, v in (("depth_quality", q), ("event_flag", f)):
+        col = np.full(len(cat), "", dtype=object)
+        col[pos] = v
+        cat[k] = col
     od = C["summary"]
     od.mkdir(parents=True, exist_ok=True)
     tag = "_partial" if partial else ""
@@ -1319,10 +1330,13 @@ def write_compare(C, cat, cs, dtr, allr, split_eff, od, tag, missing):
               f"{split_eff['dh_p90']:.3f}), vertical {split_eff['dz_med']:.3f} km (p90 {split_eff['dz_p90']:.3f}). "
               "By hop: " + "; ".join(f"hop {h}: n {v['n']}, dh {v['dh_med']:.3f}, dz {v['dz_med']:.3f}"
                                      for h, v in split_eff["by_hop"].items())]
-    # D-B055
+    # D-B055 (report only: a row without a hypocentre, loc_source none, is not above the surface)
+    from b4_catalog import surface_source
+    cat = cat.assign(above_surface=cat.above_surface.fillna(False).astype(bool),
+                     b4_above_surface=cat.b4_above_surface.fillna(False).astype(bool))
     a = pd.crosstab(cat.region, [cat.loc_source, cat.above_surface])
     L += ["", "## Above the solid surface (D-B055)", "",
-          "surface_km = GMT earth_relief 01m (gridline, bilinear) at the final epicentre, above_surface = depth < "
+          f"surface_km = {surface_source()} at the final epicentre, above_surface = depth < "
           "-surface_km on the true depth (b4_catalog.py). Nothing is moved or dropped.", "",
           "| region | B5 relocated above | B4 kept above | tier U above | B5 events above at their B4 position |",
           "|---|---|---|---|---|"]
@@ -1370,6 +1384,7 @@ def main():
     ap.add_argument("--b4-run")
     ap.add_argument("--iter0")
     ap.add_argument("--time")
+    ap.add_argument("--picks", help="pick CSV (default b5.picks; catalog v5.1: the re-timed v4.1t file)")
     ap.add_argument("--nproc", type=int, default=B["nproc"])
     ap.add_argument("--only", help="comma-separated cluster ids (run stage, tests)")
     ap.add_argument("--nboot", type=int, default=B["nboot"])

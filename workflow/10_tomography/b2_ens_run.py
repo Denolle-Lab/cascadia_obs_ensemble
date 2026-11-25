@@ -184,6 +184,13 @@ Launch (from the code worktree):
     (ROOT / "RESUME.md").write_text(txt)
 
 
+def maybe_stop(stage):
+    """B2_ENS_STOP_AFTER=<stage> ends the chain after that stage (done now or before), e.g. calibrate: synthetic gate only."""
+    if os.environ.get("B2_ENS_STOP_AFTER") == stage:
+        log(f"stopping after {stage} (B2_ENS_STOP_AFTER); rerun without it to continue")
+        sys.exit(0)
+
+
 def chain():
     ROOT.mkdir(parents=True, exist_ok=True)
     (ROOT / "chain.pid").write_text(f"pid {os.getpid()} pgid {os.getpgid(0)}\n")
@@ -194,10 +201,12 @@ def chain():
         if sh(PYD + [HERE / "b2_ens_member.py", "prep"], ENVD, "prep"):
             sys.exit(1)
         mark("prep")
+    maybe_stop("prep")
     if not stage_done("truth"):
         if sh(PYD + [HERE / "b2_ens_synth.py", "truth"], ENVD, "truth"):
             sys.exit(1)
         mark("truth")
+    maybe_stop("truth")
     if not stage_done("synth"):
         names = [f"s{i:03d}" for i in range(N["synth"])] + [f"nf{i}" for i in range(N["floor"])]
         merged, failed = run_members("synth", names)
@@ -205,6 +214,7 @@ def chain():
             log(f"too many failed synthetic members ({len(failed)}): stop")
             sys.exit(3)
         mark("synth")
+    maybe_stop("synth")
     if not stage_done("calibrate"):
         rc = sh(PYD + [HERE / "b2_ens_coverage.py"], ENVD, "calibrate")
         if rc == 2:
@@ -213,6 +223,7 @@ def chain():
         if rc:
             sys.exit(1)
         mark("calibrate")
+    maybe_stop("calibrate")
     if not stage_done("real"):
         names = [f"r{i:03d}" for i in range(N["real"])]
         merged, failed = run_members("real", names)
@@ -220,14 +231,17 @@ def chain():
             log(f"too many failed real members ({len(failed)}): stop")
             sys.exit(3)
         mark("real")
+    maybe_stop("real")
     if not stage_done("stats"):
         if sh(PYD + [HERE / "b2_ens_stats.py", "stats", "real"], ENVD, "stats"):
             sys.exit(1)
         mark("stats")
+    maybe_stop("stats")
     if not stage_done("products"):
         if sh(PYM + [HERE / "b2_ens_stats.py", "products", "real"], ENVM, "products"):
             sys.exit(1)
         mark("products")
+    maybe_stop("products")
     log("chain finished")
 
 

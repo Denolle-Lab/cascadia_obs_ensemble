@@ -7,6 +7,23 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## FINDING 2026-11-24 17:10: pick timing drift on analog short-period channels (UW timing check), PI decisions pending
+
+/wd1/mdenolle_data/tomo_v1/checks/uw_timing/report.html (RESUME.md, tables/). From 2013-10-22 14:48:30 UTC, 34 UW
+short-period stations (BBO BHW BLN BOW BRO CDF CMW EDM ELK FL2 HBO HDW HSO HSR JCW JUN KMO LCW LO2 LVP MBW MCW MTM NLO ON2
+RNO RVW SHW SMW SOS STD TDL VG2 VLM, through at least 2016-12-30), KOS until 2013-11-18, and UO IRO, HUO, FRIS until
+~2015-01 sample at 99.99939 Hz labelled 100 Hz (analog J120D=Wrmsn / MC8=PSNrs chains). Each MiniSEED record header
+is right, but ObsPy merges a day file into one trace (inter-record corrections below half a sample) and counts at
+100 Hz; the picker reads whole pnwstore day volumes (elep_picker.py run_detection), so every pick is early by
+0.52 s x the fraction of the UTC day (UO ~0.79 s/day, seasonal): 0 at midnight, 0.26 s at noon, 0.52 s at 23:59.
+86,712 catalog v4 picks (51,030 P, 35,682 S) on 17,814 events; median 0.26 s, max 0.78 s. Every pnwstore-derived pick
+version (ver3-ver6, v4, GENIE/GraphDD) and any pnwstore CC dt carry it; Track B tomography uses these picks. Not the
+velocity model, not the instrument response. Relocation test (25 % subsample, corrected picks): median shift 0.32 km
+(18-24 h UTC events 0.89 km, p90 4.2 km), RMS 0.129 -> 0.122 s. Recommended: re-time the picks from the pnwstore
+record headers (clean; handles gap days), else tables/corrections.csv (t_true = t + rate (t - t0)/86400), in the pick
+table with a flag column; one station term per station-phase re-estimated after. Not yet verified independently
+(pnwstore not read; gap days not identified).
+
 ## STAGE MARKER 2026-11-24 16:50 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
 
 Stage 1 of 5 of v5.1: build pieces built and verified (surface, runner, catalog done; three verifier must_fix fixed and

@@ -1,0 +1,10 @@
+rule,events
+no hypocentre,623
+not an earthquake (event_flag),3313
+tier D or U,42671
+not located by NonLinLoc here,0
+floor_limited,3600
+far_only,271
+deep_pass,83
+"Axial Seamount (left out, as in v0)",20485
+used for the fit,101296

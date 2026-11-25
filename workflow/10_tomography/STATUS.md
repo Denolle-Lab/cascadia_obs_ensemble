@@ -7,6 +7,14 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## STAGE MARKER 2026-11-24 16:55 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+
+Stage 1 of 5 of v5.1: build pieces built and verified (surface, runner, catalog done; three verifier must_fix fixed and
+pushed; field and wide finishing: their test grid builds run detached). Then: 2 integration (merge v51/*, D-B071,
+smoke test), 3 model decision from the slower-S test (check_slow_s/RESUME.md), 4 v5.1 production chain, 5 hand the
+catalog to session -18. UW timing check: checks/uw_timing/RESUME.md. Remote branches cleaned (15 deleted; list and
+bundle in the handoff folder).
+
 ## Update 2026-11-24 15:45: HANDOFF (round-2 / v5.1 session), read first
 
 Everything needed to pick up is in /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md (running jobs, how to resume

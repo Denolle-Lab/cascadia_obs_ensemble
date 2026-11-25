@@ -735,3 +735,12 @@ PROVIDED the co-located test (tables/validation_colocated_slope.csv: pick differ
 LON, STD.CC, B202 regressed on the correction; slope ~ 0 after re-timing) confirms that the headers are right. If it
 does not, v5.1 uses only the corrections of the listed epoch (epoch_class == 'listed' in corrections.csv). Not
 re-timable: NC/BK (not in pnwstore), channels resampled from another rate (flag rate_not_100), off-grid picks (kept).
+Result (2026-11-24 23:40, finish.sh): co-located slope test (tables/validation_colocated_slope.csv, pooled with one
+intercept per pair-phase) listed: catalog -0.992 +- 0.007 -> re-timed +0.008 +- 0.006 (n 16,859); found: -1.000 +- 0.107
+-> -0.000 +- 0.114 (n 6,293): the headers are right for both, so v5.1 uses ALL corrections. 218,809 picks corrected on
+75 stations (listed 86,711, found 189,931 incl. in_fill; corrections.csv.gz, column applied); AIC onsets after the
+onset: catalog - onset -0.264 -> -0.010 s (MAD 0.104 -> 0.020, n 673); 2,284,818 uncorrected rows byte-identical to
+v4.1. Not re-timed, kept unchanged and flagged: 45,879 picks (off_grid 23,331, mostly OBS Z5/7D with small drift, and CC
+SEP/SUG EHZ from 2014-01-18 on, whose picks are no longer on the 100 Hz grid; rate_not_100 22,541; error 7). v5.1 pick
+file: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv (md5 762f18e8f181eaaaa247d367c2d2c302; a2_make_obs.py
+reads it: 2,503,381 picks of 172,342 events in 1,206 tiles; spot check HUO.UO event 41 P 0.772 s later).

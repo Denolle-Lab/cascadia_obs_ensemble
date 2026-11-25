@@ -100,7 +100,8 @@ def build(dest: Path, commit: str):
     (dest / "scripts" / "pyproject.toml").write_text(pp)
     ln = dest / "scripts" / "run_pick_timing.py"
     ln.write_text(LAUNCHER)
-    ln.chmod(ln.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    for f in [ln] + sorted((dest / "scripts").rglob("*.py")):   # gaia-skills: bundled scripts are executable
+        f.chmod(f.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     return version
 
 

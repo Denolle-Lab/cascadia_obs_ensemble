@@ -1,0 +1,70 @@
+# pick_timing configuration template. Copy it, then edit the paths and the column maps for your files.
+# Every table: path (csv, csv.gz or parquet; a list of paths is concatenated), optional read_kwargs (passed to
+# pandas.read_csv) and columns: {canonical name: column name in YOUR file}. Unmapped columns are kept as they are.
+# This template runs as is on the synthetic example:  python -m pick_timing make-example --out example_data
+
+project: example
+output_dir: example_out           # every command writes here (or --out)
+station_id: "{sta}.{net}"         # how station ids are written in your files: "{sta}.{net}" or "{net}.{sta}"
+workers: 4                        # parallel processes
+
+picks:                            # the pick file to correct
+  path: example_data/picks.csv
+  read_kwargs: {skipinitialspace: true}
+  time_format: iso                # iso (ISO 8601 UTC strings) or epoch (POSIX seconds)
+  columns:
+    event_id: event_ID
+    station: station              # or map network + station_code when the file has two columns
+    phase: phase
+    time: pick_datetime
+    travel_time: "travel_time(s)" # optional: rewritten together with the time
+    # timing_correction: timing_correction_s   # map it if the file was re-timed before (kept as is)
+
+origins:                          # optional: event coordinates for the co-located-event control
+  path: example_data/origins.csv
+  columns: {event_id: event_id, time: time}
+
+residuals:                        # travel-time residuals of a location run (one row per pick)
+  path: example_data/residuals.csv
+  columns: {event_id: event_id, station: station, phase: phase, time: time, residual: residual, weight: weight}
+  # station coordinates: x_km/y_km columns here, or a stations table below
+
+stations:
+  path: example_data/stations.csv
+  columns: {station: station}     # needs lat/lon or x_km/y_km
+
+# cc:                             # optional: cross-correlation differential times refine the size of a clock error
+#   path: my_cc_table.csv
+#   columns: {pair: pair, event1: ev1, event2: ev2, station: station, phase: phase, dt_cc: dt, time1: t1, time2: t2,
+#             accepted: ok}
+
+waveforms:                        # only scan-headers and retime read waveforms
+  reader: sds                     # sds | fdsn | sqlite_index | routed
+  root: example_data/sds
+  # reader: fdsn
+  # client: EARTHSCOPE            # an ObsPy FDSN data-centre name (EARTHSCOPE, NCEDC, ...) or base URL
+  # reader: sqlite_index          # an mseedindex (tsindex) sqlite archive
+  # index: /path/to/{year}.sqlite
+  # day_mode: filename            # filename (YYYY/DOY in the file path) or time
+  # path_map: {type: replace, from: "/data/", to: "/mnt/archive/"}
+  # reader: routed                # different readers per network, and a fallback
+  # routes: [{networks: [NC, BK], reader: {reader: fdsn, client: NCEDC}}]
+  # default: {reader: sqlite_index, index: ...}
+  # fallback: {reader: fdsn, client: EARTHSCOPE}
+
+retime:
+  channel_priority: [HH, BH, EH]  # the picker's channel rule: first band that has a vertical
+  alternate_rules: [[EH]]
+  nominal_rate: 100.0             # the picker's sampling rate (picks must sit on this grid)
+  apply_threshold_s: 0.005        # correct a station-day when header and count differ by >= half a sample
+
+detect:
+  neighbor_km: 100.0              # reference stations for the network-relative residual
+  min_neighbors: 3
+  min_picks: 60
+  dbic_min: 30.0                  # pre-screen: BIC improvement over a constant
+  amp_min_s: 0.05                 # smallest clock error worth flagging (s)
+  p_max: 0.01                     # permutation test; needs n_perm >= 99
+  n_perm: 200
+  max_epochs: 2
+  false_alarm: {n_synthetic: 2, n_permuted: 1, inject: [[0.004, 60.0], [0.008, 90.0]]}

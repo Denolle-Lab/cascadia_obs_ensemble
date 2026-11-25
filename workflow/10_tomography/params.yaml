@@ -692,7 +692,9 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
   out: /wd1/mdenolle_data/catalog_v5                 # v<version>/ folders and catalog_v5.zip (all versions; Zenodo draft 23084158)
   track_a_code: /home/mdenolle/wt_reloc/workflow/08_relocation   # a2_parse_hyp.region (region boxes)
   v4_1_events: /home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv   # catalog v4.1 (fix_catalog_v4.py, 09f86844)
-  v4_1_magnitudes: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # Route A, v4.1
+  v4_1_magnitudes: /wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv  # Route A, v4.1, converged (D-B091: exact phase19 solver, PR #45)
+  v4_1_magnitudes_md5: fb49ecc28b75432f49cf1a6e399cd90f   # checked by catalog_version.py (MD5SUMS.txt in data/magnitude_converged)
+  v4_1_magnitudes_stored: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # before D-B091 (LSQR stopped at 3,000 iterations); not read; md5 78a445098dd76ccf8c08085cb86f67ca
   v4_1_removed: [172113]           # mis-associated in v4.0 (v4.1 patch)
   v4_1_added: [900001, 900002, 900003]   # ComCat hypocentres + repicked phases (v4.1 patch)
   versions:

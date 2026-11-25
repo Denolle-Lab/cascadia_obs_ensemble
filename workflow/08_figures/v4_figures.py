@@ -8,8 +8,10 @@ Vector PDF + 600 dpi PNG at print size (Science Advances: 18 cm full width, 12 c
     python workflow/08_figures/v4_figures.py zoom blanco --color fault     # any region of REGIONS, colour by fault/depth/time
     python workflow/08_figures/v4_figures.py perspective mendocino --az 210 --el 28
     python workflow/08_figures/v4_figures.py all
+    python workflow/08_figures/v4_figures.py --mag stored --clusters <dir> --out <dir> clusters   # options before the figure
 
-Layers: catalog v4 (data/catalog_v4), Route A magnitudes (data/magnitude_v4), fault surfaces v0 (data/faults/v0),
+Layers: catalog v4 (data/catalog_v4), Route A magnitudes (converged, D-B091; --mag stored for data/magnitude_v4;
+workflow/05_magnitude/mag_paths.py), fault surfaces v0 (data/faults/v0),
 CRESCENT CFM traces (data/faults/crescent_cfm), Slab2 (data/slab2), PB2002 plate boundaries and ComCat moment
 tensors (map_context.py), GMRT grids (data/gmrt, cached) or GMT earth_relief, the ver5/ver6 station table.
 Mc maps for Fig. 2 come from workflow/06_analysis/v4_mc_maps.py (same style).
@@ -37,6 +39,9 @@ D = ROOT / "data"
 OUT = ROOT / "paper_sciadv" / "figures"
 STATIONS = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
 sys.path.insert(0, str(ROOT / "workflow" / "06_analysis"))
+sys.path.append(str(ROOT / "workflow" / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), stored or a path
 _cwd = os.getcwd(); os.chdir(ROOT / "workflow" / "06_analysis")     # map_context uses paths relative to its folder
 import map_context as mctx  # noqa: E402
 mctx.PB2002, mctx.FOCAL, mctx.FOCAL_MATCHED = (os.path.abspath(p) for p in (mctx.PB2002, mctx.FOCAL, mctx.FOCAL_MATCHED))
@@ -75,7 +80,7 @@ def events():
     c.columns = [x.strip() for x in c.columns]
     c = c.rename(columns={"ID": "id", "longitude": "lon", "latitude": "lat", "depth(km)": "dep"})
     c["time"] = pd.to_datetime(c["datetime"].str.strip(), utc=True)
-    m = pd.read_csv(D / "magnitude_v4" / "cascadia_catalog_M_routeA.csv", usecols=["event_id", "M"]).set_index("event_id").M
+    m = pd.read_csv(MAG, usecols=["event_id", "M"]).set_index("event_id").M
     c["M"] = c.id.map(m)
     c["qc"] = (c.Num_p_picks >= 4) & (c.Num_s_picks >= 4)
     mem = pd.read_csv(D / "faults" / "v0" / "fault_surfaces_v0_members.csv").set_index("event_id").surface_id
@@ -884,7 +889,12 @@ def _tick(v):
 
 
 def main(argv=None):
+    global MAG, OUT, CL
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    mag_paths.add_argument(ap, "v4.1")
+    ap.add_argument("--out", type=Path, default=None, help="figure folder (default paper_sciadv/figures)")
+    ap.add_argument("--clusters", type=Path, default=None,
+                    help="clustering folder for Figs. 5 and 6 (v4_clusters_zbz.py --out; default data/catalog_v4/clusters_zbz)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("overview"); sub.add_parser("faults"); sub.add_parser("blanco"); sub.add_parser("clusters"); sub.add_parser("short"); sub.add_parser("all")
     z = sub.add_parser("zoom"); z.add_argument("region", choices=list(REGIONS)); z.add_argument("--width", type=float, default=TWO3)
@@ -894,6 +904,10 @@ def main(argv=None):
     for k in ("az", "el", "zmax", "exag"):
         p.add_argument(f"--{k}", type=float, default=None)
     a = ap.parse_args(argv)
+    MAG = mag_paths.v41(a.mag)
+    OUT = a.out or OUT
+    CL = a.clusters or CL
+    print(f"magnitudes {MAG}; clusters {CL}; figures -> {OUT}")
     if a.cmd in ("overview", "all"):
         fig_overview(a)
     if a.cmd in ("faults", "all"):

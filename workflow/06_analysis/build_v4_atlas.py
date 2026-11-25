@@ -4,7 +4,8 @@ Build the Cascadia catalog v4 3D atlas: one self-contained HTML file (three.js, 
 in the visual language of the Cascadia Offshore Sensor Atlas (yaoderek/cascadia-sensor-atlas-preview).
 
 Layers packed here (gzip + base64 blobs, decoded in the browser with DecompressionStream):
-  events     catalog v4 (data/catalog_v4/), magnitudes from data/magnitude_v4/ when present
+  events     catalog v4 (data/catalog_v4/), Route A magnitudes when present (default the converged
+             file of D-B091; --mag stored = data/magnitude_v4/, see workflow/05_magnitude/mag_paths.py)
              (our Route A ML / preferred M), else Ian's magnitude column (flagged), the share of
              each event's picks added after ver3 (via ver6 pick_id), and Ian's spatial_sigma
              + every other catalog of the registry workflow/11_compare/catalogs.yaml with atlas: true
@@ -34,6 +35,7 @@ import glob
 import gzip
 import json
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +43,10 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 D = ROOT / "data"
+sys.path.append(str(ROOT / "workflow" / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+
+MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), stored or a path
 
 
 def _data_dirs() -> list[Path]:
@@ -203,7 +209,7 @@ def events():
     days = ((t - T0) / pd.Timedelta(days=1)).to_numpy()
     M = c["magnitude"].to_numpy(float); Mtype = np.full(len(c), 3, "u1")      # 3 = Ian's column
     msrc = "Ian's catalog magnitude (type unknown; runs high offshore)"
-    mfile = dd("magnitude_v4", "cascadia_catalog_M_routeA.csv")
+    mfile = MAG
     if mfile.exists():
         m = pd.read_csv(mfile).set_index("event_id")
         mm = m.reindex(c["ID"])
@@ -211,7 +217,8 @@ def events():
         M = np.where(ok, mm["M"].to_numpy(float), np.nan)
         code = {"ML": 0, "Mw": 1, "Mw_cal": 2}
         Mtype = np.where(ok, mm["M_type"].map(code).fillna(0).to_numpy(), 255).astype("u1")
-        msrc = f"Route A preferred magnitude, catalog v4 ({ok.sum():,} of {len(c):,} events)"
+        kind = "converged, D-B091" if "magnitude_converged" in str(mfile) else mfile.name
+        msrc = f"Route A preferred magnitude ({kind}), catalog v4 ({ok.sum():,} of {len(c):,} events)"
     pid = pd.read_parquet(dd("catalog_v4", "ridge_report", "v4_pick_ids.parquet"))
     newfrac = (pid["pick_id"] >= VER3_N).groupby(pid["event_ID"]).mean().reindex(c["ID"]).fillna(0).to_numpy()
     sig = pd.to_numeric(c["spatial_sigma(m)"], errors="coerce").to_numpy()
@@ -531,7 +538,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
     ap.add_argument("--out", default=str(D / "catalog_v4" / "atlas" / "cascadia_v4_atlas.html"))
+    mag_paths.add_argument(ap, "v4.1")
     a = ap.parse_args(argv)
+    global MAG
+    MAG = mag_paths.v41(a.mag)
+    print(f"magnitudes: {MAG}")
     print("building atlas data")
     ev, ev_meta = events()
     ter, ter_meta = terrain()

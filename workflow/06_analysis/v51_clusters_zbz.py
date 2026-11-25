@@ -5,8 +5,9 @@ docstring for the method); the functions are imported from it so the two runs st
 new for v5.1:
 
 Events
-* Catalog v5.1 (NonLinLoc in model v0.3.1) and the v5.1 Route A magnitudes (piece "mag",
-  cascadia_catalog_v5.1_magnitudes.csv, column M).
+* Catalog v5.1 (NonLinLoc in model v0.3.1) and the v5.1 Route A magnitudes (column M): by default the
+  converged table of D-B091 (cascadia_catalog_v5.1_magnitudes_converged.csv) and its Mc / b table; --mag stored
+  gives the piece "mag" table (cascadia_catalog_v5.1_magnitudes.csv); see workflow/05_magnitude/mag_paths.py.
 * Left out: rows without a hypocentre (loc_source none, 623) and the 3,313 events flagged as not
   earthquakes (is_earthquake False: ComCat explosions / quarry blasts / other, Texada quarry_blast_likely).
   They are kept in the event table with role "excluded" and the reason.
@@ -78,16 +79,18 @@ from scipy.stats import mannwhitneyu, rankdata, spearmanr, theilslopes
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.append(str(HERE.parent / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
 from v4_clusters_zbz import (REGIONS, REGION_NAMES, REG_ORDER, RE, Q, mc_maxc, b_aki, xyz,  # noqa: E402
                              gmm1d, tree_metrics, classify, rupture_cap, migration, completeness_table)
 
 ROOT = HERE.parents[1]
 CAT = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
-MAG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv")
+MAG = mag_paths.v51()        # --mag / $CASCADIA_MAG_V51: converged (default), stored or a path
 # products of the other v5.1 pieces, read from their pushed branches (git objects are shared by all worktrees of
 # the repository); switch the refs to origin/main once those branches are merged
-MAG_REF = "origin/analysis/v51-mag"
-MCB = "data/catalog_v5/v5.1_analysis/mag/mc_b/mc_b_regional.csv"
+MAG_REF = "origin/main"      # the v5.1 Mc / b tables (stored and converged) are on main (PRs #40, #45)
+MCB = mag_paths.mcb_v51()
 FAULTS_REF = "origin/analysis/v51-faults"
 FAULTS = "data/catalog_v5/v5.1_analysis/faults"
 # waveform review of four v5.1 location problems (P1 Mount St Helens deep events, P2 Brookings 2012,
@@ -629,7 +632,8 @@ def step_main(c, a):
             "nn_dt_days", "linked", "family_id", "family_type", "role", "background", "cls", "excluded"]
     ev[slim].to_csv(OUT / "events_zbz_v51.csv.gz", index=False, float_format="%.4f")
     fam.to_csv(OUT / "families_zbz_v51.csv", index=False, float_format="%.4f")
-    json.dump(dict(rmin=a.rmin, rcap_min=a.rcap_min, q=Q, df_main=1.6, catalog=str(CAT), magnitudes=str(MAG),
+    json.dump(dict(rmin=a.rmin, rcap_min=a.rcap_min, q=Q, df_main=1.6, catalog=str(CAT), **mag_paths.describe(MAG),
+                   mc_b=f"{MAG_REF}:{MCB}",
                    n_rows=len(c), n_used=len(df), excluded=c.excluded.value_counts().to_dict()),
               open(OUT / "run_params.json", "w"), indent=1)
     return df, ctab, thr
@@ -1298,7 +1302,11 @@ def main():
     ap.add_argument("--nshuffle", type=int, default=3)
     ap.add_argument("--variants", default=",".join(VARIANTS))
     ap.add_argument("--force", action="store_true", help="recompute cached steps")
+    mag_paths.add_argument(ap, "v5.1")
     a = ap.parse_args()
+    global MAG, MCB
+    MAG, MCB = mag_paths.v51(a.mag), mag_paths.mcb_v51(a.mag)
+    print(f"magnitudes: {MAG}; Mc / b: {MAG_REF}:{MCB}", flush=True)
     OUT.mkdir(parents=True, exist_ok=True)
     BIG.mkdir(parents=True, exist_ok=True)
     steps = a.steps.split(",")

@@ -7,6 +7,19 @@ Last update: 2026-11-25 04:10 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## B5 FLOOR (D-B081) BUILT AND TESTED 2026-11-25 07:15 (session -18)
+
+* S1 test: tomoDD with rock above the surface matches the NonLinLoc v5.1 grids to a few ms; water/air in tomoDD's
+  model makes it worse. Root cause of B5 above-surface events = no floor in tomoDD.
+* PI approved a tomoDD source change: private freeze tomoDD-SE_patched_2026-11-25 (CHANGES.md lists all changes),
+  binaries bin/frozen_2026-11-25, b5.tomodd.bin_dir points to them; unchanged results without surface.dat.
+* Floor test on 4 v5.1 clusters: above the surface 76 -> 0, air-quake drops 922 -> 0, misfit unchanged (tomo/b5
+  3f910802; runs b5_v5.1_s1 / b5_v5.1_s3).
+* Next (D-B078): the three-code comparison (tomoDD + floor, GrowClust3D on the NLLoc grids, NLL-SSST-coherence) on the
+  test sets /wd1/mdenolle_data/tomo_v1/b5/cc_test (axial, blanco, msh, jdf) with the CC dt of the other session
+  (/wd1/mdenolle_data/tomo_v1/cc_dt/); B5 production waits for it. v0.3.2 velocity_models.zip replaced on the private
+  Zenodo draft (md5 044f5c81).
+
 ## CATALOG v5.1 BUILT, ON ZENODO DRAFT AND ATLAS 2026-11-25 04:10 (session -18)
 
 * /wd1/mdenolle_data/catalog_v5/v5.1 (catalog_version.py 5.1): 172,342 events = 171,717 NLLoc (b4_v51_iter1) + 2 ComCat

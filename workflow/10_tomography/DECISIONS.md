@@ -790,3 +790,33 @@ Savvaidis (2022) in place of the D-B014 static station terms. Not to be confused
 * b4_acceptance.py bug fixed: above_surface.astype(bool) turned empty values (no hypocentre) into True, so v5.1's
   acceptance.md listed 623 tier U events "at the v4 position" above the surface; it now reports 0, and 623 without a
   hypocentre. Located counts were unaffected.
+
+### D-B081 A local floor inside tomoDD for B5: NonLinLoc's floor, an update stops at it (adopted, 2026-11-25, PI: "I approve that you change the tomoDD source keeping track of all the changes we had to make")
+Cause found by the S1 test (tomo/b5 b5_s1_fieldmod.py, run b5_v5.1_s1/diag/s1; 4 v5.1 clusters): tomoDD's calculated
+differential times match the NonLinLoc v5.1 grids to a few ms with rock velocities above the surface (the node MOD, or
+the 1 km field rock-continued, which is what NonLinLoc's own grids use at water and air nodes: FLUID_NODES =
+rock_continued_1km), and get worse with water or air in tomoDD's model (JdF S MAD 15 -> 88 ms; the other session's
+builder found the same on 2 km nodes). So the B5 events above the surface come from the missing floor (tomoDD's only
+limit was one flat Air_dep per cluster, a median 1.6 km above the local surface), not from the velocity medium.
+* Source change (new private freeze `/wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-25`, binaries
+  `bin/frozen_2026-11-25`, archive `archive/tomoDD-SE_patched_2026-11-25.tar.gz`; WARF: never in git or Zenodo): in
+  `tomoDD-SE.f`, when a file `surface.dat` is in the run directory, an update that would put an event above the floor
+  depth of the nearest floor node stops 1 m below it and is logged (`>>>Floor:`); the event stays in the relocation.
+  Without `surface.dat` the program is unchanged (byte-identical results on 3 clusters; synthetic binaries same md5).
+  Every change ever made to the package (the six FORMAT commas of D-B034/D-B054 and the four floor additions) is
+  listed with reasons and checks in `CHANGES.md` of the freeze; `PATCH.diff` rebuilds the patched source from the
+  pristine one.
+* Floor = NonLinLoc's floor of the v5.1 runs (true frame, `reloc_v5/topo/topo_15s_cons_merged.bin`: D-B068 merged
+  surface, exact 15 s cell minimum - 1 m), same nearest node, in tomoDD's rescaled frame (b5_relocate.write_floor);
+  Air_dep moved to -1000 km (tomoDD tests it on the raw update and drops the event).
+* Collect removes each cluster's centroid shift (D-B053), which can lift events: the floor is written offset by that
+  shift (up to 3 runs per cluster until it holds in the final frame); where the runs have no fixed point (most of the
+  cluster on the floor), the vertical shift is limited to the largest that keeps every event at or below the floor
+  (cluster-level datum, recorded as anchor_z_limited_km; no event moved on its own).
+* New catalog columns: b5_floor_hit (the update hit the floor in the final run), b5_floor_limited (ends within 5 m of
+  the floor), as v5.1's floor_limited.
+* Test (4 v5.1 clusters, catalog dt, node MOD v0.3.1; tomo/b5 3f910802): above the surface 76 -> 0, events dropped as
+  air quakes 922 -> 0, relocated 12,291 -> 13,202, dt misfit in the NonLinLoc grids unchanged by the floor. Axial
+  settled in 3 runs (469 events end on the floor); JdF ridge c000032 needed the limited anchor (44 m, 59 on the floor).
+* Scope: B5 relocation-only runs. Whether the floor is used in the tomography inversion waits for v0.4.0 (D-B077).
+  B5 production waits for the D-B078 comparison, in which tomoDD + this floor is one of the three codes.

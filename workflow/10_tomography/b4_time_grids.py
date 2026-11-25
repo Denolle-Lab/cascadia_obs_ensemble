@@ -72,6 +72,7 @@ the grids (no append to the shared manifests.jsonl). The merged mask reads b4_su
 b4.surface.dir, or B4_SURFACE_DIR for tests).
 """
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
@@ -111,6 +112,32 @@ FLUID_VP = 1.6                       # km/s: D-B005 nodes below it are water (1.
 MASKS = ("d_b005", "merged")
 MASK = str((P.get("b4") or {}).get("surface_mask") or "d_b005")         # absent = the rule of every build to v0.3.1
 assert MASK in MASKS, f"params b4.surface_mask {MASK!r} not in {MASKS}"
+# Shallow oceanic crust rule (D-B070 test; adopted by D-B073 if params b4.shallow_crust is set): in offshore rock cells
+# whose centre lies within thickness_km below the seafloor, Vs = min(Vs, Vp / vpvs). Offshore = the coast-scan rule of
+# the D-B070 test (check_slow_s/scripts/s10_masks.py): below sea level, west of the first run of land columns at least
+# coast_run_km long along each lattice row, and not in the Strait of Juan de Fuca or the Columbia River mouth (cuts).
+# Needs the merged surface mask (seafloor and coast from b4_surface.surface_m). Absent = no rule (every build to v0.3.1).
+SC = (P.get("b4") or {}).get("shallow_crust") or None
+if SC:
+    assert MASK == "merged", "params b4.shallow_crust needs b4.surface_mask merged"
+    SC = {"vpvs": float(SC["vpvs"]), "thickness_km": float(SC["thickness_km"]),
+          "coast_run_km": float(SC.get("coast_run_km", 5.0)),
+          "cuts": [list(map(float, c)) for c in SC.get("cuts", [[47.9, 48.75, -124.55], [46.1, 46.4, -124.05]])]}
+
+
+def offshore_mask(surf_km, lon, lat, dx):
+    """Offshore columns of a lattice (x along axis 0, y along axis 1) by the coast-scan rule (SC; D-B070 test)."""
+    land = surf_km >= 0
+    nx, ny = land.shape
+    n = int(round(SC["coast_run_km"] / dx))
+    off = np.zeros_like(land)
+    for j in range(ny):
+        run = np.convolve(land[:, j].astype(int), np.ones(n, int), "valid") == n
+        i = int(np.argmax(run)) if run.any() else nx
+        off[:i, j] = ~land[:i, j]
+    for la0, la1, lomax in SC["cuts"]:
+        off &= ~((lat >= la0) & (lat <= la1) & (lon >= lomax))
+    return off
 STATION_PATCH_KM = (-1.0, 2.0)       # merged mask: station rock columns, km from the station's 1 km lattice cell origin
 FLUID_NODES = "rock_continued_1km"   # merged mask: time-grid nodes above the surface (module docstring)
 
@@ -224,6 +251,8 @@ def build_field(ds, dx, work, mask=None):
         assert np.isfinite(surf).all(), f"surface_m NaN at {int((~np.isfinite(surf)).sum())} cell centres"
         fv = fluid_velocities()
         ktop = station_rock_top(dx, (nx, ny, nz))
+        off = offshore_mask(surf, lon, lat, dx) if SC else None
+        sc_cells = {"field": 0, "rock_field": 0, "offshore_columns": int(off.sum()) if SC else 0}
     else:
         bgP = dB005("P")
     for ph, var in (("P", "Vp"), ("S", "Vs")):
@@ -250,6 +279,17 @@ def build_field(ds, dx, work, mask=None):
                 use = inside & (zt >= m["z"][0]) & (zt <= m["z"][-1])  # rock rule at every cell (pointwise lookups)
                 if use.any():
                     v[use] = mod_velocity(mm, "P", lon[use], lat[use], np.full(use.sum(), zt), clamp_surface=False)
+                if SC and ph == "S" and zt > 0:       # shallow oceanic crust (SC): Vs = min(Vs, Vp / vpvs)
+                    top = off & (zt + surf <= SC["thickness_km"])         # zt - seafloor depth (= -surf) <= thickness
+                    if top.any():
+                        pf = out.get("rock_P", out["P"])                   # P of the same cells (rock everywhere if built)
+                        vp = dx / (np.asarray(np.memmap(pf, dtype="<f4", mode="r", shape=(nx, ny, nz))[:, :, k],
+                                              dtype="f8") * np.exp(zf / RE))
+                        top &= vp >= 1.6
+                        new = np.minimum(v, vp / SC["vpvs"])
+                        sc_cells["rock_field"] += int((top & (new < v)).sum())
+                        sc_cells["field"] += int((top & rock & (new < v)).sum())
+                        v = np.where(top, new, v)
                 if ar is not None:                    # rock everywhere: the fluid-node continuation of job()
                     ar[:, :, k] = (dx / (v * np.exp(zf / RE))).astype("<f4")
                 use = use & rock
@@ -275,8 +315,11 @@ def build_field(ds, dx, work, mask=None):
                 (work / f"{rk.name}.partial").rename(rk)
             (work / f"field_{dx:g}.{ph}.mask.json").write_text(json.dumps(
                 {"surface_mask": mask, "dx_km": dx, "shape": [nx, ny, nz], "cells": cnt,
+                 "shallow_crust": SC, "shallow_crust_cells": sc_cells if ph == "S" else None,
                  "fluid_velocity_km_s": fv[ph]}, indent=1))
             del bg
+        if f.exists():                                 # a direct call must not replace a field of another build
+            raise SystemExit(f"{f} exists: refusing to replace it (new TIME_NAME, or remove the work folder)")
         tmp.rename(f)
         print(f"field {ph} {dx:g} km: {nx} x {ny} x {nz}" + (f" {cnt}" if mask == "merged" else ""), flush=True)
     return out, (nx, ny, nz)
@@ -433,12 +476,18 @@ def run_params(version, mask=None):
     if mask != "d_b005":           # d_b005 keeps the params of the builds to v0.3.1 (absent key = d_b005)
         import b4_surface
         srcs = b4_surface.sources()
-        prm.update({"surface_mask": mask, "surface_sources_md5": {s.name: s.md5 for s in srcs},
+        code = [Path(__file__).resolve(), Path(b4_surface.__file__).resolve()]
+        prm.update({"code_md5": {f.name: hashlib.md5(f.read_bytes()).hexdigest() for f in code},
+                    "surface_mask": mask, "surface_sources_md5": {s.name: s.md5 for s in srcs},
                     "fluid_velocity_km_s": fluid_velocities(), "station_patch_km": list(STATION_PATCH_KM),
                     "fluid_node_times": FLUID_NODES})
         surf_inputs = ([b4_surface._dir() / "gmrt" / s.name for s in srcs[:-1]]
                        + [b4_surface._dir() / b4_surface.P["earth_relief"]["cache"]])
         surf_notes["surface_source"] = b4_surface.SOURCE
+    if SC:
+        prm["shallow_crust"] = SC
+        surf_notes["shallow_crust_rule"] = ("offshore rock cells with centre within thickness_km below the seafloor: "
+                                            "Vs = min(Vs, Vp / vpvs) (D-B070 test, D-B073)")
     return prm, surf_inputs, surf_notes
 
 

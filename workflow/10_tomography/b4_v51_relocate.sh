@@ -51,8 +51,34 @@ done_stage() { grep -qx "$1" "$STATE" 2>/dev/null; }
 mark() { echo "$1" >> "$STATE"; log "stage $1 done"; }
 
 stage_surface() { (cd $W && $PY b4_surface.py install && $PY b4_surface.py floor --nproc 12) && [ -s "$FLOOR" ]; }
-stage_grids() { (cd $CODE && $MPY $W/b4_time_grids.py $VERSION $TIME --nproc $NPROC_GRID); }
-stage_wide() { (cd $CODE && $MPY $W/b4_wide_grids.py $TIME --nproc $NPROC_GRID); }
+stage_grids() {
+  # preflight (field verifier should_fix 3): the v5.1 water/rock boundary is params b4.surface_mask merged
+  (cd $W && $PY -c "from manifest import load_params; m = load_params()['b4'].get('surface_mask'); assert m == 'merged', m") ||
+    { log "params b4.surface_mask is not 'merged'"; return 1; }
+  [ -z "${B4_SURFACE_DIR:-}" ] || { log "B4_SURFACE_DIR is set (test override): unset it"; return 1; }
+  (cd $CODE && $MPY $W/b4_time_grids.py $VERSION $TIME --nproc $NPROC_GRID) || return 1
+  # post-check (should_fix 4): merged, every grid ok, no negative time clamped
+  $PY - $RELOC/$TIME/b4_time_grids_$TIME.manifest.json <<'EOF2'
+import json, sys
+m = json.load(open(sys.argv[1]))
+neg = {k: v.get("negative_set_0") for k, v in (m.get("notes", {}).get("fluid_node_times") or {}).items() if v.get("negative_set_0")}
+c = m["counts"]
+ok = m["params"].get("surface_mask") == "merged" and c.get("ok") == c.get("station_phases") and not neg
+print(f"grids: mask {m['params'].get('surface_mask')}, {c.get('ok')}/{c.get('station_phases')} ok, shallow_crust "
+      f"{m['params'].get('shallow_crust')}, grids with negatives {len(neg)}")
+sys.exit(0 if ok else 1)
+EOF2
+}
+stage_wide() {
+  (cd $CODE && $MPY $W/b4_wide_grids.py $TIME --nproc $NPROC_GRID) || return 1
+  $PY - $RELOC/wide_$TIME <<'EOF2'
+import glob, json, sys
+m = json.load(open(glob.glob(sys.argv[1] + "/b4_wide_grids_*.manifest.json")[0]))
+c = m["counts"]
+print(f"wide: {c.get('ok')}/{c.get('station_phases')} ok (+{c.get('exists')} existing), fine without wide {c.get('fine_without_wide')}")
+sys.exit(0 if c.get("fine_without_wide") == 0 and c.get("ok", 0) + c.get("exists", 0) == c.get("station_phases") else 1)
+EOF2
+}
 stage_obs() { (cd $TA && $PY a2_make_obs.py --picks "$PICKS" --events "$EVENTS" --out $OBS --time $TIME); }
 stage_smoke() {
   (cd $TA && $PY a2_run_nlloc.py $RS "${NLL_OPTS[@]}" --tiles $SMOKE_TILES --nproc 24) || return 1

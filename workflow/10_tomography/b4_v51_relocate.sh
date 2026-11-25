@@ -64,9 +64,18 @@ stage_grids() {
 import json, sys
 m = json.load(open(sys.argv[1]))
 neg = {k: v.get("negative_set_0") for k, v in (m.get("notes", {}).get("fluid_node_times") or {}).items() if v.get("negative_set_0")}
-c = m["counts"]
-ok = m["params"].get("surface_mask") == "merged" and c.get("ok") == c.get("station_phases") and not neg
-print(f"grids: mask {m['params'].get('surface_mask')}, {c.get('ok')}/{c.get('station_phases')} ok, shallow_crust "
+from pathlib import Path
+d = Path(sys.argv[1]).parent
+st = [l.split()[1] for l in open("/wd1/mdenolle_data/reloc_v5/model_vpvs176/stations_GTSRCE.in") if l.startswith("GTSRCE")]
+bad = []
+for sta in st:                                       # files, not manifest counts (a resumed build counts only new grids)
+    for ph in ("P", "S"):
+        h = d / f"cascadia3d.{ph}.{sta}.time.hdr"; b = d / f"cascadia3d.{ph}.{sta}.time.buf"
+        n = [int(v) for v in h.read_text().split()[:3]] if h.exists() else None
+        if not (n and b.exists() and b.stat().st_size == 4 * n[0] * n[1] * n[2]):
+            bad.append(f"{ph}.{sta}")
+ok = m["params"].get("surface_mask") == "merged" and not bad and not neg
+print(f"grids: mask {m['params'].get('surface_mask')}, {2 * len(st) - len(bad)}/{2 * len(st)} complete, shallow_crust "
       f"{m['params'].get('shallow_crust')}, grids with negatives {len(neg)}")
 sys.exit(0 if ok else 1)
 EOF2

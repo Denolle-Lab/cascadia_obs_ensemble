@@ -19,7 +19,7 @@ between neighbouring tiles). Here, per station-phase:
    the interpolation between 2 km instead of 1 km nodes;
 3. outside it, R + C, C = the continuity correction D = fine - R of the nearest node of the fine region (each index
    clamped into the region: laterally the face node at the same depth, below z' = 79 the node above), with D taken
-   on rock nodes only (rock_wide: at least 0.25 km below the model surface; a water, air or near-surface node carries
+   on rock nodes only (rock_wide: see its docstring for what the test does; a node failing it carries
    D of the nearest rock node below it). D is mostly R's start-up error at the source carried along the rays
    (direction-dependent, -0.25 to +0.39 s within one grid in the tests), so it is carried outward, not recomputed.
    Test (tomo_v1/v51_build/wide, w02/w03; 8 OBS and land station-phases, v0.3.1) against a whole-lattice reference
@@ -126,9 +126,24 @@ def fine_identity(time_name):
     if not man.exists():
         sys.exit(f"{man} missing: the fine build {time_name} is not finished")
     m = json.loads(man.read_text())
-    c = m.get("counts", {})
-    if c.get("ok") != c.get("station_phases") or not c.get("station_phases"):
-        sys.exit(f"fine build {time_name} is incomplete: {c}")
+    # completeness from the files, not the manifest counts (b4_time_grids.py counts only the grids built in the run
+    # that wrote the manifest, so a resumed complete build reads as incomplete and a partial test build as complete):
+    # every station of stations_GTSRCE.in, P and S, needs a .hdr and a .buf of exactly nx*ny*nz floats
+    stas = [l.split()[1] for l in (NLL_MODEL / "stations_GTSRCE.in").read_text().splitlines() if l.startswith("GTSRCE")]
+    missing = []
+    for sta in stas:
+        for ph in ("P", "S"):
+            h = fine / f"cascadia3d.{ph}.{sta}.time.hdr"
+            b = h.with_name(h.name[:-3] + "buf")
+            ok = h.exists() and b.exists()
+            if ok:
+                nx_, ny_, nz_ = (int(v) for v in h.read_text().split()[:3])
+                ok = b.stat().st_size == 4 * nx_ * ny_ * nz_
+            if not ok:
+                missing.append(f"{ph}.{sta}")
+    if not stas or missing:
+        sys.exit(f"fine build {time_name} is incomplete: {len(missing)} of {2 * len(stas)} station-phase grids missing "
+                 f"or truncated, e.g. {missing[:5]}")
     need = [work / "params.json", *(work / f"field_1.{ph}.buf" for ph in ("P", "S")), work / "field_0.5.P.buf"]
     if not all(f.exists() for f in need):
         sys.exit(f"{work}: the fine build's work files {[f.name for f in need if not f.exists()]} are missing")
@@ -138,7 +153,8 @@ def fine_identity(time_name):
     ident = {"time_name": time_name, "fine_manifest_utc": m["utc"], "fine_git_commit": m["git_commit"],
              "fine_params": m["params"],
              "field_md5": {ph: md5(work / f"field_1.{ph}.buf") for ph in ("P", "S")},
-             "field_05_P_md5": md5(work / "field_0.5.P.buf")}           # rock_wide's surface test
+             "field_05_P_md5": md5(work / "field_0.5.P.buf"),           # rock_wide's surface test
+             "fine_grids": 2 * len(stas)}
     return ident, work, prm["version"]
 
 
@@ -302,8 +318,12 @@ def fine_on_wide(fine_root, src):
 
 def rock_wide(field1_p, field05_p):
     """Rock nodes of the wide grid: the 1 km P cell below/after the node (the extended field) and the 0.5 km P cell
-    centred 0.25 km above it (the fine build's field_0.5; z' <= 80) have Vp >= 1.6 km/s (build_field's water/air
-    rule): the node is at least 0.25 km below the model's surface. Nodes below the 0.5 km field are rock."""
+    centred 0.25 km above it (the fine build's field_0.5; z' <= 80) pass "1.0 / slowness >= 1.6". The fields hold
+    SLOW_LEN (slowness x cell size, flattened), so with 0.5 km cells 1.0 / SLOW_LEN = 2 v': the test is in effect
+    v' >= 0.8 km/s, i.e. the cells are not air (water passes; wide verifier 2026-11-24, s2_09: 96,194 offshore water
+    nodes count as rock in the merged build). Kept on purpose: with piece 2's fine grids, which already hold
+    rock-continued times above the surface, the "plain units" test (v' >= 1.6) made the agreement worse (s2_10/s2_12/
+    s2_13). Nodes below the 0.5 km field are rock."""
     a = np.memmap(field1_p, dtype="<f4", mode="r", shape=N1)
     out = np.empty((NXW, NYW, NZW), bool)
     for i in range(0, NXW, 64):
@@ -405,7 +425,8 @@ def main():
     prm = {"time_name": a.time_name, "fine": ident, "model_version": version, "wide": WP, "richardson_k": K,
            "lattice": {"x0": G["x0"], "y0": G["y0"], "z0": G["z0"], "nodes": [NXW, NYW, NZW], "node_km": DXW,
                        "field_cells_1km": list(N1)}, "eft": True, "centred": True,
-           "code_md5": md5(Path(__file__))}               # a resume with edited code would mix grids: refused
+           "code_md5": {f.name: md5(f) for f in (Path(__file__), HERE / "b4_time_grids.py", HERE / "b2_fwd_common.py")}}
+    # a resume with edited code (this file or the code it imports) would mix grids: refused
     prm = json.loads(json.dumps(prm))
     # never mix builds: an existing folder must carry the same stamp (fine build, its fields, parameters)
     stamp = out / "params.json"

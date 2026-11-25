@@ -45,6 +45,11 @@ STATIONS = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
 REGION_SRC = Path("/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv")
 R_EARTH = 6371.0
 COLS = ["event_id", "v4_id", "time", "lat", "lon", "depth", "tier", "located", "nphs", "gap", "rms"]
+# Optional columns of the common layout, with their value for readers that do not set them (read by the atlas):
+#   no_hypo         the catalog states the event has no hypocentre (nll_catalog: loc_source none, catalog v5.1+)
+#   surface_cat_km  the catalog's own solid surface at the epicentre (km, up; nll_catalog: column surface_km), the
+#                   surface of its own above-surface test; the metrics below use the common earth_relief surface
+EXTRA = {"no_hypo": False, "surface_cat_km": np.nan}
 
 
 def path(p):
@@ -82,11 +87,15 @@ def read_v3(f):
 
 
 def read_nll_catalog(f):
-    c = pd.read_csv(f)
+    """Track A / Track B NonLinLoc catalog (a2_build_catalog.py, catalog_version.py): loc_source nll3d = located here;
+    v4 or comcat = another catalog's hypocentre kept (not located here); none = no hypocentre (v5.1+, empty lat/lon/depth)."""
+    c = pd.read_csv(f, low_memory=False)
     loc = c.loc_source.eq("nll3d")
     return pd.DataFrame({"event_id": c.ID, "v4_id": c.ID, "time": pd.to_datetime(c.time, utc=True, format="ISO8601"),
                          "lat": c.lat, "lon": c.lon, "depth": c.depth, "tier": c.tier.fillna(""),
-                         "located": loc, "nphs": c.nphs, "gap": c.gap, "rms": c.rms})
+                         "located": loc, "nphs": c.nphs, "gap": c.gap, "rms": c.rms,
+                         "no_hypo": c.loc_source.eq("none"),
+                         "surface_cat_km": c["surface_km"] if "surface_km" in c else np.nan})
 
 
 def read_nll_run(f):
@@ -276,7 +285,8 @@ def main():
             continue
         if not f.exists():
             print(f"{cid}: {f} missing, skipped"); continue
-        c = READERS[e["adapter"]](f)[COLS].reset_index(drop=True)
+        c = READERS[e["adapter"]](f)
+        c = c.assign(**{k: v for k, v in EXTRA.items() if k not in c})[COLS + list(EXTRA)].reset_index(drop=True)
         if not e.get("keyed_v4", True):
             k = match_by_time(c, tables[ref_id])
             c["v4_id"] = np.where(k >= 0, tables[ref_id].v4_id.to_numpy()[np.maximum(k, 0)], np.nan)

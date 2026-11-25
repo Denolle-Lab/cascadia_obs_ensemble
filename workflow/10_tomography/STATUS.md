@@ -7,6 +7,15 @@ Last update: 2026-11-24 15:45 (handoff 11-24 07:55 below, read first).
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
 
+## STAGE MARKER 2026-11-24 21:10 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+
+Still stage 1 of 5 (last verifications). PI 20:50: D-B072 (verify the pick drift on pnwstore, then re-time each pick
+from short ObsPy reads around it; v5.1 uses the re-timed picks; other products unchanged for now): agent running ->
+/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/. Field and wide pieces: code and tests done, verifiers running
+(v51_build/verify_field, verify_wide). Slower-S interim (V1-V3, out/s16_runs_V123_table.md): V2 (Vp/Vs 1.95 in the top
+2.5 km offshore) raises Axial within 2 km of the seafloor from 31 % to 64 % (56 % with iterated terms), controls stable,
+Blanco +0.4-0.5 km further from Lange; V1 (offshore S 4 % slower) pushes Blanco ~5 km deeper: rejected. V4 running.
+
 ## FINDING 2026-11-24 17:10: pick timing drift on analog short-period channels (UW timing check), PI decisions pending
 
 /wd1/mdenolle_data/tomo_v1/checks/uw_timing/report.html (RESUME.md, tables/). From 2013-10-22 14:48:30 UTC, 34 UW

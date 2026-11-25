@@ -1,0 +1,331 @@
+{
+ "name": "b2_res_checker_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_res_checker.py",
+ "argv": [
+  "analyse"
+ ],
+ "utc": "2026-11-23T16:22:52.142644+00:00",
+ "git_commit": "d4ef3a205d2f964fa5893036e861ace9cbf171ba",
+ "git_dirty": false,
+ "params_md5": "8de1272f412743dc234ef0d7d2d99210",
+ "params": {
+  "amp": 0.08,
+  "cell_km": [
+   40,
+   60,
+   100
+  ],
+  "bands_km": [
+   -10,
+   12,
+   25,
+   40,
+   65
+  ],
+  "phase_shift": 0.5,
+  "noise_seed": 20261122,
+  "loc_h_from_68": 1.515,
+  "window_cells": 1.5,
+  "resolved": {
+   "corr": 0.7,
+   "amp": 0.5
+  },
+  "mask_smooth": 20
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:00:52.428760+00:00",
+   "md5": "d923077c3fe2d5f8dc0da58f09c419e1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:35:59.085725+00:00",
+   "md5": "55cd09cb367d11a113aeb5f30e245bf2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:22:02.351900+00:00",
+   "md5": "b5d2a3375559638aeb2c4d5fa2b05be4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:01:02.671707+00:00",
+   "md5": "81fc4cd8e23b4810a9dac6d76068323e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:35:50.799768+00:00",
+   "md5": "c1a49c0326d8fde69c60cda6695acee7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:21:36.835038+00:00",
+   "md5": "a20cbf155540baa0dec42b01bd18671d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:37:58.410098+00:00",
+   "md5": "d2ef7226e6293c5ff6bdb9310da73476"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:36:27.902572+00:00",
+   "md5": "8d6e1e9fd57b9d65bc5abe3c9054ed8c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L040_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:59:52.755076+00:00",
+   "md5": "876d9202571b509863ea5508f3c1d93d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:24:06.958552+00:00",
+   "md5": "285e1715a92e751fddf20225eeaadc77"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:20:56.314257+00:00",
+   "md5": "d45d9d5a8e62784dfa6fede1abf8d7b4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:00:42.964810+00:00",
+   "md5": "1a14f4c779a0b3d0b7135c28f99fd5c8"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:24:04.091567+00:00",
+   "md5": "d0fa77895efd83ab1b2a9b29d2d0fa06"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:13:32.463681+00:00",
+   "md5": "9985c4cda0011531ee3b81a76e7a0d40"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:36:19.689616+00:00",
+   "md5": "f9d51bab6a9ae05cf64447535b4f80be"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:24:22.980467+00:00",
+   "md5": "3604cd0d08c80254b524fc6f1e9abe71"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L060_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:01:29.325566+00:00",
+   "md5": "caa3ee3fde6761365796e0589a85d7bb"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:37:48.450151+00:00",
+   "md5": "9f01d5cafc852b577d30a2a59b5807b2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:22:46.847660+00:00",
+   "md5": "aac3f518bb6c1e20b1bbfcec30e3c545"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_clean/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s10/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:01:40.995503+00:00",
+   "md5": "8800e1db8c5fad2c09a749744c8b113f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:37:52.226131+00:00",
+   "md5": "7ce718255bd6ac4467c9f339b37fee02"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T16:22:24.774779+00:00",
+   "md5": "587cff33d10f440a600c18d56ebb8257"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise/inv_d1000_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise_ploc/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:48:44.921645+00:00",
+   "md5": "02796393b59206213916b3b3d9fc4e5f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p0_noise_ploc/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p1_noise/inv_d1000_s20/Output_Files/Vp_model.dat",
+   "size": 346242,
+   "mtime": "2026-11-23T15:38:01.775080+00:00",
+   "md5": "62db304c712c31f11fea40b0bf3e777a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/res_tests/chk_L100_p1_noise/inv_d1000_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/checker_by_depth.csv",
+   "size": 66047,
+   "mtime": "2026-11-23T16:22:48.977648+00:00",
+   "md5": "2e45bc9f1f7ca9a43bdc768d372a6879"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/checker_maps_p_s20.png",
+   "size": 550806,
+   "mtime": "2026-11-23T16:22:50.155642+00:00",
+   "md5": "12063aeb78f5e820c1da2e8dadebf67b"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/checker_maps_s_s20.png",
+   "size": 570634,
+   "mtime": "2026-11-23T16:22:50.941638+00:00",
+   "md5": "c2969e4230c64da3d92f6f3b74677f2b"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/coast_i.txt",
+   "size": 9538,
+   "mtime": "2026-11-23T16:22:49.269647+00:00",
+   "md5": "9df5604c97a9b0ab00b3c3eddc4e3c4c"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/resolution_mask.npz",
+   "size": 3032,
+   "mtime": "2026-11-23T16:22:48.980648+00:00",
+   "md5": "5f2b554d55d4162612962729b85b67e9"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/resolution_mask_maps_s20.png",
+   "size": 64464,
+   "mtime": "2026-11-23T16:22:51.477635+00:00",
+   "md5": "037deae87959f420a3f608eeb447666e"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/resolution_sections_s20.png",
+   "size": 261852,
+   "mtime": "2026-11-23T16:22:52.140631+00:00",
+   "md5": "ad6c2fc884a8f95bf009ed3c26a6fee9"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/summary_tables.md",
+   "size": 5921,
+   "mtime": "2026-11-23T16:22:48.988648+00:00",
+   "md5": "8b12567bf6fe5b27959ac3049f598c81"
+  }
+ ],
+ "counts": {
+  "runs": 24
+ },
+ "notes": null
+}

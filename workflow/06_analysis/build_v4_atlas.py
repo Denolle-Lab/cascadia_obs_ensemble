@@ -7,17 +7,32 @@ Layers packed here (gzip + base64 blobs, decoded in the browser with Decompressi
   events     catalog v4 (data/catalog_v4/), magnitudes from data/magnitude_v4/ when present
              (our Route A ML / preferred M), else Ian's magnitude column (flagged), the share of
              each event's picks added after ver3 (via ver6 pick_id), and Ian's spatial_sigma
-             + v4-NLL3D (preliminary): the same events relocated with NonLinLoc in the 3D starting model
-             (NLL3D below): lon/lat/depth offsets from v4, location tier A-D/U, nphs, gap, rms
+             + every other catalog of the registry workflow/11_compare/catalogs.yaml with atlas: true
+             (relocations, velocity-model iterations): lon/lat/depth offsets from the reference catalog on the
+             same event order, location tier A-D/U, nphs, gap, rms, read from the common tables built by
+             workflow/11_compare/compare_catalogs.py (CMP below); whole-catalog numbers from its summary CSVs
   terrain    GMT earth_relief 01m for the whole margin + the GMRT patches in data/gmrt/
   slab       Slab2 (data/slab2/cas_slab2_dep.xyz) with the coupling models in data/coupling/
              sampled onto its nodes
   stations   ver5/ver6 station table; plates: PB2002; tensors: ComCat moment tensors 2010-2016
+  tomo       (--model) a Track B velocity model netCDF: 3D textures for a depth slice, a vertical cut and the
+             cross-section; nodes without a value (NaN; water and air nodes of models with a medium variable) not drawn
 
 Usage (default env, from the repo root):
   LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \
-      workflow/06_analysis/build_v4_atlas.py
+      workflow/06_analysis/build_v4_atlas.py [--model MODEL.nc] [--out FILE]
 Output: data/catalog_v4/atlas/cascadia_v4_atlas.html (template: workflow/06_analysis/atlas_template.html)
+
+Catalogs come from the registry only. Its top-level keys atlas_relocated (the relocated catalog: default B of Compare,
+tier colours of the reference view, end of the Moves layer) and atlas_moves_from (start of the Moves layer) choose the
+two catalogs the page singles out; --catalog2 and --catalog-before override them for one build with a registry id or
+the registered file path, and --catalog2-label, --catalog2-note, --catalog-before-label override the registry label and
+note. A catalog that is not in the registry has to be added to it (and to compare_catalogs.py's tables) first.
+
+A new location run appears on the atlas by adding it to catalogs.yaml with atlas: true, running
+compare_catalogs.py (writes CMP/<id>.parquet and the summary tables), then this script.
+Data files are read from <repo>/data; files missing there (gitignored, in a git worktree) are read from the
+main working tree's data/ (found through git), or from the folders in $ATLAS_DATA_DIRS (':'-separated).
 """
 from __future__ import annotations
 
@@ -34,15 +49,62 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 D = ROOT / "data"
+
+
+def _data_dirs() -> list[Path]:
+    dirs = [D] + [Path(p) for p in os.environ.get("ATLAS_DATA_DIRS", "").split(":") if p]
+    try:                                            # a git worktree: fall back to the main tree's data/
+        import subprocess
+        common = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        dirs.append(Path(common).parent / "data")
+    except Exception:
+        pass
+    out = []
+    for d in dirs:
+        if d.exists() and d.resolve() not in [o.resolve() for o in out]:
+            out.append(d)
+    return out
+
+
+DATA_DIRS = _data_dirs()
+
+
+def dd(*parts) -> Path:
+    """data/<parts>: the first data folder that has it (the repo's own first); the repo path if none has it."""
+    for d in DATA_DIRS:
+        if (d.joinpath(*parts)).exists():
+            return d.joinpath(*parts)
+    return D.joinpath(*parts)
+
+
+def v0_dir() -> Path:
+    """Fault surfaces v0: the geojson, members and vertices files must come from the same folder (same version)."""
+    names = ("fault_surfaces_v0.geojson", "fault_surfaces_v0_members.csv", "fault_surfaces_v0_vertices.csv")
+    for d in DATA_DIRS:
+        if all((d / "faults" / "v0" / n).exists() for n in names):
+            return d / "faults" / "v0"
+    return D / "faults" / "v0"
+
+
+def dglob(pattern: str) -> list[str]:
+    """glob under data/, the union over the data folders (the repo's own copy wins for a path in several)."""
+    seen = {}
+    for d in DATA_DIRS:
+        for f in glob.glob(str(d / pattern)):
+            seen.setdefault(os.path.relpath(f, d), f)
+    return [seen[k] for k in sorted(seen)]
+
+
 REGION = [-131.0, -119.5, 39.0, 51.0]           # lon0 lon1 lat0 lat1 of the atlas
 LON0, LAT0 = -125.25, 45.0                      # projection centre (1 unit = 1 km)
 T0 = pd.Timestamp("2010-01-01", tz="UTC")
 VER3_N = 39_597_551                              # pick_id < VER3_N: pick already in ver3
 STATIONS = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
-# v4-NLL3D (preliminary): the v4 events relocated with NonLinLoc in the 3D starting model (workflow/08_relocation
-# on branch reloc/track-a, a2_build_catalog.py). Depth km below sea level; tier U keeps the v4 location.
-NLL3D = Path("/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv")
-TIERS = "ABCDU"
+# Catalog registry and the common per-catalog tables of workflow/11_compare/compare_catalogs.py
+REGISTRY = ROOT / "workflow" / "11_compare" / "catalogs.yaml"
+CMP = Path(os.environ.get("CATALOG_COMPARE_DIR", "/wd1/mdenolle_data/catalog_compare"))   # <id>.parquet
+TIERS = "ABCDU"                                  # tier codes 0-4; 5 = located, catalog without tiers; 6 = no hypocentre
 
 # Named views (same boxes as phase5_pygmt_map.py REGIONS)
 REGIONS = [
@@ -93,7 +155,7 @@ def terrain():
     g = pygmt.datasets.load_earth_relief(resolution="01m", region=REGION, registration="gridline")
     lon, lat, z = g.lon.values, g.lat.values, g.values.astype(float)
     grids = {"base": dict(lon=lon, lat=lat, z=z, interval=200)}
-    for f in sorted(glob.glob(str(D / "gmrt" / "gmrt_*.nc"))):
+    for f in dglob("gmrt/gmrt_*.nc"):
         ds = xr.open_dataset(f)
         lo, la, zz = ds.lon.values, ds.lat.values, ds.altitude.values.astype(float)
         hi = f.endswith("_high.nc")
@@ -112,7 +174,7 @@ def terrain():
 
 def slab_and_coupling():
     import xarray as xr
-    s = pd.read_csv(D / "slab2" / "cas_slab2_dep.xyz", header=None, names=["lon", "lat", "z"])
+    s = pd.read_csv(dd("slab2", "cas_slab2_dep.xyz"), header=None, names=["lon", "lat", "z"])
     s["lon"] = np.where(s.lon > 180, s.lon - 360, s.lon)
     lons, lats = np.sort(s.lon.unique()), np.sort(s.lat.unique())
     Z = s.pivot_table(index="lat", columns="lon", values="z", dropna=False).reindex(index=lats, columns=lons).values
@@ -122,7 +184,7 @@ def slab_and_coupling():
     out = {"slab": grid_i16(dep, 10)}
     LO, LA = np.meshgrid(lons, lats)
     models = []
-    for f in sorted(glob.glob(str(D / "coupling" / "Cascadia" / "*" / "*.nc"))):
+    for f in dglob("coupling/Cascadia/*/*.nc"):
         ds = xr.open_dataset(f)
         var = next((v for v in ("coupling", "gamma", "interSSE") if v in ds), None)
         if var is None:
@@ -142,22 +204,18 @@ def slab_and_coupling():
     return out, meta
 
 
-CAT2 = {"path": None, "label": "v4-NLL3D (preliminary)",
-        "note": "the v4 events relocated with NonLinLoc in a 3D velocity model, depths below sea level. A first pass, "
-                "to be replaced by locations in the tomography model."}
-
-
-CATB = {"path": None, "label": ""}     # "before" catalog for the moves layer (before -> second catalog)
+# Build options that single out registry catalogs (main(): --catalog2*, --catalog-before*); None = the registry's choice
+SEL = {"rel": None, "rel_label": None, "rel_note": None, "before": None, "before_label": None}
 
 
 def events():
-    c = pd.read_csv(D / "catalog_v4" / "Cascadia_relocated_catalog_v4.csv", skipinitialspace=True)
+    c = pd.read_csv(dd("catalog_v4", "Cascadia_relocated_catalog_v4.csv"), skipinitialspace=True)
     c.columns = [x.strip() for x in c.columns]
     t = pd.to_datetime(c["datetime"].str.strip(), utc=True)
     days = ((t - T0) / pd.Timedelta(days=1)).to_numpy()
     M = c["magnitude"].to_numpy(float); Mtype = np.full(len(c), 3, "u1")      # 3 = Ian's column
     msrc = "Ian's catalog magnitude (type unknown; runs high offshore)"
-    mfile = D / "magnitude_v4" / "cascadia_catalog_M_routeA.csv"
+    mfile = dd("magnitude_v4", "cascadia_catalog_M_routeA.csv")
     if mfile.exists():
         m = pd.read_csv(mfile).set_index("event_id")
         mm = m.reindex(c["ID"])
@@ -166,7 +224,7 @@ def events():
         code = {"ML": 0, "Mw": 1, "Mw_cal": 2}
         Mtype = np.where(ok, mm["M_type"].map(code).fillna(0).to_numpy(), 255).astype("u1")
         msrc = f"Route A preferred magnitude, catalog v4 ({ok.sum():,} of {len(c):,} events)"
-    pid = pd.read_parquet(D / "catalog_v4" / "ridge_report" / "v4_pick_ids.parquet")
+    pid = pd.read_parquet(dd("catalog_v4", "ridge_report", "v4_pick_ids.parquet"))
     newfrac = (pid["pick_id"] >= VER3_N).groupby(pid["event_ID"]).mean().reindex(c["ID"]).fillna(0).to_numpy()
     sig = pd.to_numeric(c["spatial_sigma(m)"], errors="coerce").to_numpy()
     arr = {
@@ -180,53 +238,160 @@ def events():
     }
     # fault of each event: index into the surfaces in GeoJSON feature order (the order the atlas draws them); 65535 = none
     flt = np.full(len(c), 65535, "<u2")
-    sv = D / "faults" / "v0" / "fault_surfaces_v0.geojson"
+    sv = v0_dir() / "fault_surfaces_v0.geojson"
     if sv.exists():
         ids = [f["properties"]["surface_id"] for f in json.load(open(sv))["features"]]
-        mem = pd.read_csv(sv.with_name("fault_surfaces_v0_members.csv")).set_index("event_id").surface_id
+        mem = pd.read_csv(v0_dir() / "fault_surfaces_v0_members.csv").set_index("event_id").surface_id
         k = c["ID"].map(mem).map({s_: i for i, s_ in enumerate(ids)})
         flt = np.where(k.notna(), k.fillna(0), 65535).astype("<u2")
         print(f"  events on a fault: {(flt < 65535).sum():,}")
     arr["flt"] = flt
-    nll = nll3d(c["ID"], CAT2["path"])
-    if nll:
-        arr.update(nll)
-    if nll and CATB["path"]:                     # positions before (moves layer): offsets from v4 as for the second catalog
-        nb = nll3d(c["ID"], CATB["path"])
-        if nb:
-            arr.update({"b_" + k[2:]: nb[k] for k in ("n_dlon", "n_dlat", "n_ddep", "n_tier")})
+    cat_arr, cats = catalogs(c["ID"], c[["latitude", "longitude", "depth(km)"]].to_numpy(float))
+    arr.update(cat_arr)
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
     arr = {k: v[order] for k, v in arr.items()}
     print(f"  events: {len(c):,}; magnitudes: {msrc}")
-    return arr, dict(n=len(c), msrc=msrc, t0="2010-01-01", days_max=float(np.nanmax(days)),
-                     nll3d=dict(file=NLL3D.name, tiers=TIERS) if nll else None)
+    return arr, dict(n=len(c), msrc=msrc, t0="2010-01-01", days_max=float(np.nanmax(days)), cats=cats["list"],
+                     rel=cats["rel"], moves=cats["moves"])
 
 
-def nll3d(ids: pd.Series, path=None) -> dict | None:
-    """v4-NLL3D locations aligned on the v4 event IDs, stored as offsets from the v4 location: int16 lon/lat in
-    1e-4 deg (the precision of the v4 csv) and depth in 10 m; -32768 where the v4 location is kept (tier U).
-    Tier 0-4 = A-D, U (255 = ID missing), 5 = loc_source none (no hypocentre: drawn only in the v4 view); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none).
-    The atlas recomputes the shift from v4 from the two positions (matches shift_h_km to < 2 m)."""
-    path = Path(path or NLL3D)
-    if not path.exists():
-        print(f"  second catalog: {path} missing, layer skipped")
+def _num(v):
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
         return None
-    n = pd.read_csv(path).set_index("ID").reindex(ids)
-    kept = (n["loc_source"] != "nll3d").to_numpy()
-    d = lambda col, ref, s: np.where(kept, -32768, np.clip(np.round((n[col] - n[ref]).to_numpy(float) * s), -32767, 32767)).astype("<i2")
-    u1 = lambda v, s: np.where(np.isfinite(v) & ~kept, np.clip(np.round(v * s), 0, 254), 255).astype("u1")
-    tier = n["tier"].map({t: k for k, t in enumerate(TIERS)}).fillna(255).to_numpy().astype("u1")
-    tier[(n["loc_source"] == "none").to_numpy()] = 5    # no hypocentre (catalog v5.1+): hidden in the second catalog's view
-    out = {"n_dlon": d("lon", "v4_lon", 1e4), "n_dlat": d("lat", "v4_lat", 1e4), "n_ddep": d("depth", "v4_depth", 100),
-           "n_tier": tier, "n_nph": n["nphs"].fillna(0).clip(0, 255).to_numpy().astype("u1"),
-           "n_gap": u1(n["gap"].to_numpy(float), 0.5), "n_rms": u1(n["rms"].to_numpy(float), 100)}
-    out["n_dep"] = np.where(kept, np.nan, n["depth"].to_numpy(float)).astype("<f4")   # exact depth (n_ddep is 10 m steps)
-    if "surface_km" in n:   # the catalog's own solid surface (D-B068 in v5.1): the atlas tests "above surface" against it
-        out["n_surf"] = np.where(kept, np.nan, n["surface_km"].to_numpy(float)).astype("<f4")
-    cnt = pd.Series(tier).map(dict(enumerate(TIERS))).value_counts().reindex(list(TIERS)).fillna(0).astype(int)
-    print(f"  second catalog: {(~kept).sum():,} relocated, {(kept & (tier != 5)).sum():,} keep v4, {(tier == 5).sum():,} without a "
-          "hypocentre (hidden in its view); tiers " + " ".join(f"{t} {v:,}" for t, v in cnt.items()))
+    return None if not np.isfinite(v) else round(v, 3)
+
+
+def catalog_numbers(cid: str, ref: str) -> dict:
+    """Whole-catalog numbers of compare_catalogs.py (data/catalog_compare/*.csv) for one catalog."""
+    out = {}
+    f = dd("catalog_compare", "summary.csv")
+    if f.exists():
+        t = pd.read_csv(f)
+        r = t[(t.catalog == cid) & (t.region == "All")]
+        if len(r):
+            r = r.iloc[0]
+            out.update({k: _num(r[k]) for k in ("n_events", "n_located", "depth_p10", "depth_p50", "depth_p90",
+                                                 "pct_above_surface", "dh_ref_p50", "dh_ref_p90", "dz_ref_p50", "rms_p50")})
+    f = dd("catalog_compare", "anss.csv")
+    if f.exists():
+        t = pd.read_csv(f)
+        for sub in ("near", "all"):
+            r = t[(t.catalog == cid) & (t.region == "All") & (t.subset == sub)]
+            if len(r):
+                r = r.iloc[0]
+                out[f"anss_{sub}"] = {k: _num(r[k]) for k in ("n", "dz_p50", "dz_mad", "dh_p50", "abs_dz_p50")}
+    f = dd("catalog_compare", "faults_summary.csv")
+    if f.exists():
+        t = pd.read_csv(f).set_index("catalog")
+        if cid in t.index:
+            out["fault_rms"] = _num(t.loc[cid, "rms_plane_p50"]); out["fault_n"] = int(t.loc[cid, "n_surfaces"])
     return out
+
+
+def _registry_id(x: str, ents: dict) -> str:
+    """A registry id, or the id of the entry whose file is the path x (absolute, or relative to the repo root)."""
+    if x in ents:
+        return x
+    px = Path(x).expanduser()
+    px = (px if px.is_absolute() else ROOT / px).resolve()
+    for cid, e in ents.items():
+        f = Path(e["file"])
+        if (f if f.is_absolute() else ROOT / f).resolve() == px:
+            return cid
+    raise SystemExit(f"{x}: not a catalog of {REGISTRY}. Add it there (id, adapter, file, ...), run "
+                     "workflow/11_compare/compare_catalogs.py --only <id>, then build the atlas.")
+
+
+def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
+    """Registry catalogs with atlas: true (plus the catalogs chosen with --catalog2 / --catalog-before). The reference
+    catalog (registry 'reference') gives the event set and the base positions (the v4 csv read in events()); every other
+    catalog is stored on the same event order: lon/lat as int16 offsets from the reference in 1e-4 deg (-32768 = not
+    located there: tier U, no hypocentre, event missing, or an offset out of int16 range), the exact depth as float32
+    (NaN = not located; 10 m steps could put an event just under the surface above it), tier 0-4 = A-D, U,
+    5 = located without a tier class, 6 = no hypocentre in this catalog (loc_source none: not drawn in its view nor in
+    Compare); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none); with own_surface: true in the registry, the
+    catalog's own solid surface (float32 km, up; NaN = none) for its above-surface test. Arrays are named c<k>_* with k
+    the position in the list. Returns the arrays and dict(list=<catalog metadata>, rel=<index>, moves=dict(from, to) | None)."""
+    import yaml
+    if not REGISTRY.exists():
+        print(f"  catalogs: {REGISTRY} missing, reference only")
+        return {}, dict(list=[dict(id="v4", label="Catalog v4", key=None, status="final", ref=True, has_tiers=False,
+                                   n_loc=len(ids))], rel=0, moves=None)
+    reg = yaml.safe_load(open(REGISTRY))
+    ref = reg["reference"]
+    ents = {e["id"]: e for e in reg["catalogs"]}
+    order = [ref] + [e["id"] for e in reg["catalogs"] if e.get("atlas") and e["id"] != ref]
+    rel_id = _registry_id(SEL["rel"], ents) if SEL["rel"] else reg.get("atlas_relocated")
+    mv_id = _registry_id(SEL["before"], ents) if SEL["before"] else reg.get("atlas_moves_from")
+    for x in (rel_id, mv_id):                       # a catalog chosen for this build is shown even without atlas: true
+        if x and x not in order:
+            if x not in ents:
+                raise SystemExit(f"{x}: atlas_relocated / atlas_moves_from names no catalog of {REGISTRY}")
+            order.append(x)
+    pref = pd.read_parquet(CMP / f"{ref}.parquet").set_index("v4_id") if (CMP / f"{ref}.parquet").exists() else None
+    if pref is not None:                            # the reference table must hold the locations the atlas shows
+        dmax = np.nanmax(np.abs(pref.reindex(ids.to_numpy())[["lat", "lon", "depth"]].to_numpy() - ref_xyz))
+        if not dmax < 1e-3:
+            raise SystemExit(f"{CMP / ref}.parquet differs from the v4 csv by {dmax}: rerun compare_catalogs.py")
+    arr, cats = {}, []
+    for k, cid in enumerate(order):
+        e = dict(ents[cid])
+        if cid == rel_id:
+            e.update({k_: v for k_, v in (("label", SEL["rel_label"]), ("note", SEL["rel_note"])) if v})
+        if cid == mv_id and SEL["before_label"]:
+            e["label"] = SEL["before_label"]
+        meta = dict(id=cid, label=e.get("label", cid), velocity=e.get("velocity"), method=e.get("method"),
+                    status=e.get("status"), date=str(e.get("date") or ""), parent=e.get("parent"), note=e.get("note"),
+                    ref=(k == 0), key=None, has_tiers=False, n_loc=len(ids), n_nohypo=0, num=catalog_numbers(cid, ref))
+        if k == 0:
+            cats.append(meta)
+            continue
+        f = CMP / f"{cid}.parquet"
+        if not f.exists() or pref is None:
+            print(f"  catalog {cid}: {f} missing (run workflow/11_compare/compare_catalogs.py), skipped")
+            continue
+        t = pd.read_parquet(f)
+        t = t[t.v4_id.notna()].drop_duplicates("v4_id")
+        t.index = t.v4_id.astype("int64")
+        n = t.reindex(ids.to_numpy())
+        r = pref.reindex(ids.to_numpy())
+        loc = n["located"].astype("boolean").fillna(False).to_numpy(bool) & n.lat.notna().to_numpy() & n.depth.notna().to_numpy()
+        # no hypocentre in this catalog (common-table column of compare_catalogs.py; absent in tables built before it)
+        nohypo = n["no_hypo"].astype("boolean").fillna(False).to_numpy(bool) & ~loc if "no_hypo" in n else np.zeros(len(n), bool)
+        off = {}
+        for col, s_ in (("lon", 1e4), ("lat", 1e4)):
+            v = np.round((n[col] - r[col]).to_numpy(float) * s_)
+            loc &= np.isfinite(v) & (np.abs(v) <= 32767)
+            off[col] = v
+        key = f"c{len(cats)}"
+        i16 = lambda v: np.where(loc, np.nan_to_num(v), -32768).astype("<i2")
+        u1 = lambda v, s_: np.where(np.isfinite(v) & loc, np.clip(np.round(v * s_), 0, 254), 255).astype("u1")
+        tl = n["tier"].fillna("").astype(str).str.strip()
+        has_t = bool(tl.isin(list("ABCD")).any())
+        tier = tl.map({t_: j for j, t_ in enumerate(TIERS)}).fillna(5).to_numpy()
+        tier = np.where(loc, np.where(tier == 4, 5, tier), np.where(nohypo, 6, 4)).astype("u1")   # not located -> U
+        arr.update({f"{key}_dlon": i16(off["lon"]), f"{key}_dlat": i16(off["lat"]),
+                    f"{key}_dep": np.where(loc, n["depth"].to_numpy(float), np.nan).astype("<f4"),
+                    f"{key}_tier": tier, f"{key}_nph": n["nphs"].fillna(0).clip(0, 255).to_numpy().astype("u1"),
+                    f"{key}_gap": u1(n["gap"].to_numpy(float), 0.5), f"{key}_rms": u1(n["rms"].to_numpy(float), 100)})
+        own = bool(e.get("own_surface")) and "surface_cat_km" in n
+        if e.get("own_surface") and not own:
+            print(f"  catalog {cid}: own_surface set but {f.name} has no surface_cat_km column: rerun compare_catalogs.py --only {cid}")
+        if own:                                     # the catalog's own solid surface: the atlas tests "above surface" against it
+            arr[f"{key}_surf"] = np.where(loc, n["surface_cat_km"].to_numpy(float), np.nan).astype("<f4")
+        cnt = {TIERS[j] if j < 5 else ("-" if j == 5 else "none"): int((tier == j).sum()) for j in range(7)}
+        meta.update(key=key, has_tiers=has_t, n_loc=int(loc.sum()), n_nohypo=int(nohypo.sum()), tiers=cnt, own_surface=own)
+        cats.append(meta)
+        print(f"  catalog {cid} ({e.get('status')}): {loc.sum():,} of {len(ids):,} reference events located, "
+              f"{nohypo.sum():,} without a hypocentre; tiers " + " ".join(f"{t_} {v:,}" for t_, v in cnt.items() if v)
+              + ("; above-surface test against its own surface" if own else ""))
+    pos = {c["id"]: j for j, c in enumerate(cats)}
+    rel = pos.get(rel_id, len(cats) - 1)
+    moves = dict(**{"from": pos[mv_id]}, to=rel) if mv_id in pos and pos[mv_id] != rel else None
+    print(f"  relocated catalog: {cats[rel]['id']}" + (f"; moves {mv_id} -> {cats[rel]['id']}" if moves else "; no moves layer"))
+    return arr, dict(list=cats, rel=rel, moves=moves)
 
 
 def stations():
@@ -239,7 +404,7 @@ def stations():
 
 
 def plates():
-    d = json.load(open(D / "tectonics" / "PB2002_boundaries.json"))
+    d = json.load(open(dd("tectonics", "PB2002_boundaries.json")))
     out = []
     for f in d["features"]:
         xy = np.array(f["geometry"]["coordinates"])
@@ -251,7 +416,7 @@ def plates():
 
 
 def tensors():
-    m = pd.read_csv(D / "focal" / "comcat_mt.csv")
+    m = pd.read_csv(dd("focal", "comcat_mt.csv"))
     t = pd.to_datetime(m["time"], utc=True, format="ISO8601")
     k = (t >= T0) & (t < pd.Timestamp("2017-01-01", tz="UTC")) & m.lon.between(*REGION[:2]) & m.lat.between(*REGION[2:])
     m = m[k]
@@ -283,7 +448,7 @@ def surfaces_display(path, max_side=12):
     """Fault surfaces on a coarser grid for display: each rectangle's 1 km vertex grid (row-major in
     _vertices.csv) is subsampled to at most max_side points per side, corners kept."""
     feats = json.load(open(path))["features"]
-    vx = pd.read_csv(path.with_name("fault_surfaces_v0_vertices.csv"))
+    vx = pd.read_csv(v0_dir() / "fault_surfaces_v0_vertices.csv")
     lon, lat, dep, surf = [], [], [], []
     for f in feats:
         p = f["properties"]
@@ -336,7 +501,7 @@ def tri_mesh(features, keep):
 
 def faults():
     """CRESCENT CFM v1.0 (data/faults/crescent_cfm/): crustal 3D meshes (5 km), traces, CASIE21."""
-    F = D / "faults" / "crescent_cfm"
+    F = dd("faults", "crescent_cfm")
     if not F.exists():
         print("  faults: data/faults/crescent_cfm missing, skipped")
         return {}, {}
@@ -368,7 +533,7 @@ def faults():
           f"CASIE21 {len(clo) // 3:,} triangles")
     arr = {"f_lon": lo, "f_lat": la, "f_dep": de, "c_lon": clo, "c_lat": cla, "c_dep": cde}
     surf = []
-    sv = D / "faults" / "v0" / "fault_surfaces_v0.geojson"
+    sv = v0_dir() / "fault_surfaces_v0.geojson"
     if sv.exists():                         # event-derived surfaces v0 (workflow/07_faults/fault_surfaces_planes.py)
         (slo, sla, sde), surf = surfaces_display(sv)
         arr.update({"s_lon": slo, "s_lat": sla, "s_dep": sde})
@@ -391,7 +556,7 @@ MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs
 
 def mc_grids():
     """Mc on the 0.1 deg grid (v4_mc_maps.py): uint8 Mc*20+40 and sigma*50, 255 = no value."""
-    d = D / "catalog_v4" / "mc_maps"
+    d = dd("catalog_v4", "mc_maps", "mc_grid.csv").parent
     if not (d / "mc_grid.csv").exists():
         return None, None
     base = pd.read_csv(d / "mc_grid.csv")
@@ -435,6 +600,16 @@ def tomo_model(path):
     if "resolution_p" in d:                                # merged models: finest resolved checkerboard cell (km), 0 = none
         out["resp"] = np.clip(np.nan_to_num(a("resolution_p")), 0, 254).astype("u1")
         out["ress"] = np.clip(np.nan_to_num(a("resolution_s")), 0, 254).astype("u1")
+    masked = {}
+    if "medium" in d:     # v0.3.2+: 0 rock, 1 water, 2 air (flag_meanings): no rock velocity there, every variable empty
+        med = d["medium"].transpose("depth", "latitude", "longitude").to_numpy()
+        for k in ("dvp", "dvs", "vpvs", "vp", "vs"):
+            out[k][med != 0] = 255
+        masked = {"water": int((med == 1).sum()), "air": int((med == 2).sum())}
+    for k in ("dvp", "dvs", "vpvs", "vp", "vs"):           # NaN in rock would be a model error: say so, draw nothing there
+        bad = int((out[k] == 255).sum()) - sum(masked.values())
+        if bad > 0:
+            print(f"  velocity model: {k} has no value at {bad:,} nodes besides water and air (not drawn)")
     lon, lat = d.longitude.to_numpy().astype(float), d.latitude.to_numpy().astype(float)
     ver = d.attrs.get("version") or d.attrs.get("model_version") or Path(path).stem
     status = d.attrs.get("status", "")
@@ -446,8 +621,9 @@ def tomo_model(path):
     meta = dict(nx=len(lon), ny=len(lat), nz=d.sizes["depth"], west=float(lon[0]), south=float(lat[0]),
                 dx=float(np.round(np.diff(lon).mean(), 5)), dy=float(np.round(np.diff(lat).mean(), 5)),
                 depths=[float(z) for z in d.depth.values], version=str(ver), status=str(status),
-                title=str(d.attrs.get("title", "")))
-    print(f"  velocity model {ver}: {meta['nx']} x {meta['ny']} x {meta['nz']} nodes")
+                title=str(d.attrs.get("title", "")), masked=masked)
+    print(f"  velocity model {ver}: {meta['nx']} x {meta['ny']} x {meta['nz']} nodes"
+          + (f"; no value at {masked['water']:,} water and {masked['air']:,} air nodes" if masked else ""))
     return out, meta
 
 
@@ -456,17 +632,17 @@ def main(argv=None):
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
     ap.add_argument("--out", default=str(D / "catalog_v4" / "atlas" / "cascadia_v4_atlas.html"))
     ap.add_argument("--model", help="Track B velocity model netCDF to add as a layer")
-    ap.add_argument("--catalog2", help="second catalog (same IDs as v4, columns as the Track A catalogue); default v4-NLL3D")
-    ap.add_argument("--catalog2-label", help="its short name in the catalog switch")
-    ap.add_argument("--catalog2-note", help="one or two sentences for the legend")
-    ap.add_argument("--catalog-before", help="catalog the moves layer starts from (same format; e.g. v4-NLL3D iter1)")
-    ap.add_argument("--catalog-before-label", help="its short name")
+    ap.add_argument("--catalog2", help="relocated catalog for this build: a registry id or the registered file path "
+                    "(default: registry atlas_relocated)")
+    ap.add_argument("--catalog2-label", help="its name on the page (default: its registry label)")
+    ap.add_argument("--catalog2-note", help="one or two sentences for the legend (default: its registry note)")
+    ap.add_argument("--catalog-before", help="catalog the Moves layer starts from: a registry id or the registered file path "
+                    "(default: registry atlas_moves_from)")
+    ap.add_argument("--catalog-before-label", help="its name on the page (default: its registry label)")
     a = ap.parse_args(argv)
     print("building atlas data")
-    if a.catalog2:
-        CAT2.update(path=a.catalog2, label=a.catalog2_label or Path(a.catalog2).stem, note=a.catalog2_note or "")
-    if a.catalog_before:
-        CATB.update(path=a.catalog_before, label=a.catalog_before_label or Path(a.catalog_before).stem)
+    SEL.update(rel=a.catalog2, rel_label=a.catalog2_label, rel_note=a.catalog2_note, before=a.catalog_before,
+               before_label=a.catalog_before_label)
     ev, ev_meta = events()
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()
@@ -475,7 +651,7 @@ def main(argv=None):
     tm, tm_meta = tomo_model(a.model) if a.model else (None, None)
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],
-                     events=ev_meta, cat2=dict(label=CAT2["label"], note=CAT2["note"]), catb=dict(label=CATB["label"]) if CATB["path"] else None, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
+                     events=ev_meta, terrain=ter_meta, slab=sl_meta, faults=fa_meta, mc=mc_meta, tomo=tm_meta,
                      built=pd.Timestamp.now().strftime("%Y-%m-%d")),
         "events": blob(ev), "terrain": blob(ter), "slab": blob(sl), "faults": blob(fa) if fa else None,
         "mc": blob(mc) if mc else None, "tomo": blob(tm) if tm else None,

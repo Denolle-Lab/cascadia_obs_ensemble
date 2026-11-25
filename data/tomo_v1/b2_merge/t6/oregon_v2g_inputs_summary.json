@@ -1,0 +1,26 @@
+{
+ "region":"oregon_v2g",
+ "events":3390,
+ "stations":181,
+ "obs_stations":39,
+ "picks":122292,
+ "P":63039,
+ "S":59253,
+ "dt_pairs":13897,
+ "dt_data":300604,
+ "max_sta_per_event":88,
+ "air_dep_km":-2.318,
+ "center_lat":44.5,
+ "center_lon":-123.6,
+ "forward":{
+  "coords":"ellipsoid",
+  "mod":"nearest",
+  "station_corr":true,
+  "statics_file":"data\/tomo_v1\/obs_check\/obs_near_station_S_terms_p1_oregon.csv",
+  "p1_reference":"oregon_v2\/p1_reference"
+ },
+ "nx":56,
+ "ny":51,
+ "nz":23,
+ "npar":111132
+}

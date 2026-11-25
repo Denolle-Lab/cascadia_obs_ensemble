@@ -1,0 +1,130 @@
+{
+ "name": "b2_smooth_spike_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_smooth_spike_analyse.py",
+ "argv": [
+  "--cfg",
+  "res_tests",
+  "--inv",
+  "inv_d1000_s40"
+ ],
+ "utc": "2026-11-23T14:29:07.497295+00:00",
+ "git_commit": "a3b4b7ea85c98a283a548f1cebc1c8a96e836b8e",
+ "git_dirty": true,
+ "params_md5": "f7cf8c6f0d49ccf4ffd0516029c93930",
+ "params": {
+  "min_rec": 0.5,
+  "amp": 0.05,
+  "depths_km": [
+   -1,
+   3,
+   7,
+   12,
+   21,
+   34,
+   55
+  ],
+  "lon": [
+   -127.25,
+   -126.25,
+   -125.25,
+   -124.25,
+   -123.25
+  ],
+  "lat": [
+   39.7,
+   40.5,
+   41.3,
+   42.1,
+   42.9
+  ],
+  "region": "mendocino_gorda_v2",
+  "smooth": [
+   40.0,
+   40.0,
+   20.0
+  ],
+  "damp": 1000.0,
+  "cfg": "res_tests",
+  "inv": "inv_d1000_s40"
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zm001/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:49:21.064949+00:00",
+   "md5": "e2d288377da30c66d3e747886c4c2394"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp003/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:57.783090+00:00",
+   "md5": "8b328b41a1a98035100be2425ff8ec76"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp007/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:36.509238+00:00",
+   "md5": "ae7dc4667f5d991229af5f9a8952fe85"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp012/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:59.262079+00:00",
+   "md5": "f4e1776d5184dd7b06b362103b4a5214"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp021/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:24.521308+00:00",
+   "md5": "d80c9981c1262957cea46983a5c743a4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp034/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:35.523244+00:00",
+   "md5": "872e9fe2c3d7818c96746ff9ba3ff1be"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_zp055/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:49:54.936753+00:00",
+   "md5": "7af5bb2d7512d3433d9f51fd48a734b8"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/mendocino_gorda_v2/res_tests/spike_null/inv_d1000_s40/Output_Files/Vp_model.dat",
+   "size": 435022,
+   "mtime": "2026-11-23T06:48:34.813248+00:00",
+   "md5": "cf119c480238414cb5718abb9cbda12a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/spikes.csv",
+   "size": 24103,
+   "mtime": "2026-11-23T14:29:07.041802+00:00",
+   "md5": "5ff359c443fbadbbebdfeffe835d7aa6"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/by_depth.csv",
+   "size": 457,
+   "mtime": "2026-11-23T14:29:07.045802+00:00",
+   "md5": "c7ada88792640b0d9030207f61ff6425"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/layers.csv",
+   "size": 1020,
+   "mtime": "2026-11-23T14:29:07.087802+00:00",
+   "md5": "169d6ceca00ad3442aefd19ebddbb36f"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_v2/spike_inv_d1000_s40/psf.png",
+   "size": 131507,
+   "mtime": "2026-11-23T14:29:07.495799+00:00",
+   "md5": "5b8d1b205bb045fe09854e220e206c94"
+  }
+ ],
+ "counts": {
+  "spikes": 350
+ },
+ "notes": null
+}

@@ -82,14 +82,61 @@ earthquakes, never to build them. Table S4: `fault_surfaces_v0_literature.csv` a
 
 # Text S5. Building the catalog
 
-[TO ADAPT from the catalog draft, `paper/main.qmd`: data and stations; ensemble picking and pick
-completion (ver3 to ver6); association and location; quality control; known data issues; Route A
-magnitudes (window selection by phase and distance, inversion, ComCat anchoring, Mw above 4.5); offshore
-location check against bathymetry (Gorda Ridge axial valley).] Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
+(Adapted from the catalog draft, `paper/main.qmd`, Data and Methods.)
+
+**Data.** Continuous data from 2010 to 2016 were retrieved with ROVER into a day-file archive read through
+an indexed client (pnwstore); the `NC` and `BK` networks were requested from the NCEDC FDSN service.
+Picks of catalog v4.0 come from 696 stations of 24 networks (`7A`, `7D`, `BK`, `C8`, `CC`, `CN`, `GS`,
+`NC`, `NV`, `OO`, `PB`, `TA`, `UO`, `UW`, `X4`, `X9`, `XD`, `XG`, `XU`, `YG`, `YH`, `YW`, `Z5`, `ZZ`);
+the 2016 repicks of v4.1 add 105 land stations (71 `NC`, 13 `NP`, 7 `BK`, 6 `UW`, 4 `CE`, 2 `YK`, 1 `UO`, 1 `PB`),
+among them the Cascadia Initiative ocean-bottom stations [@Stone2018] and the cabled stations of the
+Ocean Observatories Initiative at Axial Seamount.
+
+**Picking.** ELEP [@Yuan2023] combines five EQTransformer models [@Mousavi2020] distributed by
+SeisBench [@Woollam2022] (original, ETHZ, INSTANCE, SCEDC, STEAD) by second-order semblance over 0.5 s,
+on 60 s windows stepped by 30 s, after a 4–15 Hz band-pass; a pick is the semblance maximum of each
+segment above 0.05. Two region passes (2011–2015, 123–127°W; 2010–2015, 122–129°W) produced the ver3
+table (39.6 million picks). Three fills completed it: ver4 adds region-run station-days left out of ver3
+(9.9 million picks); ver5 adds ocean-bottom station-days without picks, including the Axial cabled
+stations (11.4 million); ver6 adds the land strip 122–123°W (12.7 million), for 73.6 million picks on
+509,249 station-days. Every pick keeps its identifier across versions.
+
+**Association and location.** GENIE [@McBrearty2023], trained for 38–51°N, 119–132°W on synthetic
+events in a 3D model, associated the ver6 picks day by day on the stations available each day; events
+with at least five stations were kept and located, then relocated with GraphDD [@McBrearty2025] on
+catalog and cross-correlation differential times. Catalog v4 (I. McBrearty) has 172,340 events and
+2,503,189 arrivals; v4.1, used here, has 172,342 events and 2,503,627 arrivals after the 2016 repick
+below (`data/catalog_v4/FIXES.md`). Quality metrics are the numbers of P and S picks, stations, the azimuthal gap and the
+RMS residual; the "QC" subset used for fault surfaces requires at least 4 P and 4 S picks.
+
+**Magnitudes (Route A).** Wood–Anderson amplitudes are measured once per station-day for every pick, in
+windows that grow with distance after association (P: up to 1 + 0.03r s, S: up to 2 + 0.06r s); 99.6% of
+v4 arrivals have one. Station magnitudes with the Hutton–Boore distance term are inverted for event and
+station terms (separate for each deployment epoch) within 150 km, anchored to 3,416 ComCat local
+magnitudes (scatter 0.21), and replaced by regional moment magnitudes above M 4.5. 130,767 events have a
+magnitude.
+
+**Known data issues.** Ocean-bottom records carry ship noise, short-duration events, T-phases and high
+microseism noise on the shelf [@Hilmo2020]; fragmented station-days produce picks at every data join
+(1,846 station-days removed in ver6, 6,073 flagged in ver5); `NC` and `BK` picks are missing in 2016 and
+parts of 2010–2011 (Text S7). Depth limitations: see below.
+
+**Offshore location check.** On the Gorda Ridge, catalog epicenters fall on the axial valley, while ComCat
+epicenters of the same events lie 10–20 km east.
+
+Large events missed: 15 of 61 ComCat M ≥ 5 (2010–2016) have no catalog event within 30 s and 80 km,
 including the 8 December 2016 Mw 6.6 on the Mendocino transform (10 at the northern edge, 3 offshore in
 2016 without ocean-bottom stations, 1 in the 2016 northern California pick gap, 1 on the Blanco in 2011;
-script in the figure notes). [TO ASK Ian: association of the 2016 Mw 6.6 (event 172113 at 14:51:18, 4 P
-and 1 S, placed near Mount St. Helens).] Depth limitations: 23.5% of events above
+script in the figure notes). Event 172113 (14:51:18, 4 P and 1 S, near Mount St. Helens) is the Mw 6.6 mis-associated: its P picks
+are the Pn arrivals at 708–797 km, within 2 s of iasp91; it is removed in v4.1. We repicked the Mw 6.6, its
+M 4.7 aftershock and the January 2016 Gorda pair on 30-minute windows of all stations within 4° (279 for
+the Mw 6.6, 193 of them `NC`/`BK`) with the same ELEP ensemble, kept the picks near the predicted
+arrivals from the ComCat origins, and located them with NonLinLoc in the 3D model of the relocation and
+in iasp91. The picks are clean to 400 km (Mw 6.6: 146 P, 54 S), but every station is east of the events
+(nearest 156 km, gap 255–310°): depths go to the bottom of every search range and epicenters move 7–41 km
+west of ComCat. Catalog v4.1 adds the three missing events (IDs 900001–900003) with the ComCat hypocenter and magnitude and
+our picks, and adds 160 repicks to the M 4.7 aftershock (event 172114), which keeps its v4 hypocenter
+(`data/catalog_v4/fixes/m66_2016/`, `utils/fix_catalog_v4.py`). Depth limitations: 23.5% of events above
 the surface with depths read below sea level, 16.2% below the local surface; 3D relocation in progress.
 
 # Text S6. Clustering: validation and sensitivity
@@ -122,6 +169,33 @@ clustering is at or above all three methods everywhere except the Blanco b-value
 against 2.45). At Axial the frequency–magnitude distribution has two slopes, so the pooled goodness-of-fit
 value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4–1.0).
 
+# Text S8. Location versions and their differences
+
+(Code: `workflow/11_compare/compare_catalogs.py` and `fig_compare.py`; registry
+`workflow/11_compare/catalogs.yaml`; outputs and `SUMMARY.md` in `data/catalog_compare/`.)
+Each location run is entered once in the registry with its velocity model, method, parent catalog and
+status, and is read into one table layout. Events are linked to the catalog v4 event IDs, directly for
+runs that relocate v4 events and by origin time (≤ 3 s, ≤ 50 km) for catalog v3. The same measures are
+computed for every version, overall and in eleven regions: depth percentiles (km below sea level), the
+share of events above the topography or bathymetry (GMT earth_relief, 1 arc-minute), the shift from
+catalog v4.1 for the same events, and the depth and epicenter differences with ComCat events matched to
+v4.1 (16,584 events, ≤ 3 s and ≤ 50 km). "Near" events have a station with a pick closer than
+max(depth, 5 km). The spread of events about each fault surface (RMS distance to the best-fitting plane
+of its members) is also computed, but it favors v4, on which the surfaces were fitted, and it is lower
+for double-difference catalogs than for single-event locations by construction.
+
+Current versions (Table S7, Fig. S8): v3 (Zenodo record; ver3 picks, GraphDD), v4.0 and v4.1 (GENIE
+and GraphDD on ver6 picks in 1D models; v4.1 adds the 2016 repick), and the NonLinLoc relocation of the
+v4 events in a 3D starting model without (iteration 0) and with (iteration 1) static station terms.
+Iteration 1 locates 157,267 events; the 15,073 others keep their v4 location (tier U). Station terms
+change locations little (median 0.8 km horizontally, 0.1 km in depth). Against v4.1, iteration 1 moves
+epicenters by a median of 2.4 km and depths by +2.7 km (10–90%: −3.7 to +10.6 km). Against ComCat, near
+events go from −1.0 ± 2.4 km (v4.1) to +0.4 ± 2.4 km (median ± MAD); all matched events from
+−0.9 ± 3.8 km to +1.2 ± 4.2 km, the deep bias of poorly constrained events. By region, the 3D locations
+remove the shallow bias of v4 at Axial (median 0.3 to 3.0 km, 71% to 0% above the seafloor) and on the
+Juan de Fuca ridges, and push Gorda (+3.7 km against ComCat, near events) and Mendocino (+2.8 km)
+deeper. Each new run (tomography relocations, GrowClust) is added to the registry and to this text.
+
 # Supplementary tables (files)
 
 - Table S1. Events and share on a fault, per region.
@@ -133,3 +207,7 @@ value is unstable (σ 0.94); use maximum curvature (0.7) or the node values (0.4
   rate ratios (`data/catalog_v4/mc_maps/mc_regional.csv`); grids in
   `mc_grid.csv`, `mc_grid_<period>.csv` and NetCDF. Figs. S3–S7: three-method maps, bootstrap sigma and b,
   periods, regional frequency–magnitude distributions, QC variant (`data/catalog_v4/mc_maps/fig1–fig5`).
+- Table S7. Location versions compared: whole catalog and per region (`data/catalog_compare/summary.csv`,
+  `anss.csv`, `pairs.csv`, `faults_summary.csv`; readable tables in `SUMMARY.md`). Fig. S8: depth, depth
+  against ComCat and events above the surface by region and version, and the change from v4.1 to the
+  latest version (`figures/figS_catalog_compare`).

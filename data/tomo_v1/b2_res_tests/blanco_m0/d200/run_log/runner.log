@@ -1,0 +1,41 @@
+17:35:37 start blanco_m0/res_tests/spike_null inv_d200_s20
+17:35:39 start blanco_m0/res_tests/spike_zm001 inv_d200_s20
+17:35:41 start blanco_m0/res_tests/spike_zp003 inv_d200_s20
+17:35:43 start blanco_m0/res_tests/spike_zp007 inv_d200_s20
+17:35:45 start blanco_m0/res_tests/spike_zp012 inv_d200_s20
+17:35:47 start blanco_m0/res_tests/spike_zp021 inv_d200_s20
+17:35:49 start blanco_m0/res_tests/spike_zp034 inv_d200_s20
+17:35:51 start blanco_m0/res_tests/spike_zp055 inv_d200_s20
+17:46:08 done rc=0 blanco_m0/res_tests/spike_zm001 inv_d200_s20
+17:46:13 done rc=0 blanco_m0/res_tests/spike_zp003 inv_d200_s20
+17:46:13 done rc=0 blanco_m0/res_tests/spike_null inv_d200_s20
+17:46:20 done rc=0 blanco_m0/res_tests/spike_zp034 inv_d200_s20
+17:46:23 start blanco_m0/res_tests/chk_L060_p0_noise inv_d200_s20
+17:46:25 start blanco_m0/res_tests/chk_L060_p0_clean inv_d200_s20
+17:46:27 start blanco_m0/res_tests/chk_L060_p1_noise inv_d200_s20
+17:46:29 start blanco_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s20
+17:46:35 done rc=0 blanco_m0/res_tests/spike_zp007 inv_d200_s20
+17:46:41 done rc=0 blanco_m0/res_tests/spike_zp021 inv_d200_s20
+17:46:46 start blanco_m0/res_tests/chk_L040_p0_noise inv_d200_s20
+17:46:48 start blanco_m0/res_tests/chk_L040_p0_clean inv_d200_s20
+17:46:49 done rc=0 blanco_m0/res_tests/spike_zp055 inv_d200_s20
+17:46:50 start blanco_m0/res_tests/chk_L040_p1_noise inv_d200_s20
+17:46:50 done rc=0 blanco_m0/res_tests/spike_zp012 inv_d200_s20
+17:46:52 start blanco_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s20
+17:58:07 done rc=0 blanco_m0/res_tests/chk_L060_p0_clean inv_d200_s20
+17:58:09 start blanco_m0/res_tests/chk_L100_p0_noise inv_d200_s20
+17:59:14 done rc=0 blanco_m0/res_tests/chk_L040_p0_noise inv_d200_s20
+17:59:15 done rc=0 blanco_m0/res_tests/chk_L060_p1_noise inv_d200_s20
+17:59:15 done rc=0 blanco_m0/res_tests/chk_L060_p0_noise inv_d200_s20
+17:59:26 start blanco_m0/res_tests/chk_L100_p0_clean inv_d200_s20
+17:59:28 start blanco_m0/res_tests/chk_L100_p1_noise inv_d200_s20
+17:59:30 start blanco_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s20
+17:59:37 done rc=0 blanco_m0/res_tests/chk_L040_p0_clean inv_d200_s20
+18:00:18 done rc=0 blanco_m0/res_tests/chk_L040_p1_noise inv_d200_s20
+18:00:52 done rc=0 blanco_m0/res_tests/chk_L060_p0_noise_ploc inv_d200_s20
+18:01:32 done rc=0 blanco_m0/res_tests/chk_L040_p0_noise_ploc inv_d200_s20
+18:10:10 done rc=0 blanco_m0/res_tests/chk_L100_p0_noise inv_d200_s20
+18:10:38 done rc=0 blanco_m0/res_tests/chk_L100_p0_clean inv_d200_s20
+18:11:36 done rc=0 blanco_m0/res_tests/chk_L100_p1_noise inv_d200_s20
+18:13:35 done rc=0 blanco_m0/res_tests/chk_L100_p0_noise_ploc inv_d200_s20
+ALL DONE 18:13:35

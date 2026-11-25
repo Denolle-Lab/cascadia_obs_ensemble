@@ -1,0 +1,201 @@
+{
+ "name": "b2_t6_joint",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_t6_joint.py",
+ "argv": [],
+ "utc": "2026-11-23T23:26:27.418174+00:00",
+ "git_commit": "bc73862d193efa3e6d4e837ea05142478004303b",
+ "git_dirty": false,
+ "params_md5": "b87ce46555ee7b78ac20502412e0e504",
+ "params": {
+  "merge": {
+   "grid": {
+    "lon_step": 0.125,
+    "lat_step": 0.1
+   },
+   "max_depth_km": 55,
+   "mask_default_damp": 1000,
+   "pairs": [
+    [
+     "blanco_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d300_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "blanco_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "mendocino_gorda_c_v2",
+     "oregon_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d1000_s20",
+       "d300_s20"
+      ]
+     ]
+    ],
+    [
+     "blanco_v2",
+     "ridges_north_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d200_s20"
+      ],
+      [
+       "d1000_s20",
+       "d200_s20"
+      ]
+     ]
+    ],
+    [
+     "oregon_v2",
+     "washington_v2",
+     [
+      [
+       "d1000_s20",
+       "d1000_s20"
+      ],
+      [
+       "d500_s20",
+       "d500_s20"
+      ],
+      [
+       "d300_s20",
+       "d1000_s20"
+      ]
+     ]
+    ]
+   ],
+   "t6": {
+    "joint": [
+     "blanco_oregon_v2",
+     "d200_s20"
+    ],
+    "tile_a": [
+     "blanco_v2",
+     "d200_s20"
+    ],
+    "tile_b": [
+     "oregon_v2g",
+     "d200_s20"
+    ],
+    "mask_tiles": [
+     "blanco_v2",
+     "oregon_v2"
+    ],
+    "taper_km": 15,
+    "floor": 0.1,
+    "yardsticks": {
+     "damp200_vs_300_A": [
+      "blanco_v2",
+      "d200_s20",
+      "blanco_v2",
+      "d300_s20"
+     ],
+     "damp200_vs_300_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2",
+      "d300_s20"
+     ],
+     "weightscale_B": [
+      "oregon_v2",
+      "d200_s20",
+      "oregon_v2g",
+      "d200_s20"
+     ]
+    }
+   }
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_oregon_v2/d200_s20/Output_Files/model_geo.npz",
+   "size": 332513,
+   "mtime": "2026-11-23T23:26:24.761715+00:00",
+   "md5": "3d32c9812e8b11c62717ac7989546970"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/blanco_v2/d200_s20/Output_Files/model_geo.npz",
+   "size": 113443,
+   "mtime": "2026-11-23T17:21:03.112968+00:00",
+   "md5": "3631b8275d0a3dcaa9d03e98d6791fe4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/oregon_v2g/d200_s20/Output_Files/model_geo.npz",
+   "size": 195435,
+   "mtime": "2026-11-23T22:58:37.628263+00:00",
+   "md5": "dda0317c98959a7daa7ea2cbd927fa76"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/blanco_v2/d200/resolution_mask.npz",
+   "size": 3289,
+   "mtime": "2026-11-23T18:26:42.864086+00:00",
+   "md5": "4d983d63d34a927d9fe1f4b4a7a72cc7"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/d200/resolution_mask.npz",
+   "size": 4426,
+   "mtime": "2026-11-23T18:39:55.595795+00:00",
+   "md5": "74d16708e00b870c938d8e5f5c1aa925"
+  }
+ ],
+ "outputs": [],
+ "counts": {
+  "grid_points": 43197,
+  "events": 7720
+ },
+ "notes": null
+}

@@ -1,0 +1,84 @@
+{
+ "tile_a": "mendocino_gorda_c_v2",
+ "tag_a": "d1000_s20",
+ "tile_b": "oregon_v2",
+ "tag_b": "d1000_s20",
+ "damp_a": 1000.0,
+ "damp_b": 1000.0,
+ "overlap_box": [
+  42.6,
+  43.1,
+  -126.2,
+  -122.5
+ ],
+ "grid_n": [
+  30,
+  6,
+  17
+ ],
+ "mask_a": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/mendocino_gorda_c_v2/resolution_mask.npz",
+ "mask_b": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/oregon_v2/resolution_mask.npz",
+ "pooled_1_34km": {
+  "P_one": {
+   "start_absmax": 0.003743325062355307,
+   "start_absmed": 0.00015760339738724038,
+   "n": 6.0,
+   "rms_a": 0.070434173160371,
+   "rms_b": 0.042189953018423924,
+   "diff_mean": -0.037839325346829156,
+   "diff_med": -0.04323773320612312,
+   "diff_rstd": 0.05354378205645199,
+   "diff_rms": 0.06330764225280253,
+   "corr": 0.3042178076555143,
+   "amp_b_over_a": 0.2754608274700176
+  },
+  "P_neither": {
+   "start_absmax": 0.04034204253970042,
+   "start_absmed": 0.00048037004150841556,
+   "n": 2154.0,
+   "rms_a": 0.02887418548197211,
+   "rms_b": 0.02418596375570502,
+   "diff_mean": -0.0030428505000905065,
+   "diff_med": 0.0,
+   "diff_rstd": 0.014728380682548134,
+   "diff_rms": 0.031187746460452442,
+   "corr": 0.2947511109381783,
+   "amp_b_over_a": 0.2674786838030705
+  },
+  "S_neither": {
+   "start_absmax": 0.04034204253970042,
+   "start_absmed": 0.00046945535259101945,
+   "n": 2160.0,
+   "rms_a": 0.013566227135646461,
+   "rms_b": 0.014376367914162923,
+   "diff_mean": -0.0017739395685550917,
+   "diff_med": -3.5236513335146213e-05,
+   "diff_rstd": 0.005597477329459008,
+   "diff_rms": 0.01745621729789623,
+   "corr": 0.22208709689481923,
+   "amp_b_over_a": 0.23364967877350717
+  }
+ },
+ "vpvs": {
+  "n_both_PS": 0
+ },
+ "events": {
+  "n_events": 32,
+  "n_events_overlap_box": 32,
+  "dh_ab_km_med": 0.36534334514325045,
+  "dh_ab_km_p90": 0.8323143656497736,
+  "dh_a_km_med": 0.4710036508677664,
+  "dh_a_km_p90": 1.1974014723317794,
+  "dh_b_km_med": 0.3397232841951296,
+  "dh_b_km_p90": 0.6873289008070643,
+  "dz_ab_km_med": 0.015999999999998127,
+  "abs_dz_ab_km_med": 0.5819999999999996,
+  "abs_dz_ab_km_p90": 2.0036000000000005,
+  "dz_a_km_med": -0.12150000000000094,
+  "abs_dz_a_km_med": 0.57805,
+  "abs_dz_a_km_p90": 2.3794599999999995,
+  "dz_b_km_med": 0.05115000000000003,
+  "abs_dz_b_km_med": 0.4109499999999997,
+  "abs_dz_b_km_p90": 1.9907899999999992
+ }
+}

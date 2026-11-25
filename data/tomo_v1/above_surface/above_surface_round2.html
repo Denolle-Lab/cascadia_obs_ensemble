@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upward Pull and Station Reach</title>
+<style>
+:root { --bg: #fbfaf7; --fg: #1d1c1a; --muted: #5d5b56; --rule: #dedbd3; --accent: #2a78d6; --warn: #b3412a; --ok: #2f7d4a; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecebe6; --muted: #a9a69d; --rule: #3a3936; --accent: #7fb2ee; --warn: #ec8b72; --ok: #7cc795; } }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 Georgia, "Times New Roman", serif; margin: 0; }
+main { max-width: 880px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 36px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+h3 { font-size: 17px; margin: 22px 0 6px; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font: 14px/1.4 system-ui, sans-serif; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+code { font: 13px ui-monospace, Menlo, monospace; background: color-mix(in srgb, var(--rule) 45%, transparent); padding: 1px 4px; border-radius: 3px; }
+.tag { font: 12px system-ui, sans-serif; padding: 1px 6px; border-radius: 9px; border: 1px solid currentColor; white-space: nowrap; }
+.ok { color: var(--ok); } .open { color: var(--warn); }
+.box { border-left: 3px solid var(--accent); padding: 4px 14px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>The upward pull and the station reach</h1>
+<p class="sub">Root causes, round 2 · 2026-11-24 · two investigations, each checked by an independent verifier who reran
+the tests on new samples · round 1: <code>above_surface_round1.html</code></p>
+
+<p>Round 1 fixed NLLoc's coarse topography lookup (D-B056): the v0.3.1 relocation has no located event above the surface.
+It left two questions. Why does the fit pull about 5 % of the events up against the surface? And why do far stations drop
+out of the locations? Round 2 answers most of both. Neither fix is ready to apply as it stands.</p>
+
+<table>
+<tr><th>Finding</th><th>Events</th><th>Status</th></tr>
+<tr><td>Travel-time-dependent model error (<code>LOCGAU2</code>) in the misfit acts as a pull toward short travel times</td><td>low-resolution events; 7 of 50 above the surface with perfect data</td><td><span class="tag open">test next</span></td></tr>
+<tr><td>S arrivals late relative to P, growing with distance</td><td>pulled events, median +0.49 s</td><td><span class="tag open">origin open</span></td></tr>
+<tr><td>Events held at the floor (depth from the floor, not the data)</td><td class="n">8,816–9,481 (5.6–6.0 %)</td><td><span class="tag ok">flag ready</span></td></tr>
+<tr><td>Finer bathymetry (GMRT) is lower than earth_relief under floor-held events</td><td class="n">725 in v5.0</td><td><span class="tag open">PI choice</span></td></tr>
+<tr><td>Track A model: water or air below the surface; velocities sampled half a cell off</td><td class="n">6,108 in Track A</td><td>B4 unaffected</td></tr>
+<tr><td>Station reach: tile box drops far stations</td><td class="n">25,054 events, 169,011 arrivals</td><td><span class="tag open">fix works; grids need a correction</span></td></tr>
+<tr><td>Five-pick events skipped (6-phase minimum)</td><td class="n">12,108</td><td><span class="tag open">PI choice</span></td></tr>
+<tr><td>80 km floor of model, grids and search</td><td class="n">~100</td><td><span class="tag open">PI choice</span></td></tr>
+</table>
+
+<h2>1. The upward pull</h2>
+<p>The travel-time grids are not the problem. A trilinear lookup reproduces NLLoc's predicted times to 0.3 ms, and
+synthetic arrivals computed in the same grids are located back within 0.1–0.2 km for well-recorded events. Station
+placement (most stations sit about 50 m below the surface, a consistency error but not a cause), station terms, the
+near-station correction, the S-pick quality rule, rock or water above the surface, and a slow top kilometre for S were
+each tested one at a time and none removes the pull.</p>
+<h3>The misfit setting</h3>
+<p>Our template uses <code>LOCGAU2 0.02 0.05 2.0</code>: the modelling error grows with the predicted travel time (2 %,
+between 0.05 and 2 s). Inside the EDT misfit, NLLoc weights each pair of arrivals by 1/√(s<sub>i</sub>² + s<sub>j</sub>²)
+and raises the sum to the number of arrivals, so shorter predicted times get larger weights. For events with poor depth
+resolution this works like a prior toward shallow positions close to the stations. With perfect synthetic data placed
+0.5 km below the surface, 7 of 50 such events end 0.25 to 2.6 km above it; without <code>LOCGAU2</code>, 1 of 50. With a
+200,000-node search the same 7 events still end above, so the search is not the cause. On real data, removing
+<code>LOCGAU2</code> lets 11 of 50 floor-held events leave the floor, and 8 of them move to 17–55 km depth with an RMS of
+7–91 ms instead of 148–389 ms. Those deep solutions are probably not right at the ridges either. The setting changes which
+depth the likelihood prefers when the data cannot choose, and that choice should be made on purpose.</p>
+<h3>Late S arrivals</h3>
+<p>The pulled events have S arrivals late relative to P, by a median 0.49 s in B4 (Track A 1.1 s). A shared delay of 0.15
+to 0.3 s is enough to lift a shallow source to the surface, even a well-resolved one. The delay is not uniform: it grows
+with distance (0.29 s within 20 km, 0.5–0.6 s beyond), and in 16 of 63 events the S residuals have both signs. This points
+to wrong S picks or associations, wrong epicentres on one-sided networks, or a Vp/Vs bias of 2–3 %, rather than one
+delay per event. A waveform check of a few events would tell picks from model.</p>
+<h3>Which events, and a flag</h3>
+<p>In v0.3.1 iter0, 9,481 events (6.0 %) lie within one search cell of the D-B056 floor. Their depth uncertainty is
+large (σz 9.3 km, the expectation depth 13 km below the best point): the floor, not the data, sets their depth. They are
+44 % of JdF ridge and Endeavour events, 7 % of Blanco and 6 % of Axial. A <code>floor_limited</code> flag can be computed
+from the production output with no rerun. It must test against the floor NLLoc actually uses, and the pile-up extends to
+about 1.5 search cells.</p>
+<p>The atlas showed a related point: under 725 of these events the GMRT multibeam seafloor is lower than earth_relief 01m
+(median 41 m, up to 0.5 km), so with the better bathymetry they sit in the water. The floor and the test should use the
+best bathymetry available.</p>
+<h3>Track A</h3>
+<p><code>a1_build_model.py</code> makes a node solid only when the node itself is below the surface, while Grid2Time applies
+each node to the cell below it, so up to 1 km of water or air lies below the true surface; 6,108 Track A events are
+located inside it, invisible to the above-surface test. It also samples velocities at cell corners, which shifts the whole
+Track A structure by half a cell. B4 samples cell centres and is not affected. Track A only needs fixing if it is used
+again.</p>
+
+<h2>2. Station reach, the 80 km floor, five-pick events</h2>
+<p><b>Wide fallback grids.</b> A second, coarse (2 km) travel-time grid per station and phase covering the whole model,
+listed after the fine grid, lets NLLoc use every arrival. On 455 test events, dropped arrivals fell from 6,043 to 0 and
+located events rose from 249 to 413, including 107 of the 146 M ≥ 4 events that had kept v4 positions; 134 of 149
+control events came out identical. Before production: the wide grids disagree with the fine ones by −0.36 to +0.62 s per
+station-phase (91 of 222 beyond ±0.1 s), probably because their near-source correction differs, and station terms would
+mix the two; chunks with many far arrivals run 3 to 14 times longer (+7–12 % overall); the run must count every dropped
+arrival, not only logged rejections; and reruns need new run names. Newly located events seen only by distant stations get
+poor depths (median difference from ANSS 21–24 km instead of 11; Blanco M5–6 at 59–77 km) and need their own flag.</p>
+<p><b>Five-pick events.</b> 12,108 events have exactly 5 picks, the v4 minimum. With a 5-phase minimum, 12,044 locate, none
+above the surface, nearly all tier D (one degree of freedom; σz 13 km, horizontal error 27 km).</p>
+<p><b>80 km floor.</b> A deep pass with wide grids extended to 121 km located 16 of 17 well-recorded intraslab events at
+78–107 km and left 10 control events within 0.35 km. It needs velocities below 80 km outside the tomography box, which
+the models do not have.</p>
+<p><b>Tier U in the catalog.</b> Patches stop the catalog builders from copying v4 hypocentres. They must be merged with
+<code>catalog_version.py</code> for v5.1, since v5.0 keeps v4 hypocentres by your choice (D-B059).</p>
+
+<h2>3. Recommended next steps</h2>
+<div class="box">
+<ol>
+<li>Test the misfit: rerun the floor-held sample and controls with <code>LOCGAU2</code> off and with a constant model
+error, and score the depths against Hirao (Mount St Helens), Lange (Blanco) and Axial.</li>
+<li>Check the S picks of a few pulled events on the waveforms.</li>
+<li>Correct the wide grids so they agree with the fine grids, build them for v0.3.1, add the five-pick and bathymetry
+choices, and rerun iter0/iter1 under new run names for v5.1.</li>
+<li>Publish <code>floor_limited</code> and a far-stations-only flag in v5.1; drop v4 hypocentres from tier U.</li>
+</ol>
+</div>
+
+<h2>Evidence</h2>
+<p>Results, scripts and logs: <code>/wd1/mdenolle_data/tomo_v1/above_surface/round2_2026-11-24/</code>
+(<code>results_round2.json</code>). Test grids (131 GB, to delete after review):
+<code>/wd1/mdenolle_data/tomo_v1/above_surface/round2_scratch/</code>.</p>
+</main>
+</body>
+</html>

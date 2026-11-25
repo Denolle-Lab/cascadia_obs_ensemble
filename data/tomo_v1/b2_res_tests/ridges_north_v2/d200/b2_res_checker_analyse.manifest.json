@@ -1,0 +1,331 @@
+{
+ "name": "b2_res_checker_analyse",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_res_checker.py",
+ "argv": [
+  "analyse"
+ ],
+ "utc": "2026-11-23T15:38:36.959401+00:00",
+ "git_commit": "450104c58b733b51a17c2d179a2bcfe7e2203f45",
+ "git_dirty": false,
+ "params_md5": "f0981d0cef332098450ffed517172425",
+ "params": {
+  "amp": 0.08,
+  "cell_km": [
+   40,
+   60,
+   100
+  ],
+  "bands_km": [
+   -10,
+   12,
+   25,
+   40,
+   65
+  ],
+  "phase_shift": 0.5,
+  "noise_seed": 20261122,
+  "loc_h_from_68": 1.515,
+  "window_cells": 1.5,
+  "resolved": {
+   "corr": 0.7,
+   "amp": 0.5
+  },
+  "mask_smooth": 20
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:32:10.220942+00:00",
+   "md5": "0e5765547b166764124cea93acd0863a"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:25:44.868028+00:00",
+   "md5": "b9bc29060505a6873457319d8534597f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:37:29.254253+00:00",
+   "md5": "6da68179c492ce00c0de794362d9ec59"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:32:45.498752+00:00",
+   "md5": "83577fdb3798170a1e67b5996f33b08b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:24:11.964525+00:00",
+   "md5": "5edc0a25afe51e2df62f46f68783a80c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:37:40.747192+00:00",
+   "md5": "f869b0b62adcf43483c6ae6924ee3640"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:27:38.224409+00:00",
+   "md5": "7f78b33bf185121bae0cc9a9f9441c13"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:26:14.346867+00:00",
+   "md5": "a50b428fb1e09c6f60f1dae520d2cb03"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L040_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:31:36.428125+00:00",
+   "md5": "f162d7f6e6ec6da07f8e50737aa748cc"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:23:06.660876+00:00",
+   "md5": "159bbe4dd25306e46c2fc31634505e11"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:36:46.407475+00:00",
+   "md5": "621f6bc01461bc4bd64076f4d21c0b74"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:31:33.587140+00:00",
+   "md5": "08a4affd26a190ed239d3bc5b833e719"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:23:42.034683+00:00",
+   "md5": "27dd86dd630ba5d09b7ad7be21abeb66"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:36:56.380424+00:00",
+   "md5": "006f439ecf51986550555da53fa609c7"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:24:56.835283+00:00",
+   "md5": "a706628283754b7ef5b54a353f4f010d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:23:45.592664+00:00",
+   "md5": "6abb432ae8b60031385a7fae47663b8c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L060_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:33:19.522571+00:00",
+   "md5": "bdc37b5d17c2dca99bba85235f9e33aa"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:26:40.935722+00:00",
+   "md5": "9225f746a73196485d7a218646a130f3"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:38:28.064939+00:00",
+   "md5": "b25e630c0628c59d1fd0d2221a8463fd"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_clean/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s10/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:32:55.173701+00:00",
+   "md5": "76eb513a6203d0a1b3c4f8044b5b1002"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s10.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:26:16.274857+00:00",
+   "md5": "a7242b7bb1586288ce2eb91974d498e3"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s40/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:38:24.361959+00:00",
+   "md5": "f2babd5237af0d05b6709be089a24076"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise/inv_d200_s40.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise_ploc/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:28:10.487232+00:00",
+   "md5": "846ebbb4f64c94fcc92f511f2cb57145"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p0_noise_ploc/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p1_noise/inv_d200_s20/Output_Files/Vp_model.dat",
+   "size": 557037,
+   "mtime": "2026-11-23T15:27:11.009557+00:00",
+   "md5": "80d8902d95b8d58db2901e1186ff5582"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/ridges_north_v2/res_tests/chk_L100_p1_noise/inv_d200_s20.log/Output_Files/Vp_model.dat",
+   "exists": false
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/checker_by_depth.csv",
+   "size": 64683,
+   "mtime": "2026-11-23T15:38:30.296927+00:00",
+   "md5": "4bb0060f1aecf609a5060ab9309fd2c8"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/checker_maps_p_s20.png",
+   "size": 648000,
+   "mtime": "2026-11-23T15:38:32.647915+00:00",
+   "md5": "ab5eed7bcfd8f6ff3970a1b8fe2dc157"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/checker_maps_s_s20.png",
+   "size": 682846,
+   "mtime": "2026-11-23T15:38:34.977902+00:00",
+   "md5": "f464746816dae752db8859885d93470b"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/coast_i.txt",
+   "size": 70930,
+   "mtime": "2026-11-23T15:38:30.623925+00:00",
+   "md5": "af7739358e8250172028f261a9490580"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/resolution_mask.npz",
+   "size": 3433,
+   "mtime": "2026-11-23T15:38:30.301927+00:00",
+   "md5": "a2a8401388ff36a9b3d717f6be7c14a8"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/resolution_mask_maps_s20.png",
+   "size": 77720,
+   "mtime": "2026-11-23T15:38:36.260895+00:00",
+   "md5": "e635ec763a2be6842f6d05ce07a0cb29"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/resolution_sections_s20.png",
+   "size": 212263,
+   "mtime": "2026-11-23T15:38:36.956892+00:00",
+   "md5": "89faecccfa3932c774770b33603e71bd"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/b2_res_tests/ridges_north_v2/d200/summary_tables.md",
+   "size": 5759,
+   "mtime": "2026-11-23T15:38:30.310927+00:00",
+   "md5": "74e537554a239177a90b2b835f3cd71a"
+  }
+ ],
+ "counts": {
+  "runs": 24
+ },
+ "notes": null
+}

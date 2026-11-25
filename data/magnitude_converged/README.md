@@ -84,8 +84,8 @@ rule are unchanged.
 - Tensor Mw 3-4.5, near events, offshore labels, ML - Mw (median, 95% bootstrap interval): v4.1 +0.11
   [-0.05, +0.20] -> -0.07 [-0.21, +0.02]; v5.1 +0.26 -> -0.02. Inconclusive: 43 events, overlapping
   intervals, and Gorda gets worse (-0.03 -> -0.22). The ComCat ML anchors are the stronger test.
-- "Onshore +0.01" holds north of 42 N only. Northern California onshore near events (3,708) drop by
-  -0.19 with the NC network level, and the onshore Mc box b goes from 0.92 to 1.01.
+- "Onshore +0.01" holds north of 42 N only. Northern California onshore near events (4,527; 3,708 of them
+  "Other onshore") drop by -0.18 to -0.19 with the NC network level, and the onshore Mc box b goes from 0.92 to 1.01.
 - Internal check: the Blanco near-event median ML was 2.23 / 2.07 / 2.12 / 1.61 in 2012 / 2013 / 2014 /
   2015 (stored) and is 1.55 / 1.39 / 1.62 / 1.56 (converged). The stored deployment levels of 2012-2014
   were 0.5-0.7 too high relative to 2015.

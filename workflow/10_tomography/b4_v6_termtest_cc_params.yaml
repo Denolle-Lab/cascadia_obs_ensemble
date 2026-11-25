@@ -1,0 +1,23 @@
+# CC differential times for the v6.0 station-term test sets (b4_v6_termtest_cc.py): the tested D-B040/D-B078
+# parameters of b5_cc_params.yaml (tomo/cc-dt 2d033ec6), unchanged, plus the three test sets. Band 3-15 Hz for all
+# three, the common band (as D-B093 cc_dt_all uses for every block except Mount St Helens).
+common:
+  band: [3.0, 15.0]
+  p_pre: 0.2
+  p_post: 0.6
+  sp_margin: 0.1
+  s_pre: 0.3
+  s_post: 1.0
+  p_maxlag: 0.4
+  s_maxlag: 0.4
+  lag_sp_frac: 0.3
+  min_lag: 0.05
+  min_win: 0.3
+  taper: 1.0
+sets:
+  puget: {band: [3.0, 15.0]}
+  mtj: {band: [3.0, 15.0]}
+  blancow: {band: [3.0, 15.0]}
+threshold:
+  cc_min: 0.7
+  margin_min: 0.1

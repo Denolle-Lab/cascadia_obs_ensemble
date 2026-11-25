@@ -1,0 +1,217 @@
+{
+ "M0": {
+  "new": "margin_m0_v3",
+  "old": "margin_m0_v2",
+  "event.dat": "identical",
+  "station.dat": "identical",
+  "station_codes.csv": "identical",
+  "events.csv": "identical",
+  "forward.json": "identical",
+  "picks_used": {
+   "rows": 229308,
+   "retimed": 21369,
+   "tt_changed": 21327,
+   "tt_minus_corr_absmax_s": 0.00010000000000334741,
+   "corr_absmax_s": 0.769977,
+   "station_corr_absdiff_max_s": 1.0000000119636532e-07
+  },
+  "absolute.dat": {
+   "lines": 229308,
+   "changed": 21327,
+   "absmax_s": 0.7700000000000031,
+   "median_abs_changed_s": 0.08970000000000056
+  },
+  "dt.ct": {
+   "lines": 371263,
+   "changed": 37784,
+   "absmax_s": 0.7697000000000003,
+   "median_abs_changed_s": 0.12959999999999994
+  },
+  "station_corr": {
+   "rows": 1022,
+   "rows_old": 1022,
+   "unmatched": 0,
+   "absdiff_max_s": 0.0,
+   "n_diff": 0,
+   "identical_file": true
+  },
+  "MOD": {
+   "identical": true,
+   "dlnvp_absmax_pct": 0.0,
+   "dlnvs_absmax_pct": 0.0
+  },
+  "problems": []
+ },
+ "mendocino_gorda_c": {
+  "new": "mendocino_gorda_c_m0t",
+  "old": "mendocino_gorda_c_m0",
+  "event.dat": "identical",
+  "station.dat": "identical",
+  "station_codes.csv": "identical",
+  "events.csv": "identical",
+  "forward.json": "identical",
+  "picks_used": {
+   "rows": 267834,
+   "retimed": 908,
+   "tt_changed": 904,
+   "tt_minus_corr_absmax_s": 9.100000000034688e-05,
+   "corr_absmax_s": 0.007964,
+   "station_corr_absdiff_max_s": 0.0
+  },
+  "absolute.dat": {
+   "lines": 267834,
+   "changed": 904,
+   "absmax_s": 0.007900000000001128,
+   "median_abs_changed_s": 0.0030999999999998806
+  },
+  "dt.ct": {
+   "lines": 651518,
+   "changed": 2224,
+   "absmax_s": 0.007900000000001128,
+   "median_abs_changed_s": 0.0029000000000003467
+  },
+  "station_corr": {
+   "rows": 318,
+   "rows_old": 318,
+   "unmatched": 0,
+   "absdiff_max_s": 0.0,
+   "n_diff": 0,
+   "identical_file": true
+  },
+  "MOD": {
+   "identical": false,
+   "dlnvp_absmax_pct": 0.18883193957377475,
+   "dlnvs_absmax_pct": 0.11083457046302536
+  },
+  "problems": []
+ },
+ "blanco": {
+  "new": "blanco_m0t",
+  "old": "blanco_m0",
+  "event.dat": "identical",
+  "station.dat": "identical",
+  "station_codes.csv": "identical",
+  "events.csv": "identical",
+  "forward.json": "identical",
+  "picks_used": {
+   "rows": 85293,
+   "retimed": 4130,
+   "tt_changed": 4109,
+   "tt_minus_corr_absmax_s": 0.0001000000000005853,
+   "corr_absmax_s": 0.009519,
+   "station_corr_absdiff_max_s": 0.0
+  },
+  "absolute.dat": {
+   "lines": 85293,
+   "changed": 4109,
+   "absmax_s": 0.009500000000002728,
+   "median_abs_changed_s": 0.0036000000000004917
+  },
+  "dt.ct": {
+   "lines": 300516,
+   "changed": 12396,
+   "absmax_s": 0.009500000000000952,
+   "median_abs_changed_s": 0.003400000000000958
+  },
+  "station_corr": {
+   "rows": 171,
+   "rows_old": 171,
+   "unmatched": 0,
+   "absdiff_max_s": 0.0,
+   "n_diff": 0,
+   "identical_file": true
+  },
+  "MOD": {
+   "identical": false,
+   "dlnvp_absmax_pct": 0.16313213703098572,
+   "dlnvs_absmax_pct": 0.10951936592690226
+  },
+  "problems": []
+ },
+ "oregon": {
+  "new": "oregon_m0t",
+  "old": "oregon_m0",
+  "event.dat": "identical",
+  "station.dat": "identical",
+  "station_codes.csv": "identical",
+  "events.csv": "identical",
+  "forward.json": "identical",
+  "picks_used": {
+   "rows": 122292,
+   "retimed": 22115,
+   "tt_changed": 22077,
+   "tt_minus_corr_absmax_s": 0.00010000000000334741,
+   "corr_absmax_s": 0.769977,
+   "station_corr_absdiff_max_s": 0.0
+  },
+  "absolute.dat": {
+   "lines": 122292,
+   "changed": 22077,
+   "absmax_s": 0.7700000000000031,
+   "median_abs_changed_s": 0.09980000000000011
+  },
+  "dt.ct": {
+   "lines": 300604,
+   "changed": 66462,
+   "absmax_s": 0.7697000000000003,
+   "median_abs_changed_s": 0.1200000000000001
+  },
+  "station_corr": {
+   "rows": 354,
+   "rows_old": 354,
+   "unmatched": 0,
+   "absdiff_max_s": 0.0,
+   "n_diff": 0,
+   "identical_file": true
+  },
+  "MOD": {
+   "identical": false,
+   "dlnvp_absmax_pct": 8.313425704730049,
+   "dlnvs_absmax_pct": 3.059221538325285
+  },
+  "problems": []
+ },
+ "washington": {
+  "new": "washington_m0t",
+  "old": "washington_m0",
+  "event.dat": "identical",
+  "station.dat": "identical",
+  "station_codes.csv": "identical",
+  "events.csv": "identical",
+  "forward.json": "identical",
+  "picks_used": {
+   "rows": 334878,
+   "retimed": 53116,
+   "tt_changed": 53008,
+   "tt_minus_corr_absmax_s": 0.00010000000000338731,
+   "corr_absmax_s": 0.541288,
+   "station_corr_absdiff_max_s": 0.0
+  },
+  "absolute.dat": {
+   "lines": 334878,
+   "changed": 53008,
+   "absmax_s": 0.5412999999999997,
+   "median_abs_changed_s": 0.03920000000000101
+  },
+  "dt.ct": {
+   "lines": 811641,
+   "changed": 164023,
+   "absmax_s": 0.5412999999999997,
+   "median_abs_changed_s": 0.05030000000000001
+  },
+  "station_corr": {
+   "rows": 443,
+   "rows_old": 443,
+   "unmatched": 0,
+   "absdiff_max_s": 0.0,
+   "n_diff": 0,
+   "identical_file": true
+  },
+  "MOD": {
+   "identical": false,
+   "dlnvp_absmax_pct": 8.506745941001604,
+   "dlnvs_absmax_pct": 3.582899794404193
+  },
+  "problems": []
+ }
+}

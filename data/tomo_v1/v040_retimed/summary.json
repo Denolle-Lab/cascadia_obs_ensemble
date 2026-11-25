@@ -1,0 +1,82 @@
+{
+ "unique_picks": {
+  "b1b_picks": 754710,
+  "retimed": 65562,
+  "stations": 59,
+  "obs": 5061,
+  "gt_0.02s": 33976,
+  "gt_0.05s": 28668,
+  "gt_0.1s": 25426,
+  "gt_0.3s": 11975,
+  "listed": 31538,
+  "found": 36567
+ },
+ "qc": {
+  "kept_v031": 765486,
+  "kept_retimed": 765331,
+  "changed": 812,
+  "transitions": [
+   {
+    "qc_v031": "",
+    "qc_retimed": "event_dropped",
+    "picks": 167
+   },
+   {
+    "qc_v031": "",
+    "qc_retimed": "res",
+    "picks": 308
+   },
+   {
+    "qc_v031": "",
+    "qc_retimed": "sp",
+    "picks": 6
+   },
+   {
+    "qc_v031": "event_dropped",
+    "qc_retimed": "",
+    "picks": 143
+   },
+   {
+    "qc_v031": "res",
+    "qc_retimed": "",
+    "picks": 177
+   },
+   {
+    "qc_v031": "res",
+    "qc_retimed": "event_dropped",
+    "picks": 1
+   },
+   {
+    "qc_v031": "sp",
+    "qc_retimed": "",
+    "picks": 6
+   },
+   {
+    "qc_v031": "sp",
+    "qc_retimed": "res",
+    "picks": 4
+   }
+  ]
+ },
+ "merge_attrs_v040": {
+  "reference_fallback_fraction_p": 0.1597,
+  "reference_fallback_fraction_s": 0.16,
+  "vs_reverted_nodes": "87960",
+  "vs_capped_nodes": "281",
+  "gated_tiles": "blanco_m0t",
+  "excluded_tiles": "ridges_north",
+  "covered_nodes_p": "112644",
+  "provenance_git_commit": "a94737667325022241d2a74e5e94a2bf29f2f008"
+ },
+ "merge_attrs_v031": {
+  "reference_fallback_fraction_p": 0.1597,
+  "reference_fallback_fraction_s": 0.16,
+  "vs_reverted_nodes": "87823",
+  "vs_capped_nodes": "258",
+  "gated_tiles": "blanco_m0",
+  "excluded_tiles": "ridges_north",
+  "covered_nodes_p": "112644",
+  "provenance_git_commit": "970f4b51a75efcdfc1f7023a27172d0525ecb2c2"
+ },
+ "masks_identical": true
+}

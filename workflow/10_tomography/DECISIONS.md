@@ -683,3 +683,14 @@ blasts, for which a surface depth is right. v5.1 sets event_flag for events matc
 
 Also 2026-11-24 (PI): a separate check of the UW short-period stations TDL, ELK, LO2, SOS, whose P and S residuals drop
 together by 0.1-0.3 s from November 2013 (timing or filter delay), before the v5.1 station terms.
+
+### D-B072 Re-time the drifting analog picks from short reads around each pick; v5.1 uses them (adopted, 2026-11-24, PI)
+UW timing check (/wd1/mdenolle_data/tomo_v1/checks/uw_timing/report.html): from 2013-10-22 14:48:30 UTC, picks on 34
+UW analog short-period stations (+KOS to 2013-11-18; UO IRO, HUO, FRIS to ~2015-01) are early by up to 0.52 s (UO
+~0.79 s) by the end of each UTC day: the channels run at 99.99939 Hz labelled 100 Hz, and elep_picker.py run_detection
+reads a whole pnwstore day, filters, resample(100) and merge(fill_value='interpolate'), so a pick's time is the day
+trace's start plus samples/100. PI: first verify on our own pnwstore data; then re-time every affected pick by reading
+the waveform with ObsPy only around the pick (a short read keeps each MiniSEED record's header time; a whole-day read
+accumulates the lag), not by a rate model. Corrected picks go into a new pick file with a flag column, used by the
+v5.1 relocation (station terms re-estimated). Other products (pick tables on Zenodo, Track B tomography, the picker
+code) are not changed for now.

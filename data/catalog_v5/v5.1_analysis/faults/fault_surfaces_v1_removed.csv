@@ -1,0 +1,11 @@
+removed_id,n_events,region,lon,lat,depth_km,strike,dip,weekday_daytime_fraction,frac_depth_ok,strand,reason
+v1x_01,177,BL,-128.7299,43.8355,35.29,217.7,42.7,0.19,0.1,False,"deep Blanco artefact: centroid at 35.29 km with 18 depth_quality ok events (published Blanco seismicity stops at 10-14 km; v0 removed BL022, BL024 and BL026 for the same reason)"
+v1x_02,400,ON,-122.1602,49.049,6.58,12.5,49.5,0.7,1.0,False,non-earthquake timing (quarry blasts or other signals): 70% of events on weekdays 08-17 local time
+v1x_03,215,ON,-122.168,49.1346,4.41,159.6,34.1,0.83,1.0,False,non-earthquake timing (quarry blasts or other signals): 83% of events on weekdays 08-17 local time
+v1x_04,75,ON,-122.6128,49.3117,6.68,241.7,89.3,0.97,1.0,False,non-earthquake timing (quarry blasts or other signals): 97% of events on weekdays 08-17 local time
+v1x_05,45,ON,-124.7281,49.2366,5.9,215.3,77.8,0.82,1.0,False,non-earthquake timing (quarry blasts or other signals): 82% of events on weekdays 08-17 local time
+v1x_06,39,ON,-122.2298,46.1774,60.41,341.6,89.4,0.64,1.0,False,non-earthquake timing (quarry blasts or other signals): 64% of events on weekdays 08-17 local time
+v1x_07,30,ON,-121.9846,49.0824,3.27,19.6,49.1,0.9,1.0,False,non-earthquake timing (quarry blasts or other signals): 90% of events on weekdays 08-17 local time
+v1x_08,232,PU,-123.4745,48.4755,7.03,20.7,45.4,0.74,1.0,False,non-earthquake timing (quarry blasts or other signals): 74% of events on weekdays 08-17 local time
+v1x_09,33,PU,-122.6464,46.799,5.5,219.8,82.1,0.97,1.0,False,non-earthquake timing (quarry blasts or other signals): 97% of events on weekdays 08-17 local time
+v1x_10,68,WA,-123.5867,48.5438,4.38,54.6,56.0,0.9,1.0,False,non-earthquake timing (quarry blasts or other signals): 90% of events on weekdays 08-17 local time

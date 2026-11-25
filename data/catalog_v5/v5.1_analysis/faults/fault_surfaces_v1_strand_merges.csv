@@ -1,0 +1,11 @@
+pool,n_a,n_b,D,sep_km,reason
+west,3735,2082,4.15,2.85,depth offset needs a single fault dipping 68 deg (>= 60): offset follows depth
+west,5817,2146,0.54,0.67,per-year D 0.26 <= 2.0
+west,7963,572,3.59,3.66,depth offset needs a single fault dipping 70 deg (>= 60): offset follows depth
+west,8535,240,4.68,5.97,depth offset needs a single fault dipping 71 deg (>= 60): offset follows depth
+west,777,72,4.23,3.45,depth offset needs a single fault dipping 62 deg (>= 60): offset follows depth
+west,1906,849,2.11,1.73,per-year D 1.99 <= 2.0
+blanco_ridge,2111,595,3.22,1.62,depth offset needs a single fault dipping 67 deg (>= 60): offset follows depth
+blanco_ridge,2706,157,4.28,3.26,depth offset needs a single fault dipping 63 deg (>= 60): offset follows depth
+gorda_depression,705,714,3.27,2.3,depth offset needs a single fault dipping 65 deg (>= 60): offset follows depth
+gorda_depression,1419,180,2.87,1.62,depth offset needs a single fault dipping 80 deg (>= 60): offset follows depth

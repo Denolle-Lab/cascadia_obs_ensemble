@@ -1,0 +1,18 @@
+{
+ "fit_set": 101296,
+ "detection_planes": 161,
+ "blanco_parents": 21,
+ "blanco_strands": 12,
+ "surfaces_fitted": 152,
+ "kept": 142,
+ "removed": 10,
+ "fit_members": 64272,
+ "assignment": {
+  "fit member": 64272,
+  "none": 64093,
+  "ambiguous": 26266,
+  "assigned": 12638,
+  "not an earthquake": 3313,
+  "non-earthquake timing (surface screening)": 1137
+ }
+}

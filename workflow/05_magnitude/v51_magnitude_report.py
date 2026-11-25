@@ -36,6 +36,7 @@ V3V4 = "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/report/v3_v4_match.
 V4MC = "/home/mdenolle/wt_a51_mag/data/catalog_v4/mc_maps/mc_regional.csv"
 STA = "/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv"
 PICKS41T = "/wd1/mdenolle_data/catalog_v5/v5.1/Cascadia_picks_catalog_v4.1t.csv.gz"
+BOX_ORDER = ["AX", "EN", "BL", "GO", "MT", "WA", "OR", "PU", "ON"]  # v4_mc_maps.REG_ORDER
 REG_ORDER = ["Axial", "Endeavour", "Explorer", "JdF ridge/plate", "Blanco", "Gorda", "Mendocino",
              "Offshore forearc", "Puget/Georgia", "Cascades", "Other onshore"]
 
@@ -86,7 +87,7 @@ def compare_v4(m, out):
     by_mag = grp(d.assign(Mbin=pd.cut(d.ML_v4, bins)), "Mbin", "dML")
     by_mag["Mbin"] = by_mag["Mbin"].astype(str)
     dbins = [0, 10, 25, 50, 100, 200, 1000]
-    dd = d.merge(CAT[["ID", "dist_min", "shift_z_km", "shift_h_km"]], on="ID", how="left")
+    dd = d.merge(CAT[["ID", "dist_min", "shift_z_km", "shift_h_km", "sig_z", "v4_depth"]], on="ID", how="left")
     by_dist = grp(dd.assign(dbin=pd.cut(dd.dist_min, dbins)), "dbin", "dML")
     by_dist["dbin"] = by_dist["dbin"].astype(str)
     zb = [-200, -10, -5, -2, 2, 5, 10, 200]
@@ -213,11 +214,108 @@ def tensors(D, out):
                              dist_km_median=s.dist_km.median(), ddepth_km_median=s.ddepth_km.median()))
         rows.append(dict(catalog=name, Mw_class="all matched", n=len(x), ML_minus_Mw=np.nan,
                          dist_km_median=x.dist_km.median(), ddepth_km_median=x.ddepth_km.median()))
+        # Mw 3-4.5 split by the v5.1 region label (offshore = ridge/transform/plate + coastal labels)
+        xr = x.merge(CATF[["ID", "region"]], left_on="event_id", right_on="ID", how="left")
+        s = xr[(xr.Mw_mt >= 3) & (xr.Mw_mt < 4.5)]
+        for lab, o in (("offshore labels", s.region.isin(OFF6 + COAST)), ("onshore labels", ~s.region.isin(OFF6 + COAST))):
+            g = s[o]
+            rows.append(dict(catalog=name, Mw_class=f"3-4.5, {lab}", n=len(g),
+                             ML_minus_Mw=np.median(g.ML - g.Mw_mt) if len(g) else np.nan,
+                             dist_km_median=g.dist_km.median(), ddepth_km_median=g.ddepth_km.median()))
     r = pd.DataFrame(rows)
     r.to_csv(f"{out}/tensor_compare.csv", index=False, float_format="%.3f")
     lost = sorted(set(t4.comcat_id) - set(t51.comcat_id))
     gained = sorted(set(t51.comcat_id) - set(t4.comcat_id))
     return dict(t=r, n51=len(t51), n4=len(t4), lost=lost, gained=gained, t51=t51, t4=t4)
+
+
+def window_change(D, out):
+    """Same pick_id in the v4.1 and v5.1 amplitude selections: how often the distance-scaled
+    window length changes, by how many grid steps, and how much the amplitude changes."""
+    from route_a_day_amplitudes import WINDOWS
+    cols = ["pick_id", "window_s", "wa_amp_mm", "reason"]
+    r4 = pd.read_csv(f"{V4}/raw_wa_amplitudes_v4.csv", usecols=cols)
+    r5 = pd.read_csv(f"{D}/raw_wa_amplitudes_v51.csv", usecols=cols)
+    j = r5.merge(r4, on="pick_id", suffixes=("", "_4"))
+    w = np.asarray(WINDOWS)
+    k5 = np.searchsorted(w, j.window_s.to_numpy() - 1e-6)
+    k4 = np.searchsorted(w, j.window_s_4.to_numpy() - 1e-6)
+    j["dstep"] = k5 - k4
+    both = (j.reason == "ok") & (j.reason_4 == "ok") & (j.wa_amp_mm > 0) & (j.wa_amp_mm_4 > 0)
+    j["dlogA"] = np.where(both, np.log10(j.wa_amp_mm.where(both, 1.0) / j.wa_amp_mm_4.where(both, 1.0)), np.nan)
+    ch = j.dstep != 0
+    jc = j[ch & both]
+    same = j[~ch & both]
+    res = dict(n_common=len(j), n_changed=int(ch.sum()), share_changed=float(ch.mean()),
+               n_one_step=int((j.dstep.abs() == 1).sum()),
+               share_changed_one_step=float((j.dstep.abs() == 1).sum() / max(ch.sum(), 1)),
+               med_abs_dw_s=float((j.window_s - j.window_s_4)[ch].abs().median()),
+               n_changed_amp=len(jc), n_amp_gt001=int((jc.dlogA.abs() > 0.01).sum()),
+               share_amp_gt001_all=float((jc.dlogA.abs() > 0.01).sum() / max(both.sum(), 1)),
+               mean_dlogA_changed=float(jc.dlogA.mean()),
+               same_window_identical=bool((same.dlogA.abs() < 1e-9).all()),
+               n_longer=int((j.dstep > 0).sum()), n_shorter=int((j.dstep < 0).sum()))
+    pd.Series(res).to_csv(f"{out}/window_change.csv", header=["value"])
+    return res
+
+
+OFF6 = ["Axial", "Endeavour", "Explorer", "JdF ridge/plate", "Blanco", "Gorda"]
+COAST = ["Mendocino", "Offshore forearc"]   # labels that straddle the coast
+
+
+def offshore_splits(d, out):
+    """ML(v5.1) - ML(v4.1), offshore against onshore, under four definitions."""
+    surf = d.offshore.astype(str) == "True"
+    defs = [("epicentre below sea level (surface_km < 0)", surf),
+            ("below sea level, Puget/Georgia counted onshore", surf & (d.region != "Puget/Georgia")),
+            ("region label: ridge, transform and plate labels offshore; Mendocino, Offshore forearc, "
+             "Puget/Georgia, Cascades, Other onshore onshore", d.region.isin(OFF6)),
+            ("region label: as above but Mendocino and Offshore forearc offshore", d.region.isin(OFF6 + COAST))]
+    rows = []
+    for name, o in defs:
+        rows.append(dict(definition=name, n_offshore=int(o.sum()), median_offshore=d[o].dML.median(),
+                         n_onshore=int((~o).sum()), median_onshore=d[~o].dML.median()))
+    t = pd.DataFrame(rows)
+    t.to_csv(f"{out}/v51_vs_v4_offshore_definitions.csv", index=False, float_format="%.3f")
+    return t
+
+
+MSH_BOX = (-122.4, -122.0, 46.0, 46.4)   # lon0, lon1, lat0, lat1 (as v51_mc_b.py)
+P1_TABLE = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P1_table.csv"
+P2_VIEWS = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P2_views.csv"
+P4_TABLE = "/wd1/mdenolle_data/catalog_v5/v5.1_review/work/sets/P4_table.csv"
+
+
+def large_changes(d, out, thr=0.5):
+    """Who changed by more than thr: tier, Mount St. Helens, relocation distance."""
+    big = d[d.dML.abs() > thr].copy()
+    big["msh"] = big.lon.between(MSH_BOX[0], MSH_BOX[1]) & big.lat.between(MSH_BOX[2], MSH_BOX[3])
+    big["onshore_lbl"] = big.region.isin(["Cascades", "Other onshore"])
+    p1 = pd.read_csv(P1_TABLE, usecols=["ID"]).ID if os.path.exists(P1_TABLE) else pd.Series([], dtype=int)
+    big["p1_deep_msh"] = big.ID.isin(p1)
+    rows = []
+    for name, s in (("all", big), ("Mount St. Helens box", big[big.msh]),
+                    ("onshore labels, outside the Mount St. Helens box", big[big.onshore_lbl & ~big.msh]),
+                    ("offshore and coastal labels", big[~big.onshore_lbl])):
+        rows.append(dict(group=name, n=len(s), tier_D=int((s.tier == "D").sum()),
+                         deep_pass=int((s.deep_pass.astype(str) == "True").sum()),
+                         in_P1_deep_msh_review=int(s.p1_deep_msh.sum()),
+                         dML_median=s.dML.median(), shift_h_km_median=s.shift_h_km.median(),
+                         shift_z_km_median=s.shift_z_km.median(), sig_z_median=s.sig_z.median(),
+                         depth_v4_median=s.v4_depth.median(), depth_v51_median=s.depth.median()))
+    t = pd.DataFrame(rows)
+    t.to_csv(f"{out}/v51_vs_v4_large_changes.csv", index=False, float_format="%.2f")
+    # the event sets of the v5.1 waveform review (read only), ML change on the shared events
+    rev = {}
+    for key, f in (("P1 Mount St. Helens deep", P1_TABLE), ("P2 Brookings 2012", P2_VIEWS),
+                   ("P4 deep-pass and far_only", P4_TABLE)):
+        if os.path.exists(f):
+            ids = pd.read_csv(f, usecols=["ID"]).ID
+            s = d[d.ID.isin(ids)]
+            rev[key] = dict(n_set=int(ids.nunique()), n_shared=len(s), dML_median=float(s.dML.median()),
+                            n_big=int(big.ID.isin(ids).sum()))
+    pd.DataFrame(rev).T.to_csv(f"{out}/v51_vs_v4_review_sets.csv", float_format="%.3f")
+    return dict(t=t.set_index("group"), share_D_all=float((d.tier == "D").mean()), rev=rev)
 
 
 def timing_check(dec, out):
@@ -565,7 +663,7 @@ def main(argv=None):
     os.makedirs(out, exist_ok=True)
     mcb = a.mcb or os.path.join(out, "mc_b")
     CAT = pd.read_csv("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
-                      usecols=["ID", "dist_min", "shift_z_km", "shift_h_km", "u_reason"])
+                      usecols=["ID", "dist_min", "shift_z_km", "shift_h_km", "u_reason", "sig_z", "v4_depth"])
     CATF = pd.read_csv("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
                        usecols=["ID", "far_only", "shift_h_km", "shift_z_km", "tier", "region"])
     m = pd.read_csv(f"{DATA}/cascadia_catalog_v5.1_magnitudes.csv", low_memory=False)
@@ -574,6 +672,9 @@ def main(argv=None):
     located = m.loc_source.isin(["nll3d", "comcat"])
 
     cv = compare_v4(m, out)
+    cv["offdefs"] = offshore_splits(cv["d"], out)
+    cv["large"] = large_changes(cv["d"], out)
+    cv["window"] = window_change(DATA, out)
     dec = decomposition(DATA, out)
     cc = compare_comcat(m, out)
     tz = tensors(DATA, out)
@@ -583,6 +684,11 @@ def main(argv=None):
     regc = pd.read_csv(f"{mcb}/mc_b_catalog_region.csv")
     v4mc = pd.read_csv(V4MC)
     mc = dict(reg=reg, regc=regc)
+    cv["paired"] = pd.read_csv(f"{mcb}/paired_b.csv")
+    # convergence check of the phase19 inversion (v51_phase19_convergence.py), if run
+    cf = {k: f"{out}/phase19_convergence_{k}.csv" for k in ("summary", "by_region", "references", "v51_minus_v41")}
+    cv["conv"] = ({k: pd.read_csv(f) for k, f in cf.items()} if all(os.path.exists(f) for f in cf.values())
+                  else None)
     figures(m, cv, dec, cc, tc, mc, out)
 
     # ---- v3 continuity (shared events, v3 -> v4 match)
@@ -620,8 +726,8 @@ def main(argv=None):
     ext.to_csv(f"{out}/explosions.csv", index=False, float_format="%.2f")
 
     # ---- slim table into the worktree
-    slim = m[["ID", "M", "M_unc", "M_type", "ML", "ML_unc", "ML_method", "n_ML", "n_sta_ML", "Mw_mt", "comcat_id",
-              "mt_match",
+    slim = m[["ID", "M", "M_unc", "M_type", "ML", "ML_unc", "ML_method", "ml_caution", "depth_quality",
+              "n_ML", "n_sta_ML", "Mw_mt", "comcat_id", "mt_match",
               "anchor_ml", "is_earthquake", "ML_v4hyp", "ML_v4hyp_unc", "n_ML_v4hyp", "Mw_mt_v4"]]
     slim.to_csv(f"{out}/cascadia_catalog_v5.1_magnitudes_slim.csv.gz", index=False,
                 float_format="%.3f", compression="gzip")
@@ -728,9 +834,6 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
     mc_txt = ", ".join(f"{r} {regB.loc[r, 'mc_best']:.1f} to {regC.loc[r, 'mc_best']:.1f}" for r in boxes
                        if abs(dmc[r]) > 0.05)
     mc_txt = (mc_txt + "; 0.0 elsewhere") if mc_txt else "0.0 everywhere"
-    bsig = [r for r in boxes if abs(regC.loc[r, "b"] - regB.loc[r, "b"]) > 2 * regC.loc[r, "b_sigma_boot"]]
-    b_txt = ", ".join(f"{r} ({regB.loc[r, 'b']:.2f} to {regC.loc[r, 'b']:.2f} &plusmn; "
-                      f"{regC.loc[r, 'b_sigma_boot']:.2f})" for r in bsig) or "no box"
     nfar = int((t51.merge(CATF[["ID", "far_only"]], left_on="event_id", right_on="ID").far_only.astype(str) == "True").sum())
     mtm = m.mt_match.value_counts()
     lost_carried = m[(m.mt_match == "v4.1") & ~m.ID.isin([900001, 900002, 900003])]
@@ -748,8 +851,100 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              "Large files in <code>/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/</code>; tables and figures in "
              "<code>data/catalog_v5/v5.1_analysis/mag/</code>. Private working material, not peer reviewed.</p>")
 
+    # numbers added after the review (verify_report.json, 2026-11-25)
+    W = cv["window"]
+    od = cv["offdefs"]
+    L = cv["large"]["t"]
+    rev = cv["large"]["rev"]
+    shD = cv["large"]["share_D_all"]
+    Lall = L.loc["all"]
+    Lmsh = L.loc["Mount St. Helens box"]
+    Lon = L.loc["onshore labels, outside the Mount St. Helens box"]
+    Loff = L.loc["offshore and coastal labels"]
+    P = cv["paired"]
+    Pc = P[P.mc_source == "Mc_best C"].set_index("box")
+    Pb = P[P.mc_source == "Mc_best B"].set_index("box")
+    zc = float(P.bonferroni_z_crit.iat[0])
+    ntest = int(P.bonferroni_n_tests.iat[0])
+    boxes_main = [b for b in BOX_ORDER + ["OFF", "ALL"] if b in Pc.index]
+    sig_dn = [b for b in boxes_main if Pc.loc[b, "significant_bonferroni"] and Pc.loc[b, "db"] < 0]
+    sig_up = [b for b in boxes_main if Pc.loc[b, "significant_bonferroni"] and Pc.loc[b, "db"] > 0]
+    nsig = [b for b in boxes_main if not Pc.loc[b, "significant_bonferroni"]]
+
+    def pb(b, src=Pc):
+        r = src.loc[b]
+        return (f"{b} {r.b_v41:.3f} to {r.b_v51:.3f} at Mc {r.mc:.1f} ({r.db:+.3f}, z {r.z:+.1f})")
+    tt = tz["t"].set_index(["catalog", "Mw_class"])
+    t34 = {c: tt.loc[(c, "3-4.5, offshore labels")] for c in ("v4.1", "v5.1")}
+    t34on = {c: tt.loc[(c, "3-4.5, onshore labels")] for c in ("v4.1", "v5.1")}
+    t34all = {c: tt.loc[(c, "3-4.5")] for c in ("v4.1", "v5.1")}
+    mlc = m.ml_caution.fillna("")
+    hasml = m.ML.notna()
+    n_caut = {k: int(mlc.str.contains(k).sum()) for k in ("deep_pass", "tierD_moved30", "weak_terms")}
+    n_caut_any = int((mlc != "").sum())
+    dq = m.loc[hasml, "depth_quality"].value_counts()
+    sf_dC = st[st.seafloor.astype(str) == "True"].dC.median()
+    land_dC = st[st.seafloor.astype(str) == "False"].dC.median()
+    gaps = [cc_reg.loc[r, 'v5.1'] - cc_reg.loc[r, 'v4.1'] for r in ('Mendocino', 'Blanco', 'Gorda')]
+    CV = cv["conv"]
+    if CV is not None:
+        cs = CV["summary"].set_index("run")
+        c_same, c_conv = cs.iloc[0], cs.loc["converged"]
+        cbr = CV["by_region"].set_index("region")
+        cref = CV["references"]
+        cref_a = cref[cref.reference == "ComCat ML anchors"].pivot(index="region", columns="solution", values="median")
+        cref_n = cref[cref.reference == "ComCat ML anchors"].groupby("region").n.first()
+        cstd = cref[(cref.reference == "ComCat ML anchors") & (cref.region == "all")].set_index("solution")["std"]
+        cref_t = cref[cref.reference.str.startswith("tensor")].pivot(index="region", columns="solution", values="median")
+        cref_tn = cref[cref.reference.str.startswith("tensor")].groupby("region").n.first()
+        c41 = CV["v51_minus_v41"].set_index("region")
+        off_lbl = [r for r in OFF6 + COAST if r in c41.index and r != "Axial"]
+        c41_rng = (c41.loc[off_lbl, "converged"].min(), c41.loc[off_lbl, "converged"].max())
+        c41s_rng = (c41.loc[off_lbl, "stored"].min(), c41.loc[off_lbl, "stored"].max())
+
+    # ---- context added after the review
+    r1 = rev.get("P1 Mount St. Helens deep", {})
+    r2 = rev.get("P2 Brookings 2012", {})
+    r4 = rev.get("P4 deep-pass and far_only", {})
+    h.append("<h2>Context (added 2026-11-25, after review)</h2><ul>")
+    h.append("<li><b>These magnitudes will be redone.</b> They use the v5.1 hypocentres. Since then the PI adopted "
+             "velocity model v0.4.0 (v0.3.1 re-inverted with the re-timed picks, D-B082); v0.4.1, with a surface "
+             "floor in the inversion (D-B083), is being built. Catalog v6.0 (D-B079, NonLinLoc with SSST station "
+             "terms) will supersede v5.1, and the magnitudes will be recomputed on it with this chain. Nothing on "
+             "this page was rerun for those changes.</li>")
+    h.append(f"<li><b>Waveform review of four v5.1 location problems</b> "
+             f"(<code>/wd1/mdenolle_data/catalog_v5/v5.1_review/index.html</code>). "
+             f"(1) Mount St. Helens deep events: the analog UW channels HSR, EDM and STD carry a weekly artificial "
+             f"signal on Wednesdays 19:14-19:21 UTC from 2011-05 to 2013-08. The deep events are 96% UW P picks, "
+             f"80% within 0.5 s, 73% without S; they are likely false events, pending human review. Of the "
+             f"{r1.get('n_set', 0)} events of that set, {r1.get('n_shared', 0)} have an ML in both versions; their "
+             f"ML rose by a median {r1.get('dML_median', np.nan):+.2f}, and {r1.get('n_big', 0)} of them are among "
+             f"the {big[0.5]} events whose ML changed by more than 0.5. "
+             f"(2) Brookings 2012: predicted S-P is not monotonic with depth in the v5.1 grids, so about 7-9 km and "
+             f"about 56 km both fit the distant stations, and NonLinLoc took the deep one; the {r2.get('n_shared', 0)} "
+             f"reviewed events with ML in both versions rose by a median {r2.get('dML_median', np.nan):+.2f}. "
+             f"(3) Tensor events: v5.1 is a median 13.7 km deeper than ComCat, the same result as the tensor "
+             f"comparison below. (4) far_only events moved from near the surface (v4) to 44-64 km; the "
+             f"{r4.get('n_shared', 0)} deep-pass and far_only events of that set with ML in both versions rose by a "
+             f"median {r4.get('dML_median', np.nan):+.2f}. In all four cases the ML follows the hypocentre and "
+             f"carries its error.</li></ul>")
+
     # ---- summary
     h.append("<h2>Summary</h2><ul>")
+    if CV is not None:
+        h.append(f"<li><b>The phase19 inversion is not converged (found during the review fix; also in v4.1).</b> "
+                 f"LSQR stops at its 3000-iteration limit. Run to convergence ({int(c_conv.itn):,} iterations), the "
+                 f"final ML of whole offshore regions moves: Blanco {cbr.loc['Blanco', 'median']:+.2f}, JdF "
+                 f"ridge/plate {cbr.loc['JdF ridge/plate', 'median']:+.2f}, Gorda {cbr.loc['Gorda', 'median']:+.2f}, "
+                 f"Mendocino {cbr.loc['Mendocino', 'median']:+.2f}, onshore labels +0.01 (medians). The converged "
+                 f"solution agrees much better with ComCat ML offshore (Blanco {cref_a.loc['Blanco', 'stored']:+.2f} "
+                 f"to {cref_a.loc['Blanco', 'converged']:+.2f}, Gorda {cref_a.loc['Gorda', 'stored']:+.2f} to "
+                 f"{cref_a.loc['Gorda', 'converged']:+.2f}) and with tensor Mw (offshore ML - Mw "
+                 f"{cref_t.loc['offshore and coastal labels', 'stored']:+.2f} to "
+                 f"{cref_t.loc['offshore and coastal labels', 'converged']:+.2f}). With v4.1 and v5.1 both converged, "
+                 f"the offshore ML change between them is {c41_rng[0]:+.3f} to {c41_rng[1]:+.3f} instead of "
+                 f"{c41s_rng[0]:+.2f} to {c41s_rng[1]:+.2f}. The magnitudes in the table were not changed; see the "
+                 f"section on convergence below.</li>")
     h.append(f"<li><b>Coverage.</b> {nM:,} of the {len(m):,} v5.1 rows have a magnitude M: "
              f"{mt.get('ML', 0):,} ML, {mt.get('Mw', 0)} Mw from ComCat moment tensors and {mt.get('Mw_cal', 0)} "
              f"Mw_cal (ML plus a constant, near-recorded events with ML + offset &ge; 4.5). In v4.1: "
@@ -761,6 +956,12 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              f"hypocentre with the v5.1 station terms held fixed, is given in a separate column for "
              f"{int(nh.ML_v4hyp.notna().sum())} of them, and the v4.1 tensor Mw for {int(nh.Mw_mt_v4.notna().sum())}. "
              f"Neither is written to M.</li>")
+    h.append(f"<li><b>Flags for users.</b> The table now carries the catalog's depth_quality (for rows with ML: "
+             f"{', '.join(f'{k} {v:,}' for k, v in dq.items())}) and a column ml_caution for {n_caut_any:,} rows "
+             f"whose ML may not hold: deep_pass {n_caut['deep_pass']:,} (hypocentre from the deep pass), "
+             f"tierD_moved30 {n_caut['tierD_moved30']:,} (tier D and moved more than 30 km in 3D from v4) and "
+             f"weak_terms {n_caut['weak_terms']:,} (every 'near' pick on a station-phase term fitted from fewer "
+             f"than 20 picks).</li>")
     h.append(f"<li><b>Amplitudes were reused, not re-measured.</b> The amplitude windows are anchored at the pick "
              f"(0.3 s before it), but the amplitudes were measured at the uncorrected pick time on day traces "
              f"assembled the same way as the picker's, so they cover the samples the picker picked. On the "
@@ -769,57 +970,172 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              f"log10 units per second of correction, i.e. at most 0.02 at the largest correction (0.77 s); on "
              f"stations never re-timed, the same regression against the time of day gives {sc['P'][0]:+.3f} (P) and "
              f"{sc['S'][0]:+.3f} (S). Cutting each window short by its correction would change the amplitude by "
-             f"{wi_txt}.</li>")
+             f"{wi_txt}. The window length is re-selected from the stored grid with the v5.1 distance: it changes "
+             f"for {W['n_changed']:,} of {W['n_common']:,} picks ({100 * W['share_changed']:.0f}%; "
+             f"{100 * W['share_changed_one_step']:.0f}% of them by one grid step, median |&Delta;W| "
+             f"{W['med_abs_dw_s']:.2f} s), but the amplitude changes by more than 0.01 log10 units for only "
+             f"{W['n_amp_gt001']:,} picks ({100 * W['share_amp_gt001_all']:.1f}% of the picks with an amplitude "
+             f"in both runs; mean change {W['mean_dlogA_changed']:+.4f} over the changed windows).</li>")
+    o = od.set_index("definition")
+    o_surf = o.iloc[0]
+    o_np = o.iloc[1]
+    o_lab6 = o.iloc[2]
+    o_lab8 = o.iloc[3]
     h.append(f"<li><b>Change from v4.1.</b> On the {len(d):,} events with ML in both versions, ML(v5.1) - ML(v4.1) "
-             f"has median {dml.median():+.3f} (IQR {dml.quantile(.25):+.3f} to {dml.quantile(.75):+.3f}): "
-             f"offshore {off.loc['offshore', 'median']:+.3f}, onshore {off.loc['onshore', 'median']:+.3f} "
-             f"(offshore = epicentre below sea level). By region: Axial {br.loc['Axial', 'median']:+.2f}, "
+             f"has median {dml.median():+.3f} (IQR {dml.quantile(.25):+.3f} to {dml.quantile(.75):+.3f}). "
+             f"The offshore/onshore split depends on the definition: with offshore = epicentre below sea level, "
+             f"offshore {o_surf.median_offshore:+.3f} and onshore {o_surf.median_onshore:+.3f}, but this counts "
+             f"3,157 Puget/Georgia inland-water events as offshore (moving them onshore: {o_np.median_offshore:+.3f} "
+             f"and {o_np.median_onshore:+.3f}). By region label, the ridge, transform and plate labels change by "
+             f"{o_lab6.median_offshore:+.3f} and the rest by {o_lab6.median_onshore:+.3f}; counting Mendocino and "
+             f"Offshore forearc, which straddle the coast, as offshore gives {o_lab8.median_offshore:+.3f} and "
+             f"{o_lab8.median_onshore:+.3f}. By region: Axial {br.loc['Axial', 'median']:+.2f}, "
              f"JdF ridge/plate {br.loc['JdF ridge/plate', 'median']:+.2f}, Endeavour {br.loc['Endeavour', 'median']:+.2f}, "
              f"Explorer {br.loc['Explorer', 'median']:+.2f}, Gorda {br.loc['Gorda', 'median']:+.2f}, "
              f"Mendocino {br.loc['Mendocino', 'median']:+.2f}, Blanco {br.loc['Blanco', 'median']:+.2f}, "
              f"offshore forearc {br.loc['Offshore forearc', 'median']:+.2f}, Puget/Georgia "
-             f"{br.loc['Puget/Georgia', 'median']:+.2f}, Cascades {br.loc['Cascades', 'median']:+.2f}. "
-             f"{big[0.3]:,} events change by more than 0.3 and {big[0.5]:,} by more than 0.5, "
-             f"{int(big_reg.get('Cascades', 0) + big_reg.get('Other onshore', 0))} of the latter onshore "
-             f"(mostly Mount St. Helens, where the stations are 1-10 km away).</li>")
-    h.append(f"<li><b>Why.</b> For events 'near' in both runs, the change is reproduced from the common picks by "
-             f"three terms: the Hutton-Boore distance term (new hypocentral distances), the station terms and the "
-             f"anchor offset (correlation {r_pred:.3f}, residual std {sd_pred:.3f}). The window length almost never "
-             f"changes (the distance-scaled window rounds to the same grid value). Offshore, the station terms of the "
-             f"ocean-bottom stations dropped (median {st[st.seafloor.astype(str) == 'True'].dC.median():+.3f} vs "
-             f"{st[st.seafloor.astype(str) == 'False'].dC.median():+.3f} on land), which raises offshore ML; at "
-             f"Axial the hypocentres moved toward the caldera stations, so the distance term dropped by "
+             f"{br.loc['Puget/Georgia', 'median']:+.2f}, Cascades {br.loc['Cascades', 'median']:+.2f}.</li>")
+    h.append(f"<li><b>Large changes come from tier D relocations.</b> {big[0.3]:,} events change by more than 0.3 "
+             f"and {big[0.5]:,} by more than 0.5. Of the {big[0.5]:,}, {int(Lall.tier_D)} "
+             f"({100 * Lall.tier_D / Lall.n:.0f}%) are tier D, against {100 * shD:.0f}% tier D among all shared "
+             f"events. {int(Lmsh.n)} lie in the Mount St. Helens box (lat 46.0-46.4, lon -122.4 to -122.0); "
+             f"{int(Lmsh.tier_D)} of them are tier D, their median depth went from {Lmsh.depth_v4_median:.0f} km "
+             f"(v4) to {Lmsh.depth_v51_median:.0f} km, and {int(Lmsh.in_P1_deep_msh_review)} are in the deep "
+             f"Mount St. Helens set that the waveform review suspects are false events. The {int(Lon.n)} onshore "
+             f"events outside that box are {int(Lon.tier_D)} tier D; they moved a median "
+             f"{Lon.shift_h_km_median:.0f} km horizontally and {Lon.shift_z_km_median:.0f} km deeper (median sig_z "
+             f"{Lon.sig_z_median:.1f} km), and their ML rose by a median {Lon.dML_median:+.2f}. The remaining "
+             f"{int(Loff.n)} are offshore or coastal ({int(Loff.tier_D)} tier D).</li>")
+    h.append(f"<li><b>Which terms moved.</b> For events 'near' in both runs, the change equals the per-pick mean "
+             f"of three terms over the common picks: the Hutton-Boore distance term (new hypocentral distances), "
+             f"the station terms and the anchor offset (correlation {r_pred:.3f}, residual std {sd_pred:.3f}). "
+             f"With the pick set unchanged this is an accounting identity: it says which terms moved, not why. "
+             f"The window term is about zero (above). The station terms of the ocean-bottom stations dropped "
+             f"(median {sf_dC:+.3f} against {land_dC:+.3f} on land), which raises offshore ML. At Axial the "
+             f"epicentres moved toward the caldera stations, so the distance term dropped by "
              f"{-ev[ev.region == 'Axial'].d_dist.median():.2f}, of which the station terms took back "
-             f"{-ev[ev.region == 'Axial'].d_C.median():.2f}. Events whose depth is poorly constrained rose most: "
+             f"{-ev[ev.region == 'Axial'].d_C.median():.2f}. Outside Axial, the drop of the seafloor terms "
+             f"comes mostly from the unconverged inversion: with both runs converged, the offshore change is "
+             + (f"{c41_rng[0]:+.3f} to {c41_rng[1]:+.3f}. " if CV is not None else "not computed. ")
+             + f"These decomposition numbers also move between rebuilds of the v4.1 inversion, which stops before "
+             f"convergence at a point that depends on the floating-point order (BLAS thread count; 12 here): the "
+             f"first version of this page had correlation 0.990 and a seafloor median of -0.047. "
+             f"Events whose depth is poorly constrained rose most: "
              f"deep-pass events by {fl.loc['deep_pass', 'median']:+.2f} (median depth 86 km in v5.1 against 31 km "
              f"in v4) and far_only events by {fl.loc['far_only', 'median']:+.2f} (52 km against 4 km); their ML "
-             f"inherits the depth uncertainty.</li>")
+             f"inherits the depth error.</li>")
     h.append(f"<li><b>ComCat.</b> Against the ComCat ML anchors the v5.1 ML has median residual "
-             f"{cc_all.loc['v5.1', 'median']:+.3f} and std {cc_all.loc['v5.1', 'std']:.3f} "
-             f"(v4.1: {cc_all.loc['v4.1', 'median']:+.3f}, {cc_all.loc['v4.1', 'std']:.3f}). "
-             f"{tz['n51']} ComCat moment tensors match a v5.1 origin (v4.1: {tz['n4']}); below Mw 4.5 ML - Mw is "
-             f"{mw34} (v4.1: -0.02), above it ML saturates as before and the tensor Mw is used. "
+             f"{cc_all.loc['v5.1', 'median']:+.3f} (v4.1: {cc_all.loc['v4.1', 'median']:+.3f}). That median is near "
+             f"zero by construction, because the median anchor residual sets the offset; the informative numbers "
+             f"are the std, {cc_all.loc['v5.1', 'std']:.3f} (v4.1: {cc_all.loc['v4.1', 'std']:.3f}), and the "
+             f"regional gaps. {tz['n51']} ComCat moment tensors match a v5.1 origin (v4.1: {tz['n4']}); below Mw 4.5 "
+             f"ML - Mw is {mw34} (v4.1: -0.02), above it ML saturates as before and the tensor Mw is used. "
              f"{len(lost_carried)} located events lost their v4.1 tensor match because their v5.1 origin is now "
              f"31-101 km and 4.6-12 s from ComCat's; their v4.1 tensor is carried (the event is the same set of picks), "
              f"which keeps {int((lost_carried.M_type == 'Mw').sum())} of them at the tensor Mw instead of a "
-             f"saturated ML. Offshore, our ML is above ComCat ML at Mendocino, Blanco and Gorda (anchor medians "
-             f"{cc_reg.loc['Mendocino', 'v5.1']:+.2f}, {cc_reg.loc['Blanco', 'v5.1']:+.2f}, "
-             f"{cc_reg.loc['Gorda', 'v5.1']:+.2f}; v4.1 {cc_reg.loc['Mendocino', 'v4.1']:+.2f}, "
-             f"{cc_reg.loc['Blanco', 'v4.1']:+.2f}, {cc_reg.loc['Gorda', 'v4.1']:+.2f}).</li>")
+             f"saturated ML.</li>")
+    h.append(f"<li><b>Offshore, agreement with both outside references got worse.</b> For Mw 3-4.5 tensor events, "
+             f"ML - Mw went from {t34all['v4.1'].ML_minus_Mw:+.2f} (v4.1) to {t34all['v5.1'].ML_minus_Mw:+.2f} "
+             f"(v5.1); on the offshore and coastal labels from {t34['v4.1'].ML_minus_Mw:+.2f} to "
+             f"{t34['v5.1'].ML_minus_Mw:+.2f} ({int(t34['v5.1'].n)} events), onshore from "
+             f"{t34on['v4.1'].ML_minus_Mw:+.2f} to {t34on['v5.1'].ML_minus_Mw:+.2f} ({int(t34on['v5.1'].n)} events). "
+             f"Our ML sits above ComCat ML at Mendocino, Blanco and Gorda by "
+             f"{cc_reg.loc['Mendocino', 'v5.1']:+.2f}, {cc_reg.loc['Blanco', 'v5.1']:+.2f} and "
+             f"{cc_reg.loc['Gorda', 'v5.1']:+.2f} (anchor medians; v4.1 {cc_reg.loc['Mendocino', 'v4.1']:+.2f}, "
+             f"{cc_reg.loc['Blanco', 'v4.1']:+.2f}, {cc_reg.loc['Gorda', 'v4.1']:+.2f}), so the gap widened by "
+             f"{min(gaps):.2f} to {max(gaps):.2f}. Two differences push offshore ML up: longer hypocentral "
+             f"distances (deeper offshore hypocentres, tensor events {t51.ddepth_km.median():+.1f} km against "
+             f"ComCat; the distance term changes by -0.01 to +0.05 in the offshore labels outside Axial) and lower "
+             f"seafloor station terms ({sf_dC:+.3f}). The station-term part, the larger one, comes mostly from "
+             f"the unconverged phase19 inversion (convergence section below): with both runs converged the "
+             + (f"offshore change is {c41_rng[0]:+.3f} to {c41_rng[1]:+.3f}. " if CV is not None else "offshore "
+                "change was not computed. ")
+             + "So the v5.1 offshore ML is not closer to the outside references than v4.1, and most of the "
+             "offshore gap itself comes from the solver, not from the relocation.</li>")
     h.append(f"<li><b>A location result seen through the tensors.</b> The v5.1 hypocentres of the {tz['n51']} "
              f"matched tensor events lie deeper than the ComCat ones (median {t51.ddepth_km.median():+.1f} km, "
              f"IQR {t51.ddepth_km.quantile(.25):+.1f} to {t51.ddepth_km.quantile(.75):+.1f}; v4: "
              f"{t4.ddepth_km.median():+.1f}) and their origin times earlier (median {t51.dt_s.median():+.2f} s; "
              f"v4: {t4.dt_s.median():+.2f} s). Only {nfar} of them are far_only and none is from the deep pass. "
              f"ComCat depths offshore are often fixed (10 km), so this is a flag for the location work, not a "
-             f"magnitude result.</li>")
+             f"magnitude result; the waveform review (problem 3) reports the same offset.</li>")
+    sd_txt = ", ".join(pb(b) for b in sig_dn)
+    ns_txt = ", ".join(f"{b} ({Pc.loc[b, 'db']:+.3f}, z {Pc.loc[b, 'z']:+.1f})" for b in nsig)
+    up_txt = ", ".join(pb(b) for b in sig_up)
+    ax_txt = (f"At AX the sign depends on Mc: {Pc.loc['AX', 'db']:+.3f} at Mc {Pc.loc['AX', 'mc']:.1f} and "
+              f"{Pb.loc['AX', 'db']:+.3f} at Mc {Pb.loc['AX', 'mc']:.1f}. " if "AX" in Pb.index else "")
+    onm = Pc.loc["ON without MSH"] if "ON without MSH" in Pc.index else None
     h.append(f"<li><b>Mc and b.</b> With the v5.1 magnitudes on the v5.1 epicentres (earthquakes only), "
              f"Mc_best is {regC.loc['ALL', 'mc_best']:.1f} for the whole catalog and b = {regC.loc['ALL', 'b']:.3f} "
              f"&plusmn; {regC.loc['ALL', 'b_sigma_boot']:.3f} (bootstrap; v4.1 magnitudes on the same events: "
              f"{regB.loc['ALL', 'mc_best']:.1f}, {regB.loc['ALL', 'b']:.3f}). Region by region (v4 cluster "
-             f"boxes), Mc_best changes by {mc_txt}. b changes by more than twice its bootstrap error in "
-             f"{b_txt}; elsewhere the change is within about two bootstrap errors.</li>")
+             f"boxes), Mc_best changes by {mc_txt}. Tested on the same events at a common Mc (Mc_best with the "
+             f"v5.1 magnitudes) with a paired bootstrap, b decreases with the v5.1 magnitudes in "
+             f"{len(sig_dn)} of the {ntest} boxes tested, all beyond the Bonferroni threshold |z| &gt; {zc:.2f}: "
+             f"{sd_txt}. " + (f"It increases in {up_txt}. " if sig_up else "")
+             + f"Not significant: {ns_txt or 'none'}. {ax_txt}"
+             + (f"The onshore decrease is not driven by Mount St. Helens: without it the ON box goes from "
+                f"{onm.b_v41:.3f} to {onm.b_v51:.3f} at Mc {onm.mc:.1f} ({onm.db:+.3f}, z {onm.z:+.1f}). "
+                if onm is not None else "")
+             + "An earlier version of this page said b changed beyond two bootstrap errors only at AX and ON; that "
+             "compared b at different Mc with unpaired errors and is withdrawn. All Mc and b values here use the "
+             "stored (unconverged) ML.</li>")
     h.append("</ul>")
+
+    # ---- convergence of the phase19 inversion
+    if CV is not None:
+        h.append("<h2>The phase19 inversion is not converged</h2>")
+        h.append(f"<p>phase19 solves station ML = M<sub>i</sub> + C<sub>jp</sub> (one term per station epoch and "
+                 f"phase, sum of terms = 0 per phase) with LSQR, damping 10<sup>-3</sup>, and stops at 3000 "
+                 f"iterations. On the v5.1 pick set ({int(c_same.n_events):,} events with &ge; 3 near picks) it "
+                 f"stops there with istop {int(c_same.istop)} (iteration limit). Re-solved with the same settings, "
+                 f"the final ML agrees with the stored values to within {c_same.max_abs:.3f} (95% within "
+                 f"{max(abs(c_same.p05), abs(c_same.p95)):.3f}), so the stored values are reproducible. Run to "
+                 f"convergence it stops at {int(c_conv.itn):,} iterations (istop {int(c_conv.istop)}), and the "
+                 f"final ML (each solution with its own anchor offset: {c_conv.offset_stored:+.3f} stored, "
+                 f"{c_conv.offset:+.3f} converged) changes by more than 0.1 for {100 * c_conv.share_abs_gt_0p1:.0f}% "
+                 f"of events and by more than 0.3 for {100 * c_conv.share_abs_gt_0p3:.0f}%. The changes are "
+                 f"regional, not scatter: whole offshore networks move against the onshore ones. The residual norm "
+                 f"hardly changes ({c_same.r1norm:.2f} to {c_conv.r1norm:.2f}), so the picks constrain the level of "
+                 f"the offshore station terms relative to the onshore ones only weakly, and the stored level is "
+                 f"where LSQR stopped. The same code made the v4.1 magnitudes (the v4.1 rebuild converges at "
+                 f"4,658 iterations). Script: <code>workflow/05_magnitude/v51_phase19_convergence.py</code>; "
+                 f"tables <code>phase19_convergence_*.csv</code>.</p>")
+        h.append("<h3>Converged minus stored final ML, by region (events with &ge; 3 near picks)</h3>")
+        h.append(tab(CV["by_region"], fmt=lambda x: f"{x:+.3f}"))
+        h.append("<h3>Against the outside references</h3>")
+        h.append("<p>Anchors and tensors restricted to events with &ge; 3 near picks, so the numbers differ from "
+                 "the anchor table further down, which also holds 'mapped' events and the final M.</p>")
+        ra = pd.DataFrame({"n": cref_n, "stored": cref_a["stored"], "converged": cref_a["converged"]}).reset_index()
+        rt = pd.DataFrame({"n": cref_tn, "stored": cref_t["stored"], "converged": cref_t["converged"]}).reset_index()
+        h.append("<p><b>Our ML - ComCat ML (anchor median)</b></p>" + tab(ra, fmt=lambda x: f"{x:+.3f}"))
+        h.append("<p><b>Our ML - tensor Mw, Mw 3-4.5 (median)</b></p>" + tab(rt, fmt=lambda x: f"{x:+.3f}"))
+        h.append(f"<p>Converged, the anchor residual std drops from {cstd['stored']:.3f} to {cstd['converged']:.3f}; "
+                 f"the offshore gaps to ComCat ML shrink (Blanco {cref_a.loc['Blanco', 'stored']:+.2f} to "
+                 f"{cref_a.loc['Blanco', 'converged']:+.2f}, Gorda {cref_a.loc['Gorda', 'stored']:+.2f} to "
+                 f"{cref_a.loc['Gorda', 'converged']:+.2f}, Mendocino {cref_a.loc['Mendocino', 'stored']:+.2f} to "
+                 f"{cref_a.loc['Mendocino', 'converged']:+.2f}), and offshore ML - Mw goes from "
+                 f"{cref_t.loc['offshore and coastal labels', 'stored']:+.2f} to "
+                 f"{cref_t.loc['offshore and coastal labels', 'converged']:+.2f} "
+                 f"({int(cref_tn['offshore and coastal labels'])} events) while onshore stays near "
+                 f"{cref_t.loc['onshore labels', 'converged']:+.2f}. Two independent references therefore favour "
+                 f"the converged solution offshore.</p>")
+        h.append("<h3>v5.1 - v4.1 with both inversions converged</h3>")
+        h.append(tab(CV["v51_minus_v41"], fmt=lambda x: f"{x:+.3f}"))
+        h.append(f"<p>Medians over events with &ge; 3 near picks in both runs. Converged, the v5.1 - v4.1 change in "
+                 f"the offshore labels outside Axial is {c41_rng[0]:+.3f} to {c41_rng[1]:+.3f} (stored: "
+                 f"{c41s_rng[0]:+.3f} to {c41s_rng[1]:+.3f}); Axial stays at {c41.loc['Axial', 'converged']:+.3f} "
+                 f"(the hypocentres moved toward the caldera stations). So most of the offshore rise from v4.1 to "
+                 f"v5.1, and the drop of the seafloor station terms behind it, come from two unconverged solutions "
+                 f"stopping at different points, not from the relocation.</p>")
+        h.append("<p><b>Consequences.</b> The offshore ML level of v5.1 and of v4.1 is uncertain by 0.3-0.7 "
+                 "depending on the region, more than any change discussed on this page except at Axial and for "
+                 "relocated tier D events. Mc and b per box are computed from the stored ML; a regional shift "
+                 "moves Mc but not b, and the paired b changes may change once the solver converges. The "
+                 "magnitudes in the table were not changed here: changing the solver changes the v4.1 and "
+                 "v5.1 products and is for the PI to decide; catalog v6.0 will be recomputed anyway. Proposed: "
+                 "run phase19 to convergence (check istop), and map how strongly each offshore deployment is "
+                 "tied to the onshore network.</p>")
 
     # ---- decisions
     h.append("<h2>Decisions made here (proposed)</h2>")
@@ -829,7 +1145,9 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
          "The windows sit on the samples the picker picked (same day-trace time base); shifting them by the "
          "correction would move them off the arrival. The residual check shows no dependence above 0.03 units."),
         ("Distance-scaled window", "Re-select the window length from the stored grid with the v5.1 hypocentral "
-         "distance (as for v4).", "Same rule as v4; the stored running maxima cover 1-60 s."),
+         "distance (as for v4).", f"Same rule as v4; the stored running maxima cover 1-60 s. The length changes "
+         f"for {100 * W['share_changed']:.0f}% of picks, mostly by one grid step; the amplitude changes by more "
+         f"than 0.01 log10 units for {100 * W['share_amp_gt001_all']:.1f}% of picks."),
         ("Rows without a hypocentre", "No M (empty M, M_type). Fallback ML_v4hyp in its own column: median of the "
          "Hutton-Boore station magnitudes within 150 km of the v4 hypocentre minus the v5.1 phase19 station terms, "
          "plus the v5.1 anchor offset, >= 3 picks; not part of the joint inversion.",
@@ -850,8 +1168,14 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
         ("Everything else", "Same chain and options as v4 (SNR >= 3, epoch-keyed station terms, n fixed at 1, "
          "150 km Hutton-Boore inversion, Mw switch at 4.5).", "Comparability with v4.1."),
         ("Mc / b", "Report Mc and b for the v4 cluster boxes (v4_mc_maps.py estimators) and for the v5.1 region "
-         "labels; b uncertainty as the bootstrap std with Mc re-estimated per resample.",
-         "Same boxes as the v4 Mc maps and the clustering analysis."),
+         "labels; b uncertainty as the bootstrap std with Mc re-estimated per resample. Test a change of b "
+         "between magnitude versions on the same events at a common Mc with a paired bootstrap.",
+         "Same boxes as the v4 Mc maps and the clustering analysis. The unpaired bootstrap std cannot test a "
+         "change: the two estimates share their events, and Mc may differ between them."),
+        ("Caution flags", "Copy depth_quality from the v5.1 catalog and add ml_caution (deep_pass, tierD_moved30, "
+         "weak_terms) to the per-event table; do not change M for these rows.",
+         "Users can drop hypocentre-sensitive or weakly tied ML without a second join; the magnitudes stay "
+         "what the chain computed."),
     ]
     h.append(tab(pd.DataFrame(dec_rows, columns=["topic", "decision", "reason"])))
 
@@ -918,13 +1242,18 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
                  "of the v4 epicentre), by v4.1 ML, by the v5.1 distance to the nearest station and by the depth change."))
     h.append("<h3>By region</h3>" + tab(cv["by_reg"], fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>Offshore and onshore</h3>" + tab(cv["by_off"], fmt=lambda x: f"{x:+.3f}"))
+    h.append("<p>Here offshore means an epicentre below sea level (surface_km &lt; 0), which puts the 3,157 "
+             "Puget/Georgia inland-water events offshore. The split under other definitions "
+             "(<code>v51_vs_v4_offshore_definitions.csv</code>):</p>")
+    h.append(tab(od, fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>By magnitude (v4.1 ML)</h3>" + tab(cv["by_mag"], fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>By distance to the nearest station (v5.1)</h3>" + tab(cv["by_dist"], fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>By depth change (v5.1 - v4, km)</h3>" + tab(cv["by_dz"], fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>By location flag and tier</h3>" + tab(cv["by_flag"], fmt=lambda x: f"{x:+.3f}"))
     h.append("<p>Deep-pass events (median depth 86 km in v5.1, 31 km in v4) and far_only events (52 km against "
              "4 km) moved down by tens of km, which lengthens their distances and raises their ML. Their depths are "
-             "flagged as poorly constrained, so their ML is too.</p>")
+             "flagged as poorly constrained, so their ML is too (ml_caution deep_pass; far_only events are all "
+             "'mapped' and carry the larger mapped uncertainty).</p>")
     h.append("<h3>ML_method, v4.1 to v5.1</h3>" + tab(cv["by_meth"], fmt=lambda x: f"{x:+.3f}"))
     mtt = cv["mtype"].reset_index().rename(columns={"M_type_v4": "M_type v4.1 \\ v5.1"})
     h.append("<h3>M_type, v4.1 (rows) to v5.1 (columns)</h3>" + tab(mtt, fmt=lambda x: f"{x:,.0f}"))
@@ -933,18 +1262,43 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              f"mean over its picks of the change of the distance term, of log10 A (window length) and of the station "
              f"term, plus the change of the anchor offset ({dec['off4']:+.3f} to {dec['off51']:+.3f}). Over "
              f"{len(ev):,} events 'near' in both runs this reproduces the observed change with correlation "
-             f"{r_pred:.3f}; the rest comes from picks that enter or leave the 150 km set or the robust rejection.</p>")
+             f"{r_pred:.3f}; the rest comes from picks that enter or leave the 150 km set or the robust rejection. "
+             f"Because the event ML is the mean of (station ML - station term) plus the offset, this is an "
+             f"accounting identity when the pick set is unchanged, not independent evidence of a cause: it tells "
+             f"which terms moved. The window term is near zero: the window length changes for "
+             f"{100 * W['share_changed']:.0f}% of picks, but only {100 * W['share_amp_gt001_all']:.1f}% of "
+             f"amplitudes change by more than 0.01 log10 units (<code>window_change.csv</code>). Why the "
+             f"seafloor station terms dropped is explained only at Axial (the hypocentres moved toward the "
+             f"caldera stations); elsewhere it is not shown.</p>")
     h.append(fig("fig_decomposition", "a) observed against reconstructed change; b) median contributions per region."))
     comp = pd.read_csv(f"{out}/v51_vs_v4_decomposition.csv")
     h.append(tab(comp, fmt=lambda x: f"{x:+.3f}"))
     h.append(fig("fig_station_terms", "Phase19 station-phase terms of the two runs (the 7D.J35C S term, about "
                  "-234 in both runs, is off the plot; see open issues)."))
-    h.append(f"<p>Large changes: {big[0.3]:,} events change by more than 0.3, {big[0.5]:,} by more than 0.5 and "
+    h.append("<h3>Large changes</h3>")
+    h.append(f"<p>{big[0.3]:,} events change by more than 0.3, {big[0.5]:,} by more than 0.5 and "
              f"{big[1.0]:,} by more than 1.0. Of those above 0.5, by region: "
-             + ", ".join(f"{k} {v}" for k, v in big_reg.items()) + ". Most are within a few km of the Mount St. "
-             "Helens stations, where a 1-2 km change of depth changes the hypocentral distance by a factor of two "
-             "and the Hutton-Boore term (1.11 log10 r) by 0.3 or more. Hutton-Boore was calibrated at distances "
-             "of tens of km; at 1-5 km the station terms carry much of the scale.</p>")
+             + ", ".join(f"{k} {v}" for k, v in big_reg.items()) + f". {int(Lall.tier_D)} of the {big[0.5]:,} "
+             f"({100 * Lall.tier_D / Lall.n:.0f}%) are tier D, while tier D is {100 * shD:.0f}% of all shared events, "
+             f"so the large changes come mainly from tier D relocations, not from Mount St. Helens. "
+             f"{int(Lmsh.n)} are in the Mount St. Helens box ({int(Lmsh.tier_D)} tier D; median depth "
+             f"{Lmsh.depth_v4_median:.0f} km in v4 and {Lmsh.depth_v51_median:.0f} km in v5.1; "
+             f"{int(Lmsh.in_P1_deep_msh_review)} belong to the deep set of the waveform review, problem 1). "
+             f"The {int(Lon.n)} onshore events outside the box ({int(Lon.tier_D)} tier D) moved a median "
+             f"{Lon.shift_h_km_median:.0f} km horizontally and {Lon.shift_z_km_median:.0f} km deeper, with median "
+             f"sig_z {Lon.sig_z_median:.1f} km, and their ML rose by {Lon.dML_median:+.2f}. Where the stations are "
+             f"close (Mount St. Helens, Axial), a 1-2 km change of depth can double the hypocentral distance and "
+             f"move the Hutton-Boore term (1.11 log10 r) by 0.3 or more; Hutton-Boore was calibrated at distances "
+             f"of tens of km. Table: <code>v51_vs_v4_large_changes.csv</code>.</p>")
+    lt = L.reset_index()[["group", "n", "tier_D", "deep_pass", "in_P1_deep_msh_review", "dML_median",
+                          "shift_h_km_median", "shift_z_km_median", "sig_z_median", "depth_v4_median",
+                          "depth_v51_median"]]
+    h.append(tab(lt, fmt=lambda x: f"{x:.2f}"))
+    if rev:
+        h.append("<p>ML change on the event sets of the v5.1 waveform review (sets read from "
+                 "<code>v5.1_review/work/sets/</code>; P2 is the 39 reviewed Brookings events):</p>")
+        h.append(tab(pd.DataFrame(rev).T.reset_index().rename(columns={"index": "review set"}),
+                     fmt=lambda x: f"{x:+.3f}"))
     h.append("<h3>Continuity with v3</h3>")
     h.append("<p>Events with an ML in v3, v4.1 and v5.1 (v3-v4 match table; offshore = v5.1 epicentre below sea "
              "level). The v4 science report gave v4 - v3 = +0.19 offshore on 41,111 events with its own split; on "
@@ -1002,6 +1356,25 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
     cmp["d_mc_C_minus_B"] = cmp.mc_best - cmp.mc_best_B
     cmp["d_b_C_minus_B"] = cmp.b - cmp.b_B
     h.append("<h3>Change, region by region</h3>" + tab(cmp, fmt=lambda x: f"{x:.2f}"))
+    h.append("<p>This table compares C and B each at its own Mc_best, and b_sigma_boot is the error of C alone, so "
+             "it cannot test the change. The paired test below does.</p>")
+    h.append("<h3>Paired test of the b change (same events, common Mc)</h3>")
+    h.append(f"<p>Events located in v5.1, earthquakes, with both a v5.1 and a v4.1 M. For each box, b of the v4.1 "
+             f"and of the v5.1 magnitudes above one common Mc (Mc_best of C, and Mc_best of B where it differs); "
+             f"sd_paired is the std of b(v5.1) - b(v4.1) over 500 bootstrap resamples of the events, with Mc held "
+             f"fixed. Bonferroni over the {ntest} boxes tested at Mc_best of C: |z| &gt; {zc:.2f} for a "
+             f"family-wise 5% level. 'ON without MSH' and 'MSH only' split the onshore box at the Mount St. Helens "
+             f"box (lat 46.0-46.4, lon -122.4 to -122.0). Computed by <code>v51_mc_b.py --stage paired</code> "
+             f"(<code>mc_b/paired_b.csv</code>).</p>")
+    pcols = ["box", "mc_source", "mc", "n_events", "n_above_v41", "n_above_v51", "b_v41", "b_v51", "db",
+             "sd_paired", "z", "significant_bonferroni"]
+    h.append(tab(P[pcols], fmt=lambda x: f"{x:.3f}"))
+    h.append(f"<p>Result: b is lower with the v5.1 magnitudes in {', '.join(sig_dn)}"
+             + (f" and higher in {', '.join(sig_up)}" if sig_up else "")
+             + f" (beyond the Bonferroni threshold); not significant in {', '.join(nsig) or 'no box'}. {ax_txt}"
+             f"The changes are small (a few percent of b), and their cause is not analysed here: a slope of only "
+             f"0.03 in ML(v5.1) - ML(v4.1) against magnitude would lower b by about 3%. They come from the "
+             f"magnitudes alone, since both b values use the same events and epicentres.</p>")
     h.append("<h3>Per period, v5.1 (C)</h3>")
     h.append(tab(reg[(reg.version == "C_v51M_v51loc") & (reg.period != "all")][["period"] + cols],
                  fmt=lambda x: f"{x:.2f}"))
@@ -1015,10 +1388,11 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              f"values are not meaningful (MAXC {regC.loc['ON', 'mc_maxc']:.1f}, MBS {regC.loc['ON', 'mc_mbs']:.1f}), "
              f"use GFT or the node maps. Axial's pooled GFT Mc was unstable in v4 (bootstrap sigma "
              f"{regA.loc['AX', 'sigma_boot']:.2f}); with v5.1 magnitudes it is {regC.loc['AX', 'mc_best']:.1f} "
-             f"with bootstrap sigma {regC.loc['AX', 'sigma_boot']:.2f} (MAXC+0.2 {regC.loc['AX', 'mc_maxc']:.1f}). Offshore Oregon (OR) has only "
-             f"{int(regC.loc['OR', 'n'])} events and the largest b change; its bootstrap error is "
-             f"{regC.loc['OR', 'b_sigma_boot']:.2f}. Mc and b are in the preferred magnitude M (ML for 99.9% of "
-             f"events).</p>")
+             f"with bootstrap sigma {regC.loc['AX', 'sigma_boot']:.2f} (MAXC+0.2 {regC.loc['AX', 'mc_maxc']:.1f}); "
+             f"with the Mc this unstable, the sign of the AX b change depends on the Mc chosen (paired test). "
+             f"Offshore Oregon (OR) has only {int(regC.loc['OR', 'n'])} events; its paired b change is "
+             f"{Pc.loc['OR', 'db']:+.3f} &plusmn; {Pc.loc['OR', 'sd_paired']:.3f}. Mc and b are in the preferred "
+             f"magnitude M (ML for 99.9% of events).</p>")
 
     # ---- open issues
     h.append("<h2>Open issues</h2><ul>")
@@ -1033,7 +1407,8 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
              f"log10 units that move by up to 2.8 between runs; several of their events have all their 'near' picks "
              f"on these stations, so their ML moves with them (e.g. event 74485: {m.set_index('ID').ML.get(74485, np.nan):+.2f} "
              f"in v5.1, {m.set_index('ID').ML_v4.get(74485, np.nan):+.2f} in v4.1). {n_weak:,} events have all their "
-             f"'near' picks on station-phase terms with fewer than 20 picks. Terms this large point to a response "
+             f"'near' picks on station-phase terms with fewer than 20 picks; {n_caut['weak_terms']} of them have an "
+             f"ML and carry ml_caution weak_terms (the others have no ML). Terms this large point to a response "
              f"problem on those channels.</li>")
     h.append(f"<li><b>Short distances.</b> Hutton-Boore is used down to r of 1 km (Mount St. Helens, Axial). Small "
              f"depth changes move these ML by 0.3-1; Axial ML fell by {-br.loc['Axial', 'median']:.2f}.</li>")
@@ -1042,23 +1417,40 @@ def write_html(out, m, cv, dec, cc, tz, tc, wi, reg, regc, v4mc, v3t, nht, fbd, 
     h.append(f"<li><b>Tensor events are deeper in v5.1.</b> Median {t51.ddepth_km.median():+.1f} km against ComCat "
              f"(v4: {t4.ddepth_km.median():+.1f}); {len(lost_carried)} events moved beyond the 5 s / 50 km match. "
              f"For the location work.</li>")
-    h.append("<li><b>Offshore ML against ComCat ML.</b> Our ML sits 0.3-0.5 above ComCat ML at Mendocino, Blanco "
-             "and Gorda and agrees onshore; the single anchor offset is set mostly by onshore anchors (2,724 of "
-             "3,561). Against tensor Mw our ML is within 0.1 for Mw 3-4.5 (64 events, mostly offshore). Whether the "
-             "gap to ComCat ML offshore comes from ComCat's offshore ML or from ours is not resolved here.</li>")
-    h.append("<li><b>Poorly constrained depths.</b> floor_limited, far_only, deep-pass and five-phase events get a "
-             "magnitude like any other, but at short distance their ML depends on the depth. The flags are in the "
-             "table so that users can filter.</li>")
+    h.append(f"<li><b>Offshore ML against outside references.</b> Our ML sits 0.3-0.5 above ComCat ML at Mendocino, "
+             f"Blanco and Gorda and agrees onshore; the single anchor offset is set mostly by onshore anchors (2,724 "
+             f"of 3,561). v5.1 made the offshore agreement worse with both references: the ComCat ML gap widened by "
+             f"{min(gaps):.2f} to {max(gaps):.2f}, and ML - Mw for Mw 3-4.5 tensor events on offshore and coastal "
+             f"labels went from {t34['v4.1'].ML_minus_Mw:+.2f} to {t34['v5.1'].ML_minus_Mw:+.2f}. Most of both the "
+             f"gap and its growth comes from the unconverged phase19 inversion: converged, the offshore gaps "
+             f"to ComCat ML and to tensor Mw shrink to about 0.0-0.3 (section above). The production M was not "
+             f"changed. Open: converge the solver (PI decision, affects v4.1 too) and recheck on v6.0.</li>")
+    if CV is not None:
+        h.append(f"<li><b>Unconverged phase19 inversion.</b> LSQR stops at 3000 iterations; converged "
+                 f"({int(c_conv.itn):,}), offshore regional ML levels move by "
+                 f"{cbr.loc[[r for r in OFF6 + COAST if r in cbr.index], 'median'].min():+.2f} to "
+                 f"{cbr.loc[[r for r in OFF6 + COAST if r in cbr.index], 'median'].max():+.2f}. Pre-existing in v4.1. "
+                 f"Not fixed here.</li>")
+    h.append(f"<li><b>Poorly constrained depths.</b> floor_limited, far_only, deep-pass and five-phase events get a "
+             f"magnitude like any other, but their ML depends on the depth. The table has the flags, the catalog's "
+             f"depth_quality ({int(dq.get('unconstrained', 0)):,} unconstrained and {int(dq.get('biased_deep', 0)):,} "
+             f"biased_deep among rows with ML) and ml_caution ({n_caut_any:,} rows) so that users can filter. "
+             f"M is not changed for any of them.</li>")
     h.append("</ul>")
 
     # ---- files
     h.append("<h2>Files</h2>")
     files = [
         ("/wd1/.../v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv", "one row per v5.1 event (172,342): "
-         "M, M_unc, M_type, ML, ML_unc, ML_method, n_ML (picks), n_sta_ML (stations), ML_inv, Mw_mt, comcat_id, "
-         "anchor_ml, nearest ANSS event, v4.1 values, fallback ML_v4hyp, flags"),
+         "M, M_unc, M_type, ML, ML_unc, ML_method, ml_caution, n_ML (picks), n_sta_ML (stations), ML_inv, Mw_mt, "
+         "comcat_id, anchor_ml, nearest ANSS event, v4.1 values, fallback ML_v4hyp, location flags and "
+         "depth_quality"),
         ("data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes_slim.csv.gz", "the magnitude columns of "
-         "the table above"),
+         "the table above, with ml_caution and depth_quality"),
+        ("data/catalog_v5/v5.1_analysis/mag/mc_b/paired_b.csv", "paired test of the b change"),
+        ("data/catalog_v5/v5.1_analysis/mag/v51_vs_v4_large_changes.csv, v51_vs_v4_offshore_definitions.csv, "
+         "v51_vs_v4_review_sets.csv, window_change.csv", "large changes by group, offshore splits, review sets, "
+         "window-length change"),
         ("/wd1/.../mag/cascadia_catalog_M_v51.csv", "phase19 output"),
         ("/wd1/.../mag/phase19_near_picks_v51.parquet, phase19_station_terms_v51.csv", "per-pick station ML, "
          "residuals, station terms"),

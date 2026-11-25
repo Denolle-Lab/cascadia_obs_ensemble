@@ -21,9 +21,19 @@ b uncertainty: Shi & Bolt (1982) at Mc_best, and the bootstrap standard deviatio
 when Mc_best is re-estimated in each of the 200 resamples (b_sigma_boot).
 Also per v5.1 catalog region label (column region).
 
+Stage "paired" (paired_b.csv): the test for a change of b. On the events that have
+both a v5.1 and a v4.1 M (located earthquakes), b(v5.1 M) - b(v4.1 M) at one common Mc
+per box (Mc_best of C, and also Mc_best of B where it differs), with a paired bootstrap
+(the same resampled events for both magnitudes, Mc held fixed, 500 resamples). z is the
+difference over the paired bootstrap std; the Bonferroni threshold is for the boxes
+tested at Mc_best of C. The b_sigma_boot of the regional table is not a test of the
+change: it treats the two estimates as independent and lets Mc move between them.
+Extra rows: the onshore box without Mount St. Helens (lat 46.0-46.4, lon -122.4 to
+-122.0) and Mount St. Helens alone.
+
 Usage:
   python v51_mc_b.py --mags /wd1/.../mag/cascadia_catalog_v5.1_magnitudes.csv \
-      --out <worktree>/data/catalog_v5/v5.1_analysis/mag/mc_b [--stage compute|plot|all]
+      --out <worktree>/data/catalog_v5/v5.1_analysis/mag/mc_b [--stage compute|plot|paired|all]
 """
 from __future__ import annotations
 
@@ -191,6 +201,68 @@ def compute(a):
     (out / "run_params.json").write_text(json.dumps(meta, indent=2))
 
 
+MSH_BOX = (-122.4, -122.0, 46.0, 46.4)   # lon0, lon1, lat0, lat1
+
+
+def _b_fixed(mag_bin, mc):
+    """Aki-Utsu b above a fixed Mc on 0.1-binned magnitudes (same formula as mc_counts)."""
+    x = mag_bin[mag_bin >= mc - 1e-9]
+    if len(x) < mm.NMIN_B:
+        return np.nan, len(x)
+    return 1.0 / (mm.LN10 * (x.mean() - (mc - mm.DM / 2))), len(x)
+
+
+def paired(a, nboot=500):
+    from scipy.stats import norm
+    out = Path(a.out)
+    reg = pd.read_csv(out / "mc_b_regional.csv")
+    reg = reg[reg.period == "all"]
+    mcC = reg[reg.version == "C_v51M_v51loc"].set_index("region").mc_best
+    mcB = reg[reg.version == "B_v4M_v51loc"].set_index("region").mc_best
+    d = _MAGS[_MAGS.loc_source.isin(["nll3d", "comcat"]) & _MAGS.is_earthquake.astype(bool)
+              & _MAGS.M.notna() & _MAGS.M_v4.notna()].copy()
+    d["box"] = _regions(d.lon.values, d.lat.values)
+    d["msh"] = d.lon.between(MSH_BOX[0], MSH_BOX[1]) & d.lat.between(MSH_BOX[2], MSH_BOX[3])
+    m5 = np.round(d.M.to_numpy() / mm.DM) * mm.DM
+    m4 = np.round(d.M_v4.to_numpy() / mm.DM) * mm.DM
+    groups = [(r, d.box.eq(r).to_numpy(), r) for r in mm.REG_ORDER]
+    groups += [("OFF", d.box.isin(mm.OFFSHORE).to_numpy(), "OFF"), ("ALL", np.ones(len(d), bool), "ALL"),
+               ("ON without MSH", (d.box.eq("ON") & ~d.msh).to_numpy(), "ON"),
+               ("MSH only", (d.box.eq("ON") & d.msh).to_numpy(), None)]
+    rng = np.random.default_rng(20261125)
+    rows = []
+    for name, sel, mc_from in groups:
+        x5, x4 = m5[sel], m4[sel]
+        if mc_from is None:   # Mc_best of C for this subset
+            ib = np.clip(np.round((x5 - mm.MLO) / mm.DM).astype(int), 0, len(mm.MBINS) - 1)
+            mcs = [("C", round(mm.mc_with_bootstrap(ib, 0, 0)["mc_best"], 1))]
+        else:
+            mcs = [("C", round(float(mcC[mc_from]), 1))]
+            if abs(mcB[mc_from] - mcC[mc_from]) > 0.05:
+                mcs.append(("B", round(float(mcB[mc_from]), 1)))
+        for src, mc in mcs:
+            b4, n4 = _b_fixed(x4, mc)
+            b5, n5 = _b_fixed(x5, mc)
+            db = []
+            for _ in range(nboot):
+                i = rng.integers(0, len(x5), len(x5))
+                db.append(_b_fixed(x5[i], mc)[0] - _b_fixed(x4[i], mc)[0])
+            sd = float(np.nanstd(db))
+            z = (b5 - b4) / sd if sd > 0 else np.nan
+            rows.append(dict(box=name, mc_source=f"Mc_best {src}", mc=mc, n_events=int(sel.sum()),
+                             n_above_v41=n4, n_above_v51=n5, b_v41=b4, b_v51=b5, db=b5 - b4,
+                             sd_paired=sd, z=z, p_two_sided=2 * norm.sf(abs(z))))
+    r = pd.DataFrame(rows)
+    main = r.box.isin(mm.REG_ORDER + ["OFF", "ALL"]) & r.mc_source.eq("Mc_best C")
+    ntest = int(main.sum())
+    zcrit = float(norm.isf(0.05 / 2 / ntest))
+    r["bonferroni_n_tests"] = ntest
+    r["bonferroni_z_crit"] = zcrit
+    r["significant_bonferroni"] = r.z.abs() > zcrit
+    r.to_csv(out / "paired_b.csv", index=False, float_format="%.4f")
+    print(r.to_string(index=False, float_format=lambda v: f"{v:.3f}"))
+
+
 def plot(a):
     import pygmt
     import map_context as mcx
@@ -252,7 +324,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--mags", required=True)
     p.add_argument("--out", required=True)
-    p.add_argument("--stage", choices=["compute", "plot", "all"], default="all")
+    p.add_argument("--stage", choices=["compute", "plot", "paired", "all"], default="all")
     p.add_argument("--n", type=int, default=250)
     p.add_argument("--n-period", type=int, default=150)
     p.add_argument("--rmax", type=float, default=50.0)
@@ -265,6 +337,8 @@ def main():
         compute(a)
     if a.stage in ("plot", "all"):
         plot(a)
+    if a.stage in ("paired", "all"):
+        paired(a)
 
 
 if __name__ == "__main__":

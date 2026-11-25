@@ -29,9 +29,18 @@ Rules:
     them (event_flag anss_explosion, anss_quarry_blast, anss_other_event,
     anss_sonic_boom, quarry_blast_likely). They are dropped from Mc and b fits.
 
-Columns: ID, time, lat, lon, depth, loc_source, tier, region, offshore (surface_km < 0),
-event_flag, is_earthquake, floor_limited, far_only, deep_pass, five_phase,
-M, M_unc, M_type, ML, ML_unc, ML_method, n_ML (picks), n_sta_ML (stations), ML_inv,
+  * ml_caution (rows with an ML): semicolon-separated reasons why the ML may not hold,
+    empty when none applies:
+      deep_pass      the hypocentre comes from the deep NonLinLoc pass;
+      tierD_moved30  tier D and the hypocentre moved more than 30 km (3D) from v4;
+      weak_terms     every 'near' pick of the event sits on a phase19 station-phase term
+                     fitted from fewer than 20 picks (term weakly tied to the network).
+    The first two make ML follow a poorly constrained distance; depth_quality (copied
+    from the v5.1 catalog: ok, unconstrained, biased_deep) is the catalog's own flag.
+
+Columns: ID, time, lat, lon, depth, depth_quality, loc_source, tier, region,
+offshore (surface_km < 0), event_flag, is_earthquake, floor_limited, far_only, deep_pass,
+five_phase, M, M_unc, M_type, ML, ML_unc, ML_method, ml_caution, n_ML (picks), n_sta_ML (stations), ML_inv,
 ML_inv_unc, n_obs_inv, Mw_mt, comcat_id, mt_match (v5.1 = phase18 match on the v5.1
 origin, v4.1 = carried), anchor_ml (ComCat ML of the anchor match),
 anss_id, anss_mag, anss_magtype, anss_dt_s, anss_dist_km (nearest ANSS event of any
@@ -142,8 +151,9 @@ def main(argv=None):
     nsta = near.assign(sta=near.station.str.split("@").str[0]).groupby("event_id").sta.nunique()
 
     # ---- per-event table
-    out = cat[["ID", "time", "lat", "lon", "depth", "loc_source", "tier", "region", "surface_km",
-               "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase"]].copy()
+    out = cat[["ID", "time", "lat", "lon", "depth", "depth_quality", "loc_source", "tier", "region",
+               "surface_km", "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase",
+               "shift_h_km", "shift_z_km"]].copy()
     out["offshore"] = pd.Series(np.where(out.surface_km < 0, "True", "False"), index=out.index).where(
         out.surface_km.notna(), "")
     flag = out.event_flag.fillna("")
@@ -213,6 +223,24 @@ def main(argv=None):
           f"{int(out.loc[nh, 'ML_v4hyp'].notna().sum())}; with a v4.1 tensor Mw: "
           f"{int((nh & out.M_type_v4.eq('Mw')).sum())}; had a v4.1 M: {int(out.loc[nh, 'M_v4'].notna().sum())}")
 
+    # ---- ml_caution: hypocentre-sensitive or weakly tied ML (see docstring)
+    has_ml = out.ML.notna()
+    moved = np.hypot(out.shift_h_km, out.shift_z_km)
+    nterm = near.groupby("sp").size()
+    weak_ev = near.assign(w=near.sp.map(nterm) < 20).groupby("event_id").w.all()
+    reasons = {
+        "deep_pass": has_ml & out.deep_pass.astype(str).eq("True"),
+        "tierD_moved30": has_ml & out.tier.eq("D") & (moved > 30.0),
+        "weak_terms": has_ml & out.ID.map(weak_ev).fillna(False).astype(bool),
+    }
+    out["ml_caution"] = ""
+    for k, s in reasons.items():
+        cur = out.loc[s, "ml_caution"]
+        out.loc[s, "ml_caution"] = cur.where(cur.eq(""), cur + ";") + k
+    print("ml_caution: " + ", ".join(f"{k} {int(s.sum()):,}" for k, s in reasons.items())
+          + f"; any {int(out.ml_caution.ne('').sum()):,} of {int(has_ml.sum()):,} rows with ML")
+    print(f"depth_quality: {out.depth_quality.value_counts().to_dict()}")
+
     # ---- nearest ANSS event (any type) for the ComCat comparison
     anss = pd.read_csv(f"{D}/anss_2010-16.csv", index_col=0)
     anss["t"] = pd.to_datetime(anss["time"], format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True, errors="coerce")
@@ -223,9 +251,9 @@ def main(argv=None):
     out = out.merge(m, on="ID", how="left")
     print(f"ANSS events matched (any type): {len(m):,}")
 
-    cols = ["ID", "time", "lat", "lon", "depth", "loc_source", "tier", "region", "offshore",
+    cols = ["ID", "time", "lat", "lon", "depth", "depth_quality", "loc_source", "tier", "region", "offshore",
             "event_flag", "is_earthquake", "floor_limited", "far_only", "deep_pass", "five_phase",
-            "M", "M_unc", "M_type", "ML", "ML_unc", "ML_method", "n_ML", "n_sta_ML",
+            "M", "M_unc", "M_type", "ML", "ML_unc", "ML_method", "ml_caution", "n_ML", "n_sta_ML",
             "ML_inv", "ML_inv_unc", "n_obs_inv", "Mw_mt", "comcat_id", "mt_match", "anchor_ml",
             "anss_id", "anss_mag", "anss_magtype", "anss_type", "anss_dt_s", "anss_dist_km",
             "M_v4", "M_type_v4", "ML_v4", "ML_method_v4",

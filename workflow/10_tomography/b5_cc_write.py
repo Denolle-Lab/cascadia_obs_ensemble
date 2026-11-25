@@ -11,7 +11,8 @@ Output in /wd1/mdenolle_data/tomo_v1/cc_dt:
   CC = cc_max; only rows with above = True (status ok, peak not at the lag edge, cc_max >= cc_min,
   cc_max - cc_2nd >= margin_min, same sampling rate for both records). Rows with an un-re-timable pick (D-B072 off_grid / rate_not_100)
   are in these files and flagged in the parquet; dt_<set>_no_unretimable.cc (+ _added) leave them out.
-* qc/<set>_*.csv, qc/<set>_qc.png, qc/summary_<set>.json.
+* qc/<set>_*.csv, qc/<set>_qc.png, qc/summary_<set>.json; qc/<set>_repeater_station_outliers.csv = station
+  clock check on co-located pairs (clock_outliers).
 Per-row triangle closure (accepted rows): n_tri = closed triangles (same station-phase, all three legs accepted)
 the row is a leg of, n_tri_fail20 = of those, how many have |dt_AB + dt_BC - dt_AC| > 20 ms.
 
@@ -151,6 +152,22 @@ def drift_slopes(a, nmax=1500, seed=0):
                                        "intercept_ms"])
 
 
+def clock_outliers(d, nmin=8, ccmin=0.9, spread=0.01, dev=0.05):
+    """Station clock check on co-located pairs: pairs with >= nmin accepted rows at cc >= ccmin whose dt_cc
+    spread (median |dt - median|) is below `spread` s; rows more than `dev` s off the pair median. A clock error at
+    one station on one of the two days shifts its P and S by the same amount (and the catalog dt alike)."""
+    a = d[d.above & (d.cc_max >= ccmin)]
+    g = a.groupby("pair").dt_cc
+    a = a.assign(dev=a.dt_cc - g.transform("median"), n=g.transform("size"))
+    sp = a.groupby("pair").dev.transform(lambda x: np.median(np.abs(x)))
+    a = a[(a.n >= nmin) & (sp < spread)]
+    o = a[a.dev.abs() > dev].copy()
+    o["day1"] = [C.UTCDateTime(t).strftime("%Y-%m-%d") for t in o.t_pick1]
+    o["day2"] = [C.UTCDateTime(t).strftime("%Y-%m-%d") for t in o.t_pick2]
+    rows_per_sta = a.groupby("station").size()
+    return a.pair.nunique(), o, rows_per_sta
+
+
 def qc(name, d, P, nfiles):
     out = C.OUT / "qc"
     out.mkdir(parents=True, exist_ok=True)
@@ -210,6 +227,14 @@ def qc(name, d, P, nfiles):
     dr = drift_slopes(a)
     dr.to_csv(out / f"{name}_drift_slopes.csv", index=False, float_format="%.4g")
     S["drift_slopes"] = dr[dr.n >= 30].round(4).to_dict("records")
+    npairs_co, co, rps = clock_outliers(d)
+    co.to_csv(out / f"{name}_repeater_station_outliers.csv", index=False, float_format="%.5g")
+    S["clock_check"] = dict(colocated_pairs=int(npairs_co), outlier_rows=int(len(co)),
+                            by_station={k: dict(rows=int(len(g)), of_rows=int(rps.get(k, 0)),
+                                                dev_median_s=float(g.dev.median()),
+                                                phases="".join(sorted(set(g.phase))),
+                                                days=sorted(set(g.day1) | set(g.day2)))
+                                        for k, g in co.groupby("station")})
     rp = repeaters(d)
     rp.to_csv(out / f"{name}_repeaters.csv", index=False, float_format="%.5g")
     S["repeaters"] = dict(n=len(rp), dt_cc_std_median_ms=float(rp.dt_cc_std.median() * 1e3) if len(rp) else np.nan,
@@ -271,7 +296,7 @@ def main():
                                                                    C.OUT / f"dt_{a.set}{suf}_no_unretimable.cc")
     S = qc(a.set, d, P, {k: dict(pairs=v[0], lines=v[1]) for k, v in files.items()})
     print(json.dumps({k: S[k] for k in ("pairs_given", "pairs_added", "above_by_phase", "above_by_class", "closure",
-                                        "unretimable", "repeaters", "files")}, indent=1, default=float))
+                                        "unretimable", "repeaters", "clock_check", "files")}, indent=1, default=float))
     write_manifest(f"b5_cc_write_{a.set}", C.OUT / "qc", inputs=[C.OUT / a.set / "cc_raw.parquet", Path(a.params)],
                    outputs=[C.OUT / f"cc_{a.set}.parquet"] + [C.OUT / k for k in files],
                    params=P, counts={k: S[k] for k in ("pairs_given", "pairs_added", "files")})

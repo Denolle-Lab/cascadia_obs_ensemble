@@ -2,10 +2,175 @@
 
 One page that says where every step stands. Decisions are in `DECISIONS.md` (D-Bxxx), parameters in
 `params.yaml`, details in `notes/`. Update this file whenever a step changes state.
-Last update: 2026-11-24 09:40 (handoff 11-24 07:55 below, read first).
+Last update: 2026-11-25 04:10 (handoff 11-24 07:55 below, read first).
 
 Naming: **v4-NLL3D** = catalog v4 relocated with NonLinLoc in the 3D starting model (formerly
 "Track A", D-B024). Starting model and locations: D-B004, D-B005.
+
+## CATALOG v5.1 BUILT, ON ZENODO DRAFT AND ATLAS 2026-11-25 04:10 (session -18)
+
+* /wd1/mdenolle_data/catalog_v5/v5.1 (catalog_version.py 5.1): 172,342 events = 171,717 NLLoc (b4_v51_iter1) + 2 ComCat
+  (900001-3 not located) + 623 without a hypocentre; tiers A 21,325, B 33,896, C 73,464, D 43,032, U 625; 0 above the
+  surface (publishable by D-B055); flags floor_limited 8,682, far_only 624, deep_pass 356, five_phase 11,978. CSV md5
+  5035f0ee. Folder also has the re-timed picks (gz), re-timing corrections/README/report, station terms, B4 reports.
+* catalog_v5.zip md5 2cf6f0a3 (103 MB; v5.0 folder unchanged) replaced on the private Zenodo draft 23084158 (remote md5
+  verified; draft not submitted). Registry data/catalog_v5/registry.csv, data/catalog_v5/v5.1/.
+* Atlas gh-pages e0e32e6e shows v5.1 (atlas/model-layer 3f661608): 0 events above the surface in its view, 623 hidden.
+* D-B080 (bundle carries the re-timed picks; surface pinned per version; atlas air test against the catalog surface;
+  b4_acceptance.py NaN bug fixed). D-B073 (shallow crust) is under "go continuously": PI may revise it before v5.1 is
+  published outside the private draft.
+* Next: B5 on v5.1 with D-B061..D-B064 (catalog dt from the re-timed picks) -> v5.2; CC dt only from re-timed
+  waveform reads (D-B072 note).
+
+## v5.1 RELOCATION DONE 2026-11-25 03:18 (round-2 session; stages 1-5 of the handoff)
+
+Run b4_v51_iter1 (terms b4_v51_iter0, deep pass b4_v51_deep), grids time_b4_v0.3.1m_sc21 (model v0.3.1 + D-B073
+shallow crust; merged surface D-B068), wide_time_b4_v0.3.1m_sc21, picks re-timed (D-B072/D-B075, v4.1t), LOCGAU 0.2
+(D-B069), five-phase minimum (D-B066), deep pass (D-B067). Catalog /wd1/mdenolle_data/reloc_v5/catalog/
+catalog_b4_b4_v51_iter1.csv: 171,717 of 172,340 located (tier U 623), 0 above the merged surface (publishable),
+floor_limited 8,682, far_only 624, deep_pass 356, five_phase 11,978. Acceptance (data/tomo_v1/b4/b4_v51_iter1/
+acceptance.md, depth_literature/paired_v5.1.md): Axial A-B 81 % within 2 km below the seafloor (v0.3.1 28 %; target
+85 % not met), Blanco - Lange +1.43 km (v0.3.1 +1.99), Mt St Helens - Hirao +0.54 km (v0.3.1 +0.49), Puget unchanged.
+Integration merged: tomo/tiles 763fb372, reloc/track-a 3cb230bf. Handed to session -18 for catalog v5.1 (build,
+private Zenodo, atlas). Chain fixes during the run: missing gitignored ANSS table link in the new Track A worktree;
+tier-summary copy path (97f9d1da).
+
+## PROGRESS 2026-11-24 21:27 (PI: "go continuously from 1 to 5")
+
+* Integration branches (not merged into tomo/tiles or reloc/track-a yet): v51/integration (worktree ~/wt_v51_int:
+  surface + field + wide + catalog-b; params conflict resolved by keeping both blocks; D-B071 ComCat non-earthquake
+  event_flag with data/tomo_v1/ref_models/comcat_nonquake_2010-2016.csv; b4.surface.source merged; 5.1 params with
+  D-B069/D-B071/D-B072 notes; chain b4_v51_relocate.sh; shallow-crust rule params b4.shallow_crust (off by default);
+  field verifier should-fixes) and v51/integration-reloc (worktree ~/wt_v51_int_reloc: runner + catalog-a). Both pushed.
+* Field verifier: ready, no must_fix (v51_build/verify_field/). Wide verifier running. Shallow-crust rule-on test
+  build running (v51_build/sc_test/, compare_sc.py).
+* Waiting: V4 of the slower-S test (~midnight), pick re-timing (checks/pick_retiming/). Then step 1 (model rule
+  decision, D-B073), step 2 (accept re-timed picks), merge integration branches, launch b4_v51_relocate.sh.
+
+## STAGE MARKER 2026-11-24 20:55 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+
+Still stage 1 of 5 (last verifications). PI 20:50: D-B072 (verify the pick drift on pnwstore, then re-time each pick
+from short ObsPy reads around it; v5.1 uses the re-timed picks; other products unchanged for now): agent running ->
+/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/. Field and wide pieces: code and tests done, verifiers running
+(v51_build/verify_field, verify_wide). Slower-S interim (V1-V3, out/s16_runs_V123_table.md): V2 (Vp/Vs 1.95 in the top
+2.5 km offshore) raises Axial within 2 km of the seafloor from 31 % to 64 % (56 % with iterated terms), controls stable,
+Blanco +0.4-0.5 km further from Lange; V1 (offshore S 4 % slower) pushes Blanco ~5 km deeper: rejected. V4 running.
+
+## FINDING 2026-11-24 17:10: pick timing drift on analog short-period channels (UW timing check), PI decisions pending
+
+/wd1/mdenolle_data/tomo_v1/checks/uw_timing/report.html (RESUME.md, tables/). From 2013-10-22 14:48:30 UTC, 34 UW
+short-period stations (BBO BHW BLN BOW BRO CDF CMW EDM ELK FL2 HBO HDW HSO HSR JCW JUN KMO LCW LO2 LVP MBW MCW MTM NLO ON2
+RNO RVW SHW SMW SOS STD TDL VG2 VLM, through at least 2016-12-30), KOS until 2013-11-18, and UO IRO, HUO, FRIS until
+~2015-01 sample at 99.99939 Hz labelled 100 Hz (analog J120D=Wrmsn / MC8=PSNrs chains). Each MiniSEED record header
+is right, but ObsPy merges a day file into one trace (inter-record corrections below half a sample) and counts at
+100 Hz; the picker reads whole pnwstore day volumes (elep_picker.py run_detection), so every pick is early by
+0.52 s x the fraction of the UTC day (UO ~0.79 s/day, seasonal): 0 at midnight, 0.26 s at noon, 0.52 s at 23:59.
+86,712 catalog v4 picks (51,030 P, 35,682 S) on 17,814 events; median 0.26 s, max 0.78 s. Every pnwstore-derived pick
+version (ver3-ver6, v4, GENIE/GraphDD) and any pnwstore CC dt carry it; Track B tomography uses these picks. Not the
+velocity model, not the instrument response. Relocation test (25 % subsample, corrected picks): median shift 0.32 km
+(18-24 h UTC events 0.89 km, p90 4.2 km), RMS 0.129 -> 0.122 s. Recommended: re-time the picks from the pnwstore
+record headers (clean; handles gap days), else tables/corrections.csv (t_true = t + rate (t - t0)/86400), in the pick
+table with a flag column; one station term per station-phase re-estimated after. Not yet verified independently
+(pnwstore not read; gap days not identified).
+
+## STAGE MARKER 2026-11-24 16:50 (round-2 / v5.1 session): read /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md
+
+Stage 1 of 5 of v5.1: build pieces built and verified (surface, runner, catalog done; three verifier must_fix fixed and
+pushed; field and wide finishing: their test grid builds run detached). Then: 2 integration (merge v51/*, D-B071,
+smoke test), 3 model decision from the slower-S test (check_slow_s/RESUME.md), 4 v5.1 production chain, 5 hand the
+catalog to session -18. UW timing check: checks/uw_timing/RESUME.md. Remote branches cleaned (15 deleted; list and
+bundle in the handoff folder).
+
+## Update 2026-11-24 15:45: HANDOFF (round-2 / v5.1 session), read first
+
+Everything needed to pick up is in /wd1/mdenolle_data/tomo_v1/handoff_2026-11-24/README.md (running jobs, how to resume
+them, agent briefs, workflow script, integration steps).
+* Checks D-B065 done: misfit -> D-B069 (LOCGAU 0.2 0.0, no LOCGAU2; check_misfit/out/s06_table.md); waveform S picks are
+  right, offshore S in the model ~3-6 % too fast -> D-B070 slower-S test running (check_slow_s/); ANSS explosions ->
+  D-B071 flag; UW timing check running (/wd1/mdenolle_data/tomo_v1/checks/uw_timing/).
+* v5.1 build workflow wf_ce50cf7f-723 at 15:45: surface and catalog built + verified, field building, wide and runner
+  building; branches v51/{surface,field,wide,runner,catalog-a,catalog-b} (worktrees ~/wt_v51_*), not merged yet.
+* 16:41: the three verifier must_fix of runner and catalog fixed and tested (v51/runner 30f66861, v51/catalog-a 1318a4d3, v51/catalog-b d1a5ec1d; details in the handoff README); the v5.1 chain must parse with --deep b4_v51_deep.
+* Next: integrate (merge, field/wide verifier results, add D-B071), wait for the slower-S result (new model version or not),
+  then the v5.1 production chain; tell session -18 when the catalog is final.
+
+## Update 2026-11-24 15:30: v5.1 build (round-2 session)
+
+PI (14:58): D-B065 checks first (misfit LOCGAU2 test -> /wd1/mdenolle_data/tomo_v1/above_surface/check_misfit/; S-pick
+waveform check -> .../check_spicks/; both background agents), D-B066 five-pick events as tier D, D-B067 deep pass with
+ak135, D-B068 merged GMRT/earth_relief surface. PI chose a build workflow (run wf_ce50cf7f-723): pieces surface, field
+(after surface), wide, runner, catalog, each on its own branch v51/<key> (worktrees ~/wt_v51_<key>; catalog in
+~/wt_v51_catalog_a and _b), tests in /wd1/mdenolle_data/tomo_v1/v51_build/<key>/, each with a verifier. Integration by
+the round-2 session. Decision blocks: D-B065..D-B079 round-2 session, D-B080+ session -18.
+Integration checklist from session -18 (catalog_version.py 503a11e5): five_phase in versions."5.1".flags with
+floor_limited, far_only, deep_pass; region of 'none' rows goes in the existing columns key "tile, region" (not a new
+"region" key); events 900001-3 stay out of catalog_b4_* if NLLoc does not locate them (catalog_version.py adds ComCat
+rows only for absent events); keep b4_catalog.flags(df) -> (depth_quality, event_flag) and surface_km(lat, lon)
+signatures (or wrappers). Run `catalog_version.py 5.1 --test <dir>` and tell -18 when the columns are on a branch.
+
+## Update 2026-11-24 11:35: B5 whole-catalog tomoDD run b5_v0.3.1 done, NOT a catalog version (session -18)
+
+Branch tomo/b5 (pushed, 4d894f31; worktree ~/wt_b5_full): b5_relocate.py/.sh (prep, split, run, collect; resumable;
+crash retry with frame centre moved 0.5 km for NaN rays in RaySPDR2.f), params b5, notes/b5_relocation.md (proposed
+decisions, not in DECISIONS.md). Catalog /wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/catalog_b5_b5_v0.3.1.csv;
+summaries data/tomo_v1/b5/b5_v0.3.1/compare.md (on tomo/b5). 2,125 dt components (3 split in 2 with a 2-hop halo,
+0 pairs lost), 2,128 frozen-binary runs, 20 min wall at 40 processes.
+* Relocated 97,619 of 157,269; 54,548 unlinked, 3,607 air quakes removed by tomoDD (3,039 Axial), 1,480 dropped, 15
+  skipped: all keep B4 positions. Shift from B4 median 0.59 km h / 0.52 km |z|; centroid shift removed (D-B053).
+* **Does not improve the catalog:** dt residual rms in the B4 grids P 0.147 -> 0.148 s, S 0.181 -> 0.232 s (worse in
+  every region); cluster thickness B5/B4 median 1.00. As in D-B048: catalog dt add little to B4.
+* **D-B055: 869 relocated events above the surface** (median 0.25 km, max 5.2 km; all below it at B4). Cause: the
+  same floor-held events as the upward pull (36 % of events < 0.1 km below the surface at B4 end above it) + tomoDD has
+  no topography (Air_dep = one flat level at the highest station). Damping 400 (CND ~40) halves Axial's count.
+* **S worsening, root cause found (11:55, tomo/b5 99c488ed, notes/b5_s_mismatch.md):** NOT two forward models (tomoDD and the B4
+  grids agree on dt to MAD 2-5 ms; S misfit grows in tomoDD's own model too). Cause: S dt weighted 1/4 of P (D-B008 sigma
+  S = 2 x P) + MAD re-weighting, so B5 fits P at S's cost. Equal weights without MAD cuts: S improves (Blanco 0.269 -> 0.234 s,
+  onshore 0.166 -> 0.154 s), P unchanged or better. Measured S/P noise ratio 1.16-1.51 (catalog 1.23), not 2. Proposed P-S1..P-S3.
+* **Weighting test (12:45, tomo/b5 e1f14107, notes/b5_weighting_test.md):** 26 clusters (all regions), 18 variants (S weight 0.25/0.5/meas/1/1.5/2 x MAD cuts prod/loose/none), station cross-validation + synthetics. S weight = P (1.0) with production MAD cuts: held-out P -6 %, S -11 % vs production (24/26 clusters both), synthetic error -10 %; optimum flat 1.0-2.0; measured-ratio weights worse than equal; no MAD cuts worse. Above-surface count unchanged by weights. Proposed P-W1..P-W4.
+* **PI adopted D-B061..D-B064 (13:00):** S weight 1.0, production MAD cuts, no measured-ratio weights, CV acceptance. In the B5 driver (tomo/b5 ea682f49: params b5.tomodd.s_weight -> WTCTS 4.00; chain stage accept = b5_wtest.py accept RUN, exit 2 on FAIL). Smoke test on b5_v0.3.1: PASS every region (held-out P 0.86-0.99, S 0.85-0.96 of the old weighting). Air quakes in the test: 61 -> 35 with S weight 1.0 (a first count of 0 was a parsing error).
+* **Next for B5:** run B5 on v5.1 (after the round-2 NLLoc rerun)
+  after v5.1 (round-2 upward-pull fix); per-cluster damping to CND 40-80; whether waveform CC dt (D-B060 second pass)
+  comes first, since catalog dt do not sharpen clusters; air-quake and two-event-component handling; bootstrap not run
+  (2 CPU-h per member; tomoDD bootstrap 2-11x too small in D-B048).
+
+## Update 2026-11-24 11:00: catalog v5.0, Zenodo, atlas, B5 (session cascadia-obs-ensemble-18)
+
+Split with the round-2 session (agreed by message): this session owns catalog versions, Zenodo, atlas and B5; the
+round-2 session owns the NLLoc fixes and the iter0/iter1 rerun for v5.1. Decision numbers: D-B058..D-B064 here,
+D-B065..D-B079 the round-2 session, D-B080+ here (agreed 15:00).
+
+* **catalog_version.py ready for v5.1 (15:05):** per-version tier U mode (params `tier_u`: v4 for 5.0, D-B059; none
+  afterwards: no hypocentre, u_reason), surface check only on rows with a hypocentre, every B4 catalog column carried but
+  the build stops on a column without a README description (params `columns`, filled by the round-2 session for
+  floor_limited, far_only, deep_pass, u_reason), flag counts (params `flags`), `--test DIR` dry build. v5.0 known limits
+  moved to params, with the round-2 numbers (floor-limited ~6 %, arrivals beyond ~160 km); they enter the v5.0 README at
+  its next rebuild. Checks: v5.0 rebuilt in scratch gives the published CSV (md5 23781b52) and files; README differs only in
+  the known limits; a mock v5.1 catalog builds and stops on undocumented columns and on a tier U mode mismatch.
+
+* **PI (10:10):** D-B058 catalog versions v5.0 (now) / v5.1 (after round 2) / v5.2 (B5 tomoDD); D-B059 tier U keeps
+  its v4 hypocentre in v5.0, flagged (exception to D-B055); D-B060 B5 with catalog dt now, waveform CC dt later.
+* **v0.3.1 chain finished 10:44** (1464b4f8): 157,269 located, 0 located events above the earth_relief 01m surface.
+  Acceptance (b4_acceptance.py -> data/tomo_v1/b4/b4_iter1_v0.3.1/acceptance.md): Axial A-B 28 % within 2 km of the
+  seafloor (target 85-90 %; median 2.4 km bsf; 1.2 km shallower than v0.3.0, 0.9 km deeper than v4-NLL3D) FAILS;
+  Puget/onshore/forearc/Mendocino/Gorda unchanged from v0.3.0. Event-paired (round-2 session, 1a7a6a3b): Mt St Helens
+  +0.49 km vs Hirao 2025 (passes); Blanco +1.99 km vs Lange 2026 (fails; West Blanco +4.64, worse than v0.3.0).
+* **Catalog v5.0 built** (catalog_version.py, params catalog_versions): /wd1/mdenolle_data/catalog_v5/v5.0/
+  (cascadia_catalog_v5.0.csv md5 23781b52..., README with known limits, station terms, B4 reports), registry
+  data/catalog_v5/registry.csv. 172,342 events (v4.1 list: 172113 out, 900001-3 in with ComCat hypocentres),
+  157,269 nll3d, 15,070 v4 (tier U), 3 comcat; 4,077 above the surface, all tier U at v4 positions -> publishable false.
+  Magnitudes = v4.1 Route A (v4 hypocentres; STATUS step 9 still to do).
+* **Zenodo:** catalog_v5.zip (all v5.x versions, replaced at each version) in the private draft 23084158, remote md5
+  257a425b... OK (data/catalog_v5/zenodo_uploads.csv). The draft is now at Zenodo's 100-file limit: any new product
+  must replace an existing file or go into an existing zip.
+* **Atlas (public, gh-pages 2a6ac1c5):** catalog v5.0 is the relocated catalog, moves from v4-NLL3D, model v0.3.1.
+  Built from atlas/model-layer a69a22ab with arguments only (--catalog2 <v5.0 csv> --catalog2-label "Catalog v5.0
+  (interim)" --catalog-before catalog_v5_trackA_iter1_vpvs176.csv). The atlas flags 4,787 events above its GMRT
+  terrain: the 4,077 catalog flags + 725 located events 0-354 m (median 17 m) above GMRT where GMRT is deeper than
+  earth_relief 01m (floor-held events; list /wd1/mdenolle_data/tomo_v1/above_surface/v5.0_atlas_gmrt_air_rows.json);
+  stated in the legend, flag not changed.
+* **B5 (D-B053, D-B060):** whole-catalog tomoDD relocation-only driver being built by an agent on branch tomo/b5
+  (worktree ~/wt_b5_full, from tomo/tiles + tomo/b5-blanco-test), outputs /wd1/mdenolle_data/tomo_v1/b5/<run>/,
+  notes/b5_relocation.md; production on b4_iter1_v0.3.1 / model 0.3.1 with frozen binaries.
 
 ## Handoff 2026-11-24 07:55 (read first)
 
@@ -43,6 +208,13 @@ station reach (tile box drops 6.1 % of arrivals), 80 km floor, tier U (5-pick ev
 **Round 2 running** (workflow nlloc-upward-pull-and-reach, run wf_2c163670-389, task wqzs0ijq7; scratch
 `<scratchpad>/above_surface2`; resume with resumeFromRunId and the same args). T aims for a tested station-reach fix
 before v0.3.1 iter0 (~11:00): if ready, apply to a2_run_nlloc.py before iter0 starts, else rerun iter0/iter1 after.
+
+**Surface definition (from session -18, 10:50).** In v5.0, 725 located events are below the earth_relief 01m surface
+(D-B055 test, D-B056 floor) but above the atlas GMRT multibeam terrain, which is lower there (median -41 m, down to
+-0.5 km): median 17 m, max 354 m above it (Axial 267, Blanco 191, JdF 65, ...). They are the floor-held (upward-pull)
+events. List: /wd1/mdenolle_data/tomo_v1/above_surface/v5.0_atlas_gmrt_air_rows.json. For the round-2 synthesis: build
+the floor and the D-B055 test from the best bathymetry (GMRT where available, earth_relief elsewhere) and check that the
+3D model's seafloor/water boundary uses the same surface.
 
 **Next, in order.** (1) Read the workflow results; implement the tested NLLoc mask fix (Track A template in
 ~/wt_reloc, used by b4 iter0/iter1); rerun iter0/iter1/catalog of v0.3.1 with new run names. (2) Acceptance tests of

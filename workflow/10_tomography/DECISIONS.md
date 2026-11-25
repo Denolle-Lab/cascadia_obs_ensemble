@@ -584,3 +584,176 @@ no datum change fixes it), so under D-B055 they cannot be published. PI: the pap
 relocation in the final Track B model, once the open workflow fixes are in (round 2: upward pull, station reach, 80 km
 floor, tier U without v4 hypocentres). Catalog v4 stays the association and pick catalog (event IDs, picks, times,
 magnitudes). Asking Ian for a corrected GENIE/GraphDD run is not needed for the paper.
+
+### D-B058 Catalog versions v5.x (adopted, 2026-11-24, PI)
+Catalog v5.0 = the catalog v4 events and picks (v4.1 event list) with hypocentres from the B4 NonLinLoc relocation in
+merged model v0.3.1 (run b4_iter1_v0.3.1, D-B056 topography floor). It is an interim version: v5.1 = the NLLoc
+relocation rerun after the round-2 workflow fixes (upward pull, station reach, 80 km floor, tier U; D-B057), v5.2 =
+the B5 tomoDD relative relocation (D-B053) of v5.1. Each version goes into the private Zenodo draft 23084158 as one
+file, catalog_v5.zip (all versions, replaced at each version, as velocity_models.zip), and onto the atlas. Magnitudes
+in v5.0 are the v4.1 Route A values (computed with v4 hypocentres); recomputation with the new hypocentres is STATUS
+step 9. Note: the pick sets are also numbered ver5/ver6; "catalog v5.x" always means this event catalog.
+
+### D-B059 Tier U keeps its v4 hypocentre in v5.0, flagged (adopted, 2026-11-24, PI; exception to D-B055 for v5.0)
+Events NonLinLoc cannot locate (tier U, about 15,000, mostly <= 5 picks) keep their v4 hypocentre in v5.0 with
+loc_source = v4, tier U and the above_surface flag (about 4,000 of them are above the ground or seafloor). The PI chose
+this over blank hypocentres or dropping the rows, knowing it is an exception to D-B055; v5.0 is therefore flagged
+"publishable: false" by b4_catalog.py, and stays in the private Zenodo draft and on the atlas with the flag shown.
+Round 2 (D-B057) is to remove the copy of v4 hypocentres for v5.1.
+
+### D-B060 B5 uses catalog differential times first; waveform cross-correlation times later (adopted, 2026-11-24, PI)
+The whole-catalog B5 run (tomoDD-SE relocation-only, D-B053; frozen binaries D-B054; model frozen at the B4 model)
+uses catalog differential times (tomodd.dt rules) now, as in the D-B048 test, where they moved the B4 locations
+little. Waveform cross-correlation times (D-B040) are a second pass once waveforms are fetched. Driver on branch
+tomo/b5 (worktree ~/wt_b5_full), notes/b5_relocation.md.
+
+### D-B061 B5 weights S differential times like P (S weight 1.0) (adopted, 2026-11-24, PI; P-W1)
+Root cause of the S misfit growth in the B5 run b5_v0.3.1 (notes/b5_s_mismatch.md): not a tomoDD vs NLLoc forward
+difference (the two agree on differential times to a MAD of 2-5 ms) but the weights: dt.ct S weights carried the
+D-B008 factor 1/4 (sigma S = 2 x P) and B5 fitted P at S's cost. Weighting test (notes/b5_weighting_test.md; 26
+clusters in every region, 18 variants, station cross-validation and synthetics): S weight equal to P of the same
+pick class gives held-out dt rms -6 % (P) and -11 % (S) against the 1/4 weighting (both phases better in 24 of 26
+clusters, every region) and ~10 % smaller synthetic relative errors; 1.5 and 2.0 are equal within 1 %; 1.0 is the
+rule. Implementation: params b5.tomodd.s_weight = 1.0 (WTCTS = s_weight / 0.25 with the present dt.ct weights).
+D-B008 is unchanged for absolute locations (B4).
+
+### D-B062 B5 keeps the production MAD re-weighting (adopted, 2026-11-24, PI; P-W2)
+WRCT 8 then 6 x MAD, WDCT 10 km in sets 3-4 (params b5.tomodd.sets). Without the cuts held-out dt rms is 2 % worse
+at every S weight; the looser 12/10 cut is 0.6 % worse (notes/b5_weighting_test.md).
+
+### D-B063 S weights from the measured S/P residual ratio are not used (adopted, 2026-11-24, PI; P-W3)
+Inverse-variance weights from the S/P MAD ratio of B4 dt residuals (1.02-1.69 by region) were worse than equal weights
+on held-out data (+2.5 %) and synthetics (+1.8 % horizontal): the measured ratio includes B4 location error, which
+moves S times about Vp/Vs times more than P.
+
+### D-B064 B5 acceptance by station cross-validation (adopted, 2026-11-24, PI; P-W4; replaces the proposed P-S2)
+Every B5 run is checked by station cross-validation on sample clusters of every region (b5_wtest.py accept RUN):
+held-out dt rms of the adopted weighting must not exceed that of the D-B008 weighting (S weight 0.25) in either phase,
+by region (median over the region's clusters). Misfit against B4 in-sample is not a criterion (B4 fitted the same
+picks). Events above the surface are reported, never moved (D-B055). B5 for the catalog (v5.2) runs on v5.1.
+
+### D-B065 Two checks before the v5.1 NLLoc relocation (adopted, 2026-11-24, PI)
+Round 2 (data/tomo_v1/above_surface/above_surface_round2.html) found that the template's LOCGAU2 0.02 0.05 2.0
+(model error growing with travel time) inside EDT_OT_WT acts as a pull toward short travel times (7 of 50 perfect-data
+events above the surface with it, 1 without), and that the S arrivals of floor-held events are late relative to P, more
+so with distance. Before v5.1: (1) rerun floor-held events, controls and the Hirao/Lange/Axial reference events with
+LOCGAU2 off and with a constant model error, and choose the setting by those scores; (2) check the S picks of a few
+pulled events on the waveforms (wrong picks or associations vs a Vp/Vs bias).
+
+### D-B066 Five-pick events located with a 5-phase minimum, published as tier D (adopted, 2026-11-24, PI)
+The 12,108 events with exactly 5 picks (the v4 minimum) were skipped by LOCMETH's 6-phase minimum and kept v4 positions.
+From v5.1 the template's minimum is 5: round 2 located 12,044 of 12,089 tested, none above the surface, nearly all
+tier D (one degree of freedom, sigma_z ~13 km, horizontal error ~27 km); events with 6 or more phases are unchanged.
+
+### D-B067 Deep pass below 80 km with ak135 outside the tomography box (adopted, 2026-11-24, PI)
+The model, time grids and LOCGRID stop at z' = 80 km, so well-recorded intraslab events at 66-107 km are rejected or
+pinned at the floor. From v5.1, wide grids extend to z' ~121 km and events rejected at the bottom face or located at
+z' >= 78 km get a deep second pass (round 2: 16 of 17 located at 78-107 km, controls within 0.35 km). Below 80 km and
+outside the tomography box the velocities come from ak135, blended under the deepest model layer; deep-pass locations
+are flagged. Events seen only by distant stations, which the same trigger would select, are flagged separately.
+
+### D-B068 Solid surface from GMRT where available, earth_relief 01m elsewhere (adopted, 2026-11-24, PI)
+Under 725 v5.0 events the GMRT multibeam seafloor is lower than earth_relief 01m (median 41 m, up to 0.5 km). From
+v5.1 one merged surface (GMRT patches where available, earth_relief 01m elsewhere) defines the NLLoc topography floor
+(conservative node minimum as in D-B056), the D-B055 above-surface test, and the water/rock boundary of the model.
+
+### D-B069 NLLoc model error: constant 0.2 s, no LOCGAU2 (adopted, 2026-11-24, PI; result of the D-B065 test)
+Test on 2,397 events of b4_iter1_v0.3.1 (/wd1/mdenolle_data/tomo_v1/above_surface/check_misfit/, README and
+out/s06_table.md): with LOCGAU 0.2 0.0 and no LOCGAU2 (variant C02), Blanco minus Lange 2026 goes from +1.80 to +1.08 km
+(bootstrap change -0.73 [-0.99, -0.48]; West Blanco +4.00 -> +1.74; Cascadia Depression -1.32 -> -1.98), Mount St Helens
+is unchanged (+0.45 -> +0.47), 28 % of floor-held events leave the floor, Axial stays at 28-31 % within 2 km of the
+seafloor. Costs: tier A-B 1,094 -> 1,045 in the samples; sigma_z at Axial 1.25 -> 1.63 km and at MSH 0.97 -> 1.29 km
+(production used 0.05 s on short paths); 42 events (all tier C/D) more than 10 km deeper. NLLoc's EDT_OT_WT RMS is
+weighted by the EDT probabilities, so compare fits with the unweighted RMS. v5.1 template: LOCGAU 0.2 0.0, LOCGAU2
+removed; station terms recomputed with it in iter0.
+
+### D-B070 Test a slower offshore S before v5.1 (adopted, 2026-11-24, PI; from the D-B065 waveform check)
+Waveform check (/wd1/mdenolle_data/tomo_v1/above_surface/check_spicks/report.html): the S picks of floor-held events are
+on the S onsets (bad picks explain 8 %, at most 22 %, of the S excess); confirmed S-P is a median 0.51 s longer than the
+model's; implied path Vp/Vs offshore beyond 20 km 1.79-1.83 against 1.73-1.74 in the model; 84 % of the checked S nodes
+are reverted to the start model (D-B051); the excess is mostly constant per event (+0.2 s), pointing to slow S near the
+source (young ridge crust) or to epicentres on one-sided networks. Before v5.1: rebuild S grids for test stations with
+offshore S about 4 % slower and with a high Vp/Vs shallow crust, and score as in D-B065; if it works, the fix goes into
+the model as a new version before the v5.1 relocation.
+
+### D-B071 Flag ANSS explosions and quarry blasts (adopted, 2026-11-24, PI)
+326 of 1,700 onshore floor-held events (19 %, against 3.1 % of other onshore events) match ANSS explosions or quarry
+blasts, for which a surface depth is right. v5.1 sets event_flag for events matched to an ANSS event of those types
+(time and distance match), next to the Texada quarry flag; floor_limited is computed as before.
+
+Also 2026-11-24 (PI): a separate check of the UW short-period stations TDL, ELK, LO2, SOS, whose P and S residuals drop
+together by 0.1-0.3 s from November 2013 (timing or filter delay), before the v5.1 station terms.
+
+### D-B072 Re-time the drifting analog picks from short reads around each pick; v5.1 uses them (adopted, 2026-11-24, PI)
+UW timing check (/wd1/mdenolle_data/tomo_v1/checks/uw_timing/report.html): from 2013-10-22 14:48:30 UTC, picks on 34
+UW analog short-period stations (+KOS to 2013-11-18; UO IRO, HUO, FRIS to ~2015-01) are early by up to 0.52 s (UO
+~0.79 s) by the end of each UTC day: the channels run at 99.99939 Hz labelled 100 Hz, and elep_picker.py run_detection
+reads a whole pnwstore day, filters, resample(100) and merge(fill_value='interpolate'), so a pick's time is the day
+trace's start plus samples/100. PI: first verify on our own pnwstore data; then re-time every affected pick by reading
+the waveform with ObsPy only around the pick (a short read keeps each MiniSEED record's header time; a whole-day read
+accumulates the lag), not by a rate model. Corrected picks go into a new pick file with a flag column, used by the
+v5.1 relocation (station terms re-estimated). Other products (pick tables on Zenodo, Track B tomography, the picker
+code) are not changed for now.
+
+### D-B073 Shallow oceanic crust: Vp/Vs >= 2.1 in the top 2.5 km below the seafloor offshore (adopted, 2026-11-24, under the PI's "go continuously 1 to 5"; PI may revise before v5.1 is published)
+D-B070 test (/wd1/mdenolle_data/tomo_v1/above_surface/check_slow_s/, out/s16_runs_all_table.md; 2,397 events; constant
+0.2 s model error; "w" = station terms re-estimated in the new model, as in production): V4 (offshore rock cells whose
+centre lies within 2.5 km below the seafloor: Vs = min(Vs, Vp / 2.1)) raises Axial A-B events within 2 km of the seafloor
+from 31 % to 86 % (92 % without re-estimated terms; median 2.47 -> 1.56 km below the seafloor: meets the >= 85 % target),
+lowers floor-held events from 72 % to 46 % of the floor sample (13.1 % -> 8.5 % of all samples), raises tier A-B from
+1,045 to 1,106; controls: median depth change 0, p90 1.15 km, 17 of 300 move > 2 km, RMS unchanged or lower; Mount St
+Helens unchanged. Cost: Blanco minus Lange 2026 +1.08 -> +2.14 km if Lange's depths are below sea level (West Blanco
++1.74 -> +3.88, Blanco Ridge +2.06 -> +3.19, Cascadia Depression -1.98 -> -0.69); Lange's datum is not stated: if his
+depths are below the seafloor (~3 km of water), V4 is the closest variant. At Blanco V4 also lowers floor-held events
+(3.9 -> 1.0 %) and the unweighted RMS (0.219 -> 0.203 s). V2 (Vp/Vs 1.95) is milder (Axial 56 %, Blanco +1.53 km);
+V1/V3 (S 4 % slower everywhere offshore) push Blanco ~5 km deeper: rejected. Implementation: params b4.shallow_crust
+{vpvs 2.1, thickness_km 2.5} in b4_time_grids.py (field-level rule on the merged surface, D-B068; coast-scan offshore
+mask of the test), checked on a full field build (v51_build/sc_test: P unchanged; every changed S cell within 2.5 km
+below the merged seafloor at exactly the set Vp/Vs). The fields are model v0.3.1 plus this rule.
+
+### D-B074 v5.1 wide-grid choices: no distance cap; near-seafloor S interpolation accepted (adopted, 2026-11-24, under the PI's "go continuously 1 to 5")
+Wide verifier (/wd1/mdenolle_data/tomo_v1/v51_build/verify_wide/): wide-served S residuals trend with distance
+(-0.41 s per 100 km; -0.8 to -1.1 s beyond 300 km), the same for well-recorded events, so from the model or the picks,
+not the grids (wide minus fine and wide minus a whole-lattice reference show no trend). v5.1 keeps every arrival (no
+distance cap): the EDT likelihood is robust to outlying arrivals, events located by distant stations only are flagged
+far_only, and capping would leave many offshore events unlocated; the trend is a known limit to examine (far S picks,
+upper-mantle S) before the next model version. Near-seafloor S at OBS stations: wide minus fine at real event positions
+within 2 km of the seafloor has p95 0.046-0.061 s (max 0.23 s), from interpolating on 2 km nodes; far below the 0.2 s
+model error of D-B069: accepted (1 km vertical wide grids would cost 246 GB).
+
+### D-B075 Re-time every pick whose day trace drifts from its record headers, if the co-located test confirms the headers (adopted, 2026-11-24, under the PI's "go continuously 1 to 5"; implements D-B072)
+Re-timing (/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/, RESUME.md): verified on pnwstore (exact sample matches;
+TDL 2014-07-13: 0.010 s at 00:30, 0.521 s at 23:30; data gaps reset the count). The listed epoch (D-B072) is re-timed:
+87,301 picks (AIC onsets: catalog - onset -0.310 -> -0.010 s). The header scan found the same mechanism beyond the list:
+UW analog EHZ channels before 2013-10-22 (opposite sign, typically -0.01 to -0.07 s/day; daily maximum error median
+0.03 s, up to ~0.24 s in 2010), more UW analog stations (RER RVC LMW STW CPW GHW GMW MPO OSR PGO WPO SSO; OBC OCP OOW OSD
+OTR +0.05-0.07 s/day), CC SEP SUG NED EHZ (+0.02 to +0.4 s/day), UO FRIS and HUO already in 2010 (~1.1 s/day), and
+small sporadic cases. The PI's rule (time each pick from a short read, because a whole-day read accumulates the lag)
+applies to every such channel-day, so v5.1 uses every correction (rule: a station-day is corrected when its record
+headers and the sample count differ by >= 5 ms anywhere in the day; each pick gets its own record's header time),
+PROVIDED the co-located test (tables/validation_colocated_slope.csv: pick differences against GPS-timed digital stations
+LON, STD.CC, B202 regressed on the correction; slope ~ 0 after re-timing) confirms that the headers are right. If it
+does not, v5.1 uses only the corrections of the listed epoch (epoch_class == 'listed' in corrections.csv). Not
+re-timable: NC/BK (not in pnwstore), channels resampled from another rate (flag rate_not_100), off-grid picks (kept).
+Result (2026-11-24 23:40, finish.sh): co-located slope test (tables/validation_colocated_slope.csv, pooled with one
+intercept per pair-phase) listed: catalog -0.992 +- 0.007 -> re-timed +0.008 +- 0.006 (n 16,859); found: -1.000 +- 0.107
+-> -0.000 +- 0.114 (n 6,293): the headers are right for both, so v5.1 uses ALL corrections. 218,809 picks corrected on
+75 stations (listed 86,711, found 189,931 incl. in_fill; corrections.csv.gz, column applied); AIC onsets after the
+onset: catalog - onset -0.264 -> -0.010 s (MAD 0.104 -> 0.020, n 673); 2,284,818 uncorrected rows byte-identical to
+v4.1. Not re-timed, kept unchanged and flagged: 45,879 picks (off_grid 23,331, mostly OBS Z5/7D with small drift, and CC
+SEP/SUG EHZ from 2014-01-18 on, whose picks are no longer on the 100 Hz grid; rate_not_100 22,541; error 7). v5.1 pick
+file: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv (md5 762f18e8f181eaaaa247d367c2d2c302; a2_make_obs.py
+reads it: 2,503,381 picks of 172,342 events in 1,206 tiles; spot check HUO.UO event 41 P 0.772 s later).
+
+### D-B080 Catalog bundle carries the pick file it was located with; atlas tests the second catalog against its own surface (adopted, 2026-11-25, session -18; implements D-B058 for v5.1; PI may revise)
+* catalog_v5.zip: a version located with picks that are not in the Zenodo record carries them in its folder: v5.1 has
+  Cascadia_picks_catalog_v4.1t.csv.gz (re-timed picks, D-B072/D-B075, md5 762f18e8 uncompressed, checked at build) and
+  the re-timing corrections, README and report; the draft holds 100 files, so they go inside catalog_v5.zip.
+* catalog_version.py pins the solid surface per version (surface_source: v5.0 earth_relief_01m, v5.1 merged), so a
+  rebuild of v5.0 still reproduces its published CSV (md5 23781b52).
+* Atlas (atlas/model-layer 3f661608): events without a hypocentre (loc_source none) are drawn in the v4 view only;
+  the above-surface flag of the second catalog uses the catalog's surface_km (the atlas terrain has gaps and differs by
+  ~30 m), and its depths are stored exactly (float32), so the atlas reports the catalog's own count (v5.1: 0).
+* b4_acceptance.py bug fixed: above_surface.astype(bool) turned empty values (no hypocentre) into True, so v5.1's
+  acceptance.md listed 623 tier U events "at the v4 position" above the surface; it now reports 0, and 623 without a
+  hypocentre. Located counts were unaffected.

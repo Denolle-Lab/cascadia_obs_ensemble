@@ -1,0 +1,68 @@
+{
+ "name": "b4_lit_paired_v5.1",
+ "script": "/home/mdenolle/wt_v51_int/workflow/10_tomography/b4_lit_paired.py",
+ "argv": [
+  "v5.1=/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+  "v0.3.1=/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv"
+ ],
+ "utc": "2026-11-25T11:15:14.980432+00:00",
+ "git_commit": "97f9d1da845388c0c23694cbaa7959c0f31c60b8",
+ "git_dirty": false,
+ "params_md5": "84d5e1413d5de3f9317c6812994a216e",
+ "params": {
+  "catalogs": {
+   "v5.1": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+   "v0.3.1": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_v51_iter1.csv",
+   "size": 61837532,
+   "mtime": "2026-11-25T11:15:10.080835+00:00",
+   "md5": "8435e4c63af3a3abff11a8a136ac331c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.1.csv",
+   "size": 55446118,
+   "mtime": "2026-11-24T18:44:39.122154+00:00",
+   "md5": "e87c40a611663ef30869c88af3b1bb83"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv",
+   "size": 1042674,
+   "mtime": "2026-11-24T18:46:13.229669+00:00",
+   "md5": "cf70ec527af3b4f7bb78db938d8e5d53"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_rel_pairs.csv",
+   "size": 933819,
+   "mtime": "2026-11-24T18:46:13.262669+00:00",
+   "md5": "9a1f7083827fad9c1a1a74889ad4deb9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/msh_hirao2025_pairs.csv",
+   "size": 248846,
+   "mtime": "2026-11-24T18:46:13.190669+00:00",
+   "md5": "fc334714358bfadc7cb79f36d9ec795b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_v51_int/data/tomo_v1/depth_literature/paired_v5.1.md",
+   "size": 3667,
+   "mtime": "2026-11-25T11:15:14.978811+00:00",
+   "md5": "c6a9cc513c9bc997559980cdad8d2f54"
+  },
+  {
+   "path": "/home/mdenolle/wt_v51_int/data/tomo_v1/depth_literature/paired_v5.1.csv",
+   "size": 7710,
+   "mtime": "2026-11-25T11:15:14.964811+00:00",
+   "md5": "b4da5412692c3bce5648cc41d46d567f"
+  }
+ ],
+ "counts": {
+  "rows": 78
+ },
+ "notes": null
+}

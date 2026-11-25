@@ -1,0 +1,105 @@
+{
+ "output": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
+ "solver": "exact",
+ "data": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4",
+ "suffix": "_routeA",
+ "matched": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/comcat_mt_matched_v4.csv",
+ "rmax_km": 150.0,
+ "min_sta_obs": 8,
+ "reject_mad": 4.0,
+ "m_switch": 4.5,
+ "fit_min": 3.5,
+ "theil_max": 5000,
+ "damp": 0.001,
+ "gauge_w": 1000.0,
+ "anchor_offset": 0.3563689819662883,
+ "n_anchors": 3416,
+ "anchor_std": 0.17433103962952695,
+ "s_anchor": 0.16549847729942546,
+ "mapped_fit": {
+  "intercept": -0.29536642071380914,
+  "slope": 1.01440685007123,
+  "std": 0.6022590741805847
+ },
+ "mw_cal_offset": {
+  "mapped": 1.4198950109828803,
+  "near": 0.18682700211637426
+ },
+ "m_type": {
+  "ML": 130660,
+  "Mw": 80,
+  "Mw_cal": 27
+ },
+ "ml_method": {
+  "near": 127245,
+  "mapped": 3522
+ },
+ "threads": {
+  "OMP_NUM_THREADS": "12",
+  "OPENBLAS_NUM_THREADS": "12",
+  "MKL_NUM_THREADS": "12"
+ },
+ "inversions": [
+  {
+   "method": "exact",
+   "refine_step": 3.108450218143588e-14,
+   "normal_res_rel": 2.573912215813309e-13,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.033205395638426685,
+    0.8248744843342168,
+    0.900594565806633
+   ],
+   "n_components": 2,
+   "terms_outside_main": [
+    "7D.J35C@2013-08-09|S"
+   ],
+   "near_events_outside_main": 0,
+   "n_picks": 1370314,
+   "n_events": 161177,
+   "n_terms": 1338,
+   "r_norm": 287.3969727632636
+  },
+  {
+   "method": "exact",
+   "refine_step": 3.227762679228956e-13,
+   "normal_res_rel": 1.732828361355134e-13,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.031699725733850645,
+    0.6707679687135947,
+    0.8002979205539715
+   ],
+   "n_components": 2,
+   "terms_outside_main": [
+    "7D.J35C@2013-08-09|S"
+   ],
+   "near_events_outside_main": 0,
+   "n_picks": 1364205,
+   "n_events": 161093,
+   "n_terms": 1338,
+   "r_norm": 268.92115380075484
+  }
+ ],
+ "catalog": "v4.1",
+ "decision": "D-B091",
+ "git_commit": "cd0334d6ae61b85c1db2461e4710f369ca9bd5c9",
+ "v41_patch": {
+  "removed": [
+   172113
+  ],
+  "added_from_stored": [
+   900001,
+   900002,
+   900003
+  ],
+  "rule": "utils/fix_catalog_v4.py patch_m66: 172113 removed, 900001-900003 = ComCat Mww"
+ },
+ "stored_file": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv",
+ "stored_md5": "78a445098dd76ccf8c08085cb86f67ca",
+ "output_md5": "1c6da155dcf382b56cdbff4e3e216f45",
+ "n_events": 130769,
+ "written": "2026-11-25 11:27:07"
+}

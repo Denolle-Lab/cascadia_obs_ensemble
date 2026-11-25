@@ -33,22 +33,32 @@ the event's station residuals and s_anchor the scatter about the anchor offset a
 removing the mean SE^2 of the anchors; "mapped" sqrt((slope ML_inv_unc)^2 + s_map^2);
 Mw: MW_MT_UNC; Mw_cal: std of (Mw - ML - offset) of its pairs.
 
+Solver (D-B091): the inversion is solved exactly (phase19_solver.py, method "exact":
+events eliminated, Schur complement of the station-phase terms solved directly, with a
+convergence test that raises NotConverged). Until D-B091 it used LSQR stopped at 3000
+iterations without converging (istop 7); --solver legacy3000 reproduces that.
+
 Writes ../../data/magnitude/cascadia_catalog_M_routeA.csv (same events as
 cascadia_catalog_ML_routeA.csv; ML_inv keeps the inversion ML); with --data/--suffix,
-<data>/cascadia_catalog_M<suffix>.csv.
+<data>/cascadia_catalog_M<suffix>.csv; with --outdir/--tag, <outdir>/cascadia_catalog_M
+<suffix><tag>.csv, plus <same stem>.provenance.json (solver diagnostics of both passes).
 
 Usage (default env, run from workflow/05_magnitude, after phase18):
     python phase19_preferred_magnitude.py
     # a variant run (e.g. the 0.5 Hz high-pass test), after phase18 with the same options:
     python phase19_preferred_magnitude.py --data ../../data/magnitude_hp05 --suffix _routeA_hp05 \
         --matched ../../data/magnitude_hp05/comcat_mt_matched_routeA_hp05.csv
+    # converged v4.1 next to a stored run, never overwriting it:
+    python phase19_preferred_magnitude.py --data ../../data/magnitude_v4 \
+        --matched ../../data/magnitude_v4/comcat_mt_matched_v4.csv --outdir <dir> --tag _converged
 """
 import argparse
+import json
+import os
 import numpy as np, pandas as pd
-from scipy import sparse
-from scipy.sparse.linalg import lsqr
 from scipy.stats import theilslopes
 from phase18_moment_tensor_match import hutton_boore, RMAX
+import phase19_solver
 
 D = "../../data/magnitude"
 SUFFIX = "_routeA"
@@ -59,6 +69,9 @@ THEIL_MAX = 5000         # subsample size for the Theil-Sen mapping fit (memory 
 MW_MT_UNC = 0.1
 MIN_STA_OBS = 8
 REJECT_MAD = 4.0
+SOLVER = "exact"         # phase19_solver method (D-B091); "legacy3000" = stored v4.1 / v5.1 values
+OUTDIR, TAG = None, ""
+SOLVER_LOG = []          # info dict of every inversion of this run (provenance)
 
 
 def station_ml():
@@ -71,21 +84,16 @@ def station_ml():
 
 def invert(d):
     """station ML = M_i + C_jp (sum C = 0 per phase). Returns M (by event), C (by sp)
-    and the per-pick residuals."""
-    e, ev_ids = pd.factorize(d.event_id)
-    j, sp_ids = pd.factorize(d.sp)
-    n, ne, ns = len(d), len(ev_ids), len(sp_ids)
-    ph = np.array([k.split("|")[1] for k in sp_ids])
-    rows, cols, vals, rhs = [np.arange(n)] * 2, [e, ne + j], [np.ones(n)] * 2, list(d.m)
-    for i, p in enumerate(("P", "S")):              # gauge rows
-        sel = np.flatnonzero(ph == p)
-        rows.append(np.full(len(sel), n + i)); cols.append(ne + sel)
-        vals.append(np.full(len(sel), 1000.0)); rhs.append(0.0)
-    A = sparse.coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
-                          shape=(n + 2, ne + ns)).tocsr()
-    x = lsqr(A, np.asarray(rhs), damp=1e-3, atol=1e-8, btol=1e-8, iter_lim=3000)[0]
-    M, C = pd.Series(x[:ne], index=ev_ids), pd.Series(x[ne:], index=sp_ids)
-    return M, C, d.m.to_numpy() - x[e] - x[ne + j]
+    and the per-pick residuals. Solver: phase19_solver.solve(method=SOLVER); raises
+    phase19_solver.NotConverged when the convergence test fails."""
+    M, C, res, info = phase19_solver.solve(d, method=SOLVER)
+    SOLVER_LOG.append(info)
+    print(f"  solver {info['method']}: {info['n_picks']:,} picks, {info['n_events']:,} events, "
+          f"{info['n_terms']:,} terms; istop {info['istop']}, itn {info['itn']}, refinement step "
+          f"{info['refine_step']}, relative normal-equation residual {info['normal_res_rel']:.2e}, "
+          f"residual norm {info['r_norm']:.4f}; components {info['n_components']} "
+          f"(terms outside the main one: {info['terms_outside_main']})", flush=True)
+    return M, C, res
 
 
 def event_ml(ds):
@@ -111,13 +119,17 @@ def parse_args():
     ap.add_argument("--data", default=D, help="magnitude directory (default %(default)s)")
     ap.add_argument("--suffix", default=SUFFIX, help="file suffix (default %(default)s)")
     ap.add_argument("--matched", default=MATCHED, help="phase18 matched tensors (default %(default)s)")
+    ap.add_argument("--solver", default=SOLVER, choices=["exact", "lsqr", "legacy3000"],
+                    help="station-term solver (phase19_solver; default %(default)s)")
+    ap.add_argument("--outdir", default=None, help="output directory (default: --data)")
+    ap.add_argument("--tag", default="", help="appended to the output file stem, e.g. _converged")
     return ap.parse_args()
 
 
 def main():
-    global D, SUFFIX, MATCHED
+    global D, SUFFIX, MATCHED, SOLVER, OUTDIR, TAG
     a = parse_args()
-    D, SUFFIX, MATCHED = a.data, a.suffix, a.matched
+    D, SUFFIX, MATCHED, SOLVER, OUTDIR, TAG = a.data, a.suffix, a.matched, a.solver, a.outdir or a.data, a.tag
     cat = pd.read_csv(f"{D}/cascadia_catalog_ML{SUFFIX}.csv")
     ev = event_ml(station_ml())
     an = pd.read_csv(f"{D}/route_b_ml_anchors{SUFFIX}.csv")[["event_id", "ml"]].join(ev, on="event_id", how="inner")
@@ -178,9 +190,21 @@ def main():
     print(f"ML - ML_inv: median {d.median():+.2f}, std {d.std():.2f}; ML median {out.ML.median():.2f}")
     cols = ["event_id", "otime", "evla", "evlo", "evdp", "M", "M_unc", "M_type", "ML", "ML_unc",
             "n_ML", "ML_method", "Mw_mt", "comcat_id", "ML_inv", "ML_inv_unc"]
+    fo = f"{OUTDIR}/cascadia_catalog_M{SUFFIX}{TAG}.csv"
     out[cols].round({"M": 3, "M_unc": 3, "ML": 3, "ML_unc": 3, "ML_inv": 3, "ML_inv_unc": 3}).to_csv(
-        f"{D}/cascadia_catalog_M{SUFFIX}.csv", index=False)
-    print(f"wrote {D}/cascadia_catalog_M{SUFFIX}.csv ({len(out):,} events)")
+        fo, index=False)
+    prov = dict(output=fo, solver=SOLVER, data=os.path.abspath(D), suffix=SUFFIX, matched=os.path.abspath(MATCHED),
+                rmax_km=RMAX, min_sta_obs=MIN_STA_OBS, reject_mad=REJECT_MAD, m_switch=M_SWITCH,
+                fit_min=FIT_MIN, theil_max=THEIL_MAX, damp=phase19_solver.DAMP, gauge_w=phase19_solver.GAUGE_W,
+                anchor_offset=float(off), n_anchors=int(len(an)), anchor_std=float(np.std(an.ml - an.m - off)),
+                s_anchor=float(s_anchor), mapped_fit=dict(intercept=float(ic), slope=float(sl), std=float(s_map)),
+                mw_cal_offset={k: float(v) for k, v in off_m.items()},
+                m_type=out.M_type.value_counts().to_dict(), ml_method=out.ML_method.value_counts().to_dict(),
+                threads={k: os.environ.get(k) for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS")},
+                inversions=SOLVER_LOG)
+    with open(fo.replace(".csv", ".provenance.json"), "w") as f:
+        json.dump(prov, f, indent=1, default=str)
+    print(f"wrote {fo} ({len(out):,} events)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,86 @@
+{
+ "output": "/wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_M_v51_converged.csv",
+ "solver": "exact",
+ "data": "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag",
+ "suffix": "_v51",
+ "matched": "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/comcat_mt_matched_v51.csv",
+ "rmax_km": 150.0,
+ "min_sta_obs": 8,
+ "reject_mad": 4.0,
+ "m_switch": 4.5,
+ "fit_min": 3.5,
+ "theil_max": 5000,
+ "damp": 0.001,
+ "gauge_w": 1000.0,
+ "anchor_offset": 0.3427257127735097,
+ "n_anchors": 3414,
+ "anchor_std": 0.17484055258068193,
+ "s_anchor": 0.16584215304229616,
+ "mapped_fit": {
+  "intercept": -0.28868154236044363,
+  "slope": 0.9990474250507168,
+  "std": 0.6506288673831324
+ },
+ "mw_cal_offset": {
+  "mapped": 1.507356105349237,
+  "near": 0.16876311564781155
+ },
+ "m_type": {
+  "ML": 130246,
+  "Mw": 75,
+  "Mw_cal": 25
+ },
+ "ml_method": {
+  "near": 126840,
+  "mapped": 3506
+ },
+ "threads": {
+  "OMP_NUM_THREADS": "12",
+  "OPENBLAS_NUM_THREADS": "12",
+  "MKL_NUM_THREADS": "12"
+ },
+ "inversions": [
+  {
+   "method": "exact",
+   "refine_step": 1.428578406841979e-13,
+   "normal_res_rel": 2.8651914048076607e-13,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.03492721402143231,
+    0.7259877323313902,
+    0.9443973719167391
+   ],
+   "n_components": 2,
+   "terms_outside_main": [
+    "7D.J35C@2013-08-09|S"
+   ],
+   "near_events_outside_main": 0,
+   "n_picks": 1363151,
+   "n_events": 160591,
+   "n_terms": 1332,
+   "r_norm": 286.6559860138246
+  },
+  {
+   "method": "exact",
+   "refine_step": 2.645426267740327e-13,
+   "normal_res_rel": 3.075677000496058e-13,
+   "istop": null,
+   "itn": null,
+   "eig_min": [
+    0.03435206534851333,
+    0.7062717623989905,
+    0.8712786357156094
+   ],
+   "n_components": 2,
+   "terms_outside_main": [
+    "7D.J35C@2013-08-09|S"
+   ],
+   "near_events_outside_main": 0,
+   "n_picks": 1356944,
+   "n_events": 160509,
+   "n_terms": 1332,
+   "r_norm": 267.9018857668047
+  }
+ ]
+}

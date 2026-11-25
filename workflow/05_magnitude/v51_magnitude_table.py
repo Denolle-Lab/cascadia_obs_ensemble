@@ -50,6 +50,13 @@ n_ML_v4hyp, Mw_mt_v4 (fallback, rows without a hypocentre only).
 
 Usage:
   python v51_magnitude_table.py --data /wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag --suffix _v51
+  # converged phase19 (D-B091), written next to nothing stored:
+  python v51_magnitude_table.py --data /wd1/.../v5.1_analysis/mag --suffix _v51 \
+      --pm <dir>/cascadia_catalog_M_v51_converged.csv --out <dir> --tag _converged \
+      --v4-mags <dir>/cascadia_catalog_M_routeA_converged.csv
+  --solver sets the phase19 solver of the near inversion redone here (default: phase19's,
+  "exact"); --v4-mags replaces M_v4, M_type_v4, ML_v4, ML_method_v4 (otherwise copied from
+  the v5.1 catalog, i.e. the stored v4.1 Route A values) by those of the given phase19 file.
 """
 from __future__ import annotations
 
@@ -116,12 +123,20 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", required=True)
     ap.add_argument("--suffix", default="_v51")
+    ap.add_argument("--pm", default=None, help="phase19 output (default <data>/cascadia_catalog_M<suffix>.csv)")
+    ap.add_argument("--out", default=None, help="output directory (default --data)")
+    ap.add_argument("--tag", default="", help="appended to the output file stems")
+    ap.add_argument("--solver", default=None, help="phase19 solver (default phase19's)")
+    ap.add_argument("--v4-mags", default=None, help="phase19 file whose M, M_type, ML, ML_method replace the v4.1 columns")
     a = ap.parse_args(argv)
     D, S = a.data, a.suffix
+    O, T = a.out or a.data, a.tag
     p19.D, p19.SUFFIX = D, S
+    if a.solver:
+        p19.SOLVER = a.solver
 
     cat = pd.read_csv(V51)
-    pm = pd.read_csv(f"{D}/cascadia_catalog_M{S}.csv")
+    pm = pd.read_csv(a.pm or f"{D}/cascadia_catalog_M{S}.csv")
     anchors = pd.read_csv(f"{D}/route_b_ml_anchors{S}.csv")
     inv = pd.read_csv(f"{D}/cascadia_catalog_ML{S}.csv", usecols=["event_id", "n_obs"])
 
@@ -143,11 +158,11 @@ def main(argv=None):
           f"max |diff| {np.nanmax(np.abs(chk[pm.set_index('event_id').ML_method.reindex(Mev.index) == 'near'])):.4f}")
     arr = pd.read_csv(f"{D}/arrivals_v51.csv", usecols=["arid", "pick_id", "timing_correction_s"])
     near = near.merge(arr, on="arid", how="left")
-    near.to_parquet(f"{D}/phase19_near_picks{S}.parquet", index=False)
+    near.to_parquet(f"{O}/phase19_near_picks{S}{T}.parquet", index=False)
     terms = C.rename("C").rename_axis("sp").reset_index()
     terms[["station", "phase"]] = terms.sp.str.split("|", expand=True)
     terms = terms.merge(near.groupby("sp").size().rename("n_obs").reset_index(), on="sp")
-    terms[["station", "phase", "C", "n_obs"]].to_csv(f"{D}/phase19_station_terms{S}.csv", index=False)
+    terms[["station", "phase", "C", "n_obs"]].to_csv(f"{O}/phase19_station_terms{S}{T}.csv", index=False)
     nsta = near.assign(sta=near.station.str.split("@").str[0]).groupby("event_id").sta.nunique()
 
     # ---- per-event table
@@ -161,6 +176,11 @@ def main(argv=None):
     v4 = cat[["ID", "M", "M_type", "ML", "ML_method", "Mw_mt", "comcat_id"]].rename(
         columns={"M": "M_v4", "M_type": "M_type_v4", "ML": "ML_v4", "ML_method": "ML_method_v4",
                  "Mw_mt": "Mw_mt_v4", "comcat_id": "comcat_id_v4"})
+    if a.v4_mags:
+        r4 = pd.read_csv(a.v4_mags, usecols=["event_id", "M", "M_type", "ML", "ML_method"]).set_index("event_id")
+        for c_ in ("M", "M_type", "ML", "ML_method"):
+            v4[f"{c_}_v4"] = v4.ID.map(r4[c_])
+        print(f"v4.1 columns M, M_type, ML, ML_method from {a.v4_mags} ({int(v4.M_v4.notna().sum()):,} with M)")
     pmc = pm.rename(columns={"event_id": "ID"})[
         ["ID", "M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id",
          "ML_inv", "ML_inv_unc"]]
@@ -262,7 +282,7 @@ def main(argv=None):
     out = out[cols]
     for c_ in ("n_ML", "n_sta_ML", "n_obs_inv"):
         out[c_] = out[c_].astype("Int64")
-    fo = f"{D}/cascadia_catalog_v5.1_magnitudes.csv"
+    fo = f"{O}/cascadia_catalog_v5.1_magnitudes{T}.csv"
     out.round({"M": 3, "M_unc": 3, "ML": 3, "ML_unc": 3, "ML_inv": 3, "ML_inv_unc": 3,
                "ML_v4hyp": 3, "ML_v4hyp_unc": 3}).to_csv(fo, index=False)
     print(f"wrote {fo}: {len(out):,} rows; with M {int(out.M.notna().sum()):,}; "

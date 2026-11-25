@@ -6,6 +6,10 @@ and writes a manifest with the run's settings and output checksums.
 
   python b2_tomodd_run.py REGION TAG [--damp D] [--smooth WX WY WZ] [--thres T] [--check] [--niter-first N]
     --check: bounds-checked binary, first iteration set only, 1 iteration (array-overflow test, D-B026)
+Floored stages (D-B083, v0.4.1: tomodd.regions.<region>.floor_spacing_s set): inputs/surface.dat (b2_tomodd_floor.py)
+is copied into the run folder, so tomoDD's D-B081 floor acts on every event update, and Air_dep is
+tomodd.floor.air_dep_km (out of the way) instead of the inputs' -(highest station + margin). --check runs floored too
+(bounds check of the floor lookups).
 
 Run from the repo root with the default env (LD_LIBRARY_PATH=.pixi/envs/default/lib).
 """
@@ -110,6 +114,16 @@ def main():
         if not dst.exists():
             dst.symlink_to(inp_dir / f)
     shutil.copy(inp_dir / "MOD", run / "MOD")
+    floored = T["regions"].get(a.region, {}).get("floor_spacing_s") is not None
+    air = summ["air_dep_km"]
+    if floored:                                       # D-B083: D-B081 floor in the inversion
+        sd = inp_dir / "surface.dat"
+        if not sd.exists():
+            raise SystemExit(f"{sd} missing: run b2_tomodd_floor.py write {a.region}")
+        shutil.copy(sd, run / "surface.dat")
+        air = float(T["floor"]["air_dep_km"])
+    elif (run / "surface.dat").exists():
+        raise SystemExit(f"{run}/surface.dat exists but {a.region} is not a floored stage")
     bindir = Path(T["bin"]).parent
     for f in ("ak135.15.SKS", "layer-16.dat"):
         shutil.copy(bindir / f, run / f)
@@ -122,7 +136,7 @@ def main():
                     f"{s[5]:6g} {a.damp:6g}   1  {a.thres:g}")
     w1, w2, w3 = (f"{v:g}" for v in a.smooth)
     (run / "tomoDD-SE.inp").write_text(INP.format(
-        region=a.region, tag=a.tag, air=summ["air_dep_km"], nset=len(rows), stepl=T["inp"]["stepl_km"],
+        region=a.region, tag=a.tag, air=air, nset=len(rows), stepl=T["inp"]["stepl_km"],
         clat=summ["center_lat"], clon=summ["center_lon"], w1=w1, w2=w2, w3=w3, sets="\n".join(rows)))
 
     binary = a.bin or tomodd_bin("bin_check" if a.check else "bin", a.region)
@@ -133,10 +147,14 @@ def main():
     wall = time.time() - t0
     print(f"{a.region}/{a.tag}: exit {rc}, {wall / 60:.1f} min, {(run / 'time.txt').read_text().strip()[-60:]}")
     outs = sorted((run / "Output_Files").glob("*")) + [run / "tomoDD-SE.inp", run / "tomoDD-SE.log", run / "stdout.txt"]
+    if floored:
+        outs.append(run / "surface.dat")
     write_manifest(f"b2_tomodd_run_{a.region}_{a.tag}".replace("/", "_"), run, inputs=[inp_dir / "summary.json", inp_dir / "MOD", binary],
                    outputs=[o for o in outs if o.is_file() and o.stat().st_size < 3e9],
                    params={"region": a.region, "tag": a.tag, "damp": a.damp, "smooth": a.smooth, "thres": a.thres,
-                           "check": a.check, "sets": sets, "binary": binary},
+                           "check": a.check, "sets": sets, "binary": binary, "air_dep_km": air,
+                           "floor": ({"surface_dat": str(inp_dir / "surface.dat"), "tomodd.floor": T["floor"],
+                                      "spacing_s": T["regions"][a.region]["floor_spacing_s"]} if floored else None)},
                    counts={"exit": rc, "wall_min": round(wall / 60, 2)})
     sys.exit(rc)
 

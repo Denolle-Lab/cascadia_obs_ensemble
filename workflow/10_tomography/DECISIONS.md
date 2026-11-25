@@ -776,7 +776,7 @@ e2021JB023190, doi:10.1029/2021JB023190); scored on synthetic planes, held-out s
 PI 06:12: "New version V6.0 and consider the NLL with the recent upgrades from 2022 with SSST corrections". The NonLinLoc
 relocation in the re-inverted model (v0.4.x) is catalog v6.0, not v5.2; v5.2 stays reserved for B5 on v5.1 (D-B058). v6.0
 considers NLL-SSST (source-specific station terms, smooth in source position) and the coherence stage of Lomax &
-Savvaidis (2022) in place of the D-B014 static station terms. Not to be confused with the pick dataset "ver6".
+Savvaidis (2022) in place of the D-B006 static station terms. Not to be confused with the pick dataset "ver6".
 
 ### D-B080 Catalog bundle carries the pick file it was located with; atlas tests the second catalog against its own surface (adopted, 2026-11-25, session -18; implements D-B058 for v5.1; PI may revise)
 * catalog_v5.zip: a version located with picks that are not in the Zenodo record carries them in its folder: v5.1 has

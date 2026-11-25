@@ -618,7 +618,7 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     max_procs: 56                  # concurrent tomoDD processes of the chain (sessions -18 up to 40, another workflow 16)
     nice: 10
     min_avail_gb: 40               # MemAvailable must stay above this after a new process (mem_per_run_gb) starts
-    mem_per_run_gb: 2.8
+    mem_per_run_gb: 3.5             # max RSS of the deterministic runs: washington 3.5, mendocino_gorda_c 3.3, M0 2.6 GB
     members: {synth: 100, real: 100, floor: 5}   # D-B032; floor = clones of synth member 0 with a 1e-6 s data perturbation
     config: v0.3.1                 # the configuration the chain runs (key of configs)
     configs:                       # dataset / M0 run / tile runs as parameters (PI 2026-11-25: v0.4.x on re-timed picks may follow)

@@ -13,7 +13,8 @@ Chain stages (ROOT/chain.state records the finished ones; rerunning the same com
   stats      b2_ens_stats.py stats real (per-node statistics)
   products   b2_ens_stats.py products real (versioned ensemble product, HTML report)
 Scheduler: per member M0 first, then its tiles (all four at once), then the merge; at most tomodd.ensemble.max_procs
-tomoDD processes of this chain, each started only while MemAvailable stays above min_avail_gb + mem_per_run_gb; tile
+tomoDD processes of this chain, each started only while MemAvailable, minus mem_per_run_gb for every process started in
+the last 5 minutes (still allocating), stays above min_avail_gb + mem_per_run_gb; tile
 stages of started members go before new M0 stages (members finish early), longest tiles first. A failed stage is
 retried once; a second failure marks the member failed (FAILED_MEMBER) and the chain carries on. Every tomoDD run is
 niced (tomodd.ensemble.nice) and uses the frozen binaries (D-B054).
@@ -68,10 +69,11 @@ def run_members(kind, names, max_procs=None):
     rl = ROOT / kind / "run_log.jsonl"
     rl.parent.mkdir(parents=True, exist_ok=True)
     while True:
-        for key, (p, t_s, lf) in list(running.items()):          # reap finished jobs
+        for key, (p, t_s, lf, fh) in list(running.items()):      # reap finished jobs
             rc = p.poll()
             if rc is None:
                 continue
+            fh.close()                                           # one log handle per job: keep under the fd limit
             del running[key]
             n, st = key
             ok = rc == 0 and done(kind, n, st)
@@ -102,16 +104,19 @@ def run_members(kind, names, max_procs=None):
             break
         pending.sort()
         n_tdd = sum(1 for (n, s) in running if s != "merge")
+        # processes started in the last 5 minutes may not have reached their full memory yet: reserve it for them
+        young = sum(1 for (n, s), v in running.items() if s != "merge" and time.time() - v[1] < 300)
         for pr, _, n, s in pending:
             if s == "merge":
                 if sum(1 for (_, s2) in running if s2 == "merge") >= 4:
                     continue
                 cmd = PYD + [str(HERE / "b2_ens_member.py"), "merge", kind, n]
             else:
-                if n_tdd >= max_procs or mem_avail_gb() < need_gb:
+                if n_tdd >= max_procs or mem_avail_gb() - young * float(E["mem_per_run_gb"]) < need_gb:
                     continue
                 cmd = PYD + [str(HERE / "b2_ens_member.py"), "stage", kind, n, s]
                 n_tdd += 1
+                young += 1
             md = C.member_dir(kind, n)
             md.mkdir(parents=True, exist_ok=True)
             lf = md / f"{s}.log"
@@ -119,9 +124,7 @@ def run_members(kind, names, max_procs=None):
             fh.write(f"\n{time.strftime('%F %T')} $ {' '.join(cmd)}\n")
             fh.flush()
             running[(n, s)] = (subprocess.Popen(cmd, stdout=fh, stderr=subprocess.STDOUT, env=ENVD, cwd=HERE,
-                                                start_new_session=False), time.time(), lf)
-            if s != "merge" and mem_avail_gb() < need_gb + 5:
-                time.sleep(20)                                   # let the new process allocate before the next check
+                                                start_new_session=False), time.time(), lf, fh)
         if time.time() - last > 600:
             nd = sum(done(kind, n, "merge") for n in names)
             log(f"{kind}: {nd}/{len(names)} merged, {len(failed)} failed, {len(running)} running "
@@ -176,7 +179,7 @@ Written by b2_ens_run.py at the start of every chain run ({time.strftime('%F %T'
 Launch (from the code worktree):
 
     cd {HERE.parents[1]}
-    setsid nohup {PYD[0]} workflow/10_tomography/b2_ens_run.py chain >> {ROOT}/chain.log 2>&1 < /dev/null &
+    LD_LIBRARY_PATH={C.PY_DEFAULT}/lib setsid nohup {PYD[0]} workflow/10_tomography/b2_ens_run.py chain >> {ROOT}/chain.log 2>&1 < /dev/null &
 """
     (ROOT / "RESUME.md").write_text(txt)
 

@@ -148,4 +148,52 @@ Assessment of a surface inside the inversion (no build, no source change made he
 
 ## 6. Test members and cost
 
-RESULTS_PLACEHOLDER
+Run 2026-11-25 06:06-07:15 (`b2_ens_run.py members synth s000 s001` and `members real r000`; 3 members at once next to
+about 25 tomoDD processes of other sessions; 2026-11-24 frozen binaries, nice 10). All stages finished, no failure.
+
+| stage | wall (min), s000 / s001 / r000 | max RSS (GB) | final abs RMS (s), synth / real | events kept / start (air quakes dropped) |
+|---|---|---|---|---|
+| M0 | 18.3 / 18.4 / 18.9 | 1.6-2.5 | 0.50-0.51 / 0.46 | 6,943 start |
+| blanco | 15.5 / 15.5 / 13.9 | 1.2-2.0 | 0.53 / 0.44 | 4,313-4,325 / 4,378 synth, 4,358 real (det. 4,374) |
+| oregon | 18.2 / 17.3 / 18.1 | 1.0-1.2 | 0.52-0.53 / 0.43 | 3,325-3,335 / 3,390 synth, 3,295 real |
+| mendocino_gorda_c | 38.0 / 40.0 / 40.8 | 2.9-3.1 | 0.51 / 0.45 | 12,121-12,129 / 12,191 synth, 12,127 real |
+| washington | 47.8 / 49.1 / 49.9 | 3.4-3.7 | 0.54 / 0.45 | 9,157-9,169 / 9,332 synth, 9,075 real (det. 9,184) |
+| merge + node rule | < 1 s | small | | rule lowered Vs at 6,886-9,468 nodes (drawn Vp/Vs 2.10-2.24, 2.1-2.6 km) |
+
+* One member: 140 process-minutes, about 70 min wall (M0, then washington). The final absolute RMS (0.45 s real,
+  0.51-0.54 s synthetic) is above the deterministic runs' (washington 0.23 s) because every member fits data with
+  the drawn noise added (drawn delta sd 0.31 s); synthetic members also start from hypocentres 1.5-1.7 km from the
+  truth. Every member run drops 1-3 % of its events as tomoDD air quakes (6-15 repeated passes per run), as the
+  deterministic runs do (washington 148): the D-B081 floor question (section 5).
+* Disk: 29 MB kept per member (draws 9.3 MB, start hypocentres 1 MB, 2-3 MB per stage, merged.npz); prior 86 MB;
+  synthetic truth 294 MB. A running stage needs up to 250 MB before trimming.
+* Code paths tested end to end: coverage (2 members: FAIL as it must with 2 members; 41 s), statistics, product
+  (dry-run netCDF 11 MB) and HTML report on r000 (/wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2/test_r000/products/).
+  The member merge with null draws reproduces v0.3.1 exactly (Vp, Vs) and v0.3.2's Vp and Vs (2.4e-7).
+* Early indication from 2 synthetic members (not a verdict): on the 888 checkerboard-resolved Vp nodes the 2-member
+  mean misses the truth by a median 1.45 % while the two members differ by a median 1.25 % (so a single-member sd of
+  ~1.3 %); the recovered change correlates 0.62 with the truth's 2.9 % rms perturbation. A calibrated ensemble would
+  miss by ~1.1 % (0.6745 x 1.3 % x sqrt(1.5)), so the intervals may come out ~1.3 times too narrow (rough, 2 members):
+  the smoothing (480 in three tiles) removes part of a 30 km truth field in every member alike, and RTO's spread does
+  not contain that regularisation bias. If the
+  gate fails for this reason, the choices are a truth drawn at the scale the regularisation can carry, a bias term
+  from the resolution tests, or a wider damping/smoothing prior (PI decision).
+
+Cost of the full chain at max_procs 56 (100 synthetic + 5 noise-floor + 100 real members = 205 members x 140
+process-minutes = 28,800 process-minutes): 8.6 h with perfect packing; with the slowdown of a full machine
+(D-B026: 1.2-1.65x at 32-64 concurrent; 56 here + up to 40 of -18 + 16 others on 128 cores) and the two tails
+(the last members' washington stage, ~70 min each phase), about 12-14 h: synthetic phase ~6.5 h, calibration
+< 5 min, real phase ~6 h, statistics and products < 30 min. Memory: 56 runs x 2.3 GB mean (3.7 GB max) ~ 130 GB;
+the scheduler keeps MemAvailable above 40 GB (mem_per_run_gb 3.5 reserved for each process younger than 5 min),
+so it runs fewer than 56 when the other sessions are busy and the wall time grows accordingly. Disk: ~6 GB kept,
+~15 GB transient.
+
+Launch (not done; for the main session after review):
+
+    cd /home/mdenolle/wt_ens
+    LD_LIBRARY_PATH=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib setsid nohup \
+      /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python workflow/10_tomography/b2_ens_run.py chain \
+      >> /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2/chain.log 2>&1 < /dev/null &
+
+The three test members are reused by the chain (their stages are DONE). For a v0.4.x configuration: add
+configs.v0.4.x, set `config` (or B2_ENS_CONFIG) and a new root (B2_ENS_ROOT), then the same command.

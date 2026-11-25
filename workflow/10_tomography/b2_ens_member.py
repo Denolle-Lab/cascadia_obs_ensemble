@@ -681,7 +681,9 @@ def run_stage(kind, name, stage):
                wall_min=round((time.time() - t0) / 60, 2), tomodd_min=round(t_run / 60, 2), max_rss_gb=
                round(rss_kb / 1e6, 2) if rss_kb else None, kept_mb=round(du / 1e6, 2),
                rms_abs_final=info["log"].get("rms_abs_final"), cnd_last=info["log"].get("cnd_last"),
-               events_final=info["log"].get("events_final"), build=binfo,
+               events_final=sum(1 for _ in open(run / "Output_Files" / "tomoDD.reloc_geo")),
+               events_start=sum(1 for _ in open(C.det_inputs(stage) / "event.dat")),
+               aq_repeats=info["log"].get("aq_repeats"), passes=info["log"].get("passes"), build=binfo,
                finished=time.strftime("%Y-%m-%d %H:%M:%S"))
     C.jdump(sd / "DONE", rec)
     print(f"{kind}/{name}/{stage}: done {rec['wall_min']} min, {rec['max_rss_gb']} GB, {rec['kept_mb']} MB kept",

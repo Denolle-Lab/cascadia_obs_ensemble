@@ -1,0 +1,13 @@
+test,zone,n_columns,n_blocks,median,sd_real,sd_ci_lo,sd_ci_hi,sd_null_med,sd_null_lo,sd_null_hi,p_smaller,depth_sd,note,rho_d95_slab,frac_d95_below_slab
+Vp level at d90,BL,6,5,7.31902,0.498867,0.137582,0.719807,0.308004,0.125408,0.497018,0.976022,1.01545,,,
+Vp level at d90,MTJ,0,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d90,WA,2,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d90,other,0,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d95,BL,1,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d95,MTJ,0,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d95,WA,3,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+Vp level at d95,other,0,,,,,,,,,,,fewer than 5 columns with resolved Vp bracketing the depth,,
+slab: sd(D95 - slab),MT,83,12,11.3224,6.63913,4.48879,8.14734,6.85438,6.20452,7.46029,0.252374,3.27697,,0.0272449,0.987952
+slab: sd(D95 - slab),ON,82,28,-30.6824,22.6433,17.0041,28.4001,19.7663,17.9004,21.1986,1,8.07953,,-0.616431,0.0243902
+slab: sd(D95 - slab),PU,105,21,-27.0383,16.5092,12.2512,20.0244,13.3832,11.9617,14.5851,1,9.4268,,-0.487725,0.0761905
+slab: sd(D95 - slab),WA,15,8,-0.997002,11.7426,6.96486,14.6091,9.67031,7.00516,12.1357,0.935532,6.82109,,-0.157143,0.333333

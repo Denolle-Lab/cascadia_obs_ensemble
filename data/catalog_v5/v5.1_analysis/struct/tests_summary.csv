@@ -1,0 +1,78 @@
+question,zone,test,n,effect,ci_lo,ci_hi,null_lo,null_hi,p,q_BH,ref,passed
+Q1 swarms vs mainshock-aftershock,BL,swarm - mainshock-aftershock: VpVs_res,"24 vs 34 families, 11 blocks",-0.002869,-0.04168,0.1358,-0.06108,0.06108,0.934,1,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - multiplet: VpVs_res,"24 vs 18 families, 11 blocks",-0.05536,-0.1678,0.02133,-0.06712,0.07413,0.1549,0.3848,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - mainshock-aftershock: dVpVs_res,"24 vs 34 families, 11 blocks",-0.1826,-2.359,6.587,-2.887,2.832,0.8946,1,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - multiplet: dVpVs_res,"24 vs 18 families, 11 blocks",-2.481,-8.371,0,-3.782,3.74,0.1789,0.4305,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - mainshock-aftershock: dVs_res,"24 vs 34 families, 11 blocks",1.37,-3.188,3.715,-1.566,2.285,0.1974,0.4606,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - multiplet: dVs_res,"24 vs 18 families, 11 blocks",1.37,-2.938,4.858,-3.184,2.091,0.3168,0.6099,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - mainshock-aftershock: dVp_res,"24 vs 34 families, 11 blocks",0.2615,-3.771,3.826,-1.764,1.035,0.5857,0.9204,0,False
+Q1 swarms vs mainshock-aftershock,BL,swarm - multiplet: dVp_res,"24 vs 18 families, 11 blocks",0,-9.451,1.295,-1.967,2.03,1,1,0,False
+Q2 seismicity density,BL,event-weighted coverage-matched Vp,"5881 events, 346 nodes, 26 blocks",-0.1204,-0.2058,-0.02425,-0.07344,0.06818,0.0009995,0.006413,0,True
+Q2 seismicity density,BL,"stratified Spearman(count, Vp_res)","346 nodes, 9.0 strata",-0.2164,-0.3406,-0.04633,-0.1065,0.1111,0.0004997,0.003498,0,True
+Q2 seismicity density,BL,event-weighted coverage-matched dVp,"5881 events, 346 nodes, 26 blocks",-1.815,-3.091,-0.2305,-0.9681,0.9427,0.0004997,0.003498,0,True
+Q2 seismicity density,BL,"stratified Spearman(count, dVp_res)","346 nodes, 9.0 strata",-0.1794,-0.2833,-0.01624,-0.09966,0.1062,0.0004997,0.003498,0,True
+Q2 seismicity density,MTJ,event-weighted coverage-matched Vp,"1938 events, 83 nodes, 11 blocks",0.02687,-0.1432,0.1592,-0.0521,0.04546,0.2824,0.5575,0,False
+Q2 seismicity density,MTJ,"stratified Spearman(count, Vp_res)","83 nodes, 3.0 strata",-0.07209,-0.3118,0.3293,-0.2231,0.2158,0.5392,0.8834,0,False
+Q2 seismicity density,MTJ,event-weighted coverage-matched dVp,"1938 events, 83 nodes, 11 blocks",0.7104,-0.7386,2.605,-0.5622,0.6133,0.01549,0.09176,0,False
+Q2 seismicity density,MTJ,"stratified Spearman(count, dVp_res)","83 nodes, 3.0 strata",-0.0004619,-0.2288,0.3329,-0.2231,0.2232,0.998,1,0,False
+Q2 seismicity density,WA,event-weighted coverage-matched Vp,"10741 events, 459 nodes, 27 blocks",-0.06217,-0.09245,0.04043,-0.07347,0.09847,0.1334,0.3822,0,False
+Q2 seismicity density,WA,"stratified Spearman(count, Vp_res)","459 nodes, 22.0 strata",0.04032,-0.143,0.2075,-0.09617,0.09302,0.4198,0.7346,0,False
+Q2 seismicity density,WA,event-weighted coverage-matched dVp,"10741 events, 459 nodes, 27 blocks",-0.9791,-1.363,0.3258,-1.216,1.36,0.1439,0.3822,0,False
+Q2 seismicity density,WA,"stratified Spearman(count, dVp_res)","459 nodes, 22.0 strata",0.02264,-0.1435,0.1698,-0.09347,0.102,0.6712,0.9396,0,False
+Q2 seismicity density,BL,event-weighted coverage-matched VpVs,"4825 events, 224 nodes, 20 blocks",0.02473,-0.01388,0.05984,-0.02056,0.02,0.01999,0.1099,0,False
+Q2 seismicity density,BL,"stratified Spearman(count, VpVs_res)","224 nodes, 9.0 strata",0.1341,-0.02413,0.2967,-0.1363,0.1423,0.06297,0.2852,0,False
+Q2 seismicity density,BL,event-weighted coverage-matched dVpVs,"4825 events, 224 nodes, 20 blocks",1.205,-1.077,3.046,-1.285,1.316,0.07246,0.2937,0,False
+Q2 seismicity density,BL,"stratified Spearman(count, dVpVs_res)","224 nodes, 9.0 strata",0.1284,-0.02487,0.3188,-0.1402,0.1311,0.07046,0.2937,0,False
+Q2 seismicity density,BL,event-weighted coverage-matched Vs,"4825 events, 224 nodes, 20 blocks",-0.1246,-0.2244,-0.01073,-0.05449,0.05224,0.0004997,0.003498,0,True
+Q2 seismicity density,BL,"stratified Spearman(count, Vs_res)","224 nodes, 9.0 strata",-0.3228,-0.4752,-0.1332,-0.1419,0.1441,0.0004997,0.003498,0,True
+Q2 seismicity density,BL,event-weighted coverage-matched dVs,"4825 events, 224 nodes, 20 blocks",-2.852,-5.303,-0.06391,-1.227,1.135,0.0004997,0.003498,0,True
+Q2 seismicity density,BL,"stratified Spearman(count, dVs_res)","224 nodes, 9.0 strata",-0.3074,-0.4659,-0.1129,-0.1443,0.1368,0.0004997,0.003498,0,True
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched Vp, field smoothed 20 km","5881 events, 346 nodes, 26 blocks",0.004626,-0.04652,0.03019,-0.02064,0.01813,0.6362,0.9396,0,False
+"Q2 seismicity density, resolved scale",MTJ,"event-weighted coverage-matched Vp, field smoothed 20 km","1938 events, 83 nodes, 11 blocks",-0.00269,-0.08753,0.06114,-0.03153,0.02659,0.8551,1,0,False
+"Q2 seismicity density, resolved scale",WA,"event-weighted coverage-matched Vp, field smoothed 20 km","10741 events, 459 nodes, 27 blocks",0.01216,-0.004287,0.04306,-0.016,0.01524,0.1314,0.3822,0,False
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched dVp, field smoothed 20 km","5881 events, 346 nodes, 26 blocks",-0.2466,-0.8854,0.2432,-0.2667,0.3005,0.08546,0.3188,0,False
+"Q2 seismicity density, resolved scale",MTJ,"event-weighted coverage-matched dVp, field smoothed 20 km","1938 events, 83 nodes, 11 blocks",0.1058,-0.6905,1.039,-0.2512,0.2581,0.4508,0.7713,0,False
+"Q2 seismicity density, resolved scale",WA,"event-weighted coverage-matched dVp, field smoothed 20 km","10741 events, 459 nodes, 27 blocks",0.09929,-0.03212,0.1448,-0.1188,0.1236,0.1214,0.3822,0,False
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched VpVs, field smoothed 20 km","4825 events, 224 nodes, 20 blocks",0.01677,-0.004022,0.03235,-0.00635,0.006929,0.0004997,0.003498,0,False
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched dVpVs, field smoothed 20 km","4825 events, 224 nodes, 20 blocks",0.7852,-0.6142,1.856,-0.4986,0.4878,0.0004997,0.003498,0,False
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched Vs, field smoothed 20 km","4825 events, 224 nodes, 20 blocks",-0.04032,-0.089,0.01385,-0.01904,0.01702,0.0004997,0.003498,0,False
+"Q2 seismicity density, resolved scale",BL,"event-weighted coverage-matched dVs, field smoothed 20 km","4825 events, 224 nodes, 20 blocks",-1.021,-2.396,0.6107,-0.5209,0.477,0.0004997,0.003498,0,False
+Q2 b-value,BL,b(high Vp_res) - b(low),"372 vs 658 events, 18 blocks",-0.03393,-0.1993,0.191,-0.1882,0.2142,0.7636,0.9728,0,False
+Q2 b-value,BL,b(high dVp_res) - b(low),"362 vs 668 events, 18 blocks",-0.03928,-0.1391,0.1431,-0.1904,0.1972,0.7091,0.958,0,False
+Q2 b-value,MTJ,b(high Vp_res) - b(low),"560 vs 197 events, 11 blocks",0.1948,-0.119,0.3586,-0.2536,0.2464,0.1399,0.3822,0,False
+Q2 b-value,MTJ,b(high dVp_res) - b(low),"504 vs 253 events, 11 blocks",0.2134,-0.09964,0.3186,-0.2674,0.2006,0.08696,0.3188,0,False
+Q2 b-value,WA,b(high Vp_res) - b(low),"251 vs 286 events, 18 blocks",0.3834,-0.0364,0.6512,-0.4159,0.3248,0.05047,0.2429,0,False
+Q2 b-value,WA,b(high dVp_res) - b(low),"219 vs 318 events, 18 blocks",0.2528,-0.138,0.5274,-0.4003,0.3296,0.2069,0.4686,0,False
+Q2 b-value,BL,b(high VpVs_res) - b(low),"494 vs 353 events, 15 blocks",-0.03843,-0.2271,0.1765,-0.236,0.2745,0.7781,0.9728,0,False
+Q2 b-value,BL,b(high dVpVs_res) - b(low),"413 vs 434 events, 15 blocks",0.05679,-0.1313,0.2387,-0.2427,0.2821,0.6772,0.9396,0,False
+Q2 b-value,BL,b(high Vs_res) - b(low),"196 vs 651 events, 15 blocks",0.0181,-0.2327,0.2664,-0.232,0.2512,0.8901,1,0,False
+Q2 b-value,BL,b(high dVs_res) - b(low),"224 vs 623 events, 15 blocks",0.05441,-0.2315,0.3626,-0.2319,0.2649,0.6792,0.9396,0,False
+Q3 depth extent,BL,Vp level at d90 (smaller than null?),6 columns,0.4989,0.1376,0.7198,0.1254,0.497,0.976,1,0.3112,False
+Q3 depth extent,MT,slab: sd(D95 - slab) (smaller than null?),83 columns,6.639,4.489,8.147,6.205,7.46,0.2524,0.5404,6.832,False
+Q3 depth extent,ON,slab: sd(D95 - slab) (smaller than null?),82 columns,22.64,17,28.4,17.9,21.2,1,1,19.55,False
+Q3 depth extent,PU,slab: sd(D95 - slab) (smaller than null?),105 columns,16.51,12.25,20.02,11.96,14.59,1,1,13.27,False
+Q3 depth extent,WA,slab: sd(D95 - slab) (smaller than null?),15 columns,11.74,6.965,14.61,7.005,12.14,0.9355,1,9.57,False
+Q4 fault surfaces,all resolved,alignment |n.grad Vp| (all surfaces),"44 surfaces, 19 blocks",0.6978,0.6391,0.7646,0.5846,0.7306,0.1524,0.3848,0.6576,False
+Q4 fault surfaces,all resolved,alignment |n.grad Vp| (stable surfaces),"10 surfaces, 7 blocks",0.7826,0.7073,0.8551,0.5442,0.7971,0.04498,0.2309,0.6706,False
+Q4 fault surfaces,all resolved,alignment |n.grad VpVs| (all surfaces),"16 surfaces, 6 blocks",0.7309,0.4669,0.871,0.536,0.7814,0.1384,0.3822,0.6587,False
+Q4 fault surfaces,all resolved,alignment |n.grad VpVs| (stable surfaces),"6 surfaces, 3 blocks",0.7297,0.3599,0.9037,0.4834,0.8339,0.2634,0.5404,0.6587,False
+Q4 fault surfaces,all resolved,alignment |n.grad dVp| (all surfaces),"44 surfaces, 19 blocks",0.6615,0.5678,0.7472,0.5824,0.7309,0.4763,0.7972,0.6566,False
+Q4 fault surfaces,all resolved,alignment |n.grad dVp| (stable surfaces),"10 surfaces, 7 blocks",0.6563,0.4397,0.8117,0.5255,0.8031,0.5842,0.9204,0.6643,False
+Q4 fault surfaces,all resolved,alignment |n.grad dVpVs| (all surfaces),"16 surfaces, 6 blocks",0.6076,0.3769,0.7726,0.5323,0.7813,0.7756,0.9728,0.6568,False
+Q4 fault surfaces,all resolved,alignment |n.grad dVpVs| (stable surfaces),"6 surfaces, 3 blocks",0.4902,0.2038,0.7342,0.473,0.8343,0.964,1,0.6536,False
+Q5 Blanco segments,BL,"Spearman(VpVs_events, swarm_share)",5 segments,0.6669,,,,,0.2667,0.5404,0,False
+Q5 Blanco segments,BL,"Spearman(VpVs_events, background_share)",5 segments,-0.8721,,,,,0.1,0.35,0,False
+Q5 Blanco segments,BL,"Spearman(VpVs_events, b_value)",5 segments,-0.1539,,,,,0.8333,1,0,False
+Q5 Blanco segments,BL,"Spearman(VpVs_events, swarm_frac_fam5)",5 segments,-0.0513,,,,,1,1,0,False
+Q5 Blanco segments,BL,"Spearman(dVpVs_events, swarm_share)",5 segments,0.3,,,,,0.6833,0.9396,0,False
+Q5 Blanco segments,BL,"Spearman(dVpVs_events, background_share)",5 segments,-0.6,,,,,0.35,0.6573,0,False
+Q5 Blanco segments,BL,"Spearman(dVpVs_events, b_value)",5 segments,0.2,,,,,0.7833,0.9728,0,False
+Q5 Blanco segments,BL,"Spearman(dVpVs_events, swarm_frac_fam5)",5 segments,-0.3,,,,,0.6833,0.9396,0,False
+Q5 Blanco segments,BL,"Spearman(dVp_events, swarm_share)",5 segments,-0.3,,,,,0.6833,0.9396,0,False
+Q5 Blanco segments,BL,"Spearman(dVp_events, background_share)",5 segments,0.1,,,,,0.95,1,0,False
+Q5 Blanco segments,BL,"Spearman(dVp_events, b_value)",5 segments,0.8,,,,,0.1333,0.3822,0,False
+Q5 Blanco segments,BL,"Spearman(dVp_events, swarm_frac_fam5)",5 segments,-0.2,,,,,0.7833,0.9728,0,False
+Q5 Blanco segments,BL,"Spearman(dVs_events, swarm_share)",5 segments,-0.5643,,,,,0.4,0.7163,0,False
+Q5 Blanco segments,BL,"Spearman(dVs_events, background_share)",5 segments,0.6669,,,,,0.2667,0.5404,0,False
+Q5 Blanco segments,BL,"Spearman(dVs_events, b_value)",5 segments,0.5643,,,,,0.4,0.7163,0,False
+Q5 Blanco segments,BL,"Spearman(dVs_events, swarm_frac_fam5)",5 segments,0.1539,,,,,0.8333,1,0,False

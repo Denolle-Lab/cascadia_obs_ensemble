@@ -59,8 +59,8 @@
   .seg button.on { background: var(--text-primary); color: var(--surface-0); }
   .seg button:disabled { opacity: 0.4; cursor: default; }
   /* catalog switch: one button per registry catalog + Compare, wrapped on several rows */
-  #segCat { display: flex; flex-wrap: wrap; max-width: 100%; }
-  #segCat button, #segCat button + button { flex: 1 0 auto; white-space: nowrap; border: 0; box-shadow: inset -1px -1px 0 var(--hairline-strong); margin: 0 -1px -1px 0; }
+  #segCat, #segColor { display: flex; flex-wrap: wrap; max-width: 100%; }
+  #segCat button, #segCat button + button, #segColor button, #segColor button + button { flex: 1 0 auto; white-space: nowrap; border: 0; box-shadow: inset -1px -1px 0 var(--hairline-strong); margin: 0 -1px -1px 0; }
   .sep { border-top: 1px solid var(--hairline); margin: 2px 0; }
   details.grp { border-top: 1px solid var(--hairline); padding-top: 7px; }
   details.grp:first-child { border-top: 0; padding-top: 0; }
@@ -117,9 +117,16 @@
   #tip b { font-weight: 600; } #tip .k { color: var(--text-muted); }
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 30; color: var(--text-secondary); background: var(--surface-0); }
   .panel.closed { display: none !important; }
-  #faultCard { top: 64px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100vw - 32px)); padding: 12px 14px; display: none; font-size: 12.5px; line-height: 1.5; max-height: 46vh; overflow-y: auto; }
-  #faultCard .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  #faultCard b.id { font-size: 14px; } #faultCard .k { color: var(--text-muted); }
+  #faultCard, #famCard { top: 64px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100vw - 32px)); padding: 12px 14px; display: none; font-size: 12.5px; line-height: 1.5; max-height: 46vh; overflow-y: auto; }
+  #faultCard .top, #famCard .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  #faultCard b.id, #famCard b.id { font-size: 14px; } #faultCard .k, #famCard .k { color: var(--text-muted); }
+  #famCard .flag { color: #d9b26b; } #famCard .btns { display: flex; gap: 6px; }
+  /* Cluster colour mode: one toggle per event class (swatch, name, count) */
+  #cluTypes { grid-template-columns: 1fr; width: 100%; }
+  #cluTypes button { justify-content: flex-start; padding: 3px 6px; } #cluTypes button .n { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+  #cluTypes.nosw button:not(:first-child) .sw { visibility: hidden; }   /* by family: the class colours are not in use */
+  .legend .lgtxt { margin-top: 4px; font-size: 11px; line-height: 15px; color: var(--text-secondary); }
+  .legend .lgtxt.caveat { color: #d9b26b; }
   #faultCard a { color: #9fd0ff; text-decoration: none; } #faultCard a:hover { text-decoration: underline; }
   #faultCard ul { margin: 4px 0 0; padding-left: 16px; } #faultCard .flag { color: #d9b26b; }
   .toolbar { position: fixed; z-index: 6; display: flex; gap: 4px; padding: 4px; background: rgba(26,26,25,0.9);
@@ -161,7 +168,7 @@
     .layers button { padding: 8px 6px; font-size: 13px; }
     .hint { display: none; }
     #tip { max-width: 80vw; }
-    #faultCard { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); max-height: 40vh; }
+    #faultCard, #famCard { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); max-height: 40vh; }
   }
 </style>
 </head>
@@ -196,7 +203,13 @@
     <div class="ctl-row"><span class="lab">Max lines</span><input type="range" id="segN" min="250" max="20000" step="250" value="3000"><span class="val mono" id="segNV">3,000</span></div>
   </div>
   <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Color by</span>
-    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier (A-D, U) of the catalog shown, or of the relocated catalog">Tier</button></div></div>
+    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier (A-D, U) of the catalog shown, or of the relocated catalog">Tier</button><button data-v="7" id="btnClu" title="Earthquake families of the nearest-neighbour clustering">Cluster</button></div>
+    <div class="hint" id="cluNote" style="display:none"></div></div>
+  <div id="cluBox" style="display:none;flex-direction:column;gap:7px">
+    <div class="ctl-row"><span class="lab">Clusters</span><div class="seg" id="segClu"><button data-v="0" class="on" title="One colour per family (12 colours reused; neighbouring families get different ones)">By family</button><button data-v="1" title="One colour per class: mainshock-aftershock, swarm, multiplet, linked to a single">By type</button></div></div>
+    <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:4px"><span class="lab">Show</span><div class="layers" id="cluTypes"></div></div>
+    <div class="ctl-row" id="famRow" style="display:none"><span class="val" id="famV" style="width:auto;text-align:left"></span><button class="btn" id="famClear">Show all</button></div>
+  </div>
   <div class="ctl-row"><span class="lab">Vertical ×</span><input type="range" id="exag" min="1" max="10" step="0.5" value="3"><span class="val mono" id="exagV">3×</span></div>
   <div class="ctl-row"><span class="lab">Ground</span><input type="range" id="ground" min="0" max="1" step="0.05" value="0.55"><span class="val mono" id="groundV">solid</span></div>
   <div class="ctl-row"><span class="lab">Point size</span><input type="range" id="psize" min="0.3" max="3" step="0.1" value="1"><span class="val mono" id="psizeV">1.0</span></div>
@@ -226,7 +239,7 @@
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Cut at</span><input type="range" id="tomoCutAt" min="0" max="1000" step="1" value="500"><span class="val mono" id="tomoCutV"></span></div>
   </div></details>
   <div class="ctl-row" style="border-top:1px solid var(--hairline);padding-top:9px"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
-  <details class="grp"><summary>Help</summary><div class="grp-body"><div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div></div></details>
+  <details class="grp"><summary>Help</summary><div class="grp-body"><div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events (Cluster colours: an event's family), <kbd>Esc</kbd> to clear</div></div></details>
 </div>
 
 <nav class="regions panel" id="regions"><div class="title"><span>Go to</span><span>QC events</span></div></nav>
@@ -250,6 +263,7 @@
 <div class="legend panel" id="legend"></div>
 <div id="tip"></div>
 <div class="panel" id="faultCard"></div>
+<div class="panel" id="famCard"></div>
 
 <script type="importmap">
 { "imports": {
@@ -452,6 +466,18 @@ function catSurf(k) {   // the catalog's own surface (surface_km, the surface of
     esurfC[k] = a; }
   return esurfC[k];
 }
+// Earthquake families (colour mode Cluster, 7; build option --clusters): the nearest-neighbour clustering of one catalog
+// (CLU.cat, catalog v5.1), offered in that catalog's view only, since the families come from its locations. Per event:
+// class code ecls (CLU.cls: 0 background, 1 mainshock-aftershock, 2 swarm, 3 multiplet, 4 linked to a single,
+// 5 excluded: not drawn in this mode; 255 not in the table), family row efam (-1 none), role (CLU.roles[EV.cl_role]);
+// per family: the column lists of CLU.fam and a colour (index into CLU.pal, chosen so that neighbouring families differ).
+const CLU = M.events.clu || null;
+const ecls = new Float32Array(N).fill(255), efam = new Float32Array(N).fill(-1), ecol = new Float32Array(N * 3);
+if (CLU) for (let i = 0; i < N; i++) { ecls[i] = EV.cl_cls[i]; efam[i] = EV.cl_fam[i] === 65535 ? -1 : EV.cl_fam[i]; }
+// by type: background grey, then a set that keeps every pair apart under normal and simulated protan, deutan, tritan vision
+const CLU_TYPE_RGB = ["#6b6b6b", "#d55e00", "#f0e442", "#3987e5", "#a6dcef"];
+const CLU_LAB = ["Background", "Mainshock–aftershock", "Swarm", "Multiplet", "Linked to a single"];
+let CLU_ON = false;                          // Cluster colours in use: mode 7 in the clustered catalog's view
 const evGeo = new THREE.BufferGeometry();
 const evPos = new Float32Array(N * 3);
 for (let i = 0; i < N; i++) { evPos[i * 3] = ex[i]; evPos[i * 3 + 1] = 0; evPos[i * 3 + 2] = ez[i]; }
@@ -482,11 +508,17 @@ evGeo.setAttribute("flt", new THREE.BufferAttribute(eflt, 1));
 const tierAttr = new THREE.BufferAttribute(etier, 1), dvAttr = new THREE.BufferAttribute(cdv, 1);
 evGeo.setAttribute("tier", tierAttr);
 evGeo.setAttribute("dv", dvAttr);
-const F = { cat: 0, cmp: false, ca: 0, cb: REL, cq: 5, cs: 8, segs: 0, segN: 3000, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
+const ccolAttr = new THREE.BufferAttribute(ecol, 3);
+evGeo.setAttribute("ccls", new THREE.BufferAttribute(ecls, 1));
+evGeo.setAttribute("cfam", new THREE.BufferAttribute(efam, 1));
+evGeo.setAttribute("ccol", ccolAttr);
+// clu: Cluster mode state: sub 0 by family, 1 by type; show = classes 0-4 drawn; fam = isolated family row (-1 none)
+const F = { cat: 0, cmp: false, ca: 0, cb: REL, cq: 5, cs: 8, segs: 0, segN: 3000, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1,
+  clu: { sub: 0, show: [true, true, true, true, true], fam: -1 } };
 const EU = { uExag: U.exag, uT0: { value: F.t0 }, uT1: { value: F.t1 }, uMmin: { value: -9 }, uSig: { value: 999 }, uQC: { value: 0 },
   uD0: { value: -99 }, uD1: { value: 999 }, uBox: { value: new THREE.Vector4() }, uBoxOn: { value: 0 }, uMode: { value: 0 },
   uSize: { value: 1 }, uAir: { value: 1 }, uFault: { value: -1 }, uOnF: { value: 0 }, uPix: { value: renderer.getPixelRatio() }, uTmax: { value: M.events.days_max },
-  uRing: { value: 0 }, uTierMax: { value: 4 }, uCmp: { value: 0 }, uDvS: { value: 8 } };
+  uRing: { value: 0 }, uTierMax: { value: 4 }, uCmp: { value: 0 }, uDvS: { value: 8 }, uClu: { value: 0 }, uCluOn: { value: 31 }, uFam: { value: -1 } };
 const ramps = `
   vec3 rampDepth(float d) {   // shallow pale gold -> deep violet, all readable on dark
     float t = clamp(d / 45.0, 0.0, 1.0);
@@ -523,13 +555,15 @@ const ramps = `
   }`;
 const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthWrite: true,
   vertexShader: `
-    attribute float dep, day, mag, qc, sig, nw, air, flt, tier, dv;
+    attribute float dep, day, mag, qc, sig, nw, air, flt, tier, dv, ccls, cfam; attribute vec3 ccol;
     uniform float uRing, uCmp, uDvS, uTierMax, uFault, uOnF, uAir, uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
+    uniform float uClu, uCluOn, uFam;
     varying vec3 vCol; varying float vFade, vRing;
     ${ramps}
     void main() {
       bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1 && !(uAir > 1.5 && air > 0.5)
-        && (abs(tier - 5.0) < 0.5 || min(tier, 4.0) <= uTierMax + 0.5) && dv > -9000.0 && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
+        && (abs(tier - 5.0) < 0.5 || min(tier, 4.0) <= uTierMax + 0.5) && dv > -9000.0 && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5))
+        && (uClu < 0.5 || (ccls < 4.5 && mod(floor(uCluOn / exp2(ccls) + 0.001), 2.0) > 0.5));   // Cluster mode: classes shown (bit k of uCluOn), excluded never
       if (uBoxOn > 0.5) keep = keep && position.x >= uBox.x && position.x <= uBox.y && position.z >= uBox.z && position.z <= uBox.w;
       if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
       vec4 mv = modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0);
@@ -538,9 +572,13 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
       float s = 0.8 + 0.9 * pow(1.85, clamp(m, -1.0, 3.0) + 1.0) * pow(1.25, max(m - 3.0, 0.0));
       gl_PointSize = clamp(s * uSize * uPix * clamp(pow(320.0 / -mv.z, 0.45), 0.35, 1.6), 1.2 * uPix, 30.0 * uPix);
       vCol = uMode < 0.5 ? rampDepth(dep) : (uMode < 1.5 ? rampTime(day / uTmax) : (uMode < 2.5 ? rampNew(nw) : (uMode < 3.5 ? faultCol(flt)
-        : (uMode < 4.5 ? tierCol(tier) : (uMode < 5.5 ? rampDz(dv / uDvS) : rampDh(dv / uDvS))))));
+        : (uMode < 4.5 ? tierCol(tier) : (uMode < 5.5 ? rampDz(dv / uDvS) : (uMode < 6.5 ? rampDh(dv / uDvS) : ccol))))));
       vRing = tier > 3.5 && abs(tier - 5.0) > 0.5 && (uRing > 0.5 || (uMode > 3.5 && uMode < 4.5)) ? 1.0 : 0.0;   // tier U (4, or 6 = no hypocentre in the tier catalog): ring at the reference location
       vFade = qc > 0.5 ? 1.0 : 0.7;
+      if (uClu > 0.5) {                          // Cluster mode: background recedes; with a family isolated, the others dim
+        if (ccls < 0.5) vFade *= 0.5;
+        if (uFam > -0.5) { if (abs(cfam - uFam) > 0.5) { vCol = mix(vCol, vec3(0.4), 0.6); vFade *= 0.2; gl_PointSize *= 0.6; } else gl_PointSize *= 1.35; }
+      }
       if (uAir > 0.5 && uAir < 1.5 && air > 0.5) { vCol = vec3(0.55); vFade *= 0.45; }
     }`,
   fragmentShader: `
@@ -592,6 +630,7 @@ function passes(i) {
   if (F.air === 2 && eair[i]) return false;
   if (etier[i] !== 5 && Math.min(etier[i], 4) > F.tmax) return false;   // no tier class: always kept; no hypocentre: as U
   if (!(cdv[i] > -9000)) return false;           // no hypocentre in the catalog shown; Compare: not located in both
+  if (CLU_ON && !(ecls[i] < 5 && F.clu.show[ecls[i]])) return false;   // Cluster mode: class hidden, or excluded from the clustering
   if (F.fault >= 0 && eflt[i] !== F.fault) return false;
   if (F.onf === 1 && eflt[i] < 0 || F.onf === 2 && eflt[i] >= 0) return false;
   if (EV.day[i] < F.t0 || EV.day[i] > F.t1 || emag[i] < F.mmin || esig[i] > F.sig || eflag[i] < F.qc || d < F.d0 || d > F.d1) return false;
@@ -1053,7 +1092,77 @@ function seg(id, cb) {
   el.querySelectorAll("button").forEach(b => b.onclick = () => { el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); cb(+b.dataset.v); });
 }
 const effMode = () => F.cmp && F.cq >= 0 ? F.cq : F.mode;   // colour mode in use (Compare: Δ depth 5, Δ horiz. 6)
-function setMode() { EU.uMode.value = effMode(); drawLegend(); drawSection(); buildSegs(); }
+function setMode() { const ch = syncClu(); EU.uMode.value = effMode(); if (CLU_ON) setCluCol(); drawLegend(); drawSection(); buildSegs(); if (ch) refresh(); }
+// ---------- Cluster mode: families of the clustered catalog, in its view only ----------
+const cluView = () => !!CLU && !F.cmp && F.cat === CLU.cat;
+function syncClu() {                          // offer the mode in the clustered catalog's view only; returns true when it switched on or off
+  if (!CLU) return false;
+  const v = cluView();
+  if (!v && F.mode === 7) { F.mode = 0; $("segColor").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "0")); }
+  const was = CLU_ON; CLU_ON = v && F.mode === 7;
+  $("btnClu").disabled = !v; $("cluNote").style.display = v ? "none" : "";
+  $("cluBox").style.display = CLU_ON ? "flex" : "none";
+  EU.uClu.value = CLU_ON ? 1 : 0;
+  if (!CLU_ON && F.clu.fam >= 0) selectFamily(-1, false);
+  if (CLU_ON && !was) groundSeeThrough();      // the family colours lie under the seafloor: see-through ground, as for the model
+  return was !== CLU_ON;
+}
+function setCluCol() {                        // event colours: by family (CLU.pal; grey without a family) or by class
+  if (!CLU) return;
+  const pal = CLU.pal.map(hexRGB), typ = CLU_TYPE_RGB.map(hexRGB), fc = CLU.fam.col;
+  for (let i = 0; i < N; i++) {
+    const c = ecls[i] > 4 ? typ[0] : F.clu.sub ? typ[ecls[i]] : efam[i] >= 0 ? pal[fc[efam[i]]] : typ[0];
+    ecol[i * 3] = c[0]; ecol[i * 3 + 1] = c[1]; ecol[i * 3 + 2] = c[2];
+  }
+  ccolAttr.needsUpdate = true;
+  $("cluTypes").classList.toggle("nosw", !F.clu.sub);
+}
+const durTxt = d => d == null ? "–" : d < 1 ? `${(d * 24).toFixed(1)} h` : `${d.toFixed(d < 10 ? 1 : 0)} days`;
+function selectFamily(k, redraw = true) {     // isolate one family (others dimmed, still counted and pickable); -1 = none
+  F.clu.fam = k; EU.uFam.value = k;
+  $("famRow").style.display = k >= 0 ? "" : "none";
+  if (k >= 0) $("famV").textContent = `Family ${CLU.fam.id[k]} isolated`;
+  showFamCard(k);
+  if (redraw) { drawSection(); drawLegend(); }
+}
+function showFamCard(k) {
+  const card = $("famCard");
+  if (k < 0) { card.style.display = "none"; return; }
+  const f = CLU.fam, t = f.type[k];
+  let nd = 0, w = 999, e = -999, s = 999, n = -999; const dz = [];
+  for (let i = 0; i < N; i++) if (efam[i] === k && passes(i)) { nd++; w = Math.min(w, elon[i]); e = Math.max(e, elon[i]); s = Math.min(s, elat[i]); n = Math.max(n, elat[i]); dz.push(edep[i]); }
+  const mig = f.res[k] == null ? "" : f.res[k] === 0 ? "migration not resolvable (spread under twice the location error)"
+    : f.mig[k] ? "migrating (permutation test)" : "migration resolvable, none found";
+  const flags = [f.p1[k] ? `${f.p1[k]} Mount St Helens deep events of review set P1 (probably false events)` : "",
+    f.day[k] ? `${f.day[k]} weekday-daytime events of fault surfaces removed as possible blasts` : "",
+    f.p2[k] ? `${f.p2[k]} events of review set P2` : ""].filter(Boolean);
+  card.innerHTML = `<div class="top"><span><span class="sw" style="display:inline-block;background:${CLU.pal[f.col[k]]}"></span> <b class="id">Family ${f.id[k]}</b> <span class="k">${esc(CLU_LAB[t])} · ${esc(f.reg[k] || "")} · ${esc(CLU.cat_id)} locations</span></span><span class="btns"><button class="btn" id="famZoom">Zoom</button><button class="btn" id="famClose">Close</button></span></div>
+    <div><b>n ${f.n[k].toLocaleString()}</b> above Mc${f.n_all[k] != null && f.n_all[k] !== f.n[k] ? ` · ${f.n_all[k].toLocaleString()} with the events below Mc attached` : ""} · <b>Mmax ${fx(f.M[k], 2)}</b>${f.main[k] != null ? ` <span class="k">(largest: event ${f.main[k]})</span>` : ""}</div>
+    <div><span class="mono">${esc(f.t0[k])} → ${esc(f.t1[k])}</span> · ${durTxt(f.dur[k])} · extent ${fx(f.ext[k])} km</div>
+    ${f.dq[k] ? `<div><span class="k">depth, well-constrained events</span> ${fx(f.dq[k][1])} km (10–90 %: ${fx(f.dq[k][0])}–${fx(f.dq[k][2])} km)</div>` : ""}
+    ${mig || f.v4[k] ? `<div>${mig}${mig && f.v4[k] ? " · " : ""}${f.v4[k] ? `<span class="k">against v4:</span> ${esc(f.v4[k])}` : ""}</div>` : ""}
+    ${flags.length ? `<div class="flag">${flags.join(" · ")}</div>` : ""}
+    <div class="k" style="margin-top:4px">${nd.toLocaleString()} of its events drawn with the current filters; other events dimmed. <kbd>Esc</kbd> or Close to show all.</div>`;
+  card.style.display = "block";
+  const fc = $("faultCard");                   // under the fault card when both are open (desktop)
+  card.style.top = innerWidth > 700 && fc.style.display === "block" ? `${fc.getBoundingClientRect().bottom + 8}px` : "";
+  $("famClose").onclick = () => selectFamily(-1);
+  $("famZoom").onclick = () => {                // frame the family's events, the view centred on their median depth
+    if (!nd) return;
+    flyToBox([w - 0.05, e + 0.05, s - 0.05, n + 0.05]);
+    const dy = -quant(dz, [0.5])[0] * U.exag.value - fly.q1.y; fly.q1.y += dy; fly.p1.y += dy;
+  };
+}
+const cluTxt = i => {                          // tooltip line in the clustered catalog's view
+  if (!CLU || F.cmp || F.cat !== CLU.cat || ecls[i] > 5) return "";
+  const c = ecls[i], role = CLU.roles[EV.cl_role[i]] || "", below = role.endsWith("_belowMc");
+  if (c === 5) return `<br><span class="k">cluster</span> <span class="caveat">left out: ${role === "excluded_not_earthquake" ? "not an earthquake" : "no hypocentre"}</span>`;
+  if (efam[i] < 0) return `<br><span class="k">cluster</span> ${c === 4 ? "linked to a background single (event below Mc)" : `background${below ? " (below Mc, no link)" : ""}`}`;
+  const k = efam[i], f = CLU.fam, r = role.replace("_belowMc", "");
+  const rl = [r === "swarm" || r === "multiplet" ? "" : r, below ? "below Mc, attached" : ""].filter(Boolean).join(", ");
+  return `<br><span class="k">cluster</span> <span class="sw" style="display:inline-block;background:${CLU.pal[f.col[k]]}"></span> <b>${CLU_LAB[c]} family ${f.id[k]}</b> <span class="k">${rl}</span>
+    <br><span class="k">family</span> n ${f.n[k]}${f.n_all[k] != null && f.n_all[k] !== f.n[k] ? ` (${f.n_all[k]} with below Mc)` : ""} · Mmax ${fx(f.M[k], 2)} · ${esc(f.t0[k].slice(0, 10))} → ${esc(f.t1[k].slice(0, 10))} (${durTxt(f.dur[k])}) · ${fx(f.ext[k])} km${CLU_ON ? ' · <span class="k">click to isolate</span>' : ""}`;
+};
 seg("segColor", v => {
   F.mode = v;
   if (F.cmp && F.cq >= 0) { F.cq = -1; $("segCmp").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "-1")); }
@@ -1082,6 +1191,7 @@ const TIER_N = [0, 0, 0, 0, 0, 0, 0];         // events per tier code 0-6 (of th
 const CMPQ = { n: 0, dh: [], dz: [] };       // B − A over all events located in both (quantiles)
 const quant = (a, ps) => { if (!a.length) return ps.map(() => null); const s = Float32Array.from(a).sort(); return ps.map(p => s[Math.min(s.length - 1, Math.floor(p * (s.length - 1) + 0.5))]); };
 function applyView() {
+  syncClu(); if (CLU_ON) setCluCol();          // Cluster mode only in the clustered catalog's view (else back to Depth)
   const c = viewCat(), P = CP[c], R = CP[0], S = catSurf(c), ts = tierSrc();
   for (let i = 0; i < N; i++) {
     const ok = isLoc(c, i);
@@ -1149,6 +1259,23 @@ seg("segCmp", v => { F.cq = v; setDv(); setMode(); });
 seg("segSegs", v => { F.segs = v; buildSegs(); drawLegend(); drawSection(); });
 if (NC < 2) ["catRow"].forEach(id => $(id).style.display = "none");
 if (!ANY_TIERS) ["tierRow", "btnTier"].forEach(id => $(id).style.display = "none");
+if (CLU) {                                     // Cluster mode controls: by family / by type, one toggle per class
+  $("cluNote").textContent = `Cluster: ${CLU.cat_id} view only (families from its locations).`;
+  $("btnClu").title = `Earthquake families of the nearest-neighbour clustering of ${CLU.cat_id}, in its view only`;
+  seg("segClu", v => { F.clu.sub = v; setCluCol(); drawLegend(); drawSection(); });
+  const cnt = [0, 0, 0, 0, 0];                 // events drawn in the clustered catalog's view, per class
+  for (let i = 0; i < N; i++) if (ecls[i] < 5 && !noHypo(CLU.cat, i)) cnt[ecls[i]]++;
+  const rx = CLU.roles.indexOf("excluded_not_earthquake");
+  CLU.drawn = cnt; CLU.notEq = rx < 0 ? 0 : EV.cl_role.reduce((s_, r) => s_ + (r === rx), 0);
+  const ct = $("cluTypes");
+  ct.innerHTML = CLU_LAB.map((l, k) => `<button data-k="${k}" title="Show or hide: ${l.toLowerCase()}"><span class="sw" style="background:${CLU_TYPE_RGB[k]}"></span>${l}<span class="n mono">${cnt[k].toLocaleString()}</span></button>`).join("");
+  ct.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const k = +b.dataset.k; F.clu.show[k] = !F.clu.show[k]; b.classList.toggle("muted", !F.clu.show[k]);
+    EU.uCluOn.value = F.clu.show.reduce((s_, on, j) => s_ + (on ? 2 ** j : 0), 0);
+    refresh();
+  });
+  $("famClear").onclick = () => selectFamily(-1);
+} else $("btnClu").style.display = "none";
 
 // ---------- event <-> fault: pick a fault to see its events ----------
 const faultSel = $("faultSel");
@@ -1286,6 +1413,7 @@ function refresh() {
   refreshT = setTimeout(() => {
     let n = 0; for (let i = 0; i < N; i++) if (passes(i)) n++;
     $("nShown").textContent = n.toLocaleString(); drawHist(); buildSegs(); drawSection(); cmpShown(); updateMoves();
+    if (F.clu.fam >= 0) showFamCard(F.clu.fam);   // its count of events drawn follows the filters
   }, 40);
 }
 
@@ -1349,6 +1477,17 @@ function catNotes() {                         // registry notes, folded under "S
   const ks = F.cmp ? [F.ca, F.cb] : [F.cat || REL];
   return [...new Set(ks)].filter(k => CATS[k].note).map(k => `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${esc(CATS[k].label)}</b>: ${esc(CATS[k].note)}</div>`).join("");
 }
+function cluLeg() {                           // Cluster mode: what the colours mean, how below-Mc events enter, two caveats
+  const f = CLU.fam, nT = [0, 0, 0, 0], C = CLU.cav || {};
+  f.type.forEach(t => nT[t]++);
+  const key = F.clu.sub
+    ? `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${CLU_LAB.map((l, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="${CLU_TYPE_RGB[k]}"/></svg>${l}</div>`).join("")}</div>`
+    : `<div style="display:flex;align-items:center;gap:3px">${CLU.pal.map(h => `<span class="sw" style="background:${h}"></span>`).join("")}<span class="sw" style="background:${CLU_TYPE_RGB[0]};margin-left:8px"></span><span style="font-size:11px;color:var(--text-secondary)">no family</span></div>
+       <div class="lgtxt">One colour per family (${CLU.pal.length} colours reused, neighbouring families differ).</div>`;
+  return key + `<div class="lgtxt">${f.id.length.toLocaleString()} families of ${esc(CLU.cat_id)}: ${nT[1]} mainshock–aftershock, ${nT[2]} swarms, ${nT[3]} multiplets. Built from events above the regional Mc; an event below Mc joins its parent's family when the link passes the threshold, else it stays background.${CLU.notEq ? ` ${CLU.notEq.toLocaleString()} non-earthquakes not drawn.` : ""} Click an event to isolate its family.</div>
+    ${C.ax_bg ? `<div class="lgtxt caveat">Axial's background/clustered split is not robust (${C.ax_bg[0]} % background in the main run, ${C.ax_bg[1]} % without tier D).</div>` : ""}
+    ${C.mig && C.mig.n ? `<div class="lgtxt caveat">Swarm migration is unresolved for ${Math.round(100 * C.mig.unres / C.mig.n)} % of swarms (${C.mig.unres} of ${C.mig.n} tested; location errors ~${fx(C.mig.herr, 0)} km).</div>` : ""}`;
+}
 function drawLegend() {
   const modes = [
     { t: "Depth (km)", g: "linear-gradient(90deg,#fae59e,#f59e54,#e05c5c,#b3458c,#7854cc)", l: ["0", "11", "22", "34", "≥45"] },
@@ -1357,7 +1496,8 @@ function drawLegend() {
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] },
     { t: `${tierSrc() >= 0 ? CATS[tierSrc()].id : ""} location tier`, tiers: true },
     { t: `Depth change B − A (km), ${CATS[F.cb].id} − ${CATS[F.ca].id}`, g: "linear-gradient(90deg,#4066d9,#6badf2,#dbd9cc,#f59e54,#db4d52)", l: [`−${F.cs} B shallower`, "0", `+${F.cs} deeper`] },
-    { t: `Horizontal shift A → B (km)`, g: "linear-gradient(90deg,#737880,#66b3cc,#f5bf59,#f25c5c)", l: ["0", String(F.cs / 2), `≥${F.cs}`] }][effMode()];
+    { t: `Horizontal shift A → B (km)`, g: "linear-gradient(90deg,#737880,#66b3cc,#f5bf59,#f25c5c)", l: ["0", String(F.cs / 2), `≥${F.cs}`] },
+    { t: CLU ? `Earthquake ${F.clu.sub ? "clusters by type" : "families"}, ${CLU.cat_id}` : "", clu: true }][effMode()];
   // U counts the events not located in the tier catalog, with or without a hypocentre there (as in the catalog's tier column)
   const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${[0, 1, 2, 3, 4, 5].filter(k => k < 5 || TIER_N[5]).map(k => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${k === 5 ? "no tier" : TIERS[k]} <span class="mono" style="color:var(--text-muted)">${(k === 4 ? TIER_N[4] + TIER_N[6] : TIER_N[k]).toLocaleString()}</span></div>`).join("")}</div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the reference (${CATS[0].id}) location${TIER_N[6] ? `; ${TIER_N[6].toLocaleString()} of them have no hypocentre in ${esc(CATS[tierSrc()].id)} and are not drawn in its view` : ""}</div>`;
@@ -1374,7 +1514,7 @@ function drawLegend() {
     <div class="ramp-labels"><span>≤ ${tV.lo} ${tV.ends[0]}</span><span>${+((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>≥ ${tV.hi} ${tV.ends[1]}</span></div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}, tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} (40-100 km cells) shown.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."}${TMM.masked && TMM.masked.water + TMM.masked.air ? ` The ${(TMM.masked.water + TMM.masked.air).toLocaleString()} nodes in water or air have no value; nothing is drawn above the ground or seafloor.` : ""} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
   $("legend").innerHTML = `
-    <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
+    <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : modes.clu ? cluLeg() : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
     ${slab}${mcLeg}${tomoLeg}${MOVES && layer("moves") && layer("moves").on ? `<div><h4>Moves: ${esc(CATS[MV.from].label)} → ${esc(CATS[MV.to].label)}</h4>
       <div style="font-size:11px;line-height:15px;color:var(--text-secondary)">A line from each event's location in ${esc(CATS[MV.from].id)} (before) to its location in ${esc(CATS[MV.to].id)} (after); red deeper, blue shallower, full colour at 5 km. In the section panel a hollow circle marks the location before. ${MOVE_STATS.n.toLocaleString()} events located in both: median depth change ${MOVE_STATS.med >= 0 ? "+" : "−"}${Math.abs(MOVE_STATS.med).toFixed(2)} km, median |change| ${MOVE_STATS.absMed.toFixed(2)} km, ${Math.round(100 * MOVE_STATS.deeper)}% deeper.</div></div>` : ""}
     ${catNote()}
@@ -1398,7 +1538,8 @@ function drawLegend() {
 // ---------- tooltip / picking ----------
 const tip = $("tip"), v3 = new THREE.Vector3();
 let mouse = null;
-function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px"; tip.style.top = Math.min(innerHeight - 160, y + 12) + "px"; }
+function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px";
+  tip.style.top = Math.max(8, Math.min(innerHeight - Math.max(160, tip.offsetHeight + 8), y + 12)) + "px"; }   // long tooltips stay on screen
 const hideTip = () => tip.style.opacity = 0;
 const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][EV.mtype[i]] ?? ""}`;
 const locTxt = (k, i) => isLoc(k, i) ? `${CP[k].lat[i].toFixed(3)}°N ${(-CP[k].lon[i]).toFixed(3)}°W · ${CP[k].dep[i].toFixed(1)} km`
@@ -1429,7 +1570,7 @@ const evHtml = i => F.cmp ? cmpHtml(i) : `<b>Event ${EV.id[i]}</b> <span class="
   ${elat[i].toFixed(3)}°N ${(-elon[i]).toFixed(3)}°W · <b>${edep[i].toFixed(1)} km</b> bsl${F.datum ? ` <span class="k">(catalog ${ecat[i].toFixed(1)})</span>` : ""}<br>
   <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above the surface: location error</span>' : ""}<br>
   M ${fmtM(i)} · ${EV.np[i]} P, ${EV.ns[i]} S<br>
-  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${catLines(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
+  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${catLines(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}${cluTxt(i)}`;
 function pickEvent(mx, my) {
   if (!layer("events").on) return -1;
   const e = U.exag.value; let best = -1, bd = 81, bz = 1e9;
@@ -1502,8 +1643,10 @@ let downAt = null;
 canvas.addEventListener("pointerdown", ev => downAt = [ev.clientX, ev.clientY]);
 let tipT = 0;
 canvas.addEventListener("pointerup", ev => {     // click an event or a fault surface: show that fault's events
-  if (SEC.on || !downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4 || !FM.surf) return;
+  if (SEC.on || !downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4 || !(FM.surf || CLU_ON)) return;
   const i = pickEvent(ev.clientX, ev.clientY);
+  if (CLU_ON && i >= 0 && efam[i] >= 0) { selectFamily(efam[i]); return; }   // Cluster mode: a family event isolates its family
+  if (!FM.surf) return;
   if (i >= 0) { if (eflt[i] >= 0) selectFault(eflt[i]); return; }
   if (!surfMesh || !layer("surf").on) return;
   ray.setFromCamera(new THREE.Vector2(ev.clientX / innerWidth * 2 - 1, -ev.clientY / innerHeight * 2 + 1), camera);
@@ -1555,6 +1698,7 @@ const faultColJS = f => {
 };
 const hexRGB = h => [1, 3, 5].map(j => parseInt(h.slice(j, j + 2), 16) / 255);
 const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
+  if (mode === 7) return [ecol[v * 3], ecol[v * 3 + 1], ecol[v * 3 + 2]];   // Cluster: the event's colour (v = event index)
   if (mode === 3) return faultColJS(v).match(/\d+/g).map(x => x / 255);
   if (mode === 4) return hexRGB(TIER_RGB[v] || TIER_RGB[5]);
   const lerp = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
@@ -1567,7 +1711,7 @@ const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
 };
 const rampJS = (mode, v) => mode === 3 ? faultColJS(v) : `rgb(${rgbOf(mode, v).map(x => Math.round(x * 255)).join(",")})`;
 const colVal = (i, m) => m === 0 ? edep[i] : m === 1 ? EV.day[i] / M.events.days_max : m === 2 ? enew[i] : m === 3 ? eflt[i] : m === 4 ? etier[i]
-  : m === 5 ? cdz[i] / F.cs : cdh[i] / F.cs;
+  : m === 5 ? cdz[i] / F.cs : m === 6 ? cdh[i] / F.cs : i;
 function drawSection() {
   if (!SEC.on) return;
   const W = secCv.clientWidth, H = secCv.clientHeight, pr = devicePixelRatio; secCv.width = W * pr; secCv.height = H * pr;
@@ -1656,6 +1800,7 @@ function drawSection() {
     const r = Math.max(1.3, 1.2 + 0.9 * Math.pow(1.7, Math.min(m, 3)) * Math.pow(1.2, Math.max(m - 3, 0)));
     const px = X(s), py = Y(edep[i]);
     sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
+    if (CLU_ON) sctx.globalAlpha *= F.clu.fam >= 0 && efam[i] !== F.clu.fam ? 0.15 : ecls[i] === 0 ? 0.5 : 1;   // as the 3D view
     const em = effMode(), col = rampJS(em, colVal(i, em));
     if (F.cmp && segSet.has(i)) {               // shift line from the A location, projected on the section
       const A = CP[F.ca], s0 = (toX(A.lon[i]) - a.x) * ux + (toZ(A.lat[i]) - a.z) * uz;
@@ -1689,7 +1834,7 @@ addEventListener("keydown", e => {
   if (e.key === "s" || e.key === "S") setSection(!SEC.on);
   if (e.key === "g" || e.key === "G") { const g = $("ground"); g.value = +g.value > 0.5 ? 0.25 : 1; g.oninput(); }
   if (e.key === " ") { e.preventDefault(); togglePlay(); }
-  if (e.key === "Escape") selectFault(-1);
+  if (e.key === "Escape") { selectFault(-1); if (F.clu.fam >= 0) selectFamily(-1); }
 });
 addEventListener("keyup", e => keys.delete(e.key));
 addEventListener("hashchange", () => flyTo(location.hash.slice(1) || "full"));
@@ -1717,6 +1862,7 @@ window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, 
   ex, ez, edep, esurf, eair, elevAt,
   air: () => ({ nAir, nDrawn }), cdh, cdz, cdv, isLoc, noHypo, CP,
   moves: () => MOVES ? { from: CP[MV.from], to: CP[MV.to], n: MOVE_STATS.n } : null, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; },
+  clu: { meta: CLU, cls: ecls, fam: efam, col: ecol, active: () => CLU_ON, selectFamily, pick: pickEvent, evHtml },
   tomo: { tmSample: (lon, lat, d) => TMM ? tmSample(tVar(), lon, lat, d) : null, TS, TMM, codes: TMG, setTomo, setCut: (mode, f) => { CUT.mode = mode; CUT.f = f; setCut(true); viewCut(); } } };   // for scripted checks
 let last = performance.now(), playAcc = 0;
 function frame(now) {

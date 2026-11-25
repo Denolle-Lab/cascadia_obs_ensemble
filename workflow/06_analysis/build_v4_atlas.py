@@ -11,6 +11,9 @@ Layers packed here (gzip + base64 blobs, decoded in the browser with Decompressi
              (relocations, velocity-model iterations): lon/lat/depth offsets from the reference catalog on the
              same event order, location tier A-D/U, nphs, gap, rms, read from the common tables built by
              workflow/11_compare/compare_catalogs.py (CMP below); whole-catalog numbers from its summary CSVs
+             + the earthquake families of the clustering of one catalog (--clusters, --clusters-catalog; default the
+             catalog v5.1 nearest-neighbour clustering of workflow/06_analysis/v51_clusters_zbz.py): class, family
+             and role of each event, one row per family, a colour per family (CLU_PAL, neighbours differ)
   terrain    GMT earth_relief 01m for the whole margin + the GMRT patches in data/gmrt/
   slab       Slab2 (data/slab2/cas_slab2_dep.xyz) with the coupling models in data/coupling/
              sampled onto its nodes
@@ -33,6 +36,11 @@ from the registry; --catalog2 v5.1 --catalog-before NLL3D-i1, or the two csv pat
   ATLAS_DATA_DIRS=/home/mdenolle/wt_atlas/data LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \\
       workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.2.nc \\
       --catalog-before-label "v4-NLL3D (start model)" --out /tmp/cascadia_atlas.html
+
+Clusters (colour mode Cluster, in the view of --clusters-catalog only): events_zbz_v51.csv.gz and families_zbz_v51.csv
+(and sensitivity_zbz.csv for the Axial caveat) are read from the --clusters folder (default CLU_DIR), else from
+data/catalog_v5/v5.1_analysis/clusters/ in the data folders, else from their committed copies on origin/main (git show);
+--clusters none leaves the mode out.
 
 A new location run appears on the atlas by adding it to catalogs.yaml with atlas: true, running
 compare_catalogs.py (writes CMP/<id>.parquet and the summary tables), then this script.
@@ -212,6 +220,144 @@ def slab_and_coupling():
 # Build options that single out registry catalogs (main(): --catalog2*, --catalog-before*); None = the registry's choice
 SEL = {"rel": None, "rel_label": None, "rel_note": None, "before": None, "before_label": None}
 
+# Earthquake families (colour mode Cluster): nearest-neighbour clustering of one registry catalog (main(): --clusters,
+# --clusters-catalog). Files are looked up in CLU["dir"], then data/<CLU_REPO>/ in the data folders, then on CLU_GIT_REF.
+CLU_DIR = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/clusters")
+CLU_REPO = ("catalog_v5", "v5.1_analysis", "clusters")
+CLU_GIT_REF = "origin/main"
+CLU = {"dir": CLU_DIR, "cat": "v5.1", "events": "events_zbz_v51.csv.gz", "families": "families_zbz_v51.csv",
+       "sensitivity": "sensitivity_zbz.csv"}
+CLU_CLS = ["background", "mainshock-aftershock", "swarm", "multiplet", "linked_to_single", "excluded"]   # event class codes 0-5
+# 12 colours for the families (sRGB on the dark page): picked to maximise the smallest OKLab distance between any two,
+# under normal vision and simulated protan, deutan and tritan vision, and from the background grey (#6b6b6b)
+CLU_PAL = ["#c59fe1", "#69f991", "#2ca470", "#e65719", "#8e71f5", "#f09c17", "#e0e111", "#c958c2", "#8fc184", "#eb6f9a",
+           "#6bd8de", "#fda9b5"]
+
+
+def clu_file(name: str):
+    """A clustering output file: (path or bytes buffer, source), or (None, None) when none of the places has it."""
+    if CLU["dir"] is not None and (Path(CLU["dir"]) / name).exists():
+        return Path(CLU["dir"]) / name, str(Path(CLU["dir"]) / name)
+    f = dd(*CLU_REPO, name)
+    if f.exists():
+        return f, str(f)
+    import io
+    import subprocess
+    spec = f"{CLU_GIT_REF}:data/{'/'.join(CLU_REPO)}/{name}"
+    r = subprocess.run(["git", "-C", str(ROOT), "show", spec], capture_output=True)
+    return (io.BytesIO(r.stdout), f"git {spec}") if r.returncode == 0 and r.stdout else (None, None)
+
+
+def family_colours(lon, lat, ext, size, k: int) -> np.ndarray:
+    """Colour index 0..k-1 for each family. Largest families (size) first; each takes the colour least used by the
+    families already coloured around it, weighted 1 / (1 + d / 2 km)^2 with d the centroid distance less both half
+    extents (0 when they overlap), within 60 km; ties go to the colour used least so far. Depth is ignored (families
+    above one another share the map)."""
+    la, lo = np.radians(lat), np.radians(lon)
+    dx = (lo[:, None] - lo[None, :]) * np.cos((la[:, None] + la[None, :]) / 2) * 6371.0
+    d = np.hypot(dx, (la[:, None] - la[None, :]) * 6371.0) - 0.5 * (ext[:, None] + ext[None, :])
+    w = np.where(d < 60, 1 / (1 + np.maximum(d, 0) / 2) ** 2, 0.0)
+    col, used = np.full(len(lon), -1), np.zeros(k)
+    for f in np.argsort(-size, kind="stable"):
+        done = col >= 0
+        cost = np.bincount(col[done], weights=w[f, done], minlength=k)
+        best = np.flatnonzero(cost <= cost.min() + 1e-12)
+        col[f] = best[np.argmin(used[best])]
+        used[col[f]] += 1
+    np.fill_diagonal(d, np.inf)
+    nn = np.argmin(d, axis=1)
+    same = np.where(col[:, None] == col[None, :], d, np.inf).min(axis=1)
+    print(f"  family colours: {k} colours over {len(lon):,} families; nearest family shares the colour for "
+          f"{(col[nn] == col).sum()} families; median distance to the nearest family of the same colour "
+          f"{np.median(np.maximum(same, 0)):.0f} km")
+    return col
+
+
+def clusters(ids: pd.Series, cats: list[dict]) -> tuple[dict, dict | None]:
+    """Earthquake families of the clustering of catalog CLU["cat"] on the reference event order: cl_cls (CLU_CLS code,
+    255 = not in the table), cl_fam (row of the family table, 65535 = none), cl_role (index into roles). Meta: the
+    catalog's position in the atlas list, the class and role names, one column list per family field, the family
+    colours (index into CLU_PAL) and the numbers of the legend caveats."""
+    if CLU["dir"] is None:
+        return {}, None
+    pos = next((k for k, c in enumerate(cats) if c["id"] == CLU["cat"]), None)
+    fe, se = clu_file(CLU["events"])
+    ff, sf = clu_file(CLU["families"])
+    if pos is None or fe is None or ff is None:
+        print(f"  clusters: skipped ({'catalog ' + CLU['cat'] + ' not in the atlas' if pos is None else 'files not found'})")
+        return {}, None
+    need = ["event_id", "family_id", "cls", "role", "in_analysis", "excluded"]
+    e = pd.read_csv(fe, usecols=lambda x: x in need, compression="gzip" if CLU["events"].endswith(".gz") else "infer")
+    miss = [x for x in need[:4] if x not in e]
+    if miss:
+        raise SystemExit(f"{se}: no column {miss}")
+    f = pd.read_csv(ff).sort_values("family_id").reset_index(drop=True)
+    e = e.drop_duplicates("event_id")
+    unknown = sorted(set(e["cls"].dropna()) - set(CLU_CLS))
+    if unknown:
+        raise SystemExit(f"{se}: event classes {unknown} are not in CLU_CLS {CLU_CLS}")
+    # checks: every family member's family is in the family table; n = members above Mc (in_analysis)
+    fid = e.family_id[e.family_id >= 0]
+    if not fid.isin(f.family_id).all():
+        raise SystemExit(f"{se} and {sf}: {(~fid.isin(f.family_id)).sum()} events in families missing from the family table")
+    if "in_analysis" in e:
+        k = e[(e.family_id >= 0) & e.in_analysis.astype(bool)].groupby("family_id").size().reindex(f.family_id).fillna(0)
+        if (k.to_numpy() != f["n"].to_numpy()).any():
+            raise SystemExit(f"{se} and {sf}: family sizes n differ from the members above Mc (two different runs?); "
+                             "point --clusters at a folder holding both files of one run, or --clusters none")
+    role = e["role"].fillna("").astype(str)
+    if "excluded" in e:                              # why an event is left out: not_earthquake / no_hypocentre
+        role = np.where(e["cls"] == "excluded", "excluded_" + e["excluded"].fillna("").astype(str), role)
+    e = e.assign(role=role).set_index("event_id")
+    r = e.reindex(ids.to_numpy())
+    roles = sorted(e["role"].unique())
+    fidx = pd.Series(np.arange(len(f)), index=f.family_id.to_numpy())
+    fk = r["family_id"].map(fidx)
+    arr = {"cl_cls": r["cls"].map({c: j for j, c in enumerate(CLU_CLS)}).fillna(255).to_numpy().astype("u1"),
+           "cl_fam": np.where(fk.notna(), fk.fillna(0), 65535).astype("<u2"),
+           "cl_role": r["role"].map({x: j for j, x in enumerate(roles)}).fillna(255).to_numpy().astype("u1")}
+    col = family_colours(f["lon"].to_numpy(float), f["lat"].to_numpy(float), f["extent_km"].fillna(0).to_numpy(float),
+                         f.get("n_all", f["n"]).to_numpy(float), len(CLU_PAL))
+
+    def L(name, fn=lambda v: v, default=None):      # one family column as a JSON list (NaN -> null)
+        if name not in f:
+            return [default] * len(f)
+        return [None if (isinstance(v, float) and not np.isfinite(v)) or v is None or v is pd.NA else fn(v) for v in f[name]]
+    tb = lambda v: {True: 1, False: 0, "True": 1, "False": 0}.get(v)
+    fam = dict(id=L("family_id", int), type=L("type", CLU_CLS.index), n=L("n", int), n_all=L("n_all", int),
+               M=L("Mmax", lambda v: round(float(v), 2)), Mmin=L("Mmin_all", lambda v: round(float(v), 2)),
+               t0=L("start", lambda v: str(v)[:16]), t1=L("end", lambda v: str(v)[:16]),
+               dur=L("duration_days", lambda v: round(float(v), 2)), ext=L("extent_km", lambda v: round(float(v), 1)),
+               reg=L("region_v51", str), main=L("mainshock_id", int),
+               dq=[None if not np.isfinite(a) else [round(float(a), 1), round(float(b), 1), round(float(c), 1)]
+                   for a, b, c in zip(*(f[x] if x in f else pd.Series(np.nan, index=f.index)
+                                        for x in ("depth_good_q10", "depth_good_med", "depth_good_q90")))],
+               res=L("mig_resolvable", tb), mig=L("mig_migrating", tb),
+               p1=L("n_review_P1_msh_deep", int, 0), day=L("n_daytime_screened", int, 0),
+               p2=L("n_review_P2_brookings", int, 0), v4=L("v4_status", str), col=[int(x) for x in col])
+    # legend caveats: Axial background share (main run, without tier D) and swarms whose migration is not resolvable
+    cav = {}
+    fs, _ = clu_file(CLU["sensitivity"])
+    if fs is not None:
+        s = pd.read_csv(fs)
+        ax = s[s.region == "AX"].set_index("variant")["pct_background"]
+        if {"main", "tierABC"} <= set(ax.index):
+            cav["ax_bg"] = [float(ax["main"]), float(ax["tierABC"])]
+    sw = f[f.type == "swarm"]
+    if "mig_resolvable" in sw:
+        mr = sw["mig_resolvable"].map(tb)
+        cav["mig"] = dict(n=int(mr.notna().sum()), unres=int((mr == 0).sum()),
+                          herr=_num(sw.loc[mr.notna(), "h_err_med_km"].median()) if "h_err_med_km" in sw else None)
+    below = (e.family_id >= 0) & e.role.str.endswith("_belowMc")
+    cnt = {c: int((r["cls"] == c).sum()) for c in CLU_CLS}
+    print(f"  clusters ({CLU['cat']}): {len(f):,} families ({', '.join(f'{v} {k}' for k, v in f.type.value_counts().items())}); "
+          f"atlas events by class: " + ", ".join(f"{k} {v:,}" for k, v in cnt.items())
+          + f"; {int(r['cls'].isna().sum()):,} atlas events not in the table; from {se} and {sf}")
+    meta = dict(cat=pos, cat_id=CLU["cat"], cls=CLU_CLS, roles=roles, pal=CLU_PAL, fam=fam, counts=cnt, cav=cav,
+                n_fam_below=int(below.sum()), n_fam_events=int((e.family_id >= 0).sum()),
+                src=f"{Path(se).name if not se.startswith('git') else se}, {Path(sf).name if not sf.startswith('git') else sf}")
+    return arr, meta
+
 
 def events():
     c = pd.read_csv(dd("catalog_v4", "Cascadia_relocated_catalog_v4.csv"), skipinitialspace=True)
@@ -253,11 +399,13 @@ def events():
     arr["flt"] = flt
     cat_arr, cats = catalogs(c["ID"], c[["latitude", "longitude", "depth(km)"]].to_numpy(float))
     arr.update(cat_arr)
+    clu_arr, clu = clusters(c["ID"], cats["list"])
+    arr.update(clu_arr)
     order = np.argsort(arr["day"], kind="stable")   # time order: the time slider is a range in index
     arr = {k: v[order] for k, v in arr.items()}
     print(f"  events: {len(c):,}; magnitudes: {msrc}")
     return arr, dict(n=len(c), msrc=msrc, t0="2010-01-01", days_max=float(np.nanmax(days)), cats=cats["list"],
-                     rel=cats["rel"], moves=cats["moves"])
+                     rel=cats["rel"], moves=cats["moves"], clu=clu)
 
 
 def _num(v):
@@ -644,10 +792,16 @@ def main(argv=None):
     ap.add_argument("--catalog-before", help="catalog the Moves layer starts from: a registry id or the registered file path "
                     "(default: registry atlas_moves_from)")
     ap.add_argument("--catalog-before-label", help="its name on the page (default: its registry label)")
+    ap.add_argument("--clusters", default=str(CLU_DIR), help="folder of the clustering outputs (events_zbz_v51.csv.gz, "
+                    f"families_zbz_v51.csv, sensitivity_zbz.csv; default {CLU_DIR}; files missing there are read from "
+                    f"data/{'/'.join(CLU_REPO)}/ or {CLU_GIT_REF}); 'none': no Cluster colour mode")
+    ap.add_argument("--clusters-catalog", default=CLU["cat"], help="registry id of the catalog whose locations the "
+                    f"families were computed on; the Cluster mode is offered in its view only (default {CLU['cat']})")
     a = ap.parse_args(argv)
     print("building atlas data")
     SEL.update(rel=a.catalog2, rel_label=a.catalog2_label, rel_note=a.catalog2_note, before=a.catalog_before,
                before_label=a.catalog_before_label)
+    CLU.update(dir=None if a.clusters.lower() == "none" else Path(a.clusters), cat=a.clusters_catalog)
     ev, ev_meta = events()
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()

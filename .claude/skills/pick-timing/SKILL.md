@@ -131,10 +131,12 @@ python -m pick_timing validate -c CFG --picks-in PICKS --picks-out OUT/NEW_PICKS
 python -m pick_timing relocate-nlloc -c CFG --run-dir RUN --clock-model OUT/clock_model.json --nlloc /path/to/NLLoc --id-prefix PREFIX
 python -m pick_timing validate -c CFG --picks-in PICKS --picks-out OUT/NEW_PICKS.csv --clock-model OUT/clock_model.json --residuals-after OUT/relocate/residuals_relocated.parquet
 ```
-Pass criteria: `rows_changed_outside_rules` 0, `rows_dropped` 0, `max_shift_error_s` 0; after correction the
-station is no longer flagged and the fixed-epoch size is near 0 in re-located residuals (residuals of the old
-locations keep an opposite-sign remainder of the absorbed part: report it, do not tune it away); CC misfit drops for
-rows straddling the epoch; co-located stations: slope -1 before, 0 after.
+Pass criteria: `rows_changed_outside_rules` 0, `rows_dropped` 0, `max_shift_error_s` <= 1e-6 (rounding to the
+file's decimals); in re-located residuals the fixed-epoch size is near 0 and the detector no longer flags the
+epoch (residuals of the old locations keep an opposite-sign remainder of the absorbed part: report it, do not tune
+it away); CC misfit drops for rows straddling the epoch; co-located stations: slope -1 before, 0 after. If a
+station is still flagged after re-location, test the remainder with the CC rows of the same months before calling
+it clock: a change in the event mix inside the epoch leaves a remainder that CC does not see. Report it either way.
 
 ## Report back
 

@@ -1100,7 +1100,7 @@ function syncClu() {                          // offer the mode in the clustered
   const v = cluView();
   if (!v && F.mode === 7) { F.mode = 0; $("segColor").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "0")); }
   const was = CLU_ON; CLU_ON = v && F.mode === 7;
-  $("btnClu").disabled = !v; $("cluNote").style.display = v ? "none" : "";
+  $("cluNote").style.display = v ? "none" : "";        // the button stays on: outside the view it switches there
   $("cluBox").style.display = CLU_ON ? "flex" : "none";
   EU.uClu.value = CLU_ON ? 1 : 0;
   if (!CLU_ON && F.clu.fam >= 0) selectFamily(-1, false);
@@ -1167,7 +1167,15 @@ const cluTxt = i => {                          // tooltip line in the clustered 
   return `<br><span class="k">cluster</span> <span class="sw" style="display:inline-block;background:${CLU.pal[f.col[k]]}"></span> <b>${CLU_LAB[c]} family ${f.id[k]}</b> <span class="k">${rl}</span>
     <br><span class="k">family</span> n ${f.n[k]}${f.n_all[k] != null && f.n_all[k] !== f.n[k] ? ` (${f.n_all[k]} with below Mc)` : ""} · Mmax ${fx(f.M[k], 2)} · ${esc(f.t0[k].slice(0, 10))} → ${esc(f.t1[k].slice(0, 10))} (${durTxt(f.dur[k])}) · ${fx(f.ext[k])} km${CLU_ON ? ' · <span class="k">click to isolate</span>' : ""}`;
 };
+function clustersOn() {                      // Cluster from any view: the clustered catalog's view, Compare off, Cluster on
+  if (!CLU) return;
+  F.mode = 7;
+  $("segColor").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "7"));
+  if (!cluView()) setCatalog(CLU.cat);
+  setMode();
+}
 seg("segColor", v => {
+  if (v === 7 && CLU && !cluView()) { clustersOn(); return; }
   F.mode = v;
   if (F.cmp && F.cq >= 0) { F.cq = -1; $("segCmp").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "-1")); }
   setMode();
@@ -1264,8 +1272,8 @@ seg("segSegs", v => { F.segs = v; buildSegs(); drawLegend(); drawSection(); });
 if (NC < 2) ["catRow"].forEach(id => $(id).style.display = "none");
 if (!ANY_TIERS) ["tierRow", "btnTier"].forEach(id => $(id).style.display = "none");
 if (CLU) {                                     // Cluster mode controls: by family / by type, one toggle per class
-  $("cluNote").textContent = `Cluster: ${CLU.cat_id} view only (families from its locations).`;
-  $("btnClu").title = `Earthquake families of the nearest-neighbour clustering of ${CLU.cat_id}, in its view only`;
+  $("cluNote").textContent = `Cluster colours: earthquake families of catalog ${CLU.cat_id}; the Cluster button switches to its view.`;
+  $("btnClu").title = `Earthquake families of the nearest-neighbour clustering of ${CLU.cat_id} (switches to its view)`;
   seg("segClu", v => { F.clu.sub = v; setCluCol(); drawLegend(); drawSection(); });
   const cnt = [0, 0, 0, 0, 0];                 // events drawn in the clustered catalog's view, per class
   for (let i = 0; i < N; i++) if (ecls[i] < 5 && !noHypo(CLU.cat, i)) cnt[ecls[i]]++;
@@ -1841,7 +1849,12 @@ addEventListener("keydown", e => {
   if (e.key === "Escape") { selectFault(-1); if (F.clu.fam >= 0) selectFamily(-1); }
 });
 addEventListener("keyup", e => keys.delete(e.key));
-addEventListener("hashchange", () => flyTo(location.hash.slice(1) || "full"));
+function applyHash() {                       // #<region>, #clusters, or #clusters,<region>
+  const parts = decodeURIComponent(location.hash.slice(1)).split(/[,&/]/).filter(Boolean);
+  if (parts.includes("clusters")) clustersOn();
+  flyTo(parts.find(x => x !== "clusters") || "full");
+}
+addEventListener("hashchange", applyHash);
 addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); layoutPanels(); drawHist(); drawSection(); });
 
 // ---------- loop ----------
@@ -1859,7 +1872,7 @@ PANELS.forEach(id => setPanel(id, !PHONE && (id === "controls" || id === "legend
 document.querySelectorAll("#toolbar button").forEach(b => b.onclick = () => setPanel(b.dataset.p, $(b.dataset.p).classList.contains("closed")));
 applyView(); layoutPanels();
 camera.position.set(0, 900, 900); controls.target.set(0, 0, 0);
-flyTo(location.hash.slice(1) || "full");
+applyHash();
 $("loading").remove();
 window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, CATS, REL, MV, segCount: () => segSet.size,
   segNaN: () => { let n = 0; for (const k of ["position", "dep"]) { const t = segGeo.attributes[k]; if (t) for (const v of t.array) if (!Number.isFinite(v)) n++; } return n; },

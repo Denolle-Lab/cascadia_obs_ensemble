@@ -1,4 +1,4 @@
 volcano,radius_km,n_all,Mc_local,b_local,n_above,log_eta0,ashman_D,ashman_D_shuffled,ashman_D_shuffled_med,ashman_D_shuffled_max,n_shuffles_D_ge_real,n_shuffles,n_review_P1_above,n_review_P1_in_families,pct_background,n_families,n_swarm,n_MA,n_multiplet
-Mount St. Helens,20.0,9333,0.35000000000000187,0.79,3593,-4.08,2.27,1.71,1.71,1.83,0,10,212,101,72.0,269,0,147,122
-Mount Hood,20.0,346,1.550000000000003,1.41,76,-3.25,2.31,4.26,1.91,4.82,3,10,0,0,17.1,9,0,4,5
-Mount Rainier,20.0,1134,0.8500000000000023,1.23,553,-4.38,2.69,1.71,1.65,2.46,0,10,0,0,79.6,44,0,21,23
+Mount St. Helens,20.0,9333,0.35,0.79,3599,-4.08,2.27,1.83,1.7,1.83,0,10,212,101,72.0,269,0,147,122
+Mount Hood,20.0,346,1.55,1.41,76,-3.25,2.31,4.26,1.91,4.82,3,10,0,0,17.1,9,0,4,5
+Mount Rainier,20.0,1134,0.85,1.23,553,-4.38,2.69,1.71,1.65,2.46,0,10,0,0,79.6,44,0,21,23

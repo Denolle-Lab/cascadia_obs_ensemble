@@ -450,7 +450,7 @@ def summarize(ev, fam, reg):
         f = fam[fam.region == r] if len(fam) else fam
         rr = reg[reg.region == r].iloc[0]
         rows.append(dict(
-            region=r, n_analysis=len(e), Mc=rr.Mc, b=round(rr.b, 2), df=round(rr.df, 2),
+            region=r, n_analysis=len(e), Mc=round(rr.Mc, 2), b=round(rr.b, 2), df=round(rr.df, 2),
             log_eta0=round(rr.log_eta0, 2), ashman_D=round(rr.ashman_D, 2),
             pct_background=round(100 * (e.role == "single").mean(), 1),
             pct_MA=round(100 * e.role.isin(["mainshock", "foreshock", "aftershock"]).mean(), 1),
@@ -756,7 +756,12 @@ def step_variants(c, df, ctab, a):
         sv.to_csv(fs, index=False)
         rows.append(sv)
         log(f"variant {v}: {time.time() - t0:.0f} s\n" + sv.to_string())
-    pd.concat(rows).to_csv(OUT / "sensitivity_zbz.csv", index=False)
+    S = pd.concat(rows, ignore_index=True)
+    # Mc to 0.01 (Mc + 0.3 carries a float error, e.g. 2.8499999999999996) and the event count as an integer
+    # (empty for the main rows); the cached summaries of earlier runs are written the same way
+    S["Mc"] = S.Mc.round(2)
+    S["n_common_with_main"] = S.n_common_with_main.round().astype("Int64")
+    S.to_csv(OUT / "sensitivity_zbz.csv", index=False)
 
 
 FLAG_COLS = ["frac_on_faults", "frac_on_faults_loose", "frac_not_fitted", "main_fault", "main_fault_frac",
@@ -1184,15 +1189,19 @@ def km(lon, lat, lon0, lat0):
 
 def volcano_local(df, a, radius=20.0, names=("Mount St. Helens", "Mount Hood", "Mount Rainier"), nshuf=10):
     """Zoomed analysis around volcanoes with a local Mc (as in v4_clusters_zbz_report.volcano_local). The
-    shuffled D is given for the v4 seed and as median and maximum over nshuf seeds."""
+    shuffled D is given for the v4 seed and as median and maximum over nshuf seeds.
+
+    The local Mc is rounded to 0.01 and applied with the rule of the main run (M >= Mc - 1e-9, as in select):
+    the unrounded maximum-curvature value carries a float error (0.35000000000000187 at Mount St Helens) that
+    left out the events with M exactly at Mc. The v4 zoom compared M with the unrounded value."""
     p1 = review_ids("P1", "deep")
     rows, frows = [], []
     for v in names:
         lo, la = VOLCANOES[v]
         sub = df[km(df.lon.values, df.lat.values, lo, la) <= radius]
-        mc = mc_maxc(sub.M.values)
-        b, _, _ = b_aki(sub.M.values, mc)
-        A = sub[sub.M >= mc].sort_values("t_yr").reset_index(drop=True)
+        mc = round(mc_maxc(sub.M.values), 2)
+        b, _, _ = b_aki(sub.M.values, mc - 1e-9)
+        A = sub[sub.M >= mc - 1e-9].sort_values("t_yr").reset_index(drop=True)
         n = len(A)
         if n < 50:
             continue

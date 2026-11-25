@@ -1327,6 +1327,12 @@ year; it is variant <code>mc_best</code>.</p>
 0.1 value go to the bin below. With exact edges (-2.0, -1.9, ...) Mc changes in 2 regions:
 BL 2.45 to 2.35 (7,230 to 9,539 events above Mc; the 2014 histogram that sets Mc has two largest bins of 774 and 766 events with the v4 edges and 769 and 769 with exact edges); OR 1.85 to 1.95 (398 to 346 events above Mc; the 2014 histogram that sets Mc has two largest bins of 21 and 20 events with the v4 edges and 21 and 20 with exact edges). Two near-equal modal bins decide Mc there. The run keeps the v4 edges so that v4 and v5.1 stay
 comparable; an exact-edge rerun would have to redo v4 the same way (<code>mc_edge_check.csv</code>).</p>
+<p><b>b sample.</b> b and the events &ge; Mc of this table come from the v4 function, which compares
+M with the unrounded Mc (a float error of a few 1e-15 above the nominal value), so the 61 events with
+M exactly at Mc (AX 7, BL 13, MT 15, WA 3, OR 1, PU 14, ON 8) are left out of b; the analysis
+set (<code>regions_zbz.csv</code>) includes them. With them b would be higher by at most 0.005, less
+than the b error (0.011-0.043). v4 computed b the same way, so the run keeps it for
+comparability.</p>
 <p><b>Inputs from the other v5.1 pieces</b> are read from their pushed branches, not from their worktrees: <code>data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_assignment.csv.gz</code> at origin/analysis/v51-faults 6ebe0230; <code>data/catalog_v5/v5.1_analysis/faults/fault_surfaces_v1_summary.csv</code> at origin/analysis/v51-faults 6ebe0230; <code>data/catalog_v5/v5.1_analysis/mag/mc_b/mc_b_regional.csv</code> at origin/analysis/v51-mag cd0334d6.</p>
 <p><b>Proximity, threshold, families, classification.</b> Unchanged from v4: eta = t r^1.6
 10^(-b m) (Baiesi &amp; Paczuski 2004; Zaliapin et al. 2008) with t in years and r epicentral in km floored at 0.5 km, q = 0.5; parents in another region only within
@@ -4918,11 +4924,11 @@ same test as our swarm type.</p>
       <td>9333</td>
       <td>0.35</td>
       <td>0.79</td>
-      <td>3593</td>
+      <td>3599</td>
       <td>-4.08</td>
       <td>2.27</td>
-      <td>1.71</td>
-      <td>1.71</td>
+      <td>1.83</td>
+      <td>1.70</td>
       <td>1.83</td>
       <td>0</td>
       <td>10</td>
@@ -5001,8 +5007,10 @@ same test as our swarm type.</p>
     </tr>
   </tbody>
 </table>
-<p>Zoomed analysis within 20 km with a local Mc. At Mount St. Helens the real D is 2.27; over 10 time shuffles D has a median of 1.71 and a maximum of 1.83 (0 of 10 at or above the real value; the first build used one shuffle, D 1.71). The zoom contains suspect events: 212 of its 3593 events above the local Mc are Mount St Helens deep events of review P1, 101 of them in families. None of the volcano families meets two swarm indicators: they are small bursts of near-equal events. Shuffled catalogs are as bimodal as the real one at Mount Hood (76 events above the local Mc; 3 of 10 shuffles reach the real D of 2.31, up to 4.82), so the test is not meaningful there. Within 15 km of the
-summits (regional Mc):</p>
+<p>Zoomed analysis within 20 km with a local Mc (maximum curvature + 0.2, rounded to 0.01 and applied
+as in the main run, M &ge; Mc). The v4 zoom compared M with the unrounded value, a float error above the nominal Mc,
+and so left out the events with M exactly at Mc (Mount St. Helens 3, Mount Hood 1, Mount Rainier 3); the v5.1 zoom
+keeps them. At Mount St. Helens the real D is 2.27; over 10 time shuffles D has a median of 1.70 and a maximum of 1.83 (0 of 10 at or above the real value; the first build used one shuffle, D 1.83). The zoom contains suspect events: 212 of its 3599 events above the local Mc are Mount St Helens deep events of review P1, 101 of them in families. None of the volcano families meets two swarm indicators: they are small bursts of near-equal events. Shuffled catalogs are as bimodal as the real one at Mount Hood (76 events above the local Mc; 3 of 10 shuffles reach the real D of 2.31, up to 4.82), so the test is not meaningful there. Within 15 km of the summits (regional Mc):</p>
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">

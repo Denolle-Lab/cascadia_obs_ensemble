@@ -761,6 +761,17 @@ year; it is variant <code>mc_best</code>.</p>""")
 0.1 value go to the bin below. With exact edges (-2.0, -1.9, ...) Mc changes in {len(mdiff)} regions:
 {mdiff_txt}. Two near-equal modal bins decide Mc there. The run keeps the v4 edges so that v4 and v5.1 stay
 comparable; an exact-edge rerun would have to redo v4 the same way (<code>mc_edge_check.csv</code>).</p>""")
+    # b sample: the v4 function compares M with the unrounded Mc, the analysis set with the rounded one
+    ev_an = d["ev"][d["ev"].in_analysis.astype(bool)]
+    n_gap = (d["regions_zbz"].set_index("region").n_analysis - comp.n_above).reindex(REG_ORDER)
+    b_full = pd.Series({r: 1.0 / (np.log(10) * (ev_an.M[ev_an.region == r].mean() - comp.Mc[r])) for r in REG_ORDER})
+    b_gap = b_full - comp.b.reindex(REG_ORDER)
+    h.append(f"""<p><b>b sample.</b> b and the events &ge; Mc of this table come from the v4 function, which compares
+M with the unrounded Mc (a float error of a few 1e-15 above the nominal value), so the {int(n_gap.sum())} events with
+M exactly at Mc ({', '.join(f'{r} {int(k)}' for r, k in n_gap.items() if k > 0)}) are left out of b; the analysis
+set (<code>regions_zbz.csv</code>) includes them. With them b would be higher by at most {b_gap.max():.3f}, less
+than the b error ({comp.b_err.min():.3f}-{comp.b_err.max():.3f}). v4 computed b the same way, so the run keeps it for
+comparability.</p>""")
     ic = d["input_commits"]
     h.append("<p><b>Inputs from the other v5.1 pieces</b> are read from their pushed branches, not from their "
              "worktrees: " + "; ".join(f"<code>{html.escape(k)}</code> at {v['ref']} {v['commit'][:8]}"
@@ -1080,8 +1091,14 @@ same test as our swarm type.</p>""")
               f"({', '.join(f'{v} {int(r.n_swarm)}' for v, r in vs.iterrows() if r.n_swarm > 0)}).")
     weak_txt = ("Shuffled catalogs are as bimodal as the real one at " + "; ".join(weak)
                 + ", so the test is not meaningful there." if weak else "")
-    h.append(f"""<p>Zoomed analysis within 20 km with a local Mc. {ms_txt}{sw_txt} {weak_txt} Within 15 km of the
-summits (regional Mc):</p>""")
+    # events of the v4 zoom with M exactly at its local Mc (the v4 zoom compared M with the unrounded value)
+    at4 = {v: int(np.isclose(ev4.M[Z.km(ev4.lon.values, ev4.lat.values, *Z.VOLCANOES[v]) <= r.radius_km],
+                             round(r.Mc_local, 2), rtol=0, atol=1e-9).sum())
+           for v, r in vl4.set_index("volcano").iterrows()}
+    h.append(f"""<p>Zoomed analysis within 20 km with a local Mc (maximum curvature + 0.2, rounded to 0.01 and applied
+as in the main run, M &ge; Mc). The v4 zoom compared M with the unrounded value, a float error above the nominal Mc,
+and so left out the events with M exactly at Mc ({', '.join(f'{v} {k}' for v, k in at4.items())}); the v5.1 zoom
+keeps them. {ms_txt}{sw_txt} {weak_txt} Within 15 km of the summits (regional Mc):</p>""")
     h.append(tab(d["volcano_families"].merge(d["volcano_families_v4"][["volcano", "n_events_15km", "pct_background",
                                                                       "n_families", "n_swarm"]],
                                              on="volcano", suffixes=("", "_v4"), how="left"), fmt=lambda x: f"{x:.1f}"))

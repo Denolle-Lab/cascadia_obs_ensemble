@@ -45,11 +45,11 @@ Mount St. Helens,14,1.536,1.261,mainshock-aftershock,2011-01-27 11:36:25.933972,
 Mount St. Helens,10,1.897,1.891,mainshock-aftershock,2011-01-28 00:35:45.352951,0.009,4.000,8.350,7,0
 Mount St. Helens,12,3.248,3.098,mainshock-aftershock,2011-01-28 00:44:22.552693,1.054,2.286,25.647,6,7
 Mount St. Helens,5,1.919,1.859,mainshock-aftershock,2011-01-28 15:48:38.767690,0.459,2.000,7.023,1,0
-Mount St. Helens,28,2.518,2.344,mainshock-aftershock,2011-01-29 18:31:15.825013,1.467,3.429,5.134,28,0
+Mount St. Helens,28,2.518,2.344,mainshock-aftershock,2011-01-29 18:31:15.825013,1.467,3.318,5.134,28,0
 Mount St. Helens,3,0.995,0.596,mainshock-aftershock,2011-01-31 17:40:44.972074,0.101,1.000,1.253,3,0
 Mount St. Helens,2,1.879,1.862,multiplet,2011-02-01 21:32:50.054463,0.031,1.000,9.086,2,0
 Mount St. Helens,2,1.739,0.894,mainshock-aftershock,2011-02-01 22:10:02.511800,0.465,1.000,5.106,1,0
-Mount St. Helens,145,3.946,3.101,mainshock-aftershock,2011-02-14 18:35:25.484100,95.963,1.173,5.014,144,0
+Mount St. Helens,145,3.946,3.101,mainshock-aftershock,2011-02-14 18:35:25.484100,95.963,1.157,5.014,144,0
 Mount St. Helens,5,2.317,1.919,mainshock-aftershock,2011-03-07 01:05:16.787973,0.017,2.000,8.939,1,1
 Mount St. Helens,2,2.536,1.493,mainshock-aftershock,2011-03-07 18:02:59.616488,0.009,1.000,2.009,1,1
 Mount St. Helens,2,0.499,0.395,multiplet,2011-03-10 09:25:04.904783,0.047,1.000,1.456,1,0
@@ -194,7 +194,7 @@ Mount St. Helens,2,1.738,0.481,mainshock-aftershock,2014-11-28 09:40:31.739426,0
 Mount St. Helens,2,0.614,0.540,multiplet,2014-12-03 13:16:03.345519,0.001,1.000,7.005,2,0
 Mount St. Helens,2,2.119,2.047,multiplet,2014-12-08 10:29:54.523896,0.023,1.000,15.824,2,0
 Mount St. Helens,2,2.076,0.858,mainshock-aftershock,2014-12-14 07:46:36.799172,0.001,1.000,,0,0
-Mount St. Helens,9,1.840,1.714,mainshock-aftershock,2014-12-22 05:20:32.988596,2.225,3.200,6.710,9,0
+Mount St. Helens,10,1.840,1.714,mainshock-aftershock,2014-12-22 05:20:32.988596,2.225,3.400,6.701,10,0
 Mount St. Helens,2,0.859,0.419,mainshock-aftershock,2015-01-11 10:58:48.945881,0.002,1.000,25.826,1,1
 Mount St. Helens,4,0.502,0.474,multiplet,2015-01-27 18:20:47.591770,0.305,3.000,11.872,4,0
 Mount St. Helens,2,2.855,1.126,mainshock-aftershock,2015-02-18 04:37:21.715941,0.194,1.000,,0,1

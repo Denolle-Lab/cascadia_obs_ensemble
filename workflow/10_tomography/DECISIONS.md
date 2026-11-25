@@ -838,3 +838,16 @@ using inversion binaries built from the D-B081 freeze after a byte-identity chec
 surface stay rock-continued during the inversion (water/air nodes harm tomoDD: v0.3.2 node-vs-field test, -18's S1). The
 product follows D-B076 (medium, D-B073 node rule, Vp/Vs_tomography, NLL grids with the field rule). The ensemble's real
 phase (D-B077) runs on the v0.4.1 configuration.
+
+### D-B090 Correct station clock drift in the picks for catalog v6.0, with a reusable pick-timing toolkit (adopted, 2026-11-25 08:44, PI)
+PI: "we might as well do this correction: Correcting the MH07/MG07 picks for v6.0, and we will probably have to do that for
+other west coast picks that we had in another project, so generate a product that can be reused by human and agents".
+The CC-dt work for D-B078 (/wd1/mdenolle_data/tomo_v1/cc_dt/qc/clock_epochs.csv, tomo/cc-dt 2d033ec6) found two free-running
+clocks in spring 2016: MH07.XD drifting +8.35 +- 0.28 ms/day from 2016-02-06 (+- 2.4 d) to about +0.80 s at its data restart
+2016-05-12T05:09:09, and MG07.XD -4.40 +- 0.59 ms/day from 2016-02-20 (+- 9.3 d) to about -0.34 s at 2016-05-08T07:57:28
+(record headers carry no timing-quality information). Header errors cannot be fixed by the D-B072/D-B075 re-timing. v6.0 uses a
+pick file with these drifts removed (picks corrected by the fitted clock model, flagged and kept, never dropped), after a
+scan of every station for similar clock problems, each candidate confirmed by a person before it is applied. The detection,
+modelling, correction, re-timing (D-B072/D-B075) and reporting steps become one documented toolkit with a command line, an
+HTML review report and an agent instruction file, so the same procedure can be run on other pick datasets. Numbering: this
+session uses D-B090..D-B099 from here on; session -18 continues from D-B084.

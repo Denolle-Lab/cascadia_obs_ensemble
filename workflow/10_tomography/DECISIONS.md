@@ -820,3 +820,21 @@ limit was one flat Air_dep per cluster, a median 1.6 km above the local surface)
   settled in 3 runs (469 events end on the floor); JdF ridge c000032 needed the limited anchor (44 m, 59 on the floor).
 * Scope: B5 relocation-only runs. Whether the floor is used in the tomography inversion waits for v0.4.0 (D-B077).
   B5 production waits for the D-B078 comparison, in which tomoDD + this floor is one of the three codes.
+
+### D-B082 Model v0.4.0 (v0.3.1 re-inverted with the re-timed picks) is the base model (adopted, 2026-11-25 07:59, PI)
+v0.4.0 (D-B077; branch tomo/v040-retimed; registered intermediate; report /wd1/mdenolle_data/tomo_v1/v040_retimed/report/):
+the v0.3.1 configuration with only the pick times of Cascadia_picks_catalog_v4.1t.csv (65,562 of 754,710 B1b picks re-timed,
+59 stations; 33,976 by > 0.02 s, 11,975 by > 0.3 s). At the re-timed land stations P rms falls 0.246 -> 0.222 s (M0), 0.222
+-> 0.187 (Oregon), 0.225 -> 0.192 (Washington), and their time-of-day residual slopes go from -0.15..-0.31 s/day to about
++0.02..+0.08. Resolved shallow onshore Vp (1-9 km) changes by 0.34-0.77 % rms against a numerical noise floor of 0.01 %
+(real); resolved nodes at 15-29 km (mostly the Blanco tile at smoothing 20) change by 0.86-1.0 %, inside their noise floor
+(0.76-1.06 %; a 1e-6 s perturbation also moves 5.7 % of Blanco's events by > 1 km). Smoothing rule choices unchanged (480).
+The B1 pick QC stays as in v0.3.1 (812 of 854,465 picks would change status with the re-timed times; not redone).
+
+### D-B083 v0.4.1 = v0.4.0 with the D-B081 surface floor in the tomography inversion (adopted, 2026-11-25 07:59, PI; follows D-B077)
+M0 and the four merged tiles are re-inverted from the v0.4.0 inputs with tomoDD's event updates floored at the local solid
+surface (D-B081: surface.dat from the merged surface D-B068, an update stops 1 m under it, the event is flagged, not removed),
+using inversion binaries built from the D-B081 freeze after a byte-identity check without surface.dat. Velocities above the
+surface stay rock-continued during the inversion (water/air nodes harm tomoDD: v0.3.2 node-vs-field test, -18's S1). The
+product follows D-B076 (medium, D-B073 node rule, Vp/Vs_tomography, NLL grids with the field rule). The ensemble's real
+phase (D-B077) runs on the v0.4.1 configuration.

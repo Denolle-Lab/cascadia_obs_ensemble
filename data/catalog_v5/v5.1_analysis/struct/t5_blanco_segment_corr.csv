@@ -1,0 +1,17 @@
+x,y,n_segments,spearman,p_exact
+VpVs_events,swarm_share,5,0.666886,0.266667
+VpVs_events,background_share,5,-0.872082,0.1
+VpVs_events,b_value,5,-0.153897,0.833333
+VpVs_events,swarm_frac_fam5,5,-0.0512989,1
+dVpVs_events,swarm_share,5,0.3,0.683333
+dVpVs_events,background_share,5,-0.6,0.35
+dVpVs_events,b_value,5,0.2,0.783333
+dVpVs_events,swarm_frac_fam5,5,-0.3,0.683333
+dVp_events,swarm_share,5,-0.3,0.683333
+dVp_events,background_share,5,0.1,0.95
+dVp_events,b_value,5,0.8,0.133333
+dVp_events,swarm_frac_fam5,5,-0.2,0.783333
+dVs_events,swarm_share,5,-0.564288,0.4
+dVs_events,background_share,5,0.666886,0.266667
+dVs_events,b_value,5,0.564288,0.4
+dVs_events,swarm_frac_fam5,5,0.153897,0.833333

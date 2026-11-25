@@ -145,7 +145,20 @@ def main():
     A.write_state("snippets", events=len(ev), in_old_cache=n_old, todo_at_start=len(todo), done=False)
     groups = dict(tuple(pk.groupby("ID")))
     empty = pk.iloc[:0]
-    chunks = [[(int(i), groups.get(i, empty)) for i in todo[k:k + a.chunk]] for k in range(0, len(todo), a.chunk)]
+    # pnwstore keeps each year on one disk (C.WD): chunks are cut per disk in origin-time order (shared reads of
+    # the same day files) and interleaved across disks by fractional progress, so concurrent reads spread over the
+    # disks instead of queueing on the disk of the current year.
+    yr = pd.to_datetime(ev.set_index("ID").T0, unit="s").dt.year
+    disk = {i: C.WD.get(int(yr[i]), "other") for i in todo}
+    keyed = []
+    for dk in sorted(set(disk.values())):
+        ids = [i for i in todo if disk[i] == dk]
+        cs = [ids[k:k + a.chunk] for k in range(0, len(ids), a.chunk)]
+        keyed += [((j + 0.5) / len(cs), dk, c) for j, c in enumerate(cs)]
+    keyed.sort(key=lambda x: (x[0], x[1]))
+    chunks = [[(int(i), groups.get(i, empty)) for i in c] for _, _, c in keyed]
+    A.log("chunks per disk: " + ", ".join(f"{dk} {sum(1 for x in keyed if x[1] == dk)}"
+                                          for dk in sorted(set(disk.values()))), logf)
     for i in set(todo):
         A.snip_dir(A.SNIP, i).mkdir(parents=True, exist_ok=True)
     W = a.workers

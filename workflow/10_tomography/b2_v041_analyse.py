@@ -196,9 +196,11 @@ def test_section():
     fz = FLR.floordep(S, b.lat_w.values, b.lon_w.values)[0]
     out["final_at_floor"] = int(((b.depth_w - fz >= -1e-6) & (b.depth_w - fz < AT_FLOOR_KM)).sum())
     out["final_above_floor"] = int((b.depth_w - fz < -1e-6).sum())
-    gv0, gv1 = A.reloc(v0), A.reloc(fr)
-    for lab, g in (("v040", gv0), ("test", gv1)):
-        out[f"final_above_true_surface_{lab}"] = int((g.depth < surface_depth(g.lat.values, g.lon.values)).sum())
+    from b2_tomodd_backtransform import inverse            # the test run was not back-transformed: same map here
+    fw = json.loads((RUNS / "blanco_m0t" / "inputs" / "forward.json").read_text())
+    for lab, g in (("v040", a), ("test", b)):
+        la, lo = inverse(g.lat_w.values, g.lon_w.values, fw)
+        out[f"final_above_true_surface_{lab}"] = int((g.depth_w.values < surface_depth(la, lo)).sum())
     vp0 = np.loadtxt(v0 / "Output_Files" / "Vp_model.dat")
     vp1 = np.loadtxt(fr / "Output_Files" / "Vp_model.dat")
     vs0 = np.loadtxt(v0 / "Output_Files" / "Vs_model.dat")

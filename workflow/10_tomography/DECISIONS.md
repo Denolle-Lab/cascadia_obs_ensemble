@@ -710,3 +710,13 @@ V1/V3 (S 4 % slower everywhere offshore) push Blanco ~5 km deeper: rejected. Imp
 {vpvs 2.1, thickness_km 2.5} in b4_time_grids.py (field-level rule on the merged surface, D-B068; coast-scan offshore
 mask of the test), checked on a full field build (v51_build/sc_test: P unchanged; every changed S cell within 2.5 km
 below the merged seafloor at exactly the set Vp/Vs). The fields are model v0.3.1 plus this rule.
+
+### D-B074 v5.1 wide-grid choices: no distance cap; near-seafloor S interpolation accepted (adopted, 2026-11-24, under the PI's "go continuously 1 to 5")
+Wide verifier (/wd1/mdenolle_data/tomo_v1/v51_build/verify_wide/): wide-served S residuals trend with distance
+(-0.41 s per 100 km; -0.8 to -1.1 s beyond 300 km), the same for well-recorded events, so from the model or the picks,
+not the grids (wide minus fine and wide minus a whole-lattice reference show no trend). v5.1 keeps every arrival (no
+distance cap): the EDT likelihood is robust to outlying arrivals, events located by distant stations only are flagged
+far_only, and capping would leave many offshore events unlocated; the trend is a known limit to examine (far S picks,
+upper-mantle S) before the next model version. Near-seafloor S at OBS stations: wide minus fine at real event positions
+within 2 km of the seafloor has p95 0.046-0.061 s (max 0.23 s), from interpolating on 2 km nodes; far below the 0.2 s
+model error of D-B069: accepted (1 km vertical wide grids would cost 246 GB).

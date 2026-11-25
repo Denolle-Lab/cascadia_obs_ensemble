@@ -745,6 +745,39 @@ SEP/SUG EHZ from 2014-01-18 on, whose picks are no longer on the 100 Hz grid; ra
 file: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv (md5 762f18e8f181eaaaa247d367c2d2c302; a2_make_obs.py
 reads it: 2,503,381 picks of 172,342 events in 1,206 tiles; spot check HUO.UO event 41 P 0.772 s later).
 
+### D-B076 Model v0.3.2 = v0.3.1 + the D-B073 rule, with no rock above the solid surface (adopted, 2026-11-25, PI)
+PI 05:30: "Register v0.3.1 + D-B073 shallow-crust rule as v0.3.2"; PI 05:50: "We needed a surface fix as there are rock
+velocity above the sea floor" (v0.3.1.nc: 22,500 offshore nodes above the merged seafloor with rock values, Vp median 4.78
+km/s, 726 with P rays; 6,444 onshore above the ground). v0.3.2 (candidate; branch tomo/ensemble-v032 2609b7be,
+b2_model_v032.py): same grid; int8 `medium` (0 rock, 1 water: Vp 1.5, Vs/VpVs NaN; 2 air: NaN) from the merged surface
+(D-B068) at each node; D-B073 at offshore rock nodes within 2.5 km below the seafloor (8,739 nodes, VpVs 2.100);
+Vp_tomography/Vs_tomography = v0.3.1; NLL grids md5-identical to the v5.1 production fields (field rule on the 1 km
+lattice). nc md5 0487b11d; bundle velocity_models.zip md5 044f5c81 (to session -18 for the private draft). tomoDD users:
+water/air nodes must not enter a tomoDD MOD (node vs field test and -18's S1: water nodes add up to 0.8 s S error);
+rock-continued values match NLLoc to a few ms, as NLLoc's own time grids (rock_continued_1km); the surface acts as a floor
+(D-B081 for tomoDD).
+
+### D-B077 Re-invert v0.3.1 with the re-timed picks (v0.4.0); floor in the inversion after its results; ensemble on the final configuration (adopted, 2026-11-25, PI)
+PI 05:55: "re-run v0.3.1 with the correct re-timed picks": v0.4.0 = the v0.3.1 configuration (B1/B1b selection,
+weights, M0 d200 s480, four merged tiles, D-B049/D-B050/D-B051) with only the pick times from
+Cascadia_picks_catalog_v4.1t.csv (D-B072/D-B075), no surface treatment; branch tomo/v040-retimed. PI 06:50: decide the
+D-B081 floor in the inversion (v0.4.1, inversion binaries copied from the D-B081 freeze) after the v0.4.0 results. The
+D-B030/D-B032 ensemble (PI 05:30 "start the ensembling") runs on the final configuration; its driver is built and tested
+now (branch tomo/ensemble-v032) with dataset, M0 and tiles as parameters.
+
+### D-B078 The B5 relative-relocation code is chosen on waveform cross-correlation data (adopted, 2026-11-25, PI)
+PI 06:40 asked whether to reconsider GrowClust; 06:50 chose the comparison. Catalog differential times did not improve the
+locations in any test (D-B048; b5_v0.3.1: cluster thickness ratio 1.00). Test on 3-4 clusters (Axial, Blanco, one
+well-recorded onshore cluster) with D-B040 cross-correlation times: tomoDD relocation-only with the D-B081 floor vs
+GrowClust3D on the NonLinLoc grids (no medium problem) vs NLL-SSST-coherence (Lomax & Savvaidis 2022, JGR 127,
+e2021JB023190, doi:10.1029/2021JB023190); scored on synthetic planes, held-out stations and above-surface counts.
+
+### D-B079 Catalog v6.0 = the relocation in the re-inverted model, with NonLinLoc's SSST upgrades; amends D-B058 (adopted, 2026-11-25, PI)
+PI 06:50: "New version V6.0 and consider the NLL with the recent upgrades from 2022 with SSST corrections". The NonLinLoc
+relocation in the re-inverted model (v0.4.x) is catalog v6.0, not v5.2; v5.2 stays reserved for B5 on v5.1 (D-B058). v6.0
+considers NLL-SSST (source-specific station terms, smooth in source position) and the coherence stage of Lomax &
+Savvaidis (2022) in place of the D-B014 static station terms. Not to be confused with the pick dataset "ver6".
+
 ### D-B080 Catalog bundle carries the pick file it was located with; atlas tests the second catalog against its own surface (adopted, 2026-11-25, session -18; implements D-B058 for v5.1; PI may revise)
 * catalog_v5.zip: a version located with picks that are not in the Zenodo record carries them in its folder: v5.1 has
   Cascadia_picks_catalog_v4.1t.csv.gz (re-timed picks, D-B072/D-B075, md5 762f18e8 uncompressed, checked at build) and

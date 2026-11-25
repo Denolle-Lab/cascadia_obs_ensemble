@@ -59,6 +59,13 @@ grid, so events are located in 25 km tiles with a tile ±75 km search box (`a2_m
 Catalog with all v4 events and location-quality tiers A-D, U: `a2_build_catalog.py`; summary
 `data/reloc_v5/catalog_v5_trackA_iter1_vpvs176_tiers.md`. Use tiers A-B (`depth_constrained`) for depth work.
 
+Catalog v5.1 rules (2026-11-24, D-B055/D-B057/D-B066/D-B067): both scripts read the catalog v4.1 event list (main
+tree `data/catalog_v4`, 172,342 events). `a2_parse_hyp.py RUN [--deep DEEP_RUN]` keeps one row per event (the
+deep-pass row when it is LOCATED) and adds the NLLoc comment, `ns_z` (final oct-tree cell height), run, tile and pass.
+`a2_build_catalog.py` gives unlocated events no hypocentre (loc_source `none`, tier U, v4 values only in `v4_*`) and a
+`u_reason` (LOCMETH minimum read from the run's own `nlloc.in`, picks counted in its `events.obs`); events located
+with 5 phases are tier D.
+
 Mount Hood test (`a2_model_1d_test.py`, tile t33_30, 269 events, nearest station 29 km): Ian's 1D
 `pnsn_wa` gives median depth -1.0 km, `pnsn_nor` 8.1 km, the 3D model 16.7 km, all at RMS 0.26-0.29 s;
 ANSS 4.3 km. Depths without a station within ~2 focal depths follow the velocity model, not the data.

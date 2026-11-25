@@ -639,6 +639,9 @@ b4:                                # B4 NonLinLoc relocation in the merged model
                                         #   worsened FN08C/G30B/J25C against co-located stations); station terms absorb the
                                         #   constant start-up offset. Thresholds kept for reference (median + 3 x 1.4826 MAD)
   surface_mask: merged             # b4_time_grids.py water/rock boundary: merged = D-B068 (b4_surface.surface_m at cell centres; v5.1,
+  shallow_crust:                   # D-B073 (V4 of the D-B070 test): offshore rock cells within thickness_km below the merged seafloor: Vs = min(Vs, Vp / vpvs); b4_time_grids.py
+    vpvs: 2.1
+    thickness_km: 2.5
                                    #   time_b4_v0.3.1m on); d_b005 (= key absent) = the rule of every build to time_b4_v0.3.1
                                    #   (rebuild or resume those with d_b005; the params guard refuses to mix the two)
   depth_flags:                     # catalog depth_quality (D-B049..D-B051 approval, rule 4): ok, unconstrained, biased_deep
@@ -716,7 +719,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       model: 0.3.1
       note: "Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre."
       tier_u: none                 # D-B057: no v4 hypocentre outside the v4_* columns; u_reason says why
-      decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072]   # README header
+      decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073]   # README header
       flags: [floor_limited, far_only, deep_pass, five_phase]   # boolean columns of b4_catalog.py counted in the README
       columns:                     # README descriptions added or changed for v5.1 (override catalog_version.py COLUMNS by key)
         u_reason: "why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events"
@@ -739,6 +742,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "Model error (D-B069): a constant 0.2 s for every phase (no travel-time-dependent term, which acted as a pull toward short travel times in NonLinLoc's EDT likelihood); station terms recomputed with it."
         - "Pick timing (D-B072): picks on analog short-period channels that sample at 99.99939 Hz labelled 100 Hz (34 UW stations from 2013-10-22, KOS to 2013-11-18, UO IRO, HUO, FRIS to about 2015-01) were early by up to about 0.5 s late in each UTC day, because the picker read whole days; each such pick was re-timed from a short read of the waveform around it (pick file Cascadia_picks_catalog_v4.1t.csv, column timing_corrected)."
         - "event_flag also marks events that ComCat lists as explosions, quarry blasts or other non-earthquakes (D-B071)."
+        - "Shallow oceanic crust (D-B073): in the travel-time grids, offshore rock within 2.5 km below the seafloor has Vp/Vs of at least 2.1 (Vs = min(Vs, Vp / 2.1)); the waveform-checked S picks of floor-held events showed S slower than the model there. The velocities are model v0.3.1 plus this rule."
         - "The v4.1 additions 900001-900003 carry their ComCat hypocentre (loc_source comcat, tier U) when NonLinLoc does not locate them."
       known_limits:                # README lines ({axial}: computed Axial seafloor sentence; no other braces)
         - "floor_limited events (count above) have depths set by NonLinLoc's topography floor, not by the data (in round 2 such events had sigma_z about 9 km and expectation depths about 13 km below the best point)."
@@ -746,3 +750,4 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "five_phase events have one degree of freedom (round 2: sigma_z about 13 km, horizontal error about 27 km)."
         - "Deep-pass hypocentres below 80 km depend on ak135 outside the tomography box (D-B067)."
         - "Axial: {axial}."
+        - "Blanco: with the shallow-crust rule (D-B073) depths are about 1 km deeper relative to the Lange et al. (2026) OBS catalog than without it if that catalog's depths are below sea level; its datum is not stated (below the seafloor would reverse the comparison)."

@@ -2,6 +2,7 @@
 # Track B, catalog v5.1: NLLoc relocation of catalog v4.1 with the round-2 fixes (D-B055..D-B072). Run detached:
 #   VERSION=0.3.1 TIME=time_b4_v0.3.1m PICKS=<re-timed picks csv> setsid nohup bash workflow/10_tomography/b4_v51_relocate.sh \
 #     9>&- >> /wd1/mdenolle_data/tomo_v1/b4_v51_relocate.log 2>&1 &
+# STOP_AFTER=<stage> stops cleanly after that stage (e.g. grids while the picks are not ready).
 # Stages (each marked in the state file; a rerun skips the done ones; delete a line of the state file to redo a stage):
 #   surface  b4_surface.py install + floor: merged GMRT/earth_relief surface (D-B068) and the conservative NLLoc floor
 #            params b4.surface.floor.file (D-B056)
@@ -37,7 +38,8 @@ NPROC_GRID=${NPROC_GRID:-40}; NPROC_NLL=${NPROC_NLL:-100}
 ENV=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default
 PY=$ENV/bin/python
 export LD_LIBRARY_PATH=$ENV/lib
-MPY="pixi run --manifest-path $CODE/pixi.toml -e models python"
+MENV=${MENV:-/home/mdenolle/wt_tomo_res/.pixi/envs/models}       # existing pixi env "models" (a new worktree has none)
+MPY="env LD_LIBRARY_PATH=$MENV/lib $MENV/bin/python"
 W=$CODE/workflow/10_tomography
 RELOC=/wd1/mdenolle_data/reloc_v5
 OBS=${OBS:-$RELOC/obs_tiles_v51}
@@ -135,5 +137,6 @@ for s in surface grids wide obs smoke iter0 terms iter1 deep catalog publish; do
   log "stage $s"
   stage_$s || { log "stage $s FAILED"; exit 1; }
   mark $s
+  [ "$s" = "${STOP_AFTER:-}" ] && { log "stopping after $s (STOP_AFTER); rerun without it to continue"; exit 0; }
 done
 log "finished: catalog $RELOC/catalog/catalog_b4_$R1.csv"

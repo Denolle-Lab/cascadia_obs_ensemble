@@ -29,6 +29,10 @@ between neighbouring tiles). Here, per station-phase:
    real hypocentres outside the fine region (wide-served arrivals of production v0.3.1 events) p95 0.013 s, against
    0.05-0.38 s for R alone. Blending C into per-sector or per-column medians was worse near the region and at the
    hypocentres, better only beyond 120 km.
+4. surface_rule: a node just above the solid (not rock, rock below) holds the rock time continued upward (inside the
+   fine region through the fine grid's 1 km node in between, so wide = fine on the lower half of that 2 km cell):
+   with 2 km nodes the water/air time of such a node pulled interpolated times of events 1-2 km below the surface
+   late (wide-served arrivals at events with z' <= 0: median +0.28 s against the fine grid before this rule).
 Velocity field: the fine build's whole-lattice 1 km field (work_<TIME_NAME>/field_1.<ph>.buf of b4_time_grids.py:
 cell-centred, Earth-flattened SLOW_LEN, merged-surface water/air mask of that build) copied unchanged for z' -5..81 km
 (cells 0..85),
@@ -266,7 +270,8 @@ def node_dist(src):
 
 
 def fine_on_wide(fine_root, src):
-    """The fine grid on the wide nodes it contains: (values, index slices of the fine region in the wide grid)."""
+    """The fine grid on the wide nodes it contains: (values, index slices of the fine region in the wide grid, values
+    at the 1 km nodes halfway between consecutive wide nodes in depth, z' = -4, -2, ..., 78)."""
     h = read_nll_hdr(fine_root)
     assert h["dx"] == 1.0 and h["z0"] == G["z0"] and h["nz"] == NZF, h
     assert np.allclose(src_xyz(fine_root), src, atol=1e-4), (fine_root, src_xyz(fine_root), src)
@@ -280,8 +285,9 @@ def fine_on_wide(fine_root, src):
         sl.append(slice(w0, w1 + 1))
         fsl.append(slice(2 * w0 - i0, 2 * w1 - i0 + 1, 2))
     sl.append(slice(0, KF + 1))
+    fodd = a[fsl[0], fsl[1], 1:2 * KF:2]
     fsl.append(slice(0, 2 * KF + 1, 2))
-    return a[tuple(fsl)], tuple(sl)
+    return a[tuple(fsl)], tuple(sl), fodd
 
 
 def rock_wide(field1_p, field05_p):
@@ -303,7 +309,25 @@ def rock_wide(field1_p, field05_p):
     return out & up
 
 
-def assemble(R, Fv, sl, rock):
+def surface_rule(W, Fodd, sl, rock, src):
+    """Wide nodes just above the solid (not rock, the node below rock; more than taper_km[1] from the source) hold
+    the time of the rock below continued linearly upward instead of their water/air time, so that trilinear
+    interpolation at an event between such a node and the rock node 2 km below is not pulled late by the slow cells
+    above the surface (2 km nodes reach twice as far up as the fine grid's 1 km nodes). Inside the fine region the
+    continuation goes through the fine grid's 1 km node between them, W(k) = 2 F(z'+1) - F(z'+2), so the wide grid
+    equals the fine one on [z'+1, z'+2]; outside it W(k) = 2 W(k+1) - W(k+2). Events are never above the surface
+    (D-B055/D-B056), so a node replaced here is never itself a hypocentre. Modifies W; returns the count."""
+    m = ~rock[:, :, :-2] & rock[:, :, 1:-1] & (node_dist(src)[:, :, :-2] > R_COMB)
+    k = np.nonzero(m)
+    out = 2.0 * W[k[0], k[1], k[2] + 1].astype(np.float64) - W[k[0], k[1], k[2] + 2]
+    ia, ib, ja, jb = sl[0].start, sl[0].stop - 1, sl[1].start, sl[1].stop - 1
+    inn = (k[0] >= ia) & (k[0] <= ib) & (k[1] >= ja) & (k[1] <= jb) & (k[2] <= KF - 1)
+    out[inn] = 2.0 * Fodd[k[0][inn] - ia, k[1][inn] - ja, k[2][inn]] - W[k[0][inn], k[1][inn], k[2][inn] + 1]
+    W[k] = out.astype("<f4")
+    return int(m.sum()), int(inn.sum())
+
+
+def assemble(R, Fv, sl, rock, Fodd=None, src=None):
     """Wide grid W: the fine values Fv on the fine region sl (its +-250 km box, z' <= 79 on the wide nodes); outside,
     R + C. C is the continuity correction D = Fv - R of the nearest fine-region node (per axis: the node clamped into
     the region, so laterally the face node at the same depth, below z' = 79 the node above), with D taken on rock
@@ -323,6 +347,8 @@ def assemble(R, Fv, sl, rock):
     diag = {"D_median": round(float(np.median(v)), 4), "D_p05": round(float(np.percentile(v, 5)), 4),
             "D_p95": round(float(np.percentile(v, 95)), 4), "D_absmax_rock": round(float(np.abs(v).max()), 4),
             "nonrock_filled": int((~rk).sum())}
+    if Fodd is not None:
+        diag["surface_nodes"], diag["surface_nodes_fine_region"] = surface_rule(W, Fodd, sl, rock, src)
     return W, diag
 
 
@@ -338,11 +364,14 @@ def job(a):
     wd = work / f"{label}.{ph}"
     wd.mkdir(parents=True, exist_ok=True)
     R, _, r2 = raw_wide(wd, label, src, ph, roots)
-    Fv, sl = fine_on_wide(fine_root, src)
-    W, diag = assemble(R, Fv, sl, np.load(rock_file))
+    Fv, sl, Fodd = fine_on_wide(fine_root, src)
+    rock = np.load(rock_file)
+    W, diag = assemble(R, Fv, sl, rock, Fodd, src)
     # NLLoc rejects or drops negative predicted times without a message: stop here instead
     assert np.isfinite(W).all() and W.min() >= 0, (label, ph, float(np.nanmin(W)))
-    assert np.array_equal(W[sl], Fv), (label, ph)     # wide = fine on the fine region
+    keep = np.ones(W.shape, bool)                     # wide = fine on the fine region, but surface_rule's nodes
+    keep[:, :, :-2] = ~(~rock[:, :, :-2] & rock[:, :, 1:-1] & (node_dist(src)[:, :, :-2] > R_COMB))
+    assert np.array_equal(W[sl][keep[sl]], Fv[keep[sl]]), (label, ph)
     W.tofile(f"{dst}.buf")
     diag.update(fine_nodes=[s.stop - s.start for s in sl], wall_s=round(time.time() - t0, 1))
     (work / f"{label}.{ph}.diag.json").write_text(json.dumps(diag))
@@ -365,7 +394,8 @@ def main():
     out = Path(a.out) if a.out else RELOC / f"wide_{a.time_name}"
     prm = {"time_name": a.time_name, "fine": ident, "model_version": version, "wide": WP, "richardson_k": K,
            "lattice": {"x0": G["x0"], "y0": G["y0"], "z0": G["z0"], "nodes": [NXW, NYW, NZW], "node_km": DXW,
-                       "field_cells_1km": list(N1)}, "eft": True, "centred": True}
+                       "field_cells_1km": list(N1)}, "eft": True, "centred": True,
+           "code_md5": md5(Path(__file__))}               # a resume with edited code would mix grids: refused
     prm = json.loads(json.dumps(prm))
     # never mix builds: an existing folder must carry the same stamp (fine build, its fields, parameters)
     stamp = out / "params.json"

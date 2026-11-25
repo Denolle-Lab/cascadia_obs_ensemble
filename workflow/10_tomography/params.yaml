@@ -677,6 +677,13 @@ b4:                                # B4 NonLinLoc relocation in the merged model
       spacing_s: 15                # node spacing (arcsec). 15 s, not 7.5 s (v51_build/surface 2026-11-24): same NLLoc result for 507 of 725 + 199 of 200 rerun events; lowering under iter1 epicentres median 17 m (7.5 s: 9 m); 7.5 s costs +158 MB RSS and +0.5 s per NLLoc process
       margin_m: 1.0                # subtracted from the exact cell minimum (float32 storage, coordinate rounding)
       file: /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin   # + topo_15s_cons_merged.bin (true frame)
+  wide:                            # b4_wide_grids.py: station-reach fallback + deep-pass grids (D-B067; v5.1 piece 'wide')
+    node_km: 2.0                   # wide node spacing; 1 km and 2 km Grid2Time runs + Richardson (tomodd.p1.richardson_k)
+    z_max_km: 121.0                # last wide node z' (flattened); 1 km field to z' 123 (128 cells); deep-pass LOCGRID z' -5..120
+    blend_km: [80.0, 100.0]        # true depth: outside the tomography box, D-B005's deepest layer (80 km) blended linearly into ak135 (full at 100 km)
+    ak135: data/tomo_v1/ref_models/ak135_0-410km.csv   # Kennett, Engdahl & Buland (1995), from ObsPy 1.5.0 taup/data/ak135.tvel
+    taper_km: [4.0, 10.0]          # raw wide time: T1 alone within 4 km of the source, linear to the Richardson combination at 10 km
+    correction: nearest_rock       # outside the fine region: raw + (fine - raw) of the nearest fine-region node, rock nodes only (>= 0.25 km below the surface); the only method (b4_wide_grids.assemble)
 catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); D-B059 tier U kept with v4 hypocentres in v5.0
   out: /wd1/mdenolle_data/catalog_v5                 # v<version>/ folders and catalog_v5.zip (all versions; Zenodo draft 23084158)
   track_a_code: /home/mdenolle/wt_reloc/workflow/08_relocation   # a2_parse_hyp.region (region boxes)

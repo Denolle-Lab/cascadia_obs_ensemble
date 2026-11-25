@@ -288,9 +288,13 @@ def fig_swarm(c, fam, title, fa):
 
 def fig_msh(c):
     E = c[c.is_eq & (hav(c.lat.values, c.lon.values, 46.20, -122.19) < 15)].copy()
-    E["how"] = E.t.dt.dayofweek * 24 + E.t.dt.hour + E.t.dt.minute / 60
+    tl = E.t.dt.tz_convert("America/Los_Angeles")
+    E["how"] = tl.dt.dayofweek * 24 + tl.dt.hour + tl.dt.minute / 60
+    E["hm_l"] = tl.dt.hour + tl.dt.minute / 60 + tl.dt.second / 3600
+    E["wed"] = tl.dt.dayofweek.eq(2)
+    E["dst"] = tl.map(lambda x: bool(x.dst()))
     deep = E.depth > 30
-    fig, axs = plt.subplots(1, 3, figsize=(12, 3.4), constrained_layout=True)
+    fig, axs = plt.subplots(1, 4, figsize=(14, 3.4), constrained_layout=True)
     ax = axs[0]
     ax.hist(E.how[~deep], bins=np.arange(0, 169, 1), color="#999", label=f"depth <= 30 km (n={int((~deep).sum()):,})",
             density=True)
@@ -298,23 +302,70 @@ def fig_msh(c):
             label=f"depth > 30 km (n={int(deep.sum())})", density=True)
     ax.set_xticks(np.arange(0, 169, 24))
     ax.set_xticklabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", ""])
-    ax.set_xlabel("hour of the week (UTC)")
+    ax.set_xlabel("hour of the week (local Pacific time)")
     ax.set_ylabel("density")
     ax.legend(fontsize=6)
     ax.set_title("events within 15 km of Mount St. Helens")
     ax = axs[1]
+    W = E[E.wed & deep & E.hm_l.between(11.0, 13.5)]
+    bins = np.arange(11.0, 13.51, 1 / 60)
+    ax.hist([W.hm_l[W.dst], W.hm_l[~W.dst]], bins=bins, stacked=True, color=["#d9711a", "#1f5fa8"],
+            label=[f"PDT (n={int(W.dst.sum())})", f"PST (n={int((~W.dst).sum())})"])
+    for lo, hi in [(19 + 14 / 60 - 7, 19 + 21 / 60 - 7), (19 + 14 / 60 - 8, 19 + 21 / 60 - 8)]:
+        ax.axvspan(lo, hi, color="#999", alpha=0.25, lw=0)
+    ax.set_xticks([11, 11.5, 12, 12.5, 13, 13.5])
+    ax.set_xticklabels(["11:00", "11:30", "12:00", "12:30", "13:00", "13:30"])
+    ax.set_xlabel("local time on Wednesdays (grey: 19:14-19:21 UTC in PST, left, and in PDT, right)")
+    ax.set_ylabel("deep events per minute")
+    ax.legend(fontsize=6)
+    ax.set_title("deep events at Wednesday noon follow local time")
+    ax = axs[2]
     ax.scatter(E.t[~deep], E.depth[~deep], s=0.5, c="#999", lw=0, rasterized=True)
     ax.scatter(E.t[deep], E.depth[deep], s=3, c=np.where(E[deep].tier.isin(["A", "B"]), "k", "#c0392b"), lw=0)
     ax.invert_yaxis()
     ax.set_ylabel("depth (km bsl)")
     ax.set_title("depth against time (red: deep, tiers C-D)")
-    ax = axs[2]
+    ax = axs[3]
     ax.scatter(E.v4_depth[deep], E.depth[deep], s=4, c="#c0392b", lw=0)
     ax.plot([0, 120], [0, 120], "k:", lw=0.7)
     ax.set_xlabel("v4 depth (km)")
     ax.set_ylabel("v5.1 depth (km bsl)")
     ax.set_title("deep events: v4 against v5.1")
     fig.savefig(FIG / "fig_msh_deep_weekly.png")
+    plt.close(fig)
+
+
+def fig_depth_spikes(c):
+    """Fine depth histograms (0.05 km) and the sharp-spike ratio at integer km, model nodes and half-integers."""
+    E = c[c.is_eq]
+    t = pd.read_csv(OUT / "t8_depth_spikes.csv")
+    nodes = [1, 3, 5, 7, 9, 12, 15, 18, 21, 25, 29, 34, 40]
+    fig, axs = plt.subplots(1, 3, figsize=(14, 3.4), constrained_layout=True)
+    for ax, r, lo, hi in [(axs[0], "Axial", 1.5, 4.5), (axs[1], "Blanco", 9.5, 21.0)]:
+        g = E[E.region.eq(r)].depth
+        ax.hist(g, bins=np.arange(lo, hi, 0.05), color="#1f5fa8")
+        for z in np.arange(np.ceil(lo), hi):
+            ax.axvline(z, color="#c0392b" if int(z) in nodes else "#999", lw=0.7, ls="--" if int(z) in nodes else ":")
+        ax.set_xlabel("depth (km bsl)")
+        ax.set_ylabel("events per 0.05 km")
+        ax.set_title(f"{r}: depth in 0.05 km bins (red: model node)")
+    ax = axs[2]
+    kinds = [("model node", "#c0392b", "o"), ("integer, not a node", "#555", "s"), ("half-integer", "#1f5fa8", "^")]
+    regs = list(dict.fromkeys(t.region))
+    for k, col, m in kinds:
+        g = t[t.kind.eq(k)]
+        yy = g.region.map({r: i for i, r in enumerate(regs)}) + {"model node": -0.2, "integer, not a node": 0,
+                                                               "half-integer": 0.2}[k]
+        ax.scatter(g.ratio, yy, s=10, color=col, marker=m, label=k, alpha=0.8)
+    ax.axvline(1, color="k", lw=0.6, ls=":")
+    ax.set_yticks(range(len(regs)))
+    ax.set_yticklabels(regs)
+    ax.invert_yaxis()
+    ax.set_xscale("log")
+    ax.set_xlabel("events within 0.1 km / mean of the bins at +-0.3 km")
+    ax.legend(fontsize=6, loc="lower right")
+    ax.set_title("sharp-spike ratio, 1-40 km")
+    fig.savefig(FIG / "fig_depth_spikes.png")
     plt.close(fig)
 
 
@@ -328,20 +379,27 @@ def fig_robustness():
     for col, m, lab in [("bg_v4", "s", "v4"), ("bg_main", "o", "v5.1 main"), ("bg_tierABC", "v", "v5.1 tier A-C only"),
                         ("bg_eta0_shuf5", "^", "v5.1 conservative threshold"), ("bg_d3q", "x", "v5.1 3-D (good depths)")]:
         ax.plot(b[col], y, m, label=lab, ms=5, mfc="none" if m in "sv^" else None)
+    if "bg_min_variants" in b.columns:
+        ax.hlines(y, b.bg_min_variants, b.bg_max_variants, color="#999", lw=1, zorder=0, label="range over all variants")
     ax.set_yticks(y)
     ax.set_yticklabels(b.region)
     ax.invert_yaxis()
     ax.set_xlabel("% of events above Mc that are background")
-    ax.legend(fontsize=6, loc="lower right")
+    ax.legend(fontsize=6, loc="lower left")
     ax.set_title("background share: main run and variants (clusters piece)")
     ax = axs[1]
-    ax.barh(y, b.null_over_real_links, color=np.where(b.null_over_real_links > 0.5, "#c0392b", "#777"))
+    ax.barh(y - 0.2, b.null_over_real_links, height=0.4, color=np.where(b.null_over_real_links > 0.5, "#c0392b", "#777"),
+            label="times shuffled over 2010-2016")
+    if "null_over_real_links_month" in b.columns:
+        ax.barh(y + 0.2, b.null_over_real_links_month, height=0.4, color="#1f5fa8", alpha=0.5,
+                label="times shuffled within the month")
+        ax.legend(fontsize=6, loc="lower right")
     ax.axvline(0.5, color="k", lw=0.6, ls=":")
     ax.set_yticks(y)
     ax.set_yticklabels(b.region)
     ax.invert_yaxis()
     ax.set_xlabel("linked fraction in time-shuffled catalogs / real linked fraction")
-    ax.set_title("how much of the clustering a shuffled catalog reproduces (verifier)")
+    ax.set_title("how much of the clustering a shuffled catalog reproduces (clusters piece null test)")
     fig.savefig(FIG / "fig_cluster_robustness.png")
     plt.close(fig)
 
@@ -365,7 +423,7 @@ def fig_surface_activity():
     axs[1].set_xscale("log")
     axs[1].axhline(0.5, color="k", ls=":", lw=0.6)
     axs[1].set_xlabel("fit members")
-    axs[1].set_ylabel("Jaccard overlap, 80% subsample rerun (verifier)")
+    axs[1].set_ylabel("Jaccard overlap, 80% subsample rerun (verifier, via faults piece)")
     axs[1].set_title("detection stability of each surface")
     fig.savefig(FIG / "fig_surface_activity.png")
     plt.close(fig)
@@ -406,6 +464,7 @@ def main():
             made.append(fam)
     (OUT / "figs" / "key_swarms.json").write_text(json.dumps({str(k): t for k, t in KEY_SWARMS if k in made}, indent=1))
     fig_msh(c)
+    fig_depth_spikes(c)
     fig_robustness()
     fig_surface_activity()
     fig_axial_rate(c)

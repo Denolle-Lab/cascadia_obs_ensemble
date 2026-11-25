@@ -23,6 +23,7 @@ CLU = Path(os.environ.get("V51_CLUSTERS", "/home/mdenolle/wt_a51_clusters/data/c
 VER_F = WD1 / "v5.1_analysis" / "verify_faults"
 VER_C = WD1 / "v5.1_analysis" / "verify_clusters"
 VER_M = WD1 / "v5.1_analysis" / "verify_mag"
+REVIEW = WD1 / "v5.1_review"          # waveform review of four v5.1 location problems (read only)
 V4C = ROOT / "data" / "catalog_v4" / "clusters_zbz"
 V4S = ROOT / "data" / "catalog_v4" / "swarms"
 V0 = ROOT / "data" / "faults" / "v0"
@@ -86,10 +87,15 @@ def load_events() -> pd.DataFrame:
                    "log_eta"]], on="ID", how="left")
     a = pd.read_csv(FLT / "fault_surfaces_v1_assignment.csv.gz")
     a = a.rename(columns={"event_id": "ID", "surface_id": "surf_v1", "region": "fbox"})
-    c = c.merge(a[["ID", "assignment", "surf_v1", "distance_km", "z", "n_compatible", "fbox"]], on="ID",
-                how="left")
-    # Axial was left out of the fault fit (as in v0): its 'none' is "region not fitted" (faults verifier).
-    ax = c.assignment.eq("none") & c.fbox.eq("AX")
+    if "on_surface_strict" not in a.columns:
+        a["on_surface_strict"] = False
+    a["on_surface_strict"] = tobool(a.on_surface_strict)
+    c = c.merge(a[["ID", "assignment", "surf_v1", "distance_km", "z", "n_compatible", "fbox", "on_surface_strict"]],
+                on="ID", how="left")
+    c["on_surface_strict"] = c.on_surface_strict.eq(True)
+    # Axial was left out of the fault fit (as in v0): neither on nor off a surface. The revised faults product labels
+    # it "not fitted (Axial Seamount left out)"; the first build labelled it "none" (relabelled here).
+    ax = (c.assignment.eq("none") | c.assignment.astype(str).str.startswith("not fitted")) & c.fbox.eq("AX")
     c.loc[ax, "assignment"] = "region not fitted (Axial)"
     v4 = pd.read_csv(V4C / "events_zbz.csv.gz", usecols=["event_id", "in_analysis", "family_id", "role"])
     f4 = pd.read_csv(V4C / "families_zbz.csv", usecols=["family_id", "type"])
@@ -110,11 +116,16 @@ def load_events() -> pd.DataFrame:
 
 def load_surfaces() -> pd.DataFrame:
     s = pd.read_csv(FLT / "fault_surfaces_v1_summary.csv")
+    s = s.rename(columns={"flags": "flt_flags"})
     tr = pd.read_csv(FLT / "fault_surfaces_v1_traces.csv")
     s = s.merge(tr[["surface_id", "top_edge_lon1", "top_edge_lat1", "top_edge_lon2", "top_edge_lat2"]],
                 on="surface_id", how="left")
-    rec = pd.read_csv(VER_F / "recovery_all.csv").rename(columns={"sid": "surface_id"})
-    s = s.merge(rec[["surface_id", "J_sub80", "J_perturbed", "J_tierAB"]], on="surface_id", how="left")
+    if "recovery_J_sub80" in s.columns:      # revised faults product carries the verifier's detection reruns
+        s = s.rename(columns={"recovery_J_sub80": "J_sub80", "recovery_J_perturbed": "J_perturbed",
+                              "recovery_J_tierAB": "J_tierAB"})
+    else:
+        rec = pd.read_csv(VER_F / "recovery_all.csv").rename(columns={"sid": "surface_id"})
+        s = s.merge(rec[["surface_id", "J_sub80", "J_perturbed", "J_tierAB"]], on="surface_id", how="left")
     cc = pd.read_csv(CLU / "faults_v1_cluster_counts.csv")
     s = s.merge(cc[["surface_id", "n_events_joined", "n_analysis", "pct_background", "pct_swarm",
                     "n_families", "n_swarm_families_all"]], on="surface_id", how="left")

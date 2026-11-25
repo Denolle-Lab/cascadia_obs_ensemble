@@ -9,6 +9,7 @@ For each catalog region (column `region`, set from the v4 epicentre) this comput
   T5 swarms and sequences (families of the clusters piece with setting: plate boundary, volcano, surface)
   T6 depth against ANSS/ComCat (paired, v4 and v5.1)
   T7 named depth benchmarks from the literature (v5.1 numbers on boxes defined here)
+  T8 sharp spikes in the depth distribution at integer km (model nodes and non-node controls) and half-integers
 Large joined event table: /wd1/.../v5.1_analysis/interp/events_joined.pkl. Small tables: data/catalog_v5/v5.1_analysis/interp/.
 
     python workflow/06_analysis/v51_interp_tables.py
@@ -21,8 +22,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-from v51_interp_common import (BIG, CLU, FLT, OUT, REGIONS, VER_C, V0, VOLCANOES, hav, load_events, load_pb_steps,
-                               load_surfaces, local_xy, nearest_boundary, nearest_volcano, q, MAG)
+from v51_interp_common import (BIG, CLU, FLT, OUT, REGIONS, REVIEW, SLAB2, VER_C, V0, VOLCANOES, hav, load_events,
+                               load_pb_steps, load_surfaces, local_xy, nearest_boundary, nearest_volcano, q, MAG)
 
 OUT.mkdir(parents=True, exist_ok=True)
 BIG.mkdir(parents=True, exist_ok=True)
@@ -131,19 +132,39 @@ def t3_clusters(c):
 
 
 def t3b_boxes():
-    """Box-level robustness: shuffled-to-real link ratio (verifier), variants (clusters piece)."""
-    nul = pd.read_csv(VER_C / "v03_nulls_summary.csv")
-    nul = nul[nul.null.eq("region")][["region", "frac_linked_mean", "real_frac_linked", "null_over_real_links",
-                                       "D_max", "real_D"]]
+    """Box-level robustness: shuffled-to-real link ratios (clustering piece's null test), variants (clusters piece)."""
+    f = CLU / "null_test_summary.csv"
+    if f.exists():
+        nt = pd.read_csv(f)
+        nul = nt[nt.null.eq("region")][["region", "frac_linked_mean", "real_frac_linked", "link_ratio_null_over_real",
+                                         "D_max", "real_ashman_D", "n_swarm_mean", "real_n_swarm"]].rename(
+            columns={"link_ratio_null_over_real": "null_over_real_links", "real_ashman_D": "real_D"})
+        for k in ["region_year", "region_month"]:
+            nul = nul.merge(nt[nt.null.eq(k)][["region", "link_ratio_null_over_real"]].rename(
+                columns={"link_ratio_null_over_real": f"null_over_real_links_{k.split('_')[1]}"}), on="region", how="left")
+    else:   # first build: the clusters verifier's null
+        nul = pd.read_csv(VER_C / "v03_nulls_summary.csv")
+        nul = nul[nul.null.eq("region")][["region", "frac_linked_mean", "real_frac_linked", "null_over_real_links",
+                                           "D_max", "real_D"]]
     s = pd.read_csv(CLU / "sensitivity_zbz.csv")
     piv = s.pivot_table(index="region", columns="variant", values="pct_background").reset_index()
-    keep = ["region", "main", "tierABC", "eta0_shuf5", "d3q", "v41M", "mc_best"]
+    keep = ["region", "main", "tierABC", "eta0_shuf5", "d3q", "v41M", "mc_best", "noM_floor"]
     piv = piv[[k for k in keep if k in piv.columns]].rename(columns=lambda x: x if x == "region" else f"bg_{x}")
+    vcols = [c_ for c_ in s.variant.unique()]
+    rng = s.groupby("region").pct_background.agg(["min", "max"]).rename(columns={"min": "bg_min_variants",
+                                                                               "max": "bg_max_variants"})
+    rng["variant_min"] = s.loc[s.groupby("region").pct_background.idxmin()].set_index("region").variant
+    rng["variant_max"] = s.loc[s.groupby("region").pct_background.idxmax()].set_index("region").variant
     v4 = pd.read_csv(V0.parents[1] / "catalog_v4" / "clusters_zbz" / "regions_zbz.csv")
     v4 = v4.rename(columns={"pct_background": "bg_v4"})[["region", "bg_v4"]] if "pct_background" in v4.columns else None
-    out = nul.merge(piv, on="region", how="outer")
+    out = nul.merge(piv, on="region", how="outer").merge(rng.reset_index(), on="region", how="left")
     if v4 is not None:
         out = out.merge(v4, on="region", how="left")
+    td = CLU / "tierD_by_region.csv"
+    if td.exists():
+        out = out.merge(pd.read_csv(td)[["region", "h_max_med_tierD_km", "h_max_med_tierABC_km",
+                                         "pct_links_tierD_end"]], on="region", how="left")
+    print("variants:", vcols)
     return out
 
 
@@ -160,22 +181,65 @@ def surface_region(c, s):
     return s
 
 
-def interp_flags(s, c):
-    """Flags required by the faults verifier, added to each surface (not changing the faults product)."""
+def slab2_at(lat, lon):
+    """Slab2 slab-top depth (km, positive down) at the nearest 0.05-degree node."""
+    sl = pd.read_csv(SLAB2, header=None, names=["lon", "lat", "dep"]).dropna()
+    sl["lon"] = np.where(sl.lon > 180, sl.lon - 360, sl.lon)
+    tr = cKDTree(np.c_[sl.lon.values, sl.lat.values])
+    _, k = tr.query(np.c_[np.asarray(lon), np.asarray(lat)])
+    return -sl.dep.values[k]
+
+
+def brookings(c):
+    """v1_GO022 (2012 Brookings swarm) against Slab2 at the members' own epicentres."""
+    m = pd.read_csv(FLT / "fault_surfaces_v1_members.csv")
+    B = c[c.ID.isin(m[m.surface_id.eq("v1_GO022")].event_id)]
+    sz = slab2_at(B.lat.values, B.lon.values)
+    return dict(n=len(B), depth_med=q(B.depth, 50), depth_min=float(B.depth.min()), depth_max=float(B.depth.max()),
+                v4_depth_med=q(B.v4_depth, 50), slab_min=float(sz.min()), slab_med=float(np.median(sz)),
+                slab_max=float(sz.max()), below_slab_med=float(np.median(B.depth.values - sz)),
+                v4_below_slab_med=float(np.median(B.v4_depth.values - sz)), sig_z_med=q(B.sig_z, 50),
+                dist_min_med=q(B.dist_min, 50), lat=q(B.lat, 50), lon=q(B.lon, 50),
+                years=B.t.dt.year.value_counts().sort_index().to_dict())
+
+
+SHORT = [("not recovered in", None), ("unstable under detection", "unstable"),
+         ("depth poorly constrained", "depth poorly constrained"), ("rectangle above the ground", "above surface"),
+         ("Blanco strand: dip", "strand dip set by band"), ("members moved a median", None),
+         ("centroid deeper than", "deep centroid"), ("weekday-daytime excess", "weekday-daytime excess"),
+         ("Brookings swarm", "Brookings 2012 depth (review P2)"), ("Mount St Helens deep population", "MSH deep (review P1)")]
+
+
+def short_flags(f):
+    """Short form of the faults piece's flags for the per-region surface tables."""
+    out = []
+    for part in str(f if pd.notna(f) else "").split("; "):
+        for key, lab in SHORT:
+            if part.startswith(key) or (key == "Brookings swarm" and key in part):
+                if key == "not recovered in":
+                    w = part.split()
+                    lab = f"not recovered {w[3]}/{w[5]}"
+                elif key == "members moved a median":
+                    lab = f"moved {part.split()[4]} km v4->v5.1"
+                out.append(lab)
+                break
+    return "; ".join(out)
+
+
+def interp_flags(s, c, br):
+    """Notes added here on top of the faults piece's own flags (column flt_flags, shortened in flt_flags_short)."""
+    s["flt_flags_short"] = s.flt_flags.map(short_flags)
     fl = []
     for _, r in s.iterrows():
         f = []
         if r.surface_id == "v1_GO022":
-            f.append("Brookings 2012 swarm: members moved +30.6 km to 52.8 km, below the slab top (15-20 km, Slab2); depth suspect")
+            f.append(f"Slab2 slab top {br['slab_min']:.1f}-{br['slab_max']:.1f} km (median {br['slab_med']:.1f}) at the "
+                     f"members' epicentres: v5.1 median {br['depth_med']:.1f} km is about {br['below_slab_med']:.0f} km "
+                     f"below it, v4 ({br['v4_depth_med']:.0f} km) was already about {br['v4_below_slab_med']:.0f} km below it; "
+                     "waveform review P2: S-P not monotonic with depth in the v5.1 grids (about 7-9 km and 56 km both fit)")
         if r.surface_id == "v1_ON028":
-            f.append("42 events at 23-38 km under Mount St. Helens: same suspect deep population as removed v1x_06")
-        big_ok = pd.notna(r.members_dz_ok_med) and abs(r.members_dz_ok_med) > 10 and r.members_n_ok >= 10
-        big_all = pd.notna(r.median_shift_z_km) and abs(r.median_shift_z_km) > 10 and r.frac_depth_ok >= 0.5
-        if (big_ok or big_all) and r.surface_id != "v1_GO022":
-            f.append(f"members moved {r.median_shift_z_km:+.1f} km in depth v4->v5.1 (median; depth-ok members "
-                     f"{r.members_dz_ok_med:+.1f} km)")
-        if pd.notna(r.J_sub80) and r.J_sub80 < 0.5:
-            f.append("not recovered on a random 80% subsample (verifier)")
+            f.append("members include Mount St Helens deep events (waveform review P1: likely false events from a weekly "
+                     "artificial signal on analog UW channels)")
         fl.append("; ".join(f))
     s["interp_flags"] = fl
     return s
@@ -188,6 +252,9 @@ def t4_faults(c, s):
         g = c[c.region.eq(r) & c.is_eq]
         fs = g[g.fit_like & ~g.region.eq("Axial")]
         on = g.assignment.isin(["fit member", "assigned"])
+        fitted = ~g.assignment.eq("region not fitted (Axial)")
+        if fitted.sum() < 0.5 * max(len(g), 1):    # Axial: not fitted, so no on/off-fault share
+            fitted = fitted & False
         rows.append(dict(region=r, surfaces=len(S), steep=int(S.dip.ge(45).sum()), members=int(S.n_events.sum()),
                          stable=int(S.stable.astype(str).eq("True").sum()),
                          recovered_sub80=int(S.J_sub80.ge(0.5).sum()),
@@ -197,7 +264,10 @@ def t4_faults(c, s):
                          ambiguous=int(g.assignment.eq("ambiguous").sum()),
                          none=int(g.assignment.eq("none").sum()),
                          not_fitted=int(g.assignment.eq("region not fitted (Axial)").sum()),
-                         pct_on_fault=100 * float(on.mean()) if len(g) else np.nan,
+                         pct_on_fault=100 * float(on[fitted].mean()) if fitted.any() else np.nan,
+                         on_strict=int(g.on_surface_strict.sum()),
+                         pct_on_strict=100 * float(g.on_surface_strict[fitted].mean()) if fitted.any() else np.nan,
+                         timing_screened=int(g.assignment.astype(str).str.startswith("non-earthquake timing").sum()),
                          fit_like=len(fs)))
     t = pd.DataFrame(rows)
     v0 = pd.read_csv(V0 / "fault_surfaces_v0_summary.csv", usecols=["surface_id", "rms_normal_km", "n_events", "region"])
@@ -226,14 +296,8 @@ def t5_families(c, pb):
     return fa
 
 
-def t6_anss(c):
-    f = "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/anss_2010-16.csv"
-    a = pd.read_csv(f)
-    a = a[a.type.eq("earthquake") & a.depth.notna()]
-    # drop fixed depths (us/at with round values, or no depth error)
-    fixed = a.depthError.isna() | a.depthError.le(0) | (a.net.isin(["us", "at", "pt"]) & a.depth.isin([0, 5, 10, 33, 35]))
-    a = a[~fixed].copy()
-    a["t"] = pd.to_datetime(a.time, utc=True, format="ISO8601")
+def anss_pairs(c, a):
+    """Match ANSS earthquakes to our events (3 s, 20 km, nearest in time), separately for v5.1 and v4 origins."""
     out = []
     for ver, tcol, lat, lon, dep in [("v5.1", "t", "lat", "lon", "depth"), ("v4", "t4", "v4_lat", "v4_lon", "v4_depth")]:
         E = c[c.is_eq & c[tcol].notna()].sort_values(tcol)
@@ -256,7 +320,20 @@ def t6_anss(c):
         x["dz"] = x[dep] - x.anss_depth
         x["ver"] = ver
         out.append(x.rename(columns={dep: "our_depth"}))
-    P = pd.concat(out)
+    return pd.concat(out)
+
+
+def t6_anss(c):
+    f = "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/anss_2010-16.csv"
+    a0 = pd.read_csv(f)
+    a0 = a0[a0.type.eq("earthquake") & a0.depth.notna()].copy()
+    a0["t"] = pd.to_datetime(a0.time, utc=True, format="ISO8601")
+    # main rule: drop fixed depths (no depth error, or us/at/pt at round values)
+    fixed = a0.depthError.isna() | a0.depthError.le(0) | (a0.net.isin(["us", "at", "pt"]) & a0.depth.isin([0, 5, 10, 33, 35]))
+    # strict rule (interp verifier): also drop every round depth 0/5/6/10/33/35 at any network
+    fixed_strict = a0.depthError.isna() | a0.depthError.le(0) | a0.depth.isin([0, 5, 6, 10, 33, 35])
+    P = anss_pairs(c, a0[~fixed])
+    Ps = anss_pairs(c, a0[~fixed_strict])
     rows = []
     for r in REGIONS:
         row = dict(region=r)
@@ -269,14 +346,16 @@ def t6_anss(c):
             row[f"n_AB_{ver}"] = len(Xg)
             row[f"dz_med_AB_{ver}"] = q(Xg.dz, 50)
         # paired on the same events
-        both = P[P.ver.eq("v4")].merge(P[P.ver.eq("v5.1")], on="ID", suffixes=("_4", "_5"))
-        b = both[both.region_5.eq(r)]
-        row["n_paired"] = len(b)
-        row["dz_paired_v4"] = q(b.dz_4, 50)
-        row["dz_paired_v51"] = q(b.dz_5, 50)
-        row["absdz_paired_v4"] = q(b.dz_4.abs(), 50)
-        row["absdz_paired_v51"] = q(b.dz_5.abs(), 50)
-        row["nets"] = ",".join(b.anss_net_5.value_counts().index[:3].astype(str)) if len(b) else ""
+        for tag, PP in [("", P), ("_strict", Ps)]:
+            both = PP[PP.ver.eq("v4")].merge(PP[PP.ver.eq("v5.1")], on="ID", suffixes=("_4", "_5"))
+            b = both[both.region_5.eq(r)]
+            row[f"n_paired{tag}"] = len(b)
+            row[f"dz_paired_v4{tag}"] = q(b.dz_4, 50)
+            row[f"dz_paired_v51{tag}"] = q(b.dz_5, 50)
+            if not tag:
+                row["absdz_paired_v4"] = q(b.dz_4.abs(), 50)
+                row["absdz_paired_v51"] = q(b.dz_5.abs(), 50)
+                row["nets"] = ",".join(b.anss_net_5.value_counts().index[:3].astype(str)) if len(b) else ""
         rows.append(row)
     return pd.DataFrame(rows), P
 
@@ -327,38 +406,115 @@ def t7_benchmarks(c):
 
 
 def msh_weekly(c):
-    """Time-of-week of deep events near Mount St. Helens (faults piece finding)."""
+    """Time of week of deep events near Mount St. Helens, in UTC and in local (Pacific) time.
+
+    The waveform review (P1) found a weekly artificial signal on the analog UW channels HSR, EDM and STD.UW; its scan
+    covered 19:05-19:30 UTC. Here the deep events are binned in local time too (PST and PDT)."""
     E = c[c.is_eq & (hav(c.lat.values, c.lon.values, 46.20, -122.19) < 15)].copy()
     E["dow"] = E.t.dt.dayofweek
     E["hm"] = E.t.dt.hour + E.t.dt.minute / 60
+    tl = E.t.dt.tz_convert("America/Los_Angeles")
+    E["dow_l"] = tl.dt.dayofweek
+    E["hm_l"] = tl.dt.hour + tl.dt.minute / 60 + tl.dt.second / 3600
+    E["dst"] = tl.map(lambda x: bool(x.dst()))
+    E["date_l"] = tl.dt.date
     E["deep"] = E.depth > 30
-    wed = E.dow.eq(2) & E.hm.between(19 + 14 / 60, 19 + 20 / 60)
+    wed = E.dow.eq(2) & E.hm.between(19 + 14 / 60, 19 + 21 / 60)          # review P1 window (UTC)
+    wl = E.dow_l.eq(2) & E.hm_l.between(11.5, 13.0)                       # local window
+    c1 = E.dow_l.eq(2) & E.hm_l.between(11 + 50 / 60, 12 + 5 / 60)
+    c2 = E.dow_l.eq(2) & E.hm_l.between(12 + 10 / 60, 12 + 25 / 60)
+    tue = E.dow_l.eq(1) & E.hm_l.between(11.5, 13.0)
+    D = E[E.deep]
+    box = c.is_eq & c.lat.between(46.05, 46.30) & c.lon.between(-122.35, -122.10)
+    days_by_dow = D.groupby("date_l").dow_l.first().value_counts().sort_index()
+    # The review's continuous-data scan (19:05-19:30 UTC, Tuesdays and Wednesdays): split its 19:14-19:21 UTC
+    # detections by daylight and standard time (in PST the same local time is 20:14-20:21 UTC, outside the scan).
+    scan = {}
+    f = REVIEW / "work" / "p1_cont" / "weekly_scan_rows.csv"
+    if f.exists():
+        w = pd.read_csv(f)
+        w["day"] = pd.to_datetime(w.day)
+        w = w[w.status.eq("ok") & w.day.dt.dayofweek.eq(2) & w.day.between("2011-05-01", "2013-09-30")].copy()
+        w["dst"] = [bool((pd.Timestamp(d).tz_localize("UTC") + pd.Timedelta(hours=19)).tz_convert(
+            "America/Los_Angeles").dst()) for d in w.day]
+        w["hit"] = w.quiet_s.ge(10) & w.quiet_start_min.between(14, 21)
+        for sta, g in w.groupby("sta"):
+            scan[sta] = dict(wed_pdt=int(g.dst.sum()), hit_pdt=int((g.hit & g.dst).sum()),
+                             wed_pst=int((~g.dst).sum()), hit_pst=int((g.hit & ~g.dst).sum()))
     return dict(n=len(E), deep=int(E.deep.sum()), deep_wed_window=int((E.deep & wed).sum()),
                 shallow_wed_window=int((~E.deep & wed).sum()),
-                deep_tiers=E[E.deep].tier.value_counts().to_dict(),
-                deep_sigz_med=q(E[E.deep].sig_z, 50), deep_distmin_med=q(E[E.deep].dist_min, 50),
-                deep_v4_depth_med=q(E[E.deep].v4_depth, 50), deep_depth_med=q(E[E.deep].depth, 50),
-                deep_dow=E[E.deep].dow.value_counts().sort_index().to_dict(),
-                deep_by_year=E[E.deep].t.dt.year.value_counts().sort_index().to_dict())
+                deep_wed_local_1130_1300=int((E.deep & wl).sum()),
+                deep_wed_local_dates=int(E[E.deep & wl].date_l.nunique()),
+                deep_wed_local_pst=int((E.deep & wl & ~E.dst).sum()), deep_wed_local_pdt=int((E.deep & wl & E.dst).sum()),
+                deep_wed_local_1150_1205=int((E.deep & c1).sum()), deep_wed_local_1210_1225=int((E.deep & c2).sum()),
+                deep_wed_local_in_utc_window=int((E.deep & wl & wed).sum()),
+                deep_tue_local_1130_1300=int((E.deep & tue).sum()),
+                deep_outside_local_window=int((E.deep & ~wl).sum()),
+                shallow_wed_local_1130_1300=int((~E.deep & wl).sum()),
+                deep_wed_local_by_year=E[E.deep & wl].t.dt.year.value_counts().sort_index().to_dict(),
+                deep_wed_local_first=str(E[E.deep & wl].t.min())[:10], deep_wed_local_last=str(E[E.deep & wl].t.max())[:10],
+                deep_days_by_local_dow=days_by_dow.to_dict(),
+                deep_tiers=D.tier.value_counts().to_dict(),
+                deep_sigz_med=q(D.sig_z, 50), deep_distmin_med=q(D.dist_min, 50),
+                deep_v4_depth_med=q(D.v4_depth, 50), deep_depth_med=q(D.depth, 50),
+                deep_dow=D.dow.value_counts().sort_index().to_dict(),
+                deep_dow_local=D.dow_l.value_counts().sort_index().to_dict(),
+                deep_by_year=D.t.dt.year.value_counts().sort_index().to_dict(),
+                review_box_located_eq=int(box.sum()), review_box_deep30=int((box & (c.depth > 30)).sum()),
+                review_scan_2011_05_to_2013_09=scan)
 
 
 MODEL_NODES = [-3, -1, 1, 3, 5, 7, 9, 12, 15, 18, 21, 25, 29, 34, 40, 47, 55, 65, 80]
+SPIKE_REGIONS = ["Axial", "Blanco", "Gorda", "Mendocino", "Offshore forearc", "Puget/Georgia", "Other onshore", "Cascades"]
 
 
-def t8_node_pileups(c):
-    """Events piled on the depth nodes of model v0.3.1 (linear interpolation between nodes makes gradient kinks)."""
+def spike(g, z, hw=0.1):
+    """Sharp-spike ratio: events within +-hw km of z over the mean of the two equal bins centred at z +- 3hw.
+    Local, so a broad mode does not count as a spike (the first build's 0.25/1.25 km metric measured the mode)."""
+    w = int((np.abs(g - z) <= hw).sum())
+    side = ((np.abs(g - (z - 3 * hw)) <= hw).sum() + (np.abs(g - (z + 3 * hw)) <= hw).sum()) / 2
+    return w, float(side)
+
+
+def t8_depth_spikes(c):
+    """Spike ratio at every integer km 1-40 (model v0.3.1 nodes and non-node integers) and at half-integers (controls)."""
     E = c[c.is_eq]
     rows = []
-    for r in REGIONS:
+    for r in SPIKE_REGIONS:
         g = E[E.region.eq(r)].depth.values
-        for z in MODEL_NODES:
-            win = np.abs(g - z) <= 0.25
-            ring = (np.abs(g - z) > 0.25) & (np.abs(g - z) <= 1.25)
-            exp = ring.sum() * 0.5 / 2.0        # ring is 2 km wide, window 0.5 km
-            if win.sum() >= 30 and win.sum() > 1.5 * max(exp, 1):
-                rows.append(dict(region=r, node_km=z, n_window=int(win.sum()), n_expected=round(float(exp), 1),
-                                 excess=int(win.sum() - exp), excess_pct_of_region=100 * (win.sum() - exp) / len(g)))
-    return pd.DataFrame(rows)
+        for z in np.arange(1.0, 41.0, 0.5):
+            w, sd = spike(g, z)
+            if w + sd < 40:
+                continue
+            kind = "half-integer" if z % 1 else ("model node" if int(z) in MODEL_NODES else "integer, not a node")
+            rows.append(dict(region=r, depth_km=z, kind=kind, n_within_0p1=w, n_side_mean=round(sd, 1),
+                             ratio=w / max(sd, 1.0)))
+    t = pd.DataFrame(rows)
+    summ = t.groupby(["region", "kind"]).ratio.median().unstack()
+    summ["n_ge2_node"] = t[t.kind.eq("model node") & t.ratio.ge(2)].groupby("region").size()
+    summ["n_ge2_integer_not_node"] = t[t.kind.eq("integer, not a node") & t.ratio.ge(2)].groupby("region").size()
+    summ["n_ge2_half"] = t[t.kind.eq("half-integer") & t.ratio.ge(2)].groupby("region").size()
+    summ["spikes_ge2"] = t[t.ratio.ge(2) & ~t.kind.eq("half-integer")].groupby("region").apply(
+        lambda x: ", ".join(f"{z:.0f}{'*' if k == 'model node' else ''} ({rt:.1f})" for z, k, rt in
+                            zip(x.depth_km, x.kind, x.ratio)))
+    summ = summ.reindex(SPIKE_REGIONS).fillna({"n_ge2_node": 0, "n_ge2_integer_not_node": 0, "n_ge2_half": 0})
+    # Axial: the first build's 'excess at the 3 km node' and the same metric at 3.5 km (not a node)
+    A = E[E.region.eq("Axial")].depth.values
+    ax = {}
+    for z in (3.0, 3.5):
+        win = int((np.abs(A - z) <= 0.25).sum())
+        ring = ((np.abs(A - z) > 0.25) & (np.abs(A - z) <= 1.25)).sum() * 0.5 / 2.0
+        ax[f"old_metric_{z}"] = dict(n_window=win, expected=round(float(ring), 1), ratio=round(win / ring, 2))
+        ax[f"spike_{z}"] = round(spike(A, z)[0] / max(spike(A, z)[1], 1), 2)
+    Ab = A[(A >= 2.9) & (A <= 3.6)]
+    ax["share_2p9_3p6_bsl"] = round(100 * len(Ab) / len(A), 1)
+    # Blanco: where exactly do the integer spikes sit (Earth-flattening shift)?
+    B = E[E.region.eq("Blanco")].depth.values
+    pk = {}
+    for z in (12, 15, 19):
+        h, b = np.histogram(B, bins=np.arange(z - 0.6, z + 0.6, 0.05))
+        pk[str(z)] = round(float(b[np.argmax(h)]) + 0.025, 3)
+    return t, summ.reset_index(), dict(axial=ax, blanco_peak_bin_centre=pk)
 
 
 def region_extras(c):
@@ -403,7 +559,47 @@ def region_extras(c):
     for r in ["Puget/Georgia", "Other onshore", "Cascades", "Offshore forearc"]:
         g = E.region.eq(r) & (E.bsf < 1.0)
         x[f"near_surface_{r}"] = dict(n=int(g.sum()), weekday_daytime=float(wd[g].mean()) if g.any() else np.nan,
-                                      region_weekday_daytime=float(wd[E.region.eq(r)].mean()))
+                                      region_weekday_daytime=float(wd[E.region.eq(r)].mean()),
+                                      floor_limited=float(E[g].floor_limited.mean()) if g.any() else np.nan)
+    # Weekday-daytime excess by depth below the surface (Puget/Georgia + Other onshore): the excess over the share of
+    # events deeper than 12 km below the surface sizes the blast-like population (interp verifier).
+    O = E[E.region.isin(["Puget/Georgia", "Other onshore"])]
+    wdo = wd[O.index]
+    base = float(wdo[O.bsf > 12].mean())
+    rows = []
+    for lo, hi in [(0, 1), (1, 2), (2, 3), (3, 5), (5, 8), (8, 12), (12, 20), (20, 40)]:
+        sel = (O.bsf >= lo) & (O.bsf < hi)
+        n = int(sel.sum())
+        sh = float(wdo[sel].mean()) if n else np.nan
+        rows.append(dict(bsf_lo=lo, bsf_hi=hi, n=n, weekday_daytime=sh, floor_limited=float(O[sel].floor_limited.mean()),
+                         excess=n * (sh - base) / (1 - base) if n else 0.0))
+    x["daytime_by_depth"] = dict(base_deeper_12=base, bins=rows,
+                                 excess_above_8=float(sum(max(r_["excess"], 0) for r_ in rows if r_["bsf_hi"] <= 8)),
+                                 n_above_8=int(sum(r_["n"] for r_ in rows if r_["bsf_hi"] <= 8)))
+    # Axial assignment (faults): the AX fault box against the Axial region label
+    Ax = E[E.region.eq("Axial")]
+    x["axial_assignment"] = dict(n=len(Ax), not_fitted=int(Ax.assignment.eq("region not fitted (Axial)").sum()),
+                                 none=int(Ax.assignment.eq("none").sum()),
+                                 box_not_fitted=int(E.assignment.eq("region not fitted (Axial)").sum()),
+                                 box_not_fitted_other_regions=E[E.assignment.eq("region not fitted (Axial)") &
+                                                                ~E.region.eq("Axial")].region.value_counts().to_dict())
+    # Migration test of the clustering piece: how many families were tested and how many pass
+    fa = pd.read_csv(CLU / "families_zbz_v51.csv")
+    res = fa[fa.mig_resolvable.astype(str).eq("True")]
+    mig = fa[fa.mig_migrating.astype(str).eq("True")]
+    bonf = 0.05 / max(len(res), 1)
+    x["migration"] = dict(n_tested=int(fa.mig_p_perm.notna().sum()), n_resolvable=len(res), n_migrating=len(mig),
+                          bonferroni_p=bonf,
+                          families=[dict(family_id=int(r_.family_id), region=r_.region_v51, type=r_.type, n=int(r_.n),
+                                         n_all=int(r_.n_all), start=str(r_.start_all)[:10], rho=float(r_.mig_rho),
+                                         p_perm=float(r_.mig_p_perm), v_radial=float(r_.mig_v_radial_km_day),
+                                         passes_bonferroni=bool(r_.mig_p_perm < bonf),
+                                         days=float(r_.duration_all_days))
+                                    for r_ in mig.itertuples()])
+    dsm = CLU / "depth_swarm_vs_ma_families.csv"
+    if dsm.exists():
+        d = pd.read_csv(dsm)
+        x["depth_swarm_vs_ma"] = d[d.events.eq("all")].drop(columns="events").to_dict("records")
     # Gorda: ridge vs interior
     G = E[E.region.eq("Gorda")]
     ridge = G.pb_class.eq("OSR") & G.pb_km.lt(15)
@@ -458,19 +654,24 @@ def main():
     t2 = t2_sharpness(c)
     t3 = t3_clusters(c)
     t3b = t3b_boxes()
+    br = brookings(c)
     s = surface_region(c, load_surfaces())
-    s = interp_flags(s, c)
+    s = interp_flags(s, c, br)
     t4 = t4_faults(c, s)
     fa = t5_families(c, pb)
     t6, P = t6_anss(c)
     t7 = t7_benchmarks(c)
     mw = msh_weekly(c)
-    t8 = t8_node_pileups(c)
-    t8.to_csv(OUT / "t8_node_pileups.csv", index=False, float_format="%.2f")
-    print(t8.to_string())
+    t8, t8s, t8x = t8_depth_spikes(c)
+    t8.to_csv(OUT / "t8_depth_spikes.csv", index=False, float_format="%.2f")
+    t8s.to_csv(OUT / "t8_depth_spikes_summary.csv", index=False, float_format="%.2f")
+    print(t8s.to_string())
     ex = region_extras(c)
+    ex["brookings"] = br
+    ex["depth_spikes"] = t8x
     (OUT / "region_extras.json").write_text(json.dumps(ex, indent=1, default=str))
-    print(json.dumps(ex, indent=1, default=str)[:6000])
+    print(json.dumps({k: ex[k] for k in ["brookings", "depth_spikes", "daytime_by_depth", "axial_assignment",
+                                         "migration"]}, indent=1, default=str))
     for name, t in [("t1_locations", t1), ("t2_sharpness", t2), ("t3_clusters", t3), ("t3b_boxes", t3b),
                     ("t4_faults", t4), ("t6_anss_depth", t6), ("t7_benchmarks", t7)]:
         t.to_csv(OUT / f"{name}.csv", index=False, float_format="%.3f")
@@ -479,13 +680,11 @@ def main():
     P.to_csv(BIG / "anss_pairs.csv.gz", index=False, float_format="%.3f")
     (OUT / "msh_weekly.json").write_text(json.dumps(mw, indent=1, default=str))
     print(t1.to_string())
-    print(t2.to_string())
-    print(t3.to_string())
     print(t3b.to_string())
     print(t4.to_string())
     print(t6.to_string())
     print(t7.to_string())
-    print(mw)
+    print(json.dumps(mw, indent=1, default=str))
 
 
 if __name__ == "__main__":

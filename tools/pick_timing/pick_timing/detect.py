@@ -355,8 +355,8 @@ def run_detect(rd: pd.DataFrame, p: dict, workers=4, restarts=None, cc=None, cc_
     restarts = restarts or {}
     frames = station_frames(rd)
     log(f"detect-clock: {len(frames)} stations, {sum(len(v) for v in frames.values())} picks with rd")
-    jobs = [(s, x, p, restarts.get(s), p["seed"] + k, "real") for k, (s, x) in enumerate(frames.items())]
-    jobs.sort(key=lambda j: -len(j[1]))
+    jobs = [(s, x, p, restarts.get(s), p["seed"] + k, "real") for k, (s, x) in enumerate(sorted(frames.items()))]
+    jobs.sort(key=lambda j: (-len(j[1]), j[0]))
     t0 = time.time()
     res = _pool_map(_station_job, jobs, workers)
     log(f"  real screen done in {time.time() - t0:.0f} s")
@@ -414,19 +414,19 @@ def run_false_alarm(frames, screen, p, workers, log=print):
     scr = screen[screen.status == "screened"]
     p2 = dict(p, _tau=dict(zip(scr.station, scr.tau)))
     jobs = []
-    k = 10_000
-    for st in scr.station:
+    import zlib
+
+    def seed(st, mode):  # depends on station and run only (not on the order of the screen table)
+        return p["seed"] + zlib.crc32(f"{st}|{mode}".encode())
+
+    for st in sorted(scr.station):
         x = frames[st]
-        for i in range(fa.get("n_synthetic", 1)):
-            jobs.append((st, x, p2, None, p["seed"] + k, f"synthetic{i}"))
-            k += 1
-        for i in range(fa.get("n_permuted", 1)):
-            jobs.append((st, x, p2, None, p["seed"] + k, f"permuted{i}"))
-            k += 1
-        for rate, days in fa.get("inject", []):
-            jobs.append((st, x, p2, None, p["seed"] + k, f"inject:{rate:g}:{days:g}"))
-            k += 1
-    jobs.sort(key=lambda j: -len(j[1]))
+        modes = [f"synthetic{i}" for i in range(fa.get("n_synthetic", 1))] + \
+                [f"permuted{i}" for i in range(fa.get("n_permuted", 1))] + \
+                [f"inject:{rate:g}:{days:g}" for rate, days in fa.get("inject", [])]
+        for mode in modes:
+            jobs.append((st, x, p2, None, seed(st, mode), mode))
+    jobs.sort(key=lambda j: (-len(j[1]), j[0], j[5]))
     t0 = time.time()
     res = _pool_map(_station_job, jobs, workers)
     log(f"  false-alarm / injection runs ({len(jobs)}) done in {time.time() - t0:.0f} s")

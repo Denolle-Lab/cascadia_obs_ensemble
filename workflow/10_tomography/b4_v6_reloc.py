@@ -432,7 +432,7 @@ def cmd_nll(a):
     tasks.sort(key=lambda x: -cost.get(x[0], 0))
     t0 = time.time()
     log(f"it{k}: {len(tasks)} NLLoc jobs to run ({len(jobs) - len(tasks)} done before)")
-    rc = run_pool(tasks, f"it{k}", a.nproc, ramp=(0.5 if k == 0 else 0.05), on_done=done)
+    rc = run_pool(tasks, f"it{k}", a.nproc, ramp=(0.5 if k == 0 else 0.05), on_done=done)   # ~0.35 GB each (box grids)
     bad = sorted(n for n, r in rc.items() if r != 0)
     if bad:
         raise SystemExit(f"it{k}: {len(bad)} NLLoc jobs failed, e.g. {bad[:5]} (see their nlloc.log)")
@@ -1011,7 +1011,7 @@ def cmd_fallback(a):
         def done(name, r, rd=rd):
             if r == 0:
                 (rd / name / "done").write_text("")
-        rc = run_pool(tasks, f"{kind} pass", a.nproc, ramp=0.5, on_done=done)
+        rc = run_pool(tasks, f"{kind} pass", a.nproc, ramp=0.5, on_done=done, est_default=1.6)   # full fine/wide grids
         bad = sorted(n for n, r in rc.items() if r != 0)
         if bad:
             raise SystemExit(f"{kind} pass: {len(bad)} NLLoc jobs failed: {bad[:5]}")

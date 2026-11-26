@@ -729,9 +729,14 @@ MC_LAYERS = [  # key, label, file, column
 MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs", "mc_gft95": "sigma_gft"}
 
 
+# Mc grids (main(): --mc-maps): with the converged magnitudes (D-B091) the converged Mc grids; with --mag stored the
+# Mc grids of the stored magnitudes (data/catalog_v4/mc_maps), so that the map and the events use the same magnitudes
+MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes (D-B091)"}
+
+
 def mc_grids():
     """Mc on the 0.1 deg grid (v4_mc_maps.py): uint8 Mc*20+40 and sigma*50, 255 = no value."""
-    d = dd("catalog_v4", "mc_maps", "mc_grid.csv").parent
+    d = Path(MC["dir"]) if MC["dir"] else dd("catalog_v4", "mc_maps", "mc_grid.csv").parent
     if not (d / "mc_grid.csv").exists():
         return None, None
     base = pd.read_csv(d / "mc_grid.csv")
@@ -754,7 +759,8 @@ def mc_grids():
     stops = [[float(r[0])] + [int(round(float(x))) for x in r[1].split("/")] for r in cpt]
     stops.append([float(cpt[-1][2])] + [int(round(float(x))) for x in cpt[-1][3].split("/")])
     meta = dict(nx=len(lons), ny=len(lats), west=float(lons[0]), south=float(lats[0]), step=float(np.round(lons[1] - lons[0], 4)),
-                layers=layers, cpt=stops)
+                layers=layers, cpt=stops, source=MC["source"])
+    print(f"  Mc grids: {d} ({MC['source']})")
     return out, meta
 
 
@@ -820,9 +826,15 @@ def main(argv=None):
     ap.add_argument("--clusters-catalog", default=CLU["cat"], help="registry id of the catalog whose locations the "
                     f"families were computed on; the Cluster mode is offered in its view only (default {CLU['cat']})")
     mag_paths.add_argument(ap, "v4.1")
+    ap.add_argument("--mc-maps", help="folder of the Mc grids (mc_grid*.csv, mc.cpt); default: the converged grids "
+                    "(magnitude_converged/mc_maps_v41) with the converged magnitudes, data/catalog_v4/mc_maps with --mag stored")
     a = ap.parse_args(argv)
     global MAG
     MAG = mag_paths.v41(a.mag)
+    if a.mc_maps:
+        MC.update(dir=Path(a.mc_maps), source=f"Mc grids from {a.mc_maps}")
+    elif str(a.mag or "") == "stored" or "magnitude_converged" not in str(MAG):
+        MC.update(dir=None, source="stored Route A magnitudes (before D-B091)")
     print(f"magnitudes: {MAG}")
     print("building atlas data")
     SEL.update(rel=a.catalog2, rel_label=a.catalog2_label, rel_note=a.catalog2_note, before=a.catalog_before,

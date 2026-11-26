@@ -1648,7 +1648,7 @@ function drawLegend() {
   const mcLeg = mcL ? `<div><h4>Magnitude of completeness, ${mcL.label}</h4><div class="ramp" style="background:linear-gradient(90deg,${
     [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(v => `rgb(${mcCol(v).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.${MCM.source ? ` From the ${esc(MCM.source)}.` : ""}</div></div>` : "";
   const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
   const tIv = tV ? tIso(tV) : null, tRes = tV && TS.mask === -1 ? tResKm(tV) : "";
   const tomoLeg = tV ? `<div><h4>Velocity model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}: ${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${

@@ -1,0 +1,24 @@
+{
+ "rmin": 0.5,
+ "rcap_min": 10.0,
+ "q": 0.5,
+ "df_main": 1.6,
+ "catalog": "/wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
+ "magnitudes": "/wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
+ "magnitudes_md5": "0daf48808af466859e6804793486c2a5",
+ "mc_b": "/wd1/mdenolle_data/magnitude_converged/mc_maps_v41/mc_regional.csv",
+ "n_rows": 172342,
+ "n_used": 168861,
+ "excluded": {
+  "": 168861,
+  "not_earthquake": 3322,
+  "no_hypocentre": 159
+ },
+ "catalog_version": "v6.0",
+ "magnitudes_column": "M (catalog, D-B091 converged)",
+ "mc_best_source": "/wd1/mdenolle_data/magnitude_converged/mc_maps_v41/mc_regional.csv",
+ "M_source": {
+  "v5.1_converged (D-B091, v5.1 hypocentres)": 130348,
+  "v4.1_converged (D-B091, v4 hypocentres)": 764
+ }
+}

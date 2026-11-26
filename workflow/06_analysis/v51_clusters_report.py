@@ -1,9 +1,11 @@
 """Figures and self-contained HTML report for the catalog v5.1 clustering (v51_clusters_zbz.py, v51_swarms.py).
 
-Reads data/catalog_v5/v5.1_analysis/clusters/ (and the event table on /wd1), the v4 results in
-data/catalog_v4/, and writes fig_*.png and catalog_v51_clusters_report.html (figures embedded) in the same
-folder.  Run after v51_clusters_zbz.py and v51_swarms.py:
+Reads data/catalog_v5/v5.1_analysis/clusters/ (and the event table on /wd1), the v4 results of the same
+magnitudes (stored: the frozen copy of origin/main 5d6658bf, see v51_clusters_zbz.V4_STORED), and writes fig_*.png and
+catalog_v51_clusters_report.html (figures embedded) in the same folder. The text describes the committed run of the
+stored magnitudes (--mag stored, the default here). Run after v51_clusters_zbz.py and v51_swarms.py:
     python v51_clusters_report.py [--no-map]
+The catalog v6.0 report is v60_clusters_report.py.
 """
 from __future__ import annotations
 
@@ -27,9 +29,10 @@ from paper_style import use, FULL, INK, MUTED  # noqa: E402
 import v51_clusters_zbz as Z  # noqa: E402
 from v51_clusters_zbz import REGIONS, REGION_NAMES, REG_ORDER, KM, YR  # noqa: E402
 
+Z.configure("v5.1", "stored")
 OUT = Z.OUT
-V4 = Z.V4
-V4S = Z.ROOT / "data/catalog_v4/swarms"
+V4 = Z.REFS["v4"]["dir"]
+V4S = Z.REFS["v4"]["swarms"]
 TYPE_COLORS = {"mainshock-aftershock": "#0072B2", "swarm": "#D55E00", "multiplet": "#009E73",
                "background": "#9A9A9A"}
 REFS = [
@@ -1356,7 +1359,11 @@ def _kept_same_type(s4):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--no-map", action="store_true")
+    ap.add_argument("--mag", default="stored", help="v5.1 magnitudes of the run to report (default stored)")
     a = ap.parse_args()
+    global OUT, V4, V4S
+    Z.configure("v5.1", a.mag)
+    OUT, V4, V4S = Z.OUT, Z.REFS["v4"]["dir"], Z.REFS["v4"]["swarms"]
     use()
     d = load()
     df = Z.prepare(Z.load_all())

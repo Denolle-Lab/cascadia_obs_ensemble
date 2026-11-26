@@ -1,0 +1,5 @@
+run,label,n_analysis,pct_background,n_families,n_MA,n_swarm,n_multiplet,n_MA_ge5
+A,"v5.1 locations, stored M (v5.1 run)",30201,62.280,2097,994,200,903,132
+B,"v5.1 locations, converged M",30927,59.737,2092,975,200,917,146
+C,"v6.0 locations, stored M (variant storedM)",30123,61.244,2127,1000,208,919,131
+D,"v6.0 locations, converged M (v6.0 run)",30754,59.576,2101,975,214,912,147

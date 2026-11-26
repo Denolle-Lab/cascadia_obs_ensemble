@@ -212,6 +212,29 @@ def grid_manifest_md5():
     return md5(GRID_MD5) if GRID_MD5.exists() else None
 
 
+def cut_fine(args):
+    """write the tile-box cut of a fine grid: the fine grids are on the 1 km lattice with integer origins and z' -5..80 km,
+    as the tile boxes, so the cut holds exactly the grid's node values (1.5 MB instead of ~80 MB per NLLoc grid in
+    memory); header lines after the first are copied."""
+    src, dst, x0, y0, nx_b, ny_b = args
+    h = Path(f"{src}.hdr").read_text().splitlines()
+    t = h[0].split()
+    nx, ny, nz = (int(v) for v in t[:3])
+    ox, oy, oz, dx, dy, dz = (float(v) for v in t[3:9])
+    if not (dx == dy == dz == 1.0 and oz == RN.Z0 and nz == RN.NZ and ox == round(ox) and oy == round(oy)):
+        raise ValueError(f"{src}: grid not on the 1 km lattice of the tile boxes")
+    i0, j0 = int(round(x0 - ox)), int(round(y0 - oy))
+    if i0 < 0 or j0 < 0 or i0 + nx_b > nx or j0 + ny_b > ny:
+        raise ValueError(f"{src}: tile box outside the grid")
+    a = np.memmap(f"{src}.buf", dtype="<f4", mode="r", shape=(nx, ny, nz))
+    sub = np.ascontiguousarray(a[i0:i0 + nx_b, j0:j0 + ny_b, :])
+    sub.tofile(f"{dst}.buf.tmp")
+    os.replace(f"{dst}.buf.tmp", f"{dst}.buf")
+    t[0], t[1], t[3], t[4] = str(nx_b), str(ny_b), f"{x0:.6f}", f"{y0:.6f}"
+    Path(f"{dst}.hdr").write_text(" ".join(t) + "\n" + "\n".join(h[1:]) + "\n")
+    return dst
+
+
 def cmd_plan(a):
     root = Path(a.root)
     P = plan_dir(root)
@@ -229,7 +252,7 @@ def cmd_plan(a):
         tiles = tiles[tiles.tile.isin(want)]
     roots = (f"{FINE}/cascadia3d", f"{WIDE}/cascadia3d")
     (P / "obs").mkdir(parents=True)
-    rows, jobs, counts, events = [], {}, [], []
+    rows, jobs, counts, events, cuts = [], {}, [], [], []
     for t in tiles.itertuples():
         blocks = read_blocks(OBS / f"{t.tile}.obs")
         box = tile_box(t.ix, t.iy)
@@ -247,13 +270,16 @@ def cmd_plan(a):
                 raise SystemExit(f"{t.tile}: no grid holds the box for {ph}.{sta}")
             if not RN.headers(roots[i])[(ph, sta)][6]:
                 raise SystemExit(f"{t.tile}: incomplete grid buffer {roots[i]}.{ph}.{sta}")
-            for e in ("hdr", "buf"):
-                ln = bd / f"cascadia3d.{ph}.{sta}.time.{e}"
-                tgt = Path(roots[i]).parent / f"cascadia3d.{ph}.{sta}.time.{e}"
-                if not ln.is_symlink():
-                    ln.symlink_to(tgt)
-                if os.readlink(ln) != str(tgt):
-                    raise SystemExit(f"{ln} points to {os.readlink(ln)}, not {tgt}")
+            if i == 0:          # fine grid: exact tile-box cut (cut_fine), written below in parallel
+                cuts.append((f"{roots[0]}.{ph}.{sta}.time", str(bd / f"cascadia3d.{ph}.{sta}.time"), *box))
+            else:               # wide grid (2 km): a link, NLLoc and Loc2ssst interpolate it as in the tests
+                for e in ("hdr", "buf"):
+                    ln = bd / f"cascadia3d.{ph}.{sta}.time.{e}"
+                    tgt = Path(roots[i]).parent / f"cascadia3d.{ph}.{sta}.time.{e}"
+                    if not ln.is_symlink():
+                        ln.symlink_to(tgt)
+                    if os.readlink(ln) != str(tgt):
+                        raise SystemExit(f"{ln} points to {os.readlink(ln)}, not {tgt}")
             used[f"{ph}.{sta}"] = ("fine", "wide")[i]
             if n:
                 counts.append((t.tile, ph, sta, n))
@@ -271,6 +297,10 @@ def cmd_plan(a):
                          box_x0=t.box_x0, box_y0=t.box_y0, box_x1=t.box_x1, box_y1=t.box_y1, n_events=len(blocks),
                          n_stph=len(sp), n_fine=sum(used[f"{p_}.{s_}"] == "fine" for p_, s_ in sp),
                          n_wide=sum(used[f"{p_}.{s_}"] == "wide" for p_, s_ in sp), n_base_links=len(used)))
+    t0 = time.time()
+    with ProcessPoolExecutor(16) as ex:
+        n_cut = len(list(ex.map(cut_fine, cuts, chunksize=64)))
+    log(f"plan: {n_cut} fine base grids cut to their tile box in {(time.time() - t0) / 60:.1f} min")
     tl = pd.DataFrame(rows)
     tl.to_csv(P / "tiles.csv", index=False)
     (P / "jobs.json").write_text(json.dumps(jobs, indent=0))
@@ -280,6 +310,7 @@ def cmd_plan(a):
         raise SystemExit(f"{int(ev.ID.duplicated().sum())} events in more than one tile")
     ev.to_parquet(P / "events.parquet", index=False)
     meta = dict(obs=str(OBS), obs_meta_md5=md5(OBS / "obs_meta.json"), fine=str(FINE), wide=str(WIDE),
+                base="fine grids cut to the tile box (exact node values), wide grids linked", fine_cuts=n_cut,
                 grid_manifest=str(GRID_MD5), grid_manifest_md5=grid_manifest_md5(), margin_km=MARGIN, tile_km=TILE,
                 schedule=SCHEDULE, tiles=len(tl), jobs=len(jobs), events=len(ev), station_phases=int(tl.n_stph.sum()),
                 station_phases_fine=int(tl.n_fine.sum()), station_phases_wide=int(tl.n_wide.sum()),

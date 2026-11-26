@@ -970,3 +970,15 @@ the grids (no zarr copies, no grids); (2) the eight fault surfaces v0 files remo
 (3) the ver5/ver6 amplitude parquet parts and the PickBlue pick parts packed into one stored zip per set (data unchanged:
 recomputing them takes days of waveform processing). Picks, catalogs and READMEs stay. Every replacement is uploaded and
 md5-checked before the files it replaces are deleted; local copies are kept. The draft stays private (no publish).
+
+### D-B084 B5 relative relocation = NLL-SSST-coherence (adopted, 2026-11-25, PI, in session -18; from the D-B078 comparison)
+Fair held-out test on 4 sets (axial, blanco, msh, jdf; every code started from NonLinLoc relocated without the held-out
+stations; tomo/b5 notes/b5_code_comparison.md, data/tomo_v1/b5/cmp/report.md): NLL-SSST-coherence has the smallest
+tails and is best where data are sparse (Blanco, offshore); tomoDD + the D-B081 floor has the sharpest cluster cores
+(Axial, Mount St Helens, JdF); GrowClust3D is out (largest tails, events above the surface). The first round's tomoDD
+lead came from starting at the v5.1 positions, which used the held-out stations. The PI chose NLL-SSST-coherence. Its
+schedule was then fixed on independent clusters by the other session: SSST 9999 -> 16 -> 8 -> 4 km and coherence
+(D-B095, D-B096; Mendocino without coherence, D-B098), which is also the v6.0 recipe, so B5 and v6.0 share one code.
+tomoDD + floor (D-B081) stays available as a cross-check for dense clusters; it gives no catalog column. Open for the
+PI: whether v5.2 (B5 on v5.1, D-B058/D-B079) is still wanted now that v6.0 applies the same code in the re-inverted
+model.

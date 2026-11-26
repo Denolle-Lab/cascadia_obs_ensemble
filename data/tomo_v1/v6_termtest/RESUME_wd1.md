@@ -73,3 +73,45 @@ at puget (PNSN) and mtj (NCSN, 39 events). No event above the surface. The coher
 events (16-32 % puget, 42-56 % mtj, 0.4-2 % blancow in the fold runs), so most of the gap is static vs SSST; on rows
 relocated by coherence in both arms B - A is -3.5 to -13 ms. Small copies in the repo: data/tomo_v1/v6_termtest/.
 Disk: runs/ 33 GB (oct-trees of static_oct and ssst/it5, SSST grids g0-g4); safe to delete after the PI's review.
+
+# Confirmatory test: SSST stopping distance (D-B095 follow-up, coordinator request 2026-11-25 ~15:50)
+
+## Decision rule (written 2026-11-25 15:55, before any run or score of this test)
+
+- Clusters: two new ones sharing no event with axial, blanco, msh, jdf, puget, mtj, blancow (sets2: one onshore,
+  one offshore), chosen as before (core events nearest the median epicentre), CC with the same tested code.
+- Arms per cluster and run (full, fold0-2): the one SSST chain 9999 -> 16 -> 8 -> 4 -> 2 km; stop at 16 km = it2,
+  8 km = it3, 4 km = it4, 2 km = it5 (oct-trees saved on it2-it5); each stop followed by the coherence stage
+  (arms coh16, coh8, coh4, coh2) and without it (ssst16, ssst8, ssst4, ssst2).
+- Score per stop d (coherence arms, the recipe adopted in D-B095): S(d) = mean over the 2 clusters of
+  [held-out MAD P + held-out MAD S] (ms; -18's fold scorer, 3 folds, common rows of all 8 arms of a cluster).
+- Choice: d* = argmin S(d). If the next coarser stop d+ (2 -> 4 -> 8 -> 16 km) is not distinguishable from d*,
+  i.e. the 95 % paired-bootstrap interval of S(d+) - S(d*) includes 0 (2,000 replicates; event pairs resampled
+  within each cluster, the same resample for every arm and both phases), take d+ (one step only). The plain
+  overlap of the two individual 95 % intervals is reported alongside.
+- Reported, not part of the choice: the no-coherence arms (does coherence help per cluster?), CC fit (median
+  per-pair residual), repeater separation, literature depths (PNSN / NCSN via ANSS ComCat), above-surface count
+  (must be 0) and floor-limited count.
+
+## Stopping-distance test: status log
+
+- 15:53 sets2 built (b4_v6_termtest_sets.py --group 2): georgia 700 events (Strait of Georgia, CN/PB/UW/TA,
+  ~15 km deep), gorda 800 events (family 1162, 2014 M6.8 Gorda plate, Z5/7D OBS + NC/PB/BK/TA); no shared event
+  with the seven earlier sets. CC for both launched (logs/cc_group2.log, 6 workers, spawn pool).
+- 15:55 picks, obs (full, fold0-2), grid links; 8 chains (run_chains2.sh: --arms ssst,coh_stops), gorda 3 and
+  georgia 1 process per pass (control/balance2.sh raises georgia to 2 when the CC process ends). New: MemAvailable
+  guard (no new pass below 35 GB).
+- 16:14 group-2 CC done (georgia 83,374 ok rows, gorda 90,541 ok; gorda 693 events with NC/BK from the D-B093 NCEDC cache). georgia chains set to 3 processes (balance2 stopped).
+- 16:16 georgia/full stopped at its first Loc2ssst: with 1 process the LSSTATIONS line exceeds NonLinLoc's 1,000-character buffer (b4_v6_ssst assertion); relaunched with 3 processes (resumes after it0).
+- 16:20 gorda folds done; georgia chains to 5 processes per pass (4 chains x 5 + gorda full 3 = 23).
+- 16:44 all 8 chains done.
+- 16:47 scores (score_stop/, logs/score_stop.log): b4_v6_termtest_stop_score.py --nboot 2000; report section added
+  (report/termtest_report.html, summary notes/v6_termtest_stop_summary.md).
+
+## Stopping-distance result (2026-11-25 16:47)
+
+Choice by the rule above: **4 km** (schedule 9999 -> 16 -> 8 -> 4 km). S(d) with coherence (mean over georgia,
+gorda of held-out MAD P + S, ms): 16 km 81.0 [77.8, 83.7], 8 km 78.4 [75.7, 81.4], 4 km 76.8 [74.5, 79.9],
+2 km 80.2 [77.4, 83.3]. 8 - 4 km = +1.6 [0.3, 2.7] (excludes 0, so 4 km is kept; the individual intervals overlap);
+2 - 4 km = +3.4 [1.8, 4.6]. Coherence helps at georgia (P -15, S -21 ms at every stop), neutral at gorda (few
+compact events). No event above the surface in any arm. Disk: runs/ for georgia + gorda adds the oct-trees of it2-it5.

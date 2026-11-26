@@ -1955,6 +1955,365 @@
     }
    ],
    "key": true
+  },
+  {
+   "id": "D-B082",
+   "date": "2026-11-25",
+   "time": "07:59",
+   "title": "Model v0.4.0 (v0.3.1 re-inverted with re-timed picks) is the base",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "v0.3.1 setup with only the re-timed times (65,562 picks, 59 stations). Re-timed land stations: P rms 0.222 -> 0.187-0.192 s in the tiles, day slopes gone; shallow onshore Vp moves 0.3-0.8 % rms (noise 0.01 %).",
+   "trigger": "v0.4.0 report (D-B077, branch tomo/v040-retimed): the PI chooses the base model before the floor question.",
+   "relations": [
+    {
+     "type": "implements",
+     "target": "D-B077"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B075"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Redo the B1 pick QC with the re-timed times",
+     "outcome": "rejected",
+     "reason": "Only 812 of 854,465 picks would change status; B1 QC kept as in v0.3.1."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B083",
+   "date": "2026-11-25",
+   "time": "07:59",
+   "title": "v0.4.1 = v0.4.0 with the D-B081 surface floor in the inversion",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "M0 and the four merged tiles re-inverted from v0.4.0 inputs; tomoDD event updates stop 1 m under the merged surface (flagged, not removed); velocities above it stay rock-continued. The ensemble runs on v0.4.1.",
+   "trigger": "v0.4.0 results in (D-B082); D-B077 left the floor in the inversion until then.",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B077"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B082"
+    },
+    {
+     "type": "amends",
+     "target": "D-B081"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Water/air velocities above the surface during the inversion",
+     "outcome": "tested_and_dropped",
+     "reason": "Water/air nodes harm tomoDD (v0.3.2 node-vs-field test, session -18's S1)."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B090",
+   "date": "2026-11-25",
+   "time": "08:44",
+   "title": "Correct OBS clock drift in the v6.0 picks; a reusable pick-timing kit",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "data",
+   "summary": "MH07.XD (+8.35 ms/day, to +0.80 s) and MG07.XD (-4.40 ms/day, to -0.34 s) free-ran in spring 2016. v6.0 picks corrected by the clock model, flagged, kept; every station scanned; toolkit with CLI and report.",
+   "trigger": "CC-dt work for D-B078 found two free-running OBS clocks in spring 2016 (cc_dt/qc/clock_epochs.csv).",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B078"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B072"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Fix them with the D-B072/D-B075 re-timing",
+     "outcome": "rejected",
+     "reason": "Re-timing cannot correct errors in the record headers."
+    },
+    {
+     "option": "Drop the drifting picks",
+     "outcome": "rejected",
+     "reason": "Picks are corrected by the fitted clock model, flagged and kept."
+    },
+    {
+     "option": "Apply scan candidates automatically",
+     "outcome": "rejected",
+     "reason": "Each candidate is confirmed by a person before it is applied."
+    }
+   ],
+   "key": false
+  },
+  {
+   "id": "D-B091",
+   "date": "2026-11-25",
+   "time": "10:24",
+   "title": "Route A magnitude inversion run to convergence; v4.1, v5.1 ML redone",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "phase19's LSQR stopped at iter_lim 3000 unconverged (istop 7). Converged: offshore ML down 0.04-0.68 (Blanco -0.68), onshore +0.01; ComCat and tensor-Mw gaps shrink. Mc, b and paper figures redone.",
+   "trigger": "v5.1 magnitude fix round (analysis/v51-mag): the solver hits its iteration limit in v4.1 and v5.1.",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "S-02"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B041"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Keep the iter_lim 3000 solution",
+     "outcome": "rejected",
+     "reason": "Not converged; the converged one agrees better with ComCat ML (anchor std 0.230 -> 0.176) and tensor Mw."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B092",
+   "date": "2026-11-25",
+   "time": "10:24",
+   "title": "Prepare v6.0: v0.4.1 travel-time grids and an NLL-SSST test",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "Build the v0.4.1 grids (field rule, merged surface, wide and deep as v5.1) and test NLL-SSST against the static terms (D-B069) on a few clusters. Picks v4.1tc (MH07/MG07 corrected).",
+   "trigger": "D-B079 named v6.0; v0.4.1 adopted (D-B083); clock-corrected picks set (D-B090).",
+   "relations": [
+    {
+     "type": "implements",
+     "target": "D-B079"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B083"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B090"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Run the full v6.0 relocation before the clock-candidate review",
+     "outcome": "superseded_later",
+     "reason": "Held here for the PI's review; D-B097 runs v6.0 now and moves the review to a later version."
+    }
+   ],
+   "key": false
+  },
+  {
+   "id": "D-B093",
+   "date": "2026-11-25",
+   "time": "13:12",
+   "title": "v6.0 station terms: static + NLL-coherence; CC for all families",
+   "status": "superseded",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "SSST deepened MSH and degraded Axial on the D-B078 sets; static + coherence kept depths. Static-term choice replaced by D-B095 (SSST); coherence stage and CC for every family stay, so marked superseded.",
+   "trigger": "SSST test on the four D-B078 sets (v5.1 grids, reloc_v6/ssst_test/g51).",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B092"
+    },
+    {
+     "type": "amends",
+     "target": "D-B079"
+    },
+    {
+     "type": "implements",
+     "target": "D-B040"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "NLL-SSST station terms",
+     "outcome": "superseded_later",
+     "reason": "Rejected here (MSH deeper against Hirao et al. 2025, Axial worse); adopted by D-B095 on independent clusters."
+    },
+    {
+     "option": "CC differential times for the test sets only",
+     "outcome": "rejected",
+     "reason": "The coherence stage needs CC times for every clustered family (D-B040)."
+    },
+    {
+     "option": "Today's per-session process caps",
+     "outcome": "rejected",
+     "reason": "PI: \"use all resources you can\"; grid chain raised from 12 to 36 processes."
+    }
+   ],
+   "key": false
+  },
+  {
+   "id": "D-B094",
+   "date": "2026-11-25",
+   "time": "15:37",
+   "title": "Real ensemble on v0.4.1; Vp, Vs spreads inflated by calibration",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "uncertainty",
+   "summary": "Synthetic run: hypocentres, Vp/Vs calibrated; Vp, Vs too narrow on resolved nodes (68 % coverage 0.57-0.58). Real phase on v0.4.1; Vp, Vs spreads times coverage factors rounded up to 0.05.",
+   "trigger": "Synthetic calibration (102 members) failed the D-B030 all-items rule (exit 2).",
+   "relations": [
+    {
+     "type": "amends",
+     "target": "D-B030"
+    },
+    {
+     "type": "amends",
+     "target": "D-B077"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B083"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Pass the D-B030 all-items gate first",
+     "outcome": "tested_and_dropped",
+     "reason": "Failed: each member misses the same 3-5 % of v0.3.1's structure at Blanco and Mendocino."
+    },
+    {
+     "option": "Inflation factors not rounded",
+     "outcome": "rejected",
+     "reason": "PI: \"round up because that's still a bit too narrow\"."
+    },
+    {
+     "option": "Inflate hypocentres and Vp/Vs too",
+     "outcome": "rejected",
+     "reason": "Already calibrated (68 % coverage: hypocentres 0.70-0.73, Vp/Vs 0.75)."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B095",
+   "date": "2026-11-25",
+   "time": "15:51",
+   "title": "v6.0 station terms: NLL-SSST + coherence, stop set by a check",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "On 3 clusters independent of D-B078, SSST to 2 km + coherence beat static + coherence on held-out stations, P and S (P MAD 85 -> 59, 67 -> 56, 149 -> 107 ms). Stop distance confirmed on 2 more.",
+   "trigger": "Independent-cluster test, decision rule written before scoring (branch reloc/v6-termtest).",
+   "relations": [
+    {
+     "type": "amends",
+     "target": "D-B093"
+    },
+    {
+     "type": "implements",
+     "target": "D-B079"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B078"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Static terms + coherence (D-B093)",
+     "outcome": "rejected",
+     "reason": "Worse on held-out stations in 3/3 clusters, P and S; 95 % bootstrap intervals exclude 0."
+    },
+    {
+     "option": "Stop the SSST schedule at 2 km",
+     "outcome": "deferred",
+     "reason": "Post-hoc hint (4 km better at Puget, Mendocino) checked on two more clusters (D-B096)."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B096",
+   "date": "2026-11-25",
+   "title": "v6.0 SSST schedule stops at 4 km (9999 -> 16 -> 8 -> 4), + coherence",
+   "status": "adopted",
+   "by": "rule (D-B095, written before scoring)",
+   "theme": "relocation",
+   "summary": "Strait of Georgia (700) and 2014 M6.8 Gorda (800): held-out MAD P+S with coherence 16 km 81.0, 8 km 78.4, 4 km 76.8, 2 km 80.2 ms; 8 - 4 km +1.6 [0.3, 2.7] ms. 0 events above the surface.",
+   "trigger": "D-B095's confirmatory check of the 4 km hint; rule written into RESUME.md at 15:55, before any run.",
+   "relations": [
+    {
+     "type": "implements",
+     "target": "D-B095"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Stop at 8 km",
+     "outcome": "tested_and_dropped",
+     "reason": "78.4 ms; paired bootstrap 8 - 4 km +1.6 [0.3, 2.7] ms excludes 0."
+    },
+    {
+     "option": "Stop at 2 km or 16 km",
+     "outcome": "tested_and_dropped",
+     "reason": "80.2 and 81.0 ms held-out MAD."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B097",
+   "date": "2026-11-25",
+   "time": "16:58",
+   "title": "Run catalog v6.0 now; Mount St Helens and clock candidates wait",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "Full v6.0 relocation (v0.4.1; picks v4.1tc with only MH07/MG07 corrected; D-B096 SSST + coherence) starts when wide grids and family CC times are done. MSH signal, 129 clock candidates: v6.1.",
+   "trigger": "PI: \"Can we just keep going and leave the Mount Saint Helens stations for later?\"",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B090"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B096"
+    },
+    {
+     "type": "amends",
+     "target": "D-B092"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Fix the weekly signal on HSR, EDM, STD.UW first",
+     "outcome": "deferred",
+     "reason": "Likely false deep events; waveform review P1, in v6.1."
+    },
+    {
+     "option": "Review the 129 other clock-candidate epochs first",
+     "outcome": "deferred",
+     "reason": "Moved to v6.1 (review_candidates.csv)."
+    },
+    {
+     "option": "Apply location-review flags in v6.0",
+     "outcome": "deferred",
+     "reason": "v6.0 carries the automatic indicators as columns only."
+    }
+   ],
+   "key": true
   }
  ],
  "forks": [
@@ -1987,9 +2346,11 @@
     "D-B049",
     "D-B050",
     "D-B051",
-    "D-B077"
+    "D-B077",
+    "D-B082",
+    "D-B083"
    ],
-   "current": "M0 (d200 s480) + tiles restarted from it, gated merge (blanco only), ridges_north out, Vs revert; v0.4.0 re-inversion next."
+   "current": "M0 (d200 s480) + tiles restarted from it, gated merge (blanco only), ridges_north out, Vs revert; re-inverted as v0.4.0, then v0.4.1."
   },
   {
    "name": "Dataset",
@@ -2003,9 +2364,10 @@
     "D-B017",
     "D-B022",
     "D-B023",
-    "D-B035"
+    "D-B035",
+    "D-B082"
    ],
-   "current": "B1b_c balanced set: 28,986 events, 754,710 picks, 521 stations; v0.4.0 swaps in the re-timed pick times."
+   "current": "B1b_c balanced set: 28,986 events, 754,710 picks, 521 stations; v0.4.0 uses the re-timed times, B1 QC not redone."
   },
   {
    "name": "Forward model and OBS statics",
@@ -2034,9 +2396,10 @@
     "D-B030",
     "D-B032",
     "D-B039",
-    "D-B077"
+    "D-B077",
+    "D-B094"
    ],
-   "current": "100-member randomize-then-optimize ensemble per region after a synthetic gate, on the final setup; locations from 10-20 members."
+   "current": "Synthetic gate: hypocentres, Vp/Vs calibrated, Vp, Vs too narrow; real 100-member run on v0.4.1, Vp, Vs spreads inflated (rounded up)."
   },
   {
    "name": "Above-surface events",
@@ -2056,9 +2419,10 @@
     "D-B076",
     "D-B077",
     "D-B080",
-    "D-B081"
+    "D-B081",
+    "D-B083"
    ],
-   "current": "v5.1: 0 events above the surface; tomoDD floor for B5 (test 76 -> 0 above); floor in the inversion after v0.4.0."
+   "current": "v5.1: 0 above the surface; tomoDD floor in B5 and in the v0.4.1 inversion; 0 above in every v6.0 station-term test."
   },
   {
    "name": "Relative relocation",
@@ -2074,21 +2438,24 @@
     "D-B063",
     "D-B064",
     "S-05",
-    "D-B078"
+    "D-B078",
+    "D-B083"
    ],
-   "current": "Go for tomoDD B5 on v5.1 (05:18), then held: code chosen on CC data (tomoDD+floor vs GrowClust3D vs NLL-SSST)."
+   "current": "B5 code choice on CC data pending (D-B078); tomoDD's surface floor also runs in the v0.4.1 inversion; CC times for every family (D-B093)."
   },
   {
    "name": "Pick timing",
-   "question": "How to time the picks of drifting analog stations?",
+   "question": "How to time the picks of drifting analog stations and clocks?",
    "chain": [
     "D-B071",
     "D-B072",
     "D-B075",
     "D-B077",
-    "D-B080"
+    "D-B080",
+    "D-B090",
+    "D-B097"
    ],
-   "current": "218,809 picks on 75 stations re-timed from short reads (v4.1t); used by v5.1 and v0.4.0; Zenodo picks and picker unchanged."
+   "current": "Analog picks re-timed (v4.1t); MH07/MG07 clocks corrected for v6.0 (v4.1tc) with a reusable toolkit; 129 other candidates in v6.1."
   },
   {
    "name": "Versioning",
@@ -2102,9 +2469,12 @@
     "D-B076",
     "D-B077",
     "D-B079",
-    "D-B080"
+    "D-B080",
+    "D-B082",
+    "D-B083",
+    "D-B097"
    ],
-   "current": "Models v0.1.0 (M0) to v0.3.2, v0.4.0 next; catalogs v5.0, v5.1 built, v5.2 = B5, v6.0 = re-inverted model; private Zenodo only."
+   "current": "Models v0.4.0 (base), v0.4.1 (floor in the inversion); catalogs v5.0, v5.1, v5.2 = B5, v6.0 on v0.4.1 cleared to run, v6.1 next; private Zenodo."
   },
   {
    "name": "Science claims and analysis",
@@ -2120,7 +2490,30 @@
     "S-04"
    ],
    "current": "Novelty wording fixed; fault-zone volume averages; v5.1 program: magnitudes, clustering, A-C fault surfaces, resolved-node structure."
+  },
+  {
+   "name": "Station terms",
+   "question": "Which station terms for catalog v6.0: static, SSST, coherence?",
+   "chain": [
+    "D-B079",
+    "D-B092",
+    "D-B093",
+    "D-B095",
+    "D-B096",
+    "D-B097"
+   ],
+   "current": "NLL-SSST 9999 -> 16 -> 8 -> 4 km, then coherence; chosen on held-out stations in 5 clusters independent of the D-B078 sets."
+  },
+  {
+   "name": "Magnitudes",
+   "question": "Is the magnitude inversion converged?",
+   "chain": [
+    "D-B041",
+    "S-02",
+    "D-B091"
+   ],
+   "current": "No at iter_lim 3000 (istop 7); converged run (istop 2) lowers offshore ML up to 0.68; v4.1 and v5.1 recomputed (PR #45)."
   }
  ],
- "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B081) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
+ "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B083 and D-B090 to D-B097; D-B084 to D-B089 are reserved for session -18 and not yet in the register) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
 }

@@ -140,18 +140,20 @@ def main():
     S.append(md((OUT / "diag_explanation.md").read_text()))
     reg = []
     for tile, lab in (("t07_32", "Axial"), ("t29_40", "Puget/Georgia"), ("t22_09", "Gorda"), ("t11_23", "Blanco")):
-        p = DIAG / tile / "summary.json"
+        p = DIAG / tile / "linearised.csv"
         if not p.exists():
             continue
-        d = json.loads(p.read_text())
-        at = d["attribution_mean_it4"]
-        reg.append([f"{lab} ({tile})", f"{d['events_common']:,}", f(at['dz_obs'], 3, True),
-                    f(at['dz_lin'], 3, True), f(at['dz_commonP'], 3, True), f(at['dz_commonS'], 3, True),
-                    f(at['dz_rest'], 3, True), f(d['S_minus_P_common_median_it4'] * 1e3, 0, True),
-                    f(d.get('corr_z_commonS_median'), 2), f(d.get('sigz_ratio_commonS_median'), 1)])
-    S.append("<h3>The same decomposition in other regions (busiest v6.0 tile, tier A-B, it4 - it0)</h3>")
-    S.append(table(["tile", "events", "observed dz (mean, km)", "linearised dz", "common-P part", "common-S part",
-                    "station-pattern part", "S-P common term (ms)", "corr(z, common S)", "sigma_z inflation"], reg))
+        x = pd.read_csv(p)
+        x = x[x.tier.isin(["A", "B", "C"])]
+        reg.append([f"{lab} ({tile})", f"{len(x):,}"] + [f(x[f"dz_obs_it{k}"].median(), 2, True) for k in (1, 2, 3, 4)]
+                   + [f(x[c].median(), 2, True) for c in ("dz_lin_it4", "dz_commonP_it4", "dz_commonS_it4",
+                                                           "dz_rest_it4")]
+                   + [f(x.SmP_common_it4.median() * 1e3, 0, True), f(x.corr_z_commonS.median(), 2),
+                      f(x.sigz_ratio_commonS.median(), 1), f(100 * (x.dz_obs_it4.abs() > 1).mean(), 0)])
+    S.append("<h3>The same decomposition in the busiest tile of other regions (tier A-C, medians over events)</h3>")
+    S.append(table(["tile", "events", "dz it1", "it2", "it3", "it4 (km)", "linearised it4", "common-P part",
+                    "common-S part", "station pattern", "S-P common term (ms)", "corr(z, common S)",
+                    "sigma_z inflation", "|dz it4| > 1 km (%)"], reg))
     S.append(img(F.fig_tradeoff([("t07_32", "Axial t07_32"), ("t29_40", "Puget t29_40"), ("t22_09", "Gorda t22_09"),
                                  ("t11_23", "Blanco t11_23")]), "depth / common-S trade-off"))
     # ---------------------------------------------------------------- rule
@@ -231,15 +233,16 @@ def main():
             if p.exists():
                 d = json.loads(p.read_text())
                 nfr.append([s, f"g{k}", f"{d['events']:,}", f"{d['station_phases']}",
-                            f(d['beta'][2] * 1e3, 1, True), f(d['beta'][3] * 1e3, 1, True),
+                            f(d['beta'][2], 3, True), f(d['beta'][3] * 1e3, 1, True),
                             f(d['dz_lin_mean_before'], 3, True), f(d['dz_lin_mean_after'], 3, True),
                             f"{d['negative_nodes']}"])
     if nfr:
         S.append("<h3>nf4: the removed common-shift part (full runs)</h3>")
-        S.append("<p class='muted'>beta_z: s per km of depth absorbed (times each station-phase's dT/dz gives its "
-                 "removed constant); linearised mean depth shift of the pass's increment before and after the "
-                 "removal.</p>")
-        S.append(table(["set", "pass", "events", "station-phases", "beta_z (ms/km)", "beta_t0 (ms)",
+        S.append("<p class='muted'>beta = the common shift (dx, dy, dz km, dt0 s) whose travel-time signature "
+                 "a_i . beta was removed from the pass's increments (written as nf.json 'beta'; the key 'beta_names' of "
+                 "the runs mislabels the units as s/km); linearised mean depth shift of each event from the pass's "
+                 "increment, before and after the removal.</p>")
+        S.append(table(["set", "pass", "events", "station-phases", "beta_z (km)", "beta_t0 (ms)",
                         "lin. dz before (km)", "after (km)", "negative nodes"], nfr))
     # ---------------------------------------------------------------- decision
     S.append("<h2>4. Decision by the rule</h2>")

@@ -229,7 +229,7 @@ def nf_project(it_dir, raw, d_in, d_out, base):
                 tmin = min(tmin, float(v.min()))
     rec = dict(raw=str(raw), d_in=str(d_in), base=str(base), it=str(it_dir), events=int(len(ev)),
                arrivals=int(len(ph)), station_phases=len(corr), beta=beta.tolist(),
-               beta_names=["x_s_per_km", "y_s_per_km", "z_s_per_km", "t0_s"], d=d,
+               beta_names=["dx_km", "dy_km", "dz_km", "dt0_s"], d=d,
                rhs_before=b.tolist(), rhs_after=rhs_after.tolist(),
                dz_lin_median_before=float(np.median(dz0)) if dz0 else None,
                dz_lin_median_after=float(np.median(dz1)) if dz1 else None,
@@ -303,6 +303,8 @@ def main():
     r.add_argument("run", choices=RUNS)
     sc = sub.add_parser("score")
     sc.add_argument("--nboot", type=int, default=2000)
+    sc.add_argument("--sets", default=",".join(SETS), help="subset (mechanics check only; the decision needs all)")
+    sc.add_argument("--out", default=None, help="score folder (default score/)")
     a = ap.parse_args()
     if a.cmd == "run":
         cmd_run(a)

@@ -138,17 +138,21 @@ def q(x):
 
 
 def main(a):
+    global SC
+    sets = a.sets.split(",")
+    if a.out:
+        SC = Path(a.out)
     SC.mkdir(parents=True, exist_ok=True)
     arms = list(T.ARMS)
-    status = {s: {arm: all(complete(s, r, arm) for r in T.RUNS) for arm in arms} for s in T.SETS}
-    eligible_complete = [arm for arm in arms if all(status[s][arm] for s in T.SETS)]
+    status = {s: {arm: all(complete(s, r, arm) for r in T.RUNS) for arm in arms} for s in sets}
+    eligible_complete = [arm for arm in arms if all(status[s][arm] for s in sets)]
     log("complete arms:", eligible_complete)
     cat = pd.read_csv(CAT, usecols=["ID", "tier"], low_memory=False).set_index("ID").tier
     fl = read_floor(FLOOR)
 
     # 1. surface / floor
     srows = []
-    for s in T.SETS:
+    for s in sets:
         for run in T.RUNS:
             for arm in arms:
                 if not complete(s, run, arm):
@@ -164,7 +168,7 @@ def main(a):
 
     # 2. held-out relative fit
     hrows, best = [], {}
-    for s in T.SETS:
+    for s in sets:
         use = [arm for arm in arms if status[s][arm]]
         C, nrel = heldout_rows(s, use)
         C.to_parquet(SC / f"heldout_rows_{s}.parquet", index=False)
@@ -173,7 +177,7 @@ def main(a):
             m = {arm: mad(g[arm].to_numpy()) for arm in use}
             b = min(m, key=m.get)
             best[(s, ph)] = b
-            B, npair = boot(g, use, a.nboot, 100 + T.SETS.index(s) * 2 + (ph == "S"))
+            B, npair = boot(g, use, a.nboot, 100 + sets.index(s) * 2 + (ph == "S"))
             kb = use.index(b)
             for k, arm in enumerate(use):
                 dd = B[:, k] - B[:, kb]
@@ -189,8 +193,8 @@ def main(a):
 
     # 3. depth against the literature (full runs)
     drows = []
-    pos_full = {s: {arm: positions(s, "full", arm)[0] for arm in arms if complete(s, "full", arm)} for s in T.SETS}
-    for s in T.SETS:
+    pos_full = {s: {arm: positions(s, "full", arm)[0] for arm in arms if complete(s, "full", arm)} for s in sets}
+    for s in sets:
         P = pos_full[s]
         common = sorted(set.intersection(*[set(p.index) for p in P.values()]))
         if s == "axial":
@@ -223,7 +227,7 @@ def main(a):
     Dp.round(4).to_csv(SC / "depth.csv", index=False)
 
     # 4. the rule
-    lit_sets = [s for s in T.SETS if s == "axial" or
+    lit_sets = [s for s in sets if s == "axial" or
                 Dp[(Dp.set == s)].n.min() >= MIN_LIT_EVENTS]
     out_a = sorted(set(Sf[Sf.above_surface > 0].arm))
     out_b = {}

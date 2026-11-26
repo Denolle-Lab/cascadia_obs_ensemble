@@ -693,20 +693,22 @@ def pair_coherence(cc_dir):
     import pyarrow.parquet as pq
     parts, n_rows, n_straddle = [], 0, 0
     for f in sorted(Path(cc_dir).glob("cc_*.parquet")):
-        cols = ["ID1", "ID2", "station", "phase", "status", "edge", "cc_max", "straddles_clock_epoch"]
         if "straddles_clock_epoch" not in pq.read_schema(f).names:
             raise SystemExit(f"{f}: no straddles_clock_epoch column")
-        c = pd.read_parquet(f, columns=cols)
-        n_rows += len(c)
-        ok = (c.status == "ok") & ~c.edge.astype(bool)
+        n_rows += pq.read_metadata(f).num_rows
+        # an event pair belongs to one block (pairs.parquet: pair ids unique, ID1 < ID2), so pairs are grouped per file
+        c = pq.read_table(f, columns=["ID1", "ID2", "edge", "cc_max", "straddles_clock_epoch"],
+                          filters=[("status", "=", "ok")]).to_pandas()
+        ok = ~c.edge.astype(bool)
         n_straddle += int((ok & c.straddles_clock_epoch.astype(bool)).sum())
         c = c[ok & ~c.straddles_clock_epoch.astype(bool)]
-        parts.append(c[["ID1", "ID2", "station", "phase", "cc_max"]])
-    c = pd.concat(parts, ignore_index=True)
-    a, b = np.minimum(c.ID1, c.ID2), np.maximum(c.ID1, c.ID2)
-    c = c.assign(ID1=a, ID2=b).drop_duplicates(["ID1", "ID2", "station", "phase"])   # a pair listed in two blocks
-    g = c.groupby(["ID1", "ID2"]).cc_max.agg(["median", "size"]).reset_index()
-    g.columns = ["ID1", "ID2", "coh", "n"]
+        g = c.groupby(["ID1", "ID2"]).cc_max.agg(["median", "size"]).reset_index()
+        g.columns = ["ID1", "ID2", "coh", "n"]
+        parts.append(g)
+        del c
+    g = pd.concat(parts, ignore_index=True)
+    if g.duplicated(["ID1", "ID2"]).any():
+        raise SystemExit(f"{int(g.duplicated(['ID1', 'ID2']).sum())} event pairs in more than one CC block")
     return g[g.n >= S.COH_NMIN], dict(cc_rows=n_rows, straddling_rows_dropped=n_straddle)
 
 

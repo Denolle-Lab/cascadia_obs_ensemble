@@ -1,0 +1,19 @@
+set,region,phase,rows,mad_ssst_ms,mad_coh_ms,mad_coh_r3_ms,diff_ms,lo_ms,hi_ms,pairs,effect,diff_r3_ms,lo_r3_ms,hi_r3_ms,effect_r3
+axial,Axial,P,9523,50.323,36.43,40.527,-13.892,-15.248,-12.389,4343,helps,-9.796,-11.059,-8.361,helps
+axial,Axial,S,4802,77.102,45.195,51.784,-31.907,-35.285,-29.04,2939,helps,-25.318,-28.486,-22.51,helps
+blanco,Blanco,P,5092,87.846,88.149,88.149,0.303,-0.24,0.813,2934,no clear effect,0.303,-0.24,0.813,no clear effect
+blanco,Blanco,S,4143,143.005,143.012,143.012,0.006,-0.597,0.689,2389,no clear effect,0.006,-0.597,0.689,no clear effect
+msh,Cascades (Mount St Helens),P,28727,44.019,21.424,22.811,-22.594,-23.833,-21.459,6621,helps,-21.208,-22.377,-20.078,helps
+msh,Cascades (Mount St Helens),S,12246,48.757,19.903,20.254,-28.853,-30.731,-26.875,3412,helps,-28.503,-30.399,-26.566,helps
+jdf,JdF ridge/plate,P,2381,163.665,163.665,163.665,0.0,0.0,0.0,1297,no clear effect,0.0,0.0,0.0,no clear effect
+jdf,JdF ridge/plate,S,2151,293.018,293.018,293.018,0.0,0.0,0.0,1216,no clear effect,0.0,0.0,0.0,no clear effect
+puget,Puget/Georgia,P,13241,64.71,57.232,57.53,-7.478,-10.203,-4.956,3943,helps,-7.181,-9.691,-4.82,helps
+puget,Puget/Georgia,S,12707,100.373,90.676,91.297,-9.697,-13.921,-6.508,3846,helps,-9.076,-13.342,-6.35,helps
+mtj,Mendocino,P,10774,43.512,51.855,51.823,8.343,5.166,11.694,2062,hurts,8.311,5.288,11.669,hurts
+mtj,Mendocino,S,9192,62.439,83.058,82.697,20.619,16.107,26.253,2003,hurts,20.258,15.772,25.823,hurts
+blancow,Blanco,P,13165,99.293,99.394,99.394,0.101,-0.073,0.386,5612,no clear effect,0.101,-0.073,0.386,no clear effect
+blancow,Blanco,S,16971,155.148,155.093,155.093,-0.055,-0.263,0.307,6450,no clear effect,-0.055,-0.263,0.307,no clear effect
+georgia,Puget/Georgia,P,14453,34.494,19.769,19.746,-14.725,-15.961,-13.371,4087,helps,-14.748,-15.952,-13.373,helps
+georgia,Puget/Georgia,S,20359,50.633,30.248,30.3,-20.384,-22.108,-18.476,4056,helps,-20.333,-22.085,-18.435,helps
+gorda,Gorda,P,8586,46.541,46.757,46.755,0.216,-0.257,0.896,2970,no clear effect,0.214,-0.306,0.833,no clear effect
+gorda,Gorda,S,10139,57.025,57.297,57.225,0.272,-0.805,1.285,3275,no clear effect,0.2,-0.878,1.205,no clear effect

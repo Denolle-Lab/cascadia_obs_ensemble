@@ -4,10 +4,10 @@
  "argv": [
   "6.0"
  ],
- "utc": "2026-11-26T21:42:05.913294+00:00",
- "git_commit": "f7a87b116d0b519fbbda64d21c16fc78d51ae641",
+ "utc": "2026-11-26T21:53:49.478005+00:00",
+ "git_commit": "ac20651e657b61e9fd8b76b2a869e48c259f1a5d",
  "git_dirty": true,
- "params_md5": "209685bb31bd16747aa00c5b59d2607b",
+ "params_md5": "fc639c58a842a5f8dac84921c37ae732",
  "params": {
   "version": "6.0",
   "series": "v6",
@@ -49,7 +49,7 @@
    "v5.1",
    "v4.1"
   ],
-  "magnitudes_text": "Magnitudes: converged Route A preferred magnitudes (D-B091; M, M_type ML / Mw / Mw_cal): the catalog v5.1 table (computed with v5.1 hypocentres) where it has the event, else the v4.1 table (v4 hypocentres); magnitude_source names which. They are not recomputed with the v6.0 hypocentres.",
+  "magnitudes_text": "Magnitudes: converged Route A preferred magnitudes (D-B091; M, M_type ML / Mw / Mw_cal): the catalog v5.1 table (computed with v5.1 hypocentres) where it has the event, else the v4.1 table (v4 hypocentres); magnitude_source names which (v5.1_converged, v4.1_converged). They are not recomputed with the v6.0 hypocentres.",
   "hypocentres_text": "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model} (velocity_models.zip in this record), with source-specific station terms and coherence relocation (below), run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone). station_terms_v{version}.in: the static terms of the first pass, used only by the deep and edge passes.",
   "picks_file": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv",
   "picks_md5": "1b21ab1c2cf5aba8b48c64a58fc37356",
@@ -72,7 +72,7 @@
   "columns": {
    "tier": "location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules: a2_build_catalog.tier; counts in the table above)",
    "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091); magnitude_source names the table",
-   "magnitude_source": "v5.1_converged (computed with v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091; empty without a magnitude",
+   "magnitude_source": "table of the magnitude columns: v5.1_converged = converged Route A table computed with the v5.1 hypocentres (D-B091, D-B102); v4.1_converged = the same with the v4 hypocentres, for events the v5.1 table has no magnitude for; empty without a magnitude",
    "rms_unweighted": "unweighted rms of the residuals of the arrivals used (s); rms is NonLinLoc's EDT-weighted value (D-B069)",
    "shift_h_v51_km, shift_z_v51_km": "change from catalog v5.1 (horizontal; depth, positive = deeper), when both are located",
    "model_version": "velocity model of the travel-time grids (v0.4.1)",
@@ -168,33 +168,33 @@
  "outputs": [
   {
    "path": "/wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
-   "size": 90067403,
-   "mtime": "2026-11-26T21:41:25.505046+00:00",
-   "md5": "aea38d36f22c78b324f1fd5026eb8fa8"
+   "size": 86266681,
+   "mtime": "2026-11-26T21:53:07.684190+00:00",
+   "md5": "923aa0622d5dc62929240b58b5a52636"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v6/v6.0/README_v6.0.md",
-   "size": 11159,
-   "mtime": "2026-11-26T21:41:59.937906+00:00",
-   "md5": "aae9ea0d99678f38c279451c1521a5ce"
+   "size": 11325,
+   "mtime": "2026-11-26T21:53:43.379045+00:00",
+   "md5": "9e641a4010912cdcf3d4a59b6eb3d5fb"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v6/v6.0/MD5SUMS",
    "size": 468,
-   "mtime": "2026-11-26T21:42:00.173905+00:00",
-   "md5": "4f9536c8c592abd02b0d41d3ccd6382d"
+   "mtime": "2026-11-26T21:53:43.610044+00:00",
+   "md5": "c0b763bdd50a781366a8c3f7f2e9fd86"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v6/catalog_v6.zip",
-   "size": 76479540,
-   "mtime": "2026-11-26T21:42:05.776882+00:00",
-   "md5": "0f8131aaf532a0ca4095b8b25b7bd6dd"
+   "size": 76357421,
+   "mtime": "2026-11-26T21:53:49.329021+00:00",
+   "md5": "d60871d2a6310ddfa508d3a832d8c26a"
   },
   {
    "path": "/home/mdenolle/wt_cat/data/catalog_v6/registry.csv",
    "size": 501,
-   "mtime": "2026-11-26T21:42:00.331904+00:00",
-   "md5": "5b979f4394d306a6401c35a71e5c48de"
+   "mtime": "2026-11-26T21:53:43.762043+00:00",
+   "md5": "4e04b2d706505a0cd2dd6b898931b96d"
   }
  ],
  "counts": {

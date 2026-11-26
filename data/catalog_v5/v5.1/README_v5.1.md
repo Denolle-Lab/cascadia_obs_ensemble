@@ -23,7 +23,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 * The v4.1 additions 900001-900003 carry their ComCat hypocentre (loc_source comcat, tier U) when NonLinLoc does not locate them.
 * Events that NonLinLoc could not locate (tier U) have no hypocentre in this version (loc_source none: empty
   time, lat, lon and depth); u_reason says why. Their picks are in the picks file.
-* Magnitudes: converged Route A preferred magnitudes (D-B091, D-B102; M, M_type ML / Mw / Mw_cal), computed with the v5.1 hypocentres (catalog v5.1 magnitude table) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres); magnitude_source names which.
+* Magnitudes: converged Route A preferred magnitudes (D-B091, D-B102; M, M_type ML / Mw / Mw_cal), computed with the v5.1 hypocentres (catalog v5.1 magnitude table) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres); magnitude_source names which (v5.1_converged, v4.1_converged).
 
 ## Counts
 
@@ -67,7 +67,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 | depth_frame | how depth was obtained (true depth: the Earth-flattening of the NonLinLoc grids undone; ComCat for v4.1 additions); empty without a hypocentre |
 | v4_time, v4_lat, v4_lon, v4_depth, v4_npick, v4_sigma_m | catalog v4 origin, hypocentre, picks, GraphDD spatial sigma (m) |
 | M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id | converged Route A magnitudes (D-B091, D-B102); magnitude_source names the table |
-| magnitude_source | v5.1_converged (computed with the v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091/D-B102; empty without a magnitude |
+| magnitude_source | table of the magnitude columns: v5.1_converged = converged Route A table computed with the v5.1 hypocentres (D-B091, D-B102); v4.1_converged = the same with the v4 hypocentres, for events the v5.1 table has no magnitude for; empty without a magnitude |
 | u_reason | why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events |
 | floor_limited | True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here |
 | far_only | True when none of the arrivals used came from a fine (near-station) travel-time grid: seen only by distant stations through the coarse wide grids; epicentre usable, depth poor; empty when not located here |

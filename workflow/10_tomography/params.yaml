@@ -951,7 +951,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       note: "Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre."
       surface_source: merged       # D-B068, as b4.surface.source of the b4_v51 runs
       magnitude_tables: [v5.1, v4.1]   # D-B102: magnitudes on the v5.1 hypocentres, else the v4.1 table; column magnitude_source
-      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (D-B091, D-B102; M, M_type ML / Mw / Mw_cal), computed with the v5.1 hypocentres (catalog v5.1 magnitude table) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres); magnitude_source names which."
+      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (D-B091, D-B102; M, M_type ML / Mw / Mw_cal), computed with the v5.1 hypocentres (catalog v5.1 magnitude table) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres); magnitude_source names which (v5.1_converged, v4.1_converged)."
       tier_u: none                 # D-B057: no v4 hypocentre outside the v4_* columns; u_reason says why
       decisions: [D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075, D-B091, D-B102]   # README header
       flags: [floor_limited, far_only, deep_pass, five_phase]   # boolean columns of b4_catalog.py counted in the README
@@ -965,7 +965,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_retiming/report.html, name: pick_retiming_report.html}
       columns:                     # README descriptions added or changed for v5.1 (override catalog_version.py COLUMNS by key)
         "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091, D-B102); magnitude_source names the table"
-        magnitude_source: "v5.1_converged (computed with the v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091/D-B102; empty without a magnitude"
+        magnitude_source: "table of the magnitude columns: v5.1_converged = converged Route A table computed with the v5.1 hypocentres (D-B091, D-B102); v4.1_converged = the same with the v4 hypocentres, for events the v5.1 table has no magnitude for; empty without a magnitude"
         u_reason: "why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events"
         floor_limited: "True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here"
         far_only: "True when none of the arrivals used came from a fine (near-station) travel-time grid: seen only by distant stations through the coarse wide grids; epicentre usable, depth poor; empty when not located here"
@@ -1012,7 +1012,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       flags: [floor_limited, far_only, deep_pass, edge_pass, five_phase, coherence_relocated, coherence_skipped_region]
       magnitudes: catalog          # keep the catalog's converged magnitudes and magnitude_source (D-B091; v6.0_for_session18.md)
       magnitude_tables: [v5.1, v4.1]   # for the v4.1 additions the relocation leaves out (900003), as b4_v6_catalog.py
-      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (D-B091; M, M_type ML / Mw / Mw_cal): the catalog v5.1 table (computed with v5.1 hypocentres) where it has the event, else the v4.1 table (v4 hypocentres); magnitude_source names which. They are not recomputed with the v6.0 hypocentres."
+      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (D-B091; M, M_type ML / Mw / Mw_cal): the catalog v5.1 table (computed with v5.1 hypocentres) where it has the event, else the v4.1 table (v4 hypocentres); magnitude_source names which (v5.1_converged, v4.1_converged). They are not recomputed with the v6.0 hypocentres."
       hypocentres_text: "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model} (velocity_models.zip in this record), with source-specific station terms and coherence relocation (below), run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone). station_terms_v{version}.in: the static terms of the first pass, used only by the deep and edge passes."
       picks_file: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv
       picks_md5: 1b21ab1c2cf5aba8b48c64a58fc37356
@@ -1025,7 +1025,7 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
       columns:
         tier: "location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules: a2_build_catalog.tier; counts in the table above)"
         "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091); magnitude_source names the table"
-        "magnitude_source": "v5.1_converged (computed with v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091; empty without a magnitude"
+        "magnitude_source": "table of the magnitude columns: v5.1_converged = converged Route A table computed with the v5.1 hypocentres (D-B091, D-B102); v4.1_converged = the same with the v4 hypocentres, for events the v5.1 table has no magnitude for; empty without a magnitude"
         "rms_unweighted": "unweighted rms of the residuals of the arrivals used (s); rms is NonLinLoc's EDT-weighted value (D-B069)"
         "shift_h_v51_km, shift_z_v51_km": "change from catalog v5.1 (horizontal; depth, positive = deeper), when both are located"
         "model_version": "velocity model of the travel-time grids (v0.4.1)"

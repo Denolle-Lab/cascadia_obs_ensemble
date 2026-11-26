@@ -38,6 +38,7 @@ Outputs: <out>/v<version>/ (catalog CSV '%.8g', README, station terms of the run
 and data/catalog_<series>/v<version>/ (README copy, summary, manifest, both with the final bundle md5).
 """
 import argparse
+import functools
 import gzip
 import hashlib
 import shutil
@@ -62,14 +63,26 @@ sys.path.insert(0, str(TA))
 from a2_parse_hyp import region  # noqa: E402
 
 MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id"]
-# converged Route A magnitude tables (D-B091): path, md5, key column, magnitude_source label
+# converged Route A magnitude tables (D-B091): path, md5, key column, magnitude_source label (short and machine-readable;
+# the README column description says what each label means)
 MAG_TABLES = {"v4.1": dict(path=P["v4_1_magnitudes"], md5=P.get("v4_1_magnitudes_md5"), key="event_id",
-                           label="v4.1_converged (D-B091, v4 hypocentres)"),
+                           label="v4.1_converged"),
               "v5.1": dict(path=P.get("v5_1_magnitudes"), md5=P.get("v5_1_magnitudes_md5"), key="ID",
-                           label="v5.1_converged (D-B091, v5.1 hypocentres)")}
+                           label="v5.1_converged")}
+# long labels written by b4_v6_catalog.py (catalog v6.0 input) -> the short labels above
+MAG_LABEL_LONG = {"v4.1_converged (D-B091, v4 hypocentres)": "v4.1_converged",
+                  "v5.1_converged (D-B091, v5.1 hypocentres)": "v5.1_converged"}
 
 
+def need(ok, msg):
+    """Integrity check that also runs under python -O (unlike assert)."""
+    if not ok:
+        raise SystemExit(msg)
+
+
+@functools.lru_cache(maxsize=None)
 def mag_table(name):
+    """The md5-checked table, read once per process (callers must not modify it)."""
     t = MAG_TABLES[name]
     if not t["md5"] or md5(t["path"]) != t["md5"]:
         raise SystemExit(f"magnitude table {name} ({t['path']}): md5 missing or different from params; refusing to build")
@@ -155,15 +168,15 @@ def build(version, out=None, rd=None):
     pos = c[["lat", "lon", "depth"]].notna().all(axis=1)
     nopos = c[["time", "lat", "lon", "depth"]].isna().all(axis=1)
     none = c.loc_source == "none"
-    assert (pos == ~none).all() and nopos[none].all(), f"{src}: hypocentre present/absent does not match loc_source none"
-    assert c.loc[pos, ["surface_km", "above_surface"]].notna().all().all(), f"{src}: surface check missing on some rows"
-    assert {"v4": "none", "none": "v4"}[tier_u] not in set(c.loc_source), f"{src}: tier U rows do not follow tier_u {tier_u}"
+    need((pos == ~none).all() and nopos[none].all(), f"{src}: hypocentre present/absent does not match loc_source none")
+    need(c.loc[pos, ["surface_km", "above_surface"]].notna().all().all(), f"{src}: surface check missing on some rows")
+    need({"v4": "none", "none": "v4"}[tier_u] not in set(c.loc_source), f"{src}: tier U rows do not follow tier_u {tier_u}")
     c["above_surface"] = c.above_surface.astype("boolean")
     v41 = pd.read_csv(P["v4_1_events"], skipinitialspace=True)
     v41.columns = [x.strip() for x in v41.columns]
     drop = sorted(set(c.ID) - set(v41.ID))
     add = sorted(set(v41.ID) - set(c.ID))
-    assert set(drop) <= set(P["v4_1_removed"]) and set(add) <= set(P["v4_1_added"]), (drop, add)
+    need(set(drop) <= set(P["v4_1_removed"]) and set(add) <= set(P["v4_1_added"]), f"removed {drop} / added {add} not in params v4_1_removed / v4_1_added")
     c = c[~c.ID.isin(drop)].copy()
     if add:  # v4.1 additions: ComCat hypocentre (utils/fix_catalog_v4.py); same columns as the B4 rows
         a = v41.set_index("ID").loc[add]
@@ -184,22 +197,28 @@ def build(version, out=None, rd=None):
     names = V.get("magnitude_tables", ["v4.1"])
     if V.get("magnitudes") == "catalog":           # the catalog brings its own magnitudes and their source; only the
         missing = [k for k in MAG_COLS + ["magnitude_source"] if k not in c]       # v4.1 additions it leaves out take
-        assert not missing, f"{src}: magnitudes: catalog, but columns missing: {missing}"   # the tables
+        if missing:                                                                  # the tables
+            raise SystemExit(f"{src}: magnitudes: catalog, but columns missing: {missing}")
+        ms = c["magnitude_source"].replace(MAG_LABEL_LONG)                           # short labels
+        bad = sorted(set(ms.dropna()) - {t["label"] for t in MAG_TABLES.values()})
+        if bad:
+            raise SystemExit(f"{src}: unknown magnitude_source labels {bad}")
+        c["magnitude_source"] = ms
         mag_inputs = assign_magnitudes(c, c.ID.isin(add).values, names, source=True)
     else:
         mag_inputs = assign_magnitudes(c, np.ones(len(c), bool), names, source=len(names) > 1)
     c = c.drop(columns=["v4_magnitude"], errors="ignore").sort_values("ID").reset_index(drop=True)
-    assert c.ID.is_unique and len(c) == len(v41), (len(c), len(v41))
+    need(c.ID.is_unique and len(c) == len(v41), f"IDs not unique or {len(c)} rows against {len(v41)} catalog v4.1 events")
     # every column described in the README
     cols = {**COLUMNS, **(P["versions"][V["columns_from"]].get("columns", {}) if V.get("columns_from") else {}),
             **V.get("columns", {})}
     ls = c.loc_source.value_counts().to_dict()
     cols["loc_source"] = ", ".join(f"{k} ({LOC_SOURCE[k][0]})" for k in LOC_SOURCE if k in ls)
-    assert set(ls) <= set(LOC_SOURCE), set(ls) - set(LOC_SOURCE)
+    need(set(ls) <= set(LOC_SOURCE), f"unknown loc_source {set(ls) - set(LOC_SOURCE)}")
     described = {x for k in cols for x in k.split(", ")}
     undoc = [x for x in c.columns if x not in described]
-    assert not undoc, f"columns without a README description (params catalog_versions.versions.{version}.columns): {undoc}"
-    assert set(flag_cols) <= set(c.columns), set(flag_cols) - set(c.columns)
+    need(not undoc, f"columns without a README description (params catalog_versions.versions.{version}.columns): {undoc}")
+    need(set(flag_cols) <= set(c.columns), f"flag columns missing: {set(flag_cols) - set(c.columns)}")
 
     vd = out / f"v{version}"
     vd.mkdir(parents=True, exist_ok=True)
@@ -218,7 +237,7 @@ def build(version, out=None, rd=None):
         shutil.copy(extra[-1], vd / f.get("name", Path(f["path"]).name))
     picks = Path(V["picks_file"]) if V.get("picks_file") else None
     if picks:
-        assert md5(picks) == V["picks_md5"], f"{picks}: md5 differs from params picks_md5"
+        need(md5(picks) == V["picks_md5"], f"{picks}: md5 differs from params picks_md5")
         with open(picks, "rb") as fi, open(vd / f"{picks.name}.gz", "wb") as raw, \
                 gzip.GzipFile(fileobj=raw, mode="wb", filename="", mtime=0) as fo:
             shutil.copyfileobj(fi, fo, 1 << 24)

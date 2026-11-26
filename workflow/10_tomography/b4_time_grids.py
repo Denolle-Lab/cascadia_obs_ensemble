@@ -67,8 +67,10 @@ a2_run_nlloc.py --time <time_name>) and a manifest; the fields in work_<time_nam
 
   pixi run -e models python workflow/10_tomography/b4_time_grids.py VERSION TIME_NAME [--nproc 40] [--stations A,B]
                                                                     [--root DIR]
---root (tests): writes <DIR>/<time_name> and <DIR>/work_<time_name> instead of reloc_v5, and the manifest only next to
-the grids (no append to the shared manifests.jsonl). The merged mask reads b4_surface's pinned sources (params
+--root (tests; catalog v6.0 builds into reloc_v6): writes <DIR>/<time_name> and <DIR>/work_<time_name> instead of
+reloc_v5, and the manifest only next to the grids (no append to the shared manifests.jsonl).
+Model variables (open_model): Vp_tomography / Vs_tomography when the product has them (D-B076 products, v0.3.2 on:
+their Vp / Vs hold water and air above the surface), recorded as params model_vars; Vp / Vs otherwise. The merged mask reads b4_surface's pinned sources (params
 b4.surface.dir, or B4_SURFACE_DIR for tests).
 """
 import argparse
@@ -505,6 +507,26 @@ def check_guard(out, work, prm):
     return stamp
 
 
+MODEL_VARS_TOMO = ("Vp_tomography", "Vs_tomography")
+
+
+def open_model(version):
+    """The model version's node velocities for the fields, as (dataset with Vp, Vs, the variables used). A product
+    with the D-B076 conventions (v0.3.2 on) holds water (Vp 1.5) and air (NaN) above the solid surface in Vp and Vs
+    and the D-B073 node rule in Vs; the field rule needs the inversion's own rock-continued values, which such a
+    product keeps as Vp_tomography, Vs_tomography (b2_model_v041.py: the NLL fields were built from them). So those are
+    used when present, Vp and Vs otherwise (every product up to v0.3.1)."""
+    ds = xr.open_dataset(Path(X["store"]) / X["name"] / f"v{version}.nc")
+    if all(v in ds for v in MODEL_VARS_TOMO):
+        ds = ds.drop_vars(["Vp", "Vs"]).rename({MODEL_VARS_TOMO[0]: "Vp", MODEL_VARS_TOMO[1]: "Vs"})
+        used = list(MODEL_VARS_TOMO)
+    else:
+        used = ["Vp", "Vs"]
+    for v in ("Vp", "Vs"):
+        assert np.isfinite(ds[v].values).all(), f"v{version} {v}: non-finite node velocities"
+    return ds, used
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("version")
@@ -513,11 +535,13 @@ def main():
     ap.add_argument("--stations", help="comma-separated labels (test)")
     ap.add_argument("--root", default=str(RELOC), help="output root (tests); manifest then local only")
     a = ap.parse_args()
-    ds = xr.open_dataset(Path(X["store"]) / X["name"] / f"v{a.version}.nc")
+    ds, used = open_model(a.version)
     root = Path(a.root)
     out = root / a.time_name
     work = root / f"work_{a.time_name}"
     prm, surf_inputs, surf_notes = run_params(a.version)
+    if used != ["Vp", "Vs"]:                           # absent = Vp, Vs (every build to v0.3.1)
+        prm["model_vars"] = used
     stamp = check_guard(out, work, prm)
     out.mkdir(parents=True, exist_ok=True)
     work.mkdir(parents=True, exist_ok=True)

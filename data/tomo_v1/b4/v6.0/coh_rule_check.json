@@ -1,0 +1,101 @@
+{
+ "use": "r3",
+ "rule_r3": "sep_km <= 3.0 km, >= 3 accepted rows, median cc_max >= 0.5 over >= 3 measured rows, clock-straddling rows out",
+ "decision_rule": "R3 worse if MAD(R3)-MAD(test) has a 95% bootstrap interval above 0 and >= 5% of MAD(test) in puget or mtj, P or S",
+ "nboot": 2000,
+ "rows": [
+  {
+   "set": "puget",
+   "phase": "P",
+   "rows": 13241,
+   "pairs": 3943,
+   "mad_ssst_ms": 64.71025924682263,
+   "mad_test_ms": 57.23210259260153,
+   "mad_r3_ms": 57.529646187126666,
+   "r3_minus_test_ms": 0.2975435945251348,
+   "lo_ms": -0.7954684689492718,
+   "hi_ms": 1.6004303182063482,
+   "r3_worse": false,
+   "relocated_test": [
+    126,
+    313,
+    153
+   ],
+   "relocated_r3": [
+    126,
+    313,
+    153
+   ]
+  },
+  {
+   "set": "puget",
+   "phase": "S",
+   "rows": 12707,
+   "pairs": 3846,
+   "mad_ssst_ms": 100.37349395048007,
+   "mad_test_ms": 90.67618545780614,
+   "mad_r3_ms": 91.29748661646272,
+   "r3_minus_test_ms": 0.6213011586565786,
+   "lo_ms": -1.3979038822569365,
+   "hi_ms": 2.328576926271582,
+   "r3_worse": false,
+   "relocated_test": [
+    126,
+    313,
+    153
+   ],
+   "relocated_r3": [
+    126,
+    313,
+    153
+   ]
+  },
+  {
+   "set": "mtj",
+   "phase": "P",
+   "rows": 10774,
+   "pairs": 2062,
+   "mad_ssst_ms": 43.51182438830557,
+   "mad_test_ms": 51.85514590400796,
+   "mad_r3_ms": 51.8232944590796,
+   "r3_minus_test_ms": -0.03185144492836439,
+   "lo_ms": -0.30943016331990114,
+   "hi_ms": 0.37207891238615876,
+   "r3_worse": false,
+   "relocated_test": [
+    228,
+    244,
+    312
+   ],
+   "relocated_r3": [
+    228,
+    244,
+    312
+   ]
+  },
+  {
+   "set": "mtj",
+   "phase": "S",
+   "rows": 9192,
+   "pairs": 2003,
+   "mad_ssst_ms": 62.4386463031649,
+   "mad_test_ms": 83.05762681340362,
+   "mad_r3_ms": 82.69663456153803,
+   "r3_minus_test_ms": -0.36099225186558836,
+   "lo_ms": -1.0541351622289128,
+   "hi_ms": 0.13519995604574478,
+   "r3_worse": false,
+   "relocated_test": [
+    228,
+    244,
+    312
+   ],
+   "relocated_r3": [
+    228,
+    244,
+    312
+   ]
+  }
+ ],
+ "utc": "2026-11-25T20:09:59-0800"
+}

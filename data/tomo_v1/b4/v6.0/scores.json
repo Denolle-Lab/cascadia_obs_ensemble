@@ -1,0 +1,491 @@
+{
+ "sets": {
+  "axial": {
+   "region": "Axial",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     901,
+     1006,
+     992
+    ],
+    "coherence_r3": [
+     901,
+     1006,
+     992
+    ]
+   },
+   "events": 1200,
+   "P": {
+    "set": "axial",
+    "region": "Axial",
+    "phase": "P",
+    "rows": 9523,
+    "mad_ssst_ms": 50.32292631523569,
+    "mad_coh_ms": 36.4304594729975,
+    "mad_coh_r3_ms": 40.527182494828814,
+    "diff_ms": -13.892466842238187,
+    "lo_ms": -15.247822413116268,
+    "hi_ms": -12.388709131631487,
+    "pairs": 4343,
+    "effect": "helps",
+    "diff_r3_ms": -9.795743820406877,
+    "lo_r3_ms": -11.058806025640632,
+    "hi_r3_ms": -8.360621631694794,
+    "effect_r3": "helps"
+   },
+   "S": {
+    "set": "axial",
+    "region": "Axial",
+    "phase": "S",
+    "rows": 4802,
+    "mad_ssst_ms": 77.10206174059539,
+    "mad_coh_ms": 45.19487323369201,
+    "mad_coh_r3_ms": 51.78372279357936,
+    "diff_ms": -31.907188506903385,
+    "lo_ms": -35.28501681598111,
+    "hi_ms": -29.03995711308724,
+    "pairs": 2939,
+    "effect": "helps",
+    "diff_r3_ms": -25.31833894701603,
+    "lo_r3_ms": -28.485568094169263,
+    "hi_r3_ms": -22.50959508261895,
+    "effect_r3": "helps"
+   }
+  },
+  "blanco": {
+   "region": "Blanco",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     15,
+     0,
+     22
+    ],
+    "coherence_r3": [
+     15,
+     0,
+     22
+    ]
+   },
+   "events": 1044,
+   "P": {
+    "set": "blanco",
+    "region": "Blanco",
+    "phase": "P",
+    "rows": 5092,
+    "mad_ssst_ms": 87.84582136202098,
+    "mad_coh_ms": 88.14858307849497,
+    "mad_coh_r3_ms": 88.14858307849497,
+    "diff_ms": 0.302761716473976,
+    "lo_ms": -0.23996125444261662,
+    "hi_ms": 0.8131653900634677,
+    "pairs": 2934,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.302761716473976,
+    "lo_r3_ms": -0.23996125444261662,
+    "hi_r3_ms": 0.8131653900634677,
+    "effect_r3": "no clear effect"
+   },
+   "S": {
+    "set": "blanco",
+    "region": "Blanco",
+    "phase": "S",
+    "rows": 4143,
+    "mad_ssst_ms": 143.00531679974637,
+    "mad_coh_ms": 143.01165987972908,
+    "mad_coh_r3_ms": 143.01165987972908,
+    "diff_ms": 0.0063430799827068896,
+    "lo_ms": -0.5969215367528369,
+    "hi_ms": 0.689100114688839,
+    "pairs": 2389,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.0063430799827068896,
+    "lo_r3_ms": -0.5969215367528369,
+    "hi_r3_ms": 0.689100114688839,
+    "effect_r3": "no clear effect"
+   }
+  },
+  "msh": {
+   "region": "Cascades (Mount St Helens)",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     1138,
+     921,
+     935
+    ],
+    "coherence_r3": [
+     1138,
+     921,
+     935
+    ]
+   },
+   "events": 1436,
+   "P": {
+    "set": "msh",
+    "region": "Cascades (Mount St Helens)",
+    "phase": "P",
+    "rows": 28727,
+    "mad_ssst_ms": 44.01853943809792,
+    "mad_coh_ms": 21.42413327526979,
+    "mad_coh_r3_ms": 22.810510730326353,
+    "diff_ms": -22.594406162828125,
+    "lo_ms": -23.832544147336343,
+    "hi_ms": -21.458889838152135,
+    "pairs": 6621,
+    "effect": "helps",
+    "diff_r3_ms": -21.20802870777156,
+    "lo_r3_ms": -22.37697054357399,
+    "hi_r3_ms": -20.07831037779171,
+    "effect_r3": "helps"
+   },
+   "S": {
+    "set": "msh",
+    "region": "Cascades (Mount St Helens)",
+    "phase": "S",
+    "rows": 12246,
+    "mad_ssst_ms": 48.75684977942831,
+    "mad_coh_ms": 19.9034789928462,
+    "mad_coh_r3_ms": 20.253673774807822,
+    "diff_ms": -28.853370786582104,
+    "lo_ms": -30.731256067081343,
+    "hi_ms": -26.87520748060256,
+    "pairs": 3412,
+    "effect": "helps",
+    "diff_r3_ms": -28.50317600462048,
+    "lo_r3_ms": -30.398551498011514,
+    "hi_r3_ms": -26.56591861125866,
+    "effect_r3": "helps"
+   }
+  },
+  "jdf": {
+   "region": "JdF ridge/plate",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     0,
+     0,
+     1
+    ],
+    "coherence_r3": [
+     0,
+     0,
+     1
+    ]
+   },
+   "events": 162,
+   "P": {
+    "set": "jdf",
+    "region": "JdF ridge/plate",
+    "phase": "P",
+    "rows": 2381,
+    "mad_ssst_ms": 163.6645425197272,
+    "mad_coh_ms": 163.6645425197272,
+    "mad_coh_r3_ms": 163.6645425197272,
+    "diff_ms": 0.0,
+    "lo_ms": 0.0,
+    "hi_ms": 0.0,
+    "pairs": 1297,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.0,
+    "lo_r3_ms": 0.0,
+    "hi_r3_ms": 0.0,
+    "effect_r3": "no clear effect"
+   },
+   "S": {
+    "set": "jdf",
+    "region": "JdF ridge/plate",
+    "phase": "S",
+    "rows": 2151,
+    "mad_ssst_ms": 293.01757737765655,
+    "mad_coh_ms": 293.01757737765655,
+    "mad_coh_r3_ms": 293.01757737765655,
+    "diff_ms": 0.0,
+    "lo_ms": 0.0,
+    "hi_ms": 0.0,
+    "pairs": 1216,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.0,
+    "lo_r3_ms": 0.0,
+    "hi_r3_ms": 0.0,
+    "effect_r3": "no clear effect"
+   }
+  },
+  "puget": {
+   "region": "Puget/Georgia",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     126,
+     313,
+     153
+    ],
+    "coherence_r3": [
+     126,
+     313,
+     153
+    ]
+   },
+   "events": 1000,
+   "P": {
+    "set": "puget",
+    "region": "Puget/Georgia",
+    "phase": "P",
+    "rows": 13241,
+    "mad_ssst_ms": 64.71025924682263,
+    "mad_coh_ms": 57.23210259260153,
+    "mad_coh_r3_ms": 57.529646187126666,
+    "diff_ms": -7.4781566542210935,
+    "lo_ms": -10.202605077471658,
+    "hi_ms": -4.955884012908931,
+    "pairs": 3943,
+    "effect": "helps",
+    "diff_r3_ms": -7.1806130596959585,
+    "lo_r3_ms": -9.691370975429493,
+    "hi_r3_ms": -4.82041117143308,
+    "effect_r3": "helps"
+   },
+   "S": {
+    "set": "puget",
+    "region": "Puget/Georgia",
+    "phase": "S",
+    "rows": 12707,
+    "mad_ssst_ms": 100.37349395048007,
+    "mad_coh_ms": 90.67618545780614,
+    "mad_coh_r3_ms": 91.29748661646272,
+    "diff_ms": -9.697308492673917,
+    "lo_ms": -13.921011570853896,
+    "hi_ms": -6.508478157985833,
+    "pairs": 3846,
+    "effect": "helps",
+    "diff_r3_ms": -9.076007334017339,
+    "lo_r3_ms": -13.341753997123341,
+    "hi_r3_ms": -6.349896249939028,
+    "effect_r3": "helps"
+   }
+  },
+  "mtj": {
+   "region": "Mendocino",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     228,
+     244,
+     312
+    ],
+    "coherence_r3": [
+     228,
+     244,
+     312
+    ]
+   },
+   "events": 600,
+   "P": {
+    "set": "mtj",
+    "region": "Mendocino",
+    "phase": "P",
+    "rows": 10774,
+    "mad_ssst_ms": 43.51182438830557,
+    "mad_coh_ms": 51.85514590400796,
+    "mad_coh_r3_ms": 51.8232944590796,
+    "diff_ms": 8.34332151570239,
+    "lo_ms": 5.165588416415729,
+    "hi_ms": 11.693519308660903,
+    "pairs": 2062,
+    "effect": "hurts",
+    "diff_r3_ms": 8.311470070774027,
+    "lo_r3_ms": 5.287672388303506,
+    "hi_r3_ms": 11.669358591415666,
+    "effect_r3": "hurts"
+   },
+   "S": {
+    "set": "mtj",
+    "region": "Mendocino",
+    "phase": "S",
+    "rows": 9192,
+    "mad_ssst_ms": 62.4386463031649,
+    "mad_coh_ms": 83.05762681340362,
+    "mad_coh_r3_ms": 82.69663456153803,
+    "diff_ms": 20.618980510238714,
+    "lo_ms": 16.107411311802952,
+    "hi_ms": 26.25255814154596,
+    "pairs": 2003,
+    "effect": "hurts",
+    "diff_r3_ms": 20.257988258373125,
+    "lo_r3_ms": 15.771697833917262,
+    "hi_r3_ms": 25.82253240725364,
+    "effect_r3": "hurts"
+   }
+  },
+  "blancow": {
+   "region": "Blanco",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     10,
+     19,
+     9
+    ],
+    "coherence_r3": [
+     10,
+     19,
+     9
+    ]
+   },
+   "events": 1200,
+   "P": {
+    "set": "blancow",
+    "region": "Blanco",
+    "phase": "P",
+    "rows": 13165,
+    "mad_ssst_ms": 99.29251286892675,
+    "mad_coh_ms": 99.3936328555926,
+    "mad_coh_r3_ms": 99.3936328555926,
+    "diff_ms": 0.10111998666585686,
+    "lo_ms": -0.0732624861667322,
+    "hi_ms": 0.385829291655133,
+    "pairs": 5612,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.10111998666585686,
+    "lo_r3_ms": -0.0732624861667322,
+    "hi_r3_ms": 0.385829291655133,
+    "effect_r3": "no clear effect"
+   },
+   "S": {
+    "set": "blancow",
+    "region": "Blanco",
+    "phase": "S",
+    "rows": 16971,
+    "mad_ssst_ms": 155.1483385073465,
+    "mad_coh_ms": 155.0932435993092,
+    "mad_coh_r3_ms": 155.0932435993092,
+    "diff_ms": -0.05509490803728978,
+    "lo_ms": -0.26294074762088576,
+    "hi_ms": 0.3065589832414717,
+    "pairs": 6450,
+    "effect": "no clear effect",
+    "diff_r3_ms": -0.05509490803728978,
+    "lo_r3_ms": -0.26294074762088576,
+    "hi_r3_ms": 0.3065589832414717,
+    "effect_r3": "no clear effect"
+   }
+  },
+  "georgia": {
+   "region": "Puget/Georgia",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     359,
+     230,
+     271
+    ],
+    "coherence_r3": [
+     359,
+     230,
+     271
+    ]
+   },
+   "events": 700,
+   "P": {
+    "set": "georgia",
+    "region": "Puget/Georgia",
+    "phase": "P",
+    "rows": 14453,
+    "mad_ssst_ms": 34.49390910823257,
+    "mad_coh_ms": 19.7693213201136,
+    "mad_coh_r3_ms": 19.745871525571435,
+    "diff_ms": -14.72458778811897,
+    "lo_ms": -15.961348629449041,
+    "hi_ms": -13.370853459149062,
+    "pairs": 4087,
+    "effect": "helps",
+    "diff_r3_ms": -14.748037582661137,
+    "lo_r3_ms": -15.95180655191351,
+    "hi_r3_ms": -13.373359458898658,
+    "effect_r3": "helps"
+   },
+   "S": {
+    "set": "georgia",
+    "region": "Puget/Georgia",
+    "phase": "S",
+    "rows": 20359,
+    "mad_ssst_ms": 50.63256325161434,
+    "mad_coh_ms": 30.248380160900922,
+    "mad_coh_r3_ms": 30.299828774686837,
+    "diff_ms": -20.384183090713424,
+    "lo_ms": -22.108038548248505,
+    "hi_ms": -18.476247733752253,
+    "pairs": 4056,
+    "effect": "helps",
+    "diff_r3_ms": -20.33273447692751,
+    "lo_r3_ms": -22.085404226800108,
+    "hi_r3_ms": -18.43460933514843,
+    "effect_r3": "helps"
+   }
+  },
+  "gorda": {
+   "region": "Gorda",
+   "relocated_by_coherence_per_fold": {
+    "coherence": [
+     15,
+     88,
+     96
+    ],
+    "coherence_r3": [
+     15,
+     88,
+     96
+    ]
+   },
+   "events": 800,
+   "P": {
+    "set": "gorda",
+    "region": "Gorda",
+    "phase": "P",
+    "rows": 8586,
+    "mad_ssst_ms": 46.54074640072894,
+    "mad_coh_ms": 46.75685479942327,
+    "mad_coh_r3_ms": 46.75519712662017,
+    "diff_ms": 0.21610839869432713,
+    "lo_ms": -0.2570393782186986,
+    "hi_ms": 0.8955367780128435,
+    "pairs": 2970,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.21445072589122705,
+    "lo_r3_ms": -0.3061319185663911,
+    "hi_r3_ms": 0.833333448891864,
+    "effect_r3": "no clear effect"
+   },
+   "S": {
+    "set": "gorda",
+    "region": "Gorda",
+    "phase": "S",
+    "rows": 10139,
+    "mad_ssst_ms": 57.02499971275646,
+    "mad_coh_ms": 57.29658273788609,
+    "mad_coh_r3_ms": 57.22521378666968,
+    "diff_ms": 0.27158302512963334,
+    "lo_ms": -0.8052346992890602,
+    "hi_ms": 1.2847291591361583,
+    "pairs": 3275,
+    "effect": "no clear effect",
+    "diff_r3_ms": 0.20021407391321994,
+    "lo_r3_ms": -0.8784527338976794,
+    "hi_r3_ms": 1.2051617515547135,
+    "effect_r3": "no clear effect"
+   }
+  }
+ },
+ "schedule": [
+  9999.0,
+  16.0,
+  8.0,
+  4.0
+ ],
+ "folds": 3,
+ "seed": 78,
+ "nboot": 2000,
+ "grids": {
+  "fine": "/wd1/mdenolle_data/reloc_v6/time_v6_v0.4.1",
+  "wide": "/wd1/mdenolle_data/reloc_v6/wide_time_v6_v0.4.1"
+ },
+ "rules": {
+  "test": "median cc_max >= 0.5 over >= 3 measured rows",
+  "r3": "and sep_km <= 3.0, >= 3 accepted rows"
+ },
+ "missing": [],
+ "utc": "2026-11-26T08:05:29-0800"
+}

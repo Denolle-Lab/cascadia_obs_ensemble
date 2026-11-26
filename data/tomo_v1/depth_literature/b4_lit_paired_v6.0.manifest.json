@@ -1,0 +1,68 @@
+{
+ "name": "b4_lit_paired_v6.0",
+ "script": "/home/mdenolle/wt_v6/workflow/10_tomography/b4_lit_paired.py",
+ "argv": [
+  "v6.0=/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+  "v5.1=/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+ ],
+ "utc": "2026-11-26T16:05:30.724122+00:00",
+ "git_commit": "74b09ce9b4cf1e3f7d408427ec25407728d0a8c5",
+ "git_dirty": false,
+ "params_md5": "457dc4bda362c2171b0a98a2a94a9091",
+ "params": {
+  "catalogs": {
+   "v6.0": "/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+   "v5.1": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+   "size": 90067133,
+   "mtime": "2026-11-26T16:03:00.897820+00:00",
+   "md5": "ae77ad3c66aa6fbaa48528660a1c09ec"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+   "size": 65732303,
+   "mtime": "2026-11-25T11:22:07.664512+00:00",
+   "md5": "5035f0ee6c6494eed764f1733290d5bd"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv",
+   "size": 1042674,
+   "mtime": "2026-11-24T18:46:13.229669+00:00",
+   "md5": "cf70ec527af3b4f7bb78db938d8e5d53"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_rel_pairs.csv",
+   "size": 933819,
+   "mtime": "2026-11-24T18:46:13.262669+00:00",
+   "md5": "9a1f7083827fad9c1a1a74889ad4deb9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/msh_hirao2025_pairs.csv",
+   "size": 248846,
+   "mtime": "2026-11-24T18:46:13.190669+00:00",
+   "md5": "fc334714358bfadc7cb79f36d9ec795b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_v6/data/tomo_v1/depth_literature/paired_v6.0.md",
+   "size": 3662,
+   "mtime": "2026-11-26T16:05:30.723054+00:00",
+   "md5": "f1bbcf12ef7b6e44f5e0b62587835913"
+  },
+  {
+   "path": "/home/mdenolle/wt_v6/data/tomo_v1/depth_literature/paired_v6.0.csv",
+   "size": 7638,
+   "mtime": "2026-11-26T16:05:30.709054+00:00",
+   "md5": "2ec65c885477770851b06b460a67d268"
+  }
+ ],
+ "counts": {
+  "rows": 78
+ },
+ "notes": null
+}

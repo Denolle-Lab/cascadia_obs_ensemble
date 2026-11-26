@@ -603,12 +603,32 @@ def prune(root, k):
     log(f"pruned g{k - 1}: {n} corrected grids ({b / 1e9:.1f} GB) no longer referenced; {len(keep)} links of g{k} kept")
 
 
+DISK_MIN_GB = float(os.environ.get("V6_DISK_MIN_GB", "500"))     # keep at least this much free on /wd1 (PI)
+
+
+def disk_free_gb(path=R6):
+    st = os.statvfs(path)
+    return st.f_bavail * st.f_frsize / 1e9
+
+
+def wait_disk(need_gb, label):
+    """wait (log every 10 min) until the disk keeps DISK_MIN_GB free after writing need_gb."""
+    n = 0
+    while disk_free_gb() - need_gb < DISK_MIN_GB:
+        if n % 10 == 0:
+            log(f"{label}: {disk_free_gb():.0f} GB free, {need_gb:.0f} GB needed, {DISK_MIN_GB:.0f} GB must stay free: waiting")
+        n += 1
+        time.sleep(60)
+
+
 def cmd_lss(a):
     root, k = Path(a.root), int(a.k)
     gd = root / f"g{k}"
     if (gd / "summary.json").exists():
         log(f"{gd} done")
         return
+    plan = json.loads((plan_dir(root) / "plan.json").read_text())
+    wait_disk(1.3 * plan["corrected_grid_bytes_per_pass"] / 1e9, f"g{k}")
     rd = root / f"it{k}"
     if not (rd / "run.json").exists():
         raise SystemExit(f"{rd} not finished")

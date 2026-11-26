@@ -520,6 +520,8 @@ def guarded(fn, *args):
 
 
 def main():
+    if len(sys.argv) < 2:
+        raise SystemExit(__doc__ or "usage: b2_ens_run.py chain | members ... | status | clear-failed KIND (NAME .. | --all)")
     cmd = sys.argv[1]
     if cmd == "chain":
         guarded(chain)

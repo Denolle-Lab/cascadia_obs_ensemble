@@ -894,6 +894,7 @@ def cmd_coh(a):
     skipped = {i for i in compact if reg.get(i) in skip_regions}
     compact_all = compact
     compact = compact - skipped
+    rd.mkdir(parents=True, exist_ok=True)
     (rd / "coherence_skipped_region.csv").write_text(
         "ID,region\n" + "".join(f"{i},{reg.get(i)}\n" for i in sorted(skipped)))
     log(f"coherence: {len(skipped)} compact events skipped in regions {sorted(skip_regions)} (D-B098)")

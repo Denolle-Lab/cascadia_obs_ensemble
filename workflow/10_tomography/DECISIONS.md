@@ -929,3 +929,22 @@ In v6.0, compact events (Len3 <= 5 km) whose catalog v5.1 region is "Mendocino" 
 still be stacking partners of events outside the region. Code: reloc/v6-prep 5596e49e (b4_v6_reloc.py cmd_coh, override
 V6_COH_SKIP_REGIONS; catalog column coherence_skipped_region; coh/coherence_skipped_region.csv). Provisional: it rests on one
 Mendocino test cluster; the acceptance report states it, and v6.1 can revisit it with a second Mendocino test.
+
+### D-B099 Model v0.4.2 = v0.4.1 without self-paired differential times, with the patched tomoDD; ensemble and synthetic calibration rerun before registration (adopted, 2026-11-26 06:27, PI; amends D-B083, D-B094)
+Diagnosis of the four failed real-ensemble members (2026-11-25 20:55-22:19; ensemble_v0.4.1/diag_failures/):
+(1) tomoDD exit 139 in about 3 % of members (real r002, r049; synthetic s034, s060, s089): sph2car in tomoDD's
+transform_r_gfortran.c takes sqrt(d2^2 - z^2) with z rounded to float, which goes negative for ray nodes within a few metres
+of the vertical axis through the tile centre; the NaN node then indexes ixloc(int(NaN)) in vel3. Deterministic per member; no
+silent cases. Patch: the algebraically identical stable form (d3 sin del; atan2 in car2sph) only where the old expression
+leaves its domain; same bits elsewhere (r002, r049 first iterations byte-identical, then all 12 iterations run).
+(2) Self-pairs in dt.ct: b2_tomodd_inputs.diff_times dropped column 0 of the cKDTree query as "self"; with two events at
+identical hypocentres the twin can come first, so an event is paired with itself. tomoDD reads C1 == C2 as an absolute time
+with travel time 0 s (weight x10), which pulls the event 10-31 km away. 8 events: washington 6 (28514, 40700, 53148, 55170,
+80094, 94266), mendocino_gorda_c 1 (156844), blanco 1 (81324). Present in the deterministic v0.4.1, all ensemble members and
+the v0.3.2 synthetic calibration; r017 failed on it (linearised residual -30 s overflowing tomoDD.res). Without them: Vs at
+29 km under the Vancouver Island cluster 3.51 -> 4.06 km/s, 1 Vp and 11 Vs nodes change by > 0.05 km/s.
+PI chose: fix the builder (tomo/ensemble-fix 53a3b868) and adopt the patched tomoDD (new freeze outside git); re-invert the
+three affected tiles as v0.4.2; rerun the ensemble on v0.4.2; then redo the synthetic calibration on the fixed configuration
+and register the ensemble only once the inflation factors are confirmed (updated if they move by more than 0.05). Catalog
+v6.0 stays on v0.4.1 (local difference; stated in its README). B5 code (b5_common.diff_times) has the same bug (session -18
+told 2026-11-25 22:2x).

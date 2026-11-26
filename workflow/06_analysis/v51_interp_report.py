@@ -18,7 +18,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-from v51_interp_common import BIG, CLU, FLT, MAG, OUT, REGIONS, SLUG, VER_F, hav
+from v51_interp_common import BIG, CLU, FLT, MAG, MCB, OUT, REGIONS, SLUG, VER_F, hav
 
 FIG = OUT / "figs"
 
@@ -77,7 +77,7 @@ BS = pd.read_csv(OUT / "blanco_segments.csv")
 MAGR = pd.read_csv(MAG / "v51_vs_v4_by_region.csv").set_index("region")
 P19 = pd.read_csv(MAG / "phase19_convergence_by_region.csv").set_index("region")          # converged - stored final ML
 P19D = pd.read_csv(MAG / "phase19_convergence_v51_minus_v41.csv").set_index("region")     # v5.1 - v4.1, stored/converged
-PB = pd.read_csv(MAG / "mc_b" / "paired_b.csv")
+PB = pd.read_csv(MCB / "paired_b.csv")
 c = pd.read_pickle(BIG / "events_joined.pkl")
 E = c[c.is_eq]
 A = c[c.in_analysis.eq(True)]

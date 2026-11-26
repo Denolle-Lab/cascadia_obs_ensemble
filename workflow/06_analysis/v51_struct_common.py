@@ -1,7 +1,8 @@
 """Shared loaders and statistics for the v5.1 structure-seismicity analysis (v51_struct.py).
 
 Inputs (read only):
-* catalog v5.1 (/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv), the v5.1 magnitudes (mag piece),
+* catalog v5.1 (/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv), the v5.1 magnitudes (converged,
+  D-B091; CASCADIA_MAG_V51=stored for the mag piece table, workflow/05_magnitude/mag_paths.py),
   the v5.1 nearest-neighbour clustering (clusters piece) and the fault surfaces v1 (faults piece);
 * velocity model v0.3.1 (netCDF). Only nodes that pass the checkerboard tests are used (D-B018, D-B049, D-B051).
   Vp and dVp are sampled where resolution_p > 0 (mask mP, column resP). Vs, dVs, Vp/Vs and dVp/Vs are all sampled
@@ -18,6 +19,7 @@ what the ray coverage and the depth alone predict.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -25,8 +27,11 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.append(str(HERE.parent / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+
 CAT = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
-MAG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv")
+MAG = mag_paths.v51()        # $CASCADIA_MAG_V51: converged (default), stored or a path
 CLU = Path("/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters")
 FLT = Path("/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults")
 FLT_BIG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/faults")

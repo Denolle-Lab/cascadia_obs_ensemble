@@ -424,9 +424,17 @@ def fig_faults(pf, out):
 
 
 def main():
+    global OUT, SWARMS
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--no-map", action="store_true")
+    ap.add_argument("--out", type=Path, default=OUT, help="clustering folder (v4_clusters_zbz.py --out); report written there")
+    ap.add_argument("--swarms", type=Path, default=SWARMS, help="v4_swarms.py output folder")
+    ap.add_argument("--mag", default=None, help="v4.1 magnitudes for the catalog reload (as v4_clusters_zbz.py --mag)")
     a = ap.parse_args()
+    OUT, SWARMS = a.out, a.swarms
+    import v4_clusters_zbz as z
+    z.MAG = z.mag_paths.v41(a.mag)
+    print(f"clustering {OUT}; swarms {SWARMS}; magnitudes {z.MAG}", flush=True)
     use()
     ev, fam, reg, thr, comp, sens, sh = load()
     val, vs, vo = validate(ev, fam)

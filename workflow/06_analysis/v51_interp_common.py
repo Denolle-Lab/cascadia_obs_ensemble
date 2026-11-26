@@ -4,8 +4,12 @@ Reads (never writes) the catalog v5.1, the outputs of the pieces mag, faults and
 (their worktrees, committed state), their verifiers' tables on /wd1, and the v4-era products
 (catalog v4 clusters, fault surfaces v0 and their literature matches) of this worktree.
 
-Paths can be overridden with environment variables (V51_WD1, V51_CAT, V51_MAG, V51_FAULTS, V51_CLUSTERS,
-V51_ANSS, V51_SLAB2; the figures script also reads V51_GMT). The defaults are this project's data locations.
+Paths can be overridden with environment variables (V51_WD1, V51_CAT, V51_MAG, V51_MAG_SLIM, V51_MCB, V51_FAULTS,
+V51_CLUSTERS, V51_ANSS, V51_SLAB2; the figures script also reads V51_GMT). The defaults are this project's data
+locations. Magnitudes (D-B091): V51_MAG is the mag piece folder as merged on main; V51_MAG_SLIM, the per-event
+magnitudes, defaults to the converged slim table (cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz;
+the stored one is cascadia_catalog_v5.1_magnitudes_slim.csv.gz in the same folder); V51_MCB, the v5.1 Mc / b
+tables (paired_b.csv), defaults to the converged data/magnitude_converged/mc_b (stored: <V51_MAG>/mc_b).
 """
 from __future__ import annotations
 
@@ -18,7 +22,9 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 WD1 = Path(os.environ.get("V51_WD1", "/wd1/mdenolle_data/catalog_v5"))
 CAT = Path(os.environ.get("V51_CAT", WD1 / "v5.1" / "cascadia_catalog_v5.1.csv"))
-MAG = Path(os.environ.get("V51_MAG", "/home/mdenolle/wt_a51_mag/data/catalog_v5/v5.1_analysis/mag"))
+MAG = Path(os.environ.get("V51_MAG", ROOT / "data" / "catalog_v5" / "v5.1_analysis" / "mag"))
+MAG_SLIM = Path(os.environ.get("V51_MAG_SLIM", MAG / "cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz"))
+MCB = Path(os.environ.get("V51_MCB", ROOT / "data" / "magnitude_converged" / "mc_b"))
 FLT = Path(os.environ.get("V51_FAULTS", "/home/mdenolle/wt_a51_faults/data/catalog_v5/v5.1_analysis/faults"))
 CLU = Path(os.environ.get("V51_CLUSTERS", "/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters"))
 VER_F = WD1 / "v5.1_analysis" / "verify_faults"
@@ -78,7 +84,7 @@ def load_events() -> pd.DataFrame:
     for col in ["floor_limited", "far_only", "deep_pass", "five_phase", "above_surface"]:
         c[col] = tobool(c[col])
     c["located"] = c.loc_source.ne("none")
-    m = pd.read_csv(MAG / "cascadia_catalog_v5.1_magnitudes_slim.csv.gz")
+    m = pd.read_csv(MAG_SLIM)
     m = m[["ID", "M", "M_type", "ML", "is_earthquake", "mt_match", "Mw_mt"]].rename(
         columns={"M": "M51", "M_type": "M51_type", "ML": "ML51", "Mw_mt": "Mw_mt51"})
     c = c.rename(columns={"M": "M41", "M_type": "M41_type"}).merge(m, on="ID", how="left")

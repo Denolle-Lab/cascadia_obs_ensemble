@@ -35,7 +35,9 @@ Choices (all documented in the report):
   it, M6.5 parents link events 300+ km away within days. The cap does not
   change the nearest-neighbor search or the eta distribution.
 * Magnitude: the Route-A magnitude table (ML calibrated to ComCat, Mw from
-  moment tensors above 4.5). The catalog magnitude column is not used.
+  moment tensors above 4.5). The catalog magnitude column is not used. Default:
+  the converged magnitudes (D-B091); --mag stored gives the earlier run
+  (workflow/05_magnitude/mag_paths.py).
 * Completeness: Mc per region and year by maximum curvature + 0.2
   (years with >= 200 events); the region Mc is the largest yearly value, so
   one Mc holds for the whole 2010-2016 window. A b-value-stability Mc
@@ -94,6 +96,7 @@ from __future__ import annotations
 import argparse
 import json
 import multiprocessing as mp
+import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -104,9 +107,12 @@ from scipy.sparse.csgraph import connected_components
 from scipy.stats import gaussian_kde, spearmanr, theilslopes
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT / "workflow" / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+
 MAIN = Path("/home/mdenolle/cascadia_obs_ensemble")
 CAT = MAIN / "data/catalog_v4/Cascadia_relocated_catalog_v4.csv"
-MAG = MAIN / "data/magnitude_v4/cascadia_catalog_M_routeA.csv"
+MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), stored or a path
 FAULTS = ROOT / "data/faults/v0"
 SWARMS = ROOT / "data/catalog_v4/swarms"
 OUT = ROOT / "data/catalog_v4/clusters_zbz"
@@ -589,7 +595,11 @@ def main():
     ap.add_argument("--variants", default="d3,mc+0.3,df_est,df1.3,df2.0,noM_floor,mc_year,eta0_shuf5",
                     help="comma list of sensitivity variants ('' for none)")
     ap.add_argument("--faults-only", action="store_true", help="redo only the fault join")
+    mag_paths.add_argument(ap, "v4.1")
     a = ap.parse_args()
+    global MAG
+    MAG = mag_paths.v41(a.mag)
+    print(f"magnitudes: {MAG}", flush=True)
     out = a.out
     out.mkdir(parents=True, exist_ok=True)
     if a.faults_only:
@@ -656,7 +666,7 @@ def main():
         print(v, "\n", sv.to_string(), flush=True)
     pd.concat(allv).to_csv(out / "sensitivity_zbz.csv", index=False)
     json.dump(dict(rmin=a.rmin, rcap_min=a.rcap_min, q=Q, nshuffle=a.nshuffle, variants=vs, df_main=1.6,
-                   catalog=str(CAT), magnitudes=str(MAG)),
+                   catalog=str(CAT), **mag_paths.describe(MAG)),
               open(out / "run_params.json", "w"), indent=1)
 
 

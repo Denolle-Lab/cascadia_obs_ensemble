@@ -1,0 +1,271 @@
+{
+ "P1": {
+  "n": 7471,
+  "n_deep": 331,
+  "deep_dow": {
+   "0": 41,
+   "1": 55,
+   "2": 107,
+   "3": 35,
+   "4": 31,
+   "5": 40,
+   "6": 22
+  },
+  "deep_hour": {
+   "0": 20,
+   "1": 13,
+   "2": 16,
+   "3": 15,
+   "4": 3,
+   "5": 12,
+   "6": 9,
+   "8": 2,
+   "9": 7,
+   "10": 4,
+   "11": 9,
+   "12": 5,
+   "13": 7,
+   "14": 4,
+   "15": 15,
+   "16": 15,
+   "17": 12,
+   "18": 33,
+   "19": 52,
+   "20": 33,
+   "21": 9,
+   "22": 20,
+   "23": 16
+  },
+  "deep_wed_19": 43,
+  "shallow_wed_19": 20,
+  "pops": [
+   {
+    "population": "box events deeper than 30 km",
+    "n": 331,
+    "depth_med": 68.1,
+    "wed_window": 22,
+    "wed_19h": 43,
+    "weekday_daytime_pct": 56.0,
+    "median_P": 7.0,
+    "median_S": 0.0,
+    "pct_no_S": 73.0,
+    "P_span_med": 0.19,
+    "pct_P_span_lt_0p5": 80.0,
+    "pct_P_at_UW": 96.0,
+    "n_span": 328
+   },
+   {
+    "population": "v1_ON028 members",
+    "n": 42,
+    "depth_med": 27.7,
+    "wed_window": 2,
+    "wed_19h": 3,
+    "weekday_daytime_pct": 38.0,
+    "median_P": 7.0,
+    "median_S": 3.0,
+    "pct_no_S": 33.0,
+    "P_span_med": 1.1,
+    "pct_P_span_lt_0p5": 22.0,
+    "pct_P_at_UW": 54.0,
+    "n_span": 41
+   },
+   {
+    "population": "v1x_06 members (removed)",
+    "n": 39,
+    "depth_med": 60.5,
+    "wed_window": 6,
+    "wed_19h": 9,
+    "weekday_daytime_pct": 64.0,
+    "median_P": 9.0,
+    "median_S": 0.0,
+    "pct_no_S": 59.0,
+    "P_span_med": 0.17,
+    "pct_P_span_lt_0p5": 82.0,
+    "pct_P_at_UW": 98.0,
+    "n_span": 39
+   },
+   {
+    "population": "box events 10-30 km",
+    "n": 624,
+    "depth_med": 12.3,
+    "wed_window": 1,
+    "wed_19h": 2,
+    "weekday_daytime_pct": 24.0,
+    "median_P": 5.0,
+    "median_S": 5.0,
+    "pct_no_S": 5.0,
+    "P_span_med": 1.4,
+    "pct_P_span_lt_0p5": 23.0,
+    "pct_P_at_UW": 47.0,
+    "n_span": 581
+   },
+   {
+    "population": "box events shallower than 10 km, tier A-B",
+    "n": 3249,
+    "depth_med": 1.5,
+    "wed_window": 1,
+    "wed_19h": 8,
+    "weekday_daytime_pct": 25.0,
+    "median_P": 8.0,
+    "median_S": 6.0,
+    "pct_no_S": 1.0,
+    "P_span_med": 2.85,
+    "pct_P_span_lt_0p5": 1.0,
+    "pct_P_at_UW": 35.0,
+    "n_span": 2433
+   }
+  ]
+ },
+ "P2": {
+  "sp": [
+   {
+    "sta": "KBO.NC",
+    "dist": 42.4,
+    "n": 4,
+    "sp_obs_med": 5.59,
+    "sp_obs_iqr": [
+     5.49,
+     5.62
+    ],
+    "sp_pred_at_v51_median_depth": 7.59,
+    "sp_pred_at_v4_median_depth": 5.94,
+    "depth_where_pred_equals_obs": [],
+    "share_weight_lt_0p1": 1.0
+   },
+   {
+    "sta": "G26B.7D",
+    "dist": 53.9,
+    "n": 3,
+    "sp_obs_med": 8.81,
+    "sp_obs_iqr": [
+     8.74,
+     8.82
+    ],
+    "sp_pred_at_v51_median_depth": 7.62,
+    "sp_pred_at_v4_median_depth": 6.24,
+    "depth_where_pred_equals_obs": [
+     68.6
+    ],
+    "share_weight_lt_0p1": 0.0
+   },
+   {
+    "sta": "KSXB.NC",
+    "dist": 83.4,
+    "n": 33,
+    "sp_obs_med": 11.0,
+    "sp_obs_iqr": [
+     10.89,
+     11.09
+    ],
+    "sp_pred_at_v51_median_depth": 10.85,
+    "sp_pred_at_v4_median_depth": 10.24,
+    "depth_where_pred_equals_obs": [
+     7.0,
+     56.7
+    ],
+    "share_weight_lt_0p1": 0.0
+   },
+   {
+    "sta": "L02E.TA",
+    "dist": 89.5,
+    "n": 13,
+    "sp_obs_med": 11.87,
+    "sp_obs_iqr": [
+     11.73,
+     12.06
+    ],
+    "sp_pred_at_v51_median_depth": 11.78,
+    "sp_pred_at_v4_median_depth": 11.27,
+    "depth_where_pred_equals_obs": [
+     9.0,
+     55.8
+    ],
+    "share_weight_lt_0p1": 0.0
+   },
+   {
+    "sta": "L02D.TA",
+    "dist": 94.3,
+    "n": 19,
+    "sp_obs_med": 11.89,
+    "sp_obs_iqr": [
+     11.73,
+     12.26
+    ],
+    "sp_pred_at_v51_median_depth": 11.8,
+    "sp_pred_at_v4_median_depth": 11.29,
+    "depth_where_pred_equals_obs": [
+     9.0,
+     55.8
+    ],
+    "share_weight_lt_0p1": 0.0
+   }
+  ],
+  "n_pairs": 134
+ },
+ "P4": {
+  "deep_pass": {
+   "Cascades": {
+    "n": 178,
+    "v4_med": 27.4,
+    "v51_med": 93.2
+   },
+   "Other onshore": {
+    "n": 41,
+    "v4_med": 28.3,
+    "v51_med": 85.2
+   },
+   "Explorer": {
+    "n": 27,
+    "v4_med": 39.1,
+    "v51_med": 83.7
+   },
+   "Mendocino": {
+    "n": 25,
+    "v4_med": 39.7,
+    "v51_med": 82.7
+   },
+   "Offshore forearc": {
+    "n": 21,
+    "v4_med": 18.9,
+    "v51_med": 82.2
+   },
+   "other regions": {
+    "n": 64,
+    "v4_med": 45.9,
+    "v51_med": 80.0
+   }
+  },
+  "far_only": {
+   "Blanco": {
+    "n": 286,
+    "v4_med": 0.6,
+    "v51_med": 56.5
+   },
+   "Gorda": {
+    "n": 214,
+    "v4_med": 7.0,
+    "v51_med": 43.9
+   },
+   "Mendocino": {
+    "n": 50,
+    "v4_med": 22.2,
+    "v51_med": 63.7
+   },
+   "Offshore forearc": {
+    "n": 30,
+    "v4_med": 2.4,
+    "v51_med": 23.0
+   },
+   "Explorer": {
+    "n": 24,
+    "v4_med": 3.8,
+    "v51_med": 49.3
+   },
+   "other regions": {
+    "n": 20,
+    "v4_med": 8.1,
+    "v51_med": 16.2
+   }
+  }
+ }
+}

@@ -1,9 +1,11 @@
 # Magnitude of completeness maps, catalog v4
 
-Built by `workflow/06_analysis/v4_mc_maps.py` (branch `cluster/zbz`) on 2026-11-22.
-Inputs: `Cascadia_relocated_catalog_v4.csv` (172,340 events) and the Route A magnitudes
-`cascadia_catalog_M_routeA.csv` (130,767 events with M; 99.9% ML). Rerun with
-`python v4_mc_maps.py --yearly` (about 15 s of compute on 32 cores, plus 1 min of plotting).
+Built by `workflow/06_analysis/v4_mc_maps.py` on 2026-11-25 with the converged Route A magnitudes (decision D-B091:
+phase19 solved exactly, PR #45; `/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv`,
+md5 fb49ecc28b75432f49cf1a6e399cd90f, recorded in `run_params.json`). Inputs: `Cascadia_relocated_catalog_v4.csv`
+(catalog v4.1, 172,342 events) and those magnitudes (130,769 events with M; 99.9% ML). Rerun with
+`python v4_mc_maps.py --yearly` (about 15 s of compute on 32 cores, plus 1 min of plotting); `--mag stored` gives the
+maps of 2026-11-22 (stored magnitudes, LSQR stopped at 3,000 iterations; on main up to 5d6658bf).
 
 ## Method
 
@@ -43,21 +45,21 @@ Choices:
 
 ## Main numbers
 
-**Where Mc is lowest and highest.** 4,578 nodes have 250 events within 50 km (median radius 31 km). Node Mc_best, median (10th-90th percentile): Axial 0.7 (0.4-1.0), offshore Washington 1.0 (0.8-1.4), Puget 1.1 (0.8-1.5), onshore and other 1.4 (0.9-1.9), Mendocino 1.6 (1.3-2.0), offshore Oregon 1.7 (1.4-1.9), Endeavour 1.8 (1.6-2.2), Gorda 2.1 (1.8-2.3), Blanco 2.1 (1.9-2.5). The lowest values (0.0-0.3) sit at Mount St. Helens and inside the Axial caldera, both under dense instrumentation. The highest (2.9-3.2) are on the western Blanco transform and the northern Gorda ridge (43-44 N, 128-130.4 W), and at the southern edge of the grid near 39.3 N, 123.2 W.
+**Where Mc is lowest and highest.** 4,578 nodes have 250 events within 50 km (median radius 31 km). Node Mc_best, median (10th-90th percentile): Axial 0.8 (0.4-1.2), offshore Washington 1.1 (0.8-1.4), Puget 1.2 (0.9-1.6), onshore and other 1.4 (1.0-1.7), Mendocino 1.5 (1.1-1.8), Blanco 1.6 (1.3-2.2), offshore Oregon 1.7 (1.4-1.8), Endeavour 1.7 (1.4-2.0), Gorda 1.9 (1.7-2.1). The lowest values (-0.2 to 0.3) sit at Mount St. Helens and inside the Axial caldera, both under dense instrumentation. The highest (2.6-2.8) are on the western Blanco transform (43.6-43.9 N, 129.3-129.6 W); the Gorda ridge reaches 2.4 at most. With the stored magnitudes the highest nodes were 2.9-3.2 on the western Blanco and the northern Gorda ridge.
 
-**Which method is most conservative.** At the nodes MAXC+0.2 gives the highest Mc at 84 % of nodes; on average MBS is 0.19 lower and Mc_best 0.14 lower. With 250 events, GFT95 is reached at only 25 % of nodes and GFT90 at 84 %, so Mc_best is mostly GFT90 there; MBS finds a stable b at 68 % of nodes. For the pooled regional FMDs, with thousands of events, MBS is the highest in Blanco (2.5), Mendocino (1.8) and Puget (1.4), and GFT90 is always the lowest. The clusters_zbz Mc is at or above all three methods in every region (by 0.05 to 0.4), except the Blanco MBS (2.5 against 2.45), so the cluster analysis sits on the safe side.
+**Which method is most conservative.** At the nodes MAXC+0.2 gives the highest Mc at 83 % of nodes; on average MBS is 0.19 lower and Mc_best 0.13 lower. With 250 events, GFT95 is reached at only 26 % of nodes and GFT90 at 83 %, so Mc_best is mostly GFT90 there; MBS finds a stable b at 67 % of nodes. For the pooled regional FMDs, with thousands of events, MBS is the highest in Axial (1.5), Blanco (1.8), Mendocino (1.6), Washington (1.4) and Puget (1.4), and GFT90 is always the lowest. The clusters_zbz Mc is at or above MAXC+0.2 and Mc_best in every region. It is below the MBS value at Axial (0.85 against 1.5; the pooled Axial FMD has two slopes, see Caveats) and by half a bin at Blanco (1.75 against 1.8) and Puget (1.35 against 1.4); the map methods work on magnitudes rounded to 0.1, so a map Mc of 1.8 keeps M >= 1.75.
 
-**Effect of the moving OBS array.** Where a node can be computed in more than one period, Mc changes little: the median change is -0.1 from 2010 to 2013-2015 and 0.0 from 2013-2015 to 2016, and the worst-minus-best period range has a median of 0.3 (75th percentile 0.5). Those common nodes are mostly onshore, where the land network did not change much. Offshore, the array decides whether Mc can be measured at all. With the OBS out (2010, 2016), Blanco, Gorda and Endeavour have no node with 150 events within 50 km; with the OBS in, they have 400-650 nodes each. The rate ratios say the same: offshore (OFF) the rate of M >= 2.5 events is 0.11 of the 2013-2015 rate in 2010, 0.64 in 2011-2012 and 0.10 in 2016; for Blanco alone it is 0.05, 0.62 and 0.08, and even at M >= 3.0 it is 0.20 and 0.19 in 2010 and 2016. Without the OBS the offshore catalog is therefore incomplete above M 3, against Mc 2.1-2.2 with the OBS. Between the two OBS periods, 2013-2015 is about 0.2-0.4 lower than 2011-2012 offshore (pooled Blanco 2.6 to 2.2; node medians Endeavour 2.2 to 1.8, Blanco 2.3 to 2.1).
+**Effect of the moving OBS array.** Where a node can be computed in more than one period, Mc changes little: the median change is -0.1 from 2010 to 2013-2015 and 0.0 from 2013-2015 to 2016, and the worst-minus-best period range has a median of 0.3 (75th percentile 0.4). Those common nodes are mostly onshore, where the land network did not change much. Offshore, the array decides whether Mc can be measured at all. With the OBS out (2010, 2016), Blanco and Endeavour have no node with 150 events within 50 km and Gorda 5 (2010) or none (2016); with the OBS in (2013-2015), they have 295 (Endeavour), 500 (Blanco) and 648 (Gorda) nodes. The rate ratios say the same: offshore (OFF) the rate of M >= 2.5 events is 0.31 of the 2013-2015 rate in 2010, 0.75 in 2011-2012 and 0.28 in 2016; for Blanco alone it is 0.28, 0.79 and 0.29, and at M >= 3.0 it is 0.39 and 0.47 in 2010 and 2016. Without the OBS the offshore catalog is therefore incomplete at M 2.5-3, against Mc 1.6-1.9 with the OBS. Between the two OBS periods offshore Mc hardly changes (pooled Endeavour 1.7 to 1.6, Blanco 1.5 to 1.6, Gorda 1.9 to 1.9; node medians Endeavour 1.9 to 1.8, Blanco 1.6 to 1.5). With the stored magnitudes 2013-2015 was 0.2-0.4 lower than 2011-2012 (pooled Blanco 2.6 to 2.2): that difference came from the stored solution, whose Blanco level differed between deployments.
 
-**2016 onshore drop.** In 2016, the M >= 2.5 rate falls to 0.10 of the 2013-2015 rate in Mendocino and 0.21 in the onshore box, and Mendocino has no node. This matches the NC/BK pick gap south of 42 N, not the OBS. Puget keeps its rate (0.89 at M >= 2.5) and its Mc (1.0-1.5).
+**2016 onshore drop.** In 2016, the M >= 2.5 rate falls to 0.11 of the 2013-2015 rate in Mendocino and 0.30 in the onshore box, and Mendocino has no node. This matches the NC/BK pick gap south of 42 N, not the OBS. Puget keeps its rate (0.98 at M >= 2.5) and its Mc (node 10-90% 0.7-1.5).
 
-**QC variant.** Keeping only events with 4 P and 4 S picks removes nodes (3,395 instead of 4,578) but hardly moves Mc: the node difference has a median of 0.0 and an interquartile range of -0.1 to +0.1; pooled regional Mc_best rises by 0.2 in Endeavour, 0.1 in Blanco and Washington, and does not change elsewhere.
+**QC variant.** Keeping only events with 4 P and 4 S picks removes nodes (3,395 instead of 4,578) but hardly moves Mc: the node difference has a median of 0.0 and an interquartile range of -0.1 to +0.1; pooled regional Mc_best rises by 0.5 in the onshore box, 0.2 in Endeavour, 0.1 in Blanco and Oregon, falls by 0.1 in Puget, and does not change elsewhere.
 
 ## Caveats
 
-- The pooled Axial FMD has two slopes (2014-2015 OOI cabled array and an M 2-3 bulge in 2015), so its pooled GFT value of 0.2 is unstable (bootstrap sigma 0.94). Use MAXC+0.2 (0.7) or the node values (0.4-1.0) for Axial.
-- Pooled Mc for 2010 offshore (OFF, 2.0) and 2016 Blanco (2.4) comes with b near 0.6, a sign that the sample is incomplete above the estimated Mc. Read the rate ratios for those cases.
-- The rate ratio assumes a steady rate of larger events. The Blanco and Gorda rates vary on their own, so a ratio of 0.6 in 2011-2012 mixes detection and real changes.
+- The pooled Axial FMD has two slopes (2014-2015 OOI cabled array and an M 2-3 bulge in 2015), so its pooled GFT value of 0.3 is unstable (bootstrap sigma 0.63) and its MBS value (1.5) sits on the second slope. Use MAXC+0.2 (0.7) or the node values (0.4-1.2) for Axial.
+- Pooled Mc for 2010 offshore (OFF, 1.6) and 2016 Blanco (2.1) comes with b near 0.6-0.7, a sign that the sample is incomplete above the estimated Mc. Read the rate ratios for those cases.
+- The rate ratio assumes a steady rate of larger events. The Blanco and Gorda rates vary on their own, so a ratio of 0.6-0.8 in 2011-2012 mixes detection and real changes.
 - Mc is in Route A M, mostly ML. Mc values below 0 at Mount St. Helens follow the local ML scale.
 
 ## Mc per region and period (pooled FMD, all QC)
@@ -66,58 +68,58 @@ Mc_best = GFT95, else GFT90, else MAXC+0.2. sigma = bootstrap sigma of Mc_best. 
 
 | Region | period | N | MAXC+0.2 | MBS | GFT90 | GFT95 | best | sigma | b | rate ratio M>=2.5 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| AX | all | 13913 | 0.7 | 0.4 | 0.2 |  | 0.2 | 0.94 | 0.70 | 0.43 |
-| EN | all | 1823 | 2.2 | 1.9 | 1.8 |  | 1.8 | 0.05 | 0.81 | 0.75 |
-| BL | all | 31563 | 2.3 | 2.5 | 2.0 | 2.2 | 2.2 | 0.03 | 1.17 | 0.62 |
-| GO | all | 6958 | 2.3 | 2.2 | 1.9 | 2.1 | 2.1 | 0.02 | 1.11 | 0.69 |
-| MT | all | 28750 | 1.6 | 1.8 | 1.4 | 1.7 | 1.7 | 0.17 | 1.01 | 0.81 |
-| WA | all | 2828 | 1.3 | 1.4 | 1.0 | 1.2 | 1.2 | 0.09 | 0.99 | 1.14 |
-| OR | all | 1393 | 1.7 | 1.6 | 1.4 | 1.6 | 1.6 | 0.08 | 1.03 | 0.85 |
-| PU | all | 13348 | 1.2 | 1.4 | 1.0 | 1.2 | 1.2 | 0.16 | 1.22 | 0.91 |
-| ON | all | 30191 | 1.5 | 1.4 | 1.1 | 1.3 | 1.3 | 0.00 | 0.92 | 0.73 |
-| OFF | all | 44565 | 2.3 | 2.4 | 2.0 | 2.2 | 2.2 | 0.01 | 1.15 | 0.64 |
+| AX | all | 13913 | 0.7 | 1.5 | 0.3 |  | 0.3 | 0.63 | 0.72 | 0.43 |
+| EN | all | 1823 | 2.0 | 1.8 | 1.6 |  | 1.6 | 0.09 | 0.75 | 0.71 |
+| BL | all | 31563 | 1.7 | 1.8 | 1.4 | 1.6 | 1.6 | 0.02 | 1.10 | 0.73 |
+| GO | all | 6961 | 2.0 | 1.9 | 1.7 | 1.9 | 1.9 | 0.08 | 1.22 | 0.69 |
+| MT | all | 28750 | 1.4 | 1.6 | 1.2 | 1.5 | 1.5 | 0.17 | 1.00 | 0.82 |
+| WA | all | 2828 | 1.2 | 1.4 | 1.0 | 1.3 | 1.3 | 0.09 | 1.05 | 1.13 |
+| OR | all | 1393 | 1.7 | 1.6 | 1.5 |  | 1.5 | 0.11 | 1.15 | 0.78 |
+| PU | all | 13348 | 1.2 | 1.4 | 1.0 | 1.3 | 1.3 | 0.17 | 1.27 | 0.91 |
+| ON | all | 30190 | 1.5 | 1.4 | 1.2 | 1.3 | 1.3 | 0.00 | 1.01 | 0.79 |
+| OFF | all | 44568 | 1.7 | 1.9 | 1.5 | 1.7 | 1.7 | 0.02 | 1.09 | 0.73 |
 | AX | 2010 | 0 |  |  |  |  |  |  |  | 0.00 |
-| EN | 2010 | 52 |  |  |  |  |  |  |  | 0.25 |
-| BL | 2010 | 78 |  |  |  |  |  |  |  | 0.05 |
-| GO | 2010 | 185 | 2.5 | 2.1 | 2.0 | 2.2 | 2.2 | 0.14 | 0.84 | 0.33 |
-| MT | 2010 | 3852 | 2.0 | 1.8 | 1.5 | 1.8 | 1.8 | 0.24 | 1.00 | 1.14 |
-| WA | 2010 | 388 | 1.6 | 1.3 | 1.2 | 1.4 | 1.4 | 0.12 | 1.11 | 1.43 |
-| OR | 2010 | 123 | 1.9 | 1.4 |  |  | 1.9 | 0.20 | 0.73 | 0.87 |
-| PU | 2010 | 2392 | 1.3 | 1.6 | 1.2 | 1.5 | 1.5 | 0.15 | 1.69 | 0.39 |
-| ON | 2010 | 3583 | 1.5 | 1.4 | 1.2 | 1.3 | 1.3 | 0.08 | 0.97 | 0.53 |
-| OFF | 2010 | 826 | 1.6 | 2.1 | 2.0 |  | 2.0 | 0.25 | 0.59 | 0.11 |
+| EN | 2010 | 52 |  |  |  |  |  |  |  | 0.16 |
+| BL | 2010 | 78 |  |  |  |  |  |  |  | 0.28 |
+| GO | 2010 | 185 | 2.2 | 1.9 | 1.8 |  | 1.8 | 0.14 | 0.79 | 0.38 |
+| MT | 2010 | 3852 | 1.8 | 1.6 | 1.3 | 1.6 | 1.6 | 0.13 | 0.99 | 1.18 |
+| WA | 2010 | 388 | 1.6 | 1.3 | 1.2 | 1.4 | 1.4 | 0.11 | 1.12 | 1.36 |
+| OR | 2010 | 123 | 1.8 | 1.5 |  |  | 1.8 | 0.17 | 1.03 | 0.62 |
+| PU | 2010 | 2392 | 1.3 | 1.6 | 1.2 | 1.5 | 1.5 | 0.13 | 1.69 | 0.39 |
+| ON | 2010 | 3583 | 1.5 | 1.5 | 1.3 | 1.4 | 1.4 | 0.10 | 1.11 | 0.55 |
+| OFF | 2010 | 826 | 1.7 | 1.9 | 1.6 |  | 1.6 | 0.17 | 0.62 | 0.31 |
 | AX | 2011-2012 | 0 |  |  |  |  |  |  |  | 0.00 |
-| EN | 2011-2012 | 599 | 2.2 | 1.9 | 1.9 |  | 1.9 | 0.16 | 0.97 | 0.76 |
-| BL | 2011-2012 | 5051 | 2.4 | 2.6 | 2.3 | 2.6 | 2.6 | 0.13 | 1.26 | 0.62 |
-| GO | 2011-2012 | 1210 | 2.4 | 2.8 | 2.1 |  | 2.1 | 0.16 | 1.02 | 0.67 |
-| MT | 2011-2012 | 7286 | 1.6 | 1.7 | 1.4 | 1.6 | 1.6 | 0.12 | 0.99 | 0.71 |
-| WA | 2011-2012 | 850 | 1.1 | 1.3 | 1.0 | 1.2 | 1.2 | 0.17 | 0.98 | 1.50 |
-| OR | 2011-2012 | 382 | 1.7 | 1.6 | 1.4 | 1.6 | 1.6 | 0.11 | 1.08 | 0.80 |
-| PU | 2011-2012 | 3453 | 1.1 | 1.3 | 1.0 |  | 1.0 | 0.18 | 1.04 | 1.03 |
-| ON | 2011-2012 | 7172 | 1.6 | 1.5 | 1.2 | 1.4 | 1.4 | 0.04 | 0.96 | 0.67 |
-| OFF | 2011-2012 | 8092 | 2.4 | 2.6 | 2.2 | 2.5 | 2.5 | 0.17 | 1.19 | 0.64 |
-| AX | 2013-2015 | 13640 | 0.7 | 0.4 | 0.2 |  | 0.2 | 0.94 | 0.70 | 1.00 |
-| EN | 2013-2015 | 1140 | 2.2 | 1.9 | 1.8 |  | 1.8 | 0.08 | 0.85 | 1.00 |
-| BL | 2013-2015 | 26293 | 2.3 | 2.4 | 2.0 | 2.2 | 2.2 | 0.01 | 1.28 | 1.00 |
-| GO | 2013-2015 | 5520 | 2.2 | 2.2 | 1.9 | 2.1 | 2.1 | 0.05 | 1.21 | 1.00 |
-| MT | 2013-2015 | 17554 | 1.5 | 1.8 | 1.4 | 1.7 | 1.7 | 0.33 | 1.03 | 1.00 |
-| WA | 2013-2015 | 1556 | 1.3 | 1.3 | 0.9 | 1.1 | 1.1 | 0.15 | 1.04 | 1.00 |
-| OR | 2013-2015 | 737 | 1.9 | 1.5 | 1.4 | 1.6 | 1.6 | 0.09 | 1.08 | 1.00 |
-| PU | 2013-2015 | 6108 | 1.1 | 1.2 | 0.9 | 1.2 | 1.2 | 0.30 | 1.24 | 1.00 |
-| ON | 2013-2015 | 15350 | 1.5 | 1.3 | 1.1 | 1.2 | 1.2 | 0.02 | 0.84 | 1.00 |
-| OFF | 2013-2015 | 35246 | 2.2 | 2.3 | 2.0 | 2.2 | 2.2 | 0.03 | 1.25 | 1.00 |
-| AX | 2016 | 273 | 0.7 | 0.3 | 0.2 |  | 0.2 | 0.20 | 1.11 | 0.00 |
-| EN | 2016 | 32 |  |  |  |  |  |  |  | 0.45 |
-| BL | 2016 | 141 | 2.9 | 2.6 | 2.4 |  | 2.4 | 0.26 | 0.65 | 0.08 |
-| GO | 2016 | 43 |  |  |  |  |  |  |  | 0.13 |
-| MT | 2016 | 58 |  |  |  |  |  |  |  | 0.10 |
-| WA | 2016 | 34 |  |  |  |  |  |  |  | 0.57 |
-| OR | 2016 | 151 | 1.7 |  |  |  | 1.7 | 0.21 | 0.94 | 0.47 |
-| PU | 2016 | 1395 | 1.2 | 1.5 | 1.2 | 1.5 | 1.5 | 0.20 | 1.21 | 0.89 |
-| ON | 2016 | 4086 | 0.5 | 1.2 | 1.0 | 1.1 | 1.1 | 0.08 | 0.96 | 0.21 |
-| OFF | 2016 | 401 | 2.7 | 2.5 | 2.3 | 2.5 | 2.5 | 0.18 | 0.66 | 0.10 |
+| EN | 2011-2012 | 599 | 1.9 | 1.8 | 1.7 |  | 1.7 | 0.14 | 0.86 | 0.76 |
+| BL | 2011-2012 | 5051 | 1.7 | 2.3 | 1.5 |  | 1.5 | 0.23 | 0.86 | 0.79 |
+| GO | 2011-2012 | 1210 | 2.1 | 2.0 | 1.8 | 1.9 | 1.9 | 0.09 | 1.16 | 0.62 |
+| MT | 2011-2012 | 7286 | 1.5 | 1.5 | 1.2 | 1.4 | 1.4 | 0.08 | 0.98 | 0.73 |
+| WA | 2011-2012 | 850 | 1.2 | 1.4 | 1.1 | 1.3 | 1.3 | 0.13 | 1.04 | 1.57 |
+| OR | 2011-2012 | 382 | 1.7 | 1.6 | 1.4 | 1.6 | 1.6 | 0.12 | 1.26 | 0.67 |
+| PU | 2011-2012 | 3453 | 1.1 | 1.4 | 1.1 |  | 1.1 | 0.21 | 1.11 | 1.01 |
+| ON | 2011-2012 | 7172 | 1.6 | 1.5 | 1.3 | 1.4 | 1.4 | 0.04 | 1.00 | 0.85 |
+| OFF | 2011-2012 | 8092 | 1.7 | 2.2 | 1.7 |  | 1.7 | 0.15 | 0.95 | 0.75 |
+| AX | 2013-2015 | 13640 | 0.7 | 1.5 | 0.3 |  | 0.3 | 0.46 | 0.72 | 1.00 |
+| EN | 2013-2015 | 1140 | 2.0 | 1.8 | 1.6 |  | 1.6 | 0.09 | 0.77 | 1.00 |
+| BL | 2013-2015 | 26293 | 1.7 | 1.8 | 1.4 | 1.6 | 1.6 | 0.02 | 1.22 | 1.00 |
+| GO | 2013-2015 | 5520 | 2.0 | 1.9 | 1.7 | 1.9 | 1.9 | 0.07 | 1.32 | 1.00 |
+| MT | 2013-2015 | 17554 | 1.4 | 1.6 | 1.2 | 1.5 | 1.5 | 0.36 | 1.03 | 1.00 |
+| WA | 2013-2015 | 1556 | 1.3 | 1.3 | 1.0 | 1.3 | 1.3 | 0.16 | 1.11 | 1.00 |
+| OR | 2013-2015 | 737 | 1.7 | 1.5 | 1.5 |  | 1.5 | 0.09 | 1.20 | 1.00 |
+| PU | 2013-2015 | 6108 | 1.2 | 1.3 | 1.0 | 1.2 | 1.2 | 0.20 | 1.24 | 1.00 |
+| ON | 2013-2015 | 15350 | 1.5 | 1.3 | 1.2 | 1.3 | 1.3 | 0.00 | 1.03 | 1.00 |
+| OFF | 2013-2015 | 35246 | 1.7 | 1.8 | 1.5 | 1.7 | 1.7 | 0.01 | 1.20 | 1.00 |
+| AX | 2016 | 273 | 0.4 | 0.4 | 0.4 |  | 0.4 | 0.18 | 1.28 | 0.00 |
+| EN | 2016 | 32 |  |  |  |  |  |  |  | 0.32 |
+| BL | 2016 | 141 | 2.3 | 2.2 | 2.1 |  | 2.1 | 0.26 | 0.71 | 0.29 |
+| GO | 2016 | 46 |  |  |  |  |  |  |  | 0.20 |
+| MT | 2016 | 58 |  |  |  |  |  |  |  | 0.11 |
+| WA | 2016 | 34 |  |  |  |  |  |  |  | 0.41 |
+| OR | 2016 | 151 | 1.7 |  |  |  | 1.7 | 0.24 | 1.17 | 0.52 |
+| PU | 2016 | 1395 | 1.2 | 1.5 | 1.2 | 1.5 | 1.5 | 0.18 | 1.19 | 0.98 |
+| ON | 2016 | 4085 | 0.5 | 1.2 | 1.0 | 1.2 | 1.2 | 0.06 | 1.04 | 0.30 |
+| OFF | 2016 | 404 | 2.3 | 2.0 | 1.9 |  | 1.9 | 0.19 | 0.61 | 0.28 |
 
-clusters_zbz Mc (from `../clusters_zbz/completeness_b_df.csv`, selected years): AX 0.75, EN 2.25, BL 2.45, GO 2.45, MT 1.85, WA 1.65, OR 1.85, PU 1.35, ON 1.75.
+clusters_zbz Mc (from `../clusters_zbz/completeness_b_df.csv`, selected years): AX 0.85, EN 2.25, BL 1.75, GO 2.25, MT 1.85, WA 1.65, OR 1.85, PU 1.35, ON 1.65.
 
 ## References
 

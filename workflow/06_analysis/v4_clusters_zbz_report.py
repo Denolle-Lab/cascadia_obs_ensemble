@@ -36,6 +36,9 @@ from scipy.sparse.csgraph import connected_components  # noqa: E402
 
 OUT = ROOT / "data/catalog_v4/clusters_zbz"
 SWARMS = ROOT / "data/catalog_v4/swarms"
+# The numbers written into the prose of write_html() describe the run of 2026-11-22 with these magnitudes. The tables
+# and figures are recomputed on every run; when the run's magnitude file differs, the report says so at the top.
+PROSE_MAGNITUDES = "data/magnitude_v4/cascadia_catalog_M_routeA.csv"
 TYPE_COLORS = {"mainshock-aftershock": "#0072B2", "swarm": "#D55E00", "multiplet": "#009E73",
                "background": "#9A9A9A"}
 VOLCANOES = {"Mount Baker": (-121.813, 48.777), "Glacier Peak": (-121.113, 48.112),
@@ -514,6 +517,23 @@ REFS = [
 ]
 
 
+def prose_note(out):
+    """A warning paragraph when this run's magnitudes are not the ones the prose numbers were written for."""
+    import json
+    try:
+        mags = json.loads((out / "run_params.json").read_text()).get("magnitudes", "")
+    except (OSError, ValueError):
+        mags = ""
+    if mags.endswith(PROSE_MAGNITUDES):
+        return ""
+    return ("<p style='border:1px solid #D55E00;padding:6px 8px'><b>Magnitudes of this run:</b> "
+            f"<code>{html.escape(mags)}</code>. The tables and figures below are computed from this run. The numbers "
+            "quoted in the prose were written on 2026-11-22 for the stored Route A magnitudes "
+            f"(<code>{PROSE_MAGNITUDES}</code>) and are not all updated: where prose and tables differ, the tables "
+            "hold. The converged values of every number the paper quotes are in "
+            "<code>data/magnitude_converged/paper_numbers.csv</code> (decision D-B091).</p>")
+
+
 def write_html(out, ev, fam, reg, thr, comp, sens, sh, val, vs, vo, st, pf, vl, vlf):
     a = ev[ev.in_analysis]
     shm = sh.groupby("region").mean(numeric_only=True).reindex(REG_ORDER)
@@ -541,10 +561,11 @@ def write_html(out, ev, fam, reg, thr, comp, sens, sh, val, vs, vo, st, pf, vl, 
              f"content='width=device-width,initial-scale=1'><title>Catalog v4 clusters</title><style>{CSS}</style>"
              f"</head><body>")
     h.append("<h1>Earthquake clusters in catalog v4 (nearest-neighbor method)</h1>")
-    h.append("<p class='muted'>Cascadia catalog v4, 2010-2016, 172,340 events. Method of Zaliapin &amp; Ben-Zion "
+    h.append(f"<p class='muted'>Cascadia catalog v4, 2010-2016, {len(ev):,} events. Method of Zaliapin &amp; Ben-Zion "
              "(2013a, 2016). Code: <code>workflow/06_analysis/v4_clusters_zbz.py</code> (clustering) and "
              "<code>v4_clusters_zbz_report.py</code> (figures, validation, this page). Branch "
-             "<code>cluster/zbz</code>, 2026-11-22.</p>")
+             f"<code>cluster/zbz</code>, 2026-11-22; this page built {pd.Timestamp.now():%Y-%m-%d}.</p>")
+    h.append(prose_note(out))
 
     # ---- summary
     h.append("<h2>Summary</h2>")

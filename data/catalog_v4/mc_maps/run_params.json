@@ -25,5 +25,7 @@
       2016,
       2016
     ]
-  }
+  },
+  "magnitudes": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
+  "magnitudes_md5": "fb49ecc28b75432f49cf1a6e399cd90f"
 }

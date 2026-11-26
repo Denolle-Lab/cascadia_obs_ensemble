@@ -146,7 +146,7 @@ converged values. Main items:
   "Below 15 per week within four weeks" still holds (7-day bins after the eruption: stored 45, 11, 4,
   2; converged 41, 5, 4, 1).
 
-## Switching to the converged files (not done here)
+## Switching to the converged files (done in PR #46; list kept for the record)
 - `workflow/10_tomography/params.yaml`, `catalog_versions.v4_1_magnitudes`:
   `/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv`.
 - v4 paper scripts that read `data/magnitude_v4/cascadia_catalog_M_routeA.csv` of the main checkout
@@ -163,3 +163,22 @@ converged values. Main items:
 `data/magnitude_v4/`, `/wd1/.../v5.1_analysis/mag/`, the catalogs, Zenodo, other worktrees. The
 converged v4.1 file is at `/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv`
 (not copied next to the stored file in the main tree).
+
+## The paper on the converged magnitudes (2026-11-25, branch paper/mag-converged-figures)
+- Scripts read the converged files by default since PR #46 (`workflow/05_magnitude/mag_paths.py`; `--mag stored`
+  or `CASCADIA_MAG_V41=stored` for the earlier run).
+- Remade with the paper's own scripts and the converged v4.1 magnitudes, at their usual paths:
+  - `paper_sciadv/figures/`: Figs. 1, 2a, 2b, 3, 5, 6 and `perspective_mendocino_fault.png` (Fig. 4 does not use M
+    and is unchanged);
+  - `data/catalog_v4/clusters_zbz/` (Table S5, Text S6; main run, 3 shuffles and the 8 sensitivity variants) and its
+    report; `data/catalog_v4/mc_maps/` (Table S6, Figs. S3-S7, Text S7; README numbers updated);
+    `data/catalog_v4/swarms/`.
+- `paper_numbers.csv`: every paper number that uses M, stored and converged, with the text it replaces and how it is
+  computed (`workflow/05_magnitude/mag_converged_paper.py numbers`).
+- `manuscript_bullets.md`: the manuscript change list, bullets only (the text is edited on Overleaf, not here).
+- `paper_switch_report.html`: each remade figure next to the one on main, the pixels that the magnitudes alone change
+  (against a control run with the stored magnitudes), the numbers, Tables S5 and S6, and the bullets
+  (`mag_converged_paper.py report --control /wd1/mdenolle_data/magnitude_converged/paper/control_products`).
+- Runs, logs, the frozen stored products (`stored/`, from main 5d6658bf) and the control products:
+  `/wd1/mdenolle_data/magnitude_converged/paper/` (`run_analysis.sh`, `run_figs_maps.sh`, `run_figs_clusters.sh`,
+  `run_control_analysis.sh`).

@@ -49,6 +49,14 @@ MERGED = WORK / "merged_v041.nc"
 PROD = Path("/wd1/mdenolle_data/reloc_v5/work_time_b4_v0.3.1m_sc21")      # build_field parameters of v5.1 production
 DESC = V["description"]
 SC = TG.SC
+# merged stages whose floor counts go into the attributes, the inversion binaries, the producing script (b2_model_v042.py
+# sets these for v0.4.2; v0.4.1's values unchanged)
+FLOOR_STAGES = {"M0": ("margin_m0_v4", "d200_s480"), "mendocino_gorda_c": ("mendocino_gorda_c_m0f", "d200_s480"),
+                "blanco": ("blanco_m0f", "d200_s20"), "oregon": ("oregon_m0f", "d200_s480"),
+                "washington": ("washington_m0f", "d200_s480")}
+BINARIES = "/wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-25_inv/bin"
+FLOOR_DECISIONS = "D-B081 (tomoDD floor), D-B083 (floor in the inversion)"
+SOURCE_NOTE = "b2_model_v041.py from the v0.4.1 merge (product_v041)"
 
 
 def md5(p):
@@ -72,9 +80,7 @@ def floor_summary():
     """Floor settings and per-stage counts for the attributes (surface.dat headers, >>>Floor lines of each run)."""
     T = P["tomodd"]
     out = {}
-    for t, (reg, tag) in {"M0": ("margin_m0_v4", "d200_s480"), "mendocino_gorda_c": ("mendocino_gorda_c_m0f", "d200_s480"),
-                          "blanco": ("blanco_m0f", "d200_s20"), "oregon": ("oregon_m0f", "d200_s480"),
-                          "washington": ("washington_m0f", "d200_s480")}.items():
+    for t, (reg, tag) in FLOOR_STAGES.items():
         run = Path(T["runs"]) / reg / tag
         fj = Path(T["runs"]) / reg / "inputs" / "floor.json"
         lg = (run / "tomoDD-SE.log").read_text(errors="replace") if (run / "tomoDD-SE.log").exists() else ""
@@ -142,14 +148,14 @@ def build_nodes():
     prov = {k[len("provenance_"):]: v for k, v in base.attrs.items() if k.startswith("provenance_") and k != "provenance_git_commit"}
     fs = floor_summary()
     prov.update(merged_netcdf=str(MERGED), merged_netcdf_sha256=EX.sha256(MERGED),
-                floor=json.dumps(dict(decisions="D-B081 (tomoDD floor), D-B083 (floor in the inversion)",
-                                      binaries="/wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-25_inv/bin",
+                floor=json.dumps(dict(decisions=FLOOR_DECISIONS,
+                                      binaries=BINARIES,
                                       settings=P["tomodd"]["floor"], stages=fs), default=str),
                 nll_grids=("b4_time_grids.build_field(the inversion's nodes, 1 km, merged mask, field-level D-B073): "
                            "Earth-flattened cell-centred SLOW_LEN as the v5.1 production fields"))
     keep = {k: base.attrs[k] for k in base.attrs if not k.startswith("provenance_") and k not in (
         "title", "id", "version", "data_revision", "summary", "history", "year", "emc_check")}
-    EX.add_attrs(ds, VERSION, DESC, prov, "b2_model_v041.py from the v0.4.1 merge (product_v041)")
+    EX.add_attrs(ds, VERSION, DESC, prov, SOURCE_NOTE)
     ds.attrs.update(keep)
     ds.attrs.update(
         surface_rule="D-B068 merged solid surface: " + med_txt + "; water Vp 1.5 km/s (D-B005), Vs NaN; air NaN",

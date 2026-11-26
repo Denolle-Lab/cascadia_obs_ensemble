@@ -585,6 +585,24 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     blanco_m0fnf: {<<: *blanco_m0f, start_model: margin_m0_v4nf/d200_s480}
     oregon_m0fnf: {<<: *oregon_m0f, start_model: margin_m0_v4nf/d200_s480}
     washington_m0fnf: {<<: *washington_m0f, start_model: margin_m0_v4nf/d200_s480}
+    # v0.4.2 (D-B099, PI 2026-11-26 06:27): the v0.4.1 tiles that had self-paired catalog differential times
+    # (b2_tomodd_inputs.diff_times dropped column 0 of the KD-tree query as "self"; co-located events then paired with
+    # themselves, which tomoDD reads as absolute times of 0 s) rebuilt with the fixed pairing (dt.ct = v0.4.1's minus the
+    # self-pair blocks; every other input byte-identical, b2_v042_verify_inputs.py) and re-inverted with the 2026-11-26
+    # freeze (transform_r_gfortran.c sph2car/car2sph stable form where the old expression leaves its domain; same bits
+    # elsewhere). Same start (margin_m0_v4/d200_s480), floor, damping, smoothing as v0.4.1. M0 and oregon are unchanged.
+    mendocino_gorda_c_m0g: &mendocino_gorda_c_m0g
+      <<: *mendocino_gorda_c_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_e13k, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_e13k}
+    blanco_m0g: &blanco_m0g
+      <<: *blanco_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_e10k, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_e10k}
+    washington_m0g: &washington_m0g
+      <<: *washington_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_w, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_w}
+    mendocino_gorda_c_m0gnf: {<<: *mendocino_gorda_c_m0g, start_model: margin_m0_v4nf/d200_s480}
+    blanco_m0gnf: {<<: *blanco_m0g, start_model: margin_m0_v4nf/d200_s480}
+    washington_m0gnf: {<<: *washington_m0g, start_model: margin_m0_v4nf/d200_s480}
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -774,6 +792,18 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
       taper_km: 15
       floor: 0.1
+    product_v042:                  # v0.4.2 (D-B099): v0.4.1's merge rules and masks; mendocino_gorda_c, blanco, washington from m0g
+      choice: data/tomo_v1/b2_merge/tiles_m0g/choice.csv
+      reference: margin_m0_v4/d200_s480
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
+    product_v042nf:                # noise-floor chain of v0.4.2 (dry run only, never registered)
+      choice: data/tomo_v1/b2_merge/tiles_m0g/choice_nf.csv
+      reference: margin_m0_v4nf/d200_s480
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
   ensemble:                        # D-B030/D-B032 RTO ensemble of one merged-model configuration (b2_ens_*.py; notes/ensemble_calibration.md)
     root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # members, prior, synthetic truth, statistics, chain state, RESUME.md
     bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24          # D-B054: frozen binaries only (tomoDD-SE_<class>, _syn_<class>)
@@ -889,6 +919,21 @@ v041:                              # v0.4.1 (D-B083, PI 2026-11-25 07:59): v0.4.
   status: candidate
   base: 0.4.0                      # the model it is compared with (report)
   description: "v0.4.0 (v0.3.1 configuration, re-timed picks) re-inverted with tomoDD's event updates floored at the local solid surface (D-B081 floor in the inversion, D-B083); product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values, NonLinLoc grids by the field rule"
+
+v042:                              # v0.4.2 (D-B099, PI 2026-11-26 06:27): v0.4.1 without self-paired differential times, patched tomoDD
+  out: /wd1/mdenolle_data/tomo_v1/v042   # identity runs, tile logs, product work, merge, noise floor
+  staging: /wd1/mdenolle_data/tomo_v1/models/staging_v0.4.2   # model files (store layout) and report; registration by the PI's session
+  version: 0.4.2
+  status: candidate
+  base: 0.4.1                      # the model it is compared with (report)
+  binaries: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # D-B099 freeze (SHA256SUMS there)
+  stages:                          # merged stages (region/tag); M0 and oregon are v0.4.1's runs (identity test: reproduced)
+    M0: margin_m0_v4/d200_s480
+    mendocino_gorda_c: mendocino_gorda_c_m0g/d200_s480
+    blanco: blanco_m0g/d200_s20
+    oregon: oregon_m0f/d200_s480
+    washington: washington_m0g/d200_s480
+  description: "v0.4.1 (re-timed picks, D-B081 floor in the inversion) with the self-paired catalog differential times of the mendocino_gorda_c, blanco and washington tiles removed (8 events paired with themselves, read by tomoDD as absolute times of 0 s) and those tiles re-inverted with the patched tomoDD-SE (stable sph2car/car2sph near the tile centre axis), D-B099; product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values"
 
 b4:                                # B4 NonLinLoc relocation in the merged model and its catalog (PI 2026-11-24)
   grid_fallback: {enabled: false, P: 0.044, S: 0.075}   # D-B052 (PI 2026-11-24): whole-grid T0.5 fallback rejected (it

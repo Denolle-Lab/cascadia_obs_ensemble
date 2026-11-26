@@ -1,0 +1,6 @@
+tile,region,tag,smooth,mask_region,note
+mendocino_gorda_c,mendocino_gorda_c_m0g,d200_s480,"[480, 480, 240]",mendocino_gorda_c_m0,v0.4.2 (D-B099): v0.4.1 tile (tiles_m0f/choice.csv) without self-paired dt (156844) re-inverted with the 2026-11-26 freeze; masks of the v0.3.1 tile
+blanco,blanco_m0g,d200_s20,"[20, 20, 10]",blanco_m0,v0.4.2 (D-B099): v0.4.1 tile (tiles_m0f/choice.csv) without self-paired dt (81324) re-inverted with the 2026-11-26 freeze; masks of the v0.3.1 tile
+oregon,oregon_m0f,d200_s480,"[480, 480, 240]",oregon_m0,v0.4.2 (D-B099): v0.4.1's run unchanged (no self-pairs; the 2026-11-26 freeze reproduces it byte for byte)
+washington,washington_m0g,d200_s480,"[480, 480, 240]",washington_m0,v0.4.2 (D-B099): v0.4.1 tile (tiles_m0f/choice.csv) without self-paired dt (28514 40700 53148 55170 80094 94266) re-inverted with the 2026-11-26 freeze; masks of the v0.3.1 tile
+ridges_north,ridges_north_m0,d200_s60,"[60, 60, 30]",ridges_north_m0,not rerun: excluded from the merge (D-B050); row kept so the merge records the exclusion as v0.3.1 did

@@ -1,0 +1,6 @@
+tile,region,tag,smooth,mask_region,note
+mendocino_gorda_c,mendocino_gorda_c_m0gnf,d200_s480,"[480, 480, 240]",mendocino_gorda_c_m0,noise-floor chain of v0.4.2 (tiles_m0f/choice_nf.csv with the m0g tiles); masks of the v0.3.1 tile
+blanco,blanco_m0gnf,d200_s20,"[20, 20, 10]",blanco_m0,noise-floor chain of v0.4.2 (tiles_m0f/choice_nf.csv with the m0g tiles); masks of the v0.3.1 tile
+oregon,oregon_m0fnf,d200_s480,"[480, 480, 240]",oregon_m0,noise-floor chain of v0.4.2: v0.4.1's oregon noise-floor run (unchanged tile); masks of the v0.3.1 tile
+washington,washington_m0gnf,d200_s480,"[480, 480, 240]",washington_m0,noise-floor chain of v0.4.2 (tiles_m0f/choice_nf.csv with the m0g tiles); masks of the v0.3.1 tile
+ridges_north,ridges_north_m0,d200_s60,"[60, 60, 30]",ridges_north_m0,not rerun: excluded from the merge (D-B050); row kept so the merge records the exclusion as v0.3.1 did

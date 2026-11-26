@@ -148,3 +148,17 @@ termtest (b5_cmp_common.fold_score, pair-demeaned, pooled over 3 folds, rows loc
 **worse** if, in either cluster and either phase, MAD(R3) - MAD(test rule) has a 95 % paired-bootstrap interval (2,000
 resamples of event pairs) above 0 and is at least 5 % of MAD(test rule) (the termtest materiality). If R3 is not worse,
 the catalog uses R3; if it is worse, the coherence stage stops and reports (coordinator: report and wait).
+
+Result (2026-11-25 20:10, heldout/coh_rule_check.json; R3 relocates the same compact events, only the partners differ):
+
+| cluster | phase | pairs | MAD SSST only (ms) | MAD test rule | MAD R3 | R3 - test [95 %] | R3 worse |
+|---|---|---|---|---|---|---|---|
+| puget | P | 3,943 | 64.7 | 57.2 | 57.5 | +0.3 [-0.8, +1.6] | no |
+| puget | S | 3,846 | 100.4 | 90.7 | 91.3 | +0.6 [-1.4, +2.3] | no |
+| mtj | P | 2,062 | 43.5 | 51.9 | 51.8 | -0.0 [-0.3, +0.4] | no |
+| mtj | S | 2,003 | 62.4 | 83.1 | 82.7 | -0.4 [-1.1, +0.1] | no |
+
+R3 is not worse: the catalog's coherence stage uses R3. Not part of the rule check, but visible in the same table: at
+the Mendocino 2015 sequence (mtj) the coherence stage hurts held-out fits with either rule (P +8 ms, S +20 ms against
+SSST alone), as in D-B096; at Puget it helps (P -7 ms, S -9 ms). The acceptance report gives this by region for all
+nine clusters.

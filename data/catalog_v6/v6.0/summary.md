@@ -15,4 +15,4 @@
 | Puget/Georgia | 0 | 14,850 | 4 | 14,854 | 0 |
 | all | 1 | 172,182 | 159 | 172,342 | 0 |
 
-Bundle /wd1/mdenolle_data/catalog_v6/catalog_v6.zip md5 0772fc7b7bf6254a619af358b4e2519f (76,472,939 bytes)
+Bundle /wd1/mdenolle_data/catalog_v6/catalog_v6.zip md5 d60871d2a6310ddfa508d3a832d8c26a (76,357,421 bytes)

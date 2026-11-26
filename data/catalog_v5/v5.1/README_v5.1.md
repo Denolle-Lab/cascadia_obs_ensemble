@@ -2,7 +2,7 @@
 
 Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre.
 
-Built 2026-11-26 by workflow/10_tomography/catalog_version.py (decisions D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075 in
+Built 2026-11-26 by workflow/10_tomography/catalog_version.py (decisions D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075, D-B091, D-B102 in
 workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; not for redistribution.
 
 ## What it is
@@ -23,9 +23,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 * The v4.1 additions 900001-900003 carry their ComCat hypocentre (loc_source comcat, tier U) when NonLinLoc does not locate them.
 * Events that NonLinLoc could not locate (tier U) have no hypocentre in this version (loc_source none: empty
   time, lat, lon and depth); u_reason says why. Their picks are in the picks file.
-* Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
-  hypocentres (station-term inversion solved exactly, D-B091);
-  they will be recomputed with the new hypocentres in a later version.
+* Magnitudes: converged Route A preferred magnitudes (D-B091, D-B102; M, M_type ML / Mw / Mw_cal), computed with the v5.1 hypocentres (catalog v5.1 magnitude table) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres); magnitude_source names which (v5.1_converged, v4.1_converged).
 
 ## Counts
 
@@ -41,7 +39,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 | far_only | 624 |
 | deep_pass | 356 |
 | five_phase | 11,978 |
-| with a magnitude | 130,769 |
+| with a magnitude | 131,112 |
 | above the ground or seafloor | 0 (none) |
 | publishable (D-B055) | yes |
 
@@ -68,7 +66,8 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 | tile, region | NonLinLoc tile (workdir of the main or deep pass; empty when not located here); region label of the v4 epicentre (box rules of a2_parse_hyp.py), also for rows without a hypocentre |
 | depth_frame | how depth was obtained (true depth: the Earth-flattening of the NonLinLoc grids undone; ComCat for v4.1 additions); empty without a hypocentre |
 | v4_time, v4_lat, v4_lon, v4_depth, v4_npick, v4_sigma_m | catalog v4 origin, hypocentre, picks, GraphDD spatial sigma (m) |
-| M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id | Route A magnitudes of catalog v4.1 |
+| M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id | converged Route A magnitudes (D-B091, D-B102); magnitude_source names the table |
+| magnitude_source | table of the magnitude columns: v5.1_converged = converged Route A table computed with the v5.1 hypocentres (D-B091, D-B102); v4.1_converged = the same with the v4 hypocentres, for events the v5.1 table has no magnitude for; empty without a magnitude |
 | u_reason | why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events |
 | floor_limited | True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here |
 | far_only | True when none of the arrivals used came from a fine (near-station) travel-time grid: seen only by distant stations through the coarse wide grids; epicentre usable, depth poor; empty when not located here |

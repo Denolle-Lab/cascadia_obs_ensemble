@@ -235,6 +235,10 @@
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model</span><select id="tomoVar"></select></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model depth</span><input type="range" id="tomoDep" min="-3" max="80" step="1" value="12"><span class="val mono" id="tomoDepV">12 km</span></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Isocontours</span><div class="seg" id="segIso"><button data-v="1" class="on">On</button><button data-v="0">Off</button></div></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Interval</span><select id="tomoIso" title="Contour interval of the model shown; bold lines and labels at the major interval"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Isosurface</span><div class="seg" id="segSurf"><button data-v="0" class="on">Off</button><button data-v="1">On</button></div></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Iso value</span><input type="range" id="tomoSurf" min="0" max="1" step="0.01" value="0.5"><span class="val mono" id="tomoSurfV"></span></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Vertical cut</span><select id="tomoCut"><option value="0">none</option><option value="1">east–west</option><option value="2">north–south</option></select></div>
   <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Cut at</span><input type="range" id="tomoCutAt" min="0" max="1000" step="1" value="500"><span class="val mono" id="tomoCutV"></span></div>
   </div></details>
@@ -751,15 +755,35 @@ const TMM = M.tomo;
 // matplotlib "seismic" (PI choice): dark blue - blue - white - red - dark red, on t in [-1, 1] around each variable's centre
 const RAMP_RED_LOW = [[-1, 128, 0, 0], [-0.5, 255, 0, 0], [0, 255, 255, 255], [0.5, 0, 0, 255], [1, 0, 0, 77]];    // slow / low red, fast / high blue
 const RAMP_RED_HIGH = [[-1, 0, 0, 77], [-0.5, 0, 0, 255], [0, 255, 255, 255], [0.5, 255, 0, 0], [1, 128, 0, 0]];   // Vp/Vs: high red
+// iso: contour intervals offered, [minor, major] (bold lines with value labels at the major one), isoDef the default;
+// dig: decimals of the labels at least; surf: isosurface slider [min, max, step, default]
 const TVARS = [
-  { key: "dvp", label: "Vp change from the start model", unit: "%", wave: "p", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"] },
-  { key: "dvs", label: "Vs change from the start model", unit: "%", wave: "s", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"] },
-  { key: "vpvs", label: "Vp/Vs", unit: "", wave: "s", dec: c => 1.4 + c / 200, lo: 1.65, hi: 1.95, ramp: RAMP_RED_HIGH, ends: ["", ""] },
-  { key: "vp", label: "Vp", unit: "km/s", wave: "p", dec: c => 1.5 + c / 32, lo: 4.5, hi: 8.2, ramp: RAMP_RED_LOW, ends: ["", ""] },
-  { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_RED_LOW, ends: ["", ""] }];
+  { key: "dvp", label: "Vp change from the start model", unit: "%", wave: "p", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"],
+    iso: [[0.5, 2.5], [1, 5], [2, 10]], isoDef: 1, dig: 0, surf: [-10, 10, 0.25, -3] },
+  { key: "dvs", label: "Vs change from the start model", unit: "%", wave: "s", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"],
+    iso: [[0.5, 2.5], [1, 5], [2, 10]], isoDef: 1, dig: 0, surf: [-10, 10, 0.25, -3] },
+  { key: "vpvs", label: "Vp/Vs", unit: "", wave: "s", dec: c => 1.4 + c / 200, lo: 1.65, hi: 1.95, ramp: RAMP_RED_HIGH, ends: ["", ""],
+    iso: [[0.025, 0.1], [0.05, 0.1], [0.1, 0.5]], isoDef: 1, dig: 1, surf: [1.55, 2.3, 0.01, 1.85] },
+  { key: "vp", label: "Vp", unit: "km/s", wave: "p", dec: c => 1.5 + c / 32, lo: 4.5, hi: 8.2, ramp: RAMP_RED_LOW, ends: ["", ""],
+    iso: [[0.1, 0.5], [0.25, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [3, 8.6, 0.05, 7.5] },
+  { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_RED_LOW, ends: ["", ""],
+    iso: [[0.1, 0.5], [0.2, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [1.5, 4.8, 0.05, 4.2] }];
 const TMASK = [[0, "all cells"], [10, "DWS ≥ 10"], [100, "DWS ≥ 100"], [1000, "DWS ≥ 1,000"]]
   .concat(TMG && TMG.resp ? [[-1, "resolved in checkerboard tests"]] : []);
-const TS = { v: "dvp", d: 12, mask: 10 };
+// iso: contour lines on; isoI: interval index per variable; surf: isosurface on; sv: isosurface value per variable
+const TS = { v: "dvp", d: 12, mask: 10, iso: true, isoI: Object.fromEntries(TVARS.map(V => [V.key, V.isoDef])),
+  surf: false, sv: Object.fromEntries(TVARS.map(V => [V.key, V.surf[3]])) };
+const tIso = V => V.iso[TS.isoI[V.key]];                // [minor, major] interval in use
+const tLin = V => [V.dec(0), V.dec(1) - V.dec(0)];      // value = a + b code (every decoding is linear)
+const tUnit = V => V.unit ? (V.unit === "%" ? " %" : " " + V.unit) : "";
+const tDig = (V, x) => Math.max(V.dig, (String(x).split(".")[1] || "").length);
+// a contour or isosurface value as written on the page: minus sign, + on positive changes
+const tFmt = (V, x, dig) => { const s = Math.abs(x).toFixed(dig); return (x < 0 && +s !== 0 ? "−" : V.unit === "%" && x > 0 && +s !== 0 ? "+" : "") + s; };
+// sizes of the finest resolved checkerboard cells in the model (km), for the legend of the checkerboard mask
+const tResC = {};
+const tResKm = V => { const k = V.wave === "p" ? "resp" : "ress";
+  if (!(k in tResC)) tResC[k] = TMG[k] ? [...new Set(TMG[k])].filter(x => x > 0 && x < 255).sort((a, b) => a - b) : [];
+  const s = tResC[k]; return s.length ? `finest resolved cell ${s.length > 1 ? s.slice(0, -1).join(", ") + " or " + s[s.length - 1] : s[0]} km` : ""; };
 const TDMAX = 80;                                       // deepest level drawn (km)
 const rampCol = (R, t) => { t = Math.max(-1, Math.min(1, t)); if (t <= R[0][0]) return R[0].slice(1);
   for (let j = 1; j < R.length; j++) if (t <= R[j][0]) { const f = (t - R[j - 1][0]) / (R[j][0] - R[j - 1][0]);
@@ -813,14 +837,13 @@ if (TMG) {
     uOpacity: { value: 0.92 }, uThr: { value: 0 }, uMaskOn: { value: 0 }, uDep: { value: dep },
     uGeo: { value: new THREE.Vector4(KX, KZ, LON0, LAT0) }, uGrid: { value: new THREE.Vector4(TMM.west, TMM.south, TMM.dx, TMM.dy) },
     uN: { value: new THREE.Vector3(TMM.nx, TMM.ny, TMM.nz) }, uTerBox: { value: new THREE.Vector4(TB.west, TB.east, TB.south, TB.north) },
-    uTerN: { value: new THREE.Vector2(TB.nx, TB.ny) } };
-  // drawn before the terrain (renderOrder 10), like the events (3) and faults (4-7), so the see-through ground
-  // blends over it; opaque and writing depth, so events behind a slice are hidden and events in front show
-  tomoMat = new THREE.ShaderMaterial({ uniforms: TU, transparent: false, depthWrite: true, side: THREE.DoubleSide,
-    vertexShader: `varying vec3 vPos; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
-    fragmentShader: `precision highp float; precision highp sampler3D;
-      uniform sampler3D uVal, uMask; uniform sampler2D uLut, uTer;
-      uniform float uExag, uOpacity, uThr, uMaskOn; uniform float uDep[32];
+    uTerN: { value: new THREE.Vector2(TB.nx, TB.ny) },
+    uDec: { value: new THREE.Vector2(0, 1) }, uIso: { value: new THREE.Vector4(1, 5, 0, 1) } };   // decoding a + b code; contours: minor, major, on, pixel ratio
+  // shared by the slice and the isosurface: scene position -> fractional node indices, and the cells never drawn
+  // (outside the model, above the ground or seafloor, hidden by the ray mask: the mask is nearest-node, as the slice)
+  const TGLSL = `precision highp float; precision highp sampler3D;
+      uniform sampler3D uMask; uniform sampler2D uTer;
+      uniform float uExag, uThr, uMaskOn; uniform float uDep[32];
       uniform vec4 uGeo, uGrid, uTerBox; uniform vec3 uN; uniform vec2 uTerN;
       varying vec3 vPos;
       float kOf(float d) {
@@ -828,32 +851,126 @@ if (TMG) {
         for (int i = 0; i < 31; i++) { if (float(i) >= uN.z - 1.0) break;
           if (d <= uDep[i + 1]) return float(i) + (d - uDep[i]) / (uDep[i + 1] - uDep[i]); }
         return uN.z - 1.0; }
-      void main() {
-        float lon = vPos.x / uGeo.x + uGeo.z, lat = -vPos.z / uGeo.y + uGeo.w, d = -vPos.y / uExag;
-        float fi = (lon - uGrid.x) / uGrid.z, fj = (lat - uGrid.y) / uGrid.w;
-        if (fi < 0.0 || fj < 0.0 || fi > uN.x - 1.0 || fj > uN.y - 1.0) discard;
+      vec3 gridOf(vec3 p) {
+        float lon = p.x / uGeo.x + uGeo.z, lat = -p.z / uGeo.y + uGeo.w;
+        return vec3((lon - uGrid.x) / uGrid.z, (lat - uGrid.y) / uGrid.w, kOf(-p.y / uExag)); }
+      bool hidden(vec3 p, vec3 g) {
+        if (g.x < 0.0 || g.y < 0.0 || g.x > uN.x - 1.0 || g.y > uN.y - 1.0) return true;
+        float lon = p.x / uGeo.x + uGeo.z, lat = -p.z / uGeo.y + uGeo.w;
         vec2 tt = vec2(((lon - uTerBox.x) / (uTerBox.y - uTerBox.x) * (uTerN.x - 1.0) + 0.5) / uTerN.x,
                        ((lat - uTerBox.z) / (uTerBox.w - uTerBox.z) * (uTerN.y - 1.0) + 0.5) / uTerN.y);
-        if (d < -texture(uTer, tt).r * 0.001) discard;            // above the ground or seafloor
-        vec3 t = vec3((fi + 0.5) / uN.x, (fj + 0.5) / uN.y, (kOf(d) + 0.5) / uN.z);
-        if (uMaskOn > 0.5) { float m = texture(uMask, t).r * 255.0; if (m > 254.5 || m < uThr) discard; }
-        vec4 c = texture(uLut, vec2((texture(uVal, t).r * 255.0 + 0.5) / 256.0, 0.5));
+        if (-p.y / uExag < -texture(uTer, tt).r * 0.001) return true;     // above the ground or seafloor
+        if (uMaskOn > 0.5) { float m = texture(uMask, (g + 0.5) / uN).r * 255.0; if (m > 254.5 || m < uThr) return true; }
+        return false; }`;
+  // drawn before the terrain (renderOrder 10), like the events (3) and faults (4-7), so the see-through ground
+  // blends over it; opaque and writing depth, so events behind a slice are hidden and events in front show
+  tomoMat = new THREE.ShaderMaterial({ uniforms: TU, transparent: false, depthWrite: true, side: THREE.DoubleSide,
+    vertexShader: `varying vec3 vPos; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: TGLSL + `
+      uniform sampler3D uVal; uniform sampler2D uLut; uniform float uOpacity; uniform vec2 uDec; uniform vec4 uIso;
+      // code at fractional node indices, trilinear in full float precision from the 8 nodes (the hardware filter of an
+      // 8-bit texture may round its weights, which would break the contour lines into steps); the same field as tmSample
+      float codeAt(vec3 g) {
+        ivec3 i = clamp(ivec3(floor(g)), ivec3(0), ivec3(uN) - 2); vec3 f = clamp(g - vec3(i), 0.0, 1.0);
+        float c000 = texelFetch(uVal, i, 0).r, c100 = texelFetch(uVal, i + ivec3(1, 0, 0), 0).r;
+        float c010 = texelFetch(uVal, i + ivec3(0, 1, 0), 0).r, c110 = texelFetch(uVal, i + ivec3(1, 1, 0), 0).r;
+        float c001 = texelFetch(uVal, i + ivec3(0, 0, 1), 0).r, c101 = texelFetch(uVal, i + ivec3(1, 0, 1), 0).r;
+        float c011 = texelFetch(uVal, i + ivec3(0, 1, 1), 0).r, c111 = texelFetch(uVal, i + ivec3(1, 1, 1), 0).r;
+        return 255.0 * mix(mix(mix(c000, c100, f.x), mix(c010, c110, f.x), f.y), mix(mix(c001, c101, f.x), mix(c011, c111, f.x), f.y), f.z); }
+      // anti-aliased line at the integers of x, hw pixels half-width; none where x does not change across the pixel
+      float isoLine(float x, float hw) { float fw = fwidth(x), f = abs(fract(x - 0.5) - 0.5);
+        return fw > 1e-5 ? 1.0 - smoothstep(hw - 0.5, hw + 0.5, f / fw) : 0.0; }
+      void main() {
+        vec3 g = gridOf(vPos);
+        // contour weight before any discard (derivatives need every pixel of the 2 x 2 block)
+        float val = uDec.x + uDec.y * codeAt(g), ln = 0.0;
+        if (uIso.z > 0.5) ln = max(0.5 * isoLine(val / uIso.x, 0.5 * uIso.w), 0.88 * isoLine(val / uIso.y, 0.95 * uIso.w));
+        if (hidden(vPos, g)) discard;
+        vec4 c = texture(uLut, vec2((texture(uVal, (g + 0.5) / uN).r * 255.0 + 0.5) / 256.0, 0.5));
         if (c.a < 0.5) discard;
-        gl_FragColor = vec4(c.rgb, uOpacity);
+        gl_FragColor = vec4(mix(c.rgb, vec3(0.05, 0.05, 0.07), ln), uOpacity);   // dark lines: read on the blues and the reds
       }` });
-  tomoMat.userData = { VT, MT, LUT };
+  // isosurface: translucent, cut like the slice (model box, ground and seafloor, ray mask) and, as the ground, in front of the vertical cut
+  const IU = { uMask: TU.uMask, uTer: TU.uTer, uExag: U.exag, uThr: TU.uThr, uMaskOn: TU.uMaskOn, uDep: TU.uDep, uGeo: TU.uGeo,
+    uGrid: TU.uGrid, uN: TU.uN, uTerBox: TU.uTerBox, uTerN: TU.uTerN, uCut, uCol: { value: new THREE.Vector3(200, 230, 110).divideScalar(255) }, uOp: { value: 0.55 } };   // yellow-green #c8e66e (as written: no colour management in this shader), apart from the red-white-blue ramp
+  const isoMat = new THREE.ShaderMaterial({ uniforms: IU, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    vertexShader: `uniform float uExag; varying vec3 vPos, vN;
+      void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; vN = vec3(normal.x, normal.y / uExag, normal.z);   // mesh scaled by uExag in y
+        gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: TGLSL + `
+      uniform vec4 uCut; uniform vec3 uCol; uniform float uOp; varying vec3 vN;
+      void main() {
+        if (hidden(vPos, gridOf(vPos))) discard;
+        if (uCut.w > 0.5 && dot(vPos.xz, uCut.xy) > uCut.z) discard;
+        float l = abs(dot(normalize(vN), normalize(vec3(-0.45, 0.8, -0.4))));
+        gl_FragColor = vec4(uCol * (0.42 + 0.68 * l), uOp);
+      }` });
+  tomoMat.userData = { VT, MT, LUT, isoMat };
   const x0 = toX(TMM.west), x1 = toX(TMM.west + (TMM.nx - 1) * TMM.dx), z0 = toZ(TMM.south), z1 = toZ(TMM.south + (TMM.ny - 1) * TMM.dy);
   tomoSlice = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z0 - z1), tomoMat);
   tomoSlice.rotation.x = -Math.PI / 2; tomoSlice.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
   tomoSlice.frustumCulled = false; tomoSlice.renderOrder = 2; scene.add(tomoSlice);
 }
-function placeTomo() { if (tomoSlice) tomoSlice.position.y = -TS.d * U.exag.value; }
+let isoMesh = null, isoKey = "";
+function placeTomo() { if (tomoSlice) tomoSlice.position.y = -TS.d * U.exag.value; if (isoMesh) isoMesh.scale.y = U.exag.value; }
 function setTomo() {
   if (!tomoMat) return;
-  const V = tVar(), D = tomoMat.userData, u = tomoMat.uniforms, ms = tMaskArr(V);
+  const V = tVar(), D = tomoMat.userData, u = tomoMat.uniforms, ms = tMaskArr(V), [a, b] = tLin(V), [iv, mj] = tIso(V);
   u.uVal.value = D.VT[V.key]; u.uLut.value = D.LUT[V.key];
   u.uMaskOn.value = ms ? 1 : 0; u.uThr.value = tThr();
   u.uMask.value = ms ? D.MT[TS.mask === -1 ? (V.wave === "p" ? "resp" : "ress") : (V.wave === "p" ? "dwsp" : "dwss")] : null;
+  u.uDec.value.set(a, b); u.uIso.value.set(iv, mj, TS.iso ? 1 : 0, renderer.getPixelRatio());
+  placeTomo();
+}
+// Isosurface of one value of the variable shown: surface nets on the model nodes (down to TDMAX, uneven depth spacing),
+// on the display values TMF (the field the slice shows); one vertex per cell the level crosses, at the mean of the edge
+// crossings, its normal the gradient of the trilinear field there. Geometry in (x, -depth, z), the mesh scaled by the
+// exaggeration in y; the shader removes what lies above the ground or seafloor or in cells the ray mask hides.
+function isoGeometry(V, value) {
+  const A = TMF[V.key], nx = TMM.nx, ny = TMM.ny, nxy = nx * ny, Z = TMM.depths, nz = Z.filter(z => z <= TDMAX).length;
+  const [a, b] = tLin(V), L = (value - a) / b;                    // the level in code units
+  const ddx = TMM.dx * KX, ddz = -TMM.dy * KZ;                    // scene x, z per node step (z decreases northward)
+  const cell = new Int32Array((nx - 1) * (ny - 1) * (nz - 1)).fill(-1), cid = (i, j, k) => (k * (ny - 1) + j) * (nx - 1) + i;
+  const pos = [], nrm = [], idx = [], c = new Float64Array(8);
+  const E = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];   // corner b: i + (b & 1), j + (b >> 1 & 1), k + (b >> 2)
+  const quad = (p, q, r, s) => { if (p < 0 || q < 0 || r < 0 || s < 0) return; idx.push(p, q, r, p, r, s); };
+  for (let k = 0; k < nz - 1; k++) for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    let m = 0, bad = false;
+    for (let q = 0; q < 8; q++) { const v = A[(k + (q >> 2)) * nxy + (j + (q >> 1 & 1)) * nx + i + (q & 1)]; if (v === 255) { bad = true; break; } c[q] = v; if (v > L) m |= 1 << q; }
+    if (bad || m === 0 || m === 255) continue;
+    let su = 0, sv = 0, sw = 0, n = 0;
+    for (const [p, q] of E) { if ((m >> p & 1) === (m >> q & 1)) continue;
+      const t = (L - c[p]) / (c[q] - c[p]); su += (p & 1) + t * ((q & 1) - (p & 1)); sv += (p >> 1 & 1) + t * ((q >> 1 & 1) - (p >> 1 & 1));
+      sw += (p >> 2) + t * ((q >> 2) - (p >> 2)); n++; }
+    const u = su / n, v = sv / n, w = sw / n, dz = Z[k + 1] - Z[k];
+    let gu = 0, gv = 0, gw = 0;                                   // gradient of the trilinear field in the cell, per node step
+    for (let q = 0; q < 8; q++) { const di = q & 1, dj = q >> 1 & 1, dk = q >> 2, wu = di ? u : 1 - u, wv = dj ? v : 1 - v, ww = dk ? w : 1 - w;
+      gu += (di ? 1 : -1) * wv * ww * c[q]; gv += (dj ? 1 : -1) * wu * ww * c[q]; gw += (dk ? 1 : -1) * wu * wv * c[q]; }
+    const gx = gu / ddx, gz = gv / ddz, gy = -gw / dz, gl = Math.hypot(gx, gy, gz) || 1;   // scene y = -depth
+    cell[cid(i, j, k)] = pos.length / 3;
+    pos.push(toX(TMM.west + (i + u) * TMM.dx), -(Z[k] + w * dz), toZ(TMM.south + (j + v) * TMM.dy));
+    nrm.push(gx / gl, gy / gl, gz / gl);
+    // the quad of each crossed node edge at the cell's low corner, joining the 4 cells around it (all seen already)
+    const at = (ii, jj, kk) => ii < 0 || jj < 0 || kk < 0 ? -1 : cell[cid(ii, jj, kk)];
+    if ((m & 1) !== (m >> 1 & 1)) quad(at(i, j, k), at(i, j - 1, k), at(i, j - 1, k - 1), at(i, j, k - 1));   // edge along x
+    if ((m & 1) !== (m >> 2 & 1)) quad(at(i, j, k), at(i - 1, j, k), at(i - 1, j, k - 1), at(i, j, k - 1));   // along y (latitude)
+    if ((m & 1) !== (m >> 4 & 1)) quad(at(i, j, k), at(i - 1, j, k), at(i - 1, j - 1, k), at(i, j - 1, k));   // along depth
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));
+  g.setIndex(idx); return g;
+}
+function setIso() {                       // build, rebuild or hide the isosurface after a change of variable, value or layer
+  if (!tomoMat) return;
+  const V = tVar(), on = TS.surf && layer("tomo").on, key = V.key + "|" + TS.sv[V.key];
+  if (on && key !== isoKey) {
+    if (isoMesh) { scene.remove(isoMesh); isoMesh.geometry.dispose(); }
+    const t0 = performance.now();
+    isoMesh = new THREE.Mesh(isoGeometry(V, TS.sv[V.key]), tomoMat.userData.isoMat);
+    isoMesh.frustumCulled = false; isoMesh.renderOrder = 8; scene.add(isoMesh); isoKey = key;
+    isoMesh.userData.ms = performance.now() - t0;
+  }
+  if (isoMesh) isoMesh.visible = on;
   placeTomo();
 }
 function tomoSectionMesh(a, b) {          // vertical model section along the cross-section line (scene coordinates)
@@ -1073,14 +1190,26 @@ if (TMM) {
   tk.innerHTML = TMASK.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); tk.value = TS.mask;
   td.value = TS.d; $("tomoDepV").textContent = TS.d + " km";
   const on = () => { if (!layer("tomo").on) layer("tomo").set(true); };
-  tv.onchange = tk.onchange = () => { TS.v = tv.value; TS.mask = +tk.value; setTomo(); on(); drawLegend(); drawSection(); };
+  const ti = $("tomoIso"), ts = $("tomoSurf"), segMark = (id, v) => $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.v === v));
+  const surfV = () => { const V = tVar(), x = TS.sv[V.key]; $("tomoSurfV").textContent = tFmt(V, x, tDig(V, x)) + tUnit(V); };
+  const syncIsoCtl = () => { const V = tVar();         // interval list and isosurface slider of the variable shown (each keeps its choice)
+    ti.innerHTML = V.iso.map(([iv, mj], j) => `<option value="${j}">${iv}${tUnit(V)} (bold ${mj})</option>`).join(""); ti.value = TS.isoI[V.key];
+    ts.min = V.surf[0]; ts.max = V.surf[1]; ts.step = V.surf[2]; ts.value = TS.sv[V.key]; surfV(); };
+  syncIsoCtl();
+  tv.onchange = tk.onchange = () => { TS.v = tv.value; TS.mask = +tk.value; syncIsoCtl(); setTomo(); on(); setIso(); drawLegend(); drawSection(); };
+  seg("segIso", v => { TS.iso = !!v; setTomo(); on(); drawLegend(); drawSection(); });
+  ti.onchange = () => { TS.isoI[TS.v] = +ti.value; TS.iso = true; segMark("segIso", 1); setTomo(); on(); drawLegend(); drawSection(); };
+  seg("segSurf", v => { TS.surf = !!v; on(); setIso(); drawLegend(); });
+  let isoRaf = 0;                                       // rebuild at most once per frame while the slider moves
+  ts.oninput = () => { TS.sv[TS.v] = +ts.value; surfV(); TS.surf = true; segMark("segSurf", 1); on();
+    cancelAnimationFrame(isoRaf); isoRaf = requestAnimationFrame(() => { setIso(); drawLegend(); }); };
   td.oninput = () => { TS.d = +td.value; $("tomoDepV").textContent = TS.d + " km"; placeTomo(); on(); drawLegend(); };
   const tc = $("tomoCut"), ta = $("tomoCutAt");
   tc.onchange = () => { CUT.mode = +tc.value; on(); setCut(true); viewCut(); drawLegend(); };
   ta.oninput = () => { CUT.f = +ta.value / 1000; if (!CUT.mode) { CUT.mode = 1; tc.value = "1"; } on(); setCut(true); };
 } else document.querySelectorAll(".tomoRow").forEach(r => r.style.display = "none");
 lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend();
-  const tOn = layer("tomo") && layer("tomo").on; if (cutPlane) cutPlane.visible = tOn; uCut.value.w = tOn && CUT.mode ? 1 : 0;
+  const tOn = layer("tomo") && layer("tomo").on; if (cutPlane) cutPlane.visible = tOn; uCut.value.w = tOn && CUT.mode ? 1 : 0; setIso();
   updateMoves(); if (SEC.on) { drawSection3D(); drawSection(); } }; });
 
 // ---------- controls ----------
@@ -1521,10 +1650,11 @@ function drawLegend() {
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
   const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
-  const tomoLeg = tV ? `<div><h4>${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
+  const tIv = tV ? tIso(tV) : null, tRes = tV && TS.mask === -1 ? tResKm(tV) : "";
+  const tomoLeg = tV ? `<div><h4>Velocity model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}: ${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
     [0, 0.25, 0.5, 0.75, 1].map(f => `rgb(${rampCol(tV.ramp, 2 * f - 1).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>≤ ${tV.lo} ${tV.ends[0]}</span><span>${+((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>≥ ${tV.hi} ${tV.ends[1]}</span></div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}, tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} (40-100 km cells) shown.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."}${TMM.masked && TMM.masked.water + TMM.masked.air ? ` The ${(TMM.masked.water + TMM.masked.air).toLocaleString()} nodes in water or air have no value; nothing is drawn above the ground or seafloor.` : ""} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} shown${tRes ? ` (${tRes})` : ""}.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."}${TMM.masked && TMM.masked.water + TMM.masked.air ? ` The ${(TMM.masked.water + TMM.masked.air).toLocaleString()} nodes in water or air have no value; nothing is drawn above the ground or seafloor.` : ""}${TS.iso ? ` Isocontours every ${tIv[0]}${tUnit(tV)}, bold and labelled every ${tIv[1]}${tUnit(tV)}.` : ""}${TS.surf ? ` Translucent green isosurface ${tV.label} = ${tFmt(tV, TS.sv[tV.key], tDig(tV, TS.sv[tV.key]))}${tUnit(tV)}, cut as the slice (ray mask, ground and seafloor) and in front of the vertical cut.` : ""} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : modes.clu ? cluLeg() : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
     ${slab}${mcLeg}${tomoLeg}${MOVES && layer("moves") && layer("moves").on ? `<div><h4>Moves: ${esc(CATS[MV.from].label)} → ${esc(CATS[MV.to].label)}</h4>
@@ -1724,6 +1854,44 @@ const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
 const rampJS = (mode, v) => mode === 3 ? faultColJS(v) : `rgb(${rgbOf(mode, v).map(x => Math.round(x * 255)).join(",")})`;
 const colVal = (i, m) => m === 0 ? edep[i] : m === 1 ? EV.day[i] / M.events.days_max : m === 2 ? enew[i] : m === 3 ? eflt[i] : m === 4 ? etier[i]
   : m === 5 ? cdz[i] / F.cs : m === 6 ? cdh[i] / F.cs : i;
+// Contour lines of the model in the section panel: marching squares on the grid sampled for its image (g, nx x ny
+// values, NaN where nothing is drawn: no line in a cell with a corner masked, in water or air, or outside the model);
+// the major lines carry their value, spaced along each level
+function secIso(V, g, nx, ny, x0, y0, sx, sy) {
+  const [iv, mj] = tIso(V), dig = tDig(V, mj), minor = [], major = [], q = [0, 0, 0, 0], cr = [null, null, null, null];
+  const PX = [0, 1, 1, 0], PY = [0, 0, 1, 1];                    // corners clockwise from the top left; edge e joins corners e and e + 1
+  for (let r = 0; r < ny - 1; r++) for (let c = 0; c < nx - 1; c++) {
+    q[0] = g[r * nx + c]; q[1] = g[r * nx + c + 1]; q[2] = g[(r + 1) * nx + c + 1]; q[3] = g[(r + 1) * nx + c];
+    if (q[0] !== q[0] || q[1] !== q[1] || q[2] !== q[2] || q[3] !== q[3]) continue;
+    const lo = Math.min(q[0], q[1], q[2], q[3]), hi = Math.max(q[0], q[1], q[2], q[3]);
+    for (let n = Math.ceil(lo / iv - 1e-9); n * iv < hi; n++) {
+      const L = n * iv, f = L / mj, out = Math.abs(f - Math.round(f)) < 1e-6 ? major : minor; let k = 0;
+      for (let e = 0; e < 4; e++) { const p = q[e], s = q[(e + 1) & 3], e1 = (e + 1) & 3;
+        if ((p > L) !== (s > L)) { const t = (L - p) / (s - p);
+          cr[e] = [x0 + (c + PX[e] + t * (PX[e1] - PX[e]) + 0.5) * sx, y0 + (r + PY[e] + t * (PY[e1] - PY[e]) + 0.5) * sy]; k++; }
+        else cr[e] = null; }
+      if (k === 2) { const [p, s] = cr.filter(Boolean); out.push(p[0], p[1], s[0], s[1], L); }
+      else if (k === 4) { const up = (q[0] + q[1] + q[2] + q[3]) / 4 > L;   // saddle: cut off the corners on the other side than the centre
+        for (let j = 0; j < 4; j++) if ((q[j] > L) !== up) { const p = cr[(j + 3) & 3], s = cr[j]; out.push(p[0], p[1], s[0], s[1], L); } }
+    }
+  }
+  sctx.save(); sctx.lineCap = "round";
+  for (const [S, w, col] of [[minor, 0.7, "rgba(13,13,18,0.5)"], [major, 1.4, "rgba(13,13,18,0.88)"]]) {
+    sctx.beginPath(); for (let k = 0; k < S.length; k += 5) { sctx.moveTo(S[k], S[k + 1]); sctx.lineTo(S[k + 2], S[k + 3]); }
+    sctx.lineWidth = w; sctx.strokeStyle = col; sctx.stroke(); }
+  // labels: left to right along the section, at least 150 px from a label of the same value and 42 px from any other
+  const cand = []; for (let k = 0; k < major.length; k += 5) cand.push([(major[k] + major[k + 2]) / 2, (major[k + 1] + major[k + 3]) / 2, major[k + 4]]);
+  cand.sort((p, s) => p[0] - s[0]);
+  sctx.font = "10px IBM Plex Mono, monospace"; sctx.textAlign = "center"; sctx.textBaseline = "middle";
+  sctx.lineWidth = 3; sctx.strokeStyle = "rgba(244,243,238,0.92)"; sctx.fillStyle = "#121216";
+  const xmax = x0 + nx * sx, ymax = y0 + ny * sy, put = [];
+  for (const [x, y, L] of cand) {
+    if (x < x0 + 14 || x > xmax - 14 || y < y0 + 6 || y > ymax - 6) continue;
+    if (put.some(([px, py, pL]) => Math.hypot(x - px, y - py) < (Math.abs(pL - L) < 1e-9 ? 150 : 42))) continue;
+    const t = tFmt(V, L, dig); sctx.strokeText(t, x, y); sctx.fillText(t, x, y); put.push([x, y, L]);
+  }
+  sctx.restore();
+}
 function drawSection() {
   if (!SEC.on) return;
   const W = secCv.clientWidth, H = secCv.clientHeight, pr = devicePixelRatio; secCv.width = W * pr; secCv.height = H * pr;
@@ -1754,17 +1922,18 @@ function drawSection() {
     const V = tVar(), x0 = X(0), x1 = X(L), y0 = Y(-4), y1 = Y(dmax);
     const cw = Math.max(2, Math.round((x1 - x0) / 2)), ch = Math.max(2, Math.round((y1 - y0) / 2));
     const oc = document.createElement("canvas"); oc.width = cw; oc.height = ch;
-    const ox = oc.getContext("2d"), im = ox.createImageData(cw, ch);
+    const ox = oc.getContext("2d"), im = ox.createImageData(cw, ch), vals = new Float32Array(cw * ch).fill(NaN);
     for (let c = 0; c < cw; c++) {
       const s = L * (c + 0.5) / cw, [lo, la] = fromXZ(a.x + ux * s, a.z + uz * s), gd = -elevAt(lo, la) / 1000;
       for (let r = 0; r < ch; r++) {
         const d = -4 + (dmax + 4) * (r + 0.5) / ch; if (d < gd || d > TDMAX) continue;
         const v = tmSample(V, lo, la, d); if (v === null) continue;
-        const rgb = rampCol(V.ramp, tvarT(V, v)), o = (r * cw + c) * 4;
+        const rgb = rampCol(V.ramp, tvarT(V, v)), o = (r * cw + c) * 4; vals[r * cw + c] = v;
         im.data[o] = rgb[0]; im.data[o + 1] = rgb[1]; im.data[o + 2] = rgb[2]; im.data[o + 3] = 215;
       }
     }
     ox.putImageData(im, 0, 0); sctx.imageSmoothingEnabled = true; sctx.drawImage(oc, x0, y0, x1 - x0, y1 - y0);
+    if (TS.iso) secIso(V, vals, cw, ch, x0, y0, (x1 - x0) / cw, (y1 - y0) / ch);
   }
   sctx.font = "10.5px IBM Plex Mono, monospace"; sctx.fillStyle = "#6f6d66"; sctx.strokeStyle = "rgba(255,255,255,0.07)";
   for (let d = 0; d <= dmax; d += 10) { sctx.beginPath(); sctx.moveTo(pad.l, Y(d)); sctx.lineTo(X(L), Y(d)); sctx.stroke(); sctx.fillText(d + " km", 2, Y(d) + 3); }
@@ -1880,7 +2049,9 @@ window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, 
   air: () => ({ nAir, nDrawn }), cdh, cdz, cdv, isLoc, noHypo, CP,
   moves: () => MOVES ? { from: CP[MV.from], to: CP[MV.to], n: MOVE_STATS.n } : null, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; },
   clu: { meta: CLU, cls: ecls, fam: efam, col: ecol, active: () => CLU_ON, selectFamily, pick: pickEvent, evHtml },
-  tomo: { tmSample: (lon, lat, d) => TMM ? tmSample(tVar(), lon, lat, d) : null, TS, TMM, codes: TMG, setTomo, setCut: (mode, f) => { CUT.mode = mode; CUT.f = f; setCut(true); viewCut(); } } };   // for scripted checks
+  tomo: { tmSample: (lon, lat, d) => TMM ? tmSample(tVar(), lon, lat, d) : null, TS, TMM, codes: TMG, setTomo, setCut: (mode, f) => { CUT.mode = mode; CUT.f = f; setCut(true); viewCut(); },
+    iso: () => isoMesh ? { key: isoKey, visible: isoMesh.visible, verts: isoMesh.geometry.attributes.position.count, tris: isoMesh.geometry.index.count / 3, ms: isoMesh.userData.ms } : null,
+    uniforms: () => tomoMat ? { dec: tomoMat.uniforms.uDec.value.toArray(), iso: tomoMat.uniforms.uIso.value.toArray() } : null } };   // for scripted checks
 let last = performance.now(), playAcc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;

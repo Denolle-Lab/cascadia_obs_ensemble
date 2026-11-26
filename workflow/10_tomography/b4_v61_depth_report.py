@@ -265,7 +265,8 @@ def main():
             why.append("relative fit: " + "; ".join(dec["out_relative_fit"][arm]))
         st = "winner" if arm == dec["winner"] else ("tied" if arm in dec["tied"] else
                                                     ("eligible" if arm in dec["eligible"] else "out"))
-        rows.append([arm, f(D.get(arm), 3), st, esc(" | ".join(why))])
+        rows.append([arm, f(D.get(arm), 3), st, "<div style='white-space:normal;min-width:40ch;max-width:80ch'>"
+                     + esc(" | ".join(why)) + "</div>"])
         cls.append(["", "", "win" if st == "winner" else ("out" if st == "out" else ""), ""])
     S.append(table(["arm", "D (km)", "status", "reason"], rows, cls))
     S.append(f"<p>Literature clusters in D: {', '.join(dec['literature_sets'])}. Best arm per cluster and phase: "

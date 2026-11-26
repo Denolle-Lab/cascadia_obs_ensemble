@@ -1,0 +1,132 @@
+{
+ "rule_written": "2026-11-26 13:09 PST (RESUME.md)",
+ "scored": "2026-11-26 14:54:18 PST",
+ "nboot": 2000,
+ "arms": [
+  "it0",
+  "it0_coh",
+  "static",
+  "static_coh",
+  "ssst16",
+  "ssst16_coh",
+  "ssst4",
+  "ssst4_coh",
+  "nf4",
+  "nf4_coh"
+ ],
+ "incomplete": [],
+ "out_above_surface": [],
+ "out_relative_fit": {
+  "it0": [
+   "axial P: +17.0 ms [+15.1, +18.3] vs ssst16_coh, tolerance 2.0",
+   "axial S: +26.6 ms [+23.2, +30.2] vs it0_coh, tolerance 2.5",
+   "msh P: +46.4 ms [+44.8, +48.3] vs nf4_coh, tolerance 1.1",
+   "msh S: +63.9 ms [+60.5, +67.4] vs ssst4_coh, tolerance 1.0",
+   "blancow P: +140.4 ms [+132.1, +147.9] vs nf4_coh, tolerance 4.6",
+   "blancow S: +229.7 ms [+217.5, +242.4] vs ssst4_coh, tolerance 7.7",
+   "gordad P: +19.3 ms [+9.8, +31.9] vs static, tolerance 5.9",
+   "gordad S: +182.5 ms [+132.3, +220.8] vs ssst16_coh, tolerance 13.2"
+  ],
+  "it0_coh": [
+   "axial P: +3.8 ms [+2.5, +5.2] vs ssst16_coh, tolerance 2.0",
+   "msh P: +9.2 ms [+8.4, +10.2] vs nf4_coh, tolerance 1.1",
+   "msh S: +6.3 ms [+5.4, +7.5] vs ssst4_coh, tolerance 1.0",
+   "blancow P: +140.4 ms [+132.2, +147.9] vs nf4_coh, tolerance 4.6",
+   "blancow S: +229.5 ms [+217.4, +242.3] vs ssst4_coh, tolerance 7.7",
+   "gordad P: +19.3 ms [+9.8, +32.0] vs static, tolerance 5.9",
+   "gordad S: +182.5 ms [+132.3, +220.8] vs ssst16_coh, tolerance 13.2"
+  ],
+  "static": [
+   "axial P: +9.9 ms [+8.5, +11.3] vs ssst16_coh, tolerance 2.0",
+   "axial S: +25.0 ms [+21.7, +28.7] vs it0_coh, tolerance 2.5",
+   "msh P: +23.9 ms [+22.7, +25.1] vs nf4_coh, tolerance 1.1",
+   "msh S: +30.9 ms [+28.9, +32.8] vs ssst4_coh, tolerance 1.0",
+   "blancow P: +19.4 ms [+15.9, +22.7] vs nf4_coh, tolerance 4.6",
+   "blancow S: +43.9 ms [+38.9, +49.8] vs ssst4_coh, tolerance 7.7"
+  ],
+  "ssst16": [
+   "axial P: +10.3 ms [+8.9, +11.6] vs ssst16_coh, tolerance 2.0",
+   "axial S: +27.1 ms [+23.9, +30.7] vs it0_coh, tolerance 2.5",
+   "msh P: +21.6 ms [+20.4, +22.7] vs nf4_coh, tolerance 1.1",
+   "msh S: +28.9 ms [+26.9, +30.7] vs ssst4_coh, tolerance 1.0"
+  ],
+  "ssst4": [
+   "axial P: +10.9 ms [+9.5, +12.2] vs ssst16_coh, tolerance 2.0",
+   "axial S: +27.5 ms [+24.3, +30.8] vs it0_coh, tolerance 2.5",
+   "msh P: +21.3 ms [+20.3, +22.4] vs nf4_coh, tolerance 1.1",
+   "msh S: +28.6 ms [+26.8, +30.6] vs ssst4_coh, tolerance 1.0",
+   "gordad P: +24.8 ms [+11.3, +38.8] vs static, tolerance 5.9",
+   "gordad S: +53.2 ms [+19.1, +82.3] vs ssst16_coh, tolerance 13.2"
+  ],
+  "nf4": [
+   "axial P: +11.1 ms [+9.6, +12.4] vs ssst16_coh, tolerance 2.0",
+   "axial S: +28.2 ms [+25.0, +31.3] vs it0_coh, tolerance 2.5",
+   "msh P: +21.1 ms [+20.1, +22.3] vs nf4_coh, tolerance 1.1",
+   "msh S: +28.0 ms [+26.1, +30.3] vs ssst4_coh, tolerance 1.0",
+   "gordad P: +32.1 ms [+16.8, +49.3] vs static, tolerance 5.9",
+   "gordad S: +71.3 ms [+30.4, +108.6] vs ssst16_coh, tolerance 13.2"
+  ],
+  "static_coh": [
+   "blancow P: +19.3 ms [+15.7, +22.5] vs nf4_coh, tolerance 4.6",
+   "blancow S: +44.1 ms [+39.1, +50.0] vs ssst4_coh, tolerance 7.7"
+  ],
+  "ssst4_coh": [
+   "gordad P: +23.3 ms [+8.4, +39.0] vs static, tolerance 5.9",
+   "gordad S: +49.5 ms [+16.6, +79.2] vs ssst16_coh, tolerance 13.2"
+  ],
+  "nf4_coh": [
+   "gordad P: +30.3 ms [+14.9, +50.1] vs static, tolerance 5.9",
+   "gordad S: +69.8 ms [+29.1, +106.5] vs ssst16_coh, tolerance 13.2"
+  ]
+ },
+ "eligible": [
+  "ssst16_coh"
+ ],
+ "literature_sets": [
+  "axial",
+  "msh",
+  "blancow",
+  "gordad"
+ ],
+ "D_km": {
+  "it0": 1.2452075885725922,
+  "it0_coh": 1.2328957371935532,
+  "static": 1.4408177961727855,
+  "static_coh": 1.4469464045329876,
+  "ssst16": 2.017280405274148,
+  "ssst16_coh": 2.0216812469565912,
+  "ssst4": 2.3223966945970105,
+  "ssst4_coh": 2.3459714394280553,
+  "nf4": 1.8446191403412264,
+  "nf4_coh": 1.8445776265489366
+ },
+ "D_eligible": {
+  "ssst16_coh": 2.0216812469565912
+ },
+ "tied": [
+  "ssst16_coh"
+ ],
+ "winner": "ssst16_coh",
+ "simplicity_order": [
+  "it0",
+  "it0_coh",
+  "static",
+  "static_coh",
+  "ssst16",
+  "ssst16_coh",
+  "ssst4",
+  "ssst4_coh",
+  "nf4",
+  "nf4_coh"
+ ],
+ "best_by_set_phase": {
+  "axial P": "ssst16_coh",
+  "axial S": "it0_coh",
+  "msh P": "nf4_coh",
+  "msh S": "ssst4_coh",
+  "blancow P": "nf4_coh",
+  "blancow S": "ssst4_coh",
+  "gordad P": "static",
+  "gordad S": "ssst16_coh"
+ }
+}

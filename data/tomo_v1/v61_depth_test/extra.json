@@ -1,0 +1,29 @@
+{
+ "extra": [
+  "cm4",
+  "cm4_coh"
+ ],
+ "D_km": {
+  "cm4": 2.964025682159407,
+  "cm4_coh": 2.9969096264238244
+ },
+ "would_be_out": {
+  "cm4": [
+   "axial P",
+   "axial S",
+   "msh P",
+   "msh S",
+   "blancow P",
+   "blancow S",
+   "gordad P",
+   "gordad S"
+  ],
+  "cm4_coh": [
+   "blancow P",
+   "blancow S",
+   "gordad P",
+   "gordad S"
+  ]
+ },
+ "note": "post-hoc arms: reported only, not part of the pre-registered decision"
+}

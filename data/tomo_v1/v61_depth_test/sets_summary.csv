@@ -1,0 +1,5 @@
+set,region,events,picks,stations,cc_rows,cc_pairs,seed_index,time0,time1
+axial,Axial,1200,12372,9,22346,10377,0,2014-11-09,2016-12-30
+msh,Cascades (Mount St Helens),1436,30881,109,50389,12627,2,2010-01-01,2016-12-30
+blancow,Blanco,1200,17308,110,38410,12126,6,2012-10-02,2013-04-07
+gordad,Blanco (Gorda Depression),503,8877,168,5544,1864,9,2012-09-24,2013-10-02

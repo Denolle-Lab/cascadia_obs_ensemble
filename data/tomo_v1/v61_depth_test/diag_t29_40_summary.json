@@ -1,0 +1,195 @@
+{
+ "it1": {
+  "dz_obs_median": 0.22066792406162783,
+  "dz_lin_median": 0.2521626159969287,
+  "corr": 0.01320930050925829
+ },
+ "it2": {
+  "dz_obs_median": 0.3310859831008166,
+  "dz_lin_median": 0.34510745421624783,
+  "corr": -0.049282113147775954
+ },
+ "it3": {
+  "dz_obs_median": 0.3678404427065871,
+  "dz_lin_median": 0.3782270913768423,
+  "corr": -0.026776232456371382
+ },
+ "it4": {
+  "dz_obs_median": 0.3678404427065871,
+  "dz_lin_median": 0.3740329034126954,
+  "corr": -0.014318543723111563
+ },
+ "attribution_it1": {
+  "dz_caldera_P": 0.019039993627976454,
+  "dz_caldera_S": 0.3719309805936275,
+  "dz_far_P": -0.10396861509634495,
+  "dz_far_S": -0.03473648105080424,
+  "dz_commonP": 0.10958372323010826,
+  "dz_commonS": 0.25102933752444273,
+  "dz_rest": -0.1414825743165003
+ },
+ "attribution_mean_it1": {
+  "dz_lin": 0.44902275243588413,
+  "dz_obs": 0.429400654984083,
+  "dz_caldera_P": 0.03979313258480285,
+  "dz_caldera_S": 0.50832775256593,
+  "dz_far_P": -0.10959997044973223,
+  "dz_far_S": 0.010501837734883607,
+  "dz_commonP": 0.17708034798762948,
+  "dz_commonS": 0.2759715299311012,
+  "dz_rest": -0.0040291254828466036
+ },
+ "S_minus_P_common_median_it1": -0.07647628188622958,
+ "attribution_it4": {
+  "dz_caldera_P": 0.006455322711211721,
+  "dz_caldera_S": 0.603965012439831,
+  "dz_far_P": -0.059054713694527736,
+  "dz_far_S": -0.1277229481426415,
+  "dz_commonP": 0.1974055595957419,
+  "dz_commonS": 0.490767767277525,
+  "dz_rest": -0.3574739418717351
+ },
+ "attribution_mean_it4": {
+  "dz_lin": 0.6279002002134072,
+  "dz_obs": 0.8698418419921898,
+  "dz_caldera_P": 0.017156299481415005,
+  "dz_caldera_S": 0.7702304610523448,
+  "dz_far_P": -0.08471307201631764,
+  "dz_far_S": -0.0747734883040349,
+  "dz_commonP": 0.25100525811675933,
+  "dz_commonS": 0.4553045283801223,
+  "dz_rest": -0.07840958628347451
+ },
+ "S_minus_P_common_median_it4": -0.14541051422766182,
+ "it0_residuals_floor": [
+  {
+   "near": false,
+   "phase": "P",
+   "fl": false,
+   "n": 4893.0,
+   "mean": -0.0151,
+   "median": -0.026
+  },
+  {
+   "near": false,
+   "phase": "P",
+   "fl": true,
+   "n": 5.0,
+   "mean": -0.0535,
+   "median": -0.0309
+  },
+  {
+   "near": false,
+   "phase": "S",
+   "fl": false,
+   "n": 4162.0,
+   "mean": 0.0306,
+   "median": 0.0112
+  },
+  {
+   "near": false,
+   "phase": "S",
+   "fl": true,
+   "n": 2.0,
+   "mean": -0.088,
+   "median": -0.1303
+  },
+  {
+   "near": true,
+   "phase": "P",
+   "fl": false,
+   "n": 3399.0,
+   "mean": 0.0686,
+   "median": 0.0743
+  },
+  {
+   "near": true,
+   "phase": "P",
+   "fl": true,
+   "n": 8.0,
+   "mean": 0.0037,
+   "median": 0.0122
+  },
+  {
+   "near": true,
+   "phase": "S",
+   "fl": false,
+   "n": 3661.0,
+   "mean": -0.0618,
+   "median": -0.0582
+  },
+  {
+   "near": true,
+   "phase": "S",
+   "fl": true,
+   "n": 5.0,
+   "mean": 0.0322,
+   "median": 0.0332
+  }
+ ],
+ "by_pass_AB": [
+  {
+   "tiers": "A-B",
+   "it": 0,
+   "n": 804,
+   "within_1_6": 0.622,
+   "within_2_0": 0.746,
+   "median_bsf": 17.067,
+   "floor_limited": 0.249,
+   "dz_med": 0.0,
+   "rms_med": 0.127
+  },
+  {
+   "tiers": "A-B",
+   "it": 1,
+   "n": 804,
+   "within_1_6": 1.119,
+   "within_2_0": 1.244,
+   "median_bsf": 17.518,
+   "floor_limited": 0.249,
+   "dz_med": 0.221,
+   "rms_med": 0.085
+  },
+  {
+   "tiers": "A-B",
+   "it": 2,
+   "n": 804,
+   "within_1_6": 0.622,
+   "within_2_0": 0.871,
+   "median_bsf": 17.704,
+   "floor_limited": 0.249,
+   "dz_med": 0.331,
+   "rms_med": 0.073
+  },
+  {
+   "tiers": "A-B",
+   "it": 3,
+   "n": 804,
+   "within_1_6": 0.373,
+   "within_2_0": 0.622,
+   "median_bsf": 17.761,
+   "floor_limited": 0.373,
+   "dz_med": 0.368,
+   "rms_med": 0.066
+  },
+  {
+   "tiers": "A-B",
+   "it": 4,
+   "n": 804,
+   "within_1_6": 0.124,
+   "within_2_0": 0.373,
+   "median_bsf": 17.749,
+   "floor_limited": 0.124,
+   "dz_med": 0.368,
+   "rms_med": 0.058
+  }
+ ],
+ "sigz_ratio_commonS_median": 1.2530437282629894,
+ "corr_z_commonS_median": -0.5856334733603967,
+ "centroid_xyz": [
+  222.934,
+  308.197,
+  16.04705
+ ],
+ "events_common": 1654
+}

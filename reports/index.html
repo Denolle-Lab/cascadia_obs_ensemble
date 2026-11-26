@@ -71,8 +71,9 @@ a { color: var(--link); }
     <h2>Velocity models</h2>
     <div class="wrap"><table>
       <tr><td><a href="model_v0.4.0.html">Model v0.4.0</a></td><td>v0.3.1 re-inverted with the re-timed picks: fit at the re-timed stations, model change against the numerical noise floor, hypocentre shifts.</td><td><span class="tag ok">current</span></td></tr>
-      <tr><td><a href="model_v0.4.1.html">Model v0.4.1</a></td><td>v0.4.0 with the surface floor in the inversion: no event above the surface, model change against noise. The model of catalog v6.0.</td><td><span class="tag ok">current</span></td></tr>
-      <tr><td><a href="ensemble_v041_real.html">Ensemble v0.4.1 (dry run)</a></td><td>Bayesian ensemble on real data, 96 of 100 members: Vp and Vs spreads per node, inflated by the synthetic calibration (Vp x1.40, Vs x1.35, D-B094), floor check, run cost. Four failed members are being fixed before registration.</td><td><span class="tag warn">dry run</span></td></tr>
+      <tr><td><a href="model_v0.4.2.html">Model v0.4.2</a></td><td>v0.4.1 without the 8 self-paired differential times and with the patched tomoDD (D-B099): what changed against the noise floor, the self-paired events back next to their twins, identity test of the new tomoDD build.</td><td><span class="tag ok">current</span></td></tr>
+      <tr><td><a href="model_v0.4.1.html">Model v0.4.1</a></td><td>v0.4.0 with the surface floor in the inversion: no event above the surface, model change against noise. The model of catalog v6.0 (v0.4.2 differs only locally).</td><td><span class="tag old">v6.0 model</span></td></tr>
+      <tr><td><a href="ensemble_v041_real.html">Ensemble v0.4.1 (dry run)</a></td><td>Bayesian ensemble on real data, 96 of 100 members: Vp and Vs spreads per node, inflated by the synthetic calibration (Vp x1.40, Vs x1.35, D-B094), floor check, run cost. Superseded: the failures traced to two bugs (D-B099); the ensemble is being rerun on v0.4.2.</td><td><span class="tag old">superseded</span></td></tr>
     </table></div>
   </section>
 

@@ -1,36 +1,62 @@
 """Track B Bayesian ensemble (D-B030, D-B032): the detached, resumable chain and its member scheduler.
 
   python b2_ens_run.py chain                       full chain (launch detached, see RESUME.md in ROOT)
-  python b2_ens_run.py members KIND NAME [NAME ..]  run these members end to end (tests), same scheduler
+  python b2_ens_run.py members KIND NAME [NAME ..] [--max-procs N]   run these members end to end (tests), same
+                                                   scheduler (N: at most N tomoDD processes, default max_procs)
   python b2_ens_run.py status                      counts of done / failed stages per kind
+  python b2_ens_run.py clear-failed KIND (NAME .. | --all)   clear FAILED_MEMBER markers explicitly (renamed to
+                                                   FAILED_MEMBER.cleared.<time>, stage FAILED markers removed), so the
+                                                   next chain run retries those members
+Environment: B2_ENS_CONFIG (configuration, default tomodd.ensemble.config), B2_ENS_ROOT (root, default
+configs.<c>.root or tomodd.ensemble.root), B2_ENS_STOP_AFTER (stage), B2_ENS_MAX_PROCS (max_procs).
 
 Chain stages (ROOT/chain.state records the finished ones; rerunning the same command resumes):
-  prep       b2_ens_member.py prep (prior ingredients)
+  prep       b2_ens_member.py prep (prior ingredients; pinned external inputs; the floor's surface.dat per stage)
   truth      b2_ens_synth.py truth (synthetic truth, tomoDD-SE_syn per stage)
   synth      synthetic members s000..s(N-1) and the noise-floor clones nf0..nf(K-1) of s000
   calibrate  b2_ens_coverage.py: the D-B030 gate. FAIL -> the chain stops with exit 2 (real members not started)
+             With configs.<c>.calibration_root set (v0.4.1: the v0.3.2 synthetic calibration), truth, synth and
+             calibrate are not run here: the gate is that root's passed calibration (chain.state has calibrate and
+             synth/coverage.json result PASS), or its failed calibration explicitly accepted by configs.<c>.calibration
+             (D-B094: decision id, Vp / Vs inflation factors covering every failed item, coverage.json md5);
+             otherwise exit 2 before any real member.
+             With configs.<c>.calibration_order = after_real (v0.4.2, D-B099) the order is prep, real, stats, truth,
+             synth, calibrate, products: the real members do not wait for a calibration; this root's own synthetic
+             calibration runs after them (a FAIL verdict is recorded, not fatal), and the products run only after a
+             PASS or with configs.<c>.calibration accepting THIS root's coverage.json (calibration_acceptance); else the
+             chain stops with exit 2 before the products (rerun the same command once the entry is set).
   real       real-data members r000..r(N-1)
   stats      b2_ens_stats.py stats real (per-node statistics)
   products   b2_ens_stats.py products real (dry-run netCDF + HTML report; with B2_ENS_REGISTER=1, after the PI's go,
-             the immutable version <model>+ens.<members> is registered, read-back checked first)
+             the immutable version <model>+ens.<members> is registered, read-back checked first); the Vp / Vs
+             spreads are multiplied by configs.<c>.calibration.inflation when set (D-B094), raw spreads kept
 Scheduler: per member M0 first, then its tiles (all four at once), then the merge; at most tomodd.ensemble.max_procs
 tomoDD processes of this chain, each started only while MemAvailable, minus mem_per_run_gb for every process started in
 the last 5 minutes (still allocating), stays above min_avail_gb + mem_per_run_gb; tile
 stages of started members go before new M0 stages (members finish early), longest tiles first. A failed stage is
 retried once; a second failure marks the member failed (FAILED_MEMBER) and the chain carries on. Every tomoDD run is
 niced (tomodd.ensemble.nice) and uses the frozen binaries (D-B054).
+Markers and locks: members with a FAILED_MEMBER marker from an earlier run are skipped and listed at the start (clear
+them with clear-failed); a marker of a member that has merged since is stale and is cleared (renamed, logged). Each
+member stage runs under its own lock (<member>/<stage>/LOCK, flock + pid, pgid, host, start; b2_ens_member.py), and
+the scheduler does not start a stage another process holds; one chain per root (ROOT/chain.lock).
+Process group: the chain (and the members command) makes itself a process-group leader; every member stage and its
+tomoDD run in that group. On an exception, SIGTERM or SIGINT the chain kills the whole group (no orphan tomoDD keeps
+running) and exits non-zero.
 """
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
+import traceback
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import b2_ens_common as C  # noqa: E402
-from b2_ens_common import E, ROOT, STAGES  # noqa: E402
+from b2_ens_common import CFG, E, ROOT, STAGES, T  # noqa: E402
 
 PYD = [f"{C.PY_DEFAULT}/bin/python"]
 PYM = [f"{C.PY_MODELS}/bin/python"]
@@ -57,15 +83,47 @@ def done(kind, name, stage):
     return (md / "MERGED").exists() if stage == "merge" else (md / stage / "DONE").exists()
 
 
+def stage_locked(kind, n, s):
+    md = C.member_dir(kind, n)
+    return C.is_locked(md / "merge.LOCK" if s == "merge" else md / s / "LOCK")
+
+
+def clear_marker(md, why):
+    f = md / "FAILED_MEMBER"
+    dst = md / f"FAILED_MEMBER.cleared.{time.strftime('%Y%m%dT%H%M%S')}"
+    f.rename(dst)
+    for st in STAGES:
+        (md / st / "FAILED").unlink(missing_ok=True)
+    log(f"cleared FAILED_MEMBER of {md.parent.name}/{md.name} ({why}); kept as {dst.name}")
+
+
+def failed_markers(kind, names):
+    """Members with a FAILED_MEMBER marker: a stale one (the member merged since) is cleared; the others are skipped
+    and listed (clear them explicitly with clear-failed)."""
+    out = []
+    for n in names:
+        md = C.member_dir(kind, n)
+        if not (md / "FAILED_MEMBER").exists():
+            continue
+        if (md / "MERGED").exists():
+            clear_marker(md, "stale: the member has merged since")
+            continue
+        out.append(n)
+    if out:
+        log(f"{kind}: {len(out)} members skipped, FAILED_MEMBER from an earlier run: {out}; to retry them: "
+            f"b2_ens_run.py clear-failed {kind} {' '.join(out)}")
+    return out
+
+
 def run_members(kind, names, max_procs=None):
     """Run members to their merge. Returns (merged, failed) name lists."""
-    max_procs = int(max_procs or E["max_procs"])
+    max_procs = int(max_procs or os.environ.get("B2_ENS_MAX_PROCS") or E["max_procs"])
     need_gb = float(E["min_avail_gb"]) + float(E["mem_per_run_gb"])
     order = ["m0"] + [t for t in TILE_ORDER if t in STAGES] + [t for t in STAGES[1:] if t not in TILE_ORDER]
-    tries, running, failed = {}, {}, set()
-    for n in names:
-        if (C.member_dir(kind, n) / "FAILED_MEMBER").exists():
-            failed.add(n)
+    tries, running, failed, held = {}, {}, set(), set()
+    failed.update(failed_markers(kind, names))
+    log(f"{kind}: {len(names)} members, at most {max_procs} tomoDD processes, config {C.CONFIG}, root {ROOT}"
+        f"{', floor on' if C.FLOOR else ''}")
     t0, last = time.time(), 0
     rl = ROOT / kind / "run_log.jsonl"
     rl.parent.mkdir(parents=True, exist_ok=True)
@@ -108,6 +166,11 @@ def run_members(kind, names, max_procs=None):
         # processes started in the last 5 minutes may not have reached their full memory yet: reserve it for them
         young = sum(1 for (n, s), v in running.items() if s != "merge" and time.time() - v[1] < 300)
         for pr, _, n, s in pending:
+            if stage_locked(kind, n, s):                         # another process runs this member stage
+                if (n, s) not in held:
+                    log(f"{kind}/{n}/{s}: locked by another process, not started")
+                    held.add((n, s))
+                continue
             if s == "merge":
                 if sum(1 for (_, s2) in running if s2 == "merge") >= 4:
                     continue
@@ -162,25 +225,46 @@ def mark(s):
 
 def resume_md():
     N = E["members"]
-    txt = f"""# Ensemble {C.CONFIG} (Track B, D-B030/D-B032): how to resume
+    cr = CFG.get("calibration_root")
+    acc = C.calibration_entry()
+    acc_txt = (f" A failed calibration is accepted only by configs.{C.CONFIG}.calibration (now: {acc.get('accepted')}, "
+               f"inflation {json.dumps(acc.get('inflation'))}, coverage_md5 {acc.get('coverage_md5')}; every failed item "
+               f"must be inflated and the md5 must match): the products then multiply the Vp / Vs spreads by these "
+               f"factors (raw spreads kept as *_raw; derivation b2_ens_inflate.py -> {ROOT}/calibration/inflation.md)"
+               if acc else f" A failed calibration needs an explicit configs.{C.CONFIG}.calibration entry (PI decision)")
+    gate = (f"the synthetic calibration of {cr} (its chain.state has calibrate, synth/coverage.json PASS); this root "
+            f"runs no synthetic members. If it has not passed, the chain stops with exit 2 before any real member."
+            + acc_txt if cr else f"if the stage calibrate fails, the chain stops with exit 2 and the real members are not "
+                       f"started; see {ROOT}/synth/coverage.md. Do not remove 'calibrate' from the state by hand "
+                       f"without the PI's decision")
+    stages = "prep calibrate(gate) real stats products" if cr else "prep truth synth calibrate real stats products"
+    if after_real():
+        gate = (f"none for the real members (calibration_order after_real, D-B099): this root's synthetic calibration "
+                f"runs after them ({ROOT}/synth/coverage.md); the products run only after a PASS or with configs."
+                f"{C.CONFIG}.calibration accepting this root's coverage.json (decision, inflation, coverage_md5)."
+                + (acc_txt if acc else " No calibration entry yet: no factor is accepted"))
+        stages = "prep real stats truth synth calibrate products"
+    txt = f"""# Ensemble of model v{C.product_version()} (configuration {C.CONFIG}; products {C.product_version()}+ens.<members>): how to resume
 
-Written by b2_ens_run.py at the start of every chain run ({time.strftime('%F %T')}).
+Track B, D-B030/D-B032. Written by b2_ens_run.py at the start of every chain run ({time.strftime('%F %T')}).
 
-* Configuration: tomodd.ensemble.configs.{C.CONFIG} in params.yaml (M0 {E['configs'][C.CONFIG]['m0']['region']}/{E['configs'][C.CONFIG]['m0']['tag']}, tiles {', '.join(f"{t['region']}/{t['tag']}" for t in E['configs'][C.CONFIG]['tiles'].values())}).
-* Chain state: {STATE} (one finished stage per line: prep truth synth calibrate real stats products).
+* Configuration: tomodd.ensemble.configs.{C.CONFIG} in params.yaml (M0 {CFG['m0']['region']}/{CFG['m0']['tag']}, tiles {', '.join(f"{t['region']}/{t['tag']}" for t in CFG['tiles'].values())};
+  dataset {CFG.get('dataset', 'as the regions')}; binaries {CFG.get('bin_dir', E['bin_dir'])}; floor {'on (D-B083: surface.dat per member stage, Air_dep ' + str(T['floor']['air_dep_km']) + ' km)' if C.FLOOR else 'off'}).
+* Chain state: {STATE} (one finished stage per line: {stages}).
 * Log: {ROOT}/chain.log; per member {ROOT}/<synth|real>/<member>/<stage>.log; run log <kind>/run_log.jsonl.
-* Members: synth {N['synth']} + {N['floor']} noise-floor clones, real {N['real']}; at most {E['max_procs']} tomoDD processes,
+* Members: {'real ' + str(N['real']) if cr else f"real {N['real']}, then synth {N['synth']} + {N['floor']} noise-floor clones" if after_real() else f"synth {N['synth']} + {N['floor']} noise-floor clones, real {N['real']}"}; at most {os.environ.get('B2_ENS_MAX_PROCS') or E['max_procs']} tomoDD processes,
   nice {E['nice']}, MemAvailable kept above {E['min_avail_gb']} GB.
 * Resume after a crash or reboot: run the launch command again (same command). Finished stages and finished member
-  stages are skipped; an interrupted member stage is rerun from its inputs.
-* Calibration gate: if the stage calibrate fails, the chain stops with exit 2 and the real members are not started;
-  see {ROOT}/synth/coverage.md. Do not remove 'calibrate' from the state by hand without the PI's decision.
-* Stop: kill the process group of the chain (pgid in {ROOT}/chain.pid).
+  stages are skipped; an interrupted member stage is rerun from its inputs. Members marked FAILED_MEMBER are skipped
+  until cleared: b2_ens_run.py clear-failed <kind> <names> (same environment).
+* Calibration gate: {gate}.
+* Stop: kill the process group of the chain (pgid in {ROOT}/chain.pid); the chain also kills its group itself on an
+  exception, SIGTERM or SIGINT.
 
 Launch (from the code worktree):
 
     cd {HERE.parents[1]}
-    LD_LIBRARY_PATH={C.PY_DEFAULT}/lib setsid nohup {PYD[0]} workflow/10_tomography/b2_ens_run.py chain >> {ROOT}/chain.log 2>&1 < /dev/null &
+    B2_ENS_CONFIG={C.CONFIG} LD_LIBRARY_PATH={C.PY_DEFAULT}/lib setsid nohup {PYD[0]} workflow/10_tomography/b2_ens_run.py chain >> {ROOT}/chain.log 2>&1 < /dev/null &
 """
     (ROOT / "RESUME.md").write_text(txt)
 
@@ -192,17 +276,59 @@ def maybe_stop(stage):
         sys.exit(0)
 
 
-def chain():
-    ROOT.mkdir(parents=True, exist_ok=True)
-    (ROOT / "chain.pid").write_text(f"pid {os.getpid()} pgid {os.getpgid(0)}\n")
-    resume_md()
+MEMBER_KEYS = ("m0", "tiles", "dataset", "bin_dir", "runtime_files", "floor", "merge_product", "node_model", "mask_damp")
+
+
+def check_prepared():
+    """The root's members share one prior and one configuration: the effective prior and the member-relevant
+    configuration keys now must be those prep recorded in prior/prior.json (else: a new root)."""
+    pj = C.PRIOR / "prior.json"
+    pri = json.loads(pj.read_text())
+    bad = []
+    if json.loads(json.dumps(C.PR, default=str)) != pri.get("prior"):
+        bad.append("prior (tomodd.ensemble.prior / configs.<c>.prior)")
+    rec = pri.get("cfg") or {}
+    bad += [f"configs.{C.CONFIG}.{k}" for k in MEMBER_KEYS
+            if json.loads(json.dumps(CFG.get(k), default=str)) != rec.get(k)]
+    if bad:
+        log(f"{pj}: changed since prep: {', '.join(bad)}; members of one root must share them: use a new root")
+        sys.exit(1)
+
+
+def calibration_gate():
+    """Real phase gated on another root's synthetic calibration (configs.<c>.calibration_root): go if it passed; after a
+    failed calibration only with the explicit acceptance configs.<c>.calibration (D-B094; b2_ens_common
+    calibration_acceptance: decision id, Vp / Vs inflation factors covering every failed item, md5 of the accepted
+    coverage.json); otherwise exit 2 before any real member. Read-only on the calibration root."""
+    cr = Path(CFG["calibration_root"])
+    st, cj = cr / "chain.state", cr / "synth" / "coverage.json"
+    done_ = st.exists() and "calibrate" in st.read_text().split()
+    cov = json.loads(cj.read_text()) if cj.exists() else {}
+    res = cov.get("result")
+    if done_ and res == "PASS":
+        log(f"calibration gate: {cj} result PASS")
+        return
+    why = C.calibration_acceptance(cov, cj)
+    if why is None:
+        acc = C.calibration_entry()
+        failed = sorted(k for k, v in cov["verdict"].items() if not v)
+        log(f"calibration gate: {cj} result {res} (failed: {failed}), ACCEPTED by configs.{C.CONFIG}.calibration "
+            f"({acc['accepted']}): products inflate the spreads {json.dumps(C.inflation())}; coverage.json md5 "
+            f"{acc['coverage_md5']}")
+        return
+    log(f"CALIBRATION GATE NOT PASSED: {cr} (chain.state calibrate: {done_}, coverage.json result: {res}; "
+        f"acceptance: {why}); real-data ensemble not started")
+    sys.exit(2)
+
+
+def after_real():
+    """configs.<c>.calibration_order = after_real (D-B099): real members first, this root's synthetic calibration after."""
+    return CFG.get("calibration_order") == "after_real"
+
+
+def synthetic_phase():
+    """truth, synthetic members, calibrate of this root. Returns the calibrate rc (0 PASS, 2 FAIL) or exits on errors."""
     N = E["members"]
-    log(f"chain start, config {C.CONFIG}, root {ROOT}")
-    if not stage_done("prep"):
-        if sh(PYD + [HERE / "b2_ens_member.py", "prep"], ENVD, "prep"):
-            sys.exit(1)
-        mark("prep")
-    maybe_stop("prep")
     if not stage_done("truth"):
         if sh(PYD + [HERE / "b2_ens_synth.py", "truth"], ENVD, "truth"):
             sys.exit(1)
@@ -216,15 +342,61 @@ def chain():
             sys.exit(3)
         mark("synth")
     maybe_stop("synth")
+    rc = 0
     if not stage_done("calibrate"):
         rc = sh(PYD + [HERE / "b2_ens_coverage.py"], ENVD, "calibrate")
-        if rc == 2:
+        if rc not in (0, 2):
+            sys.exit(1)
+        if rc == 2 and not after_real():
             log("CALIBRATION FAILED: real-data ensemble not started (see synth/coverage.md)")
             sys.exit(2)
-        if rc:
-            sys.exit(1)
         mark("calibrate")
-    maybe_stop("calibrate")
+    return rc
+
+
+def products_gate():
+    """after_real: the products need this root's calibration verdict PASS, or its FAIL accepted by configs.<c>.calibration
+    (calibration_acceptance: decision id, Vp / Vs factors covering every failed item, md5 of this coverage.json)."""
+    cj = ROOT / "synth" / "coverage.json"
+    cov = json.loads(cj.read_text()) if cj.exists() else {}
+    if cov.get("result") == "PASS":
+        log(f"products gate: {cj} result PASS")
+        return
+    why = C.calibration_acceptance(cov, cj)
+    if why is None:
+        log(f"products gate: {cj} result {cov.get('result')}, ACCEPTED by configs.{C.CONFIG}.calibration "
+            f"({C.calibration_entry()['accepted']}): products inflate the spreads {json.dumps(C.inflation())}")
+        return
+    log(f"PRODUCTS WAIT for the calibration: {cj} result {cov.get('result')} (failed: "
+        f"{sorted(k for k, v in (cov.get('verdict') or {}).items() if not v)}); acceptance: {why}. Derive the factors "
+        f"(b2_ens_inflate.py), set configs.{C.CONFIG}.calibration (PI rule) and rerun the chain")
+    sys.exit(2)
+
+
+def chain():
+    ROOT.mkdir(parents=True, exist_ok=True)
+    lk = C.Lock(ROOT / "chain.lock")
+    if not lk.acquire(f"chain {C.CONFIG}"):
+        raise SystemExit(f"another chain runs on {ROOT}: {lk.owner()}")
+    C.check_config()
+    (ROOT / "chain.pid").write_text(f"pid {os.getpid()} pgid {os.getpgid(0)}\n")
+    resume_md()
+    N = E["members"]
+    cr = CFG.get("calibration_root")
+    log(f"chain start, config {C.CONFIG}, root {ROOT}, floor {'on' if C.FLOOR else 'off'}"
+        f"{', calibration from ' + cr if cr else ''}; pid {os.getpid()} pgid {os.getpgid(0)}")
+    if not stage_done("prep"):
+        if sh(PYD + [HERE / "b2_ens_member.py", "prep"], ENVD, "prep"):
+            sys.exit(1)
+        mark("prep")
+    check_prepared()
+    maybe_stop("prep")
+    if cr:
+        calibration_gate()                     # every run: the gate is the other root's current verdict
+        maybe_stop("calibrate")
+    if not cr and not after_real():
+        synthetic_phase()                      # the D-B030 gate before the real members
+        maybe_stop("calibrate")
     if not stage_done("real"):
         names = [f"r{i:03d}" for i in range(N["real"])]
         merged, failed = run_members("real", names)
@@ -238,6 +410,11 @@ def chain():
             sys.exit(1)
         mark("stats")
     maybe_stop("stats")
+    if after_real():
+        synthetic_phase()                      # D-B099: this root's calibration, after the real members
+        maybe_stop("calibrate")
+        if not stage_done("products"):
+            products_gate()
     if not stage_done("products"):
         if sh(PYM + [HERE / "b2_ens_stats.py", "products", "real"], ENVM, "products"):
             sys.exit(1)
@@ -253,15 +430,111 @@ def status():
             continue
         ms = sorted(p.name for p in d.iterdir() if p.is_dir() and p.name[0] in "srn")
         cnt = {s: sum(done(kind, m, s) for m in ms) for s in STAGES + ["merge"]}
-        print(kind, len(ms), "members:", cnt, "failed:", sum((d / m / "FAILED_MEMBER").exists() for m in ms))
+        print(kind, len(ms), "members:", cnt, "failed:", sum((d / m / "FAILED_MEMBER").exists() for m in ms),
+              "locked stages:", sum(stage_locked(kind, m, s) for m in ms for s in STAGES + ["merge"]))
+
+
+def clear_failed(kind, names):
+    d = ROOT / kind
+    if names == ["--all"]:
+        names = sorted(p.name for p in d.iterdir() if (p / "FAILED_MEMBER").exists()) if d.exists() else []
+    for n in names:
+        md = C.member_dir(kind, n)
+        if (md / "FAILED_MEMBER").exists():
+            clear_marker(md, "cleared by hand (clear-failed)")
+        else:
+            log(f"{kind}/{n}: no FAILED_MEMBER marker")
+
+
+# ---------------------------------------------------------------- process group
+def own_group():
+    """Make this process a process-group leader (setsid launches already are), so killpg reaches every member stage
+    and tomoDD run it starts and nothing else."""
+    if os.getpgid(0) != os.getpid():
+        try:
+            os.setpgid(0, 0)
+        except OSError as ex:                 # e.g. a session leader of another group: cannot happen with setsid
+            log(f"cannot become a process-group leader ({ex}); children will be killed one by one on errors")
+
+
+def _on_signal(signum, frame):
+    raise SystemExit(128 + signum)
+
+
+def group_members(pg):
+    """pids of the other live processes of process group pg (/proc)."""
+    out = []
+    for d in Path("/proc").iterdir():
+        if not d.name.isdigit() or int(d.name) == os.getpid():
+            continue
+        try:
+            st = (d / "stat").read_text()
+        except OSError:
+            continue
+        f = st[st.rindex(")") + 2:].split()            # fields after the command name: state ppid pgrp ...
+        if int(f[2]) == pg and f[0] != "Z":
+            out.append(int(d.name))
+    return out
+
+
+def kill_group(why):
+    """Kill every other process of this process group (member stages and their tomoDD runs): SIGTERM, then SIGKILL
+    after 10 s for any left. This process exits by itself afterwards (its exit code is kept)."""
+    pg = os.getpgid(0)
+    if pg != os.getpid():
+        log(f"not a group leader: not killing group {pg} ({why})")
+        return
+    left = group_members(pg)
+    if not left:
+        return
+    log(f"killing process group {pg} ({len(left)} processes): {why}")
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    os.killpg(pg, signal.SIGTERM)
+    for _ in range(20):
+        time.sleep(0.5)
+        left = group_members(pg)
+        if not left:
+            break
+    for q in left:
+        try:
+            os.kill(q, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    log(f"process group {pg}: {len(group_members(pg))} processes left")
+
+
+def guarded(fn, *args):
+    own_group()
+    signal.signal(signal.SIGTERM, _on_signal)
+    signal.signal(signal.SIGINT, _on_signal)
+    try:
+        return fn(*args)
+    except SystemExit as ex:
+        if ex.code not in (None, 0):
+            kill_group(f"exit {ex.code}")
+        raise
+    except BaseException:                     # noqa: BLE001  any error: no orphan member stage or tomoDD
+        log("chain exception:\n" + traceback.format_exc())
+        kill_group("exception")
+        raise
 
 
 def main():
+    if len(sys.argv) < 2:
+        raise SystemExit(__doc__ or "usage: b2_ens_run.py chain | members ... | status | clear-failed KIND (NAME .. | --all)")
     cmd = sys.argv[1]
     if cmd == "chain":
-        chain()
+        guarded(chain)
     elif cmd == "members":
-        run_members(sys.argv[2], sys.argv[3:])
+        args = sys.argv[2:]
+        mp = None
+        if "--max-procs" in args:
+            i = args.index("--max-procs")
+            mp = int(args[i + 1])
+            del args[i:i + 2]
+        guarded(run_members, args[0], args[1:], mp)
+    elif cmd == "clear-failed":
+        clear_failed(sys.argv[2], sys.argv[3:])
     else:
         status()
 

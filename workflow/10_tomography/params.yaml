@@ -585,6 +585,24 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
     blanco_m0fnf: {<<: *blanco_m0f, start_model: margin_m0_v4nf/d200_s480}
     oregon_m0fnf: {<<: *oregon_m0f, start_model: margin_m0_v4nf/d200_s480}
     washington_m0fnf: {<<: *washington_m0f, start_model: margin_m0_v4nf/d200_s480}
+    # v0.4.2 (D-B099, PI 2026-11-26 06:27): the v0.4.1 tiles that had self-paired catalog differential times
+    # (b2_tomodd_inputs.diff_times dropped column 0 of the KD-tree query as "self"; co-located events then paired with
+    # themselves, which tomoDD reads as absolute times of 0 s) rebuilt with the fixed pairing (dt.ct = v0.4.1's minus the
+    # self-pair blocks; every other input byte-identical, b2_v042_verify_inputs.py) and re-inverted with the 2026-11-26
+    # freeze (transform_r_gfortran.c sph2car/car2sph stable form where the old expression leaves its domain; same bits
+    # elsewhere). Same start (margin_m0_v4/d200_s480), floor, damping, smoothing as v0.4.1. M0 and oregon are unchanged.
+    mendocino_gorda_c_m0g: &mendocino_gorda_c_m0g
+      <<: *mendocino_gorda_c_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_e13k, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_e13k}
+    blanco_m0g: &blanco_m0g
+      <<: *blanco_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_e10k, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_e10k}
+    washington_m0g: &washington_m0g
+      <<: *washington_m0f
+      bins: {bin: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_w, bin_check: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin/tomoDD-SE_chk_w}
+    mendocino_gorda_c_m0gnf: {<<: *mendocino_gorda_c_m0g, start_model: margin_m0_v4nf/d200_s480}
+    blanco_m0gnf: {<<: *blanco_m0g, start_model: margin_m0_v4nf/d200_s480}
+    washington_m0gnf: {<<: *washington_m0g, start_model: margin_m0_v4nf/d200_s480}
   p1:                              # D-B028 P-1 reference times (b2_fwd_p1.py)
     richardson_k: {P: 1.33, S: 1.28}   # T = T0.5 - k (T1 - T0.5); k calibrated against TauP (notes/forward_accuracy.md)
     statics_max_dist_km: 100       # iter1 OBS S phases sampled for the P-6 statics
@@ -774,18 +792,31 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
       grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
       taper_km: 15
       floor: 0.1
+    product_v042:                  # v0.4.2 (D-B099): v0.4.1's merge rules and masks; mendocino_gorda_c, blanco, washington from m0g
+      choice: data/tomo_v1/b2_merge/tiles_m0g/choice.csv
+      reference: margin_m0_v4/d200_s480
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
+    product_v042nf:                # noise-floor chain of v0.4.2 (dry run only, never registered)
+      choice: data/tomo_v1/b2_merge/tiles_m0g/choice_nf.csv
+      reference: margin_m0_v4nf/d200_s480
+      grid: {lon: [-131.75, -120.125, 0.125], lat: [38.9, 50.6, 0.1]}
+      taper_km: 15
+      floor: 0.1
   ensemble:                        # D-B030/D-B032 RTO ensemble of one merged-model configuration (b2_ens_*.py; notes/ensemble_calibration.md)
     root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # members, prior, synthetic truth, statistics, chain state, RESUME.md
     bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-24          # D-B054: frozen binaries only (tomoDD-SE_<class>, _syn_<class>)
     runtime_files: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-24/runtime_files   # ak135.15.SKS, layer-16.dat
-    max_procs: 56                  # concurrent tomoDD processes of the chain (sessions -18 up to 40, another workflow 16)
+    max_procs: 64                  # concurrent tomoDD processes of the chain (PI 2026-11-25: whole machine; v6 grid chain 36, cc job up to 48 I/O workers)
     nice: 10
-    min_avail_gb: 40               # MemAvailable must stay above this after a new process (mem_per_run_gb) starts
+    min_avail_gb: 30               # MemAvailable must stay above this after a new process (mem_per_run_gb) starts (the throttle)
     mem_per_run_gb: 3.5             # max RSS of the deterministic runs: washington 3.5, mendocino_gorda_c 3.3, M0 2.6 GB
     members: {synth: 100, real: 100, floor: 5}   # D-B032; floor = clones of synth member 0 with a 1e-6 s data perturbation
-    config: v0.3.1                 # the configuration the chain runs (key of configs)
-    configs:                       # dataset / M0 run / tile runs as parameters (PI 2026-11-25: v0.4.x on re-timed picks may follow)
-      v0.3.1:                      # model v0.3.1 / v0.3.2 (D-B046, D-B049..D-B051, D-B073)
+    config: v0.4.1                 # the configuration the chain runs (key of configs; B2_ENS_CONFIG overrides)
+    configs:                       # dataset / M0 run / tile runs as parameters (PI 2026-11-25: v0.4.x on re-timed picks)
+      v0.3.1:                      # model v0.3.1 / v0.3.2 (D-B046, D-B049..D-B051, D-B073); its synthetic calibration runs from ~/wt_ens
+        root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2
         node_model: 0.3.2          # registered version whose medium, offshore and surface the member node rule uses
         truth_model: 0.3.1         # synthetic truth = this version's tomography nodes x (1 + one random-field draw)
         product_version: 0.3.2+ens.100   # proposed label of the exported ensemble statistics (D-B047)
@@ -796,11 +827,65 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
           oregon: {region: oregon_m0, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e10k}
           washington: {region: washington_m0, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: w}
         mask_damp: 200             # D-B049 windows from the deterministic resolution tests at this damping, fixed for all members
-    prior:                         # notes/bayes_design.md section 2 with P-M5 (one draw per member for the whole margin)
+        prior: {noise_groups: pooled_with_m0}   # the class factors the running v0.3.2 calibration drew with (before the review)
+      v0.4.1:                      # D-B083 / P-F3: the real phase on model v0.4.1 (v0.4.0 = re-timed picks, + the D-B081 floor)
+        root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.1
+        dataset: b1b_balanced_ct   # re-timed picks (D-B072/D-B075); every stage's region must use it (checked)
+        node_model: 0.4.1          # registered v0.4.1 (candidate): medium, offshore, surface for the member node rule
+        truth_model: 0.4.1         # only for a synthetic phase of this configuration (not run while calibration_root is set)
+        product_version: "0.4.1"   # products 0.4.1+ens.<merged members> (D-B047)
+        bin_dir: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-25_inv/bin   # P-F1: the D-B081 freeze rebuilt for m, e13k, e10k, w (main only, no syn)
+        runtime_files: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-25_inv/bin   # ak135.15.SKS, layer-16.dat (md5 = the 2026-11-24 runtime_files)
+        floor: true                # D-B083: surface.dat per member stage (tomodd.floor, regions' floor_spacing_s), Air_dep tomodd.floor.air_dep_km
+        merge_product: product_v041   # merge grid, taper, floor, reference margin_m0_v4/d200_s480 (tomodd.merge.product_v041)
+        calibration_root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.3.2   # D-B030 gate for this real phase: the v0.3.2 synthetic calibration (P-E11, accepted in D-B094)
+        calibration:               # D-B094 (PI 2026-11-25 15:37): that calibration FAILED (Vp, Vs too narrow) and is accepted with inflated spreads
+          accepted: D-B094         # the chain proceeds after the failed calibrate only with this entry (b2_ens_common.calibration_acceptance)
+          inflation: {Vp: 1.40, Vs: 1.35}   # b2_ens_inflate.py: max(f68, f95) on the resolved nodes rounded up to 0.05 (Vp 1.301 / 1.366, Vs 1.245 / 1.335)
+          coverage_md5: 30d524003e05f2c02f5a0afa9aedfdf5   # md5 of calibration_root/synth/coverage.json (97 members, FAIL): the accepted verdict
+        m0: {region: margin_m0_v4, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: m}
+        tiles:                     # v0.4.0 smoothing (= v0.3.1's choice); masks of the v0.3.1 tiles (as product_v041's choice.csv)
+          mendocino_gorda_c: {region: mendocino_gorda_c_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e13k, mask_region: mendocino_gorda_c_m0}
+          blanco: {region: blanco_m0f, tag: d200_s20, smooth: [20, 20, 10], damp: 200, bin: e10k, mask_region: blanco_m0}
+          oregon: {region: oregon_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e10k, mask_region: oregon_m0}
+          washington: {region: washington_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: w, mask_region: washington_m0}
+        mask_damp: 200
+      v0.4.2:                      # D-B099 (PI 2026-11-26 06:27): the real phase on model v0.4.2 (v0.4.1 without self-paired dt, patched tomoDD)
+        root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2
+        dataset: b1b_balanced_ct
+        node_model: 0.4.2          # registered v0.4.2 (candidate, 2026-11-26 07:21): medium, offshore, surface for the member node rule
+        truth_model: 0.4.2         # the synthetic calibration of this root (after the real phase) uses v0.4.2 x (1 + f) as truth
+        product_version: "0.4.2"   # products 0.4.2+ens.<merged members> (D-B047)
+        bin_dir: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # D-B099 freeze (main, syn, chk of m, e13k, e10k, w)
+        runtime_files: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # ak135.15.SKS, layer-16.dat (md5 = the 2026-11-24/25 runtime_files)
+        floor: true                # D-B083 as v0.4.1: surface.dat per member stage, Air_dep tomodd.floor.air_dep_km
+        merge_product: product_v042   # merge grid, taper, floor, reference margin_m0_v4/d200_s480 (tomodd.merge.product_v042)
+        calibration:               # D-B099 rule (PI 2026-11-26 06:27): keep v0.4.1's factors if the new ones are within 0.05, else use the new ones
+          accepted: D-B099         # this root's calibration (2026-11-26 15:46) FAILED on Vp and Vs only (too narrow); hypocentres and Vp/Vs pass
+          inflation: {Vp: 1.50, Vs: 1.35}   # b2_ens_inflate.py: Vp max(1.360, 1.480) -> 1.50 (v0.4.1 1.40, moved by > 0.05); Vs max(1.343, 1.313) -> 1.35 (= v0.4.1)
+          coverage_md5: c032bcb392aa6b6995e46b418aca70e8   # md5 of <root>/synth/coverage.json (100 members + 5 noise clones, FAIL on Vp, Vs)
+        calibration_order: after_real   # D-B099: the real members first, then this root's own synthetic calibration (truth,
+                                   # synth, calibrate); the products wait for it: they run only after a PASS or with an
+                                   # accepted calibration entry (configs.v0.4.2.calibration) for THIS root's coverage.json
+        m0: {region: margin_m0_v4, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: m}
+        tiles:                     # v0.4.1's runs and masks; mendocino_gorda_c, blanco, washington = the m0g re-inversions (D-B099)
+          mendocino_gorda_c: {region: mendocino_gorda_c_m0g, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e13k, mask_region: mendocino_gorda_c_m0}
+          blanco: {region: blanco_m0g, tag: d200_s20, smooth: [20, 20, 10], damp: 200, bin: e10k, mask_region: blanco_m0}
+          oregon: {region: oregon_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e10k, mask_region: oregon_m0}
+          washington: {region: washington_m0g, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: w, mask_region: washington_m0}
+        mask_damp: 200
+    prior:                         # notes/bayes_design.md section 2 with P-M5 (one draw per member for the whole margin);
+                                   # configs.<c>.prior overrides any key (merged key by key; prep records the result, members refuse a changed prior)
       mixture: {v4_176: 0.40, v4_173: 0.20, v4_180: 0.20, delph: 0.20}   # D-B030 (PI: Delph et al. 2018 where it covers)
       mixture_no_delph: {v4_176: 0.50, v4_173: 0.25, v4_180: 0.25}
       vpvs_ref: 1.76
-      rf: {std: 0.03, len_lat_km: 30.0, len_z_km: 8.0, taper_km: [50.0, 60.0], dx_km: 10.0}   # D-B030; Lambert km lattice
+      # start-model random field (D-B030: 3 %, 30 km / 8 km; width = pending PI decision, change it here or in
+      # configs.<c>.prior.rf, no code change): std, len_lat_km, len_z_km, taper_km, lattice dx_km; long = an optional
+      # independent long-wavelength component added to it (std 0 = off; own std, len_lat_km, len_z_km, optional taper_km)
+      rf: {std: 0.03, len_lat_km: 30.0, len_z_km: 8.0, taper_km: [50.0, 60.0], dx_km: 10.0,
+           long: {std: 0.0, len_lat_km: 150.0, len_z_km: 30.0}}
+      noise_groups: tile           # pick-noise class factors per tile (review 2026-11-25; M0 left out of the pooling); pooled_with_m0 = v0.3.1 rule
+      class_factor_min_events: 30  # a tile-class with fewer events uses the factor pooled over the tiles
       static_sd: {obs_S_add: 0.05, land_P: 0.05, land_S: 0.08, obs_P: 0.08, obs_S_nostatic: 0.08}
       fwd_dist_bins_km: [0, 25, 50, 100, 150, 200, 10000]
       h68_factor: 1.515            # sigma_h per horizontal axis = h_max / this
@@ -858,6 +943,21 @@ v041:                              # v0.4.1 (D-B083, PI 2026-11-25 07:59): v0.4.
   status: candidate
   base: 0.4.0                      # the model it is compared with (report)
   description: "v0.4.0 (v0.3.1 configuration, re-timed picks) re-inverted with tomoDD's event updates floored at the local solid surface (D-B081 floor in the inversion, D-B083); product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values, NonLinLoc grids by the field rule"
+
+v042:                              # v0.4.2 (D-B099, PI 2026-11-26 06:27): v0.4.1 without self-paired differential times, patched tomoDD
+  out: /wd1/mdenolle_data/tomo_v1/v042   # identity runs, tile logs, product work, merge, noise floor
+  staging: /wd1/mdenolle_data/tomo_v1/models/staging_v0.4.2   # model files (store layout) and report; registration by the PI's session
+  version: 0.4.2
+  status: candidate
+  base: 0.4.1                      # the model it is compared with (report)
+  binaries: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # D-B099 freeze (SHA256SUMS there)
+  stages:                          # merged stages (region/tag); M0 and oregon are v0.4.1's runs (identity test: reproduced)
+    M0: margin_m0_v4/d200_s480
+    mendocino_gorda_c: mendocino_gorda_c_m0g/d200_s480
+    blanco: blanco_m0g/d200_s20
+    oregon: oregon_m0f/d200_s480
+    washington: washington_m0g/d200_s480
+  description: "v0.4.1 (re-timed picks, D-B081 floor in the inversion) with the self-paired catalog differential times of the mendocino_gorda_c, blanco and washington tiles removed (8 events paired with themselves, read by tomoDD as absolute times of 0 s) and those tiles re-inverted with the patched tomoDD-SE (stable sph2car/car2sph near the tile centre axis), D-B099; product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values"
 
 b4:                                # B4 NonLinLoc relocation in the merged model and its catalog (PI 2026-11-24)
   grid_fallback: {enabled: false, P: 0.044, S: 0.075}   # D-B052 (PI 2026-11-24): whole-grid T0.5 fallback rejected (it

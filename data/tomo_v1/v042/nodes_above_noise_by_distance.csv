@@ -1,0 +1,11 @@
+nodes,quantity,within_30km_of_a_self_paired_event,nodes_above_noise
+resolved,VpVs,False,2
+resolved,VpVs,True,3
+resolved,Vs,False,11
+resolved,Vs,True,10
+tile-covered,Vp,False,134
+tile-covered,Vp,True,60
+tile-covered,VpVs,False,114
+tile-covered,VpVs,True,44
+tile-covered,Vs,False,51
+tile-covered,Vs,True,67

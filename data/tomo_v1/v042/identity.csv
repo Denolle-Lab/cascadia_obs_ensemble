@@ -1,0 +1,6 @@
+run,binary,binary_md5,exit,files_compared,different,log_text_differs,wall_min
+blanco_m0f_d200_s20,tomoDD-SE_e10k,de563b4ca49b,exit 0,21,[],True,9.6
+margin_m0_v4_d200_s480,tomoDD-SE_m,7e35e87e3111,exit 0,21,[],True,14.6
+mendocino_gorda_c_m0f_d200_s480,tomoDD-SE_e13k,1b3e92d56f90,stopped after 3 iterations (rc 143),5,[],True,
+oregon_m0f_d200_s480,tomoDD-SE_e10k,de563b4ca49b,exit 0,21,[],True,9.7
+washington_m0f_d200_s480,tomoDD-SE_w,19c2fb1b4a0e,stopped after 3 iterations (rc 143),5,[],True,

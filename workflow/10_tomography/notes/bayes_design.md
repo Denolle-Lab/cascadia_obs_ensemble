@@ -29,8 +29,11 @@ Each member m draws all of the following independently.
 
 Items 2-4 enter as constant time shifts per station-phase added to the absolute times (differential times are
 unchanged by a static), because tomoDD cannot solve statics. Integrating them out this way is what makes the model
-spread include station effects. Item 5 perturbs absolute times pick by pick; the differential times are rebuilt from
-the perturbed absolute times, so their noise is consistent.
+spread include station effects. Item 5 perturbs absolute times pick by pick. The catalog differential times are not
+rebuilt: the code (b2_ens_member.build) adds to t1 and t2 of every dt.ct line the same per-pick shift (items 2-5
+summed) that the absolute time of that pick receives (pair list and weights unchanged), so a static cancels in the
+difference and the pick noise of dt.ct is the same draw as in absolute.dat. (Corrected 2026-11-25: an earlier version
+said the differential times were rebuilt from the perturbed absolute times.)
 
 Amendments proposed 2026-11-23 (notes/merge_design.md P-M2, P-M5, P-M6): draw items 1, 2-3, 5 and 6 once for the
 whole region (random field on one regional lattice, statics by station code, noise by pick ID, start hypocentres by
@@ -41,8 +44,8 @@ base model becomes the coarse whole-margin inversion if P-M2 (a) is adopted.
 ## 3. One member
 
 1. Draw items 1-7 (seeded RNG, seed = member index; draws saved in member/draws.json).
-2. Build inputs with b2_tomodd_inputs.py plus a `--member` option that applies the draws (new MOD, shifted and
-   perturbed absolute times, rebuilt dt.ct, perturbed event.dat).
+2. Build inputs with the draws applied (b2_ens_member.build: new MOD, shifted and perturbed absolute times, the
+   deterministic dt.ct with the same per-pick shifts added to t1 and t2, perturbed event.dat).
 3. Run b2_tomodd_run.py with the drawn damping and smoothing; back-transform (b2_tomodd_backtransform.py).
 4. Keep: Vp, Vs, DWS on nodes; relocations; final residual statistics; the draws.
 

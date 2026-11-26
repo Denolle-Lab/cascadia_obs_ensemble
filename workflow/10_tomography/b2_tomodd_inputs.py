@@ -170,9 +170,15 @@ def diff_times(e, p):
     dd, ii = cKDTree(xyz).query(xyz, k=D["max_neighbours"] + 1, distance_upper_bound=D["max_sep_km"])
     pairs = set()
     for a in range(len(ids)):
-        for d_, b in zip(dd[a, 1:], ii[a, 1:]):
-            if np.isfinite(d_):
-                pairs.add((min(a, b), max(a, b)))
+        # Drop the event itself by index, not by position: with co-located events (identical hypocentres, e.g.
+        # NLL locations on the same node) the tree may return the twin first and the event second, and dropping
+        # column 0 then paired the event with itself. tomoDD reads a pair with C1 == C2 as an absolute time
+        # (dtres_FDD), so such a pair was an absolute pick with travel time 0 s (ensemble v0.4.1 diagnosis).
+        nb = [(d_, b) for d_, b in zip(dd[a], ii[a]) if b != a and np.isfinite(d_)][:D["max_neighbours"]]
+        for d_, b in nb:
+            pairs.add((min(a, b), max(a, b)))
+    if any(a == b for a, b in pairs):
+        raise SystemExit("diff_times: self-pair in the catalog differential times")
     key = {k: dict(zip(zip(v.code, v.phase), zip(v.tt, v.w))) for k, v in p.groupby("event_ID")}
     out, n_pairs = [], 0
     for a, b in sorted(pairs):

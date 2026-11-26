@@ -14,6 +14,13 @@ Statistics over the merged members (merge grid of b2_merge.py: 0.125 x 0.1 deg, 
   sqrt(std^2 + disagreement^2) for the tomography velocities;
 * resolved_p / _s: deterministic checkerboard resolution > 0 (D-B018, v<node_model> resolution_*) and R > 0 in every
   member; sampled_p / _s: DWS >= 100 in >= member_frac of the members.
+stats.npz / stats.json hold the raw member statistics. Calibration (D-B094), applied by `products` when
+configs.<c>.calibration.inflation is set (factor f per Vp / Vs, from b2_ens_inflate.py on the synthetic members of the
+calibration root): Vp_std, Vs_std, Vp_tomography_std, Vs_tomography_std -> f x std; their p05 / p95 -> median + f (p -
+median); the tomography std_total from the inflated std and the (not inflated) tile disagreement. The raw values stay
+in the product as <name>_raw; mean, median, n, VpVs and hypocentres are not changed. The factors, the rule, the
+decision, the source calibration (coverage.json md5) and the derivation (ROOT/calibration/inflation.json) are in the
+product attributes (provenance_uncertainty_calibration, the variables' calibration attributes) and the HTML report.
 """
 import argparse
 import base64
@@ -22,6 +29,7 @@ import json
 import pickle
 import sys
 import time
+from html import escape as html_escape
 from pathlib import Path
 
 import numpy as np
@@ -121,6 +129,15 @@ def stats(kind):
                 sampled_nodes=[int(S["sampled_p"].sum()), int(S["sampled_s"].sum())],
                 tile_disagreement_p_median_overlap=float(np.median(S["tile_disagreement_p"][S["tile_disagreement_p"] > 0]))
                 if (S["tile_disagreement_p"] > 0).any() else None)
+    if C.FLOOR:                              # D-B083 floor per stage over the members (DONE records)
+        fl = {}
+        for st in C.STAGES:
+            recs = [r[st].get("floor") or {} for r in runs]
+            fl[st] = {k: [int(np.min([x.get(k, 0) for x in recs])), float(np.median([x.get(k, 0) for x in recs])),
+                          int(np.max([x.get(k, 0) for x in recs]))]
+                      for k in ("lines", "events_hit", "end_on_floor", "start_above_floor", "above_floor_by_more_than_2m",
+                                "not_met", "air_quake_lines")}
+        summ["floor_min_median_max"] = fl
     C.jdump(out / "stats.json", summ)
     C.jdump(out / "runs.json", runs)
     print(json.dumps(summ, indent=1, default=str)[:2000])
@@ -137,21 +154,90 @@ QDOC = {"Vp": ("P-wave velocity (v0.3.2 convention: water 1.5, air NaN)", "km/s"
         "Vs_tomography": ("S-wave velocity of the inversions (no surface, no rule)", "km/s")}
 
 
+INFLATED = {"Vp": ("Vp", "Vp_tomography"), "Vs": ("Vs", "Vs_tomography")}   # D-B094 factor -> quantities it scales
+SPREAD = ("std", "p05", "p95")
+RULE = ("D-B094: spreads multiplied by f about the ensemble median (std -> f std; p05 / p95 -> median + f (p - median)); "
+        "f = max(f68, f95) on the resolved nodes of the synthetic calibration, rounded up to the next 0.05, f68 / f95 = "
+        "the smallest factor bringing the 16-84 % / 2.5-97.5 % coverage of the truth to 0.68 / 0.95 "
+        "(b2_ens_inflate.py); hypocentres and Vp/Vs not inflated; raw member statistics kept as <name>_raw")
+
+
+def inflate(S):
+    """D-B094 calibration of the spreads in place (configs.<c>.calibration.inflation, factor f per Vp / Vs): for Vp, Vs
+    (node rule) and Vp_tomography, Vs_tomography, std -> f std and p05 / p95 -> median + f (p - median); the tomography
+    std_total recomputed from the inflated std and the (not inflated) tile disagreement. The raw values are kept as
+    <name>_raw. Mean, median, n and VpVs are not changed. Returns {quantity: factor} inflated ({} = nothing)."""
+    applied = {}
+    for base, f in C.inflation().items():
+        for q in INFLATED[base]:
+            med = S[f"{q}_median"]
+            for st in SPREAD:
+                S[f"{q}_{st}_raw"] = S[f"{q}_{st}"]
+            S[f"{q}_std"] = f * S[f"{q}_std_raw"]
+            for st in ("p05", "p95"):
+                S[f"{q}_{st}"] = med + f * (S[f"{q}_{st}_raw"] - med)
+            applied[q] = f
+        k = f"{base}_tomography_std_total"
+        S[f"{k}_raw"] = S[k]
+        S[k] = np.sqrt(S[f"{base}_tomography_std"] ** 2 + S[f"tile_disagreement_{base[-1].lower()}"] ** 2)
+    return applied
+
+
+def calibration_info(applied):
+    """What the product's spreads are calibrated with: source calibration (root, coverage.json md5 and result), the
+    accepted decision and factors (configs.<c>.calibration), the derivation file ROOT/calibration/inflation.json
+    (md5, its factors, whether they equal the configuration's, the resolved-node coverages before / after)."""
+    cr = C.calibration_root()
+    cj = cr / "synth" / "coverage.json"
+    acc = C.calibration_entry()
+    info = dict(source_root=str(cr), coverage_json=str(cj), coverage_json_md5=C.md5(cj) if cj.exists() else None,
+                result=json.loads(cj.read_text()).get("result") if cj.exists() else None)
+    if acc:
+        info.update(decision=acc.get("accepted"), inflation=C.inflation(), applied_to=applied, rule=RULE,
+                    coverage_md5_accepted=acc.get("coverage_md5"),
+                    not_inflated="mean, median, n, VpVs, hypocentres (not in this product)")
+    der = ROOT / "calibration" / "inflation.json"
+    if der.exists():
+        d = json.loads(der.read_text())
+        info["derivation"] = dict(
+            file=str(der), md5=C.md5(der), factors=d["factors"],
+            matches_configuration=all(abs(float(d["factors"].get(q, np.nan)) - f) < 1e-9 for q, f in C.inflation().items()),
+            resolved={q: {k: d["items"][f"resolved_{q}"].get(k) for k in ("n", "cov68_raw", "cov95_raw", "f68", "f95",
+                                                                           "factor", "after_used_factor")}
+                      for q in ("Vp", "Vs")})
+    return info
+
+
 def dataset(kind):
     import xarray as xr
     import b2_model_export as EX
     import b2_merge as BM
     S = dict(np.load(ROOT / "stats" / kind / "stats.npz"))
     summ = json.loads((ROOT / "stats" / kind / "stats.json").read_text())
+    applied = inflate(S)
+    summ["calibration"] = calibration_info(applied)
     lon, lat, z = BM.grid_axes()
     tr = lambda a: np.ascontiguousarray(np.asarray(a).transpose(2, 1, 0))
+    src = f"b2_ens_stats.py, {summ['members']} members"
     V = {}
     for k, a in S.items():
         q, _, stat = k.rpartition("_")
         if q in QDOC and stat in VAR_DOC:
             ln, un = QDOC[q]
-            V[f"{q}_{stat}"] = (tr(a), dict(long_name=f"{VAR_DOC[stat]} of {ln}", display_name=f"{q} {stat}",
-                                            units=("1" if stat == "n" else un), source=f"b2_ens_stats.py, {summ['members']} members"))
+            at = dict(long_name=f"{VAR_DOC[stat]} of {ln}", display_name=f"{q} {stat}",
+                      units=("1" if stat == "n" else un), source=src)
+            if q in applied and stat in SPREAD:
+                f = applied[q]
+                at.update(long_name=f"{at['long_name']}, calibrated: x {f:.2f} about the ensemble median (D-B094)",
+                          calibration=f"D-B094 inflation factor {f:.2f} of the member spread (raw: {q}_{stat}_raw)",
+                          inflation_factor=f)
+            V[f"{q}_{stat}"] = (tr(a), at)
+    for q, f in applied.items():                 # raw (uninflated) member statistics, kept beside the calibrated ones
+        ln, un = QDOC[q]
+        for st in SPREAD:
+            V[f"{q}_{st}_raw"] = (tr(S[f"{q}_{st}_raw"]), dict(
+                long_name=f"{VAR_DOC[st]} of {ln}, raw member spread (not calibrated)", display_name=f"{q} {st} raw",
+                units=un, source=src, calibration=f"none (the calibrated value, x {f:.2f}, is {q}_{st})"))
     extra = {"prob_increase_p": "share of members with Vp above their own starting model",
              "prob_increase_s": "share of members with Vs above their own starting model",
              "tile_disagreement_p": "spread of the tiles' ensemble means in overlaps, Vp (P-M5)",
@@ -162,6 +248,12 @@ def dataset(kind):
              "resolved_s": "1 = resolved by the checkerboard tests (D-B018) and covered by a tile in every member, S",
              "sampled_p": "1 = DWS P >= 100 in >= 90 % of the members", "sampled_s": "1 = DWS S >= 100 in >= 90 % of the members",
              "medium": "0 rock, 1 water, 2 air (node model)"}
+    for b in ("Vp", "Vs"):
+        k = f"{b}_tomography_std_total"
+        if f"{k}_raw" in S:
+            f = applied[f"{b}_tomography"]
+            extra[k] = f"sqrt(std^2 + tile disagreement^2), {b}_tomography, std calibrated x {f:.2f} (D-B094)"
+            extra[f"{k}_raw"] = f"sqrt(raw std^2 + tile disagreement^2), {b}_tomography (not calibrated)"
     for k, ln in extra.items():
         un = "km/s" if ("disagreement" in k or "std_total" in k) else "1"
         V[k] = (tr(S[k]), dict(long_name=ln, display_name=k, units=un, source="b2_ens_stats.py"))
@@ -178,30 +270,66 @@ def fig_png(fig):
     return base64.b64encode(b.getvalue()).decode()
 
 
+def cal_html(cal):
+    """Report section of the uncertainty calibration (D-B094): decision, factors, rule, source, derivation table."""
+    if not cal.get("applied_to"):
+        return ["<h2>Uncertainty calibration</h2><p>None: the spreads are the raw member spreads (source calibration "
+                f"{html_escape(str(cal.get('coverage_json')))}, result {cal.get('result')}).</p>"]
+    f = cal["inflation"]
+    out = ["<h2>Uncertainty calibration (" + html_escape(str(cal["decision"])) + ")</h2>",
+           f"<p><b>Vp and Vs spreads multiplied by {f.get('Vp', 1):.2f} (Vp) and {f.get('Vs', 1):.2f} (Vs)</b>, applied to "
+           f"{', '.join(f'{q} (x {v:.2f})' for q, v in cal['applied_to'].items())}; the raw member statistics are in "
+           f"the variables *_raw. Not inflated: {html_escape(cal['not_inflated'])}.</p>",
+           f"<p>Rule: {html_escape(cal['rule'])}.</p>",
+           f"<p>Source: synthetic calibration {html_escape(cal['coverage_json'])} (md5 {cal['coverage_json_md5']}, "
+           f"result {cal['result']}; accepted md5 {cal['coverage_md5_accepted']}).</p>"]
+    d = cal.get("derivation")
+    if not d:
+        return out + ["<p>No derivation file (ROOT/calibration/inflation.json, b2_ens_inflate.py).</p>"]
+    out.append(f"<p>Derivation: {html_escape(d['file'])} (md5 {d['md5']}), factors {json.dumps(d['factors'])}"
+               + ("" if d["matches_configuration"] else
+                  " <b style='color:#b00'>differ from the configuration's factors used here</b>") + ".</p>")
+    out.append("<table><tr><th>resolved nodes</th><th>nodes</th><th>68 % raw</th><th>95 % raw</th><th>f68</th>"
+               "<th>f95</th><th>factor (rounded up)</th><th>68 % after</th><th>95 % after</th></tr>")
+    for q, r in d["resolved"].items():
+        a = r.get("after_used_factor") or {}
+        out.append(f"<tr><td>{q}</td><td>{r['n']}</td><td>{r['cov68_raw']}</td><td>{r['cov95_raw']}</td>"
+                   f"<td>{r['f68']:.3f}</td><td>{r['f95']:.3f}</td><td>{r['factor']:.2f}</td><td>{a.get('cov68')}</td>"
+                   f"<td>{a.get('cov95')}</td></tr>")
+    md = Path(d["file"]).with_suffix(".md")
+    out += ["</table>"] + ([f"<details><summary>All items (sampled nodes, per tile, Gaussian)</summary><pre>"
+                            f"{html_escape(md.read_text())}</pre></details>"] if md.exists() else [])
+    return out
+
+
 def report(kind, ds, summ, outdir):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     imgs = []
+    cal = summ.get("calibration") or {}
+    fac = cal.get("applied_to") or {}
+    lab = lambda q: f"{q} std, calibrated x {fac[q]:.2f}" if q in fac else f"{q} std"
     depths = [3.0, 7.0, 15.0, 25.0]
     for q in ("Vp", "Vs", "VpVs"):
         fig, axs = plt.subplots(1, len(depths), figsize=(4.2 * len(depths), 4.6))
         for ax, zz in zip(axs, depths):
             sl = ds[f"{q}_std"].sel(depth=zz, method="nearest")
             sl.where(ds.medium.sel(depth=zz, method="nearest") == 0).plot(ax=ax, cmap="viridis", robust=True,
-                                                                           cbar_kwargs=dict(shrink=0.7, label=f"{q} std"))
-            ax.set_title(f"{q} std, {float(sl.depth):g} km")
+                                                                           cbar_kwargs=dict(shrink=0.7, label=lab(q)))
+            ax.set_title(f"{lab(q)}, {float(sl.depth):g} km")
             ax.set_aspect(1 / np.cos(np.radians(45)))
             ax.set_facecolor("0.85")
-        imgs.append((f"{q}: ensemble standard deviation at depth (grey: water, air or no value)", fig_png(fig)))
+        imgs.append((f"{q}: ensemble standard deviation at depth{' (D-B094 calibrated: raw member std x ' + format(fac[q], '.2f') + ')' if q in fac else ' (not inflated)'}"
+                     " (grey: water, air or no value)", fig_png(fig)))
     secs = {"E-W at 44.5 N": dict(latitude=44.5), "E-W at 47.5 N": dict(latitude=47.5), "N-S at 125.0 W": dict(longitude=-125.0)}
     for nm, sel in secs.items():
         fig, axs = plt.subplots(1, 2, figsize=(13, 3.8))
         for ax, q in zip(axs, ("Vp", "Vs")):
             s = ds[f"{q}_std"].sel(**sel, method="nearest").sel(depth=slice(-3, 60))
-            s.plot(ax=ax, cmap="viridis", robust=True, yincrease=False, cbar_kwargs=dict(label=f"{q} std (km/s)"))
-            ax.set_title(f"{q} std, {nm}")
-        imgs.append((f"Sections of the standard deviation, {nm}", fig_png(fig)))
+            s.plot(ax=ax, cmap="viridis", robust=True, yincrease=False, cbar_kwargs=dict(label=f"{lab(q)} (km/s)"))
+            ax.set_title(f"{lab(q)}, {nm}")
+        imgs.append((f"Sections of the standard deviation, {nm}{' (calibrated, D-B094)' if fac else ''}", fig_png(fig)))
     runs = json.loads((ROOT / "stats" / kind / "runs.json").read_text())
     rows = []
     for st in C.STAGES:
@@ -210,19 +338,29 @@ def report(kind, ds, summ, outdir):
         k = [r[st].get("kept_mb") or np.nan for r in runs]
         rows.append(f"<tr><td>{st}</td><td>{np.nanmedian(w):.1f}</td><td>{np.nanmax(w):.1f}</td><td>{np.nanmax(m):.2f}</td>"
                     f"<td>{np.nanmean(k):.0f}</td></tr>")
-    cov = ROOT / "synth" / "coverage.md"
+    cov = C.calibration_root() / "synth" / "coverage.md"
     covtxt = cov.read_text() if cov.exists() else "(no calibration run)"
-    html = [f"<!doctype html><html><head><meta charset='utf-8'><title>Ensemble {C.CONFIG}</title>",
+    frows = []
+    for st, v in (summ.get("floor_min_median_max") or {}).items():
+        frows.append(f"<tr><td>{st}</td>" + "".join(f"<td>{v[k][0]} / {v[k][1]:g} / {v[k][2]}</td>" for k in
+                                                     ("lines", "events_hit", "end_on_floor", "start_above_floor",
+                                                      "above_floor_by_more_than_2m")) + "</tr>")
+    ftab = (["<h2>Floor (D-B083) per stage: min / median / max over the members</h2><table><tr><th>stage</th>"
+             "<th>floor stops</th><th>events hit</th><th>end on the floor</th><th>start above the floor</th>"
+             "<th>above the floor by &gt; 2 m at the end (errors)</th></tr>", *frows, "</table>"] if frows else [])
+    html = [f"<!doctype html><html><head><meta charset='utf-8'><title>Ensemble {product_label(summ['members'])}</title>",
             "<style>body{font-family:sans-serif;max-width:1300px;margin:auto;padding:16px;background:#fff;color:#111}"
             "img{max-width:100%}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:3px 8px}"
             "pre{white-space:pre-wrap;background:#f4f4f4;padding:8px}</style></head><body>",
-            f"<h1>Bayesian ensemble of the {C.CONFIG} configuration ({kind}, {summ['members']} members)</h1>",
+            f"<h1>Bayesian ensemble of model v{C.product_version()} (configuration {C.CONFIG}; {kind}, "
+            f"{summ['members']} members)</h1>",
             f"<p>Created {summ['created']}. Product {product_label(summ['members'])}. Median std on rock nodes: Vp "
             f"{summ['vp_std_rock_median']:.3f} km/s, Vs {summ['vs_std_rock_median']:.3f} km/s; resolved nodes P/S "
-            f"{summ['resolved_nodes']}; sampled nodes P/S {summ['sampled_nodes']}.</p>",
+            f"{summ['resolved_nodes']}; sampled nodes P/S {summ['sampled_nodes']} (raw member spreads; calibrated: x the "
+            f"factors below).</p>", *cal_html(cal),
             "<h2>Run cost per member</h2><table><tr><th>stage</th><th>median wall (min)</th><th>max wall (min)</th>"
-            "<th>max RSS (GB)</th><th>kept (MB, mean)</th></tr>", *rows, "</table>",
-            "<h2>Calibration (synthetic)</h2><pre>", covtxt, "</pre>"]
+            "<th>max RSS (GB)</th><th>kept (MB, mean)</th></tr>", *rows, "</table>", *ftab,
+            f"<h2>Synthetic calibration ({cov})</h2><pre>", html_escape(covtxt), "</pre>"]
     for cap, b in imgs:
         html += [f"<h3>{cap}</h3>", f"<img src='data:image/png;base64,{b}'>"]
     html.append("</body></html>")
@@ -234,7 +372,7 @@ def report(kind, ds, summ, outdir):
 def product_label(n_members):
     """Version label of the ensemble product: the configuration's model version (product_version before any '+')
     with '+ens.<number of merged members>' (D-B047 build metadata), e.g. 0.3.2+ens.97."""
-    return f"{str(CFG['product_version']).split('+')[0]}+ens.{int(n_members)}"
+    return f"{C.product_version()}+ens.{int(n_members)}"
 
 
 def products(kind, dry):
@@ -246,11 +384,19 @@ def products(kind, dry):
     ds, summ = dataset(kind)
     version = product_label(summ["members"])
     register = os.environ.get("B2_ENS_REGISTER") == "1" and not dry
-    desc = (f"Bayesian (RTO) ensemble statistics of the {C.CONFIG} configuration: {summ['members']} members of M0 + "
-            f"{', '.join(CFG['tiles'])} merged with the v0.3.1 rules, D-B073 node rule with drawn parameters")
+    desc = (f"Bayesian (RTO) ensemble statistics of model v{C.product_version()} (configuration {C.CONFIG}): "
+            f"{summ['members']} members of M0 + {', '.join(CFG['tiles'])} merged with the D-B049..D-B051 rules "
+            f"(tomodd.merge.{CFG.get('merge_product', 'product')}), D-B073 node rule with drawn parameters"
+            + ("; tomoDD's D-B081 floor in every inversion (D-B083)" if C.FLOOR else ""))
+    cal = summ["calibration"]
+    if cal.get("applied_to"):
+        f = cal["inflation"]
+        desc += (f"; Vp and Vs spreads (std, 5-95 % about the median) calibrated by the synthetic ensemble: x "
+                 f"{f.get('Vp', 1):.2f} (Vp), x {f.get('Vs', 1):.2f} (Vs) ({cal['decision']}; raw spreads in *_raw)")
+    cj = Path(cal["coverage_json"])
     prov = dict(run=f"ensemble {C.CONFIG} ({ROOT})", members=summ["members"], config=json.dumps(CFG),
-                prior=json.dumps(E["prior"]), calibration=(ROOT / "synth" / "coverage.json").read_text()[:2000]
-                if (ROOT / "synth" / "coverage.json").exists() else "none")
+                prior=json.dumps(C.PR, default=str), calibration=cj.read_text()[:2000] if cj.exists() else "none",
+                uncertainty_calibration=json.dumps(cal, default=str))
     EX.add_attrs(ds, version if register else "0.0.0-dryrun", desc, prov, "b2_ens_stats.py")
     out = Path(dry) if dry else ROOT / "products"
     out.mkdir(parents=True, exist_ok=True)

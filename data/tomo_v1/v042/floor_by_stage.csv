@@ -1,0 +1,6 @@
+stage,run,rerun,events_start,events_final_v041,events_final_v042,floor_lines_v041,floor_lines_v042,events_hit_v041,events_hit_v042,floor_not_met_v042,at_floor_final_v041,at_floor_final_v042,above_floor_by_more_than_2m_v042,air_quakes_v042,iterations_v042,above_true_surface_final_v041,above_true_surface_final_v042,rms_abs_final_v041,rms_abs_final_v042
+M0,margin_m0_v4/d200_s480,False,6943,6943,6943,2090,2090,266,266,0,156,156,0,0,12,0,0,0.2819,0.2819
+mendocino_gorda_c,mendocino_gorda_c_m0g/d200_s480,True,12191,12190,12191,503,504,70,70,0,48,48,0,0,12,0,0,0.2413,0.2413
+blanco,blanco_m0g/d200_s20,True,4378,4378,4378,100,105,21,21,0,11,12,0,0,12,0,0,0.2404,0.2395
+oregon,oregon_m0f/d200_s480,False,3390,3390,3390,1724,1724,218,218,0,125,125,0,0,12,0,0,0.1921,0.1921
+washington,washington_m0g/d200_s480,True,9332,9329,9332,2008,2047,278,283,0,154,158,0,0,12,0,0,0.2155,0.2156

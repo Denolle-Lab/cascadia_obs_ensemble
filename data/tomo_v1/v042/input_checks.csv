@@ -1,0 +1,7 @@
+new,old,checked,problems,identical_files,dt_equals_old_minus_self_pairs,self_pairs_removed,data_lines_removed,pairs_old_new,data_old_new,self_pairs_left
+mendocino_gorda_c_m0g,mendocino_gorda_c_m0f,True,[],10,True,[156844],26,"[44362, 44361]","[651518, 651492]",[]
+mendocino_gorda_c_m0gnf,mendocino_gorda_c_m0fnf,True,[],10,True,[156844],26,"[44362, 44361]","[651518, 651492]",[]
+blanco_m0g,blanco_m0f,True,[],10,True,[81324],13,"[19992, 19991]","[300516, 300503]",[]
+blanco_m0gnf,blanco_m0fnf,True,[],10,True,[81324],13,"[19992, 19991]","[300516, 300503]",[]
+washington_m0g,washington_m0f,True,[],10,True,"[28514, 40700, 53148, 55170, 80094, 94266]",99,"[40539, 40533]","[811641, 811542]",[]
+washington_m0gnf,washington_m0fnf,True,[],10,True,"[28514, 40700, 53148, 55170, 80094, 94266]",99,"[40539, 40533]","[811641, 811542]",[]

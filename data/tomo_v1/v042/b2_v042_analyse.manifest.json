@@ -1,0 +1,148 @@
+{
+ "name": "b2_v042_analyse",
+ "script": "/home/mdenolle/wt_ensfix/workflow/10_tomography/b2_v042_analyse.py",
+ "argv": [],
+ "utc": "2026-11-26T15:18:51.579670+00:00",
+ "git_commit": "02871bbbe5fed8aadecdbf37d3625f6ad42924cd",
+ "git_dirty": true,
+ "params_md5": "74f50313571c865dad5f863ae4f63093",
+ "params": {
+  "v042": {
+   "out": "/wd1/mdenolle_data/tomo_v1/v042",
+   "staging": "/wd1/mdenolle_data/tomo_v1/models/staging_v0.4.2",
+   "version": "0.4.2",
+   "status": "candidate",
+   "base": "0.4.1",
+   "binaries": "/wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin",
+   "stages": {
+    "M0": "margin_m0_v4/d200_s480",
+    "mendocino_gorda_c": "mendocino_gorda_c_m0g/d200_s480",
+    "blanco": "blanco_m0g/d200_s20",
+    "oregon": "oregon_m0f/d200_s480",
+    "washington": "washington_m0g/d200_s480"
+   },
+   "description": "v0.4.1 (re-timed picks, D-B081 floor in the inversion) with the self-paired catalog differential times of the mendocino_gorda_c, blanco and washington tiles removed (8 events paired with themselves, read by tomoDD as absolute times of 0 s) and those tiles re-inverted with the patched tomoDD-SE (stable sph2car/car2sph near the tile centre axis), D-B099; product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values"
+  }
+ },
+ "inputs": [],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/b2_v042_analyse.manifest.json",
+   "size": 4679,
+   "mtime": "2026-11-26T15:17:30.044327+00:00",
+   "md5": "76761ce88620cb81eb7105160928df33"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/floor_by_stage.csv",
+   "size": 878,
+   "mtime": "2026-11-26T15:18:41.496938+00:00",
+   "md5": "2eef7962b953599476b52c1cd16ad5e0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/hypocentre_shifts.csv",
+   "size": 5275,
+   "mtime": "2026-11-26T15:18:41.893936+00:00",
+   "md5": "63ff1ba0060cafdd3960f7a1a7a907d4"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/identity.csv",
+   "size": 494,
+   "mtime": "2026-11-26T15:18:34.038979+00:00",
+   "md5": "b842f567fdc26c3033f0cf9d2ac06c0d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/input_checks.csv",
+   "size": 829,
+   "mtime": "2026-11-26T15:18:34.040979+00:00",
+   "md5": "422cc91c2718cc956488461c45f28706"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/maps_diff.png",
+   "size": 150100,
+   "mtime": "2026-11-26T15:18:35.915969+00:00",
+   "md5": "acbb313478b874caba1c94db2cbe33bd"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/maps_noise.png",
+   "size": 193253,
+   "mtime": "2026-11-26T15:18:36.860964+00:00",
+   "md5": "29e3c5b0dcc431531d71ba0582ba280b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/model_diff_by_depth.csv",
+   "size": 5965,
+   "mtime": "2026-11-26T15:18:34.394977+00:00",
+   "md5": "435e41606f71dc706c5381a0f2766207"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/model_diff_total.csv",
+   "size": 591,
+   "mtime": "2026-11-26T15:18:34.395977+00:00",
+   "md5": "daa45e51360cc50ef5eb0497cfa92e1f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/nodes_above_noise.csv",
+   "size": 30087,
+   "mtime": "2026-11-26T15:18:34.396977+00:00",
+   "md5": "e24efead8311ba6ec4f5d981b22e4061"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/nodes_above_noise_by_distance.csv",
+   "size": 305,
+   "mtime": "2026-11-26T15:18:34.398977+00:00",
+   "md5": "ab5d20936c87ea9c444ba3b29fb8ad65"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/report.html",
+   "size": 831655,
+   "mtime": "2026-11-26T15:18:51.573882+00:00",
+   "md5": "99a21d482f989c1e43d223eec41c6371"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/residual_rms.csv",
+   "size": 1117,
+   "mtime": "2026-11-26T15:18:51.535882+00:00",
+   "md5": "88cdba868745e92015ce16d724e53bba"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/run_times.csv",
+   "size": 772,
+   "mtime": "2026-11-26T15:18:51.536882+00:00",
+   "md5": "683831ff7ddcf0947df7ea3ce65509c0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/sections_diff.png",
+   "size": 105048,
+   "mtime": "2026-11-26T15:18:38.001957+00:00",
+   "md5": "d2d413b94f483996d8b27c6fbd5ecd23"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/sections_noise.png",
+   "size": 111440,
+   "mtime": "2026-11-26T15:18:39.196951+00:00",
+   "md5": "c13fc521ea1ef47ee881f6b57c24f799"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/self_paired_events.csv",
+   "size": 2546,
+   "mtime": "2026-11-26T15:18:34.557976+00:00",
+   "md5": "c29b6596953358bdb03dfffd098c4df9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/self_paired_separation.csv",
+   "size": 377,
+   "mtime": "2026-11-26T15:18:34.557976+00:00",
+   "md5": "8d497521f8437a63cd8a68b18f39e47f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v042/report/summary.json",
+   "size": 14114,
+   "mtime": "2026-11-26T15:18:51.549882+00:00",
+   "md5": "c1937df0544e939d153d67727bb5d15a"
+  }
+ ],
+ "counts": {
+  "stages": 5
+ },
+ "notes": null
+}

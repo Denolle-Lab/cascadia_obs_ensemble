@@ -960,3 +960,13 @@ differential times (relative fit), which cannot see a depth shift common to a cl
 Zenodo draft with this bias stated in its README; for v6.1, test station-term recipes on absolute depth as well (Axial vs
 Waldhauser et al. 2020, Blanco vs Lange et al. 2026, Mount St Helens vs Hirao et al. 2025), together with the D-B097 deferrals.
 Numbering: this session takes D-B100..D-B109 (D-B084..D-B089 stay reserved for session -18).
+
+### D-B101 Clean up the private Zenodo draft: slim velocity models with v0.4.2, fault surfaces v1 instead of v0, amplitude and PickBlue parts packed into zips (adopted, 2026-11-26 08:58, PI)
+Draft 23084158 was full (100/100 files, 6.7 GB). PI: "consider cleaning the zenodo especially for files that won't be reused
+(since our reproducibility statements with the reports can reproduce them)"; chose all three steps:
+(1) velocity_models.zip (672 MB; 958 MB of its content were the v0.3.2 NonLinLoc grids, rebuilt from the model by
+b4_time_grids) replaced by the registered model netCDFs v0.1.0 to v0.4.2 with provenance, registry and a README on rebuilding
+the grids (no zarr copies, no grids); (2) the eight fault surfaces v0 files removed (superseded by fault surfaces v1, one zip);
+(3) the ver5/ver6 amplitude parquet parts and the PickBlue pick parts packed into one stored zip per set (data unchanged:
+recomputing them takes days of waveform processing). Picks, catalogs and READMEs stay. Every replacement is uploaded and
+md5-checked before the files it replaces are deleted; local copies are kept. The draft stays private (no publish).

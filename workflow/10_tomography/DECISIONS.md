@@ -1015,3 +1015,11 @@ colour maps change from matplotlib "seismic" (the earlier atlas choice) to perce
 colour maps (Crameri), checked under simulated colour-vision deficiency; the atlas model layer takes the same maps.
 (3) Mc grids are computed on each catalog's own hypocentres and magnitudes (v5.1, v6.0; D-B102), so the atlas Mc layer follows
 the catalog shown.
+
+### D-B105 Magnitudes on the catalog's own hypocentres are computed for v6.1 (v6.0 keeps the v5.1 values); Mc maps exclude non-earthquakes for every catalog (adopted, 2026-11-26 15:48, PI; amends D-B102)
+The Mc maps on each catalog's own hypocentres (D-B104; analysis/mc-maps-per-catalog ba9fa538) showed that v6.0 carries the
+converged magnitudes of the v5.1 hypocentres, so D-B102's "own hypocentres" holds for v4.1 and v5.1 only. PI: compute the
+converged Route A magnitudes (exact phase19 solver) on the v6.1 hypocentres as part of the v6.1 build; v6.0 keeps the v5.1
+values, as its README states. The v4.1 Mc maps (and so the paper's Mc figures) kept blasts and explosions; removing them
+changes 368 cells by >= 0.15 (range -1.0 to +0.7) and drops 170 cells in v6.0. PI: Mc maps exclude events flagged as not
+earthquakes (event_flag) for v4.1, v5.1 and v6.0; the paper's Mc figures and the numbers they report are regenerated.

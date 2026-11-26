@@ -18,7 +18,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
   surface; they are kept, with the above_surface flag, for this version only (D-B059).
 * Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
   hypocentres (station-term inversion solved exactly, D-B091);
-  they will be recomputed with the new hypocentres in a later version.
+  catalog v5.1 carries magnitudes computed with its own hypocentres (D-B102).
 
 ## Counts
 

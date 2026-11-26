@@ -52,7 +52,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 | depth | km below sea level (negative = above sea level) |
 | exp_depth | NonLinLoc expectation depth (km bsl) |
 | loc_source | nll3d (located here), comcat (ComCat hypocentre), none (not located: no hypocentre, see u_reason) |
-| tier | location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules in a2_build_catalog.py; counts in b4_catalog_v5_trackA_*_tiers.md) |
+| tier | location quality A (best) to D (D includes every event located with 5 phases, D-B066), U = not located here: no hypocentre, see u_reason (rules: a2_build_catalog.tier; counts in the table above) |
 | nphs, n_sta, gap, rms | phases and stations used, largest azimuthal gap (deg), rms residual (s) |
 | h_min, h_max, sig_z, ell_len3 | 68 % horizontal semi-axes, depth standard error, longest ellipsoid axis (km) |
 | dist_min, dist_med, dist_max, dist_over_depth | epicentral distance to the stations (km); nearest / depth |
@@ -65,12 +65,12 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 | depth_frame | how depth was obtained (true depth: the Earth-flattening of the NonLinLoc grids undone; ComCat for v4.1 additions); empty without a hypocentre |
 | v4_time, v4_lat, v4_lon, v4_depth, v4_npick, v4_sigma_m | catalog v4 origin, hypocentre, picks, GraphDD spatial sigma (m) |
 | M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id | converged Route A magnitudes (D-B091); magnitude_source names the table |
+| magnitude_source | v5.1_converged (computed with v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091; empty without a magnitude |
 | u_reason | why a tier U event has no hypocentre: 'rejected: <NonLinLoc message>' (e.g. maximum likelihood on a face of the search box), 'not in the run's observation files', 'fewer than N picks' (picks in the run's observation file; N = LOCMETH minimum of the run's nlloc.in, 5) or 'too few usable arrivals' (N or more picks, fewer usable); empty for located events |
 | floor_limited | True when the maximum-likelihood point lies within 1.5 final oct-tree cells of NonLinLoc's topography floor (the floor file of the run, read as NonLinLoc reads it; D-B056, D-B068): the depth is set by the floor, not by the data; empty when not located here |
 | far_only | True when none of the arrivals used came from a fine (near-station) travel-time grid: seen only by distant stations through the coarse wide grids; epicentre usable, depth poor; empty when not located here |
 | deep_pass | True when the hypocentre comes from the deep pass (D-B067: grids to about 121 km, ak135 below 80 km and outside the tomography box); empty when not located here |
 | five_phase | True when located with exactly 5 phases (D-B066: one degree of freedom, always tier D); empty when not located here |
-| magnitude_source | v5.1_converged (computed with v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091; empty without a magnitude |
 | rms_unweighted | unweighted rms of the residuals of the arrivals used (s); rms is NonLinLoc's EDT-weighted value (D-B069) |
 | shift_h_v51_km, shift_z_v51_km | change from catalog v5.1 (horizontal; depth, positive = deeper), when both are located |
 | model_version | velocity model of the travel-time grids (v0.4.1) |

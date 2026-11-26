@@ -2,12 +2,13 @@
  "name": "catalog_v5.0",
  "script": "/home/mdenolle/wt_cat/workflow/10_tomography/catalog_version.py",
  "argv": [
-  "5.0"
+  "5.0",
+  "5.1"
  ],
- "utc": "2026-11-26T18:48:20.360039+00:00",
- "git_commit": "6e7310706f224845ed4f728cf01fad5ae83b7115",
+ "utc": "2026-11-26T21:42:10.067514+00:00",
+ "git_commit": "f7a87b116d0b519fbbda64d21c16fc78d51ae641",
  "git_dirty": true,
- "params_md5": "050eb7bfb2c9396db675061e4f03c129",
+ "params_md5": "209685bb31bd16747aa00c5b59d2607b",
  "params": {
   "version": "5.0",
   "b4_run": "b4_iter1_v0.3.1",
@@ -77,32 +78,32 @@
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv",
    "size": 59335471,
-   "mtime": "2026-11-26T18:48:10.751438+00:00",
+   "mtime": "2026-11-26T21:41:19.815070+00:00",
    "md5": "192d3195516ad59cc1a7cf841c8d89d5"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/README_v5.0.md",
-   "size": 5493,
-   "mtime": "2026-11-26T18:48:10.808437+00:00",
-   "md5": "22ed07f3403b8b6397083929137a2bc7"
+   "size": 5500,
+   "mtime": "2026-11-26T21:41:19.873070+00:00",
+   "md5": "8e6fc3d3081f4f41bb70c44d240485b3"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/MD5SUMS",
    "size": 395,
-   "mtime": "2026-11-26T18:48:10.908437+00:00",
-   "md5": "e180ca78284d14e09b3bdd828b2fdd69"
+   "mtime": "2026-11-26T21:41:19.972069+00:00",
+   "md5": "9c0ceaee6a0b9d415b787e1d106a0bbd"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/catalog_v5.zip",
-   "size": 103186716,
-   "mtime": "2026-11-26T18:48:20.060396+00:00",
-   "md5": "fe382ddb7b72286dea1abf4be6973774"
+   "size": 103416559,
+   "mtime": "2026-11-26T21:42:09.881865+00:00",
+   "md5": "c815f13836117424836611436e59037d"
   },
   {
    "path": "/home/mdenolle/wt_cat/data/catalog_v5/registry.csv",
    "size": 823,
-   "mtime": "2026-11-26T18:48:11.013437+00:00",
-   "md5": "cee3eecd21fc44ac7b6c89167e13faba"
+   "mtime": "2026-11-26T21:42:01.255900+00:00",
+   "md5": "91bfa2af4bb8163e32e0f52fd6efa4f0"
   }
  ],
  "counts": {

@@ -1,12 +1,18 @@
-"""Catalog versions v5.x (D-B058): the catalog v4 events and picks (v4.1 event list) with the hypocentres of a
-B4 NonLinLoc relocation, Route A magnitudes, flags and a README, bundled for the private Zenodo draft 23084158.
+"""Catalog versions v5.x, v6.x (D-B058, D-B079): the catalog v4 events and picks (v4.1 event list) with the hypocentres
+of a NonLinLoc relocation, Route A magnitudes, flags and a README, bundled for the private Zenodo draft 23084158.
 
-  python catalog_version.py 5.0               # build /wd1/mdenolle_data/catalog_v5/v5.0 and catalog_v5.zip
-  python catalog_version.py 5.0 --test DIR    # same build under DIR (bundle/, repo/): nothing else is written
+  python catalog_version.py 5.0 5.1           # build the versions' folders, then catalog_v5.zip once (all versions of
+                                              # the series in the registry) and each version's summary and manifest
+  python catalog_version.py 6.0               # /wd1/mdenolle_data/catalog_v6/v6.0 and catalog_v6.zip (series v6)
+  python catalog_version.py 5.1 --test DIR    # same build under DIR (bundle/, repo/): nothing else is written
 
 Inputs (params catalog_versions): the B4 catalog of the version's run (b4_catalog.py: catalog_b4_<run>.csv, every
 event of its event list, full-precision coordinates, true depths, surface check, flags), the catalog v4.1 event list
-(v4.0 minus 172113, plus 900001-900003 with ComCat hypocentres), and the v4.1 Route A magnitudes.
+(v4.0 minus 172113, plus 900001-900003 with ComCat hypocentres), and the converged Route A magnitude tables (D-B091):
+v4.1 (v4 hypocentres) and v5.1 (v5.1 hypocentres), each md5-checked. Per version (params versions.<v>): `series`
+(bundle catalog_<series>.zip in `out`, registry data/catalog_<series>/), `b4_catalog` and `terms_file` (input paths,
+default the B4 run's), `columns_from` (inherit another version's column descriptions), README paragraphs
+`hypocentres_text`, `magnitudes_text`.
 Rules:
 * event list = v4.1. Events of v4_1_removed still in the B4 catalog are dropped; events of v4_1_added missing from
   it are added with their ComCat hypocentre (loc_source comcat, tier U), surface check and flags as b4_catalog.py.
@@ -23,11 +29,13 @@ Rules:
 * surface (params versions.<v>.surface_source, b4_catalog.py's b4.surface.source values): the solid surface of the
   version's B4 run, also used for the ComCat rows (v5.0 earth_relief_01m, v5.1 merged, D-B068).
 * extra_files: repository paths or absolute paths, or {path, name} to copy under another name.
-* magnitudes = the v4.1 Route A table (M, M_type, ML, ...), computed with the v4 hypocentres (STATUS step 9 redoes
-  them with the new hypocentres). Ian's v4 magnitude column is not carried (runs +0.3 high offshore).
+* magnitudes (params versions.<v>.magnitude_tables, default [v4.1]): per event the first table with a magnitude, all
+  magnitude columns from it; with more than one table the column magnitude_source names it (v5.1: [v5.1, v4.1],
+  D-B102). `magnitudes: catalog` (v6.0): the catalog brings its own magnitude columns and magnitude_source (checked
+  present); only the v4.1 additions it leaves out take the tables. Ian's v4 magnitude column is not carried.
 Outputs: <out>/v<version>/ (catalog CSV '%.8g', README, station terms of the run, B4 comparison, MD5SUMS),
-<out>/catalog_v5.zip (every version built so far, replaced at each version), registry
-data/catalog_v5/registry.csv and data/catalog_v5/v<version>/ (README copy, summary, manifest) in the repository.
+<out>/catalog_<series>.zip (every version of the series in its registry), registry data/catalog_<series>/registry.csv
+and data/catalog_<series>/v<version>/ (README copy, summary, manifest, both with the final bundle md5).
 """
 import argparse
 import gzip
@@ -54,6 +62,37 @@ sys.path.insert(0, str(TA))
 from a2_parse_hyp import region  # noqa: E402
 
 MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id"]
+# converged Route A magnitude tables (D-B091): path, md5, key column, magnitude_source label
+MAG_TABLES = {"v4.1": dict(path=P["v4_1_magnitudes"], md5=P.get("v4_1_magnitudes_md5"), key="event_id",
+                           label="v4.1_converged (D-B091, v4 hypocentres)"),
+              "v5.1": dict(path=P.get("v5_1_magnitudes"), md5=P.get("v5_1_magnitudes_md5"), key="ID",
+                           label="v5.1_converged (D-B091, v5.1 hypocentres)")}
+
+
+def mag_table(name):
+    t = MAG_TABLES[name]
+    if not t["md5"] or md5(t["path"]) != t["md5"]:
+        raise SystemExit(f"magnitude table {name} ({t['path']}): md5 missing or different from params; refusing to build")
+    return pd.read_csv(t["path"], low_memory=False).set_index(t["key"])
+
+
+def assign_magnitudes(c, rows, names, source):
+    """Magnitude columns of the rows (bool array) from the first table of `names` that has a magnitude (M) for the
+    event; with `source`, the column magnitude_source names that table (empty without a magnitude)."""
+    got = np.zeros(len(c), bool)
+    lab = np.full(len(c), np.nan, dtype=object)
+    for name in names:
+        m = mag_table(name)
+        take = rows & ~got & c.ID.map(m["M"]).notna().values
+        for k in MAG_COLS:
+            c.loc[take, k] = c.ID[take].map(m[k]).values
+        lab[take] = MAG_TABLES[name]["label"]
+        got |= take
+    for k in MAG_COLS:                              # no magnitude in any table: every magnitude column empty
+        c.loc[rows & ~got, k] = np.nan
+    if source:
+        c.loc[rows, "magnitude_source"] = lab[rows]
+    return [MAG_TABLES[n]["path"] for n in names]
 # README column table (a key may name several columns, ", "-separated); loc_source is written from LOC_SOURCE
 COLUMNS = {
     "ID": "catalog v4 event ID (900001-900003: v4.1 additions)",
@@ -141,19 +180,14 @@ def build(version, out=None, rd=None):
         n["dist_min"] = np.nan
         n["depth_quality"], n["event_flag"] = flags(n)
         c = pd.concat([c, n], ignore_index=True)
-    # magnitudes: v4.1 Route A table (converged, D-B091; its md5 is checked); Ian's v4 column is dropped
-    if P.get("v4_1_magnitudes_md5") and md5(P["v4_1_magnitudes"]) != P["v4_1_magnitudes_md5"]:
-        raise SystemExit(f"{P['v4_1_magnitudes']}: md5 differs from params v4_1_magnitudes_md5; refusing to build the bundle")
-    m = pd.read_csv(P["v4_1_magnitudes"]).set_index("event_id")
-    if V.get("magnitudes") == "catalog":           # the catalog carries its own (converged) magnitudes and their source;
-        added = c.ID.isin(add).values               # only the v4.1 additions it leaves out take the v4.1 table
-        for k in MAG_COLS:
-            c.loc[added, k] = c.ID[added].map(m[k]).values
-        if "magnitude_source" in c:
-            c.loc[added & c.M.notna().values, "magnitude_source"] = V["magnitude_source_v41"]
+    # magnitudes: converged Route A tables (D-B091, md5-checked); Ian's v4 column is dropped
+    names = V.get("magnitude_tables", ["v4.1"])
+    if V.get("magnitudes") == "catalog":           # the catalog brings its own magnitudes and their source; only the
+        missing = [k for k in MAG_COLS + ["magnitude_source"] if k not in c]       # v4.1 additions it leaves out take
+        assert not missing, f"{src}: magnitudes: catalog, but columns missing: {missing}"   # the tables
+        mag_inputs = assign_magnitudes(c, c.ID.isin(add).values, names, source=True)
     else:
-        for k in MAG_COLS:
-            c[k] = c.ID.map(m[k])
+        mag_inputs = assign_magnitudes(c, np.ones(len(c), bool), names, source=len(names) > 1)
     c = c.drop(columns=["v4_magnitude"], errors="ignore").sort_values("ID").reset_index(drop=True)
     assert c.ID.is_unique and len(c) == len(v41), (len(c), len(v41))
     # every column described in the README
@@ -208,8 +242,8 @@ def build(version, out=None, rd=None):
                  "Earth-flattening of the travel-time grids is undone).").format(model=model, version=version, run=run)
     mnote = f" ({P['v4_1_magnitudes_note']})" if P.get("v4_1_magnitudes_note") else ""
     mags = V.get("magnitudes_text", "Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / "
-                 "Mw_cal), computed with the v4\n  hypocentres{mnote};\n  they will be recomputed with the new "
-                 "hypocentres in a later version.").format(mnote=mnote)
+                 "Mw_cal), computed with the v4\n  hypocentres{mnote};\n  catalog v5.1 carries magnitudes "
+                 "computed with its own hypocentres (D-B102).").format(mnote=mnote)
     picks_txt = V.get("picks_note", "Picks are not repeated\n  here: they are Cascadia_picks_catalog_v4.csv.gz in this "
                                     "record, with the v4.1 patch.")
     ls_rows = "".join(f"| {LOC_SOURCE[k][1]} | {ls.get(k, 0):,} |\n" for k in LOC_SOURCE if k == "nll3d" or ls.get(k, 0))
@@ -262,6 +296,24 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
     reg = pd.concat([reg[reg.version != version], pd.DataFrame([row]).astype(str)], ignore_index=True)
     rd.mkdir(parents=True, exist_ok=True)
     reg.sort_values("version").to_csv(reg_f, index=False)
+    reg_lab = c.region.fillna("(no position)")
+    stab = pd.crosstab(reg_lab, c.loc_source, margins=True, margins_name="all")
+    stab["above_surface"] = above.groupby(reg_lab).sum().reindex(stab.index).fillna(len(ab)).astype(int)
+    print(readme.split("## Columns")[0])
+    return dict(version=version, series=series, out=out, rd=rd, reg_f=reg_f, vd=vd, csv=csv, stab=stab,
+                inputs=[src, P["v4_1_events"], *mag_inputs, terms, *extra, *([picks] if picks else [])],
+                params={"version": version, **V, "v4_1_removed": drop, "v4_1_added": add},
+                counts={"events": len(c), "loc_source": ls, "tiers": tiers, "above_surface": len(ab),
+                        "above_surface_by_source": ab_src, "flags": nflag, "with_magnitude": nm, "publishable": pub})
+
+
+def finalize(built):
+    """catalog_<series>.zip with every version of the series' registry (built once, after the versions of this run),
+    then each built version's repository folder: README and MD5SUMS copies, summary.md and manifest with the final
+    bundle md5."""
+    b0 = built[0]
+    series, out, reg_f = b0["series"], b0["out"], b0["reg_f"]
+    reg = pd.read_csv(reg_f, dtype=str)
     zp = out / f"catalog_{series}.zip"
     tmp = zp.with_suffix(".zip.part")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
@@ -270,35 +322,29 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
             for p in sorted((out / f"v{v}").iterdir()):
                 z.write(p, f"catalog_{series}/v{v}/{p.name}")
     tmp.replace(zp)
-
-    od = rd / f"v{version}"
-    od.mkdir(parents=True, exist_ok=True)
-    shutil.copy(vd / f"README_v{version}.md", od)
-    shutil.copy(vd / "MD5SUMS", od)
-    reg_lab = c.region.fillna("(no position)")
-    s = pd.crosstab(reg_lab, c.loc_source, margins=True, margins_name="all")
-    s["above_surface"] = above.groupby(reg_lab).sum().reindex(s.index).fillna(len(ab)).astype(int)
-    tab = ["| region | " + " | ".join(map(str, s.columns)) + " |", "|---" * (len(s.columns) + 1) + "|"]
-    tab += [f"| {k} | " + " | ".join(f"{v:,}" for v in row) + " |" for k, row in s.iterrows()]
-    (od / "summary.md").write_text(f"# Catalog v{version}: events by region and hypocentre source\n\n" + "\n".join(tab)
-                                   + f"\n\nBundle {zp} md5 {md5(zp)} ({zp.stat().st_size:,} bytes)\n")
-    write_manifest(f"catalog_v{version}", od,
-                   inputs=[src, P["v4_1_events"], P["v4_1_magnitudes"], terms, *extra, *([picks] if picks else [])],
-                   outputs=[csv, vd / f"README_v{version}.md", vd / "MD5SUMS", zp, reg_f],
-                   params={"version": version, **V, "v4_1_removed": drop, "v4_1_added": add},
-                   counts={"events": len(c), "loc_source": ls, "tiers": tiers, "above_surface": len(ab),
-                           "above_surface_by_source": ab_src, "flags": nflag, "with_magnitude": nm,
-                           "publishable": pub})
-    print(readme.split("## Columns")[0])
-    print(f"bundle {zp} md5 {md5(zp)}")
+    zmd5 = md5(zp)
+    for b in built:
+        version, vd, s = b["version"], b["vd"], b["stab"]
+        od = b["rd"] / f"v{version}"
+        od.mkdir(parents=True, exist_ok=True)
+        shutil.copy(vd / f"README_v{version}.md", od)
+        shutil.copy(vd / "MD5SUMS", od)
+        tab = ["| region | " + " | ".join(map(str, s.columns)) + " |", "|---" * (len(s.columns) + 1) + "|"]
+        tab += [f"| {k} | " + " | ".join(f"{v:,}" for v in row) + " |" for k, row in s.iterrows()]
+        (od / "summary.md").write_text(f"# Catalog v{version}: events by region and hypocentre source\n\n"
+                                       + "\n".join(tab) + f"\n\nBundle {zp} md5 {zmd5} ({zp.stat().st_size:,} bytes)\n")
+        write_manifest(f"catalog_v{version}", od, inputs=b["inputs"],
+                       outputs=[b["csv"], vd / f"README_v{version}.md", vd / "MD5SUMS", zp, reg_f],
+                       params=b["params"], counts=b["counts"])
+    print(f"bundle {zp} md5 {zmd5}")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("version")
+    ap.add_argument("versions", nargs="+")
     ap.add_argument("--test", type=Path, help="build under this directory only (bundle/, repo/); for checks")
     a = ap.parse_args()
-    if a.test:
-        build(a.version, out=a.test / "bundle", rd=a.test / "repo")
-    else:
-        build(a.version)
+    kw = dict(out=a.test / "bundle", rd=a.test / "repo") if a.test else {}
+    built = [build(v, **kw) for v in a.versions]
+    for series in dict.fromkeys(b["series"] for b in built):      # one bundle per series, after its versions
+        finalize([b for b in built if b["series"] == series])

@@ -10,6 +10,9 @@
 #   V6_RULECHECK=/wd1/mdenolle_data/reloc_v6/heldout/coh_rule_check.json (the v6.0 R3 partner-rule check, a record)
 # Environment: V6_ROOT (run root R6, default reloc_v6), CATVER (catalog version, default 6.0), V6_SCHEDULE (Loc2ssst
 # CharDist per SSST pass, default 9999,16,8,4: one stage ssst<CharDist> each), PUBLISH_BRANCH (default reloc/v6-prep).
+# Optional catalog inputs (read by b4_v6_catalog.py, so also by the magnitudes stage's rebuild): V6_REVIEW_DIR (outputs of
+# review_v51/ingest_review.py -> reviewer columns), V6_EVENT_FLAGS (CSV ID,event_flag appended to event_flag, e.g. the
+# Mount St Helens analog-signal events). PICKS / PICKS_MD5: another pick file (confirmed clock epochs) -> redo obs.
 # STOP_AFTER=<stage> stops cleanly after that stage. Each stage is marked in the state file; a rerun skips the done ones
 # (delete a line of the state file to redo a stage). The chain runs from the copy .b4_v6_relocate_running_v6.sh (the grid
 # chain started before the SSST stages existed runs .b4_v6_relocate_running.sh; this chain waits for it to exit and never

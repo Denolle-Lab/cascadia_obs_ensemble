@@ -30,7 +30,13 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
   review_problems, review_auto_indicators   v5.1 location-review package (review_v51_events.csv): problem groups and
                            the automatic indicators (auto_indicator_rule_not_verdict), joined with ';' (D-B097: carried
                            as columns; no reviewer verdict is applied)
-  review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097)
+  review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097),
+                           or, with V6_REVIEW_DIR (the outputs of review_v51/ingest_review.py: review_answers_merged.csv,
+                           review_flag_not_earthquake.csv, review_depth_unreliable.csv, review_relocate.csv), True for the
+                           listed events, False for the other reviewed events, empty for events nobody reviewed;
+                           review_depth_km = the corrected depth of review_relocate.csv when one value is given
+  event_flag               v5.1 rules (b4_catalog.flags), plus the flags of V6_EVENT_FLAGS (CSV with ID, event_flag;
+                           e.g. the Mount St Helens analog-signal events; ';'-joined, no event removed)
   M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id, magnitude_source   converged Route A magnitudes
                            (D-B091): the v5.1 table (computed with v5.1 hypocentres) where it has the event, else the
                            v4.1 table (v4 hypocentres); magnitude_source names which, with the short labels of
@@ -169,6 +175,10 @@ def arrivals_check(root, chosen):
     return au
 
 
+REVIEW_DIR = os.environ.get("V6_REVIEW_DIR", "")      # ingest_review.py outputs (one-version v6.1); empty = D-B097
+EVENT_FLAGS = os.environ.get("V6_EVENT_FLAGS", "")    # CSV ID, event_flag (e.g. Mount St Helens analog signal)
+
+
 def review_columns(ids):
     r = pd.read_csv(REVIEW, usecols=["ID", "problem", "auto_indicator_rule_not_verdict"])
     g = r.groupby("ID").agg(review_problems=("problem", lambda s: ";".join(sorted(set(s.dropna().astype(str))))),
@@ -182,6 +192,18 @@ def review_columns(ids):
     for k in ("review_not_earthquake", "review_depth_unreliable", "review_relocate"):
         out[k] = pd.array([pd.NA] * len(out), dtype="boolean")
     out["review_depth_km"] = np.nan
+    if REVIEW_DIR:                                   # reviewer verdicts (ingest_review.py rules)
+        d = Path(REVIEW_DIR)
+        seen = set(pd.read_csv(d / "review_answers_merged.csv", dtype={"ID": "Int64"}).ID.dropna().astype(int))
+        rev = out.index.isin(list(seen))
+        for k, f in (("review_not_earthquake", "review_flag_not_earthquake.csv"),
+                     ("review_depth_unreliable", "review_depth_unreliable.csv"), ("review_relocate", "review_relocate.csv")):
+            lst = set(pd.read_csv(d / f, dtype={"ID": "Int64"}).ID.dropna().astype(int))
+            out.loc[rev, k] = out.index[rev].isin(list(lst))
+        rl = pd.read_csv(d / "review_relocate.csv", dtype=str, keep_default_na=False)
+        one = rl[rl.corrected_depth_km.str.len().gt(0) & ~rl.corrected_depth_km.str.contains(";")]
+        z = pd.Series(pd.to_numeric(one.corrected_depth_km).to_numpy(), index=one.ID.astype(int))
+        out["review_depth_km"] = out.index.map(z)
     return out.reset_index()
 
 
@@ -293,6 +315,10 @@ def main():
     q, f = BC.flags(c.assign(time=c.time.fillna("1970-01-01T00:00:00")))
     c["depth_quality"] = np.where(nll, q, "")
     c["event_flag"] = np.where(nll, f, "")
+    if EVENT_FLAGS:                                  # extra flags (ID, event_flag), appended; no event removed
+        ef = pd.read_csv(EVENT_FLAGS, dtype={"event_flag": str}).groupby("ID").event_flag.agg(lambda s: ";".join(sorted(set(s))))
+        add = c.ID.map(ef).fillna("")
+        c["event_flag"] = [";".join(x for x in (a_, b_) if x) for a_, b_ in zip(c.event_flag, add)]
     # v5.1 flags
     fl = BC.read_floor(V.FLOOR)
     h_fl = c.depth_flat + BC.floor_at(fl, c.lat.fillna(0), c.lon.fillna(0)) / 1e3
@@ -357,7 +383,8 @@ def main():
     man = dict(catalog=str(out), catalog_md5=V.md5(out), root=str(root), plan=plan, model=f"v{V.VERSION}",
                grid_manifest=str(V.GRID_MD5), grid_manifest_md5=V.grid_manifest_md5(), floor=V.FLOOR,
                floor_md5=V.md5(V.FLOOR), picks=str(PICKS), surface=BC.SURFACE, surface_source=BC.surface_source(),
-               v51=str(V51), review=str(REVIEW), counts=counts, wall_min=round((time.time() - t0) / 60, 1),
+               v51=str(V51), review=str(REVIEW), review_verdicts=REVIEW_DIR or None, event_flags=EVENT_FLAGS or None,
+               event_flags_md5=V.md5(EVENT_FLAGS) if EVENT_FLAGS else None, counts=counts, wall_min=round((time.time() - t0) / 60, 1),
                runs={k: json.loads((root / k / "run.json").read_text()) for k in
                      [f"it{i}" for i in range(V.NPASS + 1)] + ["coh", "deep", "edge"] if (root / k / "run.json").exists()},
                loc2ssst={f"g{i}": json.loads((root / f"g{i}" / "summary.json").read_text())

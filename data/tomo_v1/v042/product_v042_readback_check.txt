@@ -1,0 +1,25 @@
+variables v0.4.2: ['Vp', 'Vs', 'VpVs', 'medium', 'shallow_crust_node', 'surface_elevation', 'offshore', 'Vp_tomography', 'Vs_tomography', 'Vp_start', 'Vs_start', 'Vp_perturbation', 'Vs_perturbation', 'dws_p', 'dws_s', 'resolution_p', 'resolution_s', 'n_tiles', 'tile_weight_p', 'tile_weight_s', 'vs_reverted']
+same variable list and order as v0.4.1: True
+dims {'depth': 21, 'latitude': 118, 'longitude': 94} same coords as v0.4.1: True
+dtypes equal: True
+attrs keys equal: True []
+version/id: v0.4.2 cascadia_obs_tomo.v0.4.2
+  medium identical to v0.4.1: True
+  surface_elevation identical to v0.4.1: True
+  offshore identical to v0.4.1: True
+  resolution_p identical to v0.4.1: True
+  resolution_s identical to v0.4.1: True
+  tile_weight_p identical to v0.4.1: True
+  tile_weight_s identical to v0.4.1: True
+  n_tiles identical to v0.4.1: True
+D-B073 / medium: rock above the surface (depth < -surface_elevation): 0 ; non-rock below the surface: 0
+Vp water == 1.5: True ; Vp air NaN: True ; Vs NaN off rock: True ; Vp/Vs NaN off rock: True
+Vp_tomography / Vs_tomography == merge: True True
+Vp rock == Vp_tomography: True
+shallow_crust_node: v0.4.2 8739 v0.4.1 8739 differ at 0 nodes
+D-B073 rule nodes: Vs == min(Vs_tomo, Vp_tomo/2.1): True
+Vs rock off-rule == Vs_tomography: True
+finite Vp/Vs on rock: True Vp/Vs rock min/max: 1.5999999046325684 2.733883857727051
+v0.4.2.nc md5 6cd65a101c12e827b00b7c13b0e32e2f sha256 45880409101f5d94691ce3d10e739a91b92ed05433447a50d3a9cee1018d04f0 4168724 bytes
+v0.4.2_surface_lattice.nc md5 89469c8bf10bb44d43a9ac9005e63a4e sha256 53d7cfc7c2286f6b6d6df8a34d3fb155464cc71954d7cc8a749c7edde4a817c4 3854629 bytes
+zarr == nc (all data vars): True

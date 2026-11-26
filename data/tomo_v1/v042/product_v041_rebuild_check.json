@@ -1,0 +1,90 @@
+{
+ "reference": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.1.nc",
+ "variables_equal": {
+  "Vp": true,
+  "Vs": true,
+  "VpVs": true,
+  "medium": true,
+  "shallow_crust_node": true,
+  "surface_elevation": true,
+  "offshore": true,
+  "Vp_tomography": true,
+  "Vs_tomography": true,
+  "Vp_start": true,
+  "Vs_start": true,
+  "Vp_perturbation": true,
+  "Vs_perturbation": true,
+  "dws_p": true,
+  "dws_s": true,
+  "resolution_p": true,
+  "resolution_s": true,
+  "n_tiles": true,
+  "tile_weight_p": true,
+  "tile_weight_s": true,
+  "vs_reverted": true
+ },
+ "all_equal": true,
+ "attrs_differing": [
+  "emc_check",
+  "history",
+  "provenance_git_commit"
+ ],
+ "info": {
+  "nodes": 232932,
+  "rock": 203988,
+  "water": 8538,
+  "air": 20406,
+  "offshore_columns": 6791,
+  "columns_outside_lattice": 108,
+  "outside_lattice_below_sea_level": 6,
+  "rule_nodes": 9585,
+  "rule_changed": 8739,
+  "water_dws_p_gt0": 405,
+  "air_dws_p_gt0": 1332,
+  "offshore_above_surface": 22108,
+  "onshore_above_surface": 6836,
+  "above_surface_vp_median": 4.718863010406494,
+  "above_surface_vs_median": 2.4756360054016113,
+  "by_depth": {
+   "-3": {
+    "water": 0,
+    "air": 11091,
+    "rule_changed": 0
+   },
+   "-1": {
+    "water": 0,
+    "air": 9315,
+    "rule_changed": 0
+   },
+   "1": {
+    "water": 6032,
+    "air": 0,
+    "rule_changed": 765
+   },
+   "3": {
+    "water": 2506,
+    "air": 0,
+    "rule_changed": 2878
+   },
+   "5": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 4882
+   },
+   "7": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 214
+   },
+   "9": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 0
+   }
+  },
+  "rule_dvs_pct_median_max": [
+   14.49,
+   23.81
+  ]
+ }
+}

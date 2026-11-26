@@ -52,6 +52,10 @@ def rd(region, stage):
     return RUNS / region / f"d200_s{SM[stage]}"
 
 
+def fmt(x):
+    return "dropped" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:g}"
+
+
 def img(name):
     return f'<img src="data:image/png;base64,{base64.b64encode((OUT / name).read_bytes()).decode()}" alt="{name}">'
 
@@ -129,8 +133,7 @@ def model_diff():
     for nodes, MS in (("resolved", res), ("tile-covered", cov)):
         for k in ("Vp", "Vs", "VpVs"):
             nl = maximum_filter(np.maximum(np.abs(D[f"n{k}"]), np.abs(D[f"o{k}"])), size=3, mode="nearest")
-            if nodes == "resolved":
-                above[k] = (np.abs(D[f"d{k}"]) > 2 * nl) & MS[k]
+            above[(nodes, k)] = (np.abs(D[f"d{k}"]) > 2 * nl) & MS[k]
             for i, zz in enumerate(list(z) + ["all"]):
                 m = MS[k][i] if zz != "all" else MS[k]
                 if m.sum() == 0:
@@ -147,14 +150,18 @@ def model_diff():
                          above_noise_pct=round(100 * float((np.abs(d) > 2 * L).mean()), 2))
                 (tot if zz == "all" else rows).append(r)
     lon, lat = new.longitude.values, new.latitude.values
+    ev = pd.concat([pd.read_csv(RUNS / STAGES[st][1] / "inputs" / "events.csv").query("ID in @ids")
+                    for st, ids in SELF.items()])
     big = []
-    for k in ("Vp", "Vs", "VpVs"):
-        iz, iy, ix = np.nonzero(above[k])
+    for (nodes, k), msk in above.items():
+        iz, iy, ix = np.nonzero(msk)
         for a, b_, c in zip(iz, iy, ix):
-            big.append(dict(quantity=k, depth_km=float(z[a]), lat=round(float(lat[b_]), 2), lon=round(float(lon[c]), 3),
-                            v041=round(float((old.Vp.values / old.Vs.values if k == "VpVs" else old[k].values)[a, b_, c]), 4),
-                            v042=round(float((new.Vp.values / new.Vs.values if k == "VpVs" else new[k].values)[a, b_, c]), 4),
-                            diff=round(float(D[f"d{k}"][a, b_, c]), 4)))
+            dh = np.hypot((ev.lat.values - lat[b_]) * 111.19, (ev.lon.values - lon[c]) * 111.19 * np.cos(np.radians(lat[b_])))
+            vo = (old.Vp.values / old.Vs.values if k == "VpVs" else old[k].values)[a, b_, c]
+            vn = (new.Vp.values / new.Vs.values if k == "VpVs" else new[k].values)[a, b_, c]
+            big.append(dict(nodes=nodes, quantity=k, depth_km=float(z[a]), lat=round(float(lat[b_]), 2),
+                            lon=round(float(lon[c]), 3), km_to_nearest_self_paired_event=round(float(dh.min()), 1),
+                            v041=round(float(vo), 4), v042=round(float(vn), 4), diff=round(float(D[f"d{k}"][a, b_, c]), 4)))
     big = pd.DataFrame(big)
     if len(big):
         big = big.reindex(big["diff"].abs().sort_values(ascending=False).index)
@@ -296,8 +303,7 @@ def floor_table():
             air_quakes_v042=len(aq1), iterations_v042=it1,
             above_true_surface_final_v041=int((f0.below_surface_km < 0).sum()),
             above_true_surface_final_v042=int((f1.below_surface_km < 0).sum()),
-            rms_abs_final_v041=l0["rms_abs_final"], rms_abs_final_v042=l1["rms_abs_final"],
-            cnd_last_v042=l1.get("cnd_last")))
+            rms_abs_final_v041=l0["rms_abs_final"], rms_abs_final_v042=l1["rms_abs_final"]))
     return pd.DataFrame(rows)
 
 
@@ -395,6 +401,10 @@ def main():
     md.to_csv(OUT / "model_diff_by_depth.csv", index=False)
     mdt.to_csv(OUT / "model_diff_total.csv", index=False)
     big.to_csv(OUT / "nodes_above_noise.csv", index=False)
+    near = (big.assign(within_30km_of_a_self_paired_event=big.km_to_nearest_self_paired_event <= 30)
+            .groupby(["nodes", "quantity", "within_30km_of_a_self_paired_event"]).size().rename("nodes_above_noise")
+            .reset_index()) if len(big) else pd.DataFrame()
+    near.to_csv(OUT / "nodes_above_noise_by_distance.csv", index=False)
     sp, sep, pts = self_pairs()
     sp.to_csv(OUT / "self_paired_events.csv", index=False)
     sep.to_csv(OUT / "self_paired_separation.csv", index=False)
@@ -413,7 +423,7 @@ def main():
     rt.to_csv(OUT / "run_times.csv", index=False)
     pr = product()
     summary = dict(identity=idt.to_dict("records"), inputs=inp.to_dict("records"), model_total=mdt.to_dict("records"),
-                   masks_identical=same_mask, nodes_above_noise=len(big), self_pair_separation=sep.to_dict("records"),
+                   masks_identical=same_mask, nodes_above_noise=near.to_dict("records"), self_pair_separation=sep.to_dict("records"),
                    floor=fl.to_dict("records"), product=pr)
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1, default=str))
     css = ("body{font-family:system-ui,sans-serif;max-width:1150px;margin:auto;padding:0 16px;color:#222;"
@@ -441,9 +451,13 @@ def main():
               f"{r.noise_v041_rms:g}), {r.above_noise_nodes} nodes above 2x the local noise"
               for r in tv.itertuples()) + ".</li>",
           f"<li>Self-paired events: separation from their co-located twins v0.4.1 -> v0.4.2 (km): "
-          + ", ".join(f"{int(r.self_paired)}/{int(r.twin)} {r.get('v041_separation_km', 'dropped')} -> "
-                      f"{r.get('v042_separation_km', 'dropped')}" for _, r in sep.iterrows()) + ".</li>",
-          f"<li>Final hypocentres above the true surface in v0.4.2: {above_tot}.</li></ul>",
+          + ", ".join(f"{int(r.self_paired)}/{int(r.twin)} {fmt(r.get('v041_separation_km'))} -> "
+                      f"{fmt(r.get('v042_separation_km'))}" for _, r in sep.iterrows()) + ".</li>",
+          "<li>Events kept: " + ", ".join(f"{r.stage} {r.events_final_v041} -> {r.events_final_v042} of {r.events_start}"
+                                          for r in fl[fl.rerun].itertuples()) + " (v0.4.1 had dropped 4 of the self-paired "
+          "events).</li>",
+          f"<li>Final hypocentres above the true surface in v0.4.2: {above_tot}; air quakes "
+          f"{int(fl.air_quakes_v042.sum()) if len(fl) else None}.</li></ul>",
           "<h2>1. Freeze identity</h2>",
           "<p>v0.4.1 deterministic runs rerun with the 2026-11-26 binary of the same size class, same inputs, "
           "tomoDD-SE.inp, MOD and surface.dat; Output_Files compared with cmp (partial runs: tomoDD.loc, the first "
@@ -455,7 +469,9 @@ def main():
           "N(0, 1e-6 s) on every observed time and merged with the same rules (v0.4.2nf: M0 and oregon noise runs of "
           "v0.4.1, the three rebuilt tiles rerun). above_noise = |difference| &gt; 2 x the largest |noise difference| "
           "(either chain) at the node and its 26 neighbours.</p>", H(mdt), H(md),
-          "<p>Resolved nodes above the noise, largest first:</p>", H(big, 40),
+          "<p>Nodes above the noise, by distance to the nearest self-paired event (start position):</p>", H(near),
+          "<p>Resolved nodes above the noise, largest first:</p>", H(big[big.nodes == "resolved"], 40),
+          "<p>Tile-covered nodes above the noise, largest first:</p>", H(big[big.nodes == "tile-covered"], 40),
           img("maps_diff.png"), img("sections_diff.png"), img("maps_noise.png"), img("sections_noise.png"),
           "<h2>4. The self-paired events and their co-located twins</h2>",
           "<p>Each self-paired event had a twin with the identical start hypocentre (v4-NLL3D); in v0.4.1 the event's "

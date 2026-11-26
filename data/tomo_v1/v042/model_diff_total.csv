@@ -1,0 +1,7 @@
+quantity,unit,nodes,depth_km,n_nodes,rms,max_abs,changed_nodes,noise_v042_rms,noise_v041_rms,noise_max_abs,above_noise_nodes,above_noise_pct
+Vp,pct,resolved,all,888,0.8274,6.1475,758,0.7125,0.8394,9.1032,0,0.0
+Vs,pct,resolved,all,320,1.3882,8.162,294,0.9887,0.8692,8.8876,21,6.56
+VpVs,abs,resolved,all,255,0.0284,0.1285,252,0.0214,0.0222,0.1202,5,1.96
+Vp,pct,tile-covered,all,94656,0.0996,6.1475,16647,0.1292,0.1395,10.2756,194,0.2
+Vs,pct,tile-covered,all,94626,0.0931,8.162,1853,0.0777,0.0651,9.276,118,0.12
+VpVs,abs,tile-covered,all,94557,0.0019,0.1285,16607,0.0023,0.0023,0.2058,158,0.17

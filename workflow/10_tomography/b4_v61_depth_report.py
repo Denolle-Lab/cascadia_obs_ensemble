@@ -161,6 +161,13 @@ def main():
     S.append("<div class='rule'>" + md(rule_text().split("\n", 1)[1]) + "</div>")
     # ---------------------------------------------------------------- scores
     S.append("<h2>3. Scores</h2>")
+    ss = OUT / "sets" / "sets_summary.csv"
+    if ss.exists():
+        t = pd.read_csv(ss)
+        S.append("<p>Test clusters (each run: full = every station, fold0-2 = a third of the stations held out):</p>")
+        S.append(table(["set", "region", "events", "picks", "stations", "accepted CC rows", "CC pairs", "time span"],
+                       [[r.set, esc(r.region), f"{r.events:,}", f"{r.picks:,}", f"{r.stations}", f"{r.cc_rows:,}",
+                         f"{r.cc_pairs:,}", f"{r.time0} to {r.time1}"] for r in t.itertuples()]))
     S.append("<h3>Relative fit: held-out CC differential times (3 station folds pooled)</h3>")
     S.append("<p class='muted'>MAD of the pair-demeaned held-out residual (ms) on the rows located in every arm; "
              "difference to the best arm of the cluster and phase with its 95 % paired-bootstrap interval "
@@ -266,13 +273,36 @@ def main():
     S.append(f"<p class='verdict'><b>Winner: {esc(dec['winner'])}</b>" +
              (f" (tied within 0.05 km: {esc(', '.join(dec['tied']))}; the simplest in the rule's order wins)"
               if len(dec["tied"]) > 1 else "") + "</p>")
+    # ---------------------------------------------------------------- post-hoc
+    ex = SC / "extra.json"
+    if ex.exists():
+        E = json.loads(ex.read_text())
+        He = pd.read_csv(SC / "extra_heldout.csv")
+        De = pd.read_csv(SC / "extra_depth.csv")
+        S.append("<h2>5. Post-hoc arm (not part of the decision)</h2>")
+        S.append(md((OUT / "report_posthoc_input.txt").read_text()) if (OUT / "report_posthoc_input.txt").exists()
+                 else "")
+        rows = []
+        for r in He.itertuples():
+            rows.append([r.arm, r.set, r.phase, f(r.mad_ms, 1), f"{r.best} {f(r.mad_best_ms, 1)}",
+                         f"{f(r.diff_best_ms, 1, True)} [{f(r.lo_ms, 1, True)}, {f(r.hi_ms, 1, True)}]",
+                         "out" if r.would_be_out else ""])
+        S.append(table(["arm", "set", "phase", "MAD (ms)", "registered best (ms)", "arm - best", "gate (b)"], rows))
+        rows = []
+        for r in De.itertuples():
+            extra_ = (f"within 1.6 / 2.0 km {f(r.within_1_6_pct, 1)} / {f(r.within_2_0_pct, 1)} %" if r.set == "axial"
+                      else f"p10 {f(r.p10_km, 2, True)}, p90 {f(r.p90_km, 2, True)}")
+            rows.append([r.arm, r.set, f"{int(r.n):,}", f(r.offset_km, 3, True), extra_])
+        S.append(table(["arm", "set", "n", "offset (km)", ""], rows))
+        S.append(f"<p>D (same four clusters): " + ", ".join(f"{k} {f(v, 3)} km" for k, v in E["D_km"].items())
+                 + "; gate (b) would exclude: " + esc(json.dumps(E["would_be_out"])) + "</p>")
     # ---------------------------------------------------------------- reproducibility
     try:
         head = subprocess.run(["git", "-C", str(HERE), "rev-parse", "--short", "HEAD"], capture_output=True,
                               text=True).stdout.strip()
     except OSError:
         head = "?"
-    S.append("<h2>5. Reproducibility</h2>")
+    S.append("<h2>6. Reproducibility</h2>")
     S.append(md(f"""Code: branch `reloc/v61-depth-test` (commit `{head}`), workflow/10_tomography/:
 `b4_v61_depth_diag.py` (diagnosis; `--tile t07_32`, `--tile t29_40 --region Puget/Georgia --near-km 25`,
 `--tile t22_09 --region Gorda --near-km 40`, `--tile t11_23 --region Blanco --near-km 40`), `b4_v61_depth_sets.py`

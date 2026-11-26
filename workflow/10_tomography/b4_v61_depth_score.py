@@ -13,6 +13,7 @@ run or score). Inputs: the runs of b4_v61_depth_test.py. Outputs (score/):
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -26,6 +27,7 @@ import b4_v6_heldout as H  # noqa: E402
 from b4_catalog import floor_at, read_floor, surface_km, unflatten  # noqa: E402
 from b4_v6_ssst_metrics import read_arm  # noqa: E402
 
+warnings.simplefilter("ignore", FutureWarning)
 SC = T.OUT / "score"
 CAT = Path("/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv")
 PAIRS = Path("/wd1/mdenolle_data/tomo_v1/depth_literature/pairs")
@@ -63,7 +65,7 @@ def read_pass(rd):
 def positions(s, run, arm):
     """(positions lat, lon, depth [true], depth_zf, ns_z; relocated-by-coherence IDs) of an arm in a run."""
     d = H.OUT / s / run
-    pas, coh = T.ARMS[arm]
+    pas, coh = {**T.ARMS, **T.EXTRA}[arm]
     e = read_pass(d / pas)[["lat", "lon", "depth", "depth_zf", "ns_z"]].copy()
     rel = set()
     if coh:
@@ -78,7 +80,7 @@ def positions(s, run, arm):
 
 def complete(s, run, arm):
     d = H.OUT / s / run
-    pas, coh = T.ARMS[arm]
+    pas, coh = {**T.ARMS, **T.EXTRA}[arm]
     return (d / pas / "run.json").exists() and (coh is None or (d / coh / "run.json").exists())
 
 
@@ -248,5 +250,61 @@ def main(a):
                D_km=D, D_eligible={arm: D.get(arm) for arm in elig}, tied=tied, winner=winner,
                simplicity_order=T.ORDER, best_by_set_phase={f"{k[0]} {k[1]}": v for k, v in best.items()})
     (SC / "decision.json").write_text(json.dumps(dec, indent=1, default=float))
+    post_hoc(a, sets, arms, best, cat, lit_sets, Dp)
     log("decision:", json.dumps({k: dec[k] for k in ("out_above_surface", "eligible", "D_eligible", "tied", "winner")},
                                 default=float))
+
+
+def post_hoc(a, sets, arms, best, cat, lit_sets, Dp):
+    """the post-hoc arms (T.EXTRA, not part of the rule), scored the same way but on their own row sets (rows located
+    in every registered arm AND the extra arm), against the registered best arm of each cluster and phase; depth on
+    the registered events also located by the extra arm. -> extra_heldout.csv, extra_depth.csv, extra.json"""
+    extra = [x for x in T.EXTRA if all(complete(s, r, x) for s in sets for r in T.RUNS)]
+    if not extra:
+        return
+    rows = []
+    for s in sets:
+        C, _ = heldout_rows(s, arms + extra)
+        for ph, g in C.groupby("phase"):
+            g = g.reset_index(drop=True)
+            b = best[(s, ph)]
+            use = [b] + extra
+            B, npair = boot(g, use, a.nboot, 500 + sets.index(s) * 2 + (ph == "S"))
+            mb = mad(g[b].to_numpy())
+            for k, x in enumerate(extra, start=1):
+                dd = B[:, k] - B[:, 0]
+                lo, hi = np.percentile(dd, [2.5, 97.5])
+                rows.append(dict(set=s, phase=ph, arm=x, rows=len(g), pairs=npair, best=b, mad_best_ms=mb * 1e3,
+                                 mad_ms=mad(g[x].to_numpy()) * 1e3, diff_best_ms=(mad(g[x].to_numpy()) - mb) * 1e3,
+                                 lo_ms=lo * 1e3, hi_ms=hi * 1e3, tol_ms=FIT_TOL * mb * 1e3,
+                                 would_be_out=bool(lo > FIT_TOL * mb)))
+    He = pd.DataFrame(rows)
+    He.round(3).to_csv(SC / "extra_heldout.csv", index=False)
+    drows = []
+    for s in sets:
+        P = {arm: positions(s, "full", arm)[0] for arm in arms + extra}
+        common = sorted(set.intersection(*[set(p.index) for p in P.values()]))
+        for x in extra:
+            p = P[x]
+            if s == "axial":
+                ids = [i for i in common if cat.get(i) in ("A", "B")]
+                e = p.loc[ids]
+                bsf = e.depth.to_numpy() + surface_km(e.lat.values, e.lon.values)
+                drows.append(dict(set=s, arm=x, n=len(e), offset_km=float(np.mean([np.quantile(bsf, qq) - z
+                                                                                   for qq, z in WALDHAUSER])),
+                                  within_1_6_pct=100 * float(np.mean(bsf <= 1.6)),
+                                  within_2_0_pct=100 * float(np.mean(bsf <= 2.0))))
+                continue
+            ref, table, lon = LIT[s]
+            pr = lit_pairs(s, table, lon).set_index("ID")
+            ids = [i for i in common if i in pr.index and cat.get(i) in ("A", "B", "C")]
+            r = q(p.loc[ids].depth.to_numpy() - pr.loc[ids].ref_depth.to_numpy())
+            drows.append(dict(set=s, arm=x, n=r["n"], offset_km=r["med"], p10_km=r["p10"], p90_km=r["p90"]))
+    De = pd.DataFrame(drows)
+    De.round(4).to_csv(SC / "extra_depth.csv", index=False)
+    D = {x: float(np.mean([abs(De[(De.set == s) & (De.arm == x)].offset_km.iloc[0]) for s in lit_sets])) for x in extra}
+    (SC / "extra.json").write_text(json.dumps(dict(extra=extra, D_km=D, would_be_out={
+        x: He[(He.arm == x) & He.would_be_out][["set", "phase"]].astype(str).agg(" ".join, axis=1).tolist()
+        for x in extra}, note="post-hoc arms: reported only, not part of the pre-registered decision"),
+        indent=1, default=float))
+    log("post-hoc:", json.dumps(D, default=float))

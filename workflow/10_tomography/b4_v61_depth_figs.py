@@ -157,9 +157,6 @@ def fig_depth(Dp, dec):
         x = np.arange(len(arms))
         col = [CS if "coh" in arm else CP for arm in arms]
         a.bar(x, d.offset_km, color=col)
-        if "p10_km" in d and s != "axial":
-            a.errorbar(x, d.offset_km, yerr=[d.offset_km - d.p10_km, d.p90_km - d.offset_km], fmt="none",
-                       ecolor="k", lw=0.6, alpha=0.5)
         a.axhline(0, color="k", lw=0.6)
         a.set_xticks(x)
         a.set_xticklabels(arms, rotation=60, ha="right", fontsize=6.5)

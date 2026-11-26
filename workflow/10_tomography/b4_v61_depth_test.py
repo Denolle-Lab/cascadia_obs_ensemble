@@ -60,9 +60,10 @@ ARMS = {   # arm: (pass folder, coherence folder or None)
     "nf4": ("nf/it4", None), "nf4_coh": ("nf/it4", "coh_nf4"),
 }
 ORDER = list(ARMS)            # simplicity order of the rule (simplest first)
+EXTRA = {"cm4": ("cm/it4", None), "cm4_coh": ("cm/it4", "coh_cm4")}   # post-hoc, reported only (cmd_extra)
 CTRL = OUT / "control"
 MEM_MIN_GB = 45.0             # coordinator: keep MemAvailable above 40 GB
-WANT = {"msh": 6, "blancow": 4, "gordad": 3, "axial": 2}
+WANT = {"msh": 6, "blancow": 4, "gordad": 3, "axial": 8}
 NEED = {"msh": 3, "blancow": 2, "gordad": 2, "axial": 1}
 
 
@@ -96,6 +97,7 @@ class Slots:
 
     def __enter__(self):
         (CTRL / "slots").mkdir(parents=True, exist_ok=True)
+        t_start = time.time()
         while True:
             try:
                 nmax = int((CTRL / "max_procs").read_text().split()[0])
@@ -110,7 +112,8 @@ class Slots:
                         got.append(fh)
                     except BlockingIOError:
                         fh.close()
-            reserve = 0 if self.prio or not self.prio_waiting() else self.RESERVE
+            aged = time.time() - t_start > 180          # a chain that waited 3 min no longer leaves the reserve
+            reserve = 0 if self.prio or aged or not self.prio_waiting() else self.RESERVE
             take = min(self.want, len(got) - reserve)
             if take >= self.need:
                 for fh in got[take:]:
@@ -242,12 +245,77 @@ def nf_project(it_dir, raw, d_in, d_out, base):
     return d_out
 
 
+def cm_project(it_dir, raw, d_in, d_out):
+    """POST-HOC arm cm4 (not in the pre-registered rule; written 2026-11-26 14:16, after the registered nf4 runs showed
+    that a cluster-constant common-shift removal moves the typical event of a spread-out offshore cluster, and before
+    the msh and axial scores existed): the common mode of each phase is removed from every Loc2ssst increment, i.e.
+    d_P (d_S) = the arrival-weighted mean increment of the P (S) station-phases at the pass's events, subtracted from
+    every P (S) station-phase. The P part only shifts origin times (EDT); the S part is the S-P common term that the
+    diagnosis found trading with depth at Axial, Puget and Blanco. No partial derivatives, no event weighting."""
+    done = d_out / "nf.json"
+    if done.exists():
+        return d_out
+    t0 = time.time()
+    ev, ph = pass_arrivals(it_dir)
+    corr = sorted(f.name[len("cascadia3d."):-len(".ssst.buf")] for f in raw.glob("cascadia3d.*.ssst.buf")
+                  if not f.is_symlink())
+    corr = [k for k in corr if not (raw / f"cascadia3d.{k}.time.buf").is_symlink()]
+    ph = ph[ph.key.isin(corr)].reset_index(drop=True)
+    pos = ev.loc[ph.ID, ["x", "y", "z"]].to_numpy()
+    c = np.zeros(len(ph))
+    for key, r in ph.groupby("key"):
+        ii = r.index.to_numpy()
+        c[ii] = Grid(raw / f"cascadia3d.{key}.ssst.hdr").at(pos[ii])
+    w = ph.weight.to_numpy()
+    dm = {p_: float(np.sum(c[m] * w[m]) / np.sum(w[m])) if m.any() else 0.0
+          for p_, m in (("P", (ph.phase == "P").to_numpy()), ("S", (ph.phase == "S").to_numpy()))}
+    d = {k: dm[k.split(".")[0]] for k in corr}
+    d_out.mkdir(parents=True, exist_ok=True)
+    for f in sorted(d_in.glob("cascadia3d.*.time.*")):
+        ln = d_out / f.name
+        if not ln.exists() and not ln.is_symlink():
+            ln.symlink_to(os.path.realpath(f))
+    nneg = 0
+    for key in corr:
+        for kind in ("time", "ssst"):
+            src_h = raw / f"cascadia3d.{key}.{kind}.hdr"
+            dst_h, dst_b = d_out / src_h.name, d_out / f"cascadia3d.{key}.{kind}.buf"
+            for p in (dst_h, dst_b):
+                if p.is_symlink() or p.exists():
+                    p.unlink()
+            v = np.fromfile(raw / f"cascadia3d.{key}.{kind}.buf", "<f4") - np.float32(d[key])
+            v.astype("<f4").tofile(dst_b)
+            dst_h.write_text(src_h.read_text())
+            if kind == "time":
+                nneg += int((v < 0).sum())
+    rec = dict(mode="common mode per phase removed", raw=str(raw), d_in=str(d_in), it=str(it_dir),
+               events=int(len(ev)), arrivals=int(len(ph)), station_phases=len(corr), common_P_s=dm["P"],
+               common_S_s=dm["S"], negative_nodes=nneg, wall_s=round(time.time() - t0, 1))
+    done.write_text(json.dumps(rec, indent=1))
+    log(f"cm {d_out}: common P {dm['P'] * 1e3:+.1f} ms, S {dm['S'] * 1e3:+.1f} ms removed, {nneg} negative nodes")
+    return d_out
+
+
 # ------------------------------------------------------------------------------------------------------------ chain
+def balanced(blocks, n):
+    """the blocks reordered so that nll_run's n contiguous slices carry similar numbers of arrivals (the pass holds its
+    slots until its slowest job ends): sorted by arrival count, dealt in snake order; locations do not depend on it."""
+    if n <= 1:
+        return blocks
+    cnt = np.array([b.count("\n") for b in blocks])
+    order = np.argsort(-cnt, kind="stable")
+    chunks = [[] for _ in range(n)]
+    for r, j in enumerate(order):
+        k = r % (2 * n)
+        chunks[k if k < n else 2 * n - 1 - k].append(blocks[j])
+    return [b for c in chunks for b in c]
+
+
 def nll(rd, blocks, box, groot, s, octree=False):
     if (rd / "run.json").exists():
         return rd
     with Slots(WANT[s], NEED[s], tag=f"{s}_{rd.parent.parent.name}") as n:
-        return S.nll_run(rd, blocks, box, (f"{groot}/cascadia3d",), octree=octree, nproc=n)
+        return S.nll_run(rd, balanced(blocks, n), box, (f"{groot}/cascadia3d",), octree=octree, nproc=n)
 
 
 def lss(it, d_in, d_out, char, box, sp, s):
@@ -295,12 +363,34 @@ def cmd_run(a):
     log(f"{s}/{run} done")
 
 
+def cmd_extra(a):
+    """post-hoc arm cm4 (cm_project; not part of the pre-registered decision) and its coherence stage."""
+    s, run = a.set, a.run
+    blocks, box = H.prep(s, run)
+    sp = S.station_phases(blocks)
+    base = H.base_grids(s, box)
+    d = H.OUT / s / run
+    assert (d / "ssst" / "g0" / "loc2ssst.json").exists(), "run the registered chain first"
+    gm = {-1: base}
+    for k, char in enumerate(SCHEDULE):
+        it = d / "ssst" / "it0" if k == 0 else nll(d / "cm" / f"it{k}", blocks, box, gm[k - 1], s)
+        raw = d / "ssst" / "g0" if k == 0 else lss(it, gm[k - 1], d / "cm" / f"g{k}_raw", char, box, sp, s)
+        gm[k] = cm_project(it, raw, gm[k - 1], d / "cm" / f"g{k}")
+    nll(d / "cm" / "it4", blocks, box, gm[3], s, octree=True)
+    coh(s, run, d / "cm" / "it4", gm[3], box, "coh_cm4")
+    (d / "DONE_extra").write_text(time.strftime("%FT%T%z"))
+    log(f"{s}/{run} extra done")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
     r.add_argument("set", choices=SETS)
     r.add_argument("run", choices=RUNS)
+    x = sub.add_parser("extra")
+    x.add_argument("set", choices=SETS)
+    x.add_argument("run", choices=RUNS)
     sc = sub.add_parser("score")
     sc.add_argument("--nboot", type=int, default=2000)
     sc.add_argument("--sets", default=",".join(SETS), help="subset (mechanics check only; the decision needs all)")
@@ -308,6 +398,8 @@ def main():
     a = ap.parse_args()
     if a.cmd == "run":
         cmd_run(a)
+    elif a.cmd == "extra":
+        cmd_extra(a)
     else:
         import b4_v61_depth_score as SC
         SC.main(a)

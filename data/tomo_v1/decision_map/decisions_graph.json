@@ -2343,6 +2343,133 @@
     }
    ],
    "key": false
+  },
+  {
+   "id": "D-B084",
+   "date": "2026-11-25",
+   "time": null,
+   "title": "B5 relative relocation = NLL-SSST-coherence",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "Fair held-out test on 4 sets (every code from NonLinLoc without held-out stations): NLL-SSST-coherence smallest tails, best where data are sparse; tomoDD + floor sharpest cores; GrowClust3D out.",
+   "trigger": "D-B078 comparison of relative-relocation codes on CC data (session -18).",
+   "relations": [
+    {
+     "type": "resolves",
+     "target": "D-B078"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B095"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "tomoDD + D-B081 floor",
+     "outcome": "rejected",
+     "reason": "Sharper cores but larger tails; first-round lead came from a leak."
+    },
+    {
+     "option": "GrowClust3D",
+     "outcome": "rejected",
+     "reason": "Largest tails, events above the surface."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B099",
+   "date": "2026-11-26",
+   "time": "06:27",
+   "title": "v0.4.2: no self-paired differential times, patched tomoDD; ensemble and calibration rerun",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "Ensemble failures traced to 8 self-paired dt.ct events (tomoDD reads them as absolute times of 0 s) and a NaN in tomoDD's coordinate transform near the tile axis. Fixed both; v0.4.2 registered; ensemble rerun, 100/100 members.",
+   "trigger": "4 of 100 v0.4.1 ensemble members failed; root-cause diagnosis.",
+   "relations": [
+    {
+     "type": "amends",
+     "target": "D-B083"
+    },
+    {
+     "type": "amends",
+     "target": "D-B094"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Keep v0.4.1, fix crashes only",
+     "outcome": "rejected",
+     "reason": "Self-pair bias would stay in the model and every member."
+    },
+    {
+     "option": "Also rebuild v6.0 on v0.4.2",
+     "outcome": "rejected",
+     "reason": "Local difference; v6.0 stays on v0.4.1."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B100",
+   "date": "2026-11-26",
+   "time": "08:29",
+   "title": "Register v6.0 as built; Axial SSST depth bias fixed in v6.1",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "v6.0 improves on v5.1 almost everywhere but SSST deepens Axial by 0.22 km (66 % of A-B within 2 km of seafloor vs 81 %). Registered with the bias stated; v6.1 tests station terms on literature depths too.",
+   "trigger": "v6.0 acceptance report: Axial depth target not met.",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B096"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B098"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Hold v6.0 for an Axial test",
+     "outcome": "deferred",
+     "reason": "Done as the v6.1 depth test."
+    },
+    {
+     "option": "No SSST at Axial in v6.0",
+     "outcome": "rejected",
+     "reason": "Untested region rule."
+    }
+   ],
+   "key": true
+  },
+  {
+   "id": "D-B101",
+   "date": "2026-11-26",
+   "time": "08:58",
+   "title": "Clean the private Zenodo draft",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "products",
+   "summary": "Draft full (100/100). Slim velocity models (v0.1.0-v0.4.2 netCDF, no grids), fault surfaces v1 instead of v0, amplitude and PickBlue parts zipped: 44 files, then v6.0 added.",
+   "trigger": "PI: clean files that will not be reused; reports reproduce them.",
+   "relations": [
+    {
+     "type": "follows_from",
+     "target": "D-B099"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Also drop amplitudes",
+     "outcome": "rejected",
+     "reason": "Days of waveform processing to recompute."
+    }
+   ],
+   "key": false
   }
  ],
  "forks": [
@@ -2426,7 +2553,8 @@
     "D-B032",
     "D-B039",
     "D-B077",
-    "D-B094"
+    "D-B094",
+    "D-B099"
    ],
    "current": "Synthetic gate: hypocentres, Vp/Vs calibrated, Vp, Vs too narrow; real 100-member run on v0.4.1, Vp, Vs spreads inflated (rounded up)."
   },
@@ -2468,7 +2596,8 @@
     "D-B064",
     "S-05",
     "D-B078",
-    "D-B083"
+    "D-B083",
+    "D-B084"
    ],
    "current": "B5 code choice on CC data pending (D-B078); tomoDD's surface floor also runs in the v0.4.1 inversion; CC times for every family (D-B093)."
   },
@@ -2501,7 +2630,9 @@
     "D-B080",
     "D-B082",
     "D-B083",
-    "D-B097"
+    "D-B097",
+    "D-B099",
+    "D-B100"
    ],
    "current": "Models v0.4.0 (base), v0.4.1 (floor in the inversion); catalogs v5.0, v5.1, v5.2 = B5, v6.0 on v0.4.1 cleared to run, v6.1 next; private Zenodo."
   },
@@ -2530,7 +2661,8 @@
     "D-B095",
     "D-B096",
     "D-B097",
-    "D-B098"
+    "D-B098",
+    "D-B100"
    ],
    "current": "NLL-SSST 9999 -> 16 -> 8 -> 4 km, then coherence; chosen on held-out stations in 5 clusters independent of the D-B078 sets."
   },
@@ -2545,5 +2677,5 @@
    "current": "No at iter_lim 3000 (istop 7); converged run (istop 2) lowers offshore ML up to 0.68; v4.1 and v5.1 recomputed (PR #45)."
   }
  ],
- "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B083 and D-B090 to D-B098; D-B084 to D-B089 are reserved for session -18 and not yet in the register) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
+ "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B084 and D-B090 to D-B101; D-B085 to D-B089 are reserved for session -18) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
 }

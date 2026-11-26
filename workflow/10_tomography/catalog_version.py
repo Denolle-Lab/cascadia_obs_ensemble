@@ -139,9 +139,8 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
         n["depth_quality"], n["event_flag"] = flags(n)
         c = pd.concat([c, n], ignore_index=True)
     # magnitudes: v4.1 Route A table (converged, D-B091; its md5 is checked); Ian's v4 column is dropped
-    if P.get("v4_1_magnitudes_md5"):
-        assert md5(P["v4_1_magnitudes"]) == P["v4_1_magnitudes_md5"], \
-            f"{P['v4_1_magnitudes']}: md5 differs from params v4_1_magnitudes_md5"
+    if P.get("v4_1_magnitudes_md5") and md5(P["v4_1_magnitudes"]) != P["v4_1_magnitudes_md5"]:
+        raise SystemExit(f"{P['v4_1_magnitudes']}: md5 differs from params v4_1_magnitudes_md5; refusing to build the bundle")
     m = pd.read_csv(P["v4_1_magnitudes"]).set_index("event_id")
     for k in MAG_COLS:
         c[k] = c.ID.map(m[k])
@@ -213,7 +212,7 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
   run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone).
 """ + "".join(f"* {x}\n" for x in V.get("method_notes", [])) + TIER_U_TEXT[tier_u] + f"""
 * Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
-  hypocentres{" (station-term inversion solved exactly, D-B091)" if "converged" in str(P["v4_1_magnitudes"]) else ""};
+  hypocentres{f" ({P['v4_1_magnitudes_note']})" if P.get("v4_1_magnitudes_note") else ""};
   they will be recomputed with the new hypocentres in a later version.
 
 ## Counts

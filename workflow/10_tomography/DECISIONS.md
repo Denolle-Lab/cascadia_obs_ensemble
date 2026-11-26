@@ -990,3 +990,18 @@ events differed between the two bundles (median |dM| 0.023, p95 0.26, max 2.14).
 converged magnitudes (as v6.0); catalog_v5.zip is rebuilt once more (session -18) together with the six minor review fixes
 (checks in magnitudes: catalog mode, 900003 label, docstring, v6.0 tier pointer, final zip md5 in summaries, upload note).
 PR #49 merged as is (f7a87b11); the fixes come as a small follow-up PR.
+
+### D-B103 Catalog v6.1 station terms: NLL-SSST stopped at 16 km, then coherence; near-surface Vp/Vs to be corrected in the model next (adopted, 2026-11-26 14:58, PI; amends D-B096)
+Pre-registered depth test (rule written 13:09, before any run; reloc/v61-depth-test b5bc25eb; report
+/wd1/mdenolle_data/reloc_v61/depth_test/report_depth_test.html): Axial (Waldhauser 2020), Mount St Helens (Hirao 2025),
+western Blanco and Gorda Depression (Lange 2026); ten arms (no terms, static, SSST 16 km, SSST 4 km, null-space-free SSST,
+each with and without coherence); out if held-out CC MAD is worse than the best by > 5 % (95 % paired bootstrap), then the
+smallest mean |depth offset| wins. Only ssst16_coh passed the held-out gate everywhere (ssst4_coh, the v6.0 recipe, fails at
+the Gorda Depression: P +23 ms [+8, +39], S +49 ms [+17, +79]); depth score D = 2.02 km (v6.0 recipe 2.35). Root cause of the
+v6.0 depth drift: the station-term/hypocentre null space (Pujol 1988) - the term common to an event's S arrivals is nearly
+the same unknown as depth (r = -0.94); Loc2ssst absorbs the S-P misfit of the first pass (Axial caldera S terms -40 to -62 ms
+relative to P) and events drift deeper with each pass (Axial +0.22, Puget +0.50, Blanco +0.44 km medians). Removing that
+common term outright over-corrects (21 % of Axial events on the floor), so part of it is a real near-surface Vp/Vs error of
+the model. PI: v6.1 uses SSST 9999 -> 16 km + coherence on the whole margin (D-B098 unchanged); next model task: correct
+near-surface Vp/Vs where the terms need large common S corrections (Axial about -60 ms, Puget about -150 ms), so a later
+version can meet the Axial depth target (the 16 km stop gives about 73 % within 2 km at catalog scale; target 85 %).

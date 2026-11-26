@@ -36,16 +36,17 @@ the registered file path, and --catalog2-label, --catalog2-note, --catalog-befor
 note. A catalog that is not in the registry has to be added to it (and to compare_catalogs.py's tables) first.
 Example, the configuration of 2026-11-26 (branch atlas/v6): model v0.4.2, converged Route A magnitudes (D-B091, the
 default; --mag stored gives the magnitudes before it), relocated catalog v6.0 and Moves from v5.1 from the registry
-(--catalog2 v6.0 --catalog-before v5.1, or the two csv paths, give the same page), Cluster mode on the v5.1 view:
+(--catalog2 v6.0 --catalog-before v5.1, or the two csv paths, give the same page), Cluster mode on the v6.0 view
+(clustering of v6.0 with converged magnitudes, the default; --clusters-catalog v5.1 with the v5.1 folder gives the old one):
   ATLAS_DATA_DIRS=/home/mdenolle/wt_atlas/data LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \\
       workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.2.nc \\
       --out /tmp/cascadia_atlas.html
 The 2026-11-25 command's --catalog-before-label "v4-NLL3D (start model)" is dropped: Moves now start from v5.1, and the
 option would rename it.
 
-Clusters (colour mode Cluster, in the view of --clusters-catalog only): events_zbz_v51.csv.gz and families_zbz_v51.csv
+Clusters (colour mode Cluster, in the view of --clusters-catalog only; default v6.0): events_zbz_<tag>.csv.gz and families_zbz_<tag>.csv (tag v60, v51, ...)
 (and sensitivity_zbz.csv for the Axial caveat) are read from the --clusters folder (default CLU_DIR), else from
-data/catalog_v5/v5.1_analysis/clusters/ in the data folders, else from their committed copies on origin/main (git show);
+data/catalog_v<major>/v<version>_analysis/clusters/ in the data folders, else from their committed copies on origin/main (git show);
 --clusters none leaves the mode out.
 
 A new location run appears on the atlas by adding it to catalogs.yaml with atlas: true, running
@@ -233,11 +234,20 @@ SEL = {"rel": None, "rel_label": None, "rel_note": None, "before": None, "before
 
 # Earthquake families (colour mode Cluster): nearest-neighbour clustering of one registry catalog (main(): --clusters,
 # --clusters-catalog). Files are looked up in CLU["dir"], then data/<CLU_REPO>/ in the data folders, then on CLU_GIT_REF.
-CLU_DIR = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/clusters")
-CLU_REPO = ("catalog_v5", "v5.1_analysis", "clusters")
+CLU_DIR = Path("/wd1/mdenolle_data/catalog_v6/v6.0_analysis/clusters")
+CLU_REPO = ("catalog_v6", "v6.0_analysis", "clusters")
 CLU_GIT_REF = "origin/main"
-CLU = {"dir": CLU_DIR, "cat": "v5.1", "events": "events_zbz_v51.csv.gz", "families": "families_zbz_v51.csv",
-       "sensitivity": "sensitivity_zbz.csv"}
+CLU = {"dir": CLU_DIR, "cat": "v6.0", "events": "events_zbz_v60.csv.gz", "families": "families_zbz_v60.csv",
+       "sensitivity": "sensitivity_zbz.csv", "repo": CLU_REPO}
+
+
+def clu_for(cat):
+    """File names and repository folder of the clustering of a registry catalog: v5.1 -> events_zbz_v51.csv.gz,
+    families_zbz_v51.csv in data/catalog_v5/v5.1_analysis/clusters (no fallback to another catalog's files)."""
+    v = cat.lstrip("v")
+    tag = "v" + v.replace(".", "")
+    return dict(cat=cat, events=f"events_zbz_{tag}.csv.gz", families=f"families_zbz_{tag}.csv",
+                repo=(f"catalog_v{v.split('.')[0]}", f"v{v}_analysis", "clusters"))
 CLU_CLS = ["background", "mainshock-aftershock", "swarm", "multiplet", "linked_to_single", "excluded"]   # event class codes 0-5
 # 12 colours for the families (sRGB on the dark page): picked to maximise the smallest OKLab distance between any two,
 # under normal vision and simulated protan, deutan and tritan vision, and from the background grey (#6b6b6b)
@@ -249,12 +259,12 @@ def clu_file(name: str):
     """A clustering output file: (path or bytes buffer, source), or (None, None) when none of the places has it."""
     if CLU["dir"] is not None and (Path(CLU["dir"]) / name).exists():
         return Path(CLU["dir"]) / name, str(Path(CLU["dir"]) / name)
-    f = dd(*CLU_REPO, name)
+    f = dd(*CLU["repo"], name)
     if f.exists():
         return f, str(f)
     import io
     import subprocess
-    spec = f"{CLU_GIT_REF}:data/{'/'.join(CLU_REPO)}/{name}"
+    spec = f"{CLU_GIT_REF}:data/{'/'.join(CLU['repo'])}/{name}"
     r = subprocess.run(["git", "-C", str(ROOT), "show", spec], capture_output=True)
     return (io.BytesIO(r.stdout), f"git {spec}") if r.returncode == 0 and r.stdout else (None, None)
 
@@ -804,8 +814,8 @@ def main(argv=None):
     ap.add_argument("--catalog-before", help="catalog the Moves layer starts from: a registry id or the registered file path "
                     "(default: registry atlas_moves_from)")
     ap.add_argument("--catalog-before-label", help="its name on the page (default: its registry label)")
-    ap.add_argument("--clusters", default=str(CLU_DIR), help="folder of the clustering outputs (events_zbz_v51.csv.gz, "
-                    f"families_zbz_v51.csv, sensitivity_zbz.csv; default {CLU_DIR}; files missing there are read from "
+    ap.add_argument("--clusters", default=str(CLU_DIR), help="folder of the clustering outputs (events_zbz_<tag>.csv.gz, "
+                    f"families_zbz_<tag>.csv, sensitivity_zbz.csv; tag from --clusters-catalog, e.g. v60; default {CLU_DIR}; files missing there are read from "
                     f"data/{'/'.join(CLU_REPO)}/ or {CLU_GIT_REF}); 'none': no Cluster colour mode")
     ap.add_argument("--clusters-catalog", default=CLU["cat"], help="registry id of the catalog whose locations the "
                     f"families were computed on; the Cluster mode is offered in its view only (default {CLU['cat']})")
@@ -817,7 +827,7 @@ def main(argv=None):
     print("building atlas data")
     SEL.update(rel=a.catalog2, rel_label=a.catalog2_label, rel_note=a.catalog2_note, before=a.catalog_before,
                before_label=a.catalog_before_label)
-    CLU.update(dir=None if a.clusters.lower() == "none" else Path(a.clusters), cat=a.clusters_catalog)
+    CLU.update(dir=None if a.clusters.lower() == "none" else Path(a.clusters), **clu_for(a.clusters_catalog))
     ev, ev_meta = events()
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()

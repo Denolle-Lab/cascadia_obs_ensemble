@@ -336,7 +336,7 @@ def run_block(block):
     A.log(f"{block}: wrote {out_pq.name} ({off} rows) and {out_dt.name} ({n_pairs_dt} pairs, {n_lines} lines) "
           f"{time.time() - t0:.0f} s", logf)
     S = qc_block(block, R, tri, q, total_paths, P, cfg, dict(pairs=n_pairs_dt, lines=n_lines))
-    A.write_state("write", **{block: dict(rows=int(len(R)), accepted=int(R.above.sum()), dt_pairs=n_pairs_dt,
+    A.write_state(f"write_{block}", **{block: dict(rows=int(len(R)), accepted=int(R.above.sum()), dt_pairs=n_pairs_dt,
                                           dt_lines=n_lines, s=round(time.time() - t0))})
     A.log(f"{block}: QC done {time.time() - t0:.0f} s", logf)
     return S
@@ -486,14 +486,16 @@ def main():
     ap.add_argument("--redo", action="store_true")
     a = ap.parse_args()
     blocks = A.BLOCKS if a.all else a.blocks.split(",")
-    st = A.read_state("write")
+    # one state file per block (state/write_<block>.json): several write processes can run side by side
     for b in blocks:
-        if not a.redo and b in st and (A.OUT / f"cc_{b}.parquet").exists() and (A.QC / f"summary_{b}.json").exists():
+        if (not a.redo and A.read_state(f"write_{b}") and (A.OUT / f"cc_{b}.parquet").exists()
+                and (A.QC / f"summary_{b}.json").exists()):
             A.log(f"{b}: done before, skipped")
             continue
         run_block(b)
-    st = A.read_state("write")
-    A.write_state("write", done=all(b in st for b in blocks if part_files(b)))
+    done = all(A.read_state(f"write_{b}") for b in A.BLOCKS if part_files(b))
+    if done:
+        A.write_state("write", done=True)
 
 
 if __name__ == "__main__":

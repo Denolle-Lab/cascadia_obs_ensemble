@@ -423,7 +423,10 @@ const TIERS = "ABCDU";                       // tier codes 0-4 = A-D, U (not loc
                                              // 5 = located, catalog without tier classes; 6 = no hypocentre in this catalog
                                              // (loc_source none, catalog v5.1+): not drawn in its view nor in Compare
 const CP = CATS.map(c => {
-  if (!c.key) return { lon: EV.lon, lat: EV.lat, dep: EV.dep, tier: null, surf: null };
+  // magnitudes (D-B102: each catalog with the magnitudes computed on its own hypocentres): c.magk names the arrays,
+  // null = the reference catalog's (the catalog has none of its own, or they are the same)
+  const mag = c.magk ? EV[c.magk + "_mag"] : EV.mag, mty = c.magk ? EV[c.magk + "_mty"] : EV.mtype;
+  if (!c.key) return { lon: EV.lon, lat: EV.lat, dep: EV.dep, tier: null, surf: null, mag, mty };
   const dl = EV[c.key + "_dlon"], da = EV[c.key + "_dlat"], de = EV[c.key + "_dep"], dz = EV[c.key + "_ddep"];
   const lon = new Float32Array(N), lat = new Float32Array(N), dep = new Float32Array(N);
   for (let i = 0; i < N; i++) {
@@ -432,7 +435,7 @@ const CP = CATS.map(c => {
     dep[i] = k ? NaN : de ? de[i] : EV.dep[i] + dz[i] / 100;   // exact depth: 10 m steps could put a near-surface event above it
   }
   return { lon, lat, dep, tier: EV[c.key + "_tier"], nph: EV[c.key + "_nph"], gap: EV[c.key + "_gap"], rms: EV[c.key + "_rms"],
-    surf: EV[c.key + "_surf"] || null };       // the catalog's own solid surface (km, up; registry own_surface), NaN = none
+    surf: EV[c.key + "_surf"] || null, mag, mty };   // the catalog's own solid surface (km, up; registry own_surface), NaN = none
 });
 const ANY_TIERS = CATS.some(c => c.has_tiers);
 const isLoc = (k, i) => !Number.isNaN(CP[k].lon[i]);
@@ -452,6 +455,7 @@ const cdv = new Float32Array(N).fill(0);     // value coloured in Compare mode; 
 // puts them, flagged (eair) and greyed or hidden with "Above surface"; nothing is moved.
 const eflt = new Float32Array(N);            // fault index of each event (-1 = none)
 const esurf = new Float32Array(N), edep = new Float32Array(N), eair = new Float32Array(N);   // surface elev (km, up), displayed depth (km bsl), above-ground flag
+const emty = Uint8Array.from(EV.mtype);       // magnitude type of the catalog shown (codes of fmtM)
 const ex = new Float32Array(N), ez = new Float32Array(N), emag = new Float32Array(N), eflag = new Float32Array(N), esig = new Float32Array(N), enew = new Float32Array(N);
 for (let i = 0; i < N; i++) {
   ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]);
@@ -504,7 +508,8 @@ const depAttr = new THREE.BufferAttribute(edep, 1), airAttr = new THREE.BufferAt
 evGeo.setAttribute("dep", depAttr);
 evGeo.setAttribute("air", airAttr);
 evGeo.setAttribute("day", new THREE.BufferAttribute(EV.day, 1));
-evGeo.setAttribute("mag", new THREE.BufferAttribute(emag, 1));
+const magAttr = new THREE.BufferAttribute(emag, 1);   // magnitudes of the catalog shown (applyView)
+evGeo.setAttribute("mag", magAttr);
 evGeo.setAttribute("qc", new THREE.BufferAttribute(eflag, 1));
 evGeo.setAttribute("sig", new THREE.BufferAttribute(esig, 1));
 evGeo.setAttribute("nw", new THREE.BufferAttribute(enew, 1));
@@ -1336,6 +1341,7 @@ function applyView() {
   const c = viewCat(), P = CP[c], R = CP[0], S = catSurf(c), ts = tierSrc();
   for (let i = 0; i < N; i++) {
     const ok = isLoc(c, i);
+    emag[i] = P.mag[i] === -32768 ? -9 : P.mag[i] / 100; emty[i] = P.mty[i];   // the shown catalog's magnitudes
     elon[i] = ok ? P.lon[i] : R.lon[i]; elat[i] = ok ? P.lat[i] : R.lat[i]; ecat[i] = ok ? P.dep[i] : R.dep[i];
     ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]); evPos[i * 3] = ex[i]; evPos[i * 3 + 2] = ez[i];
     esurf[i] = S[i];
@@ -1354,7 +1360,7 @@ function applyView() {
     CMPQ.n = dh.length; CMPQ.dh = quant(dh, [0.5, 0.9]); CMPQ.dz = quant(dz, [0.1, 0.5, 0.9]);
   }
   setDv();
-  evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true;
+  evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true; magAttr.needsUpdate = true;
   const refView = !F.cmp && c === 0, dbtn = $("segDatum").querySelectorAll("button");
   if (!refView && !F.datumLocked) { F.datum4 = F.datum; F.datumLocked = true; }
   if (refView && F.datumLocked) { F.datum = F.datum4; F.datumLocked = false; }
@@ -1670,7 +1676,7 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
     ${catNotes()}
-    <div class="attribution">Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
+    <div class="attribution">Magnitudes (${catName(viewCat())}): ${CATS[viewCat()].msrc ?? M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
       Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;
   $("legSrc").ontoggle = () => { LEG_SRC.open = $("legSrc").open; layoutPanels(); };
@@ -1683,7 +1689,7 @@ let mouse = null;
 function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px";
   tip.style.top = Math.max(8, Math.min(innerHeight - Math.max(160, tip.offsetHeight + 8), y + 12)) + "px"; }   // long tooltips stay on screen
 const hideTip = () => tip.style.opacity = 0;
-const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][EV.mtype[i]] ?? ""}`;
+const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][emty[i]] ?? ""}`;
 const locTxt = (k, i) => isLoc(k, i) ? `${CP[k].lat[i].toFixed(3)}°N ${(-CP[k].lon[i]).toFixed(3)}°W · ${CP[k].dep[i].toFixed(1)} km`
   : `<span class="caveat">${noHypo(k, i) ? "no hypocentre" : "not located"}</span>`;
 const tierTxt = (k, i) => { if (!CP[k].tier) return ""; const t = CP[k].tier[i]; return t === 5 ? "" : ` · tier <b style="color:${TIER_RGB[t]}">${TIERS[Math.min(t, 4)]}</b>`; };

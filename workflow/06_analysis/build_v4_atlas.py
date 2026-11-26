@@ -419,7 +419,8 @@ def events():
         flt = np.where(k.notna(), k.fillna(0), 65535).astype("<u2")
         print(f"  events on a fault: {(flt < 65535).sum():,}")
     arr["flt"] = flt
-    cat_arr, cats = catalogs(c["ID"], c[["latitude", "longitude", "depth(km)"]].to_numpy(float))
+    cat_arr, cats = catalogs(c["ID"], c[["latitude", "longitude", "depth(km)"]].to_numpy(float),
+                             ref_mag=(arr["mag"], arr["mtype"], msrc))
     arr.update(cat_arr)
     clu_arr, clu = clusters(c["ID"], cats["list"])
     arr.update(clu_arr)
@@ -479,7 +480,38 @@ def _registry_id(x: str, ents: dict) -> str:
                      "workflow/11_compare/compare_catalogs.py --only <id>, then build the atlas.")
 
 
-def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
+MTYPE = {"ML": 0, "Mw": 1, "Mw_cal": 2}      # mtype codes of the page (3 = Ian's column, 255 = none)
+
+
+def catalog_mags(e: dict, ids: pd.Series):
+    """The magnitudes a registry catalog file carries (columns ID, M, M_type, magnitude_source; D-B102: each catalog
+    with the magnitudes computed on its own hypocentres), on the reference event order: int16 M*100 (-32768 = none),
+    uint8 mtype, and a sentence for the legend. None when the file has no M column (the view then shows the reference
+    catalog's magnitudes)."""
+    f = Path(e.get("file", ""))
+    f = f if f.is_absolute() else ROOT / f
+    if not f.is_file():
+        return None
+    head = pd.read_csv(f, nrows=0).columns
+    if not {"ID", "M", "M_type"} <= set(head):
+        return None
+    m = pd.read_csv(f, usecols=[k for k in ("ID", "M", "M_type", "magnitude_source") if k in head], low_memory=False)
+    m = m.drop_duplicates("ID").set_index("ID").reindex(ids.to_numpy())
+    ok = m["M"].notna().to_numpy()
+    m16 = np.where(ok, np.round(m["M"].to_numpy(float) * 100), -32768).astype("<i2")
+    mty = np.where(ok, m["M_type"].map(MTYPE).fillna(0).to_numpy(), 255).astype("u1")
+    if "magnitude_source" in m:
+        vc = m.loc[ok, "magnitude_source"].fillna("unlabelled").value_counts()
+        src = "; ".join(f"{k} {v:,}" for k, v in vc.items())
+        if any(str(k).endswith("_converged") for k in vc.index):     # short labels of catalog_version.py
+            src += (" (vX.Y_converged: the converged Route A table computed with the hypocentres of catalog vX.Y, "
+                    "v4.1 = the v4 hypocentres; D-B091, D-B102)")       # no angle brackets: the page sets it as HTML
+    else:
+        src = "the M column of the catalog file"
+    return m16, mty, f"Route A preferred magnitude of catalog {e['id']}: {src} ({ok.sum():,} of {len(ids):,} events)"
+
+
+def catalogs(ids: pd.Series, ref_xyz: np.ndarray, ref_mag=None) -> tuple[dict, dict]:
     """Registry catalogs with atlas: true (plus the catalogs chosen with --catalog2 / --catalog-before). The reference
     catalog (registry 'reference') gives the event set and the base positions (the v4 csv read in events()); every other
     catalog is stored on the same event order: lon/lat as int16 offsets from the reference in 1e-4 deg (-32768 = not
@@ -487,8 +519,10 @@ def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
     (NaN = not located; 10 m steps could put an event just under the surface above it), tier 0-4 = A-D, U,
     5 = located without a tier class, 6 = no hypocentre in this catalog (loc_source none: not drawn in its view nor in
     Compare); nphs; gap in 2 deg and rms in 10 ms steps (uint8, 255 = none); with own_surface: true in the registry, the
-    catalog's own solid surface (float32 km, up; NaN = none) for its above-surface test. Arrays are named c<k>_* with k
-    the position in the list. Returns the arrays and dict(list=<catalog metadata>, rel=<index>, moves=dict(from, to) | None)."""
+    catalog's own solid surface (float32 km, up; NaN = none) for its above-surface test. Magnitudes (D-B102): a catalog
+    whose file has M columns (catalog_mags) gets c<k>_mag / c<k>_mty unless they equal the reference magnitudes
+    (ref_mag = (mag, mtype, sentence) of events()) or an earlier catalog's (meta magk = the key whose arrays it uses,
+    None = the reference's; msrc = legend sentence). Arrays are named c<k>_* with k the position in the list. Returns the arrays and dict(list=<catalog metadata>, rel=<index>, moves=dict(from, to) | None)."""
     import yaml
     if not REGISTRY.exists():
         print(f"  catalogs: {REGISTRY} missing, reference only")
@@ -510,7 +544,7 @@ def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
         dmax = np.nanmax(np.abs(pref.reindex(ids.to_numpy())[["lat", "lon", "depth"]].to_numpy() - ref_xyz))
         if not dmax < 1e-3:
             raise SystemExit(f"{CMP / ref}.parquet differs from the v4 csv by {dmax}: rerun compare_catalogs.py")
-    arr, cats = {}, []
+    arr, cats, mstore = {}, [], {}
     for k, cid in enumerate(order):
         e = dict(ents[cid])
         if cid == rel_id:
@@ -521,6 +555,7 @@ def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
                     status=e.get("status"), date=str(e.get("date") or ""), parent=e.get("parent"), note=e.get("note"),
                     ref=(k == 0), key=None, has_tiers=False, n_loc=len(ids), n_nohypo=0, num=catalog_numbers(cid, ref))
         if k == 0:
+            meta.update(magk=None, msrc=ref_mag[2] if ref_mag else None)
             cats.append(meta)
             continue
         f = CMP / f"{cid}.parquet"
@@ -557,6 +592,19 @@ def catalogs(ids: pd.Series, ref_xyz: np.ndarray) -> tuple[dict, dict]:
         if own:                                     # the catalog's own solid surface: the atlas tests "above surface" against it
             arr[f"{key}_surf"] = np.where(loc, n["surface_cat_km"].to_numpy(float), np.nan).astype("<f4")
         cnt = {TIERS[j] if j < 5 else ("-" if j == 5 else "none"): int((tier == j).sum()) for j in range(7)}
+        mg = catalog_mags(e, ids) if ref_mag else None
+        magk, msrc = None, (f"catalog {ref} magnitudes (catalog {cid} has none of its own)" if ref_mag else None)
+        if mg:
+            msrc = mg[2]
+            same = lambda a_, b_: np.array_equal(a_[0], b_[0]) and np.array_equal(a_[1], b_[1])
+            if not same(mg, ref_mag):
+                magk = next((k_ for k_, v in mstore.items() if same(mg, v)), None)
+                if magk is None:
+                    magk = key
+                    mstore[key] = mg[:2]
+                    arr.update({f"{key}_mag": mg[0], f"{key}_mty": mg[1]})
+        meta.update(magk=magk, msrc=msrc)
+        print(f"  catalog {cid} magnitudes: " + ("reference arrays" if magk is None else f"arrays {magk}") + f"; {msrc}")
         meta.update(key=key, has_tiers=has_t, n_loc=int(loc.sum()), n_nohypo=int(nohypo.sum()), tiers=cnt, own_surface=own)
         cats.append(meta)
         print(f"  catalog {cid} ({e.get('status')}): {loc.sum():,} of {len(ids):,} reference events located, "
@@ -731,7 +779,7 @@ MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs
 
 # Mc grids (main(): --mc-maps): with the converged magnitudes (D-B091) the converged Mc grids; with --mag stored the
 # Mc grids of the stored magnitudes (data/catalog_v4/mc_maps), so that the map and the events use the same magnitudes
-MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes (D-B091)"}
+MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes of catalog v4.1 (D-B091)"}
 
 
 def mc_grids():

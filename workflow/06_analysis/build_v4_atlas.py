@@ -19,7 +19,9 @@ Layers packed here (gzip + base64 blobs, decoded in the browser with Decompressi
              sampled onto its nodes
   stations   ver5/ver6 station table; plates: PB2002; tensors: ComCat moment tensors 2010-2016
   tomo       (--model) a Track B velocity model netCDF: 3D textures for a depth slice, a vertical cut and the
-             cross-section; nodes without a value (NaN; water and air nodes of models with a medium variable) not drawn
+             cross-section; nodes without a value (NaN; water and air nodes of models with a medium variable) not drawn.
+             The page draws isocontours of the variable shown (slice, cut, section panel) and an optional isosurface
+             from these codes; nothing more is packed for them
 
 Usage (default env, from the repo root):
   LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \
@@ -31,10 +33,11 @@ tier colours of the reference view, end of the Moves layer) and atlas_moves_from
 two catalogs the page singles out; --catalog2 and --catalog-before override them for one build with a registry id or
 the registered file path, and --catalog2-label, --catalog2-note, --catalog-before-label override the registry label and
 note. A catalog that is not in the registry has to be added to it (and to compare_catalogs.py's tables) first.
-Example, the live configuration of 2026-11-25 with model v0.3.2 (relocated catalog v5.1 and Moves from NLL3D-i1 come
-from the registry; --catalog2 v5.1 --catalog-before NLL3D-i1, or the two csv paths, give the same page):
+Example, the live configuration of 2026-11-25 with model v0.4.2 in place of v0.3.2 (2026-11-26; relocated catalog v5.1
+and Moves from NLL3D-i1 come from the registry; --catalog2 v5.1 --catalog-before NLL3D-i1, or the two csv paths, give
+the same page; catalogs, clusters and Moves as the v0.3.2 page):
   ATLAS_DATA_DIRS=/home/mdenolle/wt_atlas/data LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \\
-      workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.3.2.nc \\
+      workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.2.nc \\
       --catalog-before-label "v4-NLL3D (start model)" --out /tmp/cascadia_atlas.html
 
 Clusters (colour mode Cluster, in the view of --clusters-catalog only): events_zbz_v51.csv.gz and families_zbz_v51.csv

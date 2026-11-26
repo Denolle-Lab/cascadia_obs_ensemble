@@ -2,7 +2,7 @@
 
 Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059).
 
-Built 2026-11-24 by workflow/10_tomography/catalog_version.py (decisions D-B058, D-B059 in
+Built 2026-11-26 by workflow/10_tomography/catalog_version.py (decisions D-B058, D-B059 in
 workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; not for redistribution.
 
 ## What it is
@@ -17,7 +17,8 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
   hypocentre (loc_source v4). The v4 depths come from a location without topography or water and are often above the
   surface; they are kept, with the above_surface flag, for this version only (D-B059).
 * Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
-  hypocentres; they will be recomputed with the new hypocentres in a later version.
+  hypocentres (station-term inversion solved exactly, D-B091);
+  they will be recomputed with the new hypocentres in a later version.
 
 ## Counts
 
@@ -60,13 +61,10 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 
 ## Known limits of this version
 
-* Interim (D-B058): the NonLinLoc workflow fixes of round 2 (station reach, upward pull towards the surface, the 80 km
-  grid floor, tier U) are not in it; v5.1 will be the rerun with them, v5.2 the tomoDD relative relocation.
-* About 4 % of the located events have a likelihood that peaks above the surface; NonLinLoc's topography floor holds
-  them at the surface (D-B056), so their depth is set by the floor, not by the data.
+* Interim (D-B058): the NonLinLoc workflow fixes of round 2 (station reach, upward pull towards the surface, the 80 km grid floor, tier U) are not in it; v5.1 will be the rerun with them, v5.2 the tomoDD relative relocation.
+* About 6 % of the located events (44 % in the JdF ridge and Endeavour regions) have depths set by NonLinLoc's topography floor (D-B056), not by the data (round-2 report, data/tomo_v1/above_surface/above_surface_round2.html).
+* Arrivals at stations beyond about 160 km were not used (station reach of the location grids): 6.75 % of the arrivals; 25,054 events lost at least one.
 * Event 172114: located with its v4.0 picks; v4.1 added 160 picks to it that this run did not use.
-* Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local
-  studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: 28 % of the 3,474 tier A-B Axial events are within 2 km of the seafloor (median 2.4 km below it), against 90 % in Waldhauser et al. (2020).
-  Region medians against the previous relocations: b4_acceptance.md.
+* Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: 28 % of the 3,474 tier A-B Axial events are within 2 km of the seafloor (median 2.4 km below it), against 90 % in Waldhauser et al. (2020). Region medians against the previous relocations: b4_acceptance.md.
 * Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km).
 * Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md).

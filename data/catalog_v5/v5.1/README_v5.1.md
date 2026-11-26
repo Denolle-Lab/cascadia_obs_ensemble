@@ -2,7 +2,7 @@
 
 Catalog v5.1 (D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1 after the round-2 workflow fixes (every arrival used through wide travel-time grids, five-pick events located, a deep pass below 80 km, one GMRT/earth_relief solid surface); events NonLinLoc does not locate have no hypocentre.
 
-Built 2026-11-25 by workflow/10_tomography/catalog_version.py (decisions D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075 in
+Built 2026-11-26 by workflow/10_tomography/catalog_version.py (decisions D-B055, D-B056, D-B057, D-B058, D-B065, D-B066, D-B067, D-B068, D-B069, D-B071, D-B072, D-B073, D-B074, D-B075 in
 workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; not for redistribution.
 
 ## What it is
@@ -24,7 +24,8 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 * Events that NonLinLoc could not locate (tier U) have no hypocentre in this version (loc_source none: empty
   time, lat, lon and depth); u_reason says why. Their picks are in the picks file.
 * Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
-  hypocentres; they will be recomputed with the new hypocentres in a later version.
+  hypocentres (station-term inversion solved exactly, D-B091);
+  they will be recomputed with the new hypocentres in a later version.
 
 ## Counts
 

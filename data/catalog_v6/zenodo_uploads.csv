@@ -1,0 +1,2 @@
+date,zenodo_draft,file,md5,size_bytes,versions,note
+2026-11-26,23084158,catalog_v6.zip,0772fc7b7bf6254a619af358b4e2519f,76472939,6.0,"private draft (not submitted); catalog v6.0 (D-B079, D-B100): NLL-SSST + coherence in model v0.4.1, re-timed and clock-corrected picks v4.1tc bundled; README states the Axial depth bias, model v0.4.1 not v0.4.2, Mendocino without coherence"

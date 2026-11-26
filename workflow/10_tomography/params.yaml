@@ -767,6 +767,61 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "Axial: {axial}."
         - "Blanco: with the shallow-crust rule (D-B073) depths are about 1 km deeper relative to the Lange et al. (2026) OBS catalog than without it if that catalog's depths are below sea level; its datum is not stated (below the seafloor would reverse the comparison)."
 
+    "6.0":
+      series: v6                   # bundle catalog_v6.zip, registry data/catalog_v6/registry.csv
+      out: /wd1/mdenolle_data/catalog_v6
+      b4_run: v6.0                 # NLL-SSST + coherence relocation of the v6 chain (reloc/v6-prep, b4_v6_reloc.py, b4_v6_catalog.py)
+      b4_catalog: /wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv          # md5 ae77ad3c66aa6fbaa48528660a1c09ec (v6.0_for_session18.md)
+      terms_file: /wd1/mdenolle_data/reloc_v6/v60/terms/station_terms.in            # static terms of it0, used by the deep and edge passes only
+      model: 0.4.1
+      note: "Catalog v6.0 (D-B079, D-B100): catalog v4.1 events relocated with NonLinLoc in the re-inverted merged model v0.4.1, with source-specific station terms (NLL-SSST) and waveform-coherence relocation (NLL-coherence), on the re-timed and clock-corrected picks (v4.1tc); events NonLinLoc does not locate have no hypocentre."
+      surface_source: merged       # D-B068 (same floor file as v5.1)
+      tier_u: none
+      decisions: [D-B055, D-B068, D-B079, D-B082, D-B083, D-B084, D-B090, D-B091, D-B095, D-B096, D-B097, D-B098, D-B099, D-B100]
+      flags: [floor_limited, far_only, deep_pass, edge_pass, five_phase, coherence_relocated, coherence_skipped_region]
+      magnitudes: catalog          # keep the catalog's converged magnitudes and magnitude_source (D-B091; v6.0_for_session18.md)
+      magnitude_source_v41: "v4.1_converged (D-B091, v4 hypocentres)"   # for v4.1 additions left out of the relocation
+      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (D-B091; M, M_type ML / Mw / Mw_cal): the catalog v5.1 table (computed with v5.1 hypocentres) where it has the event, else the v4.1 table (v4 hypocentres); magnitude_source names which. They are not recomputed with the v6.0 hypocentres."
+      hypocentres_text: "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model} (velocity_models.zip in this record), with source-specific station terms and coherence relocation (below), run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone). station_terms_v{version}.in: the static terms of the first pass, used only by the deep and edge passes."
+      picks_file: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv
+      picks_md5: 1b21ab1c2cf5aba8b48c64a58fc37356
+      picks_note: "Picks: Cascadia_picks_catalog_v4.1tc.csv.gz in this folder: the v4.1 picks re-timed on drifting channels (v4.1t, D-B072/D-B075) plus the clock-drift corrections of MH07.XD and MG07.XD (spring 2016, D-B090; columns clock_correction_s, clock_correction_sd_s, clock_epoch, clock_flag, total_correction_s). The other candidate clock epochs of the station screen are not applied (PI review, v6.1). Method: pick_timing_README.md."
+      extra_files:
+        - {path: /wd1/mdenolle_data/reloc_v6/catalog/acceptance_v6.0.html, name: b4_acceptance_v6.0.html}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/README.md, name: pick_timing_README.md}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/confirmed_epochs.csv, name: pick_timing_confirmed_epochs.csv}
+      columns_from: "5.1"          # v5.1 column descriptions, then these added or changed
+      columns:
+        "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091); magnitude_source names the table"
+        "magnitude_source": "v5.1_converged (computed with v5.1 hypocentres) or v4.1_converged (v4 hypocentres), D-B091; empty without a magnitude"
+        "rms_unweighted": "unweighted rms of the residuals of the arrivals used (s); rms is NonLinLoc's EDT-weighted value (D-B069)"
+        "shift_h_v51_km, shift_z_v51_km": "change from catalog v5.1 (horizontal; depth, positive = deeper), when both are located"
+        "model_version": "velocity model of the travel-time grids (v0.4.1)"
+        "loc_pass": "NonLinLoc run of the hypocentre: ssst_it4 (final SSST pass), coherence, deep or edge"
+        "station_terms": "ssst (NLL-SSST, characteristic distances 9999-16-8-4 km) or static (deep and edge passes)"
+        "ssst_char_km": "final Loc2ssst characteristic distance of the event's station terms (4 km; empty for static rows)"
+        "coherence_relocated": "relocated by the NLL-coherence stage (compact location density, Len3 <= 5 km)"
+        "coherence_partners": "neighbours with pair coherence >= 0.5 and a compact density, stacked for the event"
+        "coherence_skipped_region": "compact event not coherence-relocated because it lies in the Mendocino region (D-B098); SSST location kept"
+        "edge_pass": "hypocentre from the edge pass (event rejected at a lateral face of its SSST tile box)"
+        "n_picks_retimed": "picks of the event re-timed from a short waveform read (D-B072/D-B075)"
+        "n_picks_clock_corrected": "picks of the event corrected for a confirmed station clock drift (D-B090)"
+        "review_problems, review_auto_indicators": "v5.1 location review: problem groups and automatic indicators, ';'-joined (indicators, not verdicts; D-B097)"
+        "review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km": "reviewer verdict columns, empty in this version (D-B097)"
+      method_notes:
+        - "Model v0.4.1 (D-B083): the merged tomography model re-inverted with the re-timed picks (v0.4.0, D-B082) and the tomoDD surface floor (D-B081) in the inversion. Travel-time grids as for v5.1: merged solid surface (D-B068), fine and wide grids, deep pass below 80 km (D-B067)."
+        - "Source-specific station terms (NLL-SSST, Loc2ssst; Lomax & Savvaidis 2022): four passes with characteristic distances 9999, 16, 8 and 4 km (D-B095, D-B096) replace v5.1's static terms; the deep and edge passes use the static terms of the first pass (column station_terms)."
+        - "Coherence relocation (NLL-coherence, Lomax & Savvaidis 2022): an event with a compact location density is relocated on its density stacked with those of its waveform-coherent neighbours (pair coherence from waveform cross-correlation, D-B040), the relative-relocation step chosen for B5 (D-B078, D-B084). Not applied in the Mendocino region (D-B098; column coherence_skipped_region)."
+        - "Edge pass: events rejected at a lateral face of their tile box are located again in a box centred on them (column edge_pass)."
+        - "event_flag also marks events that ComCat lists as explosions, quarry blasts or other non-earthquakes (D-B071)."
+        - "review_* columns: the automatic indicators of the v5.1 location review (D-B097); no reviewer verdict is applied in this version."
+      known_limits:
+        - "Axial depths: {axial}. The SSST passes deepen Axial by 0.22 km (median; before them 82.7 % of tier A-B events were within 2 km of the seafloor, v5.1 81 %, target 85 %). Median depth changes from the SSST passes elsewhere: Puget +0.29, Mendocino +0.17, Blanco +0.15, Gorda -0.22, offshore forearc -0.15 km. Blanco Ridge and the Gorda Depression come out deeper against Lange et al. (2026). To be fixed in v6.1 (D-B100); acceptance report: b4_acceptance_v6.0.html."
+        - "Model v0.4.1, not v0.4.2 (D-B099): v0.4.2 removes event self-pairs from the inversion data and adds a tomoDD numerical fix; the difference is local (Vs near 29 km depth under Vancouver Island)."
+        - "No coherence relocation in the Mendocino region (D-B098; 11,148 events keep their final SSST location): on the one Mendocino test cluster coherence made the held-out fit worse. Provisional."
+        - "Deferred to v6.1 (D-B097): the weekly artificial signal on UW analog stations near Mount St Helens (HSR, EDM, STD.UW; candidate false deep events), the other candidate station clock epochs (including the Axial cabled array, Dec 2014 - Jan 2015), and the reviewer verdicts (review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km empty)."
+        - "Magnitudes are not recomputed with the v6.0 hypocentres (magnitude_source)."
+        - "floor_limited, far_only and five_phase events have poorly constrained depths, as in v5.1 (counts above)."
 b5_test:                           # D-B048: relative relocation tested before B5, tomoDD-SE (velocity frozen) vs GrowClust3D
   out: /wd1/mdenolle_data/b5_test  # large files; scripts b5_*.py, note notes/b5_blanco_test.md
   model_version: 0.3.0             # D-B047 registry; tomoDD MOD from the netCDF nodes, GrowClust3D from the B4 grids

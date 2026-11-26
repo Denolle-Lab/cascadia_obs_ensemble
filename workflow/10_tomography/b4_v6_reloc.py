@@ -80,6 +80,7 @@ NLL = RN.NLL
 LOC2SSST = S.BIN / "Loc2ssst"
 TEMPLATE = TA / "nlloc_template.in"
 SCHEDULE = (9999.0, 16.0, 8.0, 4.0)       # D-B096
+V51_CATALOG = Path(os.environ.get("V6_V51_CATALOG", "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"))
 NPASS = len(SCHEDULE)                       # NLLoc passes it0..it4; it4 is the final SSST pass
 MARGIN = 20.0                               # km: SSST tile box = 25 km tile +- MARGIN
 TILE = 25.0
@@ -885,6 +886,17 @@ def cmd_coh(a):
     info = {i: r for i, r in zip(ids, res)}
     located = {i for i, (st, _) in info.items() if st == "LOCATED" and Path(str(files[i])[:-4] + ".octree").exists()}
     compact = {i for i in located if info[i][1] <= S.COH_MAX_SE3}
+    # PI 2026-11-25 (D-B098): no coherence relocation in the Mendocino region, where the held-out test found it
+    # worse (2015 sequence: P +8, S +20 ms); those events keep their final SSST (it4) location. They may still serve
+    # as stacking partners of neighbouring events outside the region. Region = catalog v5.1 label of the v4 epicentre.
+    skip_regions = set(os.environ.get("V6_COH_SKIP_REGIONS", "Mendocino").split(",")) - {""}
+    reg = pd.read_csv(V51_CATALOG, usecols=["ID", "region"]).set_index("ID").region
+    skipped = {i for i in compact if reg.get(i) in skip_regions}
+    compact_all = compact
+    compact = compact - skipped
+    (rd / "coherence_skipped_region.csv").write_text(
+        "ID,region\n" + "".join(f"{i},{reg.get(i)}\n" for i in sorted(skipped)))
+    log(f"coherence: {len(skipped)} compact events skipped in regions {sorted(skip_regions)} (D-B098)")
     coh, cinfo = pair_coherence(cc_dir)
     coh = coh[(coh.coh >= S.COH_MIN) & coh.ID1.isin(located) & coh.ID2.isin(located)]
     nb = {}
@@ -901,7 +913,7 @@ def cmd_coh(a):
         froot = str(files[eid])[:-4]
         wd = rd / tile / f"e{eid}"
         partners = sorted(nb.get(eid, []), reverse=True)
-        n_stack = sum(1 for _, o in partners if o in compact)
+        n_stack = sum(1 for _, o in partners if o in compact_all)
         rows.append((eid, tile, len(partners), n_stack))
         if (wd / "done").exists():
             continue
@@ -932,6 +944,7 @@ def cmd_coh(a):
     tab = pd.DataFrame(rows, columns=["ID", "tile", "partners", "partners_compact"])
     tab.to_csv(rd / "coherence_events.csv", index=False)
     summ = dict(events_final=len(files), located_with_octree=len(located), compact=len(compact),
+                skipped_region=len(skipped), skip_regions=sorted(skip_regions), decision_skip="D-B098",
                 compact_with_compact_partner=int((tab.partners_compact > 0).sum()), pairs_used=len(coh),
                 coh_min=S.COH_MIN, coh_nmin=S.COH_NMIN, max_se3=S.COH_MAX_SE3, cc_dir=str(cc_dir), **cinfo,
                 partner_rule="R3", rule_check={k: check.get(k) for k in ("use", "decision_rule", "utc", "note")},

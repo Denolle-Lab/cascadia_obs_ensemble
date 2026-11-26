@@ -21,6 +21,7 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
   shift_h_v51_km, shift_z_v51_km  change from catalog v5.1 (horizontal; depth, positive = deeper), both located
   coherence_relocated      relocated by the NLL-coherence stage (compact pdf, Len3 <= 5 km)
   coherence_partners       partners with pair coherence >= 0.5 and a compact pdf (stackable) of a coherence-stage event
+  coherence_skipped_region compact event not coherence-relocated because it lies in the Mendocino region (D-B098); SSST location kept
   edge_pass                hypocentre from the edge pass (event rejected at a lateral face of its SSST tile box)
   review_problems, review_auto_indicators   v5.1 location-review package (review_v51_events.csv): problem groups and
                            the automatic indicators (auto_indicator_rule_not_verdict), joined with ';' (D-B097: carried
@@ -290,6 +291,9 @@ def main():
     c["coherence_relocated"] = pd.array([pd.NA] * len(c), dtype="boolean")
     c.loc[nll, "coherence_relocated"] = c.run[nll].eq("coh").to_numpy()
     c["coherence_partners"] = c.ID.map(coh_tab.partners_compact).astype("Int64") if len(coh_tab) else pd.NA
+    skf = root / "coh" / "coherence_skipped_region.csv"     # D-B098: compact events not coherence-relocated (Mendocino)
+    sk = set(pd.read_csv(skf).ID) if skf.exists() else set()
+    c["coherence_skipped_region"] = c.ID.isin(sk)
     c = c.merge(review_columns(c.ID), on="ID", how="left")
     mags, minfo = magnitude_columns(c.ID)
     c = c.merge(mags, on="ID", how="left")
@@ -302,7 +306,7 @@ def main():
             "sig_z", "ell_len3", "dist_min", "dist_med", "dist_max", "dist_over_depth", "surface_km", "above_surface",
             "shift_h_km", "shift_z_km", "shift_h_v51_km", "shift_z_v51_km", "tile", "u_reason", "region", "depth_frame",
             "depth_quality", "event_flag", "floor_limited", "far_only", "deep_pass", "edge_pass", "five_phase",
-            "model_version", "loc_pass", "station_terms", "ssst_char_km", "coherence_relocated", "coherence_partners",
+            "model_version", "loc_pass", "station_terms", "ssst_char_km", "coherence_relocated", "coherence_partners", "coherence_skipped_region",
             "n_picks_retimed", "n_picks_clock_corrected", "review_problems", "review_auto_indicators",
             "review_not_earthquake", "review_depth_unreliable", "review_relocate", "review_depth_km"] + MAG_COLS + \
            ["magnitude_source"]

@@ -902,3 +902,13 @@ elsewhere; 0 events above the surface in every arm. Agrees in direction with -18
 (Loc2ssst, CharDist schedule 9999 -> 16 -> 8 -> 4 [-> 2] km) followed by the coherence stage, instead of D-B093's static terms. A
 post-hoc hint (4 km stop better than 2 km at Puget and Mendocino; 16 km at western Blanco) is checked on two further independent
 clusters with the same protocol before the full run; the stopping distance with the better held-out score is used.
+
+### D-B096 Catalog v6.0 SSST schedule stops at 4 km (9999 -> 16 -> 8 -> 4 km), then coherence (adopted, 2026-11-25, by the D-B095 rule written before scoring)
+Confirmatory test (branch reloc/v6-termtest 8489f8cc; /wd1/mdenolle_data/reloc_v6/termtest/score_stop/; rule written into
+RESUME.md at 15:55 before any run): two further independent clusters (Strait of Georgia 700 events; 2014 M6.8 Gorda sequence 800
+events). Held-out MAD P + S with coherence, mean of the two: 16 km 81.0, 8 km 78.4, 4 km 76.8, 2 km 80.2 ms; paired bootstrap 8 km
+- 4 km +1.6 [0.3, 2.7] ms excludes 0, so 4 km is kept. Georgia lowest at 4 km on P and S; Gorda flat between 8 and 4 km. 0 events
+above the surface in every arm; depths indistinguishable between stops. The coherence stage helped where it relocates many events
+(Puget, Georgia: P -15 ms), was neutral where it relocates few (Gorda, western Blanco) and hurt at the Mendocino 2015 sequence;
+v6.0 QC reports the held-out effect of coherence by region. Catalog scale: Loc2ssst's LSSTATIONS line is limited to 1,000
+characters, so station lists are split across instances.

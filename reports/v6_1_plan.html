@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalog v6.1 plan</title>
+<style>
+:root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#5f5e5a; --line:#dedbd3; --card:#ffffff; --accent:#1f5f8b; --warn:#8a5a00; --warnbg:#fff4dc; --ok:#2f6b3a; --okbg:#e8f3ea; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#151514; --fg:#ecebe6; --muted:#a9a79f; --line:#34332f; --card:#1d1d1b; --accent:#7fb3d9; --warn:#f0c36a; --warnbg:#3a2f16; --ok:#8fd19c; --okbg:#1f3323; } }
+:root[data-theme="dark"] { --bg:#151514; --fg:#ecebe6; --muted:#a9a79f; --line:#34332f; --card:#1d1d1b; --accent:#7fb3d9; --warn:#f0c36a; --warnbg:#3a2f16; --ok:#8fd19c; --okbg:#1f3323; }
+body { background:var(--bg); color:var(--fg); font:15px/1.55 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; margin:0; padding:24px 16px 48px; }
+main { max-width:920px; margin:0 auto; }
+h1 { font-size:24px; margin:0 0 4px; } h2 { font-size:18px; margin:28px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+.muted { color:var(--muted); } .tag { display:inline-block; font-size:12px; padding:1px 8px; border-radius:10px; }
+.warn { background:var(--warnbg); color:var(--warn); } .ok { background:var(--okbg); color:var(--ok); }
+table { border-collapse:collapse; width:100%; margin:8px 0; font-size:14px; } th, td { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+th { color:var(--muted); font-weight:600; } .wrap { overflow-x:auto; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin:12px 0; }
+code { font-size:13px; }
+</style>
+</head>
+<body><main>
+<h1>Catalog v6.1 plan</h1>
+<p class="muted">Draft for the PI, 2026-11-26. Nothing in this plan runs before approval. v6.0 is registered as built (D-B100); v6.1 fixes what v6.0 deferred or got wrong.</p>
+
+<div class="card"><b>In one paragraph.</b> v6.1 keeps the v6.0 pipeline (NonLinLoc, source-specific station terms, waveform coherence) and changes four things:
+it uses the station-term recipe chosen today by a test that also scores published depths, it locates in model v0.4.2, it flags the Mount St Helens analog-signal events, and it applies the clock corrections and review flags that a person confirms.
+The machine cost is about 11 hours, so it fits one overnight run once the inputs are ready.</div>
+
+<h2>What goes into v6.1</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>Item</th><th>Why</th><th>How</th><th>Needs</th></tr>
+<tr><td>1</td><td>Station-term recipe</td><td>SSST deepens Axial by 0.22 km (tier A-B within 2 km of the seafloor: 66 %, v5.1 81 %, target 85 %). Cause found today: the S terms absorb the S-P misfit, the station-term/hypocentre null space (Pujol 1988).</td>
+<td>Pre-registered test (rule written 13:09) on Axial, Mount St Helens, western Blanco and Gorda Depression: no terms, static, SSST 16 km, SSST 4 km and a null-space-free SSST, each with and without coherence, scored on held-out CC fit and published depths. The winner becomes the v6.1 recipe.</td>
+<td><span class="tag ok">running</span> result today</td></tr>
+<tr><td>2</td><td>Model v0.4.2</td><td>v0.4.1 contains 8 self-paired events; v0.4.2 fixes them (D-B099). The change is local.</td><td>Rebuild the travel-time grids from v0.4.2 (same builder and rules as v6.0).</td><td>your OK (about 5 h of grids)</td></tr>
+<tr><td>3</td><td>Mount St Helens analog signal</td><td>A weekly artificial signal on the analog UW channels HSR, EDM and STD (Wednesdays 11:30-13:00 local) likely makes false deep events (review P1).</td><td>Find events whose picks fall in those windows on those channels, check waveforms, flag them as not earthquakes (event_flag). No event is deleted.</td><td>flag list for your check</td></tr>
+<tr><td>4</td><td>129 clock candidates</td><td>Station clock epochs found by the pick-timing toolkit, not yet confirmed (review_candidates.csv; includes the Axial cabled array 2014-12-13 to 2015-01-15 and OBS drifts G37B, FS01B, GB331, GB320).</td><td>You confirm epochs in the review page; the toolkit applies only confirmed ones, flagged, never dropped.</td><td>your review</td></tr>
+<tr><td>5</td><td>Location review flags</td><td>1,512 events flagged in the v5.1 location review (P1-P4).</td><td>Ingest the returned CSV (review_v51/ingest_review.py) into the review columns of the catalog.</td><td>returned CSV</td></tr>
+<tr><td>6</td><td>Mendocino coherence</td><td>Coherence was skipped at Mendocino on one test cluster (D-B098).</td><td>Retest on a second independent Mendocino cluster with the same held-out protocol.</td><td>none (computational)</td></tr>
+</table></div>
+
+<h2>Order and cost</h2>
+<div class="wrap"><table>
+<tr><th>Step</th><th>Wall time</th><th>Basis</th></tr>
+<tr><td>Grids from v0.4.2 (fine and wide)</td><td>about 4.7 h</td><td>v0.4.1 grids, 11-25 13:13-17:52</td></tr>
+<tr><td>Relocation chain (first pass, station-term passes, coherence, deep and edge passes, catalog, acceptance)</td><td>about 5-6 h</td><td>v6.0: 64 + 97 + 51 + 34 + 40 + 91 + 6 min, with the machine shared</td></tr>
+<tr><td>Held-out QC and literature comparison</td><td>about 1 h</td><td>v6.0 acceptance stage</td></tr>
+</table></div>
+<p>Items 1, 2 and 6 are computational and can start as soon as you approve. Items 3-5 need a person; two ways to handle them:</p>
+<ul>
+<li><b>One version:</b> wait for the reviews, then run v6.1 with everything (best if the reviews come within a few days).</li>
+<li><b>Two versions:</b> run v6.1 now with items 1, 2, 3 (flags only) and 6; put confirmed clock corrections and review flags into v6.2.</li>
+</ul>
+
+<h2>Acceptance targets for v6.1</h2>
+<ul>
+<li>0 events above the ground or seafloor (hard requirement).</li>
+<li>Axial tier A-B within 2 km of the seafloor at or above v5.1's 81 % (target 85 %, Waldhauser et al. 2020).</li>
+<li>Median depth offsets against Hirao et al. (2025) and Lange et al. (2026) no worse than v5.1.</li>
+<li>Held-out CC fit no worse than v6.0 beyond the 5 % margin of the depth test's rule.</li>
+</ul>
+
+<h2>Decisions you will be asked for</h2>
+<ol>
+<li>Locate in v0.4.2 (recommended) or keep v0.4.1.</li>
+<li>One version or two (above).</li>
+<li>Accept the depth-test winner by the pre-registered rule, or look at the scores first.</li>
+</ol>
+<p class="muted">Sources: D-B095-D-B100 in DECISIONS.md; v6.0 acceptance report (reports/v6_acceptance.html); depth test /wd1/mdenolle_data/reloc_v61/depth_test/RESUME.md.</p>
+</main></body></html>

@@ -52,10 +52,21 @@ References
   Woessner, J. & Wiemer, S. (2005). BSSA 95(2), 684-698. doi:10.1785/0120040007
   Mignan, A. & Woessner, J. (2012). CORSSA. doi:10.5078/corssa-00180805
 
+Other catalogs (D-B102, D-B104): --catalog takes a catalog bundle (v5.1, v6.0
+schema: ID, time, lat, lon and its own magnitude columns) instead of the v4
+catalog and the --mag file, so that each catalog's Mc map uses its own
+hypocentres and its own magnitudes (--mag-col, default M; never recomputed).
+Selection as for v4.1: located events (lat and lon set) with a magnitude, any
+tier, event_flag rows kept (the v4.1 maps keep blasts and explosions, which have
+a magnitude; --exclude-flagged drops them). The QC variant counts P and S picks
+per event in the bundle's own picks file (--picks).
+
 Usage
   python v4_mc_maps.py                 # compute everything, then plot
   python v4_mc_maps.py --stage plot    # figures only, from the saved CSVs
   python v4_mc_maps.py --mag stored --out <dir>   # the maps before D-B091 (default: converged magnitudes)
+  python v4_mc_maps.py --catalog <bundle>/cascadia_catalog_v6.0.csv \\
+      --picks <bundle>/Cascadia_picks_catalog_v4.1tc.csv.gz --out <dir>   # catalog v6.0
 """
 from __future__ import annotations
 
@@ -82,6 +93,9 @@ MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), s
 STA = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
 ZBZ = ROOT / "data/catalog_v4/clusters_zbz/completeness_b_df.csv"
 OUT = ROOT / "data/catalog_v4/mc_maps"
+# --catalog: a bundle with its own hypocentres and magnitudes replaces CAT + MAG (set in main())
+BUNDLE: dict | None = None
+LABEL = "v4"
 
 REGIONS = [  # most specific first (same as v4_clusters_zbz.py)
     ("AX", "Axial Seamount", [-130.35, -129.75, 45.75, 46.2]),
@@ -111,15 +125,67 @@ REGION_MAP = [-131.0, -119.5, 39.0, 51.0]
 
 
 # ---------------------------------------------------------------- data
-def load_catalog(qc: bool = False) -> pd.DataFrame:
-    cat = pd.read_csv(CAT, skipinitialspace=True)
-    cat.columns = [c.strip() for c in cat.columns]
-    mag = pd.read_csv(MAG, usecols=["event_id", "M"])
-    df = cat.rename(columns={"ID": "event_id", "latitude": "lat", "longitude": "lon"})
-    df = df.merge(mag, on="event_id", how="left")
+def pick_counts(path: Path) -> pd.DataFrame:
+    """Number of P and S picks per event in a picks file (event_ID, phase), as Num_p_picks / Num_s_picks."""
+    p = pd.read_csv(path, skipinitialspace=True, usecols=lambda c: c.strip() in ("event_ID", "phase"))
+    p.columns = [c.strip() for c in p.columns]
+    k = p.assign(phase=p.phase.str.strip()).groupby(["event_ID", "phase"]).size().unstack(fill_value=0)
+    return k.reindex(columns=["P", "S"], fill_value=0).rename(columns={"P": "Num_p_picks", "S": "Num_s_picks"})
+
+
+def load_bundle(qc: bool = False) -> pd.DataFrame:
+    """Events of a catalog bundle (--catalog) with its own hypocentres (lat, lon, time) and magnitudes (--mag-col):
+    located events with a magnitude; event_flag rows kept unless --exclude-flagged. Counts go to BUNDLE['selection']
+    (BUNDLE['selection_qc'] for the QC variant) and from there to run_params.json."""
+    b = BUNDLE
+    cat = pd.read_csv(b["catalog"], low_memory=False)
+    miss = {"ID", "time", "lat", "lon", b["mag_col"]} - set(cat.columns)
+    if miss:
+        raise SystemExit(f"{b['catalog']}: missing columns {sorted(miss)}")
+    df = pd.DataFrame({"event_id": cat.ID, "datetime": cat.time, "lat": cat.lat, "lon": cat.lon,
+                       "M": cat[b["mag_col"]].astype(float)})
+    flag = (cat.event_flag.fillna("").astype(str).str.strip() != "") if "event_flag" in cat else \
+        pd.Series(False, index=cat.index)
+    loc = df.lat.notna() & df.lon.notna()
+    keep = loc & df.M.notna()
+    n = {"rows": len(df), "no_hypocentre": int((~loc).sum()), "located_no_magnitude": int((loc & df.M.isna()).sum()),
+         "flagged_with_magnitude": int((keep & flag).sum()), "exclude_flagged": bool(b["exclude_flagged"])}
+    if b["exclude_flagged"]:
+        keep &= ~flag
     if qc:
-        df = df[(df.Num_p_picks >= 4) & (df.Num_s_picks >= 4)]
-    df = df[df.M.notna()].copy()
+        k = pick_counts(b["picks"])
+        df = df.join(k, on="event_id")
+        q = (df.Num_p_picks.fillna(0) >= 4) & (df.Num_s_picks.fillna(0) >= 4)
+        n["below_4P_4S"] = int((keep & ~q).sum())
+        keep &= q
+    n["used"] = int(keep.sum())
+    if "magnitude_source" in cat:
+        n["magnitude_source"] = {str(s): int(c) for s, c in cat.magnitude_source[keep].value_counts().items()}
+    b["selection_qc" if qc else "selection"] = n
+    return df[keep]
+
+
+def describe_bundle() -> dict:
+    b = BUNDLE
+    return {"catalog": str(b["catalog"]), "catalog_md5": mag_paths.md5(b["catalog"]), "catalog_label": LABEL,
+            "magnitudes": str(b["catalog"]), "magnitudes_column": b["mag_col"],
+            "magnitudes_md5": mag_paths.md5(b["catalog"]), "epicentres": "lat, lon of the catalog",
+            "picks": str(b["picks"]) if b["picks"] else None,
+            "picks_md5": mag_paths.md5(b["picks"]) if b["picks"] else None}
+
+
+def load_catalog(qc: bool = False) -> pd.DataFrame:
+    if BUNDLE:
+        df = load_bundle(qc).copy()
+    else:
+        cat = pd.read_csv(CAT, skipinitialspace=True)
+        cat.columns = [c.strip() for c in cat.columns]
+        mag = pd.read_csv(MAG, usecols=["event_id", "M"])
+        df = cat.rename(columns={"ID": "event_id", "latitude": "lat", "longitude": "lon"})
+        df = df.merge(mag, on="event_id", how="left")
+        if qc:
+            df = df[(df.Num_p_picks >= 4) & (df.Num_s_picks >= 4)]
+        df = df[df.M.notna()].copy()
     df["year"] = pd.to_datetime(df["datetime"], utc=True, format="ISO8601").dt.year
     df["ibin"] = np.clip(np.round((df.M.values - MLO) / DM).astype(int), 0, len(MBINS) - 1)
     reg = np.full(len(df), "ON", dtype=object)
@@ -332,7 +398,7 @@ def compute(a):
     import xarray as xr
     meta = dict(n_events=a.n, n_events_period=a.n_period, rmax_km=a.rmax, nboot=a.nboot,
                 step_deg=a.step, nmin_b=NMIN_B, maxc_corr=CORR, mbs_window_bins=WIN,
-                dm=DM, periods=PERIODS, **mag_paths.describe(MAG))
+                dm=DM, periods=PERIODS, **(describe_bundle() if BUNDLE else mag_paths.describe(MAG)))
     df = load_catalog(qc=False)
     print(f"events with M: {len(df)}", flush=True)
 
@@ -344,6 +410,9 @@ def compute(a):
     gq = mc_grid(dq, a.n, a.rmax, a.nboot, a.step, a.nproc)
     gq.to_csv(OUT / "mc_grid_qc.csv", index=False, float_format="%.4f")
     print("grid qc:", gq.mc_best.notna().sum(), "nodes", flush=True)
+    if BUNDLE:
+        meta |= {k: BUNDLE[k] for k in ("selection", "selection_qc")}
+        print("selection:", json.dumps(BUNDLE["selection"]), flush=True)
 
     dsets = []
     summ = [node_summary(g, "all")]
@@ -363,11 +432,11 @@ def compute(a):
 
     ds = to_xr(g)
     ds["mc_best_qc"] = to_xr(gq)["mc_best"]
-    ds.attrs.update(title="Cascadia catalog v4 magnitude of completeness",
+    ds.attrs.update(title=f"Cascadia catalog {LABEL} magnitude of completeness",
                     source="workflow/06_analysis/v4_mc_maps.py", params=json.dumps(meta))
     ds.to_netcdf(OUT / "mc_grid.nc")
     dp = xr.concat(dsets, dim="period")
-    dp.attrs.update(title="Cascadia catalog v4 Mc per period",
+    dp.attrs.update(title=f"Cascadia catalog {LABEL} Mc per period",
                     source="workflow/06_analysis/v4_mc_maps.py", params=json.dumps(meta))
     dp.to_netcdf(OUT / "mc_grid_periods.nc")
 
@@ -551,7 +620,7 @@ def plot_fmd(a):
 
 
 def main():
-    global MAG, OUT, ZBZ
+    global MAG, OUT, ZBZ, BUNDLE, LABEL
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--stage", choices=["compute", "plot", "all"], default="all")
     p.add_argument("--n", type=int, default=250, help="events per node (all-data map)")
@@ -565,11 +634,32 @@ def main():
     p.add_argument("--out", type=Path, default=None, help=f"output folder (default {OUT.relative_to(ROOT)})")
     p.add_argument("--zbz", type=Path, default=None,
                    help=f"clustering Mc table for fig4 (default {ZBZ.relative_to(ROOT)})")
+    p.add_argument("--catalog", type=Path, default=None,
+                   help="catalog bundle CSV with its own hypocentres and magnitudes (v5.1/v6.0 schema: ID, time, lat, "
+                        "lon, M); replaces the v4 catalog and --mag (D-B102, D-B104)")
+    p.add_argument("--mag-col", default="M", help="magnitude column of --catalog (default M)")
+    p.add_argument("--picks", type=Path, default=None,
+                   help="picks file of --catalog (event_ID, phase): P and S counts for the QC variant (4 P + 4 S)")
+    p.add_argument("--exclude-flagged", action="store_true",
+                   help="with --catalog: drop events with event_flag set (blasts, explosions); the v4.1 maps keep them")
+    p.add_argument("--label", default=None, help="catalog name in titles (default: from the --catalog file name)")
     a = p.parse_args()
+    if a.catalog:
+        if a.mag:
+            p.error("--catalog uses the catalog's own magnitudes (--mag-col); --mag applies to the v4 catalog only")
+        if a.stage != "plot" and not a.picks:
+            p.error("--catalog needs --picks (the catalog's picks file) for the QC variant")
+        BUNDLE = dict(catalog=a.catalog, mag_col=a.mag_col, picks=a.picks, exclude_flagged=a.exclude_flagged)
+        LABEL = a.label or a.catalog.stem.split("_")[-1]
+    elif a.label:
+        LABEL = a.label
     MAG = mag_paths.v41(a.mag)
     OUT = a.out or OUT
     ZBZ = a.zbz or ZBZ
-    print(f"magnitudes: {MAG}", flush=True)
+    if BUNDLE:
+        print(f"catalog {LABEL}: {a.catalog} (magnitudes: column {a.mag_col}; picks: {a.picks})", flush=True)
+    else:
+        print(f"magnitudes: {MAG}", flush=True)
     if a.stage in ("compute", "all"):
         compute(a)
     if a.stage in ("plot", "all"):

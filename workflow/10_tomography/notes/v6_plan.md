@@ -129,3 +129,22 @@ Magnitudes: the converged phase19 solution (D-B091) recomputed on the v6.0 hypoc
 2. PI: the remaining clock-candidate epochs (D-B090), then the final pick file.
 3. The v0.4.1 cluster test (`ssst_test/g041`), which runs automatically after the grids.
 4. Process budget for the NLLoc passes (16 processes: about 4 hours per pass).
+
+## Coherence partners at catalog scale (coordinator, 2026-11-25 20:00; written before the check was scored)
+
+The all-family CC job (cc_dt_all, D-B093) measures whole families, so the test-set partner rule (pair coherence = median
+cc_max over the measured rows, >= 3 rows, >= 0.5) passes 55 % of the pairs 10-20 km apart and 35 % beyond 20 km
+(cc_dt_all/README.md); the test sets had only near pairs. v6.0 uses the restricted rule **R3**: a partner pair has
+- a separation of at most 3 km (`sep_km`, 3-D distance of the v5.1 hypocentres; the range of the tests' nearest-neighbour pairs),
+- at least 3 accepted CC rows (`above`: status ok, peak off the lag edge, cc_max >= 0.7, cc_max - cc_2nd >= 0.1),
+- median cc_max >= 0.5 over its measured rows (status ok, peak off the lag edge),
+with every row that straddles a confirmed MH07.XD/MG07.XD clock epoch left out (2,268 rows, 938 accepted). The pair
+coherence and counts come from `pair_coherence.parquet`, recomputed for the pairs with straddling rows.
+
+Check before the catalog's coherence stage (b4_v6_heldout.py rulecheck): on the held-out runs of the v6.0 recipe (v0.4.1
+grids, SSST to 4 km) of the termtest clusters puget (coherence helped, D-B096) and mtj (coherence hurt), the coherence
+stage is rerun with R3 at the training stations of each fold, and held-out CC differential times are scored as in the
+termtest (b5_cmp_common.fold_score, pair-demeaned, pooled over 3 folds, rows located in every arm). Decision rule: R3 is
+**worse** if, in either cluster and either phase, MAD(R3) - MAD(test rule) has a 95 % paired-bootstrap interval (2,000
+resamples of event pairs) above 0 and is at least 5 % of MAD(test rule) (the termtest materiality). If R3 is not worse,
+the catalog uses R3; if it is worse, the coherence stage stops and reports (coordinator: report and wait).

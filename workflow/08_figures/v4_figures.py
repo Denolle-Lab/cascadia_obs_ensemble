@@ -803,11 +803,11 @@ def fig_short(a):
     days = ((e.time - e.time.iloc[0]).dt.total_seconds() / 86400).to_numpy()
     dmax = 12.0
     keep = days <= dmax
-    pygmt.makecpt(cmap="lajolla", series=[1.5, 5.0], reverse=True, output=f"{tmp}/m.cpt", background=True)
+    pygmt.makecpt(cmap="lajolla", series=[1.0, 5.0], reverse=True, output=f"{tmp}/m.cpt", background=True)
     fig.basemap(region=[-0.3, dmax, dist.min() - 2, dist.max() + 2], projection=f"X{W2}c/{H2}c",
                 frame=["WSne", f"xa2f1+ldays since {e.time.iloc[0]:%d %b %Y %H:%M} UTC", "ya10f5+ldistance along 111@. (km), ESE positive"])
     ek = e[keep]; o = np.argsort(ek.M.fillna(0).to_numpy())
-    fig.plot(x=days[keep][o], y=dist[keep][o], size=np.minimum(msize(ek.M.to_numpy()[o], 1.8), 0.4), style="c", fill=ek.M.fillna(1.5).to_numpy()[o],
+    fig.plot(x=days[keep][o], y=dist[keep][o], size=np.minimum(msize(ek.M.to_numpy()[o], 1.8), 0.4), style="c", fill=ek.M.fillna(1.0).to_numpy()[o],
              cmap=f"{tmp}/m.cpt", pen="0.15p,gray20")
     big = ek.M.to_numpy() >= 5.0
     fig.plot(x=days[keep][big], y=dist[keep][big], style="a0.32c", fill="white", pen="0.5p,black")

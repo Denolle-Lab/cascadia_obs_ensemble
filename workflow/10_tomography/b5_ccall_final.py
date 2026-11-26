@@ -69,13 +69,28 @@ def pair_coherence():
 
 
 def loader_check(blocks):
-    code = LOADER.format(v6=V6, out=A.OUT, blocks=repr(blocks))
-    r = subprocess.run([PY, "-c", code], capture_output=True, text=True,
-                       env={"LD_LIBRARY_PATH": "/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib",
-                            "PATH": "/usr/bin:/bin", "HOME": str(Path.home())}, cwd="/tmp")
-    if r.returncode:
-        raise RuntimeError(r.stderr[-3000:])
-    res = json.loads(r.stdout.strip().splitlines()[-1])
+    """One subprocess per block (memory is returned between blocks); a block starts only when MemAvailable >= its
+    estimated peak (1.0 GB per million rows + 2 GB, whole-file pandas read) + 22 GB."""
+    import pyarrow.parquet as pq
+    res = {}
+    for b in blocks:
+        rows = pq.ParquetFile(A.OUT / f"cc_{b}.parquet").metadata.num_rows
+        need = 1.0 * rows / 1e6 + 2.0
+        while A.mem_available_gb() < need + 22.0:
+            A.log(f"loader check {b}: waiting for memory (need ~{need:.0f} + 22 GB)")
+            time.sleep(60)
+        code = LOADER.format(v6=V6, out=A.OUT, blocks=repr([b]))
+        t0 = time.time()
+        r = subprocess.run(["/usr/bin/time", "-f", "MAXRSS_KB %M", PY, "-c", code], capture_output=True, text=True,
+                           env={"LD_LIBRARY_PATH": "/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib",
+                                "PATH": "/usr/bin:/bin", "HOME": str(Path.home())}, cwd="/tmp")
+        if r.returncode:
+            raise RuntimeError(r.stderr[-3000:])
+        res.update(json.loads(r.stdout.strip().splitlines()[-1]))
+        rss = [ln for ln in r.stderr.splitlines() if ln.startswith("MAXRSS_KB")]
+        res[b]["loader_peak_rss_gb"] = round(int(rss[-1].split()[1]) / 1e6, 2) if rss else None
+        res[b]["loader_s"] = round(time.time() - t0, 1)
+        A.log(f"loader check {b}: {res[b]}")
     ok = all(v["only_loader"] == 0 and v["only_table"] == 0 and v["coh_max_abs_diff"] < 1e-12 and v["n_equal"]
              for v in res.values())
     res = dict(ok=ok, loader=str(V6 / "b4_v6_ssst.py") + ":coherences", git=subprocess.run(
@@ -187,8 +202,12 @@ def main():
     ap.add_argument("--skip-loader", action="store_true")
     a = ap.parse_args()
     t0 = time.time()
-    pc = pair_coherence()
+    import b5_ccall_write as Wr
     blocks = [b for b in A.BLOCKS if (A.OUT / f"cc_{b}.parquet").exists()]
+    for b in blocks:                      # string columns as dictionaries (idempotent)
+        if Wr.compact_strings(A.OUT / f"cc_{b}.parquet"):
+            A.log(f"compacted string columns of cc_{b}.parquet")
+    pc = pair_coherence()
     loader = {} if a.skip_loader else loader_check(blocks)
     print(json.dumps(loader, indent=1))
     counts = json.loads((A.TASKS / "counts.json").read_text())

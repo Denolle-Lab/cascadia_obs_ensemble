@@ -48,6 +48,10 @@ CAP = 30_000_000          # two-leg paths per block for the closure test
 CHUNK_ROWS = 2_000_000
 
 STR, F64, F32, I64, I32, BOOL = pa.string(), pa.float64(), pa.float32(), pa.int64(), pa.int32(), pa.bool_()
+# low-cardinality string columns are stored as dictionaries: pandas reads them back as categoricals, so loading a
+# whole cc_<block>.parquet (b4_v6_ssst.coherences reads every column) needs ~3x less memory (gorda: 20M rows)
+DICT_COLS = ("set", "block", "pair_source", "station", "net", "obs_class", "phase", "status", "comps", "channel1",
+             "channel2", "filter", "window", "timing1", "timing2", "retime_flag1", "retime_flag2")
 SCHEMA = pa.schema([
     ("set", STR), ("block", STR), ("pair", I64), ("pair_source", STR), ("family_id", I32), ("same_family", BOOL),
     ("ID1", I64), ("ID2", I64), ("sep_km", F64), ("station", STR), ("net", STR), ("obs_class", STR), ("phase", STR),
@@ -62,6 +66,8 @@ SCHEMA = pa.schema([
     ("tri_sample_frac", F64), ("pick_row1", I64), ("pick_row2", I64), ("pick_prob1", F64), ("pick_prob2", F64),
     ("clock_epoch1", I32), ("clock_epoch2", I32), ("clock_c1", F64), ("clock_c2", F64), ("clock_dt_s", F64),
     ("straddles_clock_epoch", BOOL)])
+SCHEMA = pa.schema([pa.field(f.name, pa.dictionary(pa.int32(), pa.string())) if f.name in DICT_COLS else f
+                    for f in SCHEMA])
 
 T = {}
 
@@ -237,8 +243,31 @@ def build_chunk(block, raw, P, cfg, n_tri, n_fail, q):
     arrays = []
     for f in SCHEMA:
         v = d[f.name]
-        arrays.append(pa.array(v, type=f.type, from_pandas=True))
+        if pa.types.is_dictionary(f.type):
+            arrays.append(pa.array(v, type=pa.string(), from_pandas=True).dictionary_encode())
+        else:
+            arrays.append(pa.array(v, type=f.type, from_pandas=True))
     return pa.Table.from_arrays(arrays, schema=SCHEMA)
+
+
+def compact_strings(path):
+    """Rewrite an existing cc_<block>.parquet with the DICT_COLS as dictionaries (row group by row group, same
+    values and order). Skips files already in that form. Returns True if rewritten."""
+    f = pq.ParquetFile(path)
+    sch = f.schema_arrow
+    if all(pa.types.is_dictionary(sch.field(c).type) for c in DICT_COLS if c in sch.names):
+        return False
+    tmp = Path(str(path) + ".tmp")
+    w = pq.ParquetWriter(tmp, SCHEMA, compression="zstd")
+    for i in range(f.num_row_groups):
+        t = f.read_row_group(i)
+        cols = [t.column(c).cast(pa.string()).dictionary_encode() if c in DICT_COLS else t.column(c).cast(fld.type)
+                for c, fld in zip(SCHEMA.names, SCHEMA)]
+        w.write_table(pa.Table.from_arrays([pa.chunked_array(x.chunks, type=fld.type) if hasattr(x, "chunks") else x
+                                            for x, fld in zip(cols, SCHEMA)], schema=SCHEMA), row_group_size=500_000)
+    w.close()
+    os.replace(tmp, path)
+    return True
 
 
 def write_dt_lines(tb, fh):

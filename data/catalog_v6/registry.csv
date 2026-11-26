@@ -1,0 +1,2 @@
+version,date,b4_run,model,events,nll3d,v4,comcat,none,above_surface,publishable,csv_md5,note
+6.0,2026-11-26,v6.0,0.4.1,172342,172182,0,1,159,0,True,0daf48808af466859e6804793486c2a5,"Catalog v6.0 (D-B079, D-B100): catalog v4.1 events relocated with NonLinLoc in the re-inverted merged model v0.4.1, with source-specific station terms (NLL-SSST) and waveform-coherence relocation (NLL-coherence), on the re-timed and clock-corrected picks (v4.1tc); events NonLinLoc does not locate have no hypocentre."

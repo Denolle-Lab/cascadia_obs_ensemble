@@ -1,23 +1,34 @@
 {
  "name": "catalog_v5.0",
- "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/catalog_version.py",
+ "script": "/home/mdenolle/wt_cat/workflow/10_tomography/catalog_version.py",
  "argv": [
   "5.0"
  ],
- "utc": "2026-11-24T18:47:33.764297+00:00",
- "git_commit": "1a7a6a3b1defc4bceea99dceeed2a007e1177325",
+ "utc": "2026-11-26T18:48:20.360039+00:00",
+ "git_commit": "6e7310706f224845ed4f728cf01fad5ae83b7115",
  "git_dirty": true,
- "params_md5": "7cd2a572084bbeee6c30b435e0048c03",
+ "params_md5": "050eb7bfb2c9396db675061e4f03c129",
  "params": {
   "version": "5.0",
   "b4_run": "b4_iter1_v0.3.1",
   "terms_run": "b4_iter0_v0.3.1",
   "model": "0.3.1",
   "note": "Catalog v5.0 (interim, D-B058): catalog v4.1 events relocated with NonLinLoc in the merged 3D model v0.3.1, before the round-2 NonLinLoc workflow fixes; tier U keeps v4 hypocentres, flagged (D-B059).",
+  "surface_source": "earth_relief_01m",
+  "tier_u": "v4",
+  "decisions": [
+   "D-B058",
+   "D-B059"
+  ],
   "extra_files": [
    "data/tomo_v1/depth_literature/paired_v0.3.1.md"
   ],
   "known_limits": [
+   "Interim (D-B058): the NonLinLoc workflow fixes of round 2 (station reach, upward pull towards the surface, the 80 km grid floor, tier U) are not in it; v5.1 will be the rerun with them, v5.2 the tomoDD relative relocation.",
+   "About 6 % of the located events (44 % in the JdF ridge and Endeavour regions) have depths set by NonLinLoc's topography floor (D-B056), not by the data (round-2 report, data/tomo_v1/above_surface/above_surface_round2.html).",
+   "Arrivals at stations beyond about 160 km were not used (station reach of the location grids): 6.75 % of the arrivals; 25,054 events lost at least one.",
+   "Event 172114: located with its v4.0 picks; v4.1 added 160 picks to it that this run did not use.",
+   "Depths are poorly constrained offshore without nearby OBS (depth_quality) and are deeper than published local studies at Axial, Blanco, Gorda and Mendocino (data/tomo_v1/depth_literature/depth_literature.html). Axial: {axial}. Region medians against the previous relocations: b4_acceptance.md.",
    "Mount St Helens: median +0.49 km deeper than Hirao et al. (2025) on 2,369 paired events (tiers A-D; A-B +0.67 km).",
    "Blanco: median +1.99 km deeper than Lange et al. (2026) on 11,298 paired events (tiers A-D), above the 1 km target; West Blanco +4.64 km, worse than in the v0.3.0 relocation (+2.80 km), Blanco Ridge +2.89 km, Gorda Depression +6.72 km, Cascadia Depression -1.26 km (paired_v0.3.1.md)."
   ],
@@ -44,48 +55,54 @@
    "md5": "722975b82ac5f3e6761c7f1f57cd346d"
   },
   {
-   "path": "/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv",
-   "size": 14901482,
-   "mtime": "2026-11-23T04:30:01.534888+00:00",
-   "md5": "78a445098dd76ccf8c08085cb86f67ca"
+   "path": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
+   "size": 14896031,
+   "mtime": "2026-11-25T20:18:39.736922+00:00",
+   "md5": "fb49ecc28b75432f49cf1a6e399cd90f"
   },
   {
    "path": "/wd1/mdenolle_data/reloc_v5/runs/b4_iter0_v0.3.1/station_terms.in",
    "size": 35900,
    "mtime": "2026-11-24T18:04:14.926661+00:00",
    "md5": "5fc0e1d7ad9ea2c32802e1f40c7c1fe5"
+  },
+  {
+   "path": "/home/mdenolle/wt_cat/data/tomo_v1/depth_literature/paired_v0.3.1.md",
+   "size": 4829,
+   "mtime": "2026-11-26T18:42:57.968820+00:00",
+   "md5": "858dbeb070ba8b3de2cdec63246a1a06"
   }
  ],
  "outputs": [
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv",
-   "size": 59340878,
-   "mtime": "2026-11-24T18:47:29.890268+00:00",
-   "md5": "23781b52d42370f2a49e1d3ee3192876"
+   "size": 59335471,
+   "mtime": "2026-11-26T18:48:10.751438+00:00",
+   "md5": "192d3195516ad59cc1a7cf841c8d89d5"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/README_v5.0.md",
-   "size": 5272,
-   "mtime": "2026-11-24T18:47:29.946268+00:00",
-   "md5": "a2c107ccb62717aa13f030864d14109d"
+   "size": 5493,
+   "mtime": "2026-11-26T18:48:10.808437+00:00",
+   "md5": "22ed07f3403b8b6397083929137a2bc7"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/v5.0/MD5SUMS",
    "size": 395,
-   "mtime": "2026-11-24T18:47:30.045267+00:00",
-   "md5": "d2db61033a6a97b3887e12cc7ec9effa"
+   "mtime": "2026-11-26T18:48:10.908437+00:00",
+   "md5": "e180ca78284d14e09b3bdd828b2fdd69"
   },
   {
    "path": "/wd1/mdenolle_data/catalog_v5/catalog_v5.zip",
-   "size": 19690913,
-   "mtime": "2026-11-24T18:47:33.645249+00:00",
-   "md5": "257a425b5e6df73dbca5b970b40e10f5"
+   "size": 103186716,
+   "mtime": "2026-11-26T18:48:20.060396+00:00",
+   "md5": "fe382ddb7b72286dea1abf4be6973774"
   },
   {
-   "path": "/home/mdenolle/wt_tomo_res/data/catalog_v5/registry.csv",
-   "size": 393,
-   "mtime": "2026-11-24T18:47:30.151267+00:00",
-   "md5": "d6ace26063e7eaee8504e1ba119f65d5"
+   "path": "/home/mdenolle/wt_cat/data/catalog_v5/registry.csv",
+   "size": 823,
+   "mtime": "2026-11-26T18:48:11.013437+00:00",
+   "md5": "cee3eecd21fc44ac7b6c89167e13faba"
   }
  ],
  "counts": {
@@ -106,6 +123,7 @@
   "above_surface_by_source": {
    "v4": 4077
   },
+  "flags": {},
   "with_magnitude": 130769,
   "publishable": false
  },

@@ -101,13 +101,16 @@ def md5(p):
     return h.hexdigest()
 
 
-def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
+def build(version, out=None, rd=None):
     V = P["versions"][version]
     run, model = V["b4_run"], V["model"]
+    series = V.get("series", "v5")                 # bundle series: catalog_v5.zip (v5.x), catalog_v6.zip (v6.x), ...
+    out = out or Path(V.get("out", P["out"]))
+    rd = rd or REPO / "data" / f"catalog_{series}"
     tier_u = V.get("tier_u", "none")
     flag_cols = V.get("flags", [])
     b4_catalog.SURFACE = V["surface_source"]       # surface_km reads it at each call
-    src = CAT / f"catalog_b4_{run}.csv"
+    src = Path(V["b4_catalog"]) if V.get("b4_catalog") else CAT / f"catalog_b4_{run}.csv"
     c = pd.read_csv(src, dtype={"tier": str})
     # rows without a hypocentre are exactly the loc_source 'none' rows; every other row carries the surface check
     pos = c[["lat", "lon", "depth"]].notna().all(axis=1)
@@ -142,12 +145,20 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     if P.get("v4_1_magnitudes_md5") and md5(P["v4_1_magnitudes"]) != P["v4_1_magnitudes_md5"]:
         raise SystemExit(f"{P['v4_1_magnitudes']}: md5 differs from params v4_1_magnitudes_md5; refusing to build the bundle")
     m = pd.read_csv(P["v4_1_magnitudes"]).set_index("event_id")
-    for k in MAG_COLS:
-        c[k] = c.ID.map(m[k])
+    if V.get("magnitudes") == "catalog":           # the catalog carries its own (converged) magnitudes and their source;
+        added = c.ID.isin(add).values               # only the v4.1 additions it leaves out take the v4.1 table
+        for k in MAG_COLS:
+            c.loc[added, k] = c.ID[added].map(m[k]).values
+        if "magnitude_source" in c:
+            c.loc[added & c.M.notna().values, "magnitude_source"] = V["magnitude_source_v41"]
+    else:
+        for k in MAG_COLS:
+            c[k] = c.ID.map(m[k])
     c = c.drop(columns=["v4_magnitude"], errors="ignore").sort_values("ID").reset_index(drop=True)
     assert c.ID.is_unique and len(c) == len(v41), (len(c), len(v41))
     # every column described in the README
-    cols = {**COLUMNS, **V.get("columns", {})}
+    cols = {**COLUMNS, **(P["versions"][V["columns_from"]].get("columns", {}) if V.get("columns_from") else {}),
+            **V.get("columns", {})}
     ls = c.loc_source.value_counts().to_dict()
     cols["loc_source"] = ", ".join(f"{k} ({LOC_SOURCE[k][0]})" for k in LOC_SOURCE if k in ls)
     assert set(ls) <= set(LOC_SOURCE), set(ls) - set(LOC_SOURCE)
@@ -160,7 +171,7 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     vd.mkdir(parents=True, exist_ok=True)
     csv = vd / f"cascadia_catalog_v{version}.csv"
     c.to_csv(csv, index=False, float_format="%.8g")
-    terms = RUNS / V["terms_run"] / "station_terms.in"
+    terms = Path(V["terms_file"]) if V.get("terms_file") else RUNS / V["terms_run"] / "station_terms.in"
     shutil.copy(terms, vd / f"station_terms_v{version}.in")
     b4d = REPO / "data" / "tomo_v1" / "b4" / run
     for f in ("compare.md", "acceptance.md", f"catalog_v5_trackA_{run}_tiers.md"):
@@ -186,11 +197,19 @@ def build(version, out=OUT, rd=REPO / "data" / "catalog_v5"):
     ab_src = ab.loc_source.value_counts().to_dict()
     nflag = {f: int(c[f].astype("boolean").fillna(False).sum()) for f in flag_cols}
     nm = int(c.M.notna().sum())
-    ax = c[(c.loc_source == "nll3d") & (c.region == "Axial") & c.tier.isin(["A", "B"])]
+    ax = c[(c.loc_source == "nll3d") & (c.region == "Axial") & c.tier.isin(["A", "B"])].dropna(subset=["depth", "surface_km"])
     axz = ax.depth + ax.surface_km
     axial = (f"{100 * (axz <= 2.0).mean():.0f} % of the {len(ax):,} tier A-B Axial events are within 2 km of the seafloor "
              f"(median {axz.median():.1f} km below it), against 90 % in Waldhauser et al. (2020)")
     dec = ", ".join(V.get("decisions", ["D-B058"]))
+    hypo = V.get("hypocentres_text", "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model "
+                 "v{model}\n  (velocity_models.zip in this record), with static station terms from a first pass "
+                 "(station_terms_v{version}.in),\n  run {run}. Depth is km below sea level (true depth; the "
+                 "Earth-flattening of the travel-time grids is undone).").format(model=model, version=version, run=run)
+    mnote = f" ({P['v4_1_magnitudes_note']})" if P.get("v4_1_magnitudes_note") else ""
+    mags = V.get("magnitudes_text", "Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / "
+                 "Mw_cal), computed with the v4\n  hypocentres{mnote};\n  they will be recomputed with the new "
+                 "hypocentres in a later version.").format(mnote=mnote)
     picks_txt = V.get("picks_note", "Picks are not repeated\n  here: they are Cascadia_picks_catalog_v4.csv.gz in this "
                                     "record, with the v4.1 patch.")
     ls_rows = "".join(f"| {LOC_SOURCE[k][1]} | {ls.get(k, 0):,} |\n" for k in LOC_SOURCE if k == "nll3d" or ls.get(k, 0))
@@ -207,13 +226,9 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
 
 * Events and picks: catalog v4.1 (association catalog of I. McBrearty with the v4.1 patch: event 172113 removed as
   mis-associated, events 900001-900003 added with ComCat hypocentres and repicked phases). {picks_txt}
-* Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model}
-  (velocity_models.zip in this record), with static station terms from a first pass (station_terms_v{version}.in),
-  run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone).
+* {hypo}
 """ + "".join(f"* {x}\n" for x in V.get("method_notes", [])) + TIER_U_TEXT[tier_u] + f"""
-* Magnitudes: Route A preferred magnitude of catalog v4.1 (M, M_type ML / Mw / Mw_cal), computed with the v4
-  hypocentres{f" ({P['v4_1_magnitudes_note']})" if P.get("v4_1_magnitudes_note") else ""};
-  they will be recomputed with the new hypocentres in a later version.
+* {mags}
 
 ## Counts
 
@@ -247,13 +262,13 @@ workflow/10_tomography/DECISIONS.md). Private working copy; not peer reviewed; n
     reg = pd.concat([reg[reg.version != version], pd.DataFrame([row]).astype(str)], ignore_index=True)
     rd.mkdir(parents=True, exist_ok=True)
     reg.sort_values("version").to_csv(reg_f, index=False)
-    zp = out / "catalog_v5.zip"
+    zp = out / f"catalog_{series}.zip"
     tmp = zp.with_suffix(".zip.part")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-        z.write(reg_f, "catalog_v5/registry.csv")
+        z.write(reg_f, f"catalog_{series}/registry.csv")
         for v in sorted(reg.version):
             for p in sorted((out / f"v{v}").iterdir()):
-                z.write(p, f"catalog_v5/v{v}/{p.name}")
+                z.write(p, f"catalog_{series}/v{v}/{p.name}")
     tmp.replace(zp)
 
     od = rd / f"v{version}"

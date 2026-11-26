@@ -920,3 +920,12 @@ starts as soon as the v0.4.1 wide grids and the family CC times are complete. De
 artificial signal on the analog UW channels near Mount St Helens (HSR, EDM, STD.UW; likely false deep events, waveform review P1),
 the 129 other clock-candidate epochs (review_candidates.csv) and the location-review flags; v6.0 carries the automatic review
 indicators as columns but applies no reviewer flag it does not have.
+
+### D-B098 Catalog v6.0: no coherence relocation in the Mendocino region (adopted, 2026-11-25 20:35, PI; amends D-B095, D-B096)
+PI answer "Skip at Mendocino" to: the held-out tests show the coherence stage helps at Axial (P -10 ms), Mount St Helens (-21),
+Puget (-7) and Georgia (-15), does nothing at Blanco, JdF and Gorda, and hurts at the 2015 Mendocino sequence (P +8 ms, S +20 ms).
+In v6.0, compact events (Len3 <= 5 km) whose catalog v5.1 region is "Mendocino" (a box on the v4 epicentre, 39.5-40.5 N,
+128.1-123.5 W; 24,644 events in v5.1) are not relocated by the coherence stage and keep their SSST 4 km (it4) location. They can
+still be stacking partners of events outside the region. Code: reloc/v6-prep 5596e49e (b4_v6_reloc.py cmd_coh, override
+V6_COH_SKIP_REGIONS; catalog column coherence_skipped_region; coh/coherence_skipped_region.csv). Provisional: it rests on one
+Mendocino test cluster; the acceptance report states it, and v6.1 can revisit it with a second Mendocino test.

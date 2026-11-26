@@ -205,8 +205,13 @@ def main():
         "folds on the rows located in both arms; coherence - ssst with a 95 % paired bootstrap interval over event pairs.")
     cr = c[nll].groupby("region").agg(located=("ID", "size"),
                                       coherence_relocated=("coherence_relocated", lambda s: int(B(s).sum())),
-                                      with_partner=("coherence_partners", lambda s: int((s.fillna(0) > 0).sum())))
+                                      with_partner=("coherence_partners", lambda s: int((s.fillna(0) > 0).sum())),
+                                      **({"skipped_region": ("coherence_skipped_region", lambda s: int(B(s).sum()))}
+                                         if "coherence_skipped_region" in c else {}))
     add(cr.reindex([r for r in REGION_ORDER if r in cr.index]))
+    para("D-B098 (PI 2026-11-25 20:35): no coherence relocation in the Mendocino region (v5.1 region label), where the "
+         "held-out test on the 2015 sequence found the stage worse (P +8 ms, S +20 ms); those compact events keep their SSST "
+         "4 km location (skipped_region) and can still be stacking partners elsewhere. Provisional: one Mendocino test cluster.")
     rc = Path(a.heldout) / "coh_rule_check.json" if a.heldout else None
     para("Partner rule of v6.0 (R3, coordinator 2026-11-25 20:00, notes/v6_plan.md): separation <= 3 km, >= 3 accepted "
          "CC rows, median cc_max >= 0.5 over the measured rows, rows straddling a confirmed clock epoch left out; the "

@@ -87,6 +87,7 @@ X0, Y0, X1, Y1 = -513.0, -709.0, 457.0, 724.0     # model lattice (a2_make_obs.p
 CHUNK = int(os.environ.get("V6_CHUNK", RN.CHUNK))      # events per NLLoc job (results do not depend on it)
 HALO_MAX = 50.0                             # km: Loc2ssst halo min(3 CharDist, HALO_MAX)
 MAX_ARR = 20000                             # Loc2ssst MAX_NUM_ARRIVALS_LOC2SSST
+N_MAX = int(os.environ.get("V6_LSS_NMAX", "4000"))   # input events per Loc2ssst run (its cost grows as N^2 per station-phase)
 LSS_MAXLEN = 990                            # LSSTATIONS line length (NonLinLoc line buffer 1,000)
 MEM_MIN_GB = float(os.environ.get("V6_MEM_MIN_GB", "35"))
 CTRL = R6 / "control" / "nproc"
@@ -503,9 +504,12 @@ def obs_arrivals(root, tile, jobs_by_tile):
     return out
 
 
-def lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char):
-    """Loc2ssst input files of a tile in g<k>/<tile>/lsin (links to whole tile files, or subsets where a station-phase
-    would pass MAX_ARR). Returns a record of what went in."""
+def lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char, located):
+    """Loc2ssst input files of a tile in g<k>/<tile>/lsin: the LOCATED events of the tile and of the tiles within the
+    halo min(3 CharDist, HALO_MAX), at most N_MAX events and at most MAX_ARR arrivals per station-phase. Loc2ssst's cost
+    grows as (input events)^2 per station-phase (NonLinLoc's linked-list lookups), so dense regions get a subset: the
+    tile's own events in a seeded random order first, then the halo events nearest to the tile. When everything fits,
+    the whole tile files are linked. located = {tile: [IDs LOCATED in it<k>]}. Returns a record of what went in."""
     rd = root / f"it{k}"
     lsin = root / f"g{k}" / tile / "lsin"
     lsin.mkdir(parents=True, exist_ok=True)
@@ -513,52 +517,53 @@ def lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char):
     me = (int(tiles.loc[tile, "ix"]), int(tiles.loc[tile, "iy"]))
     cand = sorted(((tile_dist(me, (int(r.ix), int(r.iy))), t) for t, r in tiles.iterrows()
                    if tile_dist(me, (int(r.ix), int(r.iy))) <= H), key=lambda v: (v[0], v[1] != tile, v[1]))
+    rec = dict(halo_km=H, n_max=N_MAX, tiles_full=[], tiles_partial={}, events_dropped=0)
+    n_all = sum(len(located.get(t, ())) for _, t in cand)
     tot = {}
-    rec = dict(halo_km=H, tiles_full=[], tiles_partial={}, events_dropped=0)
-    rng = np.random.default_rng(int(md5_text(f"{tile}:{k}")[:8], 16))      # stable seed per tile and pass
-    for d, t in cand:
-        c = counts.get(t, {})
-        if all(tot.get(kk, 0) + v <= MAX_ARR for kk, v in c.items()):
+    for _, t in cand:
+        for kk, v in counts.get(t, {}).items():
+            tot[kk] = tot.get(kk, 0) + v
+    if n_all <= N_MAX and all(v <= MAX_ARR for v in tot.values()):
+        for _, t in cand:
             (lsin / f"{t}.hyp").symlink_to(rd / "hyp" / f"{t}.hyp")
-            for kk, v in c.items():
-                tot[kk] = tot.get(kk, 0) + v
             rec["tiles_full"].append(t)
-            continue
-        # partial: the events of t nearest to this tile (own tile: seeded random order), while every station-phase fits
-        arr = obs_arrivals(root, t, jobs_by_tile)
-        ids = list(arr)
-        if t == tile:
-            rng.shuffle(ids)
-        else:
-            x0, y0 = X0 + me[0] * TILE, Y0 + me[1] * TILE
-            def dd(i):
-                p = pos.get(i)
-                if p is None or not np.isfinite(p[0]):
-                    return 1e9
-                return np.hypot(max(0, x0 - p[0], p[0] - x0 - TILE), max(0, y0 - p[1], p[1] - y0 - TILE))
-            ids.sort(key=dd)
-        keep = []
-        for i in ids:
+    else:
+        rng = np.random.default_rng(int(md5_text(f"{tile}:{k}")[:8], 16))      # stable seed per tile and pass
+        own = list(located.get(tile, ()))
+        rng.shuffle(own)
+        x0, y0 = X0 + me[0] * TILE, Y0 + me[1] * TILE
+        def dd(i):
+            p = pos[i]
+            return np.hypot(max(0, x0 - p[0], p[0] - x0 - TILE), max(0, y0 - p[1], p[1] - y0 - TILE))
+        halo = sorted((dd(i), i, t) for _, t in cand if t != tile for i in located.get(t, ()))
+        order = [(i, tile) for i in own] + [(i, t) for _, i, t in halo]
+        keep, tot = {}, {}
+        n = 0
+        for i, t in order:
+            if n >= N_MAX:
+                break
             need = {}
-            for kk in arr[i]:
+            for kk in obs_arrivals(root, t, jobs_by_tile)[i]:
                 need[kk] = need.get(kk, 0) + 1
             if all(tot.get(kk, 0) + v <= MAX_ARR for kk, v in need.items()):
-                keep.append(i)
+                keep.setdefault(t, []).append(i)
                 for kk, v in need.items():
                     tot[kk] = tot.get(kk, 0) + v
-        blocks = hyp_blocks(rd / "hyp" / f"{t}.hyp")
-        with open(lsin / f"{t}.hyp", "w") as fo:
-            for i in keep:
-                if i in blocks:
+                n += 1
+        for t, ids in keep.items():
+            blocks = hyp_blocks(rd / "hyp" / f"{t}.hyp")
+            with open(lsin / f"{t}.hyp", "w") as fo:
+                for i in ids:
                     fo.write(blocks[i])
-        rec["tiles_partial"][t] = [len(keep), len(ids)]
-        rec["events_dropped"] += len(ids) - len(keep)
+            rec["tiles_partial"][t] = [len(ids), len(located.get(t, ()))]
+        rec["events_dropped"] = n_all - n
+    rec["events_in"] = int(n_all - rec["events_dropped"])
     rec["max_arrivals_station_phase"] = max(tot.values()) if tot else 0
     rec["arrivals_in"] = int(sum(tot.values()))
     return rec
 
 
-def lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos):
+def lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos, located):
     """g<k>/<tile>: links to the previous grids, the inputs and the control files of the Loc2ssst instances; returns the
     tasks [(name, argv, cwd, log)]."""
     char = SCHEDULE[k]
@@ -569,7 +574,7 @@ def lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos):
     (d_out / "work").mkdir(parents=True)
     for f in sorted(d_in.glob("cascadia3d.*.time.*")):
         (d_out / f.name).symlink_to(os.path.realpath(f))
-    rec = lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char)
+    rec = lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char, located)
     t = tiles.loc[tile]
     x0, y0, nx, ny = float(t.x0), float(t.y0), int(t.nx), int(t.ny)
     s = S.lsgrid_km(char)
@@ -687,13 +692,17 @@ def cmd_lss(a):
     counts = {t: {(r.phase, r.sta): int(r.n) for r in g.itertuples()} for t, g in cdf.groupby("tile")}
     s = pass_summary(rd)
     pos = {int(r.ID): (r.x, r.y) for r in s.itertuples() if r.status == "LOCATED"}
+    ev_tile = pd.read_parquet(plan_dir(root) / "events.parquet").set_index("ID").tile
+    located = {}
+    for i in pos:
+        located.setdefault(ev_tile[i], []).append(i)
     t0 = time.time()
     tasks, todo = [], []
     for tile in tiles.index:
         if (gd / tile / "loc2ssst.json").exists():
             continue
         todo.append(tile)
-        tasks += lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos)
+        tasks += lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos, located)
     log(f"g{k} (CharDist {SCHEDULE[k]:g} km): {len(todo)} tiles, {len(tasks)} Loc2ssst instances")
     env = dict(ENV, PATH="/usr/bin:/bin")             # no GMT: Loc2ssst's makecpt call fails at once (cpt not needed)
     tasks.sort(key=lambda x: -x[4])                    # largest first; smaller ones fill in while memory allows
@@ -718,6 +727,8 @@ def cmd_lss(a):
                 t_min=min((r["t_min"] for r in recs if r["t_min"] is not None), default=None),
                 tiles_partial_input=sum(bool(r["tiles_partial"]) for r in recs),
                 events_dropped_arrival_limit=sum(r["events_dropped"] for r in recs),
+                n_max=N_MAX, tiles_capped=sum(bool(r["tiles_partial"]) for r in recs),
+                events_in_max=max(r.get("events_in", 0) for r in recs),
                 max_arrivals_station_phase=max(r["max_arrivals_station_phase"] for r in recs),
                 wall_min=round((time.time() - t0) / 60, 1), loc2ssst_md5=md5(LOC2SSST), utc=time.strftime("%FT%T%z"))
     (gd / "summary.json").write_text(json.dumps(summ, indent=1))

@@ -31,8 +31,8 @@
 
 reference: v4.1          # shifts are measured from this catalog
 benchmark: anss          # ComCat/ANSS events 2010-2016 (data/magnitude_v4/anss_2010-16.csv)
-atlas_relocated: v5.1
-atlas_moves_from: NLL3D-i1
+atlas_relocated: v6.0
+atlas_moves_from: v5.1
 
 catalogs:
   - id: v3
@@ -132,6 +132,23 @@ catalogs:
       2 km of the seafloor (90 % published) and Blanco events are about 1.4 km deeper; Endeavour, Explorer and Juan de
       Fuca ridge events are poorly constrained, and the catalog flags events whose depth is set by the topography floor,
       by distant stations only, or by five phases.
+
+  - id: v6.0
+    label: Catalog v6.0
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B083)
+    method: NonLinLoc EDT, 3D grids, source-specific station terms (NLL-SSST, 4 passes, D-B095/D-B096) and NLL-coherence relocation (not in Mendocino, D-B098), re-timed and clock-corrected picks v4.1tc (D-B090), run v6.0; tier U without a hypocentre (D-B100)
+    parent: v5.1
+    status: preliminary
+    date: 2026-11-26
+    atlas: true
+    own_surface: true
+    note: >-
+      NonLinLoc with source-specific station terms (NLL-SSST) and waveform-coherence relocation in model v0.4.1,
+      re-timed and clock-corrected picks; Axial depths biased deep by the station-term passes (66 % of tier A-B events
+      within 2 km of the seafloor), fixed in v6.1.
 
   # Template for Track B (tomoDD) relocations -- uncomment when a run is accepted:
   # - id: tomoDD-MG1

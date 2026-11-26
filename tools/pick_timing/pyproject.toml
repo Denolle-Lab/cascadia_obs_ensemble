@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pick-timing"
+version = "0.1.0"
+description = "Find and correct timing errors in seismic phase picks: day-merge sample-count drift and station clock errors"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+# Tested with Python 3.10, numpy 1.26.4, scipy 1.15.2, pandas 2.3.3, obspy 1.5.0, pyyaml 6.0.3
+# (matplotlib 3.10.8 comes with obspy and is used only by the HTML report).
+dependencies = [
+    "numpy>=1.22,<3",
+    "scipy>=1.9",
+    "pandas>=2.0",
+    "obspy>=1.4",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+parquet = ["pyarrow>=12"]
+test = ["pytest>=7"]
+
+[project.scripts]
+pick-timing = "pick_timing.cli:main"
+
+[tool.setuptools]
+packages = ["pick_timing"]

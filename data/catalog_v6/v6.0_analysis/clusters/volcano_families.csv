@@ -1,0 +1,11 @@
+volcano,n_events_15km,pct_background,n_families,n_swarm,n_MA,n_multiplet,largest_family_n,largest_family_type
+Mount Baker,4,100.0,0,0,0,0,0,
+Glacier Peak,3,33.3,1,0,0,1,2,multiplet
+Mount Rainier,134,83.6,9,0,4,5,4,multiplet
+Mount St. Helens,489,36.0,68,17,20,31,18,swarm
+Mount Adams,1,100.0,0,0,0,0,0,
+Mount Hood,58,34.5,9,2,2,5,14,swarm
+Three Sisters,2,100.0,0,0,0,0,0,
+Medicine Lake,2,100.0,0,0,0,0,0,
+Mount Shasta,4,100.0,0,0,0,0,0,
+Lassen Peak,22,45.5,2,1,0,1,11,swarm

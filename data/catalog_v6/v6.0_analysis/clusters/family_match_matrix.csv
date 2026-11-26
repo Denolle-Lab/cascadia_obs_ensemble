@@ -1,0 +1,7 @@
+pair,what,n_old,n_new,old_kept,old_grown,old_split,old_merged,old_changed,old_dissolved,new_kept,new_grown,new_split_part,new_merged,new_changed,new_new
+A -> B,magnitude change at v5.1 locations,2097,2092,1730,73,6,29,0,259,1735,22,16,14,6,299
+C -> D,magnitude change at v6.0 locations,2127,2101,1780,42,6,28,1,270,1786,15,14,13,8,265
+A -> C,location change with stored M,2097,2127,1744,91,16,69,1,176,1761,26,32,39,21,248
+B -> D,location change with converged M,2092,2101,1735,87,24,51,2,193,1757,17,44,31,36,216
+A -> D,v5.1 -> v6.0 (both changes),2097,2101,1550,119,13,59,2,354,1567,31,25,33,16,429
+v4.1 -> D,v4.1 (converged M) -> v6.0,1966,2101,1444,74,28,54,5,361,1490,17,45,31,40,478

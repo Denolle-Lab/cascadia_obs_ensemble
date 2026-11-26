@@ -1,0 +1,548 @@
+f4,n4_all,frac_in_v60_families,n_v60_parts,f5_main,shared_main,n5_main,status,region,type,n,Mmax,start,lon,lat,extent_km,duration90_days,mean_leaf_depth,type_v60_main,status_magnitude_only,status_location_only,cause
+1170,480,0.958,1,1140.000,459.000,1049.000,grown,BL,swarm,192,4.261,2014-03-12 04:17:39.936356,-129.440,44.167,9.284,4.322,8.591,mainshock-aftershock,kept,grown,location
+597,128,0.961,1,625.000,123.000,422.000,grown,BL,mainshock-aftershock,27,5.350,2013-01-30 03:14:25.618833,-127.798,43.468,10.066,18.428,1.000,mainshock-aftershock,grown,kept,magnitude
+1165,104,0.981,1,1140.000,102.000,1049.000,grown,BL,swarm,42,3.996,2014-03-11 16:44:21.593175,-129.442,44.153,9.716,1.655,6.600,mainshock-aftershock,kept,grown,location
+941,71,0.986,1,934.000,68.000,108.000,merged,BL,swarm,38,3.953,2013-10-14 17:55:24.685959,-128.744,43.773,9.290,0.471,8.867,swarm,merged,merged,either alone
+233,59,0.424,1,227.000,20.000,29.000,dissolved,ON,multiplet,2,3.192,2011-09-14 18:59:26.100999,-122.187,46.194,1.366,0.012,1.000,multiplet,kept,dissolved,location
+1300,56,0.982,1,1254.000,55.000,80.000,merged,BL,swarm,20,3.831,2014-05-27 00:55:59.613918,-128.704,43.834,7.604,1.050,5.083,swarm,merged,merged,either alone
+158,54,0.333,1,150.000,18.000,20.000,dissolved,PU,mainshock-aftershock,3,3.842,2011-02-08 16:36:35.896228,-123.063,48.570,10.735,43.847,1.000,mainshock-aftershock,dissolved,kept,magnitude
+1948,50,0.960,1,1939.000,48.000,218.000,merged,BL,swarm,7,3.352,2015-06-28 08:47:43.751672,-128.675,43.795,9.034,0.066,2.667,swarm,merged,kept,magnitude
+1947,48,0.979,1,1939.000,47.000,218.000,merged,BL,mainshock-aftershock,10,3.469,2015-06-27 07:37:46.230805,-128.661,43.773,7.095,0.169,1.429,swarm,merged,kept,magnitude
+1576,44,0.909,2,1585.000,31.000,32.000,split,AX,swarm,18,2.992,2015-02-02 23:41:34.704907,-129.970,45.941,3.926,0.052,5.000,mainshock-aftershock,split,kept,magnitude
+1003,42,0.000,0,,,,dissolved,EN,swarm,5,2.693,2013-11-24 05:19:29.650669,-129.232,47.575,1.635,4.109,3.000,,dissolved,kept,magnitude
+2049,36,1.000,1,2053.000,36.000,68.000,merged,PU,swarm,21,2.720,2016-02-05 22:13:02.267947,-122.287,47.298,1.671,76.895,2.143,swarm,kept,merged,location
+1949,36,1.000,1,1939.000,36.000,218.000,merged,BL,swarm,13,3.275,2015-06-28 15:57:49.396549,-128.697,43.845,8.595,0.101,4.800,swarm,merged,kept,magnitude
+79,34,1.000,1,80.000,34.000,83.000,grown,OR,mainshock-aftershock,31,5.190,2010-07-28 16:12:04.173525,-126.007,43.690,10.882,1508.442,1.546,mainshock-aftershock,grown,grown,either alone
+1167,34,1.000,1,1140.000,34.000,1049.000,grown,BL,swarm,27,3.570,2014-03-12 00:37:42.579781,-129.463,44.173,7.804,1.579,4.727,mainshock-aftershock,split,grown,location
+1166,33,0.788,1,1140.000,26.000,1049.000,grown,BL,mainshock-aftershock,4,5.083,2014-03-12 00:31:43.964920,-129.337,44.160,19.094,2.615,1.500,mainshock-aftershock,kept,grown,location
+1178,33,0.970,1,1140.000,32.000,1049.000,grown,BL,swarm,19,3.426,2014-03-15 04:29:50.178570,-129.501,44.192,4.008,1.763,2.917,mainshock-aftershock,kept,grown,location
+938,33,1.000,1,934.000,33.000,108.000,merged,BL,swarm,7,2.937,2013-10-14 08:39:10.915230,-128.733,43.780,1.747,0.354,2.667,swarm,merged,merged,either alone
+7,32,0.906,1,7.000,29.000,62.000,grown,OR,mainshock-aftershock,8,4.463,2010-01-12 02:27:42.037133,-124.456,44.379,7.500,799.977,2.333,swarm,grown,kept,magnitude
+879,31,0.871,3,885.000,11.000,11.000,split,ON,swarm,21,3.295,2013-09-04 01:06:36.425212,-130.005,45.409,15.680,78.166,5.800,swarm,split,kept,magnitude
+706,30,0.967,2,713.000,13.000,14.000,split,BL,swarm,7,2.956,2013-04-29 00:14:49.265843,-128.187,43.571,10.897,0.109,2.250,multiplet,kept,split,location
+455,29,1.000,1,487.000,29.000,58.000,merged,BL,mainshock-aftershock,5,3.201,2012-10-22 12:11:34.573369,-128.772,43.760,0.539,0.299,1.333,swarm,merged,merged,either alone
+272,26,0.269,1,260.000,7.000,30.000,dissolved,ON,multiplet,2,3.063,2011-12-21 13:48:33.430941,-122.203,46.209,3.677,0.231,1.000,swarm,kept,dissolved,location
+1975,25,0.880,1,1982.000,22.000,46.000,merged,GO,mainshock-aftershock,3,3.348,2015-08-13 18:27:20.691830,-127.469,41.297,4.064,0.013,2.000,swarm,merged,kept,magnitude
+1976,24,1.000,1,1982.000,24.000,46.000,merged,GO,mainshock-aftershock,4,3.483,2015-08-14 05:54:39.914897,-127.444,41.277,6.935,0.035,3.000,swarm,merged,kept,magnitude
+2071,22,1.000,1,2053.000,22.000,68.000,merged,PU,mainshock-aftershock,12,3.086,2016-06-24 08:38:33.441797,-122.297,47.301,6.710,50.385,1.000,swarm,kept,merged,location
+1664,22,0.955,2,1664.000,14.000,16.000,split,AX,swarm,8,1.951,2015-03-05 07:48:23.965365,-129.988,45.959,0.759,0.037,2.250,swarm,kept,kept,only both together
+644,21,0.000,0,,,,dissolved,GO,swarm,12,2.858,2013-03-07 20:31:57.792044,-126.864,42.484,5.654,0.242,6.667,,dissolved,kept,magnitude
+372,21,0.905,1,400.000,19.000,39.000,grown,MT,mainshock-aftershock,11,5.100,2012-07-21 01:52:02.379835,-125.432,40.419,13.561,14.749,1.000,mainshock-aftershock,kept,kept,only both together
+457,21,1.000,1,487.000,21.000,58.000,merged,BL,mainshock-aftershock,8,3.137,2012-10-23 10:20:57.371501,-128.775,43.752,1.397,0.321,2.200,swarm,merged,merged,either alone
+1249,19,0.737,1,1205.000,14.000,60.000,grown,BL,mainshock-aftershock,3,4.993,2014-04-25 21:18:27.711639,-127.281,43.265,8.331,4.060,1.000,mainshock-aftershock,kept,grown,location
+1180,19,0.947,1,1140.000,18.000,1049.000,grown,BL,swarm,7,3.028,2014-03-15 09:15:34.185099,-129.446,44.142,5.739,0.053,6.000,mainshock-aftershock,grown,grown,either alone
+400,19,0.684,1,432.000,8.000,16.000,changed,ON,swarm,5,3.232,2012-09-10 17:21:36.464717,-122.239,46.215,23.468,0.160,2.000,mainshock-aftershock,kept,merged,only both together
+1763,18,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,3.373,2015-03-27 23:03:39.417527,-129.992,45.940,4.375,0.024,1.000,,kept,kept,only both together
+1301,18,1.000,1,1254.000,18.000,80.000,merged,BL,swarm,9,3.139,2014-05-27 18:59:06.227661,-128.661,43.830,4.411,0.148,4.000,swarm,merged,merged,either alone
+1072,18,1.000,1,1052.000,18.000,31.000,merged,BL,swarm,16,3.850,2014-01-12 03:19:01.566844,-130.422,44.453,9.130,0.649,3.444,swarm,merged,merged,either alone
+240,18,1.000,1,235.000,16.000,41.000,grown,ON,multiplet,3,3.038,2011-10-05 18:59:19.950574,-122.207,46.164,4.465,21.011,2.000,swarm,kept,grown,location
+1921,18,1.000,1,1897.000,18.000,43.000,grown,BL,mainshock-aftershock,2,2.849,2015-05-15 14:19:20.230142,-129.679,44.240,0.921,0.086,1.000,swarm,grown,kept,magnitude
+373,18,0.500,1,401.000,9.000,19.000,grown,MT,mainshock-aftershock,3,5.190,2012-07-21 06:04:28.397419,-124.662,40.645,3.905,250.246,1.000,mainshock-aftershock,kept,kept,only both together
+342,17,0.882,1,364.000,8.000,17.000,changed,ON,swarm,11,3.225,2012-05-26 01:58:57.446134,-122.252,46.212,13.691,8.860,5.667,swarm,kept,changed,location
+745,17,0.706,1,751.000,12.000,61.000,grown,ON,mainshock-aftershock,17,5.690,2013-05-24 03:47:12.313107,-121.306,40.199,51.932,17.890,1.308,mainshock-aftershock,kept,grown,location
+41,16,1.000,1,44.000,16.000,27.000,merged,ON,swarm,9,2.819,2010-04-21 12:42:00.328660,-121.757,45.361,0.864,23.202,2.600,swarm,merged,merged,either alone
+1732,15,0.800,2,1721.000,8.000,8.000,split,AX,swarm,5,1.247,2015-03-22 14:43:15.295303,-129.981,45.944,1.609,0.007,2.000,multiplet,split,split,either alone
+145,15,0.467,1,138.000,7.000,18.000,dissolved,ON,swarm,6,2.773,2011-01-19 00:15:41.200170,-122.219,46.167,12.818,0.064,2.667,swarm,kept,dissolved,location
+870,14,0.000,0,,,,dissolved,ON,mainshock-aftershock,8,3.250,2013-08-31 09:15:40.327955,-122.209,40.555,12.290,11.800,1.750,,kept,split,only both together
+490,14,0.000,0,,,,dissolved,GO,swarm,7,2.977,2012-11-13 16:34:13.358296,-126.961,42.469,3.717,2.155,3.000,,kept,kept,only both together
+1665,14,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.955,2015-03-05 15:35:18.897389,-129.980,45.950,0.255,0.004,1.000,,dissolved,kept,magnitude
+406,12,0.417,1,445.000,5.000,8.000,dissolved,GO,mainshock-aftershock,7,4.681,2012-09-18 19:57:09.418952,-126.578,43.011,6.312,165.368,2.000,mainshock-aftershock,kept,kept,only both together
+840,12,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,4.548,2013-08-10 05:10:13.093073,-128.382,43.628,2.673,3.892,1.000,,kept,dissolved,location
+498,12,0.167,0,526.000,2.000,7.000,dissolved,ON,mainshock-aftershock,2,3.052,2012-11-17 15:26:24.031248,-122.209,46.172,4.758,0.006,1.000,swarm,kept,dissolved,location
+601,12,0.000,0,,,,dissolved,GO,multiplet,3,2.649,2013-02-02 01:07:38.723271,-127.136,41.806,5.743,0.734,2.000,,kept,dissolved,location
+650,11,0.000,0,,,,dissolved,GO,multiplet,3,2.747,2013-03-17 03:23:09.277855,-127.477,40.977,1.288,0.290,2.000,,kept,dissolved,location
+1133,11,1.000,1,1103.000,11.000,79.000,grown,BL,swarm,5,2.742,2014-02-16 13:25:07.471646,-128.193,43.573,0.989,0.031,2.000,swarm,kept,grown,location
+1817,11,0.000,0,,,,dissolved,AX,multiplet,4,1.179,2015-04-09 07:49:11.648463,-129.983,45.943,0.465,0.009,3.000,,dissolved,dissolved,either alone
+414,11,0.818,1,411.000,9.000,91.000,grown,ON,mainshock-aftershock,2,3.030,2012-09-26 19:16:35.247287,-122.132,46.190,7.904,0.169,1.000,swarm,kept,grown,location
+1348,11,1.000,1,1304.000,9.000,32.000,grown,BL,mainshock-aftershock,5,4.590,2014-07-16 15:30:09.464078,-127.213,43.267,10.220,4.500,1.000,mainshock-aftershock,grown,kept,magnitude
+750,10,1.000,1,751.000,10.000,61.000,grown,ON,swarm,10,3.338,2013-05-24 05:39:44.728548,-121.150,40.106,7.505,10.978,3.250,mainshock-aftershock,dissolved,grown,location
+1193,10,0.900,1,1152.000,9.000,21.000,merged,BL,multiplet,2,2.763,2014-03-21 12:59:51.048137,-129.426,44.099,0.307,0.063,1.000,swarm,kept,merged,location
+159,10,0.200,1,151.000,2.000,7.000,dissolved,BL,mainshock-aftershock,2,5.380,2011-02-08 22:01:58.958726,-127.444,43.316,6.118,0.102,1.000,mainshock-aftershock,grown,dissolved,location
+149,10,0.900,1,143.000,9.000,12.000,merged,ON,swarm,10,1.897,2011-01-28 00:35:45.352951,-122.165,46.128,13.757,0.008,4.000,swarm,kept,merged,location
+1074,10,1.000,1,1052.000,10.000,31.000,merged,BL,mainshock-aftershock,9,3.858,2014-01-12 12:16:01.750004,-130.409,44.435,11.729,0.057,2.250,swarm,merged,merged,either alone
+550,10,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,3.961,2012-12-27 06:36:46.146950,-123.239,48.639,3.568,4.412,1.000,,dissolved,kept,magnitude
+245,10,0.300,1,238.000,2.000,65.000,dissolved,BL,mainshock-aftershock,7,5.550,2011-10-13 04:13:57.156272,-127.253,43.303,3.924,513.158,1.000,mainshock-aftershock,grown,dissolved,location
+609,10,1.000,1,625.000,10.000,422.000,grown,BL,mainshock-aftershock,2,2.805,2013-02-06 08:06:31.492253,-128.003,43.522,0.805,0.002,1.000,mainshock-aftershock,kept,kept,only both together
+269,10,0.900,1,260.000,8.000,30.000,merged,ON,multiplet,2,3.154,2011-12-14 19:58:42.911144,-122.239,46.170,4.750,0.012,1.000,swarm,kept,merged,location
+152,10,0.600,2,146.000,4.000,4.000,split,MT,mainshock-aftershock,6,4.104,2011-01-31 06:47:12.984477,-124.560,40.309,2.795,30.104,1.250,mainshock-aftershock,kept,split,location
+718,10,1.000,1,675.000,10.000,25.000,merged,WA,swarm,5,2.973,2013-05-08 00:08:05.145647,-124.877,48.258,5.436,0.246,4.000,swarm,kept,merged,location
+90,9,0.889,1,85.000,8.000,14.000,merged,PU,swarm,5,2.051,2010-08-20 01:27:37.165023,-122.741,47.356,1.253,14.935,2.500,swarm,kept,merged,location
+1789,9,0.889,1,1760.000,8.000,22.000,merged,AX,mainshock-aftershock,5,2.425,2015-03-31 23:39:24.625750,-129.992,45.958,0.848,0.003,2.000,swarm,kept,kept,only both together
+1183,9,1.000,1,1140.000,9.000,1049.000,grown,BL,multiplet,4,2.777,2014-03-16 08:14:05.412550,-129.446,44.142,1.934,0.022,1.500,mainshock-aftershock,grown,grown,either alone
+1354,9,1.000,1,1205.000,9.000,60.000,grown,BL,multiplet,3,2.956,2014-07-22 21:58:53.014477,-127.277,43.279,5.570,0.016,1.000,mainshock-aftershock,grown,kept,magnitude
+585,9,0.000,0,,,,dissolved,GO,multiplet,4,3.111,2013-01-14 21:22:14.467768,-126.867,42.475,5.426,0.624,1.500,,kept,kept,only both together
+947,9,0.667,1,942.000,6.000,9.000,merged,ON,swarm,7,2.544,2013-10-16 08:53:02.473110,-129.155,47.127,5.753,7.048,2.000,mainshock-aftershock,kept,merged,location
+451,9,0.667,1,483.000,6.000,9.000,merged,BL,mainshock-aftershock,2,3.943,2012-10-20 23:44:49.708656,-128.671,43.725,0.765,1.383,1.000,mainshock-aftershock,kept,kept,only both together
+1022,9,0.222,1,1009.000,2.000,2.000,dissolved,GO,swarm,5,3.020,2013-12-03 15:42:51.210054,-126.931,42.460,8.856,0.337,2.000,multiplet,dissolved,dissolved,either alone
+213,9,0.444,1,208.000,4.000,8.000,dissolved,PU,mainshock-aftershock,5,3.987,2011-07-24 12:19:27.988500,-123.163,47.686,8.766,605.803,1.000,mainshock-aftershock,kept,dissolved,location
+1876,9,0.889,2,1848.000,6.000,7.000,split,ON,mainshock-aftershock,9,4.337,2015-04-24 07:04:13.943961,-129.901,46.241,13.407,0.757,3.400,swarm,kept,split,location
+1566,9,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.498,2015-01-31 20:02:01.447843,-129.989,45.962,0.359,0.007,1.000,,dissolved,dissolved,either alone
+806,8,1.000,1,813.000,8.000,17.000,grown,BL,mainshock-aftershock,4,4.570,2013-07-20 17:20:52.367121,-126.861,43.078,14.721,0.120,1.000,mainshock-aftershock,grown,kept,magnitude
+1998,8,0.500,1,1987.000,4.000,26.000,grown,ON,multiplet,2,2.740,2015-09-28 04:24:07.879273,-122.239,46.200,3.752,0.855,1.000,swarm,kept,grown,location
+875,8,0.375,1,894.000,3.000,4.000,dissolved,ON,swarm,6,3.153,2013-09-02 22:32:11.052040,-129.408,46.690,4.199,9.378,2.333,multiplet,kept,merged,only both together
+849,8,0.625,1,855.000,5.000,20.000,grown,BL,mainshock-aftershock,2,3.155,2013-08-15 16:09:54.159822,-127.081,43.208,1.151,0.316,1.000,mainshock-aftershock,kept,grown,location
+481,8,1.000,1,511.000,8.000,13.000,merged,PU,mainshock-aftershock,5,2.065,2012-11-07 15:05:27.029958,-121.657,47.882,1.345,20.395,1.333,swarm,kept,merged,location
+185,8,1.000,1,181.000,8.000,18.000,merged,ON,swarm,7,2.984,2011-05-04 21:24:41.606299,-122.231,46.139,7.130,0.139,3.000,swarm,kept,merged,location
+1194,8,1.000,1,1152.000,7.000,21.000,merged,BL,multiplet,3,3.036,2014-03-21 15:55:53.989318,-129.435,44.097,3.832,0.067,2.000,swarm,kept,merged,location
+1661,8,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.383,2015-03-05 01:35:48.202075,-129.982,45.941,0.348,0.004,1.000,,dissolved,kept,magnitude
+1812,8,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.184,2015-04-07 15:20:12.181419,-129.981,45.944,0.269,0.003,1.000,,dissolved,kept,magnitude
+433,8,0.000,0,,,,dissolved,GO,mainshock-aftershock,4,3.670,2012-10-05 23:02:35.820046,-126.377,42.504,10.456,0.017,2.000,,kept,kept,only both together
+133,8,0.750,1,129.000,6.000,10.000,merged,ON,multiplet,3,3.131,2010-12-15 13:37:44.285525,-122.256,46.217,10.796,0.010,2.000,mainshock-aftershock,kept,kept,only both together
+1431,8,1.000,1,10.000,8.000,350.000,grown,MT,mainshock-aftershock,2,3.931,2014-11-04 02:44:32.245146,-124.871,40.421,0.450,2.424,1.000,mainshock-aftershock,kept,grown,location
+1945,7,1.000,1,1939.000,7.000,218.000,merged,BL,multiplet,2,2.607,2015-06-27 03:12:25.141986,-128.676,43.773,1.188,0.046,1.000,swarm,merged,grown,magnitude
+890,7,0.000,0,,,,dissolved,ON,multiplet,3,2.181,2013-09-10 17:37:58.340721,-129.175,47.079,3.326,0.124,2.000,,dissolved,kept,magnitude
+567,7,0.000,0,,,,dissolved,EN,mainshock-aftershock,2,4.540,2013-01-06 20:53:55.220262,-129.139,48.781,1.675,0.250,1.000,,kept,dissolved,location
+144,7,1.000,1,138.000,7.000,18.000,merged,ON,swarm,5,1.982,2011-01-18 21:22:42.366653,-122.207,46.102,12.551,0.114,1.333,swarm,kept,merged,location
+1226,7,0.000,0,,,,dissolved,ON,multiplet,3,1.843,2014-04-10 10:11:41.885222,-129.544,46.640,5.806,0.014,2.000,,dissolved,kept,magnitude
+1023,7,0.000,0,,,,dissolved,ON,mainshock-aftershock,6,2.671,2013-12-03 23:36:22.991124,-129.238,46.985,7.601,0.462,1.250,,dissolved,kept,magnitude
+994,7,1.000,1,983.000,7.000,17.000,merged,BL,multiplet,2,2.647,2013-11-16 21:04:32.596666,-128.760,43.875,0.281,0.152,1.000,swarm,merged,merged,either alone
+916,7,0.571,1,917.000,4.000,11.000,grown,ON,multiplet,2,2.043,2013-09-30 18:11:53.681265,-122.210,46.116,3.458,0.121,1.000,swarm,kept,kept,only both together
+1192,7,1.000,1,1140.000,7.000,1049.000,grown,BL,multiplet,2,3.077,2014-03-21 06:46:01.743948,-129.440,44.170,0.830,0.144,1.000,mainshock-aftershock,grown,grown,either alone
+1806,7,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.303,2015-04-06 13:53:50.630399,-129.980,45.944,0.173,0.005,1.000,,dissolved,dissolved,either alone
+1805,7,0.000,0,,,,dissolved,OR,mainshock-aftershock,3,5.861,2015-04-06 06:12:07.594947,-124.443,45.047,25.348,284.215,1.000,,dissolved,kept,magnitude
+1875,7,0.286,1,1847.000,2.000,6.000,dissolved,ON,mainshock-aftershock,6,4.607,2015-04-24 06:55:34.597303,-130.092,46.229,21.207,0.718,1.250,mainshock-aftershock,kept,dissolved,location
+1277,7,1.000,1,1234.000,7.000,21.000,grown,BL,multiplet,3,2.974,2014-05-16 05:15:08.626280,-128.688,43.847,1.655,0.029,1.000,mainshock-aftershock,grown,grown,either alone
+1438,7,1.000,1,1438.000,7.000,11.000,merged,ON,swarm,7,3.609,2014-11-11 08:35:31.253911,-121.542,40.401,17.345,2.353,4.000,swarm,kept,merged,location
+995,7,1.000,1,983.000,7.000,17.000,merged,BL,multiplet,4,3.057,2013-11-17 02:17:51.708800,-128.769,43.863,2.812,0.263,3.000,swarm,merged,merged,either alone
+1731,7,0.000,0,,,,dissolved,AX,multiplet,2,0.868,2015-03-22 13:02:46.634674,-129.984,45.945,0.525,0.001,1.000,,dissolved,kept,magnitude
+1708,7,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,3.046,2015-03-16 15:29:38.211944,-129.979,45.946,3.530,0.008,2.000,,dissolved,dissolved,either alone
+748,7,1.000,1,751.000,7.000,61.000,grown,ON,swarm,6,3.356,2013-05-24 04:40:29.916150,-121.089,40.089,8.716,1.085,2.000,mainshock-aftershock,dissolved,grown,location
+1400,7,1.000,1,1139.000,6.000,2521.000,grown,MT,mainshock-aftershock,4,3.403,2014-09-28 13:53:10.385509,-125.370,40.651,1.551,0.065,1.000,mainshock-aftershock,grown,kept,magnitude
+792,7,0.857,1,799.000,6.000,9.000,merged,BL,multiplet,3,3.097,2013-07-07 18:39:45.950687,-130.251,44.465,8.531,0.007,1.000,multiplet,kept,merged,location
+1435,7,1.000,2,1433.000,4.000,4.000,split,ON,swarm,7,2.952,2014-11-10 04:20:24.825642,-121.618,40.402,10.822,2.877,2.667,multiplet,kept,split,location
+664,7,1.000,1,675.000,7.000,25.000,merged,WA,swarm,6,2.076,2013-03-28 19:05:28.681856,-124.878,48.263,4.352,19.484,2.500,swarm,kept,merged,location
+417,7,1.000,2,447.000,4.000,4.000,split,ON,mainshock-aftershock,3,2.895,2012-09-28 13:46:00.561292,-122.117,46.227,4.900,0.431,1.000,mainshock-aftershock,kept,kept,only both together
+1648,7,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,1.416,2015-02-26 20:48:58.805045,-129.979,45.945,1.442,0.005,1.000,,dissolved,kept,magnitude
+1786,7,1.000,1,1760.000,7.000,22.000,merged,AX,mainshock-aftershock,3,2.641,2015-03-31 22:22:28.659298,-129.988,45.960,2.777,0.001,2.000,swarm,kept,kept,only both together
+1779,7,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.947,2015-03-31 03:22:54.285769,-130.023,45.948,0.290,0.001,1.000,,dissolved,kept,magnitude
+1086,7,0.000,0,,,,dissolved,WA,multiplet,2,1.528,2014-01-22 18:14:37.845424,-125.207,48.844,1.706,0.156,1.000,,dissolved,kept,magnitude
+1173,7,0.000,0,,,,dissolved,ON,swarm,5,2.813,2014-03-13 09:58:28.506432,-129.988,45.441,2.052,10.957,4.000,,dissolved,kept,magnitude
+1360,6,1.000,1,1205.000,6.000,60.000,grown,BL,mainshock-aftershock,2,3.119,2014-07-25 15:29:14.390092,-127.278,43.283,3.003,0.004,1.000,mainshock-aftershock,grown,kept,magnitude
+1623,6,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.135,2015-02-18 01:28:52.402637,-129.980,45.942,0.434,0.025,1.000,,dissolved,dissolved,either alone
+1337,6,1.000,1,1294.000,6.000,10.000,merged,BL,mainshock-aftershock,2,3.849,2014-07-02 15:57:20.672480,-129.985,44.353,3.647,0.019,1.000,mainshock-aftershock,kept,merged,location
+622,6,1.000,1,647.000,6.000,8.000,merged,BL,mainshock-aftershock,2,2.925,2013-02-18 22:11:11.289417,-130.423,44.501,0.613,0.146,1.000,multiplet,merged,merged,either alone
+704,6,0.000,0,,,,dissolved,MT,multiplet,3,3.779,2013-04-27 09:01:55.639649,-125.356,40.406,1.894,17.121,2.000,,kept,kept,only both together
+1651,6,0.000,0,,,,dissolved,AX,multiplet,4,0.820,2015-02-27 03:20:22.633804,-130.034,45.954,0.333,0.004,3.000,,dissolved,split,magnitude
+1646,6,0.000,0,,,,dissolved,AX,multiplet,2,0.991,2015-02-25 19:26:01.874165,-129.988,45.954,0.530,0.001,1.000,,dissolved,kept,magnitude
+1785,6,0.333,1,1778.000,2.000,2.000,dissolved,PU,mainshock-aftershock,3,2.560,2015-03-31 22:13:46.876011,-122.713,47.405,4.588,5.100,2.000,multiplet,kept,dissolved,location
+1925,6,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.010,2015-05-19 01:27:12.946475,-122.829,44.095,0.290,0.786,1.000,,dissolved,kept,magnitude
+1168,6,0.833,1,1140.000,5.000,1049.000,grown,BL,mainshock-aftershock,3,3.509,2014-03-12 01:29:30.335373,-129.499,44.165,2.889,0.092,1.000,mainshock-aftershock,dissolved,grown,location
+1407,6,0.667,2,1392.000,2.000,3.000,split,ON,swarm,6,2.619,2014-10-06 20:35:12.195618,-123.446,39.483,6.624,1.199,2.667,mainshock-aftershock,kept,split,location
+62,6,1.000,1,44.000,6.000,27.000,merged,ON,multiplet,3,1.818,2010-06-14 15:41:07.598688,-121.752,45.364,0.506,3.160,2.000,swarm,merged,merged,either alone
+52,6,0.833,1,53.000,5.000,8.000,merged,PU,mainshock-aftershock,3,2.964,2010-05-25 12:20:58.948019,-122.037,47.718,10.079,0.724,1.000,mainshock-aftershock,kept,merged,location
+1697,6,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.772,2015-03-14 19:22:07.073645,-129.980,45.950,0.489,0.011,1.000,,dissolved,dissolved,either alone
+1820,6,0.000,0,,,,dissolved,AX,multiplet,2,0.834,2015-04-09 14:06:54.162339,-129.980,45.944,0.180,0.002,1.000,,dissolved,kept,magnitude
+1832,6,0.000,0,,,,dissolved,AX,multiplet,3,1.677,2015-04-13 17:58:52.719069,-130.021,45.945,0.688,0.011,2.000,,kept,kept,only both together
+1954,6,0.000,0,,,,dissolved,ON,mainshock-aftershock,3,2.185,2015-07-06 05:24:33.721259,-121.695,41.078,2.471,0.905,1.000,,dissolved,split,magnitude
+1953,6,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.430,2015-07-05 02:08:39.614456,-124.479,40.409,0.332,16.692,1.000,,dissolved,kept,magnitude
+1936,6,0.167,0,1923.000,1.000,6.000,dissolved,ON,mainshock-aftershock,2,2.726,2015-06-03 19:02:02.851262,-122.222,46.194,7.125,0.198,1.000,mainshock-aftershock,kept,dissolved,location
+1079,6,0.000,0,,,,dissolved,ON,swarm,5,2.199,2014-01-15 21:45:11.704928,-129.386,46.752,4.563,0.181,2.000,,dissolved,kept,magnitude
+1573,6,0.833,2,1580.000,3.000,3.000,split,AX,mainshock-aftershock,6,2.485,2015-02-01 23:17:26.348137,-130.043,45.993,2.480,0.020,3.000,mainshock-aftershock,kept,split,location
+924,6,0.000,0,,,,dissolved,ON,swarm,5,2.548,2013-10-06 14:54:54.931360,-130.048,45.334,2.881,18.695,4.000,,dissolved,split,magnitude
+919,6,0.000,0,,,,dissolved,ON,multiplet,3,2.200,2013-10-02 07:22:20.828214,-129.410,46.673,1.607,0.129,2.000,,dissolved,kept,magnitude
+67,5,1.000,2,74.000,3.000,3.000,split,PU,multiplet,4,1.808,2010-07-06 19:16:55.050681,-122.809,47.794,6.696,11.207,1.500,mainshock-aftershock,kept,split,location
+335,5,1.000,1,7.000,5.000,62.000,grown,OR,mainshock-aftershock,2,2.653,2012-05-17 13:30:17.389951,-124.493,44.327,1.370,0.238,1.000,swarm,grown,grown,either alone
+1822,5,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.210,2015-04-09 16:06:43.493579,-129.978,45.944,0.563,0.001,1.000,,dissolved,kept,magnitude
+1804,5,0.000,0,,,,dissolved,MT,multiplet,2,2.572,2015-04-05 23:35:59.696371,-124.406,40.464,0.344,0.856,1.000,,kept,kept,only both together
+1640,5,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.417,2015-02-24 13:09:02.997286,-129.972,45.935,0.081,0.001,1.000,,dissolved,kept,magnitude
+201,5,1.000,1,181.000,5.000,18.000,merged,ON,mainshock-aftershock,2,3.198,2011-06-08 18:58:28.580311,-122.195,46.151,9.702,0.001,1.000,swarm,kept,merged,location
+639,5,1.000,1,565.000,5.000,49.000,grown,PU,multiplet,4,1.665,2013-03-06 20:18:49.033090,-121.664,47.883,1.447,3.428,2.000,swarm,kept,grown,location
+646,5,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.489,2013-03-10 11:43:19.090137,-127.043,42.260,2.308,0.001,1.000,,kept,kept,only both together
+645,5,0.000,0,,,,dissolved,GO,multiplet,2,2.815,2013-03-08 21:19:09.758657,-126.903,42.461,3.009,0.246,1.000,,dissolved,dissolved,either alone
+1969,5,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.731,2015-08-02 16:44:20.706622,-122.271,46.188,9.400,0.001,1.000,,kept,dissolved,location
+1005,5,1.000,1,992.000,5.000,64.000,grown,BL,multiplet,2,2.494,2013-11-25 08:20:35.641369,-130.310,44.443,0.799,0.018,1.000,swarm,kept,grown,location
+425,5,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.126,2012-10-02 03:54:11.078293,-127.474,40.764,1.256,0.006,1.000,,kept,dissolved,location
+1838,5,0.000,0,,,,dissolved,AX,multiplet,2,0.786,2015-04-14 21:52:53.323131,-129.974,45.940,0.180,0.002,1.000,,dissolved,dissolved,either alone
+1076,5,1.000,2,1055.000,3.000,3.000,split,BL,mainshock-aftershock,3,4.065,2014-01-13 22:35:36.621072,-127.153,43.257,5.298,1.178,1.000,mainshock-aftershock,kept,split,location
+1855,5,0.000,0,,,,dissolved,AX,multiplet,2,0.926,2015-04-20 03:08:46.152535,-129.969,45.937,0.402,0.000,1.000,,kept,kept,only both together
+1836,5,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.166,2015-04-14 11:51:20.907502,-129.972,45.938,0.127,0.001,1.000,,dissolved,kept,magnitude
+533,5,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.959,2012-12-15 01:37:19.554198,-129.611,44.209,0.641,0.002,1.000,,dissolved,kept,magnitude
+1338,5,0.000,0,,,,dissolved,BL,mainshock-aftershock,3,4.528,2014-07-02 19:30:25.766464,-126.619,43.056,7.164,19.355,1.000,,kept,dissolved,location
+860,5,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,3.877,2013-08-26 02:30:20.273669,-129.441,44.060,1.346,0.049,1.000,,dissolved,kept,magnitude
+975,5,0.000,0,,,,dissolved,ON,multiplet,3,2.695,2013-11-05 23:49:53.037802,-129.365,46.763,4.761,1.651,1.000,,kept,dissolved,location
+1556,5,1.000,1,677.000,5.000,53.000,grown,GO,mainshock-aftershock,2,3.655,2015-01-27 10:08:19.806426,-126.409,40.478,0.402,1.450,1.000,mainshock-aftershock,kept,kept,only both together
+1156,5,1.000,1,1132.000,5.000,11.000,grown,BL,multiplet,3,2.965,2014-03-07 23:20:40.970343,-128.710,43.819,2.015,0.064,2.000,multiplet,grown,grown,either alone
+1143,5,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.908,2014-02-26 05:46:37.423812,-129.243,46.977,3.667,0.003,1.000,,dissolved,kept,magnitude
+322,5,1.000,1,340.000,5.000,19.000,grown,OR,mainshock-aftershock,3,2.676,2012-04-17 01:46:07.068233,-124.377,44.604,6.158,1.501,2.000,swarm,kept,grown,location
+905,5,1.000,1,625.000,5.000,422.000,grown,BL,mainshock-aftershock,2,3.197,2013-09-23 04:17:21.511628,-127.838,43.464,1.509,0.002,1.000,mainshock-aftershock,grown,kept,magnitude
+1484,5,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.058,2014-12-13 02:05:41.157746,-129.988,45.956,0.255,0.004,1.000,,dissolved,dissolved,either alone
+929,5,0.600,1,942.000,3.000,9.000,merged,ON,mainshock-aftershock,2,3.067,2013-10-08 16:07:49.574164,-129.138,47.147,0.445,8.542,1.000,mainshock-aftershock,dissolved,merged,location
+1163,5,1.000,1,837.000,5.000,385.000,grown,ON,mainshock-aftershock,2,2.041,2014-03-10 02:48:43.182033,-122.387,46.320,0.032,4.231,1.000,swarm,grown,kept,magnitude
+1197,5,0.000,0,,,,dissolved,ON,swarm,5,2.633,2014-03-23 19:00:16.879130,-129.380,46.725,14.348,4.716,4.000,,dissolved,kept,magnitude
+303,5,0.000,0,,,,dissolved,WA,multiplet,2,1.571,2012-02-15 12:00:03.488160,-124.642,47.968,3.130,0.564,1.000,,dissolved,kept,magnitude
+921,5,0.000,0,,,,dissolved,ON,multiplet,4,2.370,2013-10-03 12:29:22.764058,-129.154,47.129,3.264,0.617,3.000,,dissolved,kept,magnitude
+1910,5,0.400,1,1882.000,2.000,2.000,dissolved,ON,multiplet,2,2.896,2015-04-30 22:06:12.398681,-122.274,46.239,0.000,0.000,1.000,multiplet,kept,dissolved,location
+1257,5,0.000,0,,,,dissolved,ON,multiplet,4,2.672,2014-05-03 07:55:12.470004,-130.046,45.320,7.631,7.420,1.000,,dissolved,dissolved,either alone
+1545,5,0.000,0,,,,dissolved,AX,multiplet,2,0.753,2015-01-19 02:01:33.456254,-129.971,45.932,0.171,0.001,1.000,,dissolved,kept,magnitude
+1780,5,0.000,0,,,,dissolved,AX,multiplet,2,0.902,2015-03-31 06:36:41.476138,-129.994,45.946,0.180,0.003,1.000,,dissolved,dissolved,either alone
+1770,5,0.000,0,,,,dissolved,AX,multiplet,3,0.739,2015-03-30 00:35:12.979981,-130.020,45.982,0.737,0.002,2.000,,dissolved,kept,magnitude
+1276,5,0.400,1,1372.000,2.000,5.000,dissolved,WA,mainshock-aftershock,3,3.931,2014-05-15 10:58:09.261570,-124.226,46.788,4.893,139.755,2.000,multiplet,dissolved,dissolved,either alone
+1749,5,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.325,2015-03-24 16:47:54.857249,-129.976,45.944,0.603,0.004,1.000,,dissolved,kept,magnitude
+607,5,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,4.202,2013-02-05 22:03:44.078856,-126.131,40.460,0.161,71.341,1.000,,kept,dissolved,location
+456,5,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.664,2012-10-23 07:45:51.724648,-124.556,40.301,1.858,3.390,1.000,,dissolved,merged,magnitude
+151,5,1.000,1,145.000,5.000,12.000,grown,ON,swarm,5,1.919,2011-01-28 15:48:38.767690,-122.184,46.112,5.027,0.296,2.000,swarm,kept,merged,only both together
+1441,5,0.800,1,1443.000,4.000,12.000,grown,BL,mainshock-aftershock,3,4.199,2014-11-12 20:09:02.065799,-129.138,43.981,7.516,0.008,2.000,mainshock-aftershock,grown,dissolved,magnitude
+100,5,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.623,2010-09-20 11:00:26.627931,-126.060,41.879,3.102,0.162,1.000,,dissolved,dissolved,either alone
+688,4,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.936,2013-04-16 17:35:36.023702,-128.682,43.710,0.572,0.017,1.000,,dissolved,kept,magnitude
+1451,4,0.000,0,,,,dissolved,AX,multiplet,2,0.946,2014-11-22 18:37:27.057945,-129.981,45.947,0.235,0.004,1.000,,kept,dissolved,location
+1478,4,0.000,0,,,,dissolved,AX,multiplet,2,0.970,2014-12-12 07:19:04.726269,-130.035,45.962,1.107,0.000,1.000,,dissolved,kept,magnitude
+444,4,0.000,0,,,,dissolved,GO,mainshock-aftershock,3,3.606,2012-10-16 06:22:46.282233,-124.679,42.203,3.090,21.747,1.000,,kept,dissolved,location
+1104,4,1.000,1,1080.000,4.000,155.000,grown,BL,mainshock-aftershock,2,2.972,2014-02-02 01:15:06.404782,-129.889,44.319,1.908,0.005,1.000,swarm,kept,grown,location
+1579,4,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,2.338,2015-02-03 22:20:49.445923,-122.784,47.578,0.560,23.169,1.000,,kept,dissolved,location
+1254,4,0.000,0,,,,dissolved,GO,mainshock-aftershock,3,3.419,2014-05-01 12:35:54.813794,-126.867,42.483,8.768,0.087,1.000,,kept,kept,only both together
+1521,4,0.000,0,,,,dissolved,AX,multiplet,3,0.813,2015-01-05 02:19:25.280082,-129.974,45.948,0.518,0.001,2.000,,dissolved,kept,magnitude
+1243,4,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.346,2014-04-23 05:44:47.890708,-129.119,47.183,1.104,1.564,1.000,,dissolved,kept,magnitude
+1911,4,1.000,1,1622.000,4.000,77.000,grown,ON,multiplet,2,2.265,2015-05-04 15:02:43.018966,-123.587,49.714,0.540,4.469,1.000,mainshock-aftershock,kept,grown,location
+958,4,1.000,1,625.000,4.000,422.000,grown,BL,mainshock-aftershock,4,3.410,2013-10-28 01:24:09.577695,-127.841,43.461,6.815,0.005,3.000,mainshock-aftershock,kept,kept,only both together
+970,4,0.000,0,,,,dissolved,ON,mainshock-aftershock,4,2.182,2013-11-04 21:18:13.731613,-122.047,41.215,10.710,0.974,3.000,,dissolved,kept,magnitude
+616,4,0.000,0,,,,dissolved,GO,multiplet,4,2.730,2013-02-12 02:39:33.317802,-127.401,41.438,3.546,0.078,1.500,,kept,kept,only both together
+1171,4,1.000,1,1140.000,4.000,1049.000,grown,BL,multiplet,2,2.781,2014-03-12 17:32:39.580764,-129.446,44.146,2.109,0.001,1.000,mainshock-aftershock,kept,grown,location
+1184,4,1.000,1,1140.000,4.000,1049.000,grown,BL,mainshock-aftershock,2,2.974,2014-03-16 11:35:35.200813,-129.491,44.175,0.433,0.223,1.000,mainshock-aftershock,kept,grown,location
+459,4,0.750,1,483.000,3.000,9.000,merged,BL,multiplet,2,2.690,2012-10-23 15:28:19.065662,-128.696,43.719,0.114,0.011,1.000,mainshock-aftershock,dissolved,kept,only both together
+1992,4,1.000,1,1987.000,4.000,26.000,grown,ON,multiplet,2,1.859,2015-09-14 10:25:54.375230,-122.233,46.115,1.825,0.021,1.000,swarm,kept,merged,only both together
+893,4,0.000,0,,,,dissolved,BL,multiplet,2,2.855,2013-09-12 07:35:36.781810,-128.226,43.577,0.228,0.104,1.000,,kept,dissolved,location
+676,4,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.103,2013-04-07 11:36:10.447532,-127.029,42.342,5.593,0.021,1.000,,dissolved,kept,magnitude
+577,4,0.750,1,606.000,3.000,8.000,merged,BL,mainshock-aftershock,2,4.278,2013-01-12 11:19:47.828880,-127.742,43.460,2.496,1.328,1.000,mainshock-aftershock,grown,grown,only both together
+282,4,1.000,1,285.000,3.000,24.000,grown,BL,multiplet,3,3.276,2012-01-14 20:38:15.151049,-130.063,44.351,0.958,0.254,2.000,swarm,grown,merged,magnitude
+310,4,0.750,1,322.000,3.000,11.000,grown,BL,multiplet,4,2.948,2012-03-05 20:53:00.542322,-129.408,44.039,9.505,0.031,1.500,swarm,kept,kept,only both together
+299,4,0.000,0,,,,dissolved,ON,multiplet,2,2.017,2012-02-09 12:57:54.226616,-122.504,42.201,0.411,2.134,1.000,,dissolved,kept,magnitude
+1562,4,0.000,0,,,,dissolved,AX,multiplet,2,0.904,2015-01-30 10:55:19.466269,-129.990,45.973,0.705,0.001,1.000,,dissolved,kept,magnitude
+1032,4,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.969,2013-12-08 12:58:09.311554,-130.103,45.264,9.900,0.454,1.000,,kept,grown,only both together
+1636,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.814,2015-02-22 11:48:10.293472,-129.965,45.933,0.585,0.004,1.000,,dissolved,kept,magnitude
+1630,4,0.000,0,,,,dissolved,AX,multiplet,2,0.901,2015-02-21 11:16:48.414633,-130.019,45.945,0.114,0.003,1.000,,dissolved,dissolved,either alone
+489,4,1.000,1,511.000,4.000,13.000,merged,PU,mainshock-aftershock,4,2.075,2012-11-13 12:13:07.809599,-121.669,47.883,3.775,11.980,1.500,swarm,kept,merged,location
+117,4,0.500,1,110.000,2.000,7.000,grown,ON,multiplet,2,3.199,2010-11-04 23:38:23.541923,-122.286,46.309,3.643,0.008,1.000,multiplet,kept,grown,location
+1933,4,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.201,2015-06-01 06:53:54.690862,-122.973,46.215,5.627,0.502,1.000,,kept,dissolved,location
+1959,4,0.500,1,1958.000,2.000,10.000,merged,ON,multiplet,2,2.761,2015-07-22 22:34:43.027846,-122.247,46.173,8.315,0.198,1.000,swarm,kept,grown,only both together
+819,4,1.000,1,222.000,4.000,315.000,grown,ON,mainshock-aftershock,4,2.991,2013-07-27 21:04:45.910737,-127.118,49.413,10.560,1.582,2.000,mainshock-aftershock,kept,grown,location
+1884,4,0.750,1,1862.000,3.000,18.000,grown,AX,multiplet,2,1.266,2015-04-25 01:30:12.793905,-129.996,45.952,1.005,0.001,1.000,swarm,kept,merged,only both together
+1550,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.299,2015-01-20 03:38:44.059275,-129.996,45.975,0.974,0.001,1.000,,dissolved,dissolved,either alone
+1895,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.340,2015-04-25 11:00:52.148058,-129.985,45.947,0.489,0.003,1.000,,dissolved,kept,magnitude
+1898,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.309,2015-04-25 14:41:00.906711,-129.983,45.940,1.622,0.004,1.000,,dissolved,dissolved,either alone
+1852,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.691,2015-04-19 15:30:49.915983,-129.979,45.949,0.161,0.003,1.000,,dissolved,kept,magnitude
+1839,4,0.000,0,,,,dissolved,AX,multiplet,3,1.024,2015-04-14 22:06:37.418874,-129.974,45.941,0.212,0.002,2.000,,dissolved,kept,magnitude
+640,4,0.000,0,,,,dissolved,WA,multiplet,2,1.778,2013-03-06 20:35:33.865405,-123.433,48.896,0.040,6.505,1.000,,dissolved,kept,magnitude
+1730,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.690,2015-03-22 03:47:01.557731,-129.992,45.962,0.254,0.011,1.000,,kept,dissolved,location
+1627,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.063,2015-02-20 03:35:30.459150,-129.966,45.943,2.025,0.000,1.000,,dissolved,kept,magnitude
+1588,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.301,2015-02-06 22:31:27.502445,-129.979,45.953,0.160,0.005,1.000,,dissolved,dissolved,either alone
+1862,4,0.000,0,,,,dissolved,AX,mainshock-aftershock,4,1.461,2015-04-23 18:24:52.913022,-129.998,45.963,2.806,0.002,1.000,,grown,kept,only both together
+341,4,1.000,1,364.000,3.000,17.000,grown,ON,multiplet,3,2.338,2012-05-26 01:49:58.556539,-122.260,46.146,5.937,0.003,1.000,swarm,kept,grown,location
+1053,4,0.750,1,1034.000,3.000,5.000,merged,ON,mainshock-aftershock,4,2.414,2013-12-31 15:20:42.042757,-129.262,46.933,5.190,0.551,2.000,multiplet,dissolved,merged,location
+46,4,0.500,1,47.000,2.000,20.000,grown,BL,mainshock-aftershock,2,5.480,2010-05-07 17:46:11.771994,-129.576,44.277,10.488,0.048,1.000,mainshock-aftershock,grown,grown,either alone
+1355,4,1.000,1,1205.000,4.000,60.000,grown,BL,mainshock-aftershock,2,3.141,2014-07-23 14:26:30.700847,-127.283,43.281,1.449,0.018,1.000,mainshock-aftershock,grown,grown,either alone
+72,4,0.250,0,39.000,1.000,14.000,dissolved,MT,mainshock-aftershock,2,3.762,2010-07-17 23:49:56.891244,-124.536,40.304,0.916,3.868,1.000,mainshock-aftershock,kept,dissolved,location
+1690,4,0.000,0,,,,dissolved,AX,multiplet,2,0.764,2015-03-12 16:08:02.478307,-129.974,45.945,0.403,0.003,1.000,,dissolved,dissolved,either alone
+2047,3,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.928,2016-02-02 12:14:19.044129,-121.852,46.881,0.914,0.018,1.000,,kept,dissolved,location
+2042,3,1.000,1,2011.000,3.000,50.000,grown,PU,mainshock-aftershock,2,1.805,2016-01-07 05:50:39.290198,-122.709,47.338,0.515,0.153,1.000,swarm,kept,grown,location
+2062,3,0.333,0,2066.000,1.000,6.000,dissolved,OR,multiplet,3,2.663,2016-04-30 07:10:52.888710,-126.567,43.706,5.571,0.245,1.000,swarm,kept,dissolved,location
+59,3,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.436,2010-06-07 12:58:30.560959,-124.483,48.085,1.823,1.550,1.000,,dissolved,kept,magnitude
+91,3,0.000,0,,,,dissolved,PU,multiplet,2,1.414,2010-08-24 05:19:30.247936,-122.479,47.542,0.789,0.789,1.000,,dissolved,kept,magnitude
+54,3,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.157,2010-05-30 21:43:01.398060,-124.502,40.306,1.205,1.022,1.000,,kept,kept,only both together
+56,3,1.000,1,53.000,3.000,8.000,merged,PU,multiplet,3,1.775,2010-06-02 15:46:11.120959,-121.886,47.705,5.211,0.966,2.000,mainshock-aftershock,kept,merged,location
+58,3,1.000,1,10.000,3.000,350.000,grown,MT,mainshock-aftershock,2,4.026,2010-06-05 21:28:04.047986,-124.868,40.382,3.718,1.887,1.000,mainshock-aftershock,grown,grown,either alone
+1705,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.184,2015-03-15 22:37:03.653606,-129.989,45.969,0.570,0.001,1.000,,dissolved,kept,magnitude
+1691,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.144,2015-03-12 16:52:31.588760,-129.974,45.939,0.127,0.001,1.000,,dissolved,kept,magnitude
+1686,3,0.000,0,,,,dissolved,AX,multiplet,2,0.709,2015-03-11 19:41:16.511419,-129.979,45.945,0.161,0.002,1.000,,dissolved,dissolved,either alone
+1722,3,0.000,0,,,,dissolved,AX,multiplet,3,1.004,2015-03-19 20:33:26.168585,-129.989,45.959,1.000,0.003,2.000,,dissolved,kept,magnitude
+1710,3,0.000,0,,,,dissolved,AX,multiplet,2,0.818,2015-03-17 23:24:00.837187,-129.968,45.936,0.180,0.000,1.000,,dissolved,kept,magnitude
+1681,3,0.000,0,,,,dissolved,AX,multiplet,2,0.929,2015-03-11 16:51:35.804351,-129.997,45.980,0.569,0.000,1.000,,kept,dissolved,location
+673,3,0.000,0,,,,dissolved,GO,mainshock-aftershock,3,3.284,2013-04-06 09:57:20.908233,-126.712,42.563,2.539,1.020,2.000,,dissolved,kept,magnitude
+674,3,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.611,2013-04-06 19:40:54.345309,-124.504,40.312,0.454,7.223,1.000,,kept,dissolved,location
+1461,3,1.000,1,1434.000,3.000,32.000,grown,ON,multiplet,3,2.119,2014-12-01 11:03:36.488399,-122.235,46.116,0.538,6.995,2.000,swarm,kept,grown,location
+142,3,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.190,2011-01-17 08:24:39.675711,-124.002,46.772,2.321,0.830,1.000,,kept,dissolved,location
+415,3,1.000,1,311.000,3.000,179.000,grown,BL,multiplet,2,2.646,2012-09-28 07:15:18.619666,-127.842,43.471,0.171,0.003,1.000,swarm,grown,kept,magnitude
+401,3,1.000,1,432.000,3.000,16.000,grown,ON,multiplet,3,1.916,2012-09-10 19:21:27.081367,-122.205,46.123,6.644,0.007,1.000,mainshock-aftershock,kept,merged,only both together
+1621,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,3.301,2015-02-17 02:29:15.653747,-129.991,45.946,3.792,0.003,1.000,,kept,kept,only both together
+1548,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.284,2015-01-19 12:20:12.270613,-130.019,45.938,0.262,0.030,1.000,,kept,dissolved,location
+1843,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.537,2015-04-15 23:13:39.860847,-129.989,45.972,0.892,0.003,1.000,,dissolved,dissolved,either alone
+1894,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.055,2015-04-25 09:39:13.555761,-130.021,45.948,0.970,0.001,1.000,,dissolved,kept,magnitude
+388,3,0.333,0,415.000,1.000,36.000,dissolved,ON,multiplet,3,2.297,2012-08-19 10:24:33.059267,-129.203,47.179,10.006,0.280,2.000,mainshock-aftershock,kept,dissolved,location
+1004,3,0.333,0,993.000,1.000,2.000,dissolved,BL,mainshock-aftershock,2,2.823,2013-11-24 07:26:51.391127,-130.071,45.281,9.290,0.417,1.000,multiplet,dissolved,dissolved,either alone
+1858,3,0.000,0,,,,dissolved,AX,multiplet,2,0.827,2015-04-21 16:00:58.671687,-130.010,45.950,2.097,0.000,1.000,,dissolved,kept,magnitude
+986,3,0.000,0,,,,dissolved,ON,multiplet,2,2.213,2013-11-10 19:43:52.078792,-129.206,47.048,4.457,0.005,1.000,,dissolved,kept,magnitude
+500,3,0.667,1,526.000,2.000,7.000,merged,ON,multiplet,2,1.918,2012-11-17 16:45:21.989862,-122.275,46.113,1.371,0.122,1.000,swarm,kept,merged,location
+990,3,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,4.521,2013-11-13 19:09:34.971330,-127.079,43.206,0.524,17.765,1.000,,kept,dissolved,location
+913,3,0.000,0,,,,dissolved,ON,multiplet,2,2.228,2013-09-28 03:17:49.199163,-129.276,46.895,2.048,0.036,1.000,,dissolved,kept,magnitude
+281,3,0.333,0,287.000,1.000,2.000,dissolved,ON,multiplet,2,1.774,2012-01-14 16:36:46.519821,-129.371,46.698,0.359,2.054,1.000,mainshock-aftershock,kept,dissolved,location
+324,3,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.994,2012-04-27 08:38:38.061581,-124.959,40.358,8.245,0.164,1.000,,kept,dissolved,location
+1558,3,0.000,0,,,,dissolved,AX,multiplet,3,0.981,2015-01-28 16:40:17.264904,-130.000,45.991,1.241,0.003,2.000,,dissolved,kept,magnitude
+553,3,0.000,0,,,,dissolved,GO,multiplet,2,2.622,2012-12-28 02:21:54.433846,-126.860,42.568,8.829,0.001,1.000,,dissolved,dissolved,either alone
+1673,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.645,2015-03-10 17:55:17.135717,-130.018,45.936,0.057,0.000,1.000,,dissolved,kept,magnitude
+615,3,1.000,1,565.000,3.000,49.000,grown,PU,multiplet,2,1.479,2013-02-12 02:29:02.826089,-121.662,47.881,0.468,0.076,1.000,swarm,kept,grown,location
+1177,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.180,2014-03-15 02:28:54.336655,-121.891,41.435,0.568,2.103,1.000,,dissolved,dissolved,either alone
+1215,3,0.000,0,,,,dissolved,ON,multiplet,2,2.490,2014-04-02 00:39:04.782987,-129.115,47.219,4.645,0.450,1.000,,dissolved,dissolved,either alone
+284,3,1.000,1,285.000,3.000,24.000,grown,BL,multiplet,3,3.132,2012-01-15 02:15:41.842868,-130.049,44.381,13.095,0.007,2.000,swarm,grown,merged,magnitude
+1189,3,0.000,0,,,,dissolved,ON,multiplet,3,2.093,2014-03-21 00:52:42.706031,-129.244,46.951,0.825,0.021,2.000,,dissolved,kept,magnitude
+1190,3,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.940,2014-03-21 01:47:40.186812,-129.174,43.999,0.346,0.624,1.000,,kept,dissolved,location
+1182,3,0.667,1,1140.000,2.000,1049.000,grown,BL,multiplet,2,2.960,2014-03-16 01:43:27.485151,-129.535,44.190,0.978,0.136,1.000,mainshock-aftershock,grown,grown,either alone
+1161,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.903,2014-03-09 19:38:09.758884,-129.996,45.418,0.719,0.001,1.000,,dissolved,kept,magnitude
+192,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.245,2011-05-21 11:46:43.012671,-122.136,41.384,0.682,0.009,1.000,,dissolved,kept,magnitude
+1538,3,0.000,0,,,,dissolved,MT,multiplet,2,2.088,2015-01-15 14:34:53.593957,-124.085,40.588,0.572,0.162,1.000,,kept,kept,only both together
+1523,3,0.667,1,1408.000,2.000,68.000,grown,MT,multiplet,2,2.753,2015-01-05 02:56:22.312480,-124.361,40.302,2.576,0.009,1.000,mainshock-aftershock,kept,grown,location
+1261,3,0.667,1,1217.000,2.000,9.000,grown,BL,multiplet,3,2.865,2014-05-07 07:24:26.104637,-130.144,44.345,9.114,0.020,1.000,multiplet,kept,grown,location
+230,3,0.000,0,,,,dissolved,MT,multiplet,2,2.312,2011-09-11 14:42:51.538961,-124.076,41.010,1.490,0.090,1.000,,kept,dissolved,location
+234,3,0.333,0,219.000,1.000,2.000,dissolved,WA,multiplet,2,1.749,2011-09-15 23:00:10.789824,-123.430,48.620,2.809,0.900,1.000,multiplet,kept,dissolved,location
+504,3,1.000,1,524.000,3.000,19.000,grown,BL,multiplet,3,2.751,2012-11-19 02:23:53.895662,-130.023,44.369,2.317,0.016,1.000,swarm,kept,grown,location
+920,3,1.000,1,919.000,3.000,11.000,grown,BL,multiplet,2,2.971,2013-10-02 09:31:55.645897,-128.558,43.671,0.321,0.068,1.000,swarm,kept,grown,location
+1905,3,1.000,1,1651.000,3.000,21.000,grown,ON,multiplet,2,1.991,2015-04-27 10:27:42.265192,-122.234,46.117,6.117,0.021,1.000,mainshock-aftershock,kept,grown,location
+1908,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.755,2015-04-28 19:56:59.640853,-129.985,45.947,1.052,0.004,1.000,,dissolved,dissolved,either alone
+1649,3,0.000,0,,,,dissolved,AX,multiplet,2,0.776,2015-02-27 02:28:57.283917,-130.034,45.954,0.127,0.001,1.000,,dissolved,kept,magnitude
+934,3,1.000,1,80.000,3.000,83.000,grown,OR,multiplet,3,2.872,2013-10-11 12:10:44.388874,-126.013,43.656,3.105,29.271,2.000,mainshock-aftershock,grown,grown,either alone
+631,3,1.000,1,238.000,3.000,65.000,grown,BL,multiplet,2,2.798,2013-02-26 17:10:11.880257,-127.309,43.293,0.360,0.095,1.000,mainshock-aftershock,kept,kept,only both together
+1755,3,0.000,0,,,,dissolved,AX,multiplet,2,0.698,2015-03-25 16:34:55.474709,-129.975,45.928,0.525,0.002,1.000,,dissolved,dissolved,either alone
+1760,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,3.065,2015-03-26 20:09:08.088637,-130.012,45.997,11.272,0.004,1.000,,kept,dissolved,location
+1775,3,0.000,0,,,,dissolved,AX,multiplet,2,0.941,2015-03-30 21:54:50.624061,-129.971,45.933,0.180,0.001,1.000,,dissolved,kept,magnitude
+1655,3,0.000,0,,,,dissolved,AX,multiplet,2,1.318,2015-03-02 10:08:36.587446,-130.047,45.991,1.161,0.001,1.000,,kept,dissolved,location
+1658,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.432,2015-03-02 23:40:55.893432,-129.975,45.949,0.114,0.001,1.000,,dissolved,kept,magnitude
+1269,3,0.000,0,,,,dissolved,BL,multiplet,2,2.790,2014-05-14 02:23:05.399367,-127.123,43.239,0.765,0.130,1.000,,kept,dissolved,location
+843,3,0.000,0,,,,dissolved,ON,multiplet,3,1.942,2013-08-11 17:42:04.904926,-129.995,45.430,2.567,0.689,1.000,,dissolved,kept,magnitude
+901,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.389,2013-09-21 03:41:21.815107,-129.371,46.745,6.788,0.167,1.000,,dissolved,kept,magnitude
+1764,3,0.000,0,,,,dissolved,AX,multiplet,2,0.923,2015-03-28 18:21:59.390755,-130.030,45.953,0.661,0.001,1.000,,dissolved,kept,magnitude
+1767,3,0.000,0,,,,dissolved,AX,multiplet,2,0.696,2015-03-28 23:18:14.226906,-129.983,45.943,0.080,0.002,1.000,,dissolved,dissolved,either alone
+1511,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.589,2014-12-27 08:43:21.730781,-129.984,45.961,1.170,0.001,1.000,,dissolved,kept,magnitude
+663,3,1.000,1,625.000,3.000,422.000,grown,BL,multiplet,2,2.593,2013-03-27 13:11:18.535178,-127.816,43.472,3.930,0.001,1.000,mainshock-aftershock,grown,kept,magnitude
+1981,3,1.000,1,1987.000,3.000,26.000,grown,ON,mainshock-aftershock,2,2.078,2015-08-24 10:59:55.246673,-122.259,46.135,0.570,6.279,1.000,swarm,kept,merged,only both together
+1972,3,1.000,1,1958.000,3.000,10.000,merged,ON,multiplet,2,2.024,2015-08-10 10:26:15.543723,-122.231,46.115,1.833,0.021,1.000,swarm,kept,kept,only both together
+1492,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.246,2014-12-15 19:52:01.556603,-129.975,45.967,1.329,0.001,1.000,,dissolved,dissolved,either alone
+1493,3,1.000,1,1501.000,3.000,8.000,grown,BL,mainshock-aftershock,2,2.992,2014-12-16 02:13:35.243956,-129.055,43.944,1.493,0.025,1.000,mainshock-aftershock,kept,kept,only both together
+1487,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,1.228,2014-12-13 04:31:00.130083,-130.018,45.938,0.170,0.000,1.000,,dissolved,kept,magnitude
+264,3,0.667,1,260.000,2.000,30.000,merged,ON,mainshock-aftershock,2,2.969,2011-11-30 19:59:24.449008,-122.206,46.151,5.921,0.012,1.000,swarm,kept,merged,location
+1964,3,1.000,1,1963.000,3.000,54.000,grown,BL,mainshock-aftershock,2,3.008,2015-07-26 17:55:22.011780,-128.768,43.875,2.805,0.004,1.000,swarm,grown,merged,magnitude
+1738,3,1.000,1,1651.000,3.000,21.000,grown,ON,multiplet,3,1.982,2015-03-23 10:28:21.954841,-122.246,46.116,5.038,5.623,1.000,mainshock-aftershock,kept,grown,location
+1720,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.117,2015-03-19 13:18:33.842020,-129.992,45.959,0.128,0.001,1.000,,dissolved,kept,magnitude
+630,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,3,3.242,2013-02-26 16:52:50.726784,-129.992,45.478,4.390,4.109,2.000,,kept,kept,only both together
+747,3,1.000,1,751.000,3.000,61.000,grown,ON,multiplet,3,2.754,2013-05-24 04:23:06.430152,-121.127,40.111,4.062,0.163,1.000,mainshock-aftershock,dissolved,grown,location
+127,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,3,3.258,2010-11-28 07:41:35.732926,-122.964,40.077,4.603,0.112,1.000,,dissolved,kept,magnitude
+42,3,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.001,2010-04-26 04:23:59.948941,-124.597,40.301,1.381,0.743,1.000,,kept,kept,only both together
+2069,3,0.333,0,2073.000,1.000,2.000,dissolved,BL,mainshock-aftershock,3,4.735,2016-06-12 18:47:01.184768,-127.549,43.361,7.861,0.037,1.000,mainshock-aftershock,kept,dissolved,location
+33,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,3,3.406,2010-04-09 05:15:07.528951,-123.380,39.543,14.555,2.475,1.000,,kept,dissolved,location
+101,3,0.000,0,,,,dissolved,WA,multiplet,2,1.465,2010-09-26 18:55:44.666657,-125.189,48.835,1.094,2.906,1.000,,dissolved,kept,magnitude
+104,3,0.000,0,,,,dissolved,ON,multiplet,3,1.956,2010-09-29 21:07:59.511678,-122.387,42.629,0.717,0.335,2.000,,dissolved,kept,magnitude
+84,3,1.000,1,85.000,3.000,14.000,merged,PU,multiplet,2,1.477,2010-08-13 13:13:09.911392,-122.746,47.353,0.508,2.815,1.000,swarm,kept,merged,location
+86,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.363,2010-08-17 06:43:45.169600,-122.079,40.393,1.719,0.042,1.000,,dissolved,kept,magnitude
+1446,3,1.000,1,1449.000,3.000,10.000,grown,BL,multiplet,2,2.871,2014-11-18 13:59:18.913429,-127.834,43.450,1.083,0.005,1.000,swarm,grown,kept,magnitude
+155,3,0.667,1,5.000,2.000,1794.000,grown,MT,mainshock-aftershock,2,3.648,2011-02-05 04:52:31.759208,-124.337,40.792,0.758,0.379,1.000,mainshock-aftershock,grown,kept,magnitude
+1586,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.049,2015-02-06 16:06:27.495126,-129.965,45.932,0.899,0.001,1.000,,dissolved,kept,magnitude
+339,3,1.000,1,360.000,3.000,11.000,merged,ON,mainshock-aftershock,2,2.811,2012-05-23 19:17:24.222687,-122.242,46.154,4.646,0.675,1.000,multiplet,kept,merged,location
+1601,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,3,1.128,2015-02-09 04:45:48.912092,-129.993,45.950,0.538,0.002,2.000,,dissolved,kept,magnitude
+1602,3,0.000,0,,,,dissolved,AX,multiplet,2,0.823,2015-02-09 05:29:09.407973,-129.995,45.958,0.541,0.000,1.000,,dissolved,kept,magnitude
+1124,3,1.000,1,1094.000,3.000,16.000,grown,BL,mainshock-aftershock,3,2.994,2014-02-11 20:02:49.313001,-129.727,44.299,6.956,0.231,2.000,swarm,grown,grown,either alone
+1112,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.660,2014-02-07 02:06:07.405106,-129.147,47.116,0.714,7.913,1.000,,dissolved,kept,magnitude
+1056,3,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.949,2014-01-02 14:40:11.888562,-130.321,44.392,4.366,0.008,1.000,,kept,dissolved,location
+441,3,0.000,0,,,,dissolved,ON,mainshock-aftershock,3,3.414,2012-10-13 20:25:41.353566,-129.964,45.513,6.800,6.681,1.000,,dissolved,dissolved,either alone
+340,3,0.000,0,,,,dissolved,GO,multiplet,2,2.645,2012-05-24 12:12:42.751777,-127.051,41.186,3.285,0.129,1.000,,kept,dissolved,location
+1594,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.386,2015-02-08 01:36:47.827482,-130.002,45.982,0.360,0.004,1.000,,kept,dissolved,location
+1606,3,0.000,0,,,,dissolved,AX,multiplet,2,0.858,2015-02-09 23:01:59.769218,-129.988,45.969,0.510,0.000,1.000,,dissolved,kept,magnitude
+1609,3,0.000,0,,,,dissolved,AX,multiplet,2,0.830,2015-02-12 01:55:50.070286,-129.987,45.968,0.228,0.001,1.000,,dissolved,kept,magnitude
+1571,3,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.435,2015-02-01 01:55:23.059814,-129.989,45.959,0.228,0.002,1.000,,dissolved,dissolved,either alone
+1067,3,0.333,0,1056.000,1.000,4.000,dissolved,ON,multiplet,3,2.770,2014-01-09 20:48:45.885388,-129.185,47.113,1.506,7.100,1.000,multiplet,kept,kept,only both together
+746,3,1.000,1,751.000,3.000,61.000,grown,ON,mainshock-aftershock,3,3.404,2013-05-24 03:55:30.940711,-121.176,40.061,3.667,8.011,1.000,mainshock-aftershock,dissolved,grown,location
+12,2,0.000,0,,,,dissolved,BL,multiplet,2,2.879,2010-02-21 09:11:07.776607,-126.916,43.208,0.365,0.347,1.000,,kept,dissolved,location
+20,2,0.500,0,23.000,1.000,5.000,grown,BL,mainshock-aftershock,2,5.010,2010-03-13 04:53:38.689762,-129.442,44.027,9.472,1.243,1.000,mainshock-aftershock,kept,kept,only both together
+35,2,0.000,0,,,,dissolved,ON,multiplet,2,1.886,2010-04-09 15:22:50.375892,-122.152,41.174,0.864,0.102,1.000,,dissolved,kept,magnitude
+2084,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,3.082,2016-10-02 18:09:19.873615,-121.988,47.475,0.828,2.299,1.000,,kept,dissolved,location
+78,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.784,2010-07-28 07:17:46.500703,-122.804,39.975,5.405,0.072,1.000,,dissolved,kept,magnitude
+89,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.737,2010-08-19 20:52:56.139666,-122.001,47.336,1.240,0.086,1.000,,kept,dissolved,location
+93,2,0.000,0,,,,dissolved,ON,multiplet,2,2.257,2010-08-26 02:00:55.891326,-122.971,40.031,0.454,8.556,1.000,,dissolved,dissolved,either alone
+2015,2,0.000,0,,,,dissolved,ON,multiplet,2,1.979,2015-11-04 11:45:07.342423,-122.341,40.758,5.453,0.128,1.000,,dissolved,kept,magnitude
+2020,2,0.000,0,,,,dissolved,ON,multiplet,2,1.753,2015-11-19 01:09:45.952820,-122.616,41.374,0.180,0.250,1.000,,dissolved,kept,magnitude
+2022,2,0.500,0,2015.000,1.000,33.000,grown,ON,multiplet,2,1.812,2015-11-19 22:35:12.986518,-121.805,43.566,2.800,0.009,1.000,swarm,dissolved,kept,only both together
+1995,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,3.439,2015-09-24 13:50:24.450078,-123.237,46.787,3.893,1.987,1.000,,kept,dissolved,location
+1996,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,2.322,2015-09-26 01:51:30.576437,-123.795,40.316,1.906,0.067,1.000,,kept,dissolved,location
+1997,2,1.000,1,2003.000,2.000,5.000,grown,MT,multiplet,2,2.737,2015-09-27 17:31:37.712858,-123.800,40.336,4.017,0.047,1.000,swarm,kept,grown,location
+2008,2,0.000,0,,,,dissolved,ON,multiplet,2,1.697,2015-10-19 07:35:20.653363,-124.672,50.963,0.657,2.687,1.000,,dissolved,dissolved,either alone
+135,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.137,2010-12-17 07:30:13.686073,-122.105,40.447,2.161,1.742,1.000,,dissolved,kept,magnitude
+1291,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.080,2014-05-24 23:11:05.092124,-121.669,40.988,1.137,0.023,1.000,,dissolved,kept,magnitude
+1475,2,0.000,0,,,,dissolved,AX,multiplet,2,0.903,2014-12-12 04:18:05.903517,-129.977,45.962,4.177,0.000,1.000,,dissolved,dissolved,either alone
+1476,2,0.000,0,,,,dissolved,AX,multiplet,2,1.046,2014-12-12 06:07:01.495548,-129.954,45.933,1.680,0.000,1.000,,kept,dissolved,location
+1343,2,1.000,1,1294.000,2.000,10.000,merged,BL,multiplet,2,2.598,2014-07-10 01:51:58.212394,-129.970,44.373,0.665,0.000,1.000,mainshock-aftershock,kept,merged,location
+1467,2,0.000,0,,,,dissolved,AX,multiplet,2,0.958,2014-12-03 22:53:10.145025,-129.979,45.947,0.323,0.000,1.000,,dissolved,kept,magnitude
+1473,2,0.000,0,,,,dissolved,ON,multiplet,2,1.972,2014-12-08 23:50:58.916728,-122.059,41.089,6.296,0.050,1.000,,dissolved,kept,magnitude
+1376,2,0.500,0,1139.000,1.000,2521.000,grown,MT,multiplet,2,2.123,2014-08-19 19:18:34.897043,-125.403,40.615,3.135,0.030,1.000,mainshock-aftershock,grown,dissolved,magnitude
+1380,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.625,2014-08-23 14:16:41.250448,-123.107,39.339,3.803,0.069,1.000,,kept,dissolved,location
+1384,2,0.500,0,1352.000,1.000,4.000,grown,BL,multiplet,2,3.276,2014-09-01 16:46:02.716377,-129.474,43.980,7.896,0.021,1.000,mainshock-aftershock,kept,grown,location
+1454,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.129,2014-11-24 02:40:41.568390,-129.969,45.933,0.114,0.000,1.000,,dissolved,kept,magnitude
+1278,2,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.088,2014-05-16 07:07:30.105052,-123.902,47.718,0.776,0.002,1.000,,dissolved,kept,magnitude
+1281,2,0.500,0,1235.000,1.000,7.000,grown,BL,mainshock-aftershock,2,3.333,2014-05-17 18:26:12.089315,-129.434,44.163,0.459,0.891,1.000,mainshock-aftershock,kept,grown,location
+1284,2,1.000,1,1237.000,2.000,14.000,grown,BL,multiplet,2,2.666,2014-05-18 15:03:37.289132,-129.073,44.003,4.186,0.006,1.000,swarm,kept,grown,location
+1290,2,0.000,0,,,,dissolved,MT,multiplet,2,2.051,2014-05-21 11:07:34.768647,-123.551,40.749,3.043,0.022,1.000,,dissolved,kept,magnitude
+1506,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.760,2014-12-25 18:00:19.763210,-129.993,45.956,0.581,0.002,1.000,,dissolved,kept,magnitude
+1486,2,0.000,0,,,,dissolved,AX,multiplet,2,0.900,2014-12-13 03:38:16.266270,-130.041,45.957,0.255,0.000,1.000,,dissolved,kept,magnitude
+1488,2,0.000,0,,,,dissolved,AX,multiplet,2,0.854,2014-12-13 14:18:35.088757,-129.982,45.998,0.645,0.001,1.000,,dissolved,dissolved,either alone
+1489,2,0.000,0,,,,dissolved,AX,multiplet,2,0.749,2014-12-14 09:52:08.680246,-129.980,45.951,0.360,0.001,1.000,,dissolved,kept,magnitude
+1494,2,0.000,0,,,,dissolved,AX,multiplet,2,1.124,2014-12-16 04:09:32.847029,-130.016,45.992,0.763,0.001,1.000,,kept,dissolved,location
+1499,2,0.000,0,,,,dissolved,AX,multiplet,2,0.910,2014-12-18 20:48:35.911099,-129.994,45.955,0.580,0.001,1.000,,dissolved,kept,magnitude
+1310,2,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.005,2014-06-07 12:20:42.640549,-127.358,40.453,3.756,0.342,1.000,,kept,kept,only both together
+1317,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.212,2014-06-12 14:55:21.691157,-123.439,39.542,3.388,0.058,1.000,,dissolved,kept,magnitude
+1485,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.172,2014-12-13 03:17:46.963978,-130.043,45.960,0.284,0.001,1.000,,dissolved,kept,magnitude
+1540,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.963,2015-01-16 17:03:48.048509,-123.239,48.486,3.851,0.650,1.000,,kept,dissolved,location
+1524,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.052,2015-01-05 06:57:07.090685,-129.981,45.942,0.081,0.001,1.000,,dissolved,kept,magnitude
+1537,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.044,2015-01-14 14:27:54.486051,-129.986,45.959,0.398,0.002,1.000,,dissolved,dissolved,either alone
+1248,2,1.000,1,1203.000,2.000,274.000,grown,ON,mainshock-aftershock,2,2.497,2014-04-24 03:26:50.434468,-127.070,50.307,0.744,0.022,1.000,mainshock-aftershock,kept,grown,location
+1251,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.405,2014-04-28 04:15:56.603717,-122.385,40.645,0.507,3.550,1.000,,dissolved,kept,magnitude
+1253,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.228,2014-04-30 02:34:58.134346,-129.169,47.085,0.917,0.588,1.000,,dissolved,kept,magnitude
+1115,2,0.000,0,,,,dissolved,ON,multiplet,2,2.009,2014-02-08 09:28:21.903190,-121.718,41.320,8.899,0.004,1.000,,dissolved,kept,magnitude
+1116,2,0.000,0,,,,dissolved,MT,multiplet,2,2.200,2014-02-08 14:14:15.178445,-125.240,40.758,0.560,0.587,1.000,,dissolved,kept,magnitude
+1118,2,0.000,0,,,,dissolved,GO,multiplet,2,2.769,2014-02-09 17:07:42.537020,-127.075,42.282,2.596,0.091,1.000,,dissolved,dissolved,either alone
+1559,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.060,2015-01-28 22:18:28.622034,-130.034,45.989,1.554,0.002,1.000,,kept,dissolved,location
+1572,2,0.000,0,,,,dissolved,AX,multiplet,2,0.711,2015-02-01 05:25:02.835169,-130.022,45.943,0.749,0.001,1.000,,dissolved,kept,magnitude
+1574,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.391,2015-02-02 00:22:23.986067,-130.005,46.011,1.769,0.000,1.000,,kept,dissolved,location
+1109,2,0.500,0,1085.000,1.000,3.000,grown,ON,mainshock-aftershock,2,3.210,2014-02-04 11:48:14.799466,-123.170,39.736,2.762,2.027,1.000,mainshock-aftershock,dissolved,grown,location
+1140,2,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,2.771,2014-02-22 13:59:02.614278,-127.069,43.160,0.912,0.058,1.000,,kept,dissolved,location
+1150,2,0.000,0,,,,dissolved,ON,multiplet,2,1.916,2014-03-04 05:33:03.758714,-129.259,46.917,0.161,0.001,1.000,,dissolved,kept,magnitude
+1549,2,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.529,2015-01-20 03:13:42.964581,-124.112,47.337,2.222,1.650,1.000,,dissolved,kept,magnitude
+1224,2,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,4.051,2014-04-06 09:40:54.530385,-126.599,43.031,1.939,20.945,1.000,,dissolved,dissolved,either alone
+1164,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.103,2014-03-10 11:37:00.607513,-129.531,46.615,1.309,0.176,1.000,,dissolved,kept,magnitude
+1169,2,1.000,1,1140.000,2.000,1049.000,grown,BL,multiplet,2,2.744,2014-03-12 02:05:31.650335,-129.448,44.138,0.805,0.002,1.000,mainshock-aftershock,kept,grown,location
+1172,2,0.000,0,,,,dissolved,GO,multiplet,2,2.565,2014-03-13 07:10:59.544899,-127.059,42.375,3.530,0.098,1.000,,dissolved,dissolved,either alone
+1011,2,0.000,0,,,,dissolved,ON,multiplet,2,2.311,2013-11-29 07:35:54.611989,-129.995,45.450,1.125,0.007,1.000,,dissolved,kept,magnitude
+1037,2,0.000,0,,,,dissolved,MT,multiplet,2,2.540,2013-12-15 02:06:32.911795,-124.460,40.320,0.740,0.422,1.000,,dissolved,kept,magnitude
+1039,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.566,2013-12-16 00:27:24.494300,-129.410,46.735,1.985,0.405,1.000,,dissolved,kept,magnitude
+1046,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.421,2013-12-24 21:40:25.605814,-129.991,45.425,0.306,0.005,1.000,,dissolved,kept,magnitude
+1051,2,1.000,1,1034.000,2.000,5.000,merged,ON,mainshock-aftershock,2,2.266,2013-12-30 00:57:42.295792,-129.248,46.927,0.512,0.006,1.000,multiplet,dissolved,merged,location
+1055,2,0.000,0,,,,dissolved,EN,mainshock-aftershock,2,3.406,2014-01-02 11:21:32.218258,-129.252,47.831,9.373,0.048,1.000,,dissolved,kept,magnitude
+1582,2,0.000,0,,,,dissolved,AX,multiplet,2,0.903,2015-02-05 01:54:39.632451,-129.968,45.935,0.180,0.001,1.000,,dissolved,kept,magnitude
+1583,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.557,2015-02-05 01:57:46.484808,-129.995,45.964,0.081,0.002,1.000,,dissolved,kept,magnitude
+1587,2,0.000,0,,,,dissolved,ON,multiplet,2,1.873,2015-02-06 20:15:16.862279,-122.828,42.446,0.127,2.689,1.000,,dissolved,kept,magnitude
+1593,2,0.000,0,,,,dissolved,AX,multiplet,2,0.992,2015-02-07 13:56:57.837334,-129.988,45.957,0.057,0.001,1.000,,dissolved,kept,magnitude
+1600,2,0.000,0,,,,dissolved,AX,multiplet,2,0.770,2015-02-09 03:50:13.327262,-129.995,45.958,0.255,0.002,1.000,,dissolved,kept,magnitude
+1069,2,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.186,2014-01-11 15:24:50.291280,-124.248,47.914,2.006,0.784,1.000,,dissolved,kept,magnitude
+1078,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.429,2014-01-15 02:54:51.280007,-129.327,46.822,1.876,0.167,1.000,,dissolved,merged,magnitude
+1082,2,0.000,0,,,,dissolved,ON,multiplet,2,1.962,2014-01-19 00:27:36.004809,-129.326,46.793,0.912,0.020,1.000,,dissolved,merged,magnitude
+1093,2,0.000,0,,,,dissolved,MT,multiplet,2,2.028,2014-01-26 10:22:37.197969,-123.559,40.517,0.552,0.468,1.000,,dissolved,kept,magnitude
+945,2,1.000,1,940.000,2.000,49.000,grown,BL,mainshock-aftershock,2,3.208,2013-10-15 20:44:20.544594,-128.719,43.843,6.858,0.001,1.000,swarm,kept,grown,location
+948,2,0.000,0,,,,dissolved,ON,multiplet,2,2.240,2013-10-16 16:17:28.501682,-129.410,46.713,2.548,0.092,1.000,,dissolved,kept,magnitude
+1632,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.306,2015-02-21 23:23:36.394409,-130.014,46.007,2.993,0.002,1.000,,kept,dissolved,location
+1641,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.109,2015-02-24 19:50:25.187296,-130.028,45.955,0.649,0.000,1.000,,dissolved,kept,magnitude
+974,2,0.000,0,,,,dissolved,WA,mainshock-aftershock,2,2.208,2013-11-05 14:52:46.859147,-124.696,48.005,1.651,9.040,1.000,,dissolved,kept,magnitude
+976,2,0.000,0,,,,dissolved,ON,multiplet,2,2.196,2013-11-06 11:49:39.281918,-129.219,46.983,0.774,4.866,1.000,,dissolved,dissolved,either alone
+1029,2,0.500,0,995.000,1.000,62.000,grown,BL,mainshock-aftershock,2,2.876,2013-12-07 09:44:51.235885,-130.316,44.472,3.557,0.009,1.000,mainshock-aftershock,kept,grown,location
+1034,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.515,2013-12-09 07:30:05.340389,-123.119,40.179,0.967,0.026,1.000,,dissolved,kept,magnitude
+1616,2,1.000,1,1620.000,2.000,6.000,merged,AX,mainshock-aftershock,2,1.514,2015-02-14 22:54:19.818001,-129.996,45.986,1.188,0.001,1.000,swarm,kept,merged,location
+1618,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.561,2015-02-15 01:44:49.146098,-130.009,46.003,0.254,0.005,1.000,,dissolved,kept,magnitude
+1624,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.913,2015-02-18 09:04:11.938271,-120.749,47.266,1.095,39.115,1.000,,kept,dissolved,location
+895,2,0.000,0,,,,dissolved,ON,multiplet,2,2.026,2013-09-15 17:59:11.559267,-129.256,46.920,1.138,0.042,1.000,,dissolved,merged,magnitude
+850,2,0.000,0,,,,dissolved,BL,multiplet,2,2.659,2013-08-16 04:08:04.232125,-130.357,44.505,0.235,0.002,1.000,,dissolved,kept,magnitude
+868,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,2.521,2013-08-29 16:08:51.841235,-124.811,40.396,0.900,0.366,1.000,,kept,dissolved,location
+884,2,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,3.561,2013-09-06 15:09:08.136963,-127.183,43.270,0.393,3.197,1.000,,kept,dissolved,location
+886,2,1.000,1,891.000,2.000,9.000,grown,BL,mainshock-aftershock,2,2.839,2013-09-07 15:21:14.470339,-127.097,43.186,4.289,0.010,1.000,multiplet,kept,grown,location
+888,2,0.000,0,,,,dissolved,ON,multiplet,2,2.141,2013-09-08 04:23:25.931492,-129.457,46.664,5.935,0.141,1.000,,dissolved,merged,magnitude
+891,2,0.000,0,,,,dissolved,ON,multiplet,2,1.903,2013-09-10 19:37:20.315539,-122.236,40.535,1.109,0.254,1.000,,dissolved,grown,magnitude
+927,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.800,2013-10-08 05:29:42.130667,-122.099,40.406,2.962,0.035,1.000,,dissolved,kept,magnitude
+1663,2,0.000,0,,,,dissolved,AX,multiplet,2,0.859,2015-03-05 03:16:18.405283,-129.989,45.954,0.242,0.001,1.000,,dissolved,kept,magnitude
+959,2,0.000,0,,,,dissolved,BL,multiplet,2,2.674,2013-10-29 09:33:27.061298,-128.734,43.864,0.180,0.194,1.000,,kept,dissolved,location
+960,2,0.000,0,,,,dissolved,ON,multiplet,2,2.072,2013-10-31 13:47:28.851607,-129.264,46.916,0.161,0.608,1.000,,dissolved,kept,magnitude
+963,2,0.000,0,,,,dissolved,BL,multiplet,2,2.651,2013-11-02 03:31:49.670705,-128.695,43.830,0.581,0.190,1.000,,kept,dissolved,location
+751,2,1.000,1,751.000,2.000,61.000,grown,ON,mainshock-aftershock,2,3.695,2013-05-24 11:40:13.874619,-121.020,40.131,8.361,0.012,1.000,mainshock-aftershock,dissolved,grown,location
+769,2,0.000,0,,,,dissolved,BL,multiplet,2,2.659,2013-06-09 12:12:51.363639,-127.030,43.182,0.637,0.142,1.000,,kept,dissolved,location
+809,2,0.500,0,751.000,1.000,61.000,grown,ON,multiplet,2,2.323,2013-07-22 03:05:08.416802,-121.259,40.131,2.733,0.075,1.000,mainshock-aftershock,kept,grown,location
+1676,2,0.000,0,,,,dissolved,AX,multiplet,2,0.846,2015-03-10 21:25:06.868606,-129.986,45.940,0.180,0.001,1.000,,dissolved,kept,magnitude
+1698,2,0.000,0,,,,dissolved,AX,multiplet,2,0.959,2015-03-14 20:30:34.469502,-130.006,45.953,3.525,0.000,1.000,,kept,dissolved,location
+1702,2,0.000,0,,,,dissolved,AX,multiplet,2,0.676,2015-03-15 18:47:52.383744,-129.988,45.947,0.585,0.000,1.000,,dissolved,kept,magnitude
+807,2,1.000,1,751.000,2.000,61.000,grown,ON,multiplet,2,3.240,2013-07-21 21:37:04.771988,-121.073,40.097,5.116,0.123,1.000,mainshock-aftershock,kept,grown,location
+705,2,1.000,1,658.000,2.000,21.000,grown,MT,mainshock-aftershock,2,2.724,2013-04-28 23:23:03.746834,-124.713,40.339,1.417,0.009,1.000,mainshock-aftershock,kept,grown,location
+708,2,0.000,0,,,,dissolved,OR,multiplet,2,2.090,2013-04-29 20:22:41.431017,-126.044,44.740,2.480,0.001,1.000,,dissolved,kept,magnitude
+1715,2,0.000,0,,,,dissolved,ON,multiplet,2,2.087,2015-03-18 04:19:08.720754,-122.806,40.190,0.761,1.607,1.000,,dissolved,kept,magnitude
+1729,2,0.000,0,,,,dissolved,AX,multiplet,2,0.849,2015-03-22 02:58:06.520880,-129.979,45.943,0.180,0.000,1.000,,dissolved,kept,magnitude
+1733,2,0.000,0,,,,dissolved,AX,multiplet,2,1.004,2015-03-22 15:32:03.998319,-130.050,45.960,0.890,0.001,1.000,,dissolved,kept,magnitude
+691,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.416,2013-04-19 03:24:00.524476,-121.266,42.019,7.131,0.012,1.000,,dissolved,kept,magnitude
+729,2,0.000,0,,,,dissolved,EN,mainshock-aftershock,2,3.145,2013-05-14 22:03:57.974067,-127.224,49.693,8.253,1.000,1.000,,dissolved,dissolved,either alone
+1707,2,1.000,1,1651.000,2.000,21.000,grown,ON,multiplet,2,1.932,2015-03-16 10:28:18.478749,-122.259,46.116,2.524,0.021,1.000,mainshock-aftershock,kept,grown,location
+1709,2,0.000,0,,,,dissolved,AX,multiplet,2,0.894,2015-03-17 16:14:18.919050,-130.027,45.994,0.456,0.003,1.000,,kept,dissolved,location
+1711,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.517,2015-03-18 00:06:50.616830,-129.978,45.940,1.083,0.000,1.000,,dissolved,kept,magnitude
+1713,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.436,2015-03-18 00:44:38.927878,-129.947,46.171,1.439,0.001,1.000,,kept,dissolved,location
+716,2,0.500,0,724.000,1.000,3.000,grown,ON,multiplet,2,3.029,2013-05-05 14:45:58.977532,-129.963,45.437,0.938,18.772,1.000,multiplet,dissolved,grown,location
+719,2,0.000,0,,,,dissolved,ON,multiplet,2,1.721,2013-05-10 03:46:54.244887,-122.081,40.850,0.253,0.012,1.000,,dissolved,kept,magnitude
+724,2,0.000,0,,,,dissolved,ON,multiplet,2,3.415,2013-05-13 03:50:52.033093,-129.852,45.620,4.428,0.722,1.000,,dissolved,kept,magnitude
+727,2,0.000,0,,,,dissolved,MT,multiplet,2,2.277,2013-05-14 08:15:38.860078,-124.517,40.344,3.466,0.045,1.000,,dissolved,dissolved,either alone
+1747,2,0.500,0,1651.000,1.000,21.000,grown,ON,mainshock-aftershock,2,2.885,2015-03-24 06:39:00.504755,-122.244,46.214,5.629,0.001,1.000,mainshock-aftershock,kept,grown,location
+1757,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.584,2015-03-25 19:12:16.997604,-130.019,45.941,0.410,0.004,1.000,,dissolved,kept,magnitude
+1761,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.421,2015-03-27 03:56:06.880329,-130.018,45.945,0.114,0.007,1.000,,dissolved,dissolved,either alone
+1769,2,0.000,0,,,,dissolved,AX,multiplet,2,0.804,2015-03-29 19:39:42.926187,-130.027,45.951,0.836,0.001,1.000,,dissolved,kept,magnitude
+619,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.671,2013-02-15 21:18:19.358576,-123.532,39.609,2.333,42.284,1.000,,dissolved,kept,magnitude
+623,2,1.000,1,647.000,2.000,8.000,merged,BL,multiplet,2,2.738,2013-02-19 08:39:39.938544,-130.429,44.504,0.687,0.078,1.000,multiplet,merged,merged,either alone
+625,2,1.000,1,565.000,2.000,49.000,grown,PU,multiplet,2,1.649,2013-02-20 07:08:38.349478,-121.688,47.876,0.523,3.187,1.000,swarm,kept,grown,location
+627,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,2.929,2013-02-24 01:39:02.163541,-125.420,40.405,5.940,0.034,1.000,,dissolved,kept,magnitude
+1739,2,0.000,0,,,,dissolved,AX,multiplet,2,0.978,2015-03-23 14:43:30.699835,-130.007,45.988,1.369,0.001,1.000,,kept,dissolved,location
+651,2,0.000,0,,,,dissolved,ON,multiplet,2,2.117,2013-03-17 23:01:29.060686,-122.225,40.536,2.411,0.001,1.000,,kept,dissolved,location
+653,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.702,2013-03-19 00:56:11.751257,-121.656,47.882,0.814,2.587,1.000,,kept,dissolved,location
+654,2,0.000,0,,,,dissolved,GO,multiplet,2,2.905,2013-03-21 09:03:59.005219,-127.086,42.001,1.080,0.011,1.000,,kept,kept,only both together
+666,2,0.500,0,669.000,1.000,3.000,grown,ON,multiplet,2,2.834,2013-03-30 05:01:03.827441,-129.993,45.511,4.616,0.606,1.000,mainshock-aftershock,dissolved,grown,location
+679,2,0.000,0,,,,dissolved,ON,multiplet,2,1.962,2013-04-11 14:09:24.546865,-121.944,40.792,9.211,0.002,1.000,,dissolved,dissolved,either alone
+509,2,0.000,0,,,,dissolved,BL,multiplet,2,2.708,2012-11-20 14:52:09.348936,-127.581,43.383,0.805,0.058,1.000,,kept,dissolved,location
+540,2,0.000,0,,,,dissolved,PU,multiplet,2,1.859,2012-12-18 10:48:04.547764,-121.697,48.221,4.998,0.120,1.000,,kept,dissolved,location
+1788,2,1.000,1,1760.000,2.000,22.000,merged,AX,multiplet,2,1.662,2015-03-31 23:14:03.685093,-129.990,45.958,1.174,0.000,1.000,swarm,kept,grown,only both together
+1798,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.296,2015-04-04 00:15:42.610967,-129.988,45.974,0.526,0.001,1.000,,dissolved,kept,magnitude
+523,2,0.500,0,238.000,1.000,65.000,grown,BL,multiplet,2,2.938,2012-12-04 11:20:35.792095,-127.269,43.277,2.390,0.021,1.000,mainshock-aftershock,grown,kept,magnitude
+564,2,0.000,0,,,,dissolved,PU,multiplet,2,1.288,2013-01-05 22:47:04.455636,-122.983,47.486,0.171,1.225,1.000,,kept,dissolved,location
+579,2,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.130,2013-01-12 21:15:43.662234,-127.480,40.782,1.891,0.001,1.000,,kept,dissolved,location
+1773,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.170,2015-03-30 12:05:53.585888,-130.020,45.940,0.360,0.027,1.000,,dissolved,dissolved,either alone
+449,2,0.000,0,,,,dissolved,MT,multiplet,2,2.272,2012-10-19 11:10:14.239969,-124.475,40.306,0.691,0.577,1.000,,dissolved,kept,magnitude
+395,2,1.000,1,424.000,2.000,5.000,grown,GO,mainshock-aftershock,2,3.245,2012-09-04 01:14:12.814462,-124.747,42.227,1.169,0.101,1.000,mainshock-aftershock,grown,grown,either alone
+1823,2,0.000,0,,,,dissolved,AX,multiplet,2,0.974,2015-04-09 17:03:04.206580,-130.027,45.971,1.017,0.001,1.000,,kept,dissolved,location
+1824,2,1.000,1,1797.000,2.000,5.000,grown,OR,mainshock-aftershock,2,2.413,2015-04-09 17:08:01.628039,-126.396,44.103,6.151,0.081,1.000,multiplet,kept,kept,only both together
+429,2,0.000,0,,,,dissolved,BL,multiplet,2,2.876,2012-10-03 02:26:41.972574,-129.696,44.108,0.470,0.005,1.000,,kept,dissolved,location
+475,2,0.000,0,,,,dissolved,MT,multiplet,2,2.026,2012-11-03 08:46:19.430904,-125.362,40.755,0.951,0.045,1.000,,kept,kept,only both together
+510,2,0.000,0,,,,dissolved,BL,mainshock-aftershock,2,3.176,2012-11-20 21:29:03.275447,-128.297,43.601,0.727,0.008,1.000,,dissolved,kept,magnitude
+511,2,0.000,0,,,,dissolved,BL,multiplet,2,2.513,2012-11-21 04:56:12.415763,-127.847,43.472,0.604,0.000,1.000,,grown,kept,only both together
+515,2,0.000,0,,,,dissolved,GO,multiplet,2,2.898,2012-11-23 00:55:02.307489,-126.933,42.489,3.567,0.003,1.000,,kept,kept,only both together
+1863,2,1.000,1,1836.000,2.000,30.000,grown,AX,multiplet,2,1.520,2015-04-23 18:42:25.423626,-129.992,45.968,0.360,0.001,1.000,swarm,kept,kept,only both together
+336,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.627,2012-05-17 21:42:39.779270,-121.968,47.816,2.679,0.197,1.000,,dissolved,dissolved,either alone
+343,2,1.000,1,364.000,2.000,17.000,grown,ON,multiplet,2,1.778,2012-05-26 02:19:11.162255,-122.198,46.108,6.003,0.002,1.000,swarm,kept,grown,location
+384,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.137,2012-08-15 19:43:49.015675,-124.588,40.316,1.607,0.952,1.000,,dissolved,dissolved,either alone
+387,2,0.500,0,416.000,1.000,3.000,grown,ON,multiplet,2,2.384,2012-08-19 10:18:09.751699,-129.619,47.262,1.842,0.128,1.000,multiplet,kept,grown,location
+389,2,0.000,0,,,,dissolved,ON,multiplet,2,2.458,2012-08-24 00:16:48.377041,-123.188,39.461,1.984,0.319,1.000,,kept,kept,only both together
+1842,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,1.751,2015-04-15 12:07:28.935151,-129.988,45.966,0.114,0.013,1.000,,kept,dissolved,location
+1849,2,0.000,0,,,,dissolved,AX,multiplet,2,0.929,2015-04-18 14:03:28.072708,-129.985,45.986,0.114,0.001,1.000,,dissolved,kept,magnitude
+423,2,0.000,0,,,,dissolved,GO,multiplet,2,2.835,2012-10-01 07:02:38.079600,-127.088,42.224,7.658,0.008,1.000,,dissolved,kept,magnitude
+268,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.119,2011-12-10 18:18:06.398540,-122.295,40.637,1.731,0.457,1.000,,dissolved,kept,magnitude
+274,2,0.000,0,,,,dissolved,BL,multiplet,2,2.938,2011-12-26 06:38:06.223789,-128.554,43.780,2.133,0.017,1.000,,kept,dissolved,location
+276,2,1.000,1,260.000,2.000,30.000,merged,ON,mainshock-aftershock,2,2.181,2011-12-28 20:18:39.814159,-122.241,46.166,7.823,0.000,1.000,swarm,kept,merged,location
+311,2,0.500,0,322.000,1.000,11.000,grown,BL,multiplet,2,3.401,2012-03-06 07:13:22.611596,-129.481,44.010,3.878,0.020,1.000,swarm,grown,kept,magnitude
+313,2,0.000,0,,,,dissolved,PU,mainshock-aftershock,2,1.668,2012-03-15 20:43:14.594506,-122.295,47.727,4.820,0.052,1.000,,kept,dissolved,location
+1869,2,0.000,0,,,,dissolved,AX,multiplet,2,1.069,2015-04-24 04:42:40.017680,-129.989,45.975,0.360,0.003,1.000,,dissolved,kept,magnitude
+1877,2,0.500,0,1844.000,1.000,457.000,grown,AX,mainshock-aftershock,2,3.523,2015-04-24 10:10:29.100348,-129.894,45.966,2.180,0.007,1.000,swarm,kept,grown,location
+1891,2,0.000,0,,,,dissolved,AX,mainshock-aftershock,2,2.125,2015-04-25 07:13:58.543414,-129.990,45.950,0.663,0.004,1.000,,dissolved,kept,magnitude
+352,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,2.734,2012-06-11 18:06:08.505296,-124.957,40.721,0.979,0.657,1.000,,kept,kept,only both together
+241,2,0.000,0,,,,dissolved,ON,multiplet,2,1.768,2011-10-10 10:07:35.417126,-122.356,40.656,3.132,0.222,1.000,,dissolved,kept,magnitude
+244,2,0.000,0,,,,dissolved,WA,multiplet,2,1.515,2011-10-12 14:41:46.186924,-124.772,48.964,0.284,6.679,1.000,,dissolved,kept,magnitude
+1912,2,0.000,0,,,,dissolved,PU,multiplet,2,1.331,2015-05-04 19:59:56.978356,-122.260,47.274,8.491,0.030,1.000,,kept,dissolved,location
+277,2,1.000,1,276.000,2.000,7.000,grown,BL,multiplet,2,3.043,2011-12-30 06:08:51.426935,-130.068,44.363,6.738,0.004,1.000,swarm,grown,grown,either alone
+283,2,1.000,1,285.000,2.000,24.000,grown,BL,multiplet,2,2.776,2012-01-14 23:06:02.628769,-130.138,44.348,2.096,0.018,1.000,swarm,grown,merged,magnitude
+287,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.845,2012-01-21 15:34:25.377168,-123.134,39.754,2.586,0.520,1.000,,kept,dissolved,location
+288,2,0.000,0,,,,dissolved,MT,multiplet,2,2.350,2012-01-24 12:05:50.970169,-125.308,40.270,2.128,0.062,1.000,,kept,dissolved,location
+1962,2,0.000,0,,,,dissolved,ON,multiplet,2,1.742,2015-07-24 17:58:36.377898,-122.828,42.472,1.712,0.160,1.000,,dissolved,kept,magnitude
+171,2,0.000,0,,,,dissolved,GO,mainshock-aftershock,2,3.360,2011-03-20 20:41:41.733435,-126.549,42.473,4.812,0.117,1.000,,kept,dissolved,location
+172,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.854,2011-03-21 11:56:59.247286,-123.657,41.726,1.685,0.063,1.000,,dissolved,kept,magnitude
+181,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.574,2011-04-22 01:32:13.702116,-123.922,40.810,5.123,0.475,1.000,,dissolved,kept,magnitude
+183,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.975,2011-05-02 10:53:03.164091,-123.156,39.414,2.908,11.245,1.000,,kept,dissolved,location
+1937,2,0.000,0,,,,dissolved,ON,multiplet,2,1.867,2015-06-04 01:14:26.705390,-122.145,41.376,3.841,0.014,1.000,,dissolved,kept,magnitude
+1943,2,0.000,0,,,,dissolved,ON,multiplet,2,1.931,2015-06-21 21:42:19.170629,-123.475,39.578,0.663,4.652,1.000,,dissolved,dissolved,either alone
+1956,2,0.000,0,,,,dissolved,OR,mainshock-aftershock,2,2.254,2015-07-13 02:36:27.336099,-126.380,44.075,6.620,0.038,1.000,,dissolved,kept,magnitude
+1958,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.214,2015-07-18 10:37:26.153890,-121.734,40.338,1.109,0.078,1.000,,dissolved,kept,magnitude
+1931,2,0.000,0,,,,dissolved,ON,multiplet,2,2.192,2015-05-31 00:08:10.426286,-129.990,45.392,4.325,0.066,1.000,,kept,dissolved,location
+211,2,0.000,0,,,,dissolved,GO,multiplet,2,3.162,2011-07-14 13:18:43.125808,-125.680,40.468,1.438,1.866,1.000,,kept,dissolved,location
+220,2,0.000,0,,,,dissolved,WA,multiplet,2,1.552,2011-08-13 00:55:06.280262,-125.148,48.831,0.254,12.173,1.000,,dissolved,dissolved,either alone
+168,2,1.000,1,145.000,2.000,12.000,grown,ON,multiplet,2,1.915,2011-03-14 16:40:17.637303,-122.210,46.119,5.472,0.059,1.000,swarm,kept,kept,only both together
+108,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.072,2010-10-17 01:08:51.358163,-124.693,40.493,0.691,2.673,1.000,,kept,dissolved,location
+153,2,1.000,1,145.000,2.000,12.000,grown,ON,multiplet,2,1.879,2011-02-01 21:32:50.054463,-122.246,46.132,0.321,0.028,1.000,swarm,kept,merged,only both together
+161,2,0.000,0,,,,dissolved,PU,multiplet,2,1.519,2011-02-13 10:26:31.037063,-123.336,47.949,9.796,0.011,1.000,,kept,dissolved,location
+1971,2,0.000,0,,,,dissolved,WA,multiplet,2,1.750,2015-08-09 14:29:18.873297,-125.129,48.527,1.028,0.023,1.000,,dissolved,kept,magnitude
+1988,2,0.000,0,,,,dissolved,MT,multiplet,2,2.713,2015-09-03 21:36:40.543118,-123.790,40.334,0.321,0.118,1.000,,kept,kept,only both together
+2092,2,0.000,0,,,,dissolved,OR,mainshock-aftershock,2,3.826,2016-11-28 04:35:33.140828,-123.444,45.749,8.385,0.253,1.000,,kept,dissolved,location
+2034,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.229,2015-12-19 10:02:58.147474,-125.394,40.409,0.970,0.479,1.000,,dissolved,grown,magnitude
+2037,2,0.000,0,,,,dissolved,GO,multiplet,2,2.767,2015-12-27 09:21:38.680223,-127.084,40.517,2.521,0.003,1.000,,kept,dissolved,location
+2056,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,3.619,2016-04-04 18:36:32.648483,-123.591,49.779,7.880,0.755,1.000,,kept,dissolved,location
+103,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,2.719,2010-09-29 10:44:26.582838,-125.383,40.302,5.268,0.010,1.000,,kept,dissolved,location
+43,2,0.000,0,,,,dissolved,ON,multiplet,2,1.861,2010-04-27 05:25:53.881705,-123.152,40.173,3.228,0.277,1.000,,dissolved,dissolved,either alone
+1413,2,0.000,0,,,,dissolved,ON,multiplet,2,2.416,2014-10-11 03:59:40.568179,-121.627,40.434,1.046,1.156,1.000,,kept,dissolved,location
+1415,2,0.000,0,,,,dissolved,EN,multiplet,2,3.195,2014-10-12 10:09:46.714623,-129.448,48.925,1.235,1.129,1.000,,kept,dissolved,location
+1359,2,0.000,0,,,,dissolved,BL,multiplet,2,2.769,2014-07-25 14:43:19.090275,-126.604,43.057,1.139,0.039,1.000,,dissolved,kept,magnitude
+1365,2,0.000,0,,,,dissolved,ON,multiplet,2,1.951,2014-07-28 20:32:06.614156,-122.290,40.717,1.708,0.769,1.000,,dissolved,dissolved,either alone
+1395,2,1.000,1,1370.000,2.000,9.000,grown,BL,multiplet,2,2.556,2014-09-16 09:43:04.813243,-128.082,43.524,0.415,0.004,1.000,swarm,grown,kept,magnitude
+1411,2,0.000,0,,,,dissolved,MT,mainshock-aftershock,2,3.738,2014-10-10 07:06:51.644164,-125.429,40.434,0.579,15.470,1.000,,kept,kept,only both together
+1412,2,0.000,0,,,,dissolved,ON,multiplet,2,2.287,2014-10-10 15:01:54.025165,-123.463,39.469,8.145,0.019,1.000,,kept,dissolved,location
+1444,2,1.000,1,1139.000,2.000,2521.000,grown,MT,mainshock-aftershock,2,2.672,2014-11-17 19:46:49.695056,-125.364,40.699,3.502,0.109,1.000,mainshock-aftershock,grown,grown,either alone
+1420,2,0.000,0,,,,dissolved,ON,mainshock-aftershock,2,2.155,2014-10-16 22:17:18.893613,-121.513,40.991,1.206,0.001,1.000,,dissolved,kept,magnitude
+1426,2,1.000,1,1417.000,2.000,9.000,grown,OR,mainshock-aftershock,2,3.145,2014-10-27 07:40:44.434886,-124.459,44.376,6.960,0.001,1.000,mainshock-aftershock,grown,grown,either alone
+1432,2,0.000,0,,,,dissolved,ON,multiplet,2,2.208,2014-11-05 08:00:33.938608,-122.247,41.876,3.800,0.149,1.000,,kept,dissolved,location

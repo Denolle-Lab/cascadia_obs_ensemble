@@ -1,8 +1,8 @@
-"""Nearest-neighbour clustering of catalog v5.1 with the v5.1 magnitudes (Zaliapin & Ben-Zion method).
+"""Nearest-neighbour clustering of catalogs v5.1 and v6.0 (Zaliapin & Ben-Zion method).
 
 The method, parameters and classification rules are those of v4_clusters_zbz.py (catalog v4; read its
-docstring for the method); the functions are imported from it so the two runs stay comparable. What is
-new for v5.1:
+docstring for the method); the functions are imported from it so the runs stay comparable. Written for v5.1
+(below); catalog v6.0 runs the same code with --catalog v6.0 (see "Catalog version"). What is new for v5.1:
 
 Events
 * Catalog v5.1 (NonLinLoc in model v0.3.1) and the v5.1 Route A magnitudes (column M): by default the
@@ -56,8 +56,20 @@ Steps (each caches its output; rerun skips what exists unless --force):
               unit, waveform-review sets in the clustering
     compare   comparison with the v4 results, known sequences, volcano zoom, setting statistics
 
+Catalog version (--catalog; configure() sets inputs, folders and file tags):
+    v5.1  --mag stored reproduces the committed v5.1 run (outputs in data/catalog_v5/v5.1_analysis/clusters/ and
+          /wd1/.../v5.1_analysis/clusters/, compared with the v4 run of the stored magnitudes). Any other --mag writes
+          to folders with the suffix _Mconv (or --out / --big) and is compared with the v4.1 run on main (converged).
+    v6.0  catalog v6.0 with its own magnitude column (converged, D-B091); not earthquakes = event_flag set; every
+          output in /wd1/mdenolle_data/catalog_v6/v6.0_analysis/clusters/ (events_zbz_v60.csv.gz,
+          families_zbz_v60.csv, ...); variant storedM replaces v41M; mc_best from the converged Mc map table
+          (MCB_V60); compared with v5.1 (stored M), v5.1 locations with converged M (ref_v51_Mconv/, run first with
+          --catalog v5.1 --mag converged --out/--big <v6.0 folder>/ref_v51_Mconv) and v4.1 (converged M). Step repo
+          copies the small outputs to data/catalog_v6/v6.0_analysis/clusters/.
+
 Run (from this folder):
-    python v51_clusters_zbz.py --steps main,shuffle,variants,faults,nulls,checks,compare --workers 12
+    python v51_clusters_zbz.py --catalog v5.1 --mag stored --steps main,shuffle,variants,faults,nulls,checks,compare
+    python v51_clusters_zbz.py --catalog v6.0 --steps main,shuffle,variants,faults,nulls,checks,compare,repo
 """
 from __future__ import annotations
 
@@ -85,25 +97,92 @@ from v4_clusters_zbz import (REGIONS, REGION_NAMES, REG_ORDER, RE, Q, mc_maxc, b
                              gmm1d, tree_metrics, classify, rupture_cap, migration, completeness_table)
 
 ROOT = HERE.parents[1]
-CAT = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
-MAG = mag_paths.v51()        # --mag / $CASCADIA_MAG_V51: converged (default), stored or a path
-# products of the other v5.1 pieces, read from their pushed branches (git objects are shared by all worktrees of
-# the repository); switch the refs to origin/main once those branches are merged
+WD1 = Path("/wd1/mdenolle_data")
+# The catalog version (--catalog) sets the inputs, the output folders and the file tag; configure() sets the globals
+# below. 'v5.1' with --mag stored reproduces the committed v5.1 results (PR #42); 'v6.0' is catalog v6.0.
+CATALOGS = {
+    "v5.1": dict(tag="v51", csv=WD1 / "catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+                 out="data/catalog_v5/v5.1_analysis/clusters", big=WD1 / "catalog_v5/v5.1_analysis/clusters"),
+    "v6.0": dict(tag="v60", csv=WD1 / "catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
+                 out=None, big=WD1 / "catalog_v6/v6.0_analysis/clusters"),
+}
+CATV = "v5.1"
+TAG = "v51"
+CAT = CATALOGS["v5.1"]["csv"]
+MAG = mag_paths.v51()        # v5.1: --mag / $CASCADIA_MAG_V51: converged (default), stored or a path
+# v6.0: the catalog's own M column (converged Route A magnitudes of D-B091, magnitude_source), not recomputed; variant
+# storedM puts the stored (pre-D-B091) magnitudes on the v6.0 locations: the v5.1 stored table, else the v4.1 stored
+# table, as v6.0 takes the v5.1 table, else the v4.1 table
+MAG_V51_STORED = mag_paths.v51("stored")
+MAG_V41_STORED = mag_paths.v41("stored")
+# products of the other v5.1 pieces, read through git (git objects are shared by all worktrees of the repository)
 MAG_REF = "origin/main"      # the v5.1 Mc / b tables (stored and converged) are on main (PRs #40, #45)
 MCB = mag_paths.mcb_v51()
-FAULTS_REF = "origin/analysis/v51-faults"
+# Mc_best for variant mc_best of v6.0: the converged regional Mc map table (v4_mc_maps.py on the converged v4.1
+# magnitudes, v4 locations; rows variant 'all', period 'all')
+MCB_V60 = WD1 / "magnitude_converged/mc_maps_v41/mc_regional.csv"
+FAULTS_REF = "origin/main"   # fault surfaces v1 (PR #41; same blobs as origin/analysis/v51-faults 6ebe0230)
 FAULTS = "data/catalog_v5/v5.1_analysis/faults"
 # waveform review of four v5.1 location problems (P1 Mount St Helens deep events, P2 Brookings 2012,
 # P3 tensor events, P4 deep_pass / far_only), review/v51-locations
-REVIEW = Path("/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv")
-V4 = ROOT / "data/catalog_v4/clusters_zbz"
-OUT = ROOT / "data/catalog_v5/v5.1_analysis/clusters"
-BIG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/clusters")
+REVIEW = WD1 / "catalog_v5/v5.1_review/review_v51_events.csv"
+# clustering runs to compare with (step compare): key -> folder, events file, families file, label. The first one is
+# the primary comparison (file names without '_vs_<key>'). The v4 clustering of the stored magnitudes is the frozen
+# copy of origin/main 5d6658bf (data/catalog_v4/clusters_zbz has held the converged run since PR #47).
+V4_STORED = WD1 / "magnitude_converged/paper/stored/data/catalog_v4"
+V4_CONV = ROOT / "data/catalog_v4"
+REFS: dict = {}
+OUT = ROOT / CATALOGS["v5.1"]["out"]
+BIG = CATALOGS["v5.1"]["big"]
+EVF, FAMF = "events_zbz_v51.csv.gz", "families_zbz_v51.csv"
 T0 = pd.Timestamp("2010-01-01", tz="UTC")
 YR = 365.25
 KM = 111.195
-VARIANTS = ["d3", "d3q", "mc+0.3", "mc_best", "df_est", "df1.3", "df2.0", "noM_floor", "mc_year",
-            "eta0_shuf5", "tierABC", "v41M"]
+VARIANTS_V51 = ["d3", "d3q", "mc+0.3", "mc_best", "df_est", "df1.3", "df2.0", "noM_floor", "mc_year",
+                "eta0_shuf5", "tierABC", "v41M"]
+VARIANTS = list(VARIANTS_V51)
+VARIANTS_V60 = ["d3", "d3q", "mc+0.3", "mc_best", "df_est", "df1.3", "df2.0", "noM_floor", "mc_year",
+                "eta0_shuf5", "tierABC", "storedM"]
+
+
+def configure(catalog: str = "v5.1", mag: str | None = None, out: str | None = None, big: str | None = None) -> None:
+    """Set the catalog version, magnitudes, output folders and file names (module globals).
+
+    v5.1: magnitudes from --mag (mag_paths: converged by default, 'stored' = the committed v5.1 results). The outputs
+    of the stored magnitudes go to the committed folders; any other magnitude choice goes to folders with the suffix
+    '_Mconv' (or to --out / --big), so a converged run never overwrites the committed stored-magnitude results.
+    v6.0: magnitudes from the catalog (--mag is refused); every output in one folder on /wd1 (OUT = BIG) so the atlas
+    finds the events, families and sensitivity tables together."""
+    global CATV, TAG, CAT, MAG, MCB, OUT, BIG, EVF, FAMF, REFS, VARIANTS
+    cfg = CATALOGS[catalog]
+    CATV, TAG, CAT = catalog, cfg["tag"], cfg["csv"]
+    EVF, FAMF = f"events_zbz_{TAG}.csv.gz", f"families_zbz_{TAG}.csv"
+    if catalog == "v5.1":
+        MAG, MCB = mag_paths.v51(mag), mag_paths.mcb_v51(mag)
+        stored = Path(MAG) == mag_paths.v51("stored")
+        sfx = "" if stored else "_Mconv"
+        OUT = Path(out) if out else ROOT / (cfg["out"] + sfx)
+        BIG = Path(big) if big else Path(str(cfg["big"]) + sfx)
+        v4 = V4_STORED if stored else V4_CONV
+        REFS = {"v4": dict(dir=v4 / "clusters_zbz", events="events_zbz.csv.gz", families="families_zbz.csv",
+                           swarms=v4 / "swarms", label="v4 (" + ("stored" if stored else "converged") + " M)")}
+        VARIANTS = [v for v in VARIANTS_V51 if stored or v != "v41M"]
+    else:
+        if mag:
+            raise SystemExit("--mag: catalog v6.0 carries its magnitudes (converged, D-B091); use variant storedM")
+        MAG, MCB = CAT, str(MCB_V60)
+        BIG = Path(big) if big else cfg["big"]
+        OUT = Path(out) if out else BIG
+        v51 = CATALOGS["v5.1"]
+        REFS = {
+            "v51": dict(dir=ROOT / v51["out"], big=v51["big"], events="events_zbz_v51.csv.gz",
+                        families="families_zbz_v51.csv", swarms=ROOT / v51["out"], label="v5.1 (stored M)"),
+            "v51Mc": dict(dir=BIG / "ref_v51_Mconv", big=BIG / "ref_v51_Mconv", events="events_zbz_v51.csv.gz",
+                          families="families_zbz_v51.csv", label="v5.1 locations, converged M"),
+            "v4": dict(dir=V4_CONV / "clusters_zbz", events="events_zbz.csv.gz", families="families_zbz.csv",
+                       swarms=V4_CONV / "swarms", label="v4.1 (converged M)"),
+        }
+        VARIANTS = list(VARIANTS_V60)
 # known events for validation (catalog v4 event IDs = v5.1 IDs; ComCat magnitudes); list of v4_clusters_zbz_report.py
 KNOWN = [
     (262, "2010-01-10 Mw 6.5 Gorda", "mainshock-aftershock"),
@@ -152,17 +231,34 @@ def git_csv(ref: str, path: str, **kw) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- loading
 def load_all() -> pd.DataFrame:
-    """All 172,342 catalog rows with the v5.1 magnitudes and the exclusion reason ('' = used)."""
+    """All 172,342 catalog rows with the magnitudes and the exclusion reason ('' = used).
+
+    The catalog column 'region' (box label of the v4 epicentre; identical in catalogs v5.1 and v6.0) is kept as
+    region_v51 in both versions, so the output tables have one schema (the atlas reads region_v51)."""
     cols = ["ID", "time", "lat", "lon", "depth", "loc_source", "tier", "region", "h_min", "h_max", "sig_z",
             "depth_quality", "event_flag", "floor_limited", "far_only", "deep_pass", "five_phase", "M", "n_sta",
             "gap"]
-    c = pd.read_csv(CAT, usecols=cols, low_memory=False).rename(
-        columns={"ID": "event_id", "region": "region_v51", "M": "M_v41"})
-    m = pd.read_csv(MAG, usecols=["ID", "M", "M_type", "is_earthquake"]).rename(columns={"ID": "event_id"})
-    c = c.merge(m, on="event_id", how="left", validate="1:1")
+    if CATV == "v5.1":
+        c = pd.read_csv(CAT, usecols=cols, low_memory=False).rename(
+            columns={"ID": "event_id", "region": "region_v51", "M": "M_v41"})
+        m = pd.read_csv(MAG, usecols=["ID", "M", "M_type", "is_earthquake"]).rename(columns={"ID": "event_id"})
+        c = c.merge(m, on="event_id", how="left", validate="1:1")
+        c["is_earthquake"] = _bool(c["is_earthquake"])
+    else:
+        c = pd.read_csv(CAT, usecols=cols + ["M_type", "magnitude_source"], low_memory=False).rename(
+            columns={"ID": "event_id", "region": "region_v51"})
+        # not an earthquake: the catalog's own event_flag (ComCat explosion / quarry blast / other within 3 s and
+        # 20 km, Texada quarry_blast_likely; D-B071), evaluated on the v6.0 hypocentres
+        c["is_earthquake"] = c.event_flag.fillna("").astype(str).str.strip().eq("")
+        # variant storedM: stored magnitudes on the v6.0 locations (v5.1 stored table, else v4.1 stored table)
+        s51 = pd.read_csv(MAG_V51_STORED, usecols=["ID", "M"]).set_index("ID").M
+        s41 = pd.read_csv(MAG_V41_STORED, usecols=["event_id", "M"]).drop_duplicates("event_id").set_index(
+            "event_id").M
+        src51 = c.magnitude_source.fillna("").str.startswith("v5.1")
+        c["M_stored"] = np.where(src51, c.event_id.map(s51), c.event_id.map(s41))
+        c["M_stored"] = np.where(c.M.notna(), c.M_stored, np.nan)   # the same events carry M as in the catalog
     for f in ["floor_limited", "far_only", "deep_pass", "five_phase"]:
         c[f] = _bool(c[f])
-    c["is_earthquake"] = _bool(c["is_earthquake"])
     c["excluded"] = np.where(c.loc_source.eq("none"), "no_hypocentre",
                              np.where(~c.is_earthquake, "not_earthquake", ""))
     return c
@@ -192,12 +288,17 @@ def prepare(c: pd.DataFrame, mcol: str = "M") -> pd.DataFrame:
 def completeness(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     ctab, ytab = completeness_table(df)
     ctab["Mc_year"] = [ytab[ytab.region == r].set_index("year").Mc_maxc.to_dict() for r in ctab.region]
-    # Mc_best of the mag piece (v5.1 magnitudes, v5.1 locations, whole period), for variant mc_best
+    # Mc_best for variant mc_best. v5.1: the mag piece's table (v5.1 magnitudes, v5.1 locations, whole period);
+    # v6.0: the converged regional Mc map table (MCB_V60; no Mc map exists for the v6.0 locations)
     try:
-        mb = git_csv(MAG_REF, MCB)
-        mb = mb[(mb.version == "C_v51M_v51loc") & (mb.period == "all")].set_index("region")
+        if CATV == "v5.1":
+            mb = git_csv(MAG_REF, MCB)
+            mb = mb[(mb.version == "C_v51M_v51loc") & (mb.period == "all")].set_index("region")
+        else:
+            mb = pd.read_csv(MCB)
+            mb = mb[(mb.variant == "all") & (mb.period == "all")].set_index("region")
         ctab["Mc_best"] = ctab.region.map(mb.mc_best)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         ctab["Mc_best"] = np.nan
     bb = [b_aki(df.M.values[df.region.values == r], m)[0] if np.isfinite(m) else np.nan
           for r, m in zip(ctab.region, ctab.Mc_best)]
@@ -627,16 +728,22 @@ def step_main(c, a):
     exc.loc[exc.excluded.eq("no_hypocentre"), "region"] = ""
     ev = pd.concat([ev, exc], ignore_index=True).sort_values("event_id")
     BIG.mkdir(parents=True, exist_ok=True)
-    ev.to_csv(BIG / "events_zbz_v51.csv.gz", index=False, float_format="%.4f")
-    slim = ["event_id", "region", "in_analysis", "M", "parent_id", "log_eta", "log_T", "log_R", "nn_dist_km",
-            "nn_dt_days", "linked", "family_id", "family_type", "role", "background", "cls", "excluded"]
-    ev[slim].to_csv(OUT / "events_zbz_v51.csv.gz", index=False, float_format="%.4f")
-    fam.to_csv(OUT / "families_zbz_v51.csv", index=False, float_format="%.4f")
+    ev.to_csv(BIG / EVF, index=False, float_format="%.4f")
+    if OUT.resolve() != BIG.resolve():
+        ev[SLIM].to_csv(OUT / EVF, index=False, float_format="%.4f")
+    fam.to_csv(OUT / FAMF, index=False, float_format="%.4f")
+    extra = {} if CATV == "v5.1" else dict(
+        catalog_version=CATV, magnitudes_column="M (catalog, D-B091 converged)", mc_best_source=str(MCB),
+        M_source=c.magnitude_source.value_counts().to_dict())
     json.dump(dict(rmin=a.rmin, rcap_min=a.rcap_min, q=Q, df_main=1.6, catalog=str(CAT), **mag_paths.describe(MAG),
-                   mc_b=f"{MAG_REF}:{MCB}",
-                   n_rows=len(c), n_used=len(df), excluded=c.excluded.value_counts().to_dict()),
+                   mc_b=f"{MAG_REF}:{MCB}" if CATV == "v5.1" else str(MCB),
+                   n_rows=len(c), n_used=len(df), excluded=c.excluded.value_counts().to_dict(), **extra),
               open(OUT / "run_params.json", "w"), indent=1)
     return df, ctab, thr
+
+
+SLIM = ["event_id", "region", "in_analysis", "M", "parent_id", "log_eta", "log_T", "log_R", "nn_dist_km",
+        "nn_dt_days", "linked", "family_id", "family_type", "role", "background", "cls", "excluded"]
 
 
 def step_shuffle(df, ctab, thr, a):
@@ -677,10 +784,10 @@ def step_nulls(df, ctab, a, seeds=(10, 5, 5)):
     two keep slow rate changes such as network changes and long sequences)."""
     reg = pd.read_csv(OUT / "thresholds_zbz.csv").set_index("region")
     thr0 = reg.log_eta0.to_dict()
-    ev = pd.read_csv(OUT / "events_zbz_v51.csv.gz", usecols=["event_id", "region", "in_analysis", "linked",
+    ev = pd.read_csv(OUT / EVF, usecols=["event_id", "region", "in_analysis", "linked",
                                                             "family_id"])
     ea = ev[ev.in_analysis.astype(bool)]
-    fam = pd.read_csv(OUT / "families_zbz_v51.csv", usecols=["family_id", "region", "type"])
+    fam = pd.read_csv(OUT / FAMF, usecols=["family_id", "region", "type"])
     rows = []
     for r in REG_ORDER:
         e = ea[ea.region == r]
@@ -729,7 +836,7 @@ def step_nulls(df, ctab, a, seeds=(10, 5, 5)):
 def step_variants(c, df, ctab, a):
     vdir = BIG / "variants"
     vdir.mkdir(parents=True, exist_ok=True)
-    main_ev = pd.read_csv(OUT / "events_zbz_v51.csv.gz", usecols=["event_id", "in_analysis", "background"])
+    main_ev = pd.read_csv(OUT / EVF, usecols=["event_id", "in_analysis", "background"])
     main_bg = main_ev[main_ev.in_analysis].set_index("event_id").background
     regs = pd.read_csv(OUT / "thresholds_zbz.csv")
     thr_shuf = dict(zip(regs.region, regs.log_eta0_shuf5))
@@ -741,10 +848,12 @@ def step_variants(c, df, ctab, a):
             rows.append(pd.read_csv(fs))
             continue
         t0 = time.time()
-        if v == "v41M":
-            dfv = prepare(c, "M_v41")
+        if v in ("v41M", "storedM"):
+            # other magnitudes on the same locations: Mc, b and eta0 recomputed from them (v41M: the v4.1 magnitudes
+            # of the catalog v5.1 column M; storedM: the stored, pre-D-B091 magnitudes on the v6.0 locations)
+            dfv = prepare(c, "M_v41" if v == "v41M" else "M_stored")
             ctv, _ = completeness(dfv)
-            ctv.drop(columns="Mc_year").to_csv(vdir / "completeness_v41M.csv", index=False, float_format="%.3f")
+            ctv.drop(columns="Mc_year").to_csv(vdir / f"completeness_{v}.csv", index=False, float_format="%.3f")
             ev_v, fam_v, reg_v, _ = build(dfv, ctv, "main", a)
         else:
             ev_v, fam_v, reg_v, _ = build(df, ctab, v, a, thr_override=thr_shuf if v == "eta0_shuf5" else None)
@@ -866,8 +975,8 @@ def maxc_edges(m: np.ndarray, edges: np.ndarray) -> float:
 
 
 def step_checks(c, df):
-    ev = pd.read_csv(BIG / "events_zbz_v51.csv.gz", low_memory=False)
-    fam = pd.read_csv(OUT / "families_zbz_v51.csv")
+    ev = pd.read_csv(BIG / EVF, low_memory=False)
+    fam = pd.read_csv(OUT / FAMF)
     cc = c.set_index("event_id")
     ev["h_max"] = ev.event_id.map(cc.h_max)
     ev["five_phase"] = ev.event_id.map(cc.five_phase).fillna(False).astype(bool)
@@ -989,8 +1098,12 @@ def cls_of(e):
 
 
 def match_families(m4: pd.DataFrame, m5: pd.DataFrame, f4: pd.DataFrame, f5: pd.DataFrame,
-                   min_share: float = 0.2) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """m4, m5: event_id -> family id (members incl. attached). Status of each v4 and each v5.1 family."""
+                   min_share: float = 0.2, ref: str = "v4", new: str = "v51"
+                   ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """m4, m5: event_id -> family id (members incl. attached) of the reference run (ref) and of the new run (new).
+    Status of each reference and each new family; ref / new only name the output columns."""
+    fin, npt = f"frac_in_{new}_families", f"n_{new}_parts"
+    ffr, nrp = f"frac_from_{ref}_families", f"n_{ref}_parts"
     j = m4.merge(m5, on="event_id")
     ov = j.groupby(["f4", "f5"]).size().rename("n_shared").reset_index()
     n4, n5 = m4.f4.value_counts(), m5.f5.value_counts()
@@ -1005,14 +1118,13 @@ def match_families(m4: pd.DataFrame, m5: pd.DataFrame, f4: pd.DataFrame, f5: pd.
     tot5 = ov.groupby("f5").n_shared.sum()
     r4 = []
     for F, nF in n4.items():
-        d = dict(f4=F, n4_all=int(nF), frac_in_v51_families=float(tot4.get(F, 0) / nF),
-                 n_v51_parts=int(s4.get(F, 0)))
+        d = {"f4": F, "n4_all": int(nF), fin: float(tot4.get(F, 0) / nF), npt: int(s4.get(F, 0))}
         if F in best4.index:
             b = best4.loc[F]
             d.update(f5_main=int(b.f5), shared_main=int(b.n_shared), n5_main=int(b.n5))
-        if d["frac_in_v51_families"] < 0.5:
+        if d[fin] < 0.5:
             st = "dissolved"
-        elif d["n_v51_parts"] >= 2:
+        elif d[npt] >= 2:
             st = "split"
         elif s5.get(d["f5_main"], 0) >= 2:
             st = "merged"
@@ -1028,14 +1140,13 @@ def match_families(m4: pd.DataFrame, m5: pd.DataFrame, f4: pd.DataFrame, f5: pd.
     st4 = r4.set_index("f4").status
     r5 = []
     for G, nG in n5.items():
-        d = dict(f5=G, n5_all=int(nG), frac_from_v4_families=float(tot5.get(G, 0) / nG),
-                 n_v4_parts=int(s5.get(G, 0)))
+        d = {"f5": G, "n5_all": int(nG), ffr: float(tot5.get(G, 0) / nG), nrp: int(s5.get(G, 0))}
         if G in best5.index:
             b = best5.loc[G]
             d.update(f4_main=int(b.f4), shared_main=int(b.n_shared), n4_main=int(b.n4))
-        if d["n_v4_parts"] == 0:
+        if d[nrp] == 0:
             st = "new"
-        elif d["n_v4_parts"] >= 2:
+        elif d[nrp] >= 2:
             st = "merged"
         elif st4.get(d.get("f4_main", -1), "") == "split":
             st = "split_part"
@@ -1051,63 +1162,90 @@ def match_families(m4: pd.DataFrame, m5: pd.DataFrame, f4: pd.DataFrame, f5: pd.
     return ov, r4, r5
 
 
+def ref_tables(key: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Events (with positions when the reference has them) and families of comparison run REFS[key]."""
+    R = REFS[key]
+    want = ["event_id", "region", "in_analysis", "M", "family_id", "role", "linked", "lat", "lon", "depth",
+            "excluded"]
+    src = Path(R.get("big", R["dir"])) / R["events"]
+    if not src.exists():
+        src = Path(R["dir"]) / R["events"]
+    e = pd.read_csv(src, usecols=lambda x: x in want, low_memory=False)
+    f = pd.read_csv(Path(R["dir"]) / R["families"])
+    return e, f
+
+
 def step_compare(c, df, ctab, a):
-    ev = pd.read_csv(BIG / "events_zbz_v51.csv.gz", low_memory=False)
-    fam = pd.read_csv(OUT / "families_zbz_v51.csv")
-    e4 = pd.read_csv(V4 / "events_zbz.csv.gz",
-                     usecols=["event_id", "region", "in_analysis", "M", "family_id", "role", "linked", "lat", "lon",
-                              "depth"])
-    f4 = pd.read_csv(V4 / "families_zbz.csv")
-    # ---- event-level transitions
-    e4["cls4"] = cls_of(e4)
-    e4["type4"] = e4.family_id.map(f4.set_index("family_id").type).fillna("")
+    """Compare with every run of REFS: event classes, analysis-set membership, family matching (status of each
+    family on both sides), fate of dissolved families, location shift. The first entry of REFS is the primary
+    comparison (status files without '_vs_<key>')."""
+    ev = pd.read_csv(BIG / EVF, low_memory=False)
+    fam = pd.read_csv(OUT / FAMF)
     ev["cls5"] = np.where(ev.excluded.fillna("").ne(""), "excluded_" + ev.excluded.fillna(""), cls_of(ev))
-    j = e4.merge(ev[["event_id", "cls5", "in_analysis", "family_type", "region", "M"]], on="event_id",
-                 how="outer", suffixes=("_4", "_5"))
-    j["cls4"] = j.cls4.fillna("not in v4")
-    j["cls5"] = j.cls5.fillna("not in v5.1")
-    pd.crosstab(j.cls4, j.cls5, margins=True).to_csv(OUT / "v4_vs_v51_event_classes.csv")
-    both = j[j.in_analysis_4.eq(True) & j.in_analysis_5.eq(True)]
-    tr = pd.crosstab([both.region_4], [both.cls4 + "->" + both.cls5])
-    tr.to_csv(OUT / "v4_vs_v51_event_classes_analysis_by_region.csv")
-    # analysis-set membership changes (Mc and magnitude changes)
-    j["an4"] = j.in_analysis_4.eq(True)
-    j["an5"] = j.in_analysis_5.eq(True)
-    pd.crosstab(j.region_4.fillna(j.region_5), [j.an4, j.an5]).to_csv(OUT / "v4_vs_v51_analysis_membership.csv")
-    # ---- family matching
-    m4 = e4[e4.family_id > 0][["event_id", "family_id"]].rename(columns={"family_id": "f4"})
-    m5 = ev[ev.family_id > 0][["event_id", "family_id"]].rename(columns={"family_id": "f5"})
-    ov, r4, r5 = match_families(m4, m5, f4, fam)
-    # where did the members of dissolved v4 families go
-    dis = m4[m4.f4.isin(r4[r4.status == "dissolved"].f4)].merge(ev[["event_id", "cls5"]], on="event_id",
-                                                                 how="left")
-    r4 = r4.merge(f4[["family_id", "region", "type", "n", "Mmax", "start", "lon", "lat", "extent_km",
-                      "duration90_days", "mean_leaf_depth"]].rename(columns={"family_id": "f4"}), on="f4", how="left")
-    r5 = r5.merge(fam[["family_id", "region", "type", "n", "Mmax", "start", "lon", "lat", "extent_km",
-                       "duration90_days", "mean_leaf_depth"]].rename(columns={"family_id": "f5"}), on="f5",
-                  how="left")
-    tmap = r5.set_index("f5").type
-    r4["type_v51_main"] = r4.f5_main.map(tmap)
-    r4.to_csv(OUT / "v4_families_status.csv", index=False, float_format="%.3f")
-    r5["type_v4_main"] = r5.f4_main.map(f4.set_index("family_id").type)
-    r5.to_csv(OUT / "v51_families_status.csv", index=False, float_format="%.3f")
-    fam = fam.drop(columns=[c for c in ["v4_status", "v4_family_main", "v4_shared_main"] if c in fam]).merge(
-        r5[["f5", "status", "f4_main", "shared_main"]].rename(columns={
-            "f5": "family_id", "status": "v4_status", "f4_main": "v4_family_main", "shared_main": "v4_shared_main"}),
-        on="family_id", how="left")
-    fam.to_csv(OUT / "families_zbz_v51.csv", index=False, float_format="%.4f")
-    ov.to_csv(OUT / "v4_v51_family_overlap.csv", index=False)
-    dis_counts = dis.cls5.fillna("not in v5.1").value_counts()
-    dis_counts.rename("n").to_csv(OUT / "v4_dissolved_members_fate.csv")
-    # ---- location change of matched family members
-    sh = df[["event_id", "lat", "lon", "depth", "depth_good"]].merge(
-        e4[["event_id", "lat", "lon", "depth"]], on="event_id", suffixes=("", "_v4"))
-    sh["dh_km"] = np.hypot((sh.lon - sh.lon_v4) * KM * np.cos(np.radians(sh.lat)), (sh.lat - sh.lat_v4) * KM)
-    sh["dz_km"] = sh.depth - sh.depth_v4
-    sh[["event_id", "dh_km", "dz_km", "depth_good"]].to_csv(BIG / "v4_v51_shift.csv.gz", index=False,
-                                                            float_format="%.3f")
+    e4v = None
+    for k_ref, ref in enumerate(REFS):
+        e4, f4 = ref_tables(ref)
+        sfx = "" if k_ref == 0 else f"_vs_{ref}"
+        # ---- event-level transitions
+        e4["cls4"] = cls_of(e4)
+        e4["type4"] = e4.family_id.map(f4.set_index("family_id").type).fillna("")
+        j = e4.merge(ev[["event_id", "cls5", "in_analysis", "family_type", "region", "M"]], on="event_id",
+                     how="outer", suffixes=("_4", "_5"))
+        j["cls4"] = j.cls4.fillna(f"not in {ref}")
+        j["cls5"] = j.cls5.fillna(f"not in {CATV}")
+        if "excluded" in e4:     # excluded rows of the reference run (no hypocentre, not an earthquake)
+            ex4 = j.excluded.fillna("").astype(str)
+            j["cls4"] = np.where(ex4.ne("") & ex4.ne("nan"), "excluded_" + ex4, j.cls4)
+        pd.crosstab(j.cls4, j.cls5, margins=True).to_csv(OUT / f"{ref}_vs_{TAG}_event_classes.csv")
+        both = j[j.in_analysis_4.eq(True) & j.in_analysis_5.eq(True)]
+        tr = pd.crosstab([both.region_4], [both.cls4 + "->" + both.cls5])
+        tr.to_csv(OUT / f"{ref}_vs_{TAG}_event_classes_analysis_by_region.csv")
+        # analysis-set membership changes (Mc and magnitude changes)
+        j["an4"] = j.in_analysis_4.eq(True)
+        j["an5"] = j.in_analysis_5.eq(True)
+        pd.crosstab(j.region_4.fillna(j.region_5), [j.an4, j.an5]).to_csv(
+            OUT / f"{ref}_vs_{TAG}_analysis_membership.csv")
+        # ---- family matching
+        m4 = e4[e4.family_id > 0][["event_id", "family_id"]].rename(columns={"family_id": "f4"})
+        m5 = ev[ev.family_id > 0][["event_id", "family_id"]].rename(columns={"family_id": "f5"})
+        ov, r4, r5 = match_families(m4, m5, f4, fam, ref=ref, new=TAG)
+        # where did the members of dissolved reference families go
+        dis = m4[m4.f4.isin(r4[r4.status == "dissolved"].f4)].merge(ev[["event_id", "cls5"]], on="event_id",
+                                                                     how="left")
+        r4 = r4.merge(f4[["family_id", "region", "type", "n", "Mmax", "start", "lon", "lat", "extent_km",
+                          "duration90_days", "mean_leaf_depth"]].rename(columns={"family_id": "f4"}), on="f4",
+                      how="left")
+        r5 = r5.merge(fam[["family_id", "region", "type", "n", "Mmax", "start", "lon", "lat", "extent_km",
+                           "duration90_days", "mean_leaf_depth"]].rename(columns={"family_id": "f5"}), on="f5",
+                      how="left")
+        tmap = r5.set_index("f5").type
+        r4[f"type_{TAG}_main"] = r4.f5_main.map(tmap)
+        r4.to_csv(OUT / f"{ref}_families_status.csv", index=False, float_format="%.3f")
+        r5[f"type_{ref}_main"] = r5.f4_main.map(f4.set_index("family_id").type)
+        r5.to_csv(OUT / f"{TAG}_families_status{sfx}.csv", index=False, float_format="%.3f")
+        cols = [f"{ref}_status", f"{ref}_family_main", f"{ref}_shared_main"]
+        fam = fam.drop(columns=[x for x in cols if x in fam]).merge(
+            r5[["f5", "status", "f4_main", "shared_main"]].rename(columns={
+                "f5": "family_id", "status": cols[0], "f4_main": cols[1], "shared_main": cols[2]}),
+            on="family_id", how="left")
+        ov.to_csv(OUT / f"{ref}_{TAG}_family_overlap.csv", index=False)
+        dis_counts = dis.cls5.fillna(f"not in {CATV}").value_counts()
+        dis_counts.rename("n").to_csv(OUT / f"{ref}_dissolved_members_fate.csv")
+        # ---- location change of the events between the reference run and this one
+        if {"lat", "lon", "depth"} <= set(e4.columns):
+            sh = df[["event_id", "lat", "lon", "depth", "depth_good"]].merge(
+                e4[["event_id", "lat", "lon", "depth"]].dropna(subset=["lat"]), on="event_id", suffixes=("", "_r"))
+            sh["dh_km"] = np.hypot((sh.lon - sh.lon_r) * KM * np.cos(np.radians(sh.lat)), (sh.lat - sh.lat_r) * KM)
+            sh["dz_km"] = sh.depth - sh.depth_r
+            sh[["event_id", "dh_km", "dz_km", "depth_good"]].to_csv(BIG / f"{ref}_{TAG}_shift.csv.gz", index=False,
+                                                                    float_format="%.3f")
+        if ref == "v4":
+            e4v = e4
+        log(f"compare with {ref}: {TAG} families {r5.status.value_counts().to_dict()}; "
+            f"{ref} families {r4.status.value_counts().to_dict()}")
+    fam.to_csv(OUT / FAMF, index=False, float_format="%.4f")
     # ---- validation, volcano zoom, setting stats
-    validate(ev, fam, c, e4)
+    validate(ev, fam, c, e4v if e4v is not None else e4)
     volcano_local(df, a)
     setting_stats(ev, fam, ctab)
 
@@ -1152,7 +1290,7 @@ def validate(ev, fam, c, e4):
                 d.update(other_id=o, other_M=mem.M.iloc[0], other_time=str(mem.time.iloc[0])[:19],
                          other_tier=cc.tier.get(o), other_h_max_km=round(float(cc.h_max.get(o, np.nan)), 1),
                          other_n_sta=cc.n_sta.get(o), other_gap=round(float(cc.gap.get(o, np.nan)), 0),
-                         other_dist_v51_km=dist(eid, o, pv), other_dist_v4_km=dist(eid, o, p4))
+                         **{f"other_dist_{TAG}_km": dist(eid, o, pv), "other_dist_v4_km": dist(eid, o, p4)})
             Fv = vt.get(eid, -1)
             if Fv > 0 and len(fv):
                 g = fv.loc[Fv]
@@ -1287,31 +1425,58 @@ def setting_stats(ev, fam, ctab):
             pct_fam_migrating_ge10=round(100 * f[f.n >= 10].migrating.mean(), 1) if (f.n >= 10).any() else np.nan,
             n_fam_ge10=int((f.n >= 10).sum()),
             n_fam_all_ge10=len(f10),
-            pct_fam_all_ge10_migrating_v51=round(100 * f10.mig_migrating.fillna(False).astype(bool).mean(), 1)
-            if len(f10) else np.nan))
+            **{f"pct_fam_all_ge10_migrating_{TAG}": round(100 * f10.mig_migrating.fillna(False).astype(bool).mean(), 1)
+               if len(f10) else np.nan}))
     pd.DataFrame(rows).to_csv(OUT / "setting_stats.csv", index=False)
+
+
+# ---------------------------------------------------------------- copy to the repository (v6.0)
+REPO_V60 = "data/catalog_v6/v6.0_analysis/clusters"
+
+
+def step_repo():
+    """v6.0 writes everything to BIG on /wd1; copy the small outputs (tables, figures, report, the slim event table)
+    to the repository folder REPO_V60 for the commit. Large files (full event table, variants, shifts) stay on /wd1."""
+    import shutil
+    dst = ROOT / REPO_V60
+    dst.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for f in sorted(OUT.iterdir()):
+        if f.is_file() and f.suffix in (".csv", ".json", ".png", ".html", ".md", ".npz") and f.name != "RESUME.md" \
+                and f.stat().st_size < 5e6:
+            shutil.copy2(f, dst / f.name)
+            n += 1
+    ev = pd.read_csv(BIG / EVF, usecols=SLIM, low_memory=False)
+    ev.to_csv(dst / EVF, index=False, float_format="%.4f")
+    log(f"repo: {n} files and the slim {EVF} copied to {dst}")
 
 
 # ---------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--catalog", default="v5.1", choices=sorted(CATALOGS),
+                    help="catalog version (v5.1: committed run with --mag stored; v6.0: magnitudes of the catalog)")
     ap.add_argument("--steps", default="main,shuffle,variants,faults,nulls,checks,compare")
     ap.add_argument("--rmin", type=float, default=0.5, help="distance floor (km)")
     ap.add_argument("--rcap-min", type=float, default=10.0, help="minimum link distance cap (km)")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--nshuffle", type=int, default=3)
-    ap.add_argument("--variants", default=",".join(VARIANTS))
+    ap.add_argument("--variants", default=None, help="comma-separated (default: all variants of the catalog)")
+    ap.add_argument("--out", default=None, help="folder of the tables (default: set by --catalog and --mag)")
+    ap.add_argument("--big", default=None, help="folder of the large outputs (default: set by --catalog and --mag)")
     ap.add_argument("--force", action="store_true", help="recompute cached steps")
     mag_paths.add_argument(ap, "v5.1")
     a = ap.parse_args()
-    global MAG, MCB
-    MAG, MCB = mag_paths.v51(a.mag), mag_paths.mcb_v51(a.mag)
-    print(f"magnitudes: {MAG}; Mc / b: {MAG_REF}:{MCB}", flush=True)
+    configure(a.catalog, a.mag, a.out, a.big)
+    if a.variants is None:
+        a.variants = ",".join(VARIANTS)
+    print(f"catalog {CATV}: {CAT}; magnitudes: {MAG}; Mc_best: {MCB}; OUT {OUT}; BIG {BIG}; "
+          f"compare with {list(REFS)}", flush=True)
     OUT.mkdir(parents=True, exist_ok=True)
     BIG.mkdir(parents=True, exist_ok=True)
     steps = a.steps.split(",")
     c = load_all()
-    if "main" in steps and (a.force or not (OUT / "families_zbz_v51.csv").exists()):
+    if "main" in steps and (a.force or not (OUT / FAMF).exists()):
         step_main(c, a)
     df = prepare(c)
     ctab, _ = completeness(df)
@@ -1322,10 +1487,10 @@ def main():
     if "variants" in steps:
         step_variants(c, df, ctab, a)
     if "faults" in steps:
-        ev = pd.read_csv(BIG / "events_zbz_v51.csv.gz", low_memory=False)
-        fam = pd.read_csv(OUT / "families_zbz_v51.csv")
+        ev = pd.read_csv(BIG / EVF, low_memory=False)
+        fam = pd.read_csv(OUT / FAMF)
         fam, pf = step_faults(ev, fam)
-        fam.to_csv(OUT / "families_zbz_v51.csv", index=False, float_format="%.4f")
+        fam.to_csv(OUT / FAMF, index=False, float_format="%.4f")
         log(f"faults: {len(pf)} surfaces with events")
     if "nulls" in steps and (a.force or not (OUT / "null_test_summary.csv").exists()):
         step_nulls(df, ctab, a)
@@ -1334,6 +1499,8 @@ def main():
     if "compare" in steps:
         step_compare(c, df, ctab, a)
         log("compare done")
+    if "repo" in steps and CATV == "v6.0":
+        step_repo()
 
 
 if __name__ == "__main__":

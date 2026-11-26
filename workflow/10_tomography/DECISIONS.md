@@ -982,3 +982,11 @@ schedule was then fixed on independent clusters by the other session: SSST 9999 
 tomoDD + floor (D-B081) stays available as a cross-check for dense clusters; it gives no catalog column. Open for the
 PI: whether v5.2 (B5 on v5.1, D-B058/D-B079) is still wanted now that v6.0 applies the same code in the re-inverted
 model.
+
+### D-B102 Each catalog carries magnitudes computed on its own hypocentres: v5.1 takes the converged v5.1-hypocentre table (adopted, 2026-11-26 13:33, PI; amends D-B091)
+Independent review of PR #49 (catalog v6.0 bundle and converged v5.x magnitudes): the v5.1 bundle took M from the converged
+v4.1 table (v4 hypocentres), while v6.0 takes it from the converged v5.1 table (v5.1 hypocentres), so 126,808 of 130,769
+events differed between the two bundles (median |dM| 0.023, p95 0.26, max 2.14). PI: v5.1 switches to the v5.1-hypocentre
+converged magnitudes (as v6.0); catalog_v5.zip is rebuilt once more (session -18) together with the six minor review fixes
+(checks in magnitudes: catalog mode, 900003 label, docstring, v6.0 tier pointer, final zip md5 in summaries, upload note).
+PR #49 merged as is (f7a87b11); the fixes come as a small follow-up PR.

@@ -149,10 +149,13 @@ def nproc_limit(default):
         return default
 
 
-def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None):
-    """tasks: [(name, argv, cwd, logfile)]; at most nproc_limit(nproc) at a time, a new one only while MemAvailable >=
-    MEM_MIN_GB, at most one start per `ramp` seconds. on_done(name, rc) is called as each finishes. Returns {name: rc}."""
-    queue, running, rc = list(tasks), {}, {}
+def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default=0.5):
+    """tasks: [(name, argv, cwd, logfile[, est_gb])]; at most nproc_limit(nproc) at a time, at most one start per `ramp`
+    seconds; a task starts only while MemAvailable - (estimates of the tasks started in the last 60 s, whose memory
+    MemAvailable may not show yet) - its own estimate >= MEM_MIN_GB; the first queued task that fits starts (smaller
+    ones skip ahead of a large one that does not fit). on_done(name, rc) is called as each finishes. Returns {name: rc}."""
+    queue = [tuple(x) + ((est_default,) if len(x) == 4 else ()) for x in tasks]
+    running, rc, recent = {}, {}, []
     t0, last_log, last_start = time.time(), 0.0, 0.0
     while queue or running:
         for name in list(running):
@@ -165,12 +168,19 @@ def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None):
                 if on_done:
                     on_done(name, r)
         lim = nproc_limit(nproc)
-        while queue and len(running) < lim and time.time() - last_start >= ramp and mem_gb() >= MEM_MIN_GB:
-            name, argv, cwd, logf = queue.pop(0)
+        while queue and len(running) < lim and time.time() - last_start >= ramp:
+            now = time.time()
+            recent = [(ts, e) for ts, e in recent if now - ts < 60]
+            free = mem_gb() - sum(e for _, e in recent) - MEM_MIN_GB
+            i = next((j for j, x in enumerate(queue) if x[4] <= free), None)
+            if i is None:
+                break
+            name, argv, cwd, logf, est = queue.pop(i)
             fh = open(logf, "w")
             running[name] = (subprocess.Popen([str(x) for x in argv], cwd=cwd, stdout=fh, stderr=subprocess.STDOUT,
                                               env=env or ENV), fh)
-            last_start = time.time()
+            recent.append((now, est))
+            last_start = now
             if ramp >= 0.2:
                 break
         if time.time() - last_log > 300:
@@ -544,6 +554,7 @@ def lss_inputs(root, k, tile, tiles, counts, jobs_by_tile, pos, char):
         rec["tiles_partial"][t] = [len(keep), len(ids)]
         rec["events_dropped"] += len(ids) - len(keep)
     rec["max_arrivals_station_phase"] = max(tot.values()) if tot else 0
+    rec["arrivals_in"] = int(sum(tot.values()))
     return rec
 
 
@@ -582,7 +593,9 @@ def lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos):
     tasks = []
     for i, st in enumerate(sets):
         (d_out / "work" / f"ssst_{i}.in").write_text(base + "LSSTATIONS =" + "=".join(st) + "=\n")
-        tasks.append((f"{tile}#{i}", [LOC2SSST, f"ssst_{i}.in"], d_out / "work", d_out / "work" / f"ssst_{i}.log"))
+        # memory: ~1.55 GB per 100,000 input arrivals per instance (measured on g0, 2026-11-25)
+        tasks.append((f"{tile}#{i}", [LOC2SSST, f"ssst_{i}.in"], d_out / "work", d_out / "work" / f"ssst_{i}.log",
+                      0.2 + 1.6e-5 * rec["arrivals_in"]))
     rec.update(char_dist_km=char, lsgrid_km=s, lsgrid=[gx, gy, gz], box=[x0, y0, nx, ny], station_sets=sets,
                weight_floor=S.WEIGHT_FLOOR, lsphstat=S.LSPHSTAT, input=str(d_in))
     (d_out / "setup.json").write_text(json.dumps(rec, indent=0))
@@ -683,6 +696,8 @@ def cmd_lss(a):
         tasks += lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos)
     log(f"g{k} (CharDist {SCHEDULE[k]:g} km): {len(todo)} tiles, {len(tasks)} Loc2ssst instances")
     env = dict(ENV, PATH="/usr/bin:/bin")             # no GMT: Loc2ssst's makecpt call fails at once (cpt not needed)
+    tasks.sort(key=lambda x: -x[4])                    # largest first; smaller ones fill in while memory allows
+    log(f"g{k}: estimated memory per instance {min(x[4] for x in tasks):.1f}-{max(x[4] for x in tasks):.1f} GB")
     rc = run_pool(tasks, f"g{k}", a.nproc, ramp=0.05, env=env)
     bytile = {}
     for name, r in rc.items():

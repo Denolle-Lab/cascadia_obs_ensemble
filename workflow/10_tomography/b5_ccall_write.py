@@ -87,6 +87,32 @@ def load_tasks():
     return T
 
 
+MEM_FLOOR_GB = 21.0          # brief: never let MemAvailable fall below 20 GB
+
+
+def mem_check(block, where):
+    """Abort the block (it is retried by main after memory recovers) when MemAvailable falls below the floor."""
+    m = A.mem_available_gb()
+    if m < MEM_FLOOR_GB:
+        raise MemoryError(f"{block}: MemAvailable {m:.1f} GB < {MEM_FLOOR_GB} at {where}")
+
+
+def block_rows(block):
+    pr = load_tasks()["pr"]
+    return int(pr.loc[pr.block == block, "n_common"].sum())
+
+
+def wait_memory(block, logf):
+    """Start a block only when MemAvailable >= its estimated peak (0.6 GB per million rows + 3 GB) + 22 GB."""
+    need = 0.6 * block_rows(block) / 1e6 + 3.0
+    t = time.time()
+    while A.mem_available_gb() < need + 22.0:
+        if time.time() - t < 61:
+            A.log(f"{block}: waiting for memory (need ~{need:.0f} GB + 22 GB free, have {A.mem_available_gb():.0f})", logf)
+        time.sleep(60)
+    return need
+
+
 def part_files(block):
     return sorted(glob.glob(str(A.WORK / "raw" / block / "*.parquet")))
 
@@ -273,19 +299,25 @@ def run_block(block):
     R["clock_dt_s"] = cdt
     R["straddles_clock_epoch"] = tk["pk_epoch"][p1] != tk["pk_epoch"][p2]
     R["spc"] = pk.spc.values[p1]
-    R["station"] = pk.station.values[p1]
-    R["phase"] = pk.phase.values[p1]
-    R["timing1"] = pk.timing.values[p1]
-    R["timing2"] = pk.timing.values[p2]
+    sts = tk_stations()
+    R["station"] = pd.Categorical.from_codes(pk.sta_i.values[p1], sts)
+    R["phase"] = pd.Categorical.from_codes(pk.ph_i.values[p1].astype(np.int8), ["P", "S"])
+    tcat = pd.Categorical(pk.timing.values)
+    R["timing1"] = pd.Categorical.from_codes(tcat.codes[p1], tcat.categories)
+    R["timing2"] = pd.Categorical.from_codes(tcat.codes[p2], tcat.categories)
     R["t_pick1"] = pk.t_pick.values[p1]
     R["t_pick2"] = pk.t_pick.values[p2]
-    prs = pr.iloc[R.pair.values]
-    R["ID1"], R["ID2"] = prs.ID1.values, prs.ID2.values
-    R["i1"], R["i2"] = prs.i1.values, prs.i2.values
-    R["sep_km"] = prs.sep_km.values
-    R["pair_source"] = prs.pair_source.values
-    R["net"] = pk.net.values[p1]
-    R["obs_class"] = np.where(R.net.isin(A.OBS_NETS), "seafloor", "land")
+    pv = R.pair.values
+    R["ID1"], R["ID2"] = pr.ID1.values[pv], pr.ID2.values[pv]
+    R["i1"], R["i2"] = pr.i1.values[pv], pr.i2.values[pv]
+    R["sep_km"] = pr.sep_km.values[pv].astype(np.float32)
+    R["pair_source"] = pd.Categorical.from_codes((pr.pair_source.values[pv] == "knn").astype(np.int8), ["family", "knn"])
+    seafloor = np.array([s.split(".")[-1] in A.OBS_NETS for s in sts])
+    R["obs_class"] = pd.Categorical.from_codes(np.where(seafloor[pk.sta_i.values[p1]], 1, 0).astype(np.int8),
+                                               ["land", "seafloor"])
+    for c in ("cc_2nd", "margin", "snr1", "snr2", "rate", "lag_s"):
+        R[c] = R[c].astype(np.float32)
+    mem_check(block, "pass 1")
     # closure on accepted rows
     ai = np.where(R.above.values)[0]
     n_tri_a, n_fail_a, tri, q, total_paths = closure_block(R.i1.values[ai], R.i2.values[ai], R.spc.values[ai],
@@ -327,6 +359,8 @@ def run_block(block):
             assert (tb["pair"].to_numpy() == R.pair.values[off:off + len(raw)]).all()
             off += len(raw)
             writer.write_table(tb, row_group_size=500_000)
+            del raw
+            mem_check(block, "pass 2")
             a, b = write_dt_lines(tb, fh)
             n_pairs_dt += a
             n_lines += b
@@ -335,6 +369,7 @@ def run_block(block):
     os.replace(tmp_dt, out_dt)
     A.log(f"{block}: wrote {out_pq.name} ({off} rows) and {out_dt.name} ({n_pairs_dt} pairs, {n_lines} lines) "
           f"{time.time() - t0:.0f} s", logf)
+    mem_check(block, "before QC")
     S = qc_block(block, R, tri, q, total_paths, P, cfg, dict(pairs=n_pairs_dt, lines=n_lines))
     A.write_state(f"write_{block}", **{block: dict(rows=int(len(R)), accepted=int(R.above.sum()), dt_pairs=n_pairs_dt,
                                           dt_lines=n_lines, s=round(time.time() - t0))})
@@ -351,23 +386,27 @@ def tk_stations():
 def qc_block(block, R, tri, q, total_paths, P, cfg, files):
     out = A.QC
     out.mkdir(parents=True, exist_ok=True)
-    ok = R[R.status == "ok"]
-    a = R[R.above]
+    okm = (R.status == "ok").values
+    ok = R.loc[okm, ["station", "phase", "obs_class", "comps", "channel1", "rate", "cc_max", "above", "dt_diff", "snr1",
+                     "snr2", "edge"]]
+    a = R[R.above.values]
     S = dict(block=block, rows=int(len(R)), status=R.status.value_counts().to_dict(), threshold=P, cfg=cfg,
              dt_file=files)
     S["accepted_frac_of_measured"] = float(len(a) / max(len(ok), 1))
     S["accepted_frac_of_rows"] = float(len(a) / max(len(R), 1))
     pr = load_tasks()["pr"]
     pb = pr[pr.block == block]
-    for src in ("family", "knn"):
-        dd = R[R.pair_source == src]
-        na = dd[dd.above].groupby("pair").size()
+    srcv = (R.pair_source == "knn").values
+    abv = R.above.values
+    for k, src in enumerate(("family", "knn")):
+        m = srcv == bool(k)
+        na = pd.Series(R.pair.values[m & abv]).value_counts()
         npairs = int((pb.pair_source == src).sum())
-        S[f"pairs_{src}"] = dict(pairs=npairs, pairs_with_rows=int(dd.pair.nunique()), obs=int(len(dd)),
-                                 obs_ok=int((dd.status == "ok").sum()), obs_above=int(dd.above.sum()),
+        S[f"pairs_{src}"] = dict(pairs=npairs, pairs_with_rows=int(pd.unique(R.pair.values[m]).size), obs=int(m.sum()),
+                                 obs_ok=int((m & okm).sum()), obs_above=int((m & abv).sum()),
                                  ge1=int((na >= 1).sum()), ge4=int((na >= 4).sum()), ge8=int((na >= 8).sum()),
-                                 cc_median_ok=float(dd[dd.status == "ok"].cc_max.median()),
-                                 cc_median_above=float(dd[dd.above].cc_max.median()))
+                                 cc_median_ok=float(np.median(R.cc_max.values[m & okm])) if (m & okm).any() else np.nan,
+                                 cc_median_above=float(np.median(R.cc_max.values[m & abv])) if (m & abv).any() else np.nan)
     S["above_by_phase"] = {ph: W.qstats(a[a.phase == ph]) for ph in ("P", "S")}
     S["above_by_class"] = {c: W.qstats(a[a.obs_class == c]) for c in sorted(a.obs_class.unique())}
     S["ok_by_class"] = {c: dict(n=int((ok.obs_class == c).sum()),
@@ -385,7 +424,7 @@ def qc_block(block, R, tri, q, total_paths, P, cfg, files):
     rows = []
     trs = tri.groupby(["station", "phase"]).e.agg(n_tri="size", tri_mad_ms=lambda e: mad(e) * 1e3,
                                                   tri_gt20=lambda e: float((e.abs() > 0.02).mean())) if len(tri) else None
-    for (sta, ph), g in ok.groupby(["station", "phase"]):
+    for (sta, ph), g in ok.groupby(["station", "phase"], observed=True):
         ga = g[g.above]
         r = dict(station=sta, phase=ph, obs_class=g.obs_class.iloc[0],
                  comps=",".join(sorted(g.comps.dropna().astype(str).unique())),
@@ -407,22 +446,22 @@ def qc_block(block, R, tri, q, total_paths, P, cfg, files):
     dr.to_csv(out / f"{block}_drift_slopes.csv", index=False, float_format="%.4g")
     S["drift_slopes_gt_0.03"] = dr[(dr.n >= 30) & ((dr.lo95 > 0.03) | (dr.hi95 < -0.03))].round(4).to_dict("records")
     for lab, col, suf in (("clock_check", "dt_cc", ""), ("clock_check_hdr", "dt_cc_hdr", "_hdr")):
-        npc, co, rps = W.clock_outliers(R.assign(dt_cc=R[col]))
+        npc, co, rps = W.clock_outliers(a.assign(dt_cc=a[col]))
         co.to_csv(out / f"{block}_repeater_station_outliers{suf}.csv",
                                                           index=False, float_format="%.5g")
         S[lab] = dict(colocated_pairs=int(npc), outlier_rows=int(len(co)),
                       by_station={k: dict(rows=int(len(g)), of_rows=int(rps.get(k, 0)),
                                           dev_median_s=float(g.dev.median()), phases="".join(sorted(set(g.phase))),
                                           days=sorted(set(g.day1) | set(g.day2))[:20])
-                                  for k, g in co.groupby("station") if len(g) >= 2})
-    rp = W.repeaters(R)
+                                  for k, g in co.groupby("station", observed=True) if len(g) >= 2})
+    rp = W.repeaters(a)
     rp.to_csv(out / f"{block}_repeaters.csv", index=False, float_format="%.5g")
     S["repeaters"] = dict(n=len(rp), dt_cc_std_median_ms=float(rp.dt_cc_std.median() * 1e3) if len(rp) else np.nan,
                           dt_cat_std_median_ms=float(rp.dt_cat_std.median() * 1e3) if len(rp) else np.nan,
                           sep_km_median=float(rp.sep_km.median()) if len(rp) else np.nan)
-    sc = R[R.straddles_clock_epoch]
+    sc = R[R.straddles_clock_epoch.values]
     S["clock_epochs"] = dict(rows=int(len(sc)), accepted=int(sc.above.sum()),
-                             by_station={k: int(v) for k, v in sc.groupby("station").size().items()},
+                             by_station={k: int(v) for k, v in sc.groupby("station", observed=True).size().items() if v},
                              abs_clock_dt_gt_0p02=int((R.clock_dt_s.abs() > 0.02).sum()))
     # model check on the accepted rows across epochs: station dt minus the other stations' median, before / after
     if len(sc[sc.above]):
@@ -434,7 +473,7 @@ def qc_block(block, R, tri, q, total_paths, P, cfg, files):
                                                       misfit_corr_median_abs_s=float((g.dt_cc - g["median"]).abs().median()),
                                                       gt50ms_hdr=float(((g.dt_cc_hdr - g["median"]).abs() > 0.05).mean()),
                                                       gt50ms_corr=float(((g.dt_cc - g["median"]).abs() > 0.05).mean()))
-                                            for st_, g in x.groupby("station")}
+                                            for st_, g in x.groupby("station", observed=True) if len(g)}
     S["lag_abs_q"] = {ph: [float(v) for v in np.quantile(a[a.phase == ph].lag_s.abs(), [0.5, 0.9, 0.99])]
                       if (a.phase == ph).any() else [] for ph in ("P", "S")}
     S["edge_frac_ok"] = float(ok.edge.mean()) if len(ok) else np.nan
@@ -474,7 +513,7 @@ def qc_block(block, R, tri, q, total_paths, P, cfg, files):
     # accepted rows for the clock screen (b5_ccall_clock.py)
     (A.WORK / "accepted").mkdir(parents=True, exist_ok=True)
     a[["pair", "ID1", "ID2", "sep_km", "station", "phase", "cc_max", "dt_cc", "dt_cc_hdr", "dt_cat", "t_pick1",
-       "t_pick2", "clock_dt_s", "straddles_clock_epoch"]].to_parquet(A.WORK / "accepted" / f"{block}.parquet",
+       "t_pick2", "clock_dt_s", "straddles_clock_epoch"]].astype({"station": str, "phase": str}).to_parquet(A.WORK / "accepted" / f"{block}.parquet",
                                                                       index=False)
     return S
 
@@ -487,12 +526,27 @@ def main():
     a = ap.parse_args()
     blocks = A.BLOCKS if a.all else a.blocks.split(",")
     # one state file per block (state/write_<block>.json): several write processes can run side by side
+    import gc
+    logf = A.OUT / "logs" / "write.log"
     for b in blocks:
         if (not a.redo and A.read_state(f"write_{b}") and (A.OUT / f"cc_{b}.parquet").exists()
                 and (A.QC / f"summary_{b}.json").exists()):
             A.log(f"{b}: done before, skipped")
             continue
-        run_block(b)
+        if not part_files(b):
+            A.log(f"{b}: no raw parts", logf)
+            continue
+        for attempt in range(6):
+            need = wait_memory(b, logf)
+            A.log(f"{b}: start (attempt {attempt + 1}, estimated peak {need:.0f} GB, MemAvailable "
+                  f"{A.mem_available_gb():.0f} GB)", logf)
+            try:
+                run_block(b)
+                break
+            except MemoryError as e:
+                A.log(f"{e}; block aborted, retried when memory is back", logf)
+                gc.collect()
+                time.sleep(120)
     done = all(A.read_state(f"write_{b}") for b in A.BLOCKS if part_files(b))
     if done:
         A.write_state("write", done=True)

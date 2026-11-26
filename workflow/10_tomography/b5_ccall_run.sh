@@ -17,11 +17,10 @@ for s in ${STAGES:-tasks snippets ncedc measure write clock final}; do
     snippets) $PY b5_ccall_snippets.py --workers ${WORKERS:-24} --max-workers ${MAX_WORKERS:-48} --chunk 12 >> $OUT/logs/snippets.out 2>&1 ;;
     ncedc)    $PY b5_ccall_ncedc.py --threads ${THREADS:-8} >> $OUT/logs/ncedc.out 2>&1 ;;
     measure)  $PY b5_ccall_measure.py --workers ${WORKERS:-24} --max-workers ${MAX_WORKERS:-48} >> $OUT/logs/measure.out 2>&1 ;;
-    write)    # three block groups side by side (largest blocks apart; peak memory ~10 GB for gorda)
-              $PY b5_ccall_write.py --blocks gorda,jdf,endeavour,explorer >> $OUT/logs/write_a.out 2>&1 &
-              $PY b5_ccall_write.py --blocks blanco,mendocino,onshore >> $OUT/logs/write_b.out 2>&1 &
-              $PY b5_ccall_write.py --blocks forearc,axial,msh,cascades,puget >> $OUT/logs/write_c.out 2>&1 &
-              wait ;;
+    write)    # one process, small blocks first; each block waits for MemAvailable >= its peak + 22 GB and is
+              # aborted and retried if MemAvailable falls below 21 GB (2026-11-25 19:17: three parallel writers
+              # plus other sessions' jobs ran the machine out of memory; the kernel killed the gorda writer)
+              $PY b5_ccall_write.py --blocks endeavour,explorer,onshore,jdf,puget,cascades,msh,axial,mendocino,forearc,blanco,gorda >> $OUT/logs/write.out 2>&1 ;;
     clock)    $PY b5_ccall_clock.py >> $OUT/logs/clock.out 2>&1 ;;
     final)    $PY b5_ccall_final.py >> $OUT/logs/final.out 2>&1 ;;
   esac

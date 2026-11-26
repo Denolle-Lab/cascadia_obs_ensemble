@@ -416,6 +416,9 @@ def cmd_nll(a):
     def done(name, r):
         if r == 0:
             (rd / name / "done").write_text("")
+    # largest jobs first (arrivals in the job's obs): only the order of the queue, not the results, so no long tail
+    cost = pd.read_parquet(P / "events.parquet").groupby("job").n_obs.sum()
+    tasks.sort(key=lambda x: -cost.get(x[0], 0))
     t0 = time.time()
     log(f"it{k}: {len(tasks)} NLLoc jobs to run ({len(jobs) - len(tasks)} done before)")
     rc = run_pool(tasks, f"it{k}", a.nproc, ramp=(0.5 if k == 0 else 0.05), on_done=done)

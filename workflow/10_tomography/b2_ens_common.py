@@ -346,6 +346,10 @@ def floor_log(log_text):
 
 def read_res_abs(path):
     r = pd.read_csv(path, sep=r"\s+")
+    if r.RES.dtype == object:                         # f12.6 overflow: res >= 100 s or res <= -10 s
+        bad = r[r.RES.astype(str).str.contains(r"\*", regex=True)]
+        raise SystemExit(f"{path}: {len(bad)} residual(s) overflow the RES field (an impossible residual: a "
+                         f"computation error upstream, not a parser problem); first: {bad.iloc[0].to_dict()}")
     r = r[r.C1 == r.C2].copy()
     r["phase"] = np.where(r.IDX == 3, "P", "S")
     return r.rename(columns={"STA": "code", "C1": "event_ID"}).assign(res=lambda d: d.RES / 1000.0)[

@@ -259,6 +259,9 @@ def prep_base_real(u, codes):
         a["station"] = a.code.map(cm)
         a["pidx"] = pd.MultiIndex.from_frame(a[["event_ID", "station", "phase"]]).map(key).values
         d = C.parse_dt(inp / "dt.ct")
+        if (d.ev1 == d.ev2).any():                   # tomoDD reads C1 == C2 as an absolute time (obs 0 s here)
+            raise SystemExit(f"{s}: dt.ct has self-pairs {sorted(set(d.ev1[d.ev1 == d.ev2]))}; rebuild the "
+                             f"deterministic inputs with the fixed b2_tomodd_inputs.diff_times")
         d["station"] = d.code.map(cm)
         d["pidx1"] = pd.MultiIndex.from_frame(d[["ev1", "station", "phase"]]).map(key).values
         d["pidx2"] = pd.MultiIndex.from_frame(d[["ev2", "station", "phase"]]).map(key).values

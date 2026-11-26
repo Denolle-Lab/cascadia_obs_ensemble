@@ -429,23 +429,33 @@ def tile_dist(a, b):
     return float(np.hypot(dx, dy))
 
 
+_CACHE = {}
+
+
 def hyp_blocks(path):
-    """{ID: block text} of a concatenated per-event hyp file."""
+    """{ID: block text} of a concatenated per-event hyp file (cached: dense tiles are partial inputs of many tiles)."""
+    if str(path) in _CACHE:
+        return _CACHE[str(path)]
     out = {}
     for b in Path(path).read_text(errors="replace").split("END_NLLOC"):
         m = re.search(r"^PUBLIC_ID v4_(\d+)", b, re.M)
         if m:
             out[int(m.group(1))] = b.strip("\n") + "\nEND_NLLOC\n\n"
+    _CACHE[str(path)] = out
     return out
 
 
 def obs_arrivals(root, tile, jobs_by_tile):
-    """{ID: [(phase, station)]} of a tile (plan obs)."""
+    """{ID: [(phase, station)]} of a tile (plan obs; cached)."""
+    key = ("obs", str(root), tile)
+    if key in _CACHE:
+        return _CACHE[key]
     out = {}
     for j in jobs_by_tile[tile]:
         for b in read_blocks(plan_dir(root) / "obs" / f"{j}.obs"):
             eid, arr = RN.block_arrivals(b)
             out[eid] = arr
+    _CACHE[key] = out
     return out
 
 

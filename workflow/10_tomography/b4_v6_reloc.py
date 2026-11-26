@@ -174,6 +174,12 @@ def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default
             recent = [(ts, e, nm) for ts, e, nm in recent if now - ts < 20 and nm in running]
             free = mem_gb() - sum(e for _, e, _ in recent) - MEM_MIN_GB
             i = next((j for j, x in enumerate(queue) if x[4] <= free), None)
+            if i is None and not running:      # idle: a large task may use memory down to the PI's 30 GB floor
+                i = next((j for j, x in enumerate(queue) if x[4] <= free + MEM_MIN_GB - 30.0), None)
+                if i is None and now - last_start > 600:
+                    log(f"{label}: waiting for memory: {len(queue)} queued, smallest needs "
+                        f"{min(x[4] for x in queue):.1f} GB, MemAvailable {mem_gb():.0f} GB")
+                    last_start = now
             if i is None:
                 break
             name, argv, cwd, logf, est = queue.pop(i)

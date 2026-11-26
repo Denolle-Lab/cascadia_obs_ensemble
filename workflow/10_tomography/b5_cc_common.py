@@ -25,16 +25,18 @@ import obspy
 from obspy import UTCDateTime, Stream
 
 HERE = Path(__file__).resolve().parent
-OUT = Path("/wd1/mdenolle_data/tomo_v1/cc_dt")
+# B5_CC_OUT / B5_CC_SETDIR / B5_CC_SETS: other output folder and test sets (station-term test of v6.0,
+# b4_v6_termtest_cc.py); defaults = the D-B078 run. Nothing else differs from tomo/cc-dt 2d033ec6.
+OUT = Path(os.environ.get("B5_CC_OUT", "/wd1/mdenolle_data/tomo_v1/cc_dt"))
 SNIP = OUT / "snippets"
-SETDIR = Path("/wd1/mdenolle_data/tomo_v1/b5/cc_test")
+SETDIR = Path(os.environ.get("B5_CC_SETDIR", "/wd1/mdenolle_data/tomo_v1/b5/cc_test"))
 RETIME = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_retiming")
 PICKS = RETIME / "Cascadia_picks_catalog_v4.1t.csv"
 PICKS_MD5 = "762f18e8f181eaaaa247d367c2d2c302"
 CORR = RETIME / "corrections.csv.gz"
 CATALOG = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
 INDEX = "/wd1/PNWstore_sqlite/{year}.sqlite"
-SETS = ["axial", "blanco", "msh", "jdf"]
+SETS = os.environ.get("B5_CC_SETS", "axial,blanco,msh,jdf").split(",")
 
 SNIP_PRE, SNIP_POST = 8.0, 8.0   # s read around each pick (CC window + max lag + filter margin + noise window)
 NO_PNWSTORE = {"NC", "BK"}

@@ -860,6 +860,10 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
         runtime_files: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # ak135.15.SKS, layer-16.dat (md5 = the 2026-11-24/25 runtime_files)
         floor: true                # D-B083 as v0.4.1: surface.dat per member stage, Air_dep tomodd.floor.air_dep_km
         merge_product: product_v042   # merge grid, taper, floor, reference margin_m0_v4/d200_s480 (tomodd.merge.product_v042)
+        calibration:               # D-B099 rule (PI 2026-11-26 06:27): keep v0.4.1's factors if the new ones are within 0.05, else use the new ones
+          accepted: D-B099         # this root's calibration (2026-11-26 15:46) FAILED on Vp and Vs only (too narrow); hypocentres and Vp/Vs pass
+          inflation: {Vp: 1.50, Vs: 1.35}   # b2_ens_inflate.py: Vp max(1.360, 1.480) -> 1.50 (v0.4.1 1.40, moved by > 0.05); Vs max(1.343, 1.313) -> 1.35 (= v0.4.1)
+          coverage_md5: c032bcb392aa6b6995e46b418aca70e8   # md5 of <root>/synth/coverage.json (100 members + 5 noise clones, FAIL on Vp, Vs)
         calibration_order: after_real   # D-B099: the real members first, then this root's own synthetic calibration (truth,
                                    # synth, calibrate); the products wait for it: they run only after a PASS or with an
                                    # accepted calibration entry (configs.v0.4.2.calibration) for THIS root's coverage.json

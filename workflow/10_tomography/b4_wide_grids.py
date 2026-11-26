@@ -70,7 +70,6 @@ import shutil
 import subprocess
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -420,6 +419,11 @@ def main():
     ap.add_argument("--out", help="output folder (test; default <root>/wide_<TIME_NAME>)")
     ap.add_argument("--root", default=str(RELOC), help="folder of the fine build (b4_time_grids.py --root; catalog v6.0: "
                     "reloc_v6); other than reloc_v5, the manifest is written only next to the grids")
+    ap.add_argument("--nproc-ctrl", help="control file of the process limit ('auto BUSY FREE' or a number, read every "
+                                         "30 s; b4_time_grids.pool_map); --nproc is the default when it is unreadable")
+    ap.add_argument("--mem-min-gb", type=float, default=0.0, help="with --nproc-ctrl: start a job only while "
+                                                                  "MemAvailable stays above this")
+    ap.add_argument("--job-gb", type=float, default=2.5, help="with --nproc-ctrl: memory estimate of one job")
     a = ap.parse_args()
     root = Path(a.root)
     ident, work_fine, version = fine_identity(a.time_name, root)
@@ -455,12 +459,13 @@ def main():
     sp = [s for s in sp if s[0] in a.phases.split(",")]
     jobs = [(lab, ph, fine_dir, roots, rock_file, work, out) for ph, lab in sp]
     print(f"{len(jobs)} station-phases -> {out}", flush=True)
+    from b4_time_grids import pool_map
     res = []
-    with ProcessPoolExecutor(a.nproc) as ex:
-        for i, r in enumerate(ex.map(job, jobs, chunksize=1)):
-            res.append(r)
-            if i % 25 == 0 or i == len(jobs) - 1:
-                print(f"{time.strftime('%H:%M:%S')} {i + 1}/{len(jobs)} {r[:3]} {r[3]}", flush=True)
+    for n, (i, r) in enumerate(pool_map(job, jobs, a.nproc, a.nproc_ctrl, a.mem_min_gb, a.job_gb, "wide grids")):
+        res.append((i, r))
+        if n % 25 == 0 or n == len(jobs) - 1:
+            print(f"{time.strftime('%H:%M:%S')} {n + 1}/{len(jobs)} {r[:3]} {r[3]}", flush=True)
+    res = [r for _, r in sorted(res)]                  # job order (the manifest does not depend on the pool)
     fine = {h.name for h in fine_dir.glob("cascadia3d.*.time.hdr")}
     wide = {h.name for h in out.glob("cascadia3d.*.time.hdr")}
     diag = {f"{ph}.{lab}": d for lab, ph, _, d in res}

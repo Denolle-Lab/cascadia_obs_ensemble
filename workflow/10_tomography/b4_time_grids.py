@@ -79,6 +79,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -469,6 +470,87 @@ def local_manifest(name, outdir, inputs=(), outputs=(), params=None, counts=None
     return rec
 
 
+def mem_available_gb():
+    with open("/proc/meminfo") as f:
+        for line in f:
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1048576.0
+    return 1e9
+
+
+def tomodd_running():
+    """True while tomoDD-SE processes (the tomography ensembles) run on the machine."""
+    for p in Path("/proc").iterdir():
+        if p.name.isdigit():
+            try:
+                if (p / "comm").read_text().startswith("tomoDD-SE"):
+                    return True
+            except OSError:
+                pass
+    return False
+
+
+def nproc_from(ctrl, default):
+    """process limit from a control file (b4_v6_reloc.nproc_limit's format): one number, or 'auto BUSY FREE' = BUSY
+    while tomoDD-SE processes run, FREE otherwise; `default` without a readable file."""
+    try:
+        t = Path(ctrl).read_text().split()
+        if t[0] == "auto":
+            return max(1, int(t[1] if tomodd_running() else t[2]))
+        return max(1, int(t[0]))
+    except (OSError, ValueError, IndexError, TypeError):
+        return default
+
+
+def pool_map(fn, jobs, nproc, ctrl=None, mem_min_gb=0.0, est_gb=0.0, label="jobs"):
+    """fn over jobs in worker processes; yields (index, result) in completion order. Without ctrl: a fixed pool of
+    nproc. With ctrl (a control file, read every 30 s, so it can be changed live): at most nproc_from(ctrl, nproc) jobs
+    at a time, and a job starts only while MemAvailable - est_gb x (jobs started in the last 60 s, whose memory may not
+    show yet, + 1) >= mem_min_gb. The worker pool is sized to the largest limit the file can give at the start (a larger
+    number written later is capped there). Process control only: the results do not depend on it."""
+    from concurrent.futures import FIRST_COMPLETED, wait
+    if not ctrl:
+        with ProcessPoolExecutor(nproc) as ex:
+            yield from enumerate(ex.map(fn, jobs, chunksize=1))
+        return
+    try:
+        nums = [int(v) for v in Path(ctrl).read_text().split() if v.isdigit()]
+    except OSError:
+        nums = []
+    cap = max([nproc] + nums)
+    todo, pend, recent = list(enumerate(jobs)), {}, []
+    lim, t_lim, t_log, waited = nproc, 0.0, 0.0, False
+    with ProcessPoolExecutor(cap) as ex:
+        while todo or pend:
+            now = time.time()
+            if now - t_lim > 30:
+                new = min(cap, nproc_from(ctrl, nproc))
+                if new != lim or t_lim == 0.0:
+                    print(f"{time.strftime('%F %T')} {label}: process limit {new} ({Path(ctrl).name}), MemAvailable "
+                          f"{mem_available_gb():.0f} GB", flush=True)
+                lim, t_lim = new, now
+            recent = [(t, f) for t, f in recent if now - t < 60 and f in pend]
+            while todo and len(pend) < lim:
+                if mem_available_gb() - est_gb * (len(recent) + 1) < mem_min_gb:
+                    if not waited or now - t_log > 600:
+                        print(f"{time.strftime('%F %T')} {label}: waiting for memory (MemAvailable "
+                              f"{mem_available_gb():.0f} GB, floor {mem_min_gb:g} GB, {len(pend)} running)", flush=True)
+                        t_log, waited = now, True
+                    break
+                i, j = todo.pop(0)
+                f = ex.submit(fn, j)
+                pend[f] = i
+                recent.append((time.time(), f))
+                waited = False
+                time.sleep(0.5)                       # stagger the starts (field reads, Grid2Time start-up)
+            if not pend:
+                time.sleep(10)
+                continue
+            done, _ = wait(list(pend), timeout=10, return_when=FIRST_COMPLETED)
+            for f in done:
+                yield pend.pop(f), f.result()
+
+
 def run_params(version, mask=None):
     """params of a build (guarded, in the manifest and work/params.json), extra inputs and notes of its mask."""
     mask = mask or MASK
@@ -527,6 +609,36 @@ def open_model(version):
     return ds, used
 
 
+def reference_field(version, out):
+    """Identity reference for a model registered without v<version>_nll (v0.4.2): the 1 km fields built the way
+    b2_model_v041.py cmd_nll builds the registered NLL fields, build_field on the inversion's merged node values (the
+    netcdf named in the provenance, sha256 checked), written as <out>/model.<P|S>.mod.buf. The chain's grids stage
+    checks that the build's field_1 (from the product's Vp_tomography / Vs_tomography) is md5-identical to it."""
+    store = Path(X["store"]) / X["name"]
+    att = json.loads((store / f"v{version}.provenance.json").read_text())["attributes"]
+    nc, want = Path(att["provenance_merged_netcdf"]), att["provenance_merged_netcdf_sha256"]
+    h = hashlib.sha256(nc.read_bytes()).hexdigest()
+    if h != want:
+        raise SystemExit(f"{nc}: sha256 {h}, provenance says {want}")
+    out = Path(out)
+    if (out / "reference.json").exists():
+        print(f"reference field {out} exists", flush=True)
+        return
+    work = out / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    fields, shape = build_field(xr.open_dataset(nc), 1.0, work)
+    rec = dict(version=version, merged_netcdf=str(nc), merged_netcdf_sha256=h, shape=list(shape), md5={},
+               code_md5=hashlib.md5(Path(__file__).read_bytes()).hexdigest(), params=run_params(version)[0],
+               utc=time.strftime("%FT%T%z"), about=reference_field.__doc__)
+    for ph in ("P", "S"):
+        shutil.copy(fields[ph], out / f"model.{ph}.mod.buf")
+        hh = hashlib.md5((out / f"model.{ph}.mod.buf").read_bytes()).hexdigest()
+        rec["md5"][ph] = hh
+    shutil.rmtree(work)
+    (out / "reference.json").write_text(json.dumps(rec, indent=1, default=str))
+    print(f"reference field {out}: {rec['md5']}", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("version")
@@ -534,7 +646,16 @@ def main():
     ap.add_argument("--nproc", type=int, default=40)
     ap.add_argument("--stations", help="comma-separated labels (test)")
     ap.add_argument("--root", default=str(RELOC), help="output root (tests); manifest then local only")
+    ap.add_argument("--nproc-ctrl", help="control file of the process limit ('auto BUSY FREE' or a number, read every "
+                                         "30 s; pool_map); --nproc is the default when it is unreadable")
+    ap.add_argument("--mem-min-gb", type=float, default=0.0, help="with --nproc-ctrl: start a job only while "
+                                                                  "MemAvailable stays above this")
+    ap.add_argument("--job-gb", type=float, default=3.0, help="with --nproc-ctrl: memory estimate of one job")
+    ap.add_argument("--reference-field", metavar="DIR", help="only build the identity reference field of a model "
+                                                             "registered without NLL fields into DIR (reference_field)")
     a = ap.parse_args()
+    if a.reference_field:
+        return reference_field(a.version, a.reference_field)
     ds, used = open_model(a.version)
     root = Path(a.root)
     out = root / a.time_name
@@ -557,11 +678,12 @@ def main():
     jobs = [(lab, la, lo, z, ph, fields, shapes, work, out) for lab, la, lo, z in st for ph in ("P", "S")]
     print(f"{len(jobs)} station-phases", flush=True)
     res = []
-    with ProcessPoolExecutor(a.nproc) as ex:
-        for i, r in enumerate(ex.map(job, jobs, chunksize=1)):
-            res.append(r)
-            if i % 50 == 0 or r[4]:
-                print(f"{i + 1}/{len(jobs)} {r}" + (" D-B052 fallback: T0.5 whole grid" if r[4] else ""), flush=True)
+    for n, (i, r) in enumerate(pool_map(job, jobs, a.nproc, a.nproc_ctrl, a.mem_min_gb, a.job_gb, "fine grids")):
+        res.append((i, r))
+        if n % 50 == 0 or r[4]:
+            print(f"{time.strftime('%T')} {n + 1}/{len(jobs)} {r}" + (" D-B052 fallback: T0.5 whole grid" if r[4] else ""),
+                  flush=True)
+    res = [r for _, r in sorted(res)]                  # job order (the manifest does not depend on the pool)
     # per grid: median of T0.5 - T over rock nodes R_DIAG km from the station, the offset the taper leaves (docstring)
     off = {f"{ph}.{lab}": o for lab, ph, _, o, _ in res}
     fbk = {f"{ph}.{lab}": f for lab, ph, _, _, f in res}

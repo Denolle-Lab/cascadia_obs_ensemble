@@ -763,29 +763,68 @@ def event_files(rd, pattern="loc.*_v4_*.grid0.loc.hyp"):
     return out
 
 
-def pair_coherence(cc_dir):
-    """pair coherence of b4_v6_ssst.coherences over every cc_<block>.parquet of cc_dir, rows straddling a confirmed clock
-    epoch left out: median cc_max of the rows with status ok, peak not at the lag edge; pairs with >= COH_NMIN rows."""
+SEP_MAX, NACC_MIN = 3.0, 3          # coherence partner rule R3 (coordinator 20:00; notes/v6_plan.md)
+RULECHECK = R6 / "heldout" / "coh_rule_check.json"
+
+
+def pair_coherence(cc_dir, check=True):
+    """coherence partners by rule R3 from cc_dir/pair_coherence.parquet (coh = median cc_max over the measured rows,
+    n_meas, n_accepted, sep_km): sep_km <= SEP_MAX, n_accepted >= NACC_MIN, n_meas >= COH_NMIN (and coh >= COH_MIN,
+    applied by the caller). Pairs with rows straddling a confirmed clock epoch are recomputed from their cc_<block>.parquet
+    rows without those rows (streamed in batches: the full loader needs 25 GB for gorda); with check, the recomputation
+    including the straddling rows must reproduce pair_coherence.parquet for those pairs."""
     import pyarrow.parquet as pq
-    parts, n_rows, n_straddle = [], 0, 0
+    pcf = Path(cc_dir) / "pair_coherence.parquet"
+    pc = pd.read_parquet(pcf, columns=["ID1", "ID2", "sep_km", "n_meas", "n_accepted", "coh"])
+    affected, blocks = set(), []
     for f in sorted(Path(cc_dir).glob("cc_*.parquet")):
-        if "straddles_clock_epoch" not in pq.read_schema(f).names:
-            raise SystemExit(f"{f}: no straddles_clock_epoch column")
-        n_rows += pq.read_metadata(f).num_rows
-        # an event pair belongs to one block (pairs.parquet: pair ids unique, ID1 < ID2), so pairs are grouped per file
-        c = pq.read_table(f, columns=["ID1", "ID2", "edge", "cc_max", "straddles_clock_epoch"],
-                          filters=[("status", "=", "ok")]).to_pandas()
-        ok = ~c.edge.astype(bool)
-        n_straddle += int((ok & c.straddles_clock_epoch.astype(bool)).sum())
-        c = c[ok & ~c.straddles_clock_epoch.astype(bool)]
-        g = c.groupby(["ID1", "ID2"]).cc_max.agg(["median", "size"]).reset_index()
-        g.columns = ["ID1", "ID2", "coh", "n"]
-        parts.append(g)
-        del c
-    g = pd.concat(parts, ignore_index=True)
-    if g.duplicated(["ID1", "ID2"]).any():
-        raise SystemExit(f"{int(g.duplicated(['ID1', 'ID2']).sum())} event pairs in more than one CC block")
-    return g[g.n >= S.COH_NMIN], dict(cc_rows=n_rows, straddling_rows_dropped=n_straddle)
+        hit = False
+        for b in pq.ParquetFile(f).iter_batches(batch_size=2_000_000, columns=["ID1", "ID2", "straddles_clock_epoch"]):
+            m = b.column("straddles_clock_epoch").to_numpy(zero_copy_only=False).astype(bool)
+            if m.any():
+                affected.update(zip(b.column("ID1").to_numpy()[m].tolist(), b.column("ID2").to_numpy()[m].tolist()))
+                hit = True
+        if hit:
+            blocks.append(f)
+    rows = []
+    keys = pd.MultiIndex.from_tuples(sorted(affected), names=["ID1", "ID2"]) if affected else None
+    for f in blocks:
+        for b in pq.ParquetFile(f).iter_batches(batch_size=2_000_000, columns=["ID1", "ID2", "status", "edge", "above",
+                                                                               "cc_max", "straddles_clock_epoch"]):
+            d = b.to_pandas()
+            k = pd.MultiIndex.from_arrays([d.ID1, d.ID2]).isin(keys)
+            if k.any():
+                rows.append(d[k])
+    info = dict(pairs=len(pc), pairs_with_straddling_rows=len(affected), straddling_rows=0, straddling_accepted=0)
+    if rows:
+        r = pd.concat(rows, ignore_index=True)
+        r["meas"] = r.status.eq("ok") & ~r.edge.astype(bool)
+        r["acc"] = r.above.astype(bool)
+        r["str"] = r.straddles_clock_epoch.astype(bool)
+        info.update(straddling_rows=int(r.str.sum()), straddling_accepted=int((r.str & r.acc).sum()))
+
+        def agg(x):
+            m = x[x.meas]
+            return pd.DataFrame({"n_meas": m.groupby(["ID1", "ID2"]).size(), "coh": m.groupby(["ID1", "ID2"]).cc_max.median(),
+                                 "n_accepted": x[x.acc].groupby(["ID1", "ID2"]).size()}).reindex(keys)
+        if check:                   # the definition reproduces pair_coherence.parquet on these pairs (all rows)
+            full = agg(r).fillna({"n_meas": 0, "n_accepted": 0})
+            ref = pc.set_index(["ID1", "ID2"]).reindex(keys)
+            bad = int(((full.n_meas != ref.n_meas) | (full.n_accepted != ref.n_accepted) |
+                       ((full.coh - ref.coh).abs() > 1e-9)).sum())
+            info["check_mismatch"] = bad
+            if bad:
+                raise SystemExit(f"pair coherence: the recomputation differs from {pcf} on {bad} pairs")
+        new = agg(r[~r.str]).fillna({"n_meas": 0, "n_accepted": 0})
+        pc = pc.set_index(["ID1", "ID2"])
+        pc.loc[keys, ["n_meas", "n_accepted", "coh"]] = new[["n_meas", "n_accepted", "coh"]].to_numpy()
+        pc = pc.reset_index()
+    test = (pc.n_meas >= S.COH_NMIN) & (pc.coh >= S.COH_MIN)
+    r3 = test & (pc.sep_km <= SEP_MAX) & (pc.n_accepted >= NACC_MIN)
+    info.update(pairs_test_rule=int(test.sum()), pairs_r3=int(r3.sum()), sep_max_km=SEP_MAX, n_accepted_min=NACC_MIN,
+                pair_coherence_md5=md5(pcf))
+    g = pc[r3][["ID1", "ID2", "coh", "n_meas", "n_accepted", "sep_km"]].rename(columns={"n_meas": "n"})
+    return g.reset_index(drop=True), info
 
 
 def len3_of(f):
@@ -822,6 +861,18 @@ def cmd_coh(a):
         return
     if not cc_done(cc_dir):
         raise SystemExit(f"CC job not finished ({cc_dir}/state/final.json)")
+    if a.no_rulecheck:
+        check = dict(use="r3", note="rule check skipped (smoke test)")
+    else:
+        if not RULECHECK.exists():          # R3 against the test rule on puget and mtj (b4_v6_heldout.py rulecheck)
+            log("coherence: running the partner-rule check (b4_v6_heldout.py rulecheck)")
+            r = subprocess.run([str(S.PY), str(HERE / "b4_v6_heldout.py"), "rulecheck"], env=ENV)
+            if r.returncode or not RULECHECK.exists():
+                raise SystemExit("coherence: the partner-rule check failed")
+        check = json.loads(RULECHECK.read_text())
+        if check.get("use") != "r3":
+            raise SystemExit(f"coherence: rule R3 is worse than the test rule on held-out MAD ({RULECHECK}): the stage "
+                             "waits for a decision (coordinator 20:00: report and wait)")
     it = root / f"it{NPASS}"
     if not (it / "run.json").exists():
         raise SystemExit(f"{it} not finished")
@@ -883,6 +934,7 @@ def cmd_coh(a):
     summ = dict(events_final=len(files), located_with_octree=len(located), compact=len(compact),
                 compact_with_compact_partner=int((tab.partners_compact > 0).sum()), pairs_used=len(coh),
                 coh_min=S.COH_MIN, coh_nmin=S.COH_NMIN, max_se3=S.COH_MAX_SE3, cc_dir=str(cc_dir), **cinfo,
+                partner_rule="R3", rule_check={k: check.get(k) for k in ("use", "decision_rule", "utc", "note")},
                 failed=bad[:50], n_failed=len(bad), wall_min=round((time.time() - t0) / 60, 1),
                 grids=f"{root}/g{NPASS - 1}", utc=time.strftime("%FT%T%z"))
     if bad:
@@ -1138,6 +1190,7 @@ def main():
             x.add_argument("--tiles")
         if c == "coh":
             x.add_argument("--cc")
+            x.add_argument("--no-rulecheck", action="store_true", help="smoke test only")
         x.add_argument("--nproc", type=int, default=int(os.environ.get("NPROC_NLL", "40")))
     a = ap.parse_args()
     {"tilepos": cmd_tilepos, "gridcheck": cmd_gridcheck, "plan": cmd_plan, "nll": cmd_nll, "lss": cmd_lss, "coh": cmd_coh, "terms": cmd_terms,

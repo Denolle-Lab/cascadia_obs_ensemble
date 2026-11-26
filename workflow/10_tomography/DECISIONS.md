@@ -1005,3 +1005,13 @@ common term outright over-corrects (21 % of Axial events on the floor), so part 
 the model. PI: v6.1 uses SSST 9999 -> 16 km + coherence on the whole margin (D-B098 unchanged); next model task: correct
 near-surface Vp/Vs where the terms need large common S corrections (Axial about -60 ms, Puget about -150 ms), so a later
 version can meet the Axial depth target (the 16 km stop gives about 73 % within 2 km at catalog scale; target 85 %).
+
+### D-B104 Catalog v6.1 is located in model v0.4.2; paper figures and the atlas show the latest model only, in colourblind-safe colour maps; the atlas Mc map follows each catalog (adopted, 2026-11-26 15:30, PI)
+PI: "We need to show the latest model only. The color map should be very colorblind-friendly but very beautiful ... we'll
+submit this to Science Advances ... Make the atlas only show the latest MC or adjust the MC for each of the catalogs that are
+shown. For the v6.1 we'll use the latest v042." (1) v6.1 travel-time grids are built from v0.4.2 (amends the v6.1 plan's open
+choice); recipe D-B103. (2) Paper model figures show v0.4.2 only (published models may still appear as comparison); velocity
+colour maps change from matplotlib "seismic" (the earlier atlas choice) to perceptually uniform, colourblind-safe scientific
+colour maps (Crameri), checked under simulated colour-vision deficiency; the atlas model layer takes the same maps.
+(3) Mc grids are computed on each catalog's own hypocentres and magnitudes (v5.1, v6.0; D-B102), so the atlas Mc layer follows
+the catalog shown.

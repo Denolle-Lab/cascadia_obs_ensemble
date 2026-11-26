@@ -820,3 +820,165 @@ limit was one flat Air_dep per cluster, a median 1.6 km above the local surface)
   settled in 3 runs (469 events end on the floor); JdF ridge c000032 needed the limited anchor (44 m, 59 on the floor).
 * Scope: B5 relocation-only runs. Whether the floor is used in the tomography inversion waits for v0.4.0 (D-B077).
   B5 production waits for the D-B078 comparison, in which tomoDD + this floor is one of the three codes.
+
+### D-B082 Model v0.4.0 (v0.3.1 re-inverted with the re-timed picks) is the base model (adopted, 2026-11-25 07:59, PI)
+v0.4.0 (D-B077; branch tomo/v040-retimed; registered intermediate; report /wd1/mdenolle_data/tomo_v1/v040_retimed/report/):
+the v0.3.1 configuration with only the pick times of Cascadia_picks_catalog_v4.1t.csv (65,562 of 754,710 B1b picks re-timed,
+59 stations; 33,976 by > 0.02 s, 11,975 by > 0.3 s). At the re-timed land stations P rms falls 0.246 -> 0.222 s (M0), 0.222
+-> 0.187 (Oregon), 0.225 -> 0.192 (Washington), and their time-of-day residual slopes go from -0.15..-0.31 s/day to about
++0.02..+0.08. Resolved shallow onshore Vp (1-9 km) changes by 0.34-0.77 % rms against a numerical noise floor of 0.01 %
+(real); resolved nodes at 15-29 km (mostly the Blanco tile at smoothing 20) change by 0.86-1.0 %, inside their noise floor
+(0.76-1.06 %; a 1e-6 s perturbation also moves 5.7 % of Blanco's events by > 1 km). Smoothing rule choices unchanged (480).
+The B1 pick QC stays as in v0.3.1 (812 of 854,465 picks would change status with the re-timed times; not redone).
+
+### D-B083 v0.4.1 = v0.4.0 with the D-B081 surface floor in the tomography inversion (adopted, 2026-11-25 07:59, PI; follows D-B077)
+M0 and the four merged tiles are re-inverted from the v0.4.0 inputs with tomoDD's event updates floored at the local solid
+surface (D-B081: surface.dat from the merged surface D-B068, an update stops 1 m under it, the event is flagged, not removed),
+using inversion binaries built from the D-B081 freeze after a byte-identity check without surface.dat. Velocities above the
+surface stay rock-continued during the inversion (water/air nodes harm tomoDD: v0.3.2 node-vs-field test, -18's S1). The
+product follows D-B076 (medium, D-B073 node rule, Vp/Vs_tomography, NLL grids with the field rule). The ensemble's real
+phase (D-B077) runs on the v0.4.1 configuration.
+
+### D-B090 Correct station clock drift in the picks for catalog v6.0, with a reusable pick-timing toolkit (adopted, 2026-11-25 08:44, PI)
+PI: "we might as well do this correction: Correcting the MH07/MG07 picks for v6.0, and we will probably have to do that for
+other west coast picks that we had in another project, so generate a product that can be reused by human and agents".
+The CC-dt work for D-B078 (/wd1/mdenolle_data/tomo_v1/cc_dt/qc/clock_epochs.csv, tomo/cc-dt 2d033ec6) found two free-running
+clocks in spring 2016: MH07.XD drifting +8.35 +- 0.28 ms/day from 2016-02-06 (+- 2.4 d) to about +0.80 s at its data restart
+2016-05-12T05:09:09, and MG07.XD -4.40 +- 0.59 ms/day from 2016-02-20 (+- 9.3 d) to about -0.34 s at 2016-05-08T07:57:28
+(record headers carry no timing-quality information). Header errors cannot be fixed by the D-B072/D-B075 re-timing. v6.0 uses a
+pick file with these drifts removed (picks corrected by the fitted clock model, flagged and kept, never dropped), after a
+scan of every station for similar clock problems, each candidate confirmed by a person before it is applied. The detection,
+modelling, correction, re-timing (D-B072/D-B075) and reporting steps become one documented toolkit with a command line, an
+HTML review report and an agent instruction file, so the same procedure can be run on other pick datasets. Numbering: this
+session uses D-B090..D-B099 from here on; session -18 continues from D-B084.
+
+### D-B091 Run the Route A magnitude station-term inversion to convergence and recompute the v4.1 and v5.1 magnitudes (adopted, 2026-11-25 10:24, PI)
+Found in the v5.1 magnitude fix round (branch analysis/v51-mag cd0334d6, workflow/05_magnitude/v51_phase19_convergence.py):
+phase19's LSQR (damp 1e-3) stops at iter_lim 3000 without converging (istop 7) in v4.1 (the paper's magnitudes) and v5.1.
+Run to convergence (4,863 iterations, istop 2), final ML moves by Blanco -0.68, JdF ridge/plate -0.51, Gorda, Mendocino and
+offshore forearc -0.28, Explorer -0.08, Axial -0.04, onshore +0.01, with the residual norm almost unchanged (268.37 -> 267.86):
+the picks only weakly tie the offshore level to the onshore network. The converged solution agrees better with both outside
+references: ComCat ML anchor gaps Blanco +0.59 -> +0.10, Gorda +0.33 -> +0.02, Mendocino +0.54 -> +0.26, anchor std 0.230 ->
+0.176; offshore ML - tensor Mw (Mw 3-4.5) +0.26 -> -0.01. Both the v4.1 (paper) and v5.1 magnitudes are recomputed with a
+converged solver that checks istop, together with a map of how strongly each offshore deployment is tied to the onshore
+network; Mc, b and every paper figure or number that uses offshore ML are updated (manuscript: bullets only).
+
+### D-B092 Prepare the catalog v6.0 relocation now: v0.4.1 travel-time grids and NonLinLoc SSST (adopted, 2026-11-25 10:24, PI; implements D-B079)
+Build the travel-time grids of model v0.4.1 (D-B083; field rule, merged surface, wide and deep grids as for v5.1) and implement
+and test NLL-SSST (source-specific station terms, Lomax & Savvaidis 2022) against the D-B014/D-B069 static station terms on a
+few clusters. Picks: Cascadia_picks_catalog_v4.1tc.csv (D-B090; MH07/MG07 corrected). The full relocation runs after the PI's
+review of the other clock-candidate epochs; the location-review flags are applied when the catalog is built.
+
+### D-B093 Catalog v6.0 station terms: static terms plus the NLL-coherence stage, with waveform cross-correlation for all families; use the whole machine (adopted, 2026-11-25 13:12, PI)
+SSST test on the four D-B078 sets (v5.1 grids, /wd1/mdenolle_data/reloc_v6/ssst_test/g51/; fit of the CC differential times,
+median per pair, ms): static / best SSST step / static + coherence = Axial 12.3 / 13.5 / 11.2; Mount St Helens 17.2 / 16.9 /
+10.6; Blanco 24.3 / 23.2 / 24.3; JdF 39.0 / 35.7 (16-8 km) / not applicable (too few compact pdfs). SSST pushed Mount St
+Helens deeper against Hirao et al. 2025 (+0.91 -> +1.16 to +1.59 km) and degraded Axial at every step; static + coherence
+kept the depths (+0.95 km) and brought repeater pairs to 74 m (Axial, MSH). No event above the surface in any arm. v6.0
+therefore keeps the static station terms of v5.1 (D-B014/D-B069) and adds the coherence stage (NonLinLoc 7.1.07,
+LOCPOSTERIOR OCT_TREE stacking; Lomax & Savvaidis 2022) for events with waveform-similar neighbours, which needs CC
+differential times for every clustered family (D-B040), not only the test sets. PI: "use all resources you can while our
+jobs are running - we are the only one using the machine today": the per-session process caps of today are lifted, subject
+to keeping free memory (grid chain raised from 12 to 36 processes at 13:13).
+
+### D-B094 Real-data ensemble on v0.4.1 with velocity uncertainties inflated by the calibration, rounded up (adopted, 2026-11-25 15:37, PI; amends D-B030, D-B077)
+Synthetic calibration (ensemble_v0.3.2/synth/coverage.md, 102 members merged): hypocentres calibrated in every tile and
+coordinate (68 % coverage 0.70-0.73, 95 % 0.95-0.96); Vp/Vs calibrated (0.75 / 0.96); Vp and Vs too narrow on resolved
+nodes (Vp 0.565 / 0.849, rms z 1.28; Vs 0.581 / 0.863, rms z 1.22), as the f0 diagnostic predicted (each member misses the
+same 3-5 % of v0.3.1's structure at Blanco and Mendocino; the 3 % prior does not cover it). The D-B030 all-items rule failed
+(exit 2). PI: run the real phase on v0.4.1 (D-B083) and calibrate by inflation, "but round up because that's still a bit too
+narrow": the Vp and Vs posterior spreads (std and percentile half-widths about the median) are multiplied by factors taken
+from the synthetic members as the larger of the factors that bring the 68 % and the 95 % coverage of the resolved nodes to
+nominal, rounded up to the next 0.05; hypocentres and Vp/Vs are not inflated. The values and their derivation are recorded
+in the ensemble note and the product attributes. The v0.3.2-configuration calibration is accepted for v0.4.1 (P-E11).
+
+### D-B095 Catalog v6.0 station terms: NLL-SSST + coherence, stopping distance set by a confirmatory check (adopted, 2026-11-25 15:51, PI; amends D-B093)
+Independent-cluster test (branch reloc/v6-termtest 07b45252; /wd1/mdenolle_data/reloc_v6/termtest/; decision rule written before
+scoring): on three clusters sharing no event with the D-B078 sets (Puget 1,000, Mendocino 2015 sequence 600, western Blanco 2012
+swarm 1,200), SSST stopped at 2 km + coherence (B) beat static + coherence (A) on held-out stations (session -18's fold scorer,
+no leak) in all three, P and S: MAD P 85 -> 59, 67 -> 56, 149 -> 107 ms; S 141 -> 90, 118 -> 88, 264 -> 164 ms (95 % bootstrap
+intervals exclude 0); CC fit better in 3/3; depth closer to Lange 2026 at western Blanco (median |dz| 2.11 -> 1.52 km), ties
+elsewhere; 0 events above the surface in every arm. Agrees in direction with -18's D-B078 four-set result. v6.0 uses NLL-SSST
+(Loc2ssst, CharDist schedule 9999 -> 16 -> 8 -> 4 [-> 2] km) followed by the coherence stage, instead of D-B093's static terms. A
+post-hoc hint (4 km stop better than 2 km at Puget and Mendocino; 16 km at western Blanco) is checked on two further independent
+clusters with the same protocol before the full run; the stopping distance with the better held-out score is used.
+
+### D-B096 Catalog v6.0 SSST schedule stops at 4 km (9999 -> 16 -> 8 -> 4 km), then coherence (adopted, 2026-11-25, by the D-B095 rule written before scoring)
+Confirmatory test (branch reloc/v6-termtest 8489f8cc; /wd1/mdenolle_data/reloc_v6/termtest/score_stop/; rule written into
+RESUME.md at 15:55 before any run): two further independent clusters (Strait of Georgia 700 events; 2014 M6.8 Gorda sequence 800
+events). Held-out MAD P + S with coherence, mean of the two: 16 km 81.0, 8 km 78.4, 4 km 76.8, 2 km 80.2 ms; paired bootstrap 8 km
+- 4 km +1.6 [0.3, 2.7] ms excludes 0, so 4 km is kept. Georgia lowest at 4 km on P and S; Gorda flat between 8 and 4 km. 0 events
+above the surface in every arm; depths indistinguishable between stops. The coherence stage helped where it relocates many events
+(Puget, Georgia: P -15 ms), was neutral where it relocates few (Gorda, western Blanco) and hurt at the Mendocino 2015 sequence;
+v6.0 QC reports the held-out effect of coherence by region. Catalog scale: Loc2ssst's LSSTATIONS line is limited to 1,000
+characters, so station lists are split across instances.
+
+### D-B097 Run catalog v6.0 now; the Mount St Helens station issues and the other clock candidates wait for a later version (adopted, 2026-11-25 16:58, PI)
+PI: "Can we just keep going and leave the Mount Saint Helens stations for later?". The full v6.0 relocation (model v0.4.1, D-B083;
+picks Cascadia_picks_catalog_v4.1tc.csv with only the MH07.XD/MG07.XD clock corrections, D-B090; D-B096 SSST schedule + coherence)
+starts as soon as the v0.4.1 wide grids and the family CC times are complete. Deferred to a later version (v6.1): the weekly
+artificial signal on the analog UW channels near Mount St Helens (HSR, EDM, STD.UW; likely false deep events, waveform review P1),
+the 129 other clock-candidate epochs (review_candidates.csv) and the location-review flags; v6.0 carries the automatic review
+indicators as columns but applies no reviewer flag it does not have.
+
+### D-B098 Catalog v6.0: no coherence relocation in the Mendocino region (adopted, 2026-11-25 20:35, PI; amends D-B095, D-B096)
+PI answer "Skip at Mendocino" to: the held-out tests show the coherence stage helps at Axial (P -10 ms), Mount St Helens (-21),
+Puget (-7) and Georgia (-15), does nothing at Blanco, JdF and Gorda, and hurts at the 2015 Mendocino sequence (P +8 ms, S +20 ms).
+In v6.0, compact events (Len3 <= 5 km) whose catalog v5.1 region is "Mendocino" (a box on the v4 epicentre, 39.5-40.5 N,
+128.1-123.5 W; 24,644 events in v5.1) are not relocated by the coherence stage and keep their SSST 4 km (it4) location. They can
+still be stacking partners of events outside the region. Code: reloc/v6-prep 5596e49e (b4_v6_reloc.py cmd_coh, override
+V6_COH_SKIP_REGIONS; catalog column coherence_skipped_region; coh/coherence_skipped_region.csv). Provisional: it rests on one
+Mendocino test cluster; the acceptance report states it, and v6.1 can revisit it with a second Mendocino test.
+
+### D-B099 Model v0.4.2 = v0.4.1 without self-paired differential times, with the patched tomoDD; ensemble and synthetic calibration rerun before registration (adopted, 2026-11-26 06:27, PI; amends D-B083, D-B094)
+Diagnosis of the four failed real-ensemble members (2026-11-25 20:55-22:19; ensemble_v0.4.1/diag_failures/):
+(1) tomoDD exit 139 in about 3 % of members (real r002, r049; synthetic s034, s060, s089): sph2car in tomoDD's
+transform_r_gfortran.c takes sqrt(d2^2 - z^2) with z rounded to float, which goes negative for ray nodes within a few metres
+of the vertical axis through the tile centre; the NaN node then indexes ixloc(int(NaN)) in vel3. Deterministic per member; no
+silent cases. Patch: the algebraically identical stable form (d3 sin del; atan2 in car2sph) only where the old expression
+leaves its domain; same bits elsewhere (r002, r049 first iterations byte-identical, then all 12 iterations run).
+(2) Self-pairs in dt.ct: b2_tomodd_inputs.diff_times dropped column 0 of the cKDTree query as "self"; with two events at
+identical hypocentres the twin can come first, so an event is paired with itself. tomoDD reads C1 == C2 as an absolute time
+with travel time 0 s (weight x10), which pulls the event 10-31 km away. 8 events: washington 6 (28514, 40700, 53148, 55170,
+80094, 94266), mendocino_gorda_c 1 (156844), blanco 1 (81324). Present in the deterministic v0.4.1, all ensemble members and
+the v0.3.2 synthetic calibration; r017 failed on it (linearised residual -30 s overflowing tomoDD.res). Without them: Vs at
+29 km under the Vancouver Island cluster 3.51 -> 4.06 km/s, 1 Vp and 11 Vs nodes change by > 0.05 km/s.
+PI chose: fix the builder (tomo/ensemble-fix 53a3b868) and adopt the patched tomoDD (new freeze outside git); re-invert the
+three affected tiles as v0.4.2; rerun the ensemble on v0.4.2; then redo the synthetic calibration on the fixed configuration
+and register the ensemble only once the inflation factors are confirmed (updated if they move by more than 0.05). Catalog
+v6.0 stays on v0.4.1 (local difference; stated in its README). B5 code (b5_common.diff_times) has the same bug (session -18
+told 2026-11-25 22:20).
+
+### D-B100 Register catalog v6.0 as built; its Axial depth bias from the SSST passes is stated and fixed in v6.1 (adopted, 2026-11-26 08:29, PI)
+v6.0 (catalog_b4_v6.0.csv md5 ae77ad3c66aa6fbaa48528660a1c09ec, finished 2026-11-26 08:05; acceptance
+reloc_v6/catalog/acceptance_v6.0.html): 172,182 located, 0 above the surface, floor-limited 3.3 % (v5.1 5.1 %), D tier 32,935
+(v5.1 43,032), median rms 0.076 s (v5.1 0.122). It fails the Axial depth target: tier A-B within 2 km of the seafloor 66.1 %
+(v5.1 81.0 %, target 85 %). Cause, by pass: it0 (no terms) 82.7 %, it1 76.3, it2 72.7, it3 68.8, it4 65.9 % (median below
+seafloor 1.63 -> 1.85 km); the SSST terms trade off with depth. Median depth shift it4 - it0 (tiers A-C): Axial +0.22 km,
+Puget/Georgia +0.29, Mendocino +0.17, Blanco +0.15, Gorda -0.22, forearc -0.15. The D-B095/D-B096 tests scored held-out CC
+differential times (relative fit), which cannot see a depth shift common to a cluster. PI: register v6.0 as is in the private
+Zenodo draft with this bias stated in its README; for v6.1, test station-term recipes on absolute depth as well (Axial vs
+Waldhauser et al. 2020, Blanco vs Lange et al. 2026, Mount St Helens vs Hirao et al. 2025), together with the D-B097 deferrals.
+Numbering: this session takes D-B100..D-B109 (D-B084..D-B089 stay reserved for session -18).
+
+### D-B101 Clean up the private Zenodo draft: slim velocity models with v0.4.2, fault surfaces v1 instead of v0, amplitude and PickBlue parts packed into zips (adopted, 2026-11-26 08:58, PI)
+Draft 23084158 was full (100/100 files, 6.7 GB). PI: "consider cleaning the zenodo especially for files that won't be reused
+(since our reproducibility statements with the reports can reproduce them)"; chose all three steps:
+(1) velocity_models.zip (672 MB; 958 MB of its content were the v0.3.2 NonLinLoc grids, rebuilt from the model by
+b4_time_grids) replaced by the registered model netCDFs v0.1.0 to v0.4.2 with provenance, registry and a README on rebuilding
+the grids (no zarr copies, no grids); (2) the eight fault surfaces v0 files removed (superseded by fault surfaces v1, one zip);
+(3) the ver5/ver6 amplitude parquet parts and the PickBlue pick parts packed into one stored zip per set (data unchanged:
+recomputing them takes days of waveform processing). Picks, catalogs and READMEs stay. Every replacement is uploaded and
+md5-checked before the files it replaces are deleted; local copies are kept. The draft stays private (no publish).
+
+### D-B084 B5 relative relocation = NLL-SSST-coherence (adopted, 2026-11-25, PI, in session -18; from the D-B078 comparison)
+Fair held-out test on 4 sets (axial, blanco, msh, jdf; every code started from NonLinLoc relocated without the held-out
+stations; tomo/b5 notes/b5_code_comparison.md, data/tomo_v1/b5/cmp/report.md): NLL-SSST-coherence has the smallest
+tails and is best where data are sparse (Blanco, offshore); tomoDD + the D-B081 floor has the sharpest cluster cores
+(Axial, Mount St Helens, JdF); GrowClust3D is out (largest tails, events above the surface). The first round's tomoDD
+lead came from starting at the v5.1 positions, which used the held-out stations. The PI chose NLL-SSST-coherence. Its
+schedule was then fixed on independent clusters by the other session: SSST 9999 -> 16 -> 8 -> 4 km and coherence
+(D-B095, D-B096; Mendocino without coherence, D-B098), which is also the v6.0 recipe, so B5 and v6.0 share one code.
+tomoDD + floor (D-B081) stays available as a cross-check for dense clusters; it gives no catalog column. Open for the
+PI: whether v5.2 (B5 on v5.1, D-B058/D-B079) is still wanted now that v6.0 applies the same code in the re-inverted
+model.

@@ -912,3 +912,11 @@ above the surface in every arm; depths indistinguishable between stops. The cohe
 (Puget, Georgia: P -15 ms), was neutral where it relocates few (Gorda, western Blanco) and hurt at the Mendocino 2015 sequence;
 v6.0 QC reports the held-out effect of coherence by region. Catalog scale: Loc2ssst's LSSTATIONS line is limited to 1,000
 characters, so station lists are split across instances.
+
+### D-B097 Run catalog v6.0 now; the Mount St Helens station issues and the other clock candidates wait for a later version (adopted, 2026-11-25 16:58, PI)
+PI: "Can we just keep going and leave the Mount Saint Helens stations for later?". The full v6.0 relocation (model v0.4.1, D-B083;
+picks Cascadia_picks_catalog_v4.1tc.csv with only the MH07.XD/MG07.XD clock corrections, D-B090; D-B096 SSST schedule + coherence)
+starts as soon as the v0.4.1 wide grids and the family CC times are complete. Deferred to a later version (v6.1): the weekly
+artificial signal on the analog UW channels near Mount St Helens (HSR, EDM, STD.UW; likely false deep events, waveform review P1),
+the 129 other clock-candidate epochs (review_candidates.csv) and the location-review flags; v6.0 carries the automatic review
+indicators as columns but applies no reviewer flag it does not have.

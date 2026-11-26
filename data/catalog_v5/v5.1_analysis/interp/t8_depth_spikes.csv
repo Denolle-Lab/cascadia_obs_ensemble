@@ -1,0 +1,475 @@
+region,depth_km,kind,n_within_0p1,n_side_mean,ratio
+Axial,1.50,half-integer,651,155.00,4.20
+Axial,2.00,"integer, not a node",1192,576.50,2.07
+Axial,2.50,half-integer,1243,1316.00,0.94
+Axial,3.00,model node,2890,2699.00,1.07
+Axial,3.50,half-integer,2900,2727.50,1.06
+Axial,4.00,"integer, not a node",1408,1437.00,0.98
+Axial,4.50,half-integer,376,379.50,0.99
+Axial,5.00,model node,254,213.50,1.19
+Axial,5.50,half-integer,258,227.00,1.14
+Axial,6.00,"integer, not a node",138,146.50,0.94
+Axial,6.50,half-integer,85,83.50,1.02
+Axial,7.00,model node,68,61.50,1.11
+Axial,7.50,half-integer,41,33.00,1.24
+Axial,8.50,half-integer,25,33.50,0.75
+Axial,9.00,model node,26,14.50,1.79
+Blanco,2.50,half-integer,98,84.50,1.16
+Blanco,3.00,model node,149,87.50,1.70
+Blanco,3.50,half-integer,400,292.50,1.37
+Blanco,4.00,"integer, not a node",572,521.00,1.10
+Blanco,4.50,half-integer,614,615.00,1.00
+Blanco,5.00,model node,722,648.50,1.11
+Blanco,5.50,half-integer,1236,1061.00,1.16
+Blanco,6.00,"integer, not a node",1158,790.50,1.46
+Blanco,6.50,half-integer,782,676.50,1.16
+Blanco,7.00,model node,812,664.00,1.22
+Blanco,7.50,half-integer,758,612.50,1.24
+Blanco,8.00,"integer, not a node",818,753.50,1.09
+Blanco,8.50,half-integer,474,474.50,1.00
+Blanco,9.00,model node,815,554.50,1.47
+Blanco,9.50,half-integer,252,275.50,0.91
+Blanco,10.00,"integer, not a node",207,236.50,0.88
+Blanco,10.50,half-integer,298,279.00,1.07
+Blanco,11.00,"integer, not a node",277,163.50,1.69
+Blanco,11.50,half-integer,156,203.50,0.77
+Blanco,12.00,model node,837,124.00,6.75
+Blanco,12.50,half-integer,158,135.00,1.17
+Blanco,13.00,"integer, not a node",267,154.00,1.73
+Blanco,13.50,half-integer,171,161.50,1.06
+Blanco,14.00,"integer, not a node",275,202.00,1.36
+Blanco,14.50,half-integer,122,135.00,0.90
+Blanco,15.00,model node,528,149.50,3.53
+Blanco,15.50,half-integer,169,218.00,0.78
+Blanco,16.00,"integer, not a node",440,146.00,3.01
+Blanco,16.50,half-integer,191,160.00,1.19
+Blanco,17.00,"integer, not a node",312,145.50,2.14
+Blanco,17.50,half-integer,133,164.50,0.81
+Blanco,18.00,model node,381,149.50,2.55
+Blanco,18.50,half-integer,134,148.00,0.91
+Blanco,19.00,"integer, not a node",500,152.50,3.28
+Blanco,19.50,half-integer,127,78.50,1.62
+Blanco,20.00,"integer, not a node",275,120.00,2.29
+Blanco,20.50,half-integer,141,169.50,0.83
+Blanco,21.00,model node,188,110.00,1.71
+Blanco,21.50,half-integer,92,102.50,0.90
+Blanco,22.00,"integer, not a node",137,94.50,1.45
+Blanco,22.50,half-integer,96,104.00,0.92
+Blanco,23.00,"integer, not a node",170,88.00,1.93
+Blanco,23.50,half-integer,108,84.50,1.28
+Blanco,24.00,"integer, not a node",163,109.00,1.50
+Blanco,24.50,half-integer,49,68.50,0.72
+Blanco,25.00,model node,165,101.00,1.63
+Blanco,25.50,half-integer,126,118.00,1.07
+Blanco,26.00,"integer, not a node",113,80.00,1.41
+Blanco,26.50,half-integer,100,81.00,1.23
+Blanco,27.00,"integer, not a node",135,79.50,1.70
+Blanco,27.50,half-integer,76,92.50,0.82
+Blanco,28.00,"integer, not a node",88,78.00,1.13
+Blanco,28.50,half-integer,66,97.00,0.68
+Blanco,29.00,model node,128,95.50,1.34
+Blanco,29.50,half-integer,53,37.00,1.43
+Blanco,30.00,"integer, not a node",84,57.00,1.47
+Blanco,30.50,half-integer,90,102.00,0.88
+Blanco,31.00,"integer, not a node",68,87.00,0.78
+Blanco,31.50,half-integer,67,88.00,0.76
+Blanco,32.00,"integer, not a node",80,86.00,0.93
+Blanco,32.50,half-integer,64,69.50,0.92
+Blanco,33.00,"integer, not a node",101,51.00,1.98
+Blanco,33.50,half-integer,75,57.00,1.32
+Blanco,34.00,model node,89,76.50,1.16
+Blanco,34.50,half-integer,31,64.00,0.48
+Blanco,35.00,"integer, not a node",37,49.50,0.75
+Blanco,35.50,half-integer,74,75.50,0.98
+Blanco,36.00,"integer, not a node",52,56.50,0.92
+Blanco,36.50,half-integer,54,48.00,1.12
+Blanco,37.00,"integer, not a node",71,51.00,1.39
+Blanco,37.50,half-integer,47,44.00,1.07
+Blanco,38.00,"integer, not a node",45,34.00,1.32
+Blanco,38.50,half-integer,36,56.50,0.64
+Blanco,39.00,"integer, not a node",54,59.00,0.92
+Blanco,39.50,half-integer,47,36.00,1.31
+Blanco,40.50,half-integer,23,37.50,0.61
+Gorda,2.50,half-integer,40,36.00,1.11
+Gorda,3.00,model node,47,49.00,0.96
+Gorda,3.50,half-integer,127,66.50,1.91
+Gorda,4.00,"integer, not a node",75,80.00,0.94
+Gorda,4.50,half-integer,58,63.50,0.91
+Gorda,5.00,model node,54,33.00,1.64
+Gorda,5.50,half-integer,46,48.00,0.96
+Gorda,6.00,"integer, not a node",48,29.50,1.63
+Gorda,6.50,half-integer,25,17.50,1.43
+Gorda,7.00,model node,29,18.50,1.57
+Gorda,9.00,model node,51,24.00,2.12
+Gorda,9.50,half-integer,22,20.00,1.10
+Gorda,10.00,"integer, not a node",27,14.50,1.86
+Gorda,10.50,half-integer,34,40.00,0.85
+Gorda,11.00,"integer, not a node",32,29.50,1.08
+Gorda,11.50,half-integer,22,28.50,0.77
+Gorda,12.00,model node,49,24.50,2.00
+Gorda,12.50,half-integer,39,33.00,1.18
+Gorda,13.00,"integer, not a node",44,34.00,1.29
+Gorda,13.50,half-integer,27,32.50,0.83
+Gorda,14.00,"integer, not a node",50,32.50,1.54
+Gorda,14.50,half-integer,30,24.50,1.22
+Gorda,15.00,model node,43,30.00,1.43
+Gorda,15.50,half-integer,42,40.50,1.04
+Gorda,16.00,"integer, not a node",61,39.00,1.56
+Gorda,16.50,half-integer,46,45.00,1.02
+Gorda,17.00,"integer, not a node",58,46.50,1.25
+Gorda,17.50,half-integer,39,43.50,0.90
+Gorda,18.00,model node,59,42.50,1.39
+Gorda,18.50,half-integer,52,61.00,0.85
+Gorda,19.00,"integer, not a node",110,56.50,1.95
+Gorda,19.50,half-integer,30,24.50,1.22
+Gorda,20.00,"integer, not a node",103,51.00,2.02
+Gorda,20.50,half-integer,76,70.00,1.09
+Gorda,21.00,model node,84,59.00,1.42
+Gorda,21.50,half-integer,68,62.00,1.10
+Gorda,22.00,"integer, not a node",102,60.00,1.70
+Gorda,22.50,half-integer,75,76.50,0.98
+Gorda,23.00,"integer, not a node",136,77.50,1.75
+Gorda,23.50,half-integer,105,99.50,1.06
+Gorda,24.00,"integer, not a node",188,123.50,1.52
+Gorda,24.50,half-integer,85,110.50,0.77
+Gorda,25.00,model node,214,135.00,1.59
+Gorda,25.50,half-integer,150,155.50,0.96
+Gorda,26.00,"integer, not a node",128,123.50,1.04
+Gorda,26.50,half-integer,156,127.00,1.23
+Gorda,27.00,"integer, not a node",164,117.50,1.40
+Gorda,27.50,half-integer,113,134.00,0.84
+Gorda,28.00,"integer, not a node",130,114.00,1.14
+Gorda,28.50,half-integer,81,98.00,0.83
+Gorda,29.00,model node,224,67.50,3.32
+Gorda,29.50,half-integer,44,36.00,1.22
+Gorda,30.00,"integer, not a node",111,37.00,3.00
+Gorda,30.50,half-integer,73,71.00,1.03
+Gorda,31.00,"integer, not a node",62,51.50,1.20
+Gorda,31.50,half-integer,51,61.00,0.84
+Gorda,32.00,"integer, not a node",41,46.50,0.88
+Gorda,32.50,half-integer,45,45.00,1.00
+Gorda,33.00,"integer, not a node",64,40.00,1.60
+Gorda,33.50,half-integer,28,40.50,0.69
+Gorda,34.00,model node,50,34.50,1.45
+Gorda,34.50,half-integer,22,32.00,0.69
+Gorda,35.00,"integer, not a node",28,29.00,0.97
+Gorda,35.50,half-integer,30,42.00,0.71
+Gorda,36.00,"integer, not a node",36,27.00,1.33
+Gorda,36.50,half-integer,24,30.00,0.80
+Gorda,37.00,"integer, not a node",47,20.50,2.29
+Gorda,37.50,half-integer,17,28.50,0.60
+Gorda,38.00,"integer, not a node",24,19.00,1.26
+Gorda,38.50,half-integer,26,20.50,1.27
+Gorda,39.00,"integer, not a node",29,21.00,1.38
+Mendocino,1.00,model node,68,32.50,2.09
+Mendocino,1.50,half-integer,37,40.00,0.93
+Mendocino,2.00,"integer, not a node",28,52.50,0.53
+Mendocino,2.50,half-integer,51,44.00,1.16
+Mendocino,3.00,model node,37,26.00,1.42
+Mendocino,3.50,half-integer,56,41.50,1.35
+Mendocino,4.00,"integer, not a node",65,46.00,1.41
+Mendocino,4.50,half-integer,32,48.00,0.67
+Mendocino,5.00,model node,29,32.00,0.91
+Mendocino,5.50,half-integer,40,42.00,0.95
+Mendocino,6.00,"integer, not a node",54,35.00,1.54
+Mendocino,6.50,half-integer,41,29.00,1.41
+Mendocino,7.00,model node,63,36.50,1.73
+Mendocino,7.50,half-integer,46,48.50,0.95
+Mendocino,8.00,"integer, not a node",50,50.50,0.99
+Mendocino,8.50,half-integer,52,52.50,0.99
+Mendocino,9.00,model node,82,79.00,1.04
+Mendocino,9.50,half-integer,76,76.00,1.00
+Mendocino,10.00,"integer, not a node",77,88.00,0.88
+Mendocino,10.50,half-integer,93,106.00,0.88
+Mendocino,11.00,"integer, not a node",117,84.50,1.38
+Mendocino,11.50,half-integer,84,119.00,0.71
+Mendocino,12.00,model node,106,97.50,1.09
+Mendocino,12.50,half-integer,104,81.00,1.28
+Mendocino,13.00,"integer, not a node",79,70.00,1.13
+Mendocino,13.50,half-integer,82,67.50,1.21
+Mendocino,14.00,"integer, not a node",101,74.00,1.36
+Mendocino,14.50,half-integer,37,54.00,0.69
+Mendocino,15.00,model node,81,67.00,1.21
+Mendocino,15.50,half-integer,78,77.50,1.01
+Mendocino,16.00,"integer, not a node",85,73.50,1.16
+Mendocino,16.50,half-integer,98,72.50,1.35
+Mendocino,17.00,"integer, not a node",131,102.00,1.28
+Mendocino,17.50,half-integer,131,152.00,0.86
+Mendocino,18.00,model node,136,147.00,0.93
+Mendocino,18.50,half-integer,159,154.00,1.03
+Mendocino,19.00,"integer, not a node",253,222.00,1.14
+Mendocino,19.50,half-integer,162,152.50,1.06
+Mendocino,20.00,"integer, not a node",218,217.00,1.00
+Mendocino,20.50,half-integer,280,253.50,1.10
+Mendocino,21.00,model node,261,238.00,1.10
+Mendocino,21.50,half-integer,266,247.50,1.07
+Mendocino,22.00,"integer, not a node",225,227.50,0.99
+Mendocino,22.50,half-integer,249,239.00,1.04
+Mendocino,23.00,"integer, not a node",246,259.50,0.95
+Mendocino,23.50,half-integer,329,305.50,1.08
+Mendocino,24.00,"integer, not a node",354,356.50,0.99
+Mendocino,24.50,half-integer,218,240.00,0.91
+Mendocino,25.00,model node,255,242.00,1.05
+Mendocino,25.50,half-integer,242,239.00,1.01
+Mendocino,26.00,"integer, not a node",196,187.50,1.05
+Mendocino,26.50,half-integer,196,192.50,1.02
+Mendocino,27.00,"integer, not a node",211,195.00,1.08
+Mendocino,27.50,half-integer,206,240.50,0.86
+Mendocino,28.00,"integer, not a node",254,265.50,0.96
+Mendocino,28.50,half-integer,255,255.00,1.00
+Mendocino,29.00,model node,438,272.50,1.61
+Mendocino,29.50,half-integer,205,185.00,1.11
+Mendocino,30.00,"integer, not a node",250,186.50,1.34
+Mendocino,30.50,half-integer,218,219.00,1.00
+Mendocino,31.00,"integer, not a node",169,166.00,1.02
+Mendocino,31.50,half-integer,147,174.00,0.84
+Mendocino,32.00,"integer, not a node",148,137.00,1.08
+Mendocino,32.50,half-integer,78,97.00,0.80
+Mendocino,33.00,"integer, not a node",94,74.50,1.26
+Mendocino,33.50,half-integer,42,51.00,0.82
+Mendocino,34.00,model node,82,55.50,1.48
+Mendocino,34.50,half-integer,24,41.00,0.59
+Mendocino,35.00,"integer, not a node",23,31.00,0.74
+Mendocino,35.50,half-integer,36,42.50,0.85
+Mendocino,36.00,"integer, not a node",37,33.50,1.10
+Mendocino,36.50,half-integer,18,25.00,0.72
+Mendocino,37.00,"integer, not a node",39,16.00,2.44
+Mendocino,37.50,half-integer,21,20.00,1.05
+Mendocino,38.50,half-integer,23,19.00,1.21
+Mendocino,39.00,"integer, not a node",24,22.50,1.07
+Offshore forearc,1.00,model node,102,28.00,3.64
+Offshore forearc,1.50,half-integer,25,42.50,0.59
+Offshore forearc,2.00,"integer, not a node",46,32.50,1.42
+Offshore forearc,2.50,half-integer,27,30.50,0.89
+Offshore forearc,3.00,model node,33,17.00,1.94
+Offshore forearc,3.50,half-integer,48,38.00,1.26
+Offshore forearc,4.00,"integer, not a node",44,41.00,1.07
+Offshore forearc,4.50,half-integer,34,48.50,0.70
+Offshore forearc,5.00,model node,34,49.50,0.69
+Offshore forearc,5.50,half-integer,44,42.50,1.04
+Offshore forearc,6.00,"integer, not a node",63,31.50,2.00
+Offshore forearc,6.50,half-integer,39,30.00,1.30
+Offshore forearc,7.00,model node,48,35.00,1.37
+Offshore forearc,7.50,half-integer,33,39.50,0.84
+Offshore forearc,8.00,"integer, not a node",44,46.50,0.95
+Offshore forearc,8.50,half-integer,43,51.50,0.83
+Offshore forearc,9.00,model node,76,51.00,1.49
+Offshore forearc,9.50,half-integer,37,34.50,1.07
+Offshore forearc,10.00,"integer, not a node",50,38.50,1.30
+Offshore forearc,10.50,half-integer,43,57.00,0.75
+Offshore forearc,11.00,"integer, not a node",50,56.00,0.89
+Offshore forearc,11.50,half-integer,55,55.50,0.99
+Offshore forearc,12.00,model node,64,53.00,1.21
+Offshore forearc,12.50,half-integer,55,63.00,0.87
+Offshore forearc,13.00,"integer, not a node",69,53.00,1.30
+Offshore forearc,13.50,half-integer,59,63.50,0.93
+Offshore forearc,14.00,"integer, not a node",110,80.00,1.38
+Offshore forearc,14.50,half-integer,44,61.00,0.72
+Offshore forearc,15.00,model node,66,67.00,0.99
+Offshore forearc,15.50,half-integer,91,95.50,0.95
+Offshore forearc,16.00,"integer, not a node",109,76.00,1.43
+Offshore forearc,16.50,half-integer,81,59.00,1.37
+Offshore forearc,17.00,"integer, not a node",111,78.00,1.42
+Offshore forearc,17.50,half-integer,135,126.50,1.07
+Offshore forearc,18.00,model node,148,175.00,0.85
+Offshore forearc,18.50,half-integer,199,220.50,0.90
+Offshore forearc,19.00,"integer, not a node",323,254.00,1.27
+Offshore forearc,19.50,half-integer,208,172.50,1.21
+Offshore forearc,20.00,"integer, not a node",206,170.50,1.21
+Offshore forearc,20.50,half-integer,150,149.00,1.01
+Offshore forearc,21.00,model node,127,108.50,1.17
+Offshore forearc,21.50,half-integer,72,94.50,0.76
+Offshore forearc,22.00,"integer, not a node",96,73.50,1.31
+Offshore forearc,22.50,half-integer,87,69.50,1.25
+Offshore forearc,23.00,"integer, not a node",89,58.00,1.53
+Offshore forearc,23.50,half-integer,103,73.50,1.40
+Offshore forearc,24.00,"integer, not a node",147,77.50,1.90
+Offshore forearc,24.50,half-integer,42,63.50,0.66
+Offshore forearc,25.00,model node,161,93.50,1.72
+Offshore forearc,25.50,half-integer,82,103.00,0.80
+Offshore forearc,26.00,"integer, not a node",124,84.00,1.48
+Offshore forearc,26.50,half-integer,92,83.00,1.11
+Offshore forearc,27.00,"integer, not a node",106,86.50,1.23
+Offshore forearc,27.50,half-integer,75,101.00,0.74
+Offshore forearc,28.00,"integer, not a node",98,83.50,1.17
+Offshore forearc,28.50,half-integer,69,104.50,0.66
+Offshore forearc,29.00,model node,181,82.50,2.19
+Offshore forearc,29.50,half-integer,57,41.50,1.37
+Offshore forearc,30.00,"integer, not a node",90,34.50,2.61
+Offshore forearc,30.50,half-integer,56,59.00,0.95
+Offshore forearc,31.00,"integer, not a node",34,51.50,0.66
+Offshore forearc,31.50,half-integer,31,41.00,0.76
+Offshore forearc,32.00,"integer, not a node",45,41.00,1.10
+Offshore forearc,32.50,half-integer,36,30.50,1.18
+Offshore forearc,33.00,"integer, not a node",35,26.00,1.35
+Offshore forearc,33.50,half-integer,27,23.50,1.15
+Offshore forearc,34.00,model node,30,32.50,0.92
+Offshore forearc,34.50,half-integer,17,26.50,0.64
+Offshore forearc,35.00,"integer, not a node",15,25.50,0.59
+Offshore forearc,35.50,half-integer,24,25.00,0.96
+Offshore forearc,36.50,half-integer,26,14.00,1.86
+Puget/Georgia,1.00,model node,61,60.50,1.01
+Puget/Georgia,1.50,half-integer,51,75.50,0.68
+Puget/Georgia,2.00,"integer, not a node",77,73.00,1.05
+Puget/Georgia,2.50,half-integer,48,43.50,1.10
+Puget/Georgia,3.00,model node,42,28.00,1.50
+Puget/Georgia,3.50,half-integer,50,44.50,1.12
+Puget/Georgia,4.00,"integer, not a node",86,65.00,1.32
+Puget/Georgia,4.50,half-integer,45,69.50,0.65
+Puget/Georgia,5.00,model node,43,48.00,0.90
+Puget/Georgia,5.50,half-integer,76,55.00,1.38
+Puget/Georgia,6.00,"integer, not a node",90,49.00,1.84
+Puget/Georgia,6.50,half-integer,72,52.50,1.37
+Puget/Georgia,7.00,model node,91,60.00,1.52
+Puget/Georgia,7.50,half-integer,56,55.50,1.01
+Puget/Georgia,8.00,"integer, not a node",88,70.50,1.25
+Puget/Georgia,8.50,half-integer,54,72.50,0.74
+Puget/Georgia,9.00,model node,114,89.50,1.27
+Puget/Georgia,9.50,half-integer,75,71.00,1.06
+Puget/Georgia,10.00,"integer, not a node",101,78.50,1.29
+Puget/Georgia,10.50,half-integer,114,108.50,1.05
+Puget/Georgia,11.00,"integer, not a node",112,98.50,1.14
+Puget/Georgia,11.50,half-integer,106,129.00,0.82
+Puget/Georgia,12.00,model node,163,108.50,1.50
+Puget/Georgia,12.50,half-integer,138,125.00,1.10
+Puget/Georgia,13.00,"integer, not a node",157,135.00,1.16
+Puget/Georgia,13.50,half-integer,143,118.00,1.21
+Puget/Georgia,14.00,"integer, not a node",238,166.50,1.43
+Puget/Georgia,14.50,half-integer,133,135.00,0.99
+Puget/Georgia,15.00,model node,254,144.50,1.76
+Puget/Georgia,15.50,half-integer,158,170.00,0.93
+Puget/Georgia,16.00,"integer, not a node",211,133.50,1.58
+Puget/Georgia,16.50,half-integer,165,112.00,1.47
+Puget/Georgia,17.00,"integer, not a node",144,114.00,1.26
+Puget/Georgia,17.50,half-integer,131,152.50,0.86
+Puget/Georgia,18.00,model node,265,166.00,1.60
+Puget/Georgia,18.50,half-integer,135,157.00,0.86
+Puget/Georgia,19.00,"integer, not a node",219,151.00,1.45
+Puget/Georgia,19.50,half-integer,118,115.00,1.03
+Puget/Georgia,20.00,"integer, not a node",170,131.50,1.29
+Puget/Georgia,20.50,half-integer,140,125.50,1.12
+Puget/Georgia,21.00,model node,142,113.00,1.26
+Puget/Georgia,21.50,half-integer,93,94.00,0.99
+Puget/Georgia,22.00,"integer, not a node",101,70.00,1.44
+Puget/Georgia,22.50,half-integer,72,62.00,1.16
+Puget/Georgia,23.00,"integer, not a node",84,50.00,1.68
+Puget/Georgia,23.50,half-integer,67,50.50,1.33
+Puget/Georgia,24.00,"integer, not a node",64,44.00,1.45
+Puget/Georgia,24.50,half-integer,26,36.00,0.72
+Puget/Georgia,25.00,model node,42,40.00,1.05
+Puget/Georgia,25.50,half-integer,39,46.00,0.85
+Puget/Georgia,26.00,"integer, not a node",35,24.50,1.43
+Puget/Georgia,26.50,half-integer,21,21.50,0.98
+Puget/Georgia,27.00,"integer, not a node",17,23.50,0.72
+Other onshore,1.00,model node,42,54.00,0.78
+Other onshore,1.50,half-integer,43,50.00,0.86
+Other onshore,2.00,"integer, not a node",41,44.50,0.92
+Other onshore,2.50,half-integer,60,42.00,1.43
+Other onshore,3.00,model node,34,28.00,1.21
+Other onshore,3.50,half-integer,48,44.00,1.09
+Other onshore,4.00,"integer, not a node",53,45.00,1.18
+Other onshore,4.50,half-integer,32,56.00,0.57
+Other onshore,5.00,model node,42,39.50,1.06
+Other onshore,5.50,half-integer,53,43.50,1.22
+Other onshore,6.00,"integer, not a node",76,41.50,1.83
+Other onshore,6.50,half-integer,56,51.50,1.09
+Other onshore,7.00,model node,86,60.00,1.43
+Other onshore,7.50,half-integer,57,54.50,1.05
+Other onshore,8.00,"integer, not a node",67,63.00,1.06
+Other onshore,8.50,half-integer,58,66.50,0.87
+Other onshore,9.00,model node,119,66.00,1.80
+Other onshore,9.50,half-integer,45,55.50,0.81
+Other onshore,10.00,"integer, not a node",70,57.00,1.23
+Other onshore,10.50,half-integer,89,78.00,1.14
+Other onshore,11.00,"integer, not a node",96,76.00,1.26
+Other onshore,11.50,half-integer,102,97.00,1.05
+Other onshore,12.00,model node,106,80.00,1.32
+Other onshore,12.50,half-integer,94,102.00,0.92
+Other onshore,13.00,"integer, not a node",127,89.00,1.43
+Other onshore,13.50,half-integer,134,111.00,1.21
+Other onshore,14.00,"integer, not a node",172,128.50,1.34
+Other onshore,14.50,half-integer,84,99.50,0.84
+Other onshore,15.00,model node,152,106.50,1.43
+Other onshore,15.50,half-integer,111,125.00,0.89
+Other onshore,16.00,"integer, not a node",137,109.50,1.25
+Other onshore,16.50,half-integer,107,109.00,0.98
+Other onshore,17.00,"integer, not a node",116,107.00,1.08
+Other onshore,17.50,half-integer,114,103.00,1.11
+Other onshore,18.00,model node,123,106.00,1.16
+Other onshore,18.50,half-integer,99,118.50,0.84
+Other onshore,19.00,"integer, not a node",120,107.50,1.12
+Other onshore,19.50,half-integer,79,69.50,1.14
+Other onshore,20.00,"integer, not a node",94,82.50,1.14
+Other onshore,20.50,half-integer,82,83.00,0.99
+Other onshore,21.00,model node,85,79.00,1.08
+Other onshore,21.50,half-integer,90,90.00,1.00
+Other onshore,22.00,"integer, not a node",87,80.50,1.08
+Other onshore,22.50,half-integer,87,82.50,1.05
+Other onshore,23.00,"integer, not a node",75,68.00,1.10
+Other onshore,23.50,half-integer,85,64.50,1.32
+Other onshore,24.00,"integer, not a node",99,67.50,1.47
+Other onshore,24.50,half-integer,44,58.50,0.75
+Other onshore,25.00,model node,62,63.50,0.98
+Other onshore,25.50,half-integer,63,62.50,1.01
+Other onshore,26.00,"integer, not a node",51,54.50,0.94
+Other onshore,26.50,half-integer,57,50.00,1.14
+Other onshore,27.00,"integer, not a node",70,57.50,1.22
+Other onshore,27.50,half-integer,66,72.50,0.91
+Other onshore,28.00,"integer, not a node",42,51.00,0.82
+Other onshore,28.50,half-integer,42,40.00,1.05
+Other onshore,29.00,model node,56,39.50,1.42
+Other onshore,29.50,half-integer,35,37.00,0.95
+Other onshore,30.00,"integer, not a node",27,37.50,0.72
+Other onshore,30.50,half-integer,26,30.50,0.85
+Other onshore,31.00,"integer, not a node",37,34.00,1.09
+Other onshore,31.50,half-integer,24,38.50,0.62
+Other onshore,32.00,"integer, not a node",35,28.50,1.23
+Other onshore,32.50,half-integer,25,22.00,1.14
+Other onshore,33.00,"integer, not a node",31,25.50,1.22
+Other onshore,33.50,half-integer,34,25.00,1.36
+Other onshore,34.00,model node,54,28.50,1.89
+Other onshore,35.50,half-integer,27,21.50,1.26
+Other onshore,36.00,"integer, not a node",28,13.00,2.15
+Other onshore,38.50,half-integer,17,25.00,0.68
+Cascades,1.00,model node,283,271.50,1.04
+Cascades,1.50,half-integer,226,237.00,0.95
+Cascades,2.00,"integer, not a node",127,158.00,0.80
+Cascades,2.50,half-integer,112,105.50,1.06
+Cascades,3.00,model node,115,87.50,1.31
+Cascades,3.50,half-integer,80,100.00,0.80
+Cascades,4.00,"integer, not a node",141,117.50,1.20
+Cascades,4.50,half-integer,109,135.50,0.80
+Cascades,5.00,model node,210,131.50,1.60
+Cascades,5.50,half-integer,149,159.50,0.93
+Cascades,6.00,"integer, not a node",166,121.50,1.37
+Cascades,6.50,half-integer,129,138.00,0.93
+Cascades,7.00,model node,197,101.50,1.94
+Cascades,7.50,half-integer,122,118.00,1.03
+Cascades,8.00,"integer, not a node",209,158.50,1.32
+Cascades,8.50,half-integer,107,138.00,0.78
+Cascades,9.00,model node,189,153.00,1.24
+Cascades,9.50,half-integer,85,115.50,0.74
+Cascades,10.00,"integer, not a node",137,111.00,1.23
+Cascades,10.50,half-integer,129,135.00,0.96
+Cascades,11.00,"integer, not a node",167,124.00,1.35
+Cascades,11.50,half-integer,172,163.50,1.05
+Cascades,12.00,model node,157,137.00,1.15
+Cascades,12.50,half-integer,123,111.50,1.10
+Cascades,13.00,"integer, not a node",108,90.00,1.20
+Cascades,13.50,half-integer,112,95.50,1.17
+Cascades,14.00,"integer, not a node",179,144.50,1.24
+Cascades,14.50,half-integer,116,117.50,0.99
+Cascades,15.00,model node,132,92.00,1.43
+Cascades,15.50,half-integer,69,78.00,0.88
+Cascades,16.00,"integer, not a node",89,61.50,1.45
+Cascades,16.50,half-integer,103,85.50,1.20
+Cascades,17.00,"integer, not a node",75,75.50,0.99
+Cascades,17.50,half-integer,67,71.50,0.94
+Cascades,18.00,model node,57,63.50,0.90
+Cascades,18.50,half-integer,58,56.00,1.04
+Cascades,19.00,"integer, not a node",79,66.00,1.20
+Cascades,19.50,half-integer,44,43.00,1.02
+Cascades,20.00,"integer, not a node",58,50.00,1.16
+Cascades,20.50,half-integer,56,48.50,1.15
+Cascades,21.00,model node,49,43.00,1.14
+Cascades,21.50,half-integer,25,31.00,0.81

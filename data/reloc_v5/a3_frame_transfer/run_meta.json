@@ -1,0 +1,22 @@
+{
+ "catalog": "/wd1/mdenolle_data/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv",
+ "radii": [
+  1,
+  2,
+  3,
+  5,
+  7.5,
+  10,
+  15
+ ],
+ "zcols": [
+  "depth",
+  "exp_depth"
+ ],
+ "k": 300,
+ "nmin": 10,
+ "field_tiers": "ABCD",
+ "outdir": "/wd1/mdenolle_data/reloc_v5/frame_transfer",
+ "qcdir": "/home/mdenolle/wt_reloc/data/reloc_v5/a3_frame_transfer",
+ "started": "2026-11-23 07:32:59"
+}

@@ -55,6 +55,7 @@ References
 Usage
   python v4_mc_maps.py                 # compute everything, then plot
   python v4_mc_maps.py --stage plot    # figures only, from the saved CSVs
+  python v4_mc_maps.py --mag stored --out <dir>   # the maps before D-B091 (default: converged magnitudes)
 """
 from __future__ import annotations
 
@@ -72,9 +73,12 @@ from numpy.lib.stride_tricks import sliding_window_view
 from scipy.spatial import cKDTree
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT / "workflow" / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+
 MAIN = Path("/home/mdenolle/cascadia_obs_ensemble")
 CAT = MAIN / "data/catalog_v4/Cascadia_relocated_catalog_v4.csv"
-MAG = MAIN / "data/magnitude_v4/cascadia_catalog_M_routeA.csv"
+MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), stored or a path
 STA = Path("/wd1/mdenolle_data/picks_share/stations/stations_ver5_v6.csv")
 ZBZ = ROOT / "data/catalog_v4/clusters_zbz/completeness_b_df.csv"
 OUT = ROOT / "data/catalog_v4/mc_maps"
@@ -328,7 +332,7 @@ def compute(a):
     import xarray as xr
     meta = dict(n_events=a.n, n_events_period=a.n_period, rmax_km=a.rmax, nboot=a.nboot,
                 step_deg=a.step, nmin_b=NMIN_B, maxc_corr=CORR, mbs_window_bins=WIN,
-                dm=DM, periods=PERIODS)
+                dm=DM, periods=PERIODS, **mag_paths.describe(MAG))
     df = load_catalog(qc=False)
     print(f"events with M: {len(df)}", flush=True)
 
@@ -547,6 +551,7 @@ def plot_fmd(a):
 
 
 def main():
+    global MAG, OUT, ZBZ
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--stage", choices=["compute", "plot", "all"], default="all")
     p.add_argument("--n", type=int, default=250, help="events per node (all-data map)")
@@ -556,7 +561,15 @@ def main():
     p.add_argument("--step", type=float, default=0.1, help="grid step, deg")
     p.add_argument("--nproc", type=int, default=32)
     p.add_argument("--yearly", action="store_true", help="also write per-year grids")
+    mag_paths.add_argument(p, "v4.1")
+    p.add_argument("--out", type=Path, default=None, help=f"output folder (default {OUT.relative_to(ROOT)})")
+    p.add_argument("--zbz", type=Path, default=None,
+                   help=f"clustering Mc table for fig4 (default {ZBZ.relative_to(ROOT)})")
     a = p.parse_args()
+    MAG = mag_paths.v41(a.mag)
+    OUT = a.out or OUT
+    ZBZ = a.zbz or ZBZ
+    print(f"magnitudes: {MAG}", flush=True)
     if a.stage in ("compute", "all"):
         compute(a)
     if a.stage in ("plot", "all"):

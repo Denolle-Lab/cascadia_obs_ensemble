@@ -1,0 +1,119 @@
+{
+ "name": "b5_wtest",
+ "script": "/home/mdenolle/wt_b5_full/workflow/10_tomography/b5_wtest.py",
+ "argv": [
+  "collect"
+ ],
+ "utc": "2026-11-24T21:15:27.457049+00:00",
+ "git_commit": "e1f14107307f70ce7a4b670e2252a42929ab485e",
+ "git_dirty": true,
+ "params_md5": "4a1e217be920a5891eae7649f4ae3c95",
+ "params": {
+  "run": "b5_v0.3.1",
+  "out": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights",
+  "clusters_per_region": 3,
+  "size_range": [
+   80,
+   1500
+  ],
+  "axial_subsets": {
+   "chunks": [
+    "c000001_p000",
+    "c000001_p001"
+   ],
+   "n_events": 1200
+  },
+  "s_weight": [
+   0.25,
+   0.5,
+   "meas",
+   1.0,
+   1.5,
+   2.0
+  ],
+  "reweight": {
+   "prod": [
+    [
+     -9,
+     -9
+    ],
+    [
+     8,
+     -9
+    ],
+    [
+     6,
+     10
+    ],
+    [
+     6,
+     10
+    ]
+   ],
+   "loose": [
+    [
+     -9,
+     -9
+    ],
+    [
+     12,
+     -9
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     10,
+     10
+    ]
+   ],
+   "none": [
+    [
+     -9,
+     -9
+    ],
+    [
+     -9,
+     -9
+    ],
+    [
+     -9,
+     -9
+    ],
+    [
+     -9,
+     -9
+    ]
+   ]
+  },
+  "folds": 3,
+  "seed": 0,
+  "synth": {
+   "start_scale": 0.5,
+   "sigma_h_clip": [
+    0.1,
+    3.0
+   ],
+   "sigma_z_clip": [
+    0.1,
+    5.0
+   ],
+   "origin_sigma_s": 0.05
+  },
+  "nproc": 40
+ },
+ "inputs": [],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights/summary/results.csv",
+   "size": 595411,
+   "mtime": "2026-11-24T21:15:27.455458+00:00",
+   "md5": "071bf3f8d3d4fe9d1932fcfc09c1d381"
+  }
+ ],
+ "counts": {
+  "results": 2340
+ },
+ "notes": null
+}

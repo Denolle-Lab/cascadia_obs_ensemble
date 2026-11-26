@@ -1,0 +1,9 @@
+fb49ecc28b75432f49cf1a6e399cd90f  v4.1/cascadia_catalog_M_routeA_converged.csv
+c3e7971978b147a77c1fe7c045df8093  v4.1/cascadia_catalog_M_routeA_converged.provenance.json
+c4a6d089f97c10d53eb8b1e9fbddf0fb  v5.1/cascadia_catalog_M_v51_converged.csv
+b9cc229d944034d34dff837f2a369299  v5.1/cascadia_catalog_M_v51_converged.provenance.json
+d8c68099cbb529d5b0315f18d3b1c2ec  v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv
+07c06b1c30d5f2ad3371826453cfdc1d  v5.1/phase19_station_terms_v51_converged.csv
+9e1c4ad4fca04d5e7376e0db1b64c70b  v5.1/phase19_near_picks_v51_converged.parquet
+b37bb713c6951b339952849328612e41  v4.1/phase19_near_picks_routeA_converged.parquet
+3f7b1a4f69ac9cdaa01d8dad26566e55  data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz (repository)

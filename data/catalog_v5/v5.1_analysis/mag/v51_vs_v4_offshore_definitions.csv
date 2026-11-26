@@ -1,0 +1,5 @@
+definition,n_offshore,median_offshore,n_onshore,median_onshore
+epicentre below sea level (surface_km < 0),75993,0.062,54010,0.020
+"below sea level, Puget/Georgia counted onshore",72836,0.066,57167,0.018
+"region label: ridge, transform and plate labels offshore; Mendocino, Offshore forearc, Puget/Georgia, Cascades, Other onshore onshore",56043,0.055,73960,0.036
+region label: as above but Mendocino and Offshore forearc offshore,85815,0.070,44188,0.009

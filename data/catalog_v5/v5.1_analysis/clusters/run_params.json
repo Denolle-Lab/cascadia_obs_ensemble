@@ -1,0 +1,15 @@
+{
+ "rmin": 0.5,
+ "rcap_min": 10.0,
+ "q": 0.5,
+ "df_main": 1.6,
+ "catalog": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+ "magnitudes": "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes.csv",
+ "n_rows": 172342,
+ "n_used": 168406,
+ "excluded": {
+  "": 168406,
+  "not_earthquake": 3313,
+  "no_hypocentre": 623
+ }
+}

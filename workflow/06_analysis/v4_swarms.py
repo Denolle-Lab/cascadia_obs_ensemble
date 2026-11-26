@@ -20,6 +20,7 @@ v4_cluster_members.csv (event_id, cluster).
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +32,10 @@ from scipy.stats import theilslopes
 
 ROOT = Path(__file__).resolve().parents[2]
 D = ROOT / "data"
+sys.path.append(str(ROOT / "workflow" / "05_magnitude"))
+import mag_paths  # noqa: E402  (converged Route A magnitudes by default, D-B091)
+
+MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), stored or a path
 LON0, LAT0 = -125.25, 45.0
 KX = 111.195 * np.cos(np.radians(LAT0))
 KY = 111.195
@@ -74,7 +79,7 @@ def load() -> pd.DataFrame:
     c.columns = [x.strip() for x in c.columns]
     c = c.rename(columns={"ID": "event_id", "depth(km)": "depth", "spatial_sigma(m)": "sigma_m"})
     c["time"] = pd.to_datetime(c["datetime"].str.strip(), utc=True)
-    m = pd.read_csv(D / "magnitude_v4" / "cascadia_catalog_M_routeA.csv", usecols=["event_id", "M", "M_type"])
+    m = pd.read_csv(MAG, usecols=["event_id", "M", "M_type"])
     c = c.merge(m, on="event_id", how="left")
     c["qc"] = (c["Num_p_picks"] >= 4) & (c["Num_s_picks"] >= 4)
     c["x"] = (c["longitude"] - LON0) * KX
@@ -169,7 +174,11 @@ def main(argv=None):
     ap.add_argument("--rad", type=float, default=10.0, help="radius (km) for the background rate")
     ap.add_argument("--bg", type=float, default=90.0, help="days before/after for the background rate")
     ap.add_argument("--out", default=str(D / "catalog_v4" / "swarms"))
+    mag_paths.add_argument(ap, "v4.1")
     a = ap.parse_args(argv)
+    global MAG
+    MAG = mag_paths.v41(a.mag)
+    print(f"magnitudes: {MAG}", flush=True)
     c = load()
     lab = cluster(c, a.eps, a.kmday, a.core)
     t = describe(c, lab, a.rad, a.bg, a.min_n, a.max_dur)

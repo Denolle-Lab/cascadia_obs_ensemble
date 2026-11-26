@@ -1,0 +1,5 @@
+design,gauge_rows,connected_pieces,null_directions,check_passes,misfit,meanS_minus_meanP,isolated_term,max_abs_dML_vs_stored_design,dML_Mendocino,dML_Offshore forearc,dML_Gorda,dML_Blanco,dML_Axial,dML_Explorer,dML_Puget/Georgia
+"stored design: two rows (sum P, sum S), isolated term kept",2,2,2,True,72318.5870,0.4541,-303.3446,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"new: one row (sum P), isolated term dropped",1,1,1,True,72318.5867,0.4543,,0.0015,0.0001,0.0000,0.0000,0.0000,0.0000,-0.0001,-0.0000
+"one row, isolated term kept",1,2,2,False,72318.5867,0.4543,2.7380,0.0015,0.0001,0.0000,0.0000,0.0000,0.0000,-0.0001,-0.0000
+"two rows, isolated term dropped",2,1,1,False,75256.3730,0.0000,,4.6553,-0.2221,-0.2175,-0.2119,-0.1240,-0.1555,0.1226,0.0173

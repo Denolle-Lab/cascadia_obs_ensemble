@@ -1,4 +1,7 @@
-# Track A, A2: NLLoc control template. __OBS__, __OUT__, __TIME__ and __STATERMS__ are filled by the runner.
+# Track A / B4, A2: NLLoc control template. The runner (a2_run_nlloc.py) writes LOCFILES (obs file, fine time-grid
+# root, then the wide root with --time-wide, output root), LOCGRID and LOCSEARCH (tile box), the LOCMETH distance,
+# LOCGAU, LOCGAU2 and the LOCTOPO_SURFACE file (runner options; the values below are the production defaults) and
+# the station terms (INCLUDE).
 CONTROL 1 54321
 TRANS LAMBERT WGS-84 45.0 -125.8 41.0 49.0 0.0
 LOCSIG Cascadia OBS ensemble catalog v5, Track A (CRESCENT Gen0 + Brocher Vp, topography)
@@ -8,10 +11,10 @@ LOCHYPOUT SAVE_NLLOC_ALL NLL_FORMAT_VER_2
 # search volume = whole model; oct-tree start cells ~39 x 41 x 9.4 km
 LOCGRID 971 1434 86 -513.0 -709.0 -5.0 1.0 1.0 1.0 PROB_DENSITY SAVE
 LOCSEARCH OCT 25 35 9 0.02 40000 2000 0 1
-# EDT with origin-time weighting (robust to outlier picks); >= 6 phases; S from S grids;
-# keep 20 travel-time grids in memory (1.9 GB per job; all grids = 16 GB)
-LOCMETH EDT_OT_WT 9999.0 6 -1 -1 -1 20 -1.0 1
-# model error: 0.1 s + 2% of travel time (min 0.05, max 2 s)
+# EDT with origin-time weighting (robust to outlier picks); >= 5 phases (D-B066: the five-pick events of catalog v4,
+# published as tier D; 6 up to v5.0); S from S grids; keep 20 travel-time grids in memory (1.9 GB per job)
+LOCMETH EDT_OT_WT 9999.0 5 -1 -1 -1 20 -1.0 1
+# model error: 0.1 s + 2% of travel time (min 0.05, max 2 s) (production default; runner --locgau, --locgau2)
 LOCGAU 0.1 0.0
 LOCGAU2 0.02 0.05 2.0
 LOCPHASEID P P p Pg Pn
@@ -19,5 +22,9 @@ LOCPHASEID S S s Sg Sn
 LOCQUAL2ERR 0.05 0.1 0.15 0.3 99999.9
 LOCPHSTAT 9999.0 -1 9999.0 1.0 1.0 9999.9 -9999.9 9999.9
 LOCANGLES ANGLES_YES 5
-LOCTOPO_SURFACE /wd1/mdenolle_data/reloc_v5/topo/topo_01m.bin 0
+# topography floor (D-B055/D-B056): NLLoc reads this grid by nearest node, so each 15 s node holds the minimum of the
+# bilinear surface over its node cell, minus 1 m, Earth-flattened (h' = Re ln(1 + h/Re) <= h, so exact for the
+# flattened B4 grids and at most 2.2 m conservative in the true frame); a2_make_topo_surface_cons.py. Default: the
+# earth_relief 01m floor of v0.3.1; v5.1 passes --topo .../topo_15s_cons_merged_eft.bin (merged surface, D-B068).
+LOCTOPO_SURFACE /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_eft.bin 0
 __STATERMS__

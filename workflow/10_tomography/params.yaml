@@ -692,7 +692,10 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
   out: /wd1/mdenolle_data/catalog_v5                 # v<version>/ folders and catalog_v5.zip (all versions; Zenodo draft 23084158)
   track_a_code: /home/mdenolle/wt_reloc/workflow/08_relocation   # a2_parse_hyp.region (region boxes)
   v4_1_events: /home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv   # catalog v4.1 (fix_catalog_v4.py, 09f86844)
-  v4_1_magnitudes: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # Route A, v4.1
+  v4_1_magnitudes: /wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv  # Route A, v4.1, converged (D-B091: exact phase19 solver, PR #45)
+  v4_1_magnitudes_md5: fb49ecc28b75432f49cf1a6e399cd90f   # checked by catalog_version.py (MD5SUMS.txt in data/magnitude_converged)
+  v4_1_magnitudes_note: "station-term inversion solved exactly, D-B091"   # README text for this magnitude file (catalog_version.py)
+  v4_1_magnitudes_stored: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # before D-B091 (LSQR stopped at 3,000 iterations); not read; md5 78a445098dd76ccf8c08085cb86f67ca
   v4_1_removed: [172113]           # mis-associated in v4.0 (v4.1 patch)
   v4_1_added: [900001, 900002, 900003]   # ComCat hypocentres + repicked phases (v4.1 patch)
   versions:
@@ -763,3 +766,143 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "Pick timing (D-B072, D-B075): 45,879 picks on drifting channels could not be re-timed and keep their catalog times (mostly ocean-bottom channels with drift below 0.02 s; CC SEP and SUG EHZ from 2014-01-18 on, whose re-timed picks before that date needed a median 0.01 s and up to about 0.08 s; channels the picker resampled from other rates); NC and BK picks were not checked (not in the waveform archive used)."
         - "Axial: {axial}."
         - "Blanco: with the shallow-crust rule (D-B073) depths are about 1 km deeper relative to the Lange et al. (2026) OBS catalog than without it if that catalog's depths are below sea level; its datum is not stated (below the seafloor would reverse the comparison)."
+
+b5_test:                           # D-B048: relative relocation tested before B5, tomoDD-SE (velocity frozen) vs GrowClust3D
+  out: /wd1/mdenolle_data/b5_test  # large files; scripts b5_*.py, note notes/b5_blanco_test.md
+  model_version: 0.3.0             # D-B047 registry; tomoDD MOD from the netCDF nodes, GrowClust3D from the B4 grids
+  catalog: /wd1/mdenolle_data/reloc_v5/catalog/catalog_b4_b4_iter1_v0.3.0.csv   # B4 catalog: tiers, IDs (rounded %.5g)
+  # B4 start hypocentres at full precision: the run's NLLoc solutions (status LOCATED = the 157,270 nll3d events; depth
+  # z'), EFT undone by b5_prep.py as b4_catalog.py. Both catalog CSVs of the run (catalog_v5_trackA_* by wt_reloc's
+  # a2_build_catalog.py, catalog_b4_* by b4_catalog.py) are written with %.5g: longitude to 0.01 deg (0.8 km).
+  catalog_full: /wd1/mdenolle_data/reloc_v5/runs/b4_iter1_v0.3.0/locations.csv
+  picks: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv    # v4.0 picks (= B4 input)
+  time_grids: /wd1/mdenolle_data/reloc_v5/time_b4_v0.3.0       # B4 NLL grids: Lambert x, y; depth axis EFT z'
+  grid_prefix: cascadia3d
+  station_terms: /wd1/mdenolle_data/reloc_v5/runs/b4_iter0_v0.3.0/station_terms.in   # B4 terms (tomoDD absolute times)
+  tomodd_p4: blanco_v2             # P-4 tomoDD forward corrections reused (tomodd.runs/<tile>/inputs/station_corr.csv)
+  families: /home/mdenolle/wt_paper/data/catalog_v4/clusters_zbz/families_zbz.csv
+  members: /home/mdenolle/wt_paper/data/catalog_v4/clusters_zbz/events_zbz.csv.gz
+  cases:                           # name: zbz family ids (region BL); 1803 = June 2015 West Blanco swarm
+    f1803: [1803]
+    f0399: [399]
+    f1051: [1051]
+  loc_source: nll3d                # B4 events located in 3D only (tier U keeps v4 hypocentres in another frame)
+  grid_margin_km: 5.0              # pick kept if the event lies this far inside its station's time grid
+  dt: {max_neighbours: 10, max_sep_km: 10.0, min_common: 8}   # = tomodd.dt
+  weight: "(0.05/sigma)^2"         # D-B008 sigma by pick_prob class (pick_errors); pair weight = min of the two
+  tomodd:
+    # D-B034 build + the same missing comma fixed in lsfitHFDD_lsqr_lm5.f line 504 (relocation-only LSQR routine,
+    # never called by joint runs; unfixed it stops with exit 2 after the first LSQR). gfortran 8.5, O3nofs flags.
+    bin: /wd1/mdenolle_data/b5_test/bin/tomoDD-SE_O3nofs_e10k_fmt2   # md5 d59d8cdc938660732c6ba28f1c34aec1 (src b5_test/src/O3nofs_e10k_fmt2)
+    node_margin_deg: 0.375         # interior MOD nodes = v0.3.0 nodes over the events and stations + this margin
+    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation + margin), as tomodd.air_dep_margin_km
+    damp: 100                      # LSQR damping (relocation only); CND recorded
+    # NITER WTCTP WTCTS WRCT WDCT WTCD; JOINT = 0 (locations only). hier = tomodd.inp.sets (absolute data first);
+    # dd = differential data only (WTCD = 0: absolute rows weightless, removed at the first re-weighting).
+    variants:
+      hier: [[3, 1.0, 1.0, -9, -9, 10.0], [3, 1.0, 1.0, 8, -9, 10.0], [3, 1.0, 1.0, 6, 10, 1.0], [3, 1.0, 1.0, 6, 10, 0.1]]
+      dd: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]
+    nboot: 30                      # bootstrap: dt rows resampled with replacement (as GrowClust3D), same seeds
+  growclust:
+    julia: /wd1/mdenolle_data/b5_test/julia_env/.pixi/envs/default/bin/julia   # Julia 1.13.4 (separate pixi project)
+    depot: /wd1/mdenolle_data/b5_test/julia_depot
+    project: /wd1/mdenolle_data/b5_test/julia_env/gc3d   # GrowClust3D 0.1.0, git 592f6179 (not in the General registry)
+    threads: 16
+    nboot: 100
+    # rxcor field = pair weight (0-1): orders the merges, no weight in the L1 misfit; rmin = rmincut = 0 keeps every dt
+    inp: {rmin: 0.0, delmax: 400.0, rpsavgmin: 0.0, rmincut: 0.0, ngoodmin: 8, iponly: 0, nbranch_min: 2,
+          tt_zmin: -5.0, tt_zmax: 80.0, box_km: 80.0}
+    variants:                      # default = run_growclust3D.jl example values (tuned for waveform cross-correlation)
+      default: {distmax: 8.0, distmax2: 6.0, hshiftmax: 2.0, vshiftmax: 2.0, rmedmax: 0.1, rmsmax: 0.2,
+                maxlink: 12, nbeststa: 24, boxwid: 3.0, nit: 15, irelonorm: 1, torgdifmax: 10.0}
+      catalog: {distmax: 10.0, distmax2: 10.0, hshiftmax: 5.0, vshiftmax: 5.0, rmedmax: 0.3, rmsmax: 0.5,
+                maxlink: 12, nbeststa: 24, boxwid: 6.0, nit: 15, irelonorm: 1, torgdifmax: 10.0}
+  synth:                           # planar swarm through both codes
+    n_events: 200
+    length_km: 10.0                # along strike
+    width_km: 5.0                  # down dip
+    strike_deg: 111.0              # Blanco transform
+    dip_deg: 90.0
+    centre: f1803                  # B4 median epicentre and depth of this case's events
+    seed: 48
+    start_depth_min_km: 3.0        # perturbed start depths clipped here (seafloor ~3-4.5 km bsl at West Blanco)
+
+b5:                                # B5 relative relocation of the whole catalog (D-B053; D-B060: catalog dt now, cc later)
+  # b5_relocate.py (stages prep, split, run, collect) + b5_relocate.sh (detached, state file); notes/b5_relocation.md
+  out: /wd1/mdenolle_data/tomo_v1/b5     # <out>/<run>/: prep, split, clusters/<cid>, catalog (large files, not in git)
+  summary: data/tomo_v1/b5               # repo: <summary>/<run>/compare.md, clusters_summary.csv, manifests
+  forbidden_out: [/wd1/mdenolle_data/b5_test, /wd1/mdenolle_data/reloc_v5/runs, /wd1/mdenolle_data/tomo_v1/b2_tomodd,
+                  /wd1/mdenolle_data/tomo_v1/above_surface]
+  reloc_v5: /wd1/mdenolle_data/reloc_v5  # B4: runs/<b4_run>/locations.csv, catalog/catalog_b4_<b4_run>.csv, <time_grids>/
+  defaults:                        # {v} = model version (--version); each can be overridden on the command line
+    run: b5_v{v}
+    b4_run: b4_iter1_v{v}          # start = its NLLoc solutions (status LOCATED), EFT undone
+    b4_iter0: b4_iter0_v{v}        # B4 station terms (absolute times; zero weight in variant dd)
+    time_grids: time_b4_v{v}       # B4 grids: pick kept if the event is grid_margin_km inside; dt rms before/after
+  grid_prefix: cascadia3d
+  picks: /wd1/mdenolle_data/catalog_v4_0_backup/Cascadia_picks_catalog_v4.csv    # v4.0 picks (= B4 input)
+  exclude_ids: [172113]            # mis-associated in v4.0, removed in v4.1: not relocated, not in the B5 catalog
+  loc_source: nll3d                # relocate B4 3D locations only; tier U keeps its v4 hypocentre (loc_source v4)
+  grid_margin_km: 5.0              # as b5_test
+  dt: {max_neighbours: 10, max_sep_km: 10.0, min_common: 8}   # = tomodd.dt (3D distance, Earth-centred coordinates)
+  weight: "(0.05/sigma)^2"         # D-B008 sigma by pick_prob class; dt weight = min of the two picks
+  split:
+    halo_hops: 2                   # chunk = core + events within 2 pair-graph hops (every pair of a core event and of
+                                   # its partners is in the chunk); event taken from the chunk where it is core
+    min_core: 50                   # stop (error) if a core this small still fits no binary
+  tomodd:
+    bin_dir: /wd1/mdenolle_data/tomo_v1/bin/frozen_2026-11-25     # D-B081 freeze (= D-B054 + local floor; without surface.dat identical results, checked on 3 clusters); WARF: private, never copied
+    runtime: /wd1/mdenolle_data/tomo_v1/src/tomoDD-SE_patched_2026-11-25/runtime_files   # ak135.15.SKS, layer-16.dat
+    classes:                       # BUILD.md array sizes; first class that fits all four limits is used
+      e10k: {maxeve: 10000, maxdata: 3000000, maxsta: 200, maxobs: 100}
+      e13k: {maxeve: 13000, maxdata: 2000000, maxsta: 200, maxobs: 100}
+      o140: {maxeve: 10000, maxdata: 3000000, maxsta: 200, maxobs: 140}
+      w: {maxeve: 10000, maxdata: 3000000, maxsta: 260, maxobs: 140}
+      m: {maxeve: 10000, maxdata: 3000000, maxsta: 560, maxobs: 130}
+    mod_max: {nx: 90, ny: 80, nz: 50}   # RaySPDR.inc maxnx (longitude nodes incl. edges), maxny (latitude), maxnz
+    variant: dd                    # = b5_test.tomodd.variants.dd: differential times only (WTCD = 0), JOINT = 0
+    sets: [[3, 1.0, 1.0, -9, -9, 0.0], [3, 1.0, 1.0, 8, -9, 0.0], [3, 1.0, 1.0, 6, 10, 0.0], [3, 1.0, 1.0, 6, 10, 0.0]]   # NITER WTCTP WTCTS WRCT WDCT WTCD; D-B062: production MAD re-weighting kept
+    s_weight: 1.0                  # D-B061: S dt weight relative to P dt of the same pick class; dt.ct weights carry
+                                   # 1/S_over_P^2 (pick_errors, D-B008), so WTCTS written = sets WTCTS x s_weight x S_over_P^2
+    damp: 100                      # LSQR damping (D-B048 test)
+    node_margin_deg: 0.375         # MOD interior nodes = model nodes over the cluster's events and stations + this
+    air_dep_margin_km: 0.05        # Air_dep = -(highest station elevation of the cluster + margin), as b5_test (floor off)
+    floor:                         # D-B081 (PI 2026-11-25): NonLinLoc's floor inside tomoDD (patched source 2026-11-25, surface.dat)
+      enabled: true                # an update that would put an event above the floor stops 1 m below it (logged >>>Floor:)
+      file: /wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged.bin   # true-frame LOCTOPO_SURFACE of the b4_v51 runs (D-B068 merged surface, cell min - 1 m)
+      margin_deg: 0.15             # floor nodes over the cluster's events + this margin (beyond: the edge node)
+      air_dep_km: -1000.0          # flat Air_dep out of the way: tomoDD tests it on the raw update, before the step caps, and would drop the event (the floor is the limit)
+      max_passes: 3                # reruns with the floor offset by the cluster's centroid shift until it holds in the final frame (D-B053)
+    crash_retries: 2               # tomoDD segfault (NaN ray point, RaySPDR2.f intmap): rerun with the frame centre moved ~0.5 km
+  frame_clear_km: 0.05             # D-B053: no event within 50 m of tomoDD's frame centre (b5_common.frame_centre)
+  nboot: 0                         # bootstrap runs per cluster (dt rows resampled, seed 48000 + k); 0 in production
+  nproc: 48                        # parallel tomoDD runs (brief: <= 8 while B4 iter1 runs, <= 48 after)
+  min_free_gb: 30                  # a tomoDD run starts only while MemAvailable >= this + the largest RSS seen
+  accept:                          # D-B064: station cross-validation of every B5 run (b5_wtest.py accept RUN)
+    reference_s_weight: 0.25       # D-B008 weighting the adopted s_weight must not lose to (held-out dt rms, P and S, per region)
+    clusters_per_region: 3         # largest unsplit clusters in size_range per region
+    size_range: [80, 1500]
+    subset_events: 1200            # regions with no such cluster: subsets of their largest split chunks (up to 2)
+    folds: 3
+    nproc: 40
+  collect:
+    pca_min_events: 10             # cluster shape (PCA) reported for clusters with at least this many relocated events
+b5_wtest:                          # PI 2026-11-24: test S weighting and re-weighting options for B5 (notes/b5_s_mismatch.md P-S1)
+  run: b5_v0.3.1                   # production run whose cluster inputs are reused (only weights / dt rows / start change)
+  out: /wd1/mdenolle_data/tomo_v1/b5/b5_v0.3.1/diag/weights
+  clusters_per_region: 3           # largest unsplit clusters with 80-1500 events per region (status ok)
+  size_range: [80, 1500]
+  axial_subsets: {chunks: [c000001_p000, c000001_p001], n_events: 1200}   # Axial has no mid-size cluster: nearest core events to each chunk's median epicentre
+  s_weight: [0.25, 0.5, meas, 1.0, 1.5, 2.0]   # 1.5, 2.0 added after the first pass (1.0 was best, at the edge); S weight relative to P (same pick class); 0.25 = production (D-B008 sigma S = 2 x P); meas = 1/r^2, r = region median of MAD_S/MAD_P of B4 dt residuals
+  reweight:                        # (WRCT, WDCT) per set, production sets otherwise
+    prod: [[-9, -9], [8, -9], [6, 10], [6, 10]]
+    loose: [[-9, -9], [12, -9], [10, 10], [10, 10]]
+    none: [[-9, -9], [-9, -9], [-9, -9], [-9, -9]]   # (not "off": YAML reads it as false)
+  folds: 3                         # cross-validation by station (random, seed); held-out rows scored with the per-pair offset of the training rows
+  seed: 0
+  synth:                           # truth = B4 positions; times from the B4 grids; noise resampled from the cluster's B4 dt residuals / sqrt(2) per phase
+    start_scale: 0.5               # start = truth + N(0, scale x B4 sigma): sigma_h = h_max / 1.515, sigma_z = sig_z
+    sigma_h_clip: [0.1, 3.0]
+    sigma_z_clip: [0.1, 5.0]
+    origin_sigma_s: 0.05
+  nproc: 40

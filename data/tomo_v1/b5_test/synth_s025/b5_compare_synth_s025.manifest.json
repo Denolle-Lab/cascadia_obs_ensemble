@@ -1,0 +1,98 @@
+{
+ "name": "b5_compare_synth_s025",
+ "script": "/home/mdenolle/wt_b5/workflow/10_tomography/b5_compare.py",
+ "argv": [
+  "synth_s025"
+ ],
+ "utc": "2026-11-24T14:08:05.027274+00:00",
+ "git_commit": "9249dfb7266b70efe38604b2b0d031321944c190",
+ "git_dirty": true,
+ "params_md5": "eb2fe1d673224107434fefcd3ccd5831",
+ "params": null,
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/b5_test/synth_s025/data/dt.csv",
+   "size": 126554,
+   "mtime": "2026-11-24T14:05:47.538742+00:00",
+   "md5": "fb9efaccd191a268316678cf6f813fe1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/synth_s025/tomodd/hier/reloc.csv",
+   "size": 17508,
+   "mtime": "2026-11-24T14:05:59.454670+00:00",
+   "md5": "369f62691513a356dcab7e6781e2a671"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/synth_s025/tomodd/dd/reloc.csv",
+   "size": 15250,
+   "mtime": "2026-11-24T14:06:08.269616+00:00",
+   "md5": "4d99fddfa375116bde33a8f6b0088844"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/synth_s025/growclust/catalog/reloc.csv",
+   "size": 17060,
+   "mtime": "2026-11-24T14:06:33.989461+00:00",
+   "md5": "75de8bebd80f6bbfc05fc44c6a1e0038"
+  },
+  {
+   "path": "/wd1/mdenolle_data/b5_test/synth_s025/growclust/default/reloc.csv",
+   "size": 15450,
+   "mtime": "2026-11-24T14:06:59.267309+00:00",
+   "md5": "2befd74d0d0c73359892cc3e9dea61f8"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/metrics.json",
+   "size": 16960,
+   "mtime": "2026-11-24T14:08:03.857922+00:00",
+   "md5": "de315213ac6ee8bcb5306127fd8ffba6"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/shape.csv",
+   "size": 1146,
+   "mtime": "2026-11-24T14:08:03.659924+00:00",
+   "md5": "1141b470ec8ca28a06eed40546c2b116"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/pair_distances.csv",
+   "size": 815,
+   "mtime": "2026-11-24T14:08:03.663924+00:00",
+   "md5": "cde053c592abf23bb06bdd4e0ca1adc6"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/relative_positions.csv",
+   "size": 1083,
+   "mtime": "2026-11-24T14:08:03.666924+00:00",
+   "md5": "5e546893ae48c839bf5221c88dc627db"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/uncertainty.csv",
+   "size": 411,
+   "mtime": "2026-11-24T14:08:03.793923+00:00",
+   "md5": "161e8006331ad4713084a11677763eb4"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/sections.png",
+   "size": 152472,
+   "mtime": "2026-11-24T14:08:04.756917+00:00",
+   "md5": "710661a0117bcea806db69dd1b1f3e5b"
+  },
+  {
+   "path": "/home/mdenolle/wt_b5/data/tomo_v1/b5_test/synth_s025/depth_pairs.png",
+   "size": 216888,
+   "mtime": "2026-11-24T14:08:05.025915+00:00",
+   "md5": "a63b12e7c02b305661ccd3586df2f849"
+  }
+ ],
+ "counts": {
+  "common": 76,
+  "runs": [
+   "tomodd/hier",
+   "tomodd/dd",
+   "growclust/catalog",
+   "growclust/default"
+  ]
+ },
+ "notes": null
+}

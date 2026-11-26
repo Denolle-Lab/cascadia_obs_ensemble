@@ -1,0 +1,79 @@
+reference,catalog,tiers,group,n,med,p10,p90,cat_med,ref_med
+"Mount St Helens, Hirao et al. 2025",v6.0,A-D,all,2369,0.751,-0.876,2.099,1.087,0.361
+"Mount St Helens, Hirao et al. 2025",v6.0,A-C,all,2144,0.770,-0.788,2.091,1.142,0.361
+"Mount St Helens, Hirao et al. 2025",v6.0,A-B,all,1683,0.913,-0.518,2.166,1.225,0.325
+"Mount St Helens, Hirao et al. 2025",v5.1,A-D,all,2369,0.536,-1.519,2.156,0.866,0.361
+"Mount St Helens, Hirao et al. 2025",v5.1,A-C,all,2039,0.578,-1.417,2.168,0.940,0.357
+"Mount St Helens, Hirao et al. 2025",v5.1,A-B,all,1671,0.759,-1.091,2.236,1.087,0.330
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,all,11298,1.376,-2.461,12.208,8.386,7.800
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,West (WBD/EBD),4785,2.718,-1.870,12.725,8.386,7.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,Surveyor,2075,-0.282,-2.361,3.855,7.198,7.500
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,Cascadia Depression,1900,-1.090,-3.442,7.659,7.723,9.100
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,Blanco Ridge,2035,3.685,-2.002,14.325,14.058,10.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-D,Gorda Depression,503,7.901,-3.958,18.928,18.547,10.500
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,all,11247,1.375,-2.452,12.204,8.386,7.800
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,West (WBD/EBD),4766,2.722,-1.859,12.694,8.386,7.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,Surveyor,2072,-0.284,-2.361,3.852,7.198,7.500
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,Cascadia Depression,1895,-1.093,-3.439,7.607,7.723,9.100
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,Blanco Ridge,2017,3.685,-1.911,14.356,14.131,10.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-C,Gorda Depression,497,7.939,-3.968,19.034,18.658,10.500
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,all,2436,3.154,-1.255,10.060,11.458,8.100
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,West (WBD/EBD),690,5.295,3.165,11.755,13.239,7.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,Surveyor,817,-0.239,-1.951,3.197,7.521,7.500
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,Cascadia Depression,130,2.105,0.274,15.018,11.361,9.900
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,Blanco Ridge,778,3.615,0.270,10.094,13.648,10.000
+"Blanco, Lange et al. 2026 (absolute)",v6.0,A-B,Gorda Depression,21,14.247,7.680,29.370,27.076,12.700
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,all,11298,1.434,-2.827,11.774,8.792,7.800
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,West (WBD/EBD),4785,2.607,-2.113,12.889,8.681,7.000
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,Surveyor,2075,0.744,-2.312,6.575,8.092,7.500
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,Cascadia Depression,1900,-1.019,-3.652,6.950,7.649,9.100
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,Blanco Ridge,2035,2.820,-3.155,13.296,13.690,10.000
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-D,Gorda Depression,503,5.432,-5.930,16.609,16.009,10.500
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,all,10887,1.402,-2.788,11.617,8.755,7.800
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,West (WBD/EBD),4578,2.512,-2.032,12.560,8.644,7.000
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,Surveyor,2024,0.731,-2.288,6.415,8.092,7.500
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,Cascadia Depression,1841,-1.040,-3.645,6.714,7.649,9.100
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,Blanco Ridge,1963,2.854,-3.041,13.424,13.800,10.000
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-C,Gorda Depression,481,5.639,-5.714,16.592,16.340,10.500
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,all,2395,2.634,-0.256,10.229,11.149,8.100
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,West (WBD/EBD),657,5.690,2.494,12.219,13.690,7.100
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,Surveyor,858,0.923,-1.087,4.220,8.534,7.550
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,Cascadia Depression,116,2.375,0.005,12.615,11.573,9.850
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,Blanco Ridge,740,2.684,-0.057,10.402,13.432,10.000
+"Blanco, Lange et al. 2026 (absolute)",v5.1,A-B,Gorda Depression,24,10.864,2.307,22.927,20.772,11.200
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,all,10706,1.262,-2.102,12.307,8.405,7.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,West (WBD/EBD),4530,2.926,-1.473,12.746,8.635,6.800
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,Surveyor,2007,-0.439,-2.520,2.407,7.198,7.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,Cascadia Depression,1793,-1.008,-2.702,7.673,7.723,8.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,Blanco Ridge,1897,3.638,-0.831,14.243,13.837,9.400
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-D,Gorda Depression,479,9.163,-2.611,19.410,18.658,9.100
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,all,10659,1.260,-2.093,12.298,8.386,7.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,West (WBD/EBD),4511,2.928,-1.457,12.743,8.635,6.800
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,Surveyor,2005,-0.439,-2.521,2.400,7.198,7.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,Cascadia Depression,1789,-1.008,-2.699,7.575,7.723,8.700
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,Blanco Ridge,1881,3.649,-0.740,14.305,13.911,9.400
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-C,Gorda Depression,473,9.208,-2.618,19.415,18.805,9.100
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,all,2354,3.188,-1.424,9.907,11.398,7.900
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,West (WBD/EBD),668,6.484,3.626,12.166,13.239,6.450
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,Surveyor,805,-0.228,-2.156,2.149,7.521,7.800
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,Cascadia Depression,121,3.124,2.477,14.679,11.324,8.300
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,Blanco Ridge,740,3.591,1.087,8.605,13.593,10.000
+"Blanco, Lange et al. 2026 (relative)",v6.0,A-B,Gorda Depression,20,16.817,10.524,25.310,27.011,9.900
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,all,10706,1.432,-2.388,11.785,8.829,7.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,West (WBD/EBD),4530,2.970,-1.694,12.940,8.875,6.800
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,Surveyor,2007,0.465,-2.408,5.949,8.092,7.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,Cascadia Depression,1793,-0.914,-2.898,7.474,7.723,8.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,Blanco Ridge,1897,2.958,-2.298,12.950,13.506,9.400
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-D,Gorda Depression,479,7.158,-3.814,17.408,15.935,9.100
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,all,10314,1.397,-2.356,11.543,8.792,7.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,West (WBD/EBD),4329,2.876,-1.637,12.671,8.792,6.800
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,Surveyor,1958,0.452,-2.407,5.549,8.092,7.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,Cascadia Depression,1738,-0.943,-2.877,7.057,7.649,8.700
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,Blanco Ridge,1831,3.002,-2.183,13.023,13.616,9.400
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-C,Gorda Depression,458,7.218,-3.793,17.368,16.082,9.100
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,all,2320,2.702,-0.220,9.656,11.039,7.900
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,West (WBD/EBD),642,6.508,3.558,12.242,13.690,6.500
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,Surveyor,846,0.757,-1.287,2.857,8.534,7.800
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,Cascadia Depression,107,3.301,1.809,13.646,11.407,8.200
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,Blanco Ridge,702,2.852,0.766,9.028,13.358,10.000
+"Blanco, Lange et al. 2026 (relative)",v5.1,A-B,Gorda Depression,23,12.182,8.076,21.709,20.570,9.800

@@ -761,7 +761,11 @@ placeMc(); setMc("best");
 // longitude, latitude and depth between the model nodes); nothing above the ground or seafloor is drawn. The same
 // values feed the model image behind the events in the 2D cross-section.
 const TMM = M.tomo;
-// matplotlib "seismic" (PI choice): dark blue - blue - white - red - dark red, on t in [-1, 1] around each variable's centre
+// Colour ramps (D-B104): Crameri scientific colour maps from atlas_ramps.js of the paper model figures, inlined by the
+// builder (--ramps): RAMP_DV, RAMP_V, RAMP_VPVS and ATLAS_RAMPS (per variable: kind, map, lo, hi, centre, ends, stops),
+// on t in [-1, 1] (-1 = lo, +1 = hi; diverging maps have their centre colour at t = 0). Without the file
+// (ATLAS_RAMPS null) the earlier matplotlib "seismic" ramps below stay in use.
+/*__ATLAS_RAMPS__*/
 const RAMP_RED_LOW = [[-1, 128, 0, 0], [-0.5, 255, 0, 0], [0, 255, 255, 255], [0.5, 0, 0, 255], [1, 0, 0, 77]];    // slow / low red, fast / high blue
 const RAMP_RED_HIGH = [[-1, 0, 0, 77], [-0.5, 0, 0, 255], [0, 255, 255, 255], [0.5, 255, 0, 0], [1, 128, 0, 0]];   // Vp/Vs: high red
 // iso: contour intervals offered, [minor, major] (bold lines with value labels at the major one), isoDef the default;
@@ -777,6 +781,12 @@ const TVARS = [
     iso: [[0.1, 0.5], [0.25, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [3, 8.6, 0.05, 7.5] },
   { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_RED_LOW, ends: ["", ""],
     iso: [[0.1, 0.5], [0.2, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [1.5, 4.8, 0.05, 4.2] }];
+if (ATLAS_RAMPS) for (const V of TVARS) {               // the paper figures' map, display range and end labels
+  const R = ATLAS_RAMPS[V.key]; if (!R) continue;
+  if (R.kind === "diverging" && Math.abs((R.lo + R.hi) / 2 - R.centre) > 1e-9)
+    console.error(`atlas_ramps.js ${V.key}: centre ${R.centre} is not the middle of ${R.lo}-${R.hi}`);
+  Object.assign(V, { lo: R.lo, hi: R.hi, ramp: R.stops, ends: R.ends, cmap: R.map, kind: R.kind });
+}
 const TMASK = [[0, "all cells"], [10, "DWS ≥ 10"], [100, "DWS ≥ 100"], [1000, "DWS ≥ 1,000"]]
   .concat(TMG && TMG.resp ? [[-1, "resolved in checkerboard tests"]] : []);
 // iso: contour lines on; isoI: interval index per variable; surf: isosurface on; sv: isosurface value per variable
@@ -1666,8 +1676,9 @@ function drawLegend() {
   const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
   const tIv = tV ? tIso(tV) : null, tRes = tV && TS.mask === -1 ? tResKm(tV) : "";
   const tomoLeg = tV ? `<div><h4>Velocity model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}: ${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
-    [0, 0.25, 0.5, 0.75, 1].map(f => `rgb(${rampCol(tV.ramp, 2 * f - 1).map(Math.round).join(",")})`).join(",")})"></div>
+    Array.from({ length: 17 }, (_, j) => j / 16).map(f => `rgb(${rampCol(tV.ramp, 2 * f - 1).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>≤ ${tV.lo} ${tV.ends[0]}</span><span>${+((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>≥ ${tV.hi} ${tV.ends[1]}</span></div>
+    ${tV.cmap ? `<div style="margin-top:2px;font-size:11px;color:var(--text-secondary)">Crameri ${esc(tV.cmap)}, ${tV.kind}${tV.kind === "diverging" ? ` about ${+((tV.lo + tV.hi) / 2).toFixed(2)}` : ""} (scientific colour map, readable with colour-vision deficiency)</div>` : ""}
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} shown${tRes ? ` (${tRes})` : ""}.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."}${TMM.masked && TMM.masked.water + TMM.masked.air ? ` The ${(TMM.masked.water + TMM.masked.air).toLocaleString()} nodes in water or air have no value; nothing is drawn above the ground or seafloor.` : ""}${TS.iso ? ` Isocontours every ${tIv[0]}${tUnit(tV)}, bold and labelled every ${tIv[1]}${tUnit(tV)}.` : ""}${TS.surf ? ` Translucent green isosurface ${tV.label} = ${tFmt(tV, TS.sv[tV.key], tDig(tV, TS.sv[tV.key]))}${tUnit(tV)}, cut as the slice (ray mask, ground and seafloor) and in front of the vertical cut.` : ""} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
   $("legend").innerHTML = `
     <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : modes.clu ? cluLeg() : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>

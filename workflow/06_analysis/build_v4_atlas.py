@@ -41,6 +41,10 @@ default; --mag stored gives the magnitudes before it), relocated catalog v6.0 an
   ATLAS_DATA_DIRS=/home/mdenolle/wt_atlas/data LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \\
       workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.2.nc \\
       --out /tmp/cascadia_atlas.html
+D-B104 (2026-11-26): add the per-catalog Mc grids (the Mc layer follows the catalog shown; NLL3D-i1 and v5.0 show
+the v4.1 grids) and the Crameri colour ramps of the paper model figures (--ramps, default figures_v0.4.2/atlas_ramps.js):
+      ... --mc-cat v5.1=/wd1/mdenolle_data/magnitude_converged/mc_maps_v51 \\
+      --mc-cat v6.0=/wd1/mdenolle_data/magnitude_converged/mc_maps_v60
 The 2026-11-25 command's --catalog-before-label "v4-NLL3D (start model)" is dropped: Moves now start from v5.1, and the
 option would rename it.
 
@@ -60,6 +64,7 @@ import argparse
 import base64
 import glob
 import gzip
+import hashlib
 import json
 import os
 import sys
@@ -782,6 +787,7 @@ MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs
 MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes of catalog v4.1 (D-B091)"}
 
 
+RAMPS = Path("/wd1/mdenolle_data/tomo_v1/models/figures_v0.4.2/atlas_ramps.js")   # D-B104 colour ramps (main(): --ramps)
 MC_CAT = {}   # per-catalog Mc grids (D-B104; main(): --mc-cat ID=DIR): registry id -> folder; the Mc layer follows the catalog shown
 
 
@@ -886,6 +892,9 @@ def tomo_model(path):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--ramps", default=str(RAMPS), help="atlas_ramps.js of the paper model figures (Crameri colour maps, "
+                    "D-B104; ATLAS_RAMPS gives each model variable its map, display range and end labels); 'none' keeps "
+                    "the earlier matplotlib seismic ramps")
     ap.add_argument("--template", default=str(ROOT / "workflow" / "06_analysis" / "atlas_template.html"))
     ap.add_argument("--out", default=str(D / "catalog_v4" / "atlas" / "cascadia_v4_atlas.html"))
     ap.add_argument("--model", help="Track B velocity model netCDF to add as a layer")
@@ -939,6 +948,16 @@ def main(argv=None):
         "stations": stations(), "plates": plates(), "tensors": tensors(),
     }
     html = Path(a.template).read_text().replace("/*__ATLAS_DATA__*/null", json.dumps(payload, separators=(",", ":")))
+    rf = Path(a.ramps) if a.ramps and a.ramps.lower() != "none" else None   # colour ramps of the model layer (D-B104)
+    if rf and not rf.exists():
+        raise SystemExit(f"--ramps {rf}: missing (--ramps none keeps the earlier seismic ramps)")
+    rjs = rf.read_text() if rf else "const ATLAS_RAMPS = null;"
+    if rf and "const ATLAS_RAMPS" not in rjs:
+        raise SystemExit(f"--ramps {rf}: no ATLAS_RAMPS object")
+    print(f"  colour ramps: {rf} (md5 {hashlib.md5(rjs.encode()).hexdigest()})" if rf else "  colour ramps: seismic (no --ramps)")
+    if html.count("/*__ATLAS_RAMPS__*/") != 1:
+        raise SystemExit(f"{a.template}: expected one /*__ATLAS_RAMPS__*/ placeholder")
+    html = html.replace("/*__ATLAS_RAMPS__*/", rjs)
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html)
     print(f"wrote {out} ({out.stat().st_size / 1e6:.1f} MB)")

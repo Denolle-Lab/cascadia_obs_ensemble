@@ -152,8 +152,8 @@ def nproc_limit(default):
 
 def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default=0.5):
     """tasks: [(name, argv, cwd, logfile[, est_gb])]; at most nproc_limit(nproc) at a time, at most one start per `ramp`
-    seconds; a task starts only while MemAvailable - (estimates of the tasks started in the last 60 s, whose memory
-    MemAvailable may not show yet) - its own estimate >= MEM_MIN_GB; the first queued task that fits starts (smaller
+    seconds; a task starts only while MemAvailable - (estimates of the running tasks started in the last 20 s, whose
+    memory MemAvailable may not show yet) - its own estimate >= MEM_MIN_GB; the first queued task that fits starts (smaller
     ones skip ahead of a large one that does not fit). on_done(name, rc) is called as each finishes. Returns {name: rc}."""
     queue = [tuple(x) + ((est_default,) if len(x) == 4 else ()) for x in tasks]
     running, rc, recent = {}, {}, []
@@ -171,8 +171,8 @@ def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default
         lim = nproc_limit(nproc)
         while queue and len(running) < lim and time.time() - last_start >= ramp:
             now = time.time()
-            recent = [(ts, e) for ts, e in recent if now - ts < 60]
-            free = mem_gb() - sum(e for _, e in recent) - MEM_MIN_GB
+            recent = [(ts, e, nm) for ts, e, nm in recent if now - ts < 20 and nm in running]
+            free = mem_gb() - sum(e for _, e, _ in recent) - MEM_MIN_GB
             i = next((j for j, x in enumerate(queue) if x[4] <= free), None)
             if i is None:
                 break
@@ -180,7 +180,7 @@ def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default
             fh = open(logf, "w")
             running[name] = (subprocess.Popen([str(x) for x in argv], cwd=cwd, stdout=fh, stderr=subprocess.STDOUT,
                                               env=env or ENV), fh)
-            recent.append((now, est))
+            recent.append((now, est, name))
             last_start = now
             if ramp >= 0.2:
                 break

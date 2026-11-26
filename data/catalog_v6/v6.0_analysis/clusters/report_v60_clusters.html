@@ -14,7 +14,7 @@ img{max-width:100%;height:auto;border:1px solid var(--rule)}
 .muted{color:var(--muted);font-size:.92em} code{font-size:.92em}
 </style></head><body>
 <h1>Earthquake families in catalog v6.0 (nearest-neighbour clustering)</h1>
-<p class='muted'>Branch <code>analysis/v60-clusters</code> (commit 6e731070), 2026-11-26. Private working product; not peer reviewed. Same method, parameters and code as the v5.1 clustering (PR #42; <code>v51_clusters_zbz.py</code>, now with <code>--catalog v6.0</code>), run on catalog v6.0 with its converged Route A magnitudes (D-B091).</p>
+<p class='muted'>Branch <code>analysis/v60-clusters</code> (commit dc8b3640), 2026-11-26. Private working product; not peer reviewed. Same method, parameters and code as the v5.1 clustering (PR #42; <code>v51_clusters_zbz.py</code>, now with <code>--catalog v6.0</code>), run on catalog v6.0 with its converged Route A magnitudes (D-B091).</p>
 <h2>What changed against v5.1</h2><ul>
 <li>Inputs. Locations: catalog v6.0 (NonLinLoc in model v0.4.1 with SSST station terms and coherence relocation, D-B100) instead of v5.1. Magnitudes: the converged Route A values of D-B091 carried in the v6.0 catalog (130,348 from the v5.1 table, 764 from the v4.1 table) instead of the stored values used for v5.1. Median change of M (converged minus stored) per region box: AX -0.06, EN -0.26, BL -0.70, GO -0.29, MT -0.29, WA +0.01, OR -0.06, PU +0.02, ON +0.01 (Fig. 1).</li>
 <li>Events used: 168,861 located earthquakes (v5.1: 168,406); 159 rows without a hypocentre (v5.1: 623) and 3,322 flagged as not earthquakes by the v6.0 <code>event_flag</code> (v5.1: 3,313, from the v5.1 magnitude table's is_earthquake). Above Mc (the analysis set): 30,754 events (v5.1: 30,201).</li>

@@ -207,13 +207,28 @@ def main():
                                       coherence_relocated=("coherence_relocated", lambda s: int(B(s).sum())),
                                       with_partner=("coherence_partners", lambda s: int((s.fillna(0) > 0).sum())))
     add(cr.reindex([r for r in REGION_ORDER if r in cr.index]))
+    rc = Path(a.heldout) / "coh_rule_check.json" if a.heldout else None
+    para("Partner rule of v6.0 (R3, coordinator 2026-11-25 20:00, notes/v6_plan.md): separation <= 3 km, >= 3 accepted "
+         "CC rows, median cc_max >= 0.5 over the measured rows, rows straddling a confirmed clock epoch left out; the "
+         "test sets' rule (median cc_max >= 0.5 over >= 3 measured rows) passes 55 % of all-family pairs 10-20 km apart.")
+    if rc and rc.exists():
+        ck = json.loads(rc.read_text())
+        para(f"Rule check before the coherence stage (puget, mtj; decision rule: {ck.get('decision_rule')}): "
+             f"use {ck.get('use')}.")
+        add(pd.DataFrame(ck["rows"])[["set", "phase", "pairs", "mad_ssst_ms", "mad_test_ms", "mad_r3_ms",
+                                      "r3_minus_test_ms", "lo_ms", "hi_ms", "r3_worse"]], index=False,
+            fmt={"mad_ssst_ms": "{:.1f}", "mad_test_ms": "{:.1f}", "mad_r3_ms": "{:.1f}", "r3_minus_test_ms": "{:+.1f}",
+                 "lo_ms": "{:+.1f}", "hi_ms": "{:+.1f}", "pairs": "{:,.0f}"})
     hf = Path(a.heldout) / "heldout.csv" if a.heldout else None
     if hf and hf.exists():
         h = pd.read_csv(hf)
-        h = h[["set", "region", "phase", "pairs", "mad_ssst_ms", "mad_coh_ms", "diff_ms", "lo_ms", "hi_ms", "effect",
-               "rows_both_relocated"]]
-        add(h, index=False, fmt={"mad_ssst_ms": "{:.1f}", "mad_coh_ms": "{:.1f}", "diff_ms": "{:+.1f}",
-                                 "lo_ms": "{:+.1f}", "hi_ms": "{:+.1f}", "pairs": "{:,.0f}"})
+        cols = ["set", "region", "phase", "pairs", "mad_ssst_ms", "mad_coh_ms", "diff_ms", "effect"]
+        if "mad_coh_r3_ms" in h:
+            cols += ["mad_coh_r3_ms", "diff_r3_ms", "lo_r3_ms", "hi_r3_ms", "effect_r3"]
+        para("Held-out MAD (ms): ssst = SSST to 4 km alone; coh = coherence with the test rule; coh_r3 = coherence with "
+             "R3 (the v6.0 rule); diff = coherence - ssst with its 95 % interval (effect: helps / hurts / no clear effect).")
+        add(h[cols], index=False, fmt={k: ("{:+.1f}" if k.startswith(("diff", "lo", "hi")) else "{:.1f}")
+                                       for k in cols if k.endswith("_ms")} | {"pairs": "{:,.0f}"})
         js = json.loads((Path(a.heldout) / "scores.json").read_text())
         if js.get("missing"):
             para(f"Clusters not scored (relocation not finished or failed): {', '.join(js['missing'])}.")

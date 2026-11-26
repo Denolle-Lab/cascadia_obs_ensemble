@@ -81,6 +81,8 @@ def folds(s):
 
 
 def held_out(s, run):
+    if run == "full":                         # every station (b4_v61_depth_test.py full runs)
+        return set()
     k = int(run.replace("fold", ""))
     return {st for st, f in folds(s).items() if f == k}
 
@@ -162,12 +164,13 @@ def cc_pairs(s, run, rule="test"):
     return g
 
 
-def coherence_run(s, run, it_dir, groot, box, nproc, rule="test"):
-    """b4_v6_ssst.coherence_run (termtest copy) with the fold's training-station CC rows; rule 'r3' -> coherence_r3/."""
+def coherence_run(s, run, it_dir, groot, box, nproc, rule="test", name=None):
+    """b4_v6_ssst.coherence_run (termtest copy) with the fold's training-station CC rows; rule 'r3' -> coherence_r3/
+    (name: another output folder, b4_v61_depth_test.py)."""
     import argparse as _ap
     from concurrent.futures import ProcessPoolExecutor
     import a2_parse_hyp as PH
-    rd = OUT / s / run / ("coherence" if rule == "test" else f"coherence_{rule}")
+    rd = OUT / s / run / (name or ("coherence" if rule == "test" else f"coherence_{rule}"))
     if (rd / "run.json").exists():
         return rd
     roots, dup = S.hyp_roots(it_dir)

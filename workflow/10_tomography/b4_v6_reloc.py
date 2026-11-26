@@ -850,11 +850,13 @@ def cmd_coh(a):
         ctl = RN.sub1(r"^LOCFILES .*$", f"LOCFILES {froot}.hyp NLLOC_OBS {groot} {wd}/loc", ctl)
         ctl += f"LOCPOSTERIOR OCT_TREE {sc} 1e-30 {S.COH_MIN} -1.0 {S.COH_MAX_SE3} -1 -1.0 -999\n"
         (wd / "nlloc.in").write_text(ctl)
-        tasks.append((f"{tile}/e{eid}", [NLL, "nlloc.in"], wd, wd / "nlloc.log"))
+        # memory: ~0.23 GB plus ~6 MB per listed partner oct-tree (measured on the held-out Axial runs)
+        tasks.append((f"{tile}/e{eid}", [NLL, "nlloc.in"], wd, wd / "nlloc.log", 0.3 + 0.0065 * len(partners)))
 
     def done(name, r):
         if r == 0:
             (rd / name / "done").write_text("")
+    tasks.sort(key=lambda x: -x[4])                    # largest stacks first; small ones fill in while memory allows
     t0 = time.time()
     log(f"coherence: {len(compact)} compact events of {len(located)} located (Len3 <= {S.COH_MAX_SE3} km), "
         f"{len(coh)} pairs with coherence >= {S.COH_MIN}, {len(tasks)} NLLoc runs to do")

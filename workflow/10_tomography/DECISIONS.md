@@ -948,3 +948,15 @@ three affected tiles as v0.4.2; rerun the ensemble on v0.4.2; then redo the synt
 and register the ensemble only once the inflation factors are confirmed (updated if they move by more than 0.05). Catalog
 v6.0 stays on v0.4.1 (local difference; stated in its README). B5 code (b5_common.diff_times) has the same bug (session -18
 told 2026-11-25 22:20).
+
+### D-B100 Register catalog v6.0 as built; its Axial depth bias from the SSST passes is stated and fixed in v6.1 (adopted, 2026-11-26 08:29, PI)
+v6.0 (catalog_b4_v6.0.csv md5 ae77ad3c66aa6fbaa48528660a1c09ec, finished 2026-11-26 08:05; acceptance
+reloc_v6/catalog/acceptance_v6.0.html): 172,182 located, 0 above the surface, floor-limited 3.3 % (v5.1 5.1 %), D tier 32,935
+(v5.1 43,032), median rms 0.076 s (v5.1 0.122). It fails the Axial depth target: tier A-B within 2 km of the seafloor 66.1 %
+(v5.1 81.0 %, target 85 %). Cause, by pass: it0 (no terms) 82.7 %, it1 76.3, it2 72.7, it3 68.8, it4 65.9 % (median below
+seafloor 1.63 -> 1.85 km); the SSST terms trade off with depth. Median depth shift it4 - it0 (tiers A-C): Axial +0.22 km,
+Puget/Georgia +0.29, Mendocino +0.17, Blanco +0.15, Gorda -0.22, forearc -0.15. The D-B095/D-B096 tests scored held-out CC
+differential times (relative fit), which cannot see a depth shift common to a cluster. PI: register v6.0 as is in the private
+Zenodo draft with this bias stated in its README; for v6.1, test station-term recipes on absolute depth as well (Axial vs
+Waldhauser et al. 2020, Blanco vs Lange et al. 2026, Mount St Helens vs Hirao et al. 2025), together with the D-B097 deferrals.
+Numbering: this session takes D-B100..D-B109 (D-B084..D-B089 stay reserved for session -18).

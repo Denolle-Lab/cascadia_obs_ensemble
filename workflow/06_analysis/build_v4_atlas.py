@@ -782,33 +782,61 @@ MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs
 MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes of catalog v4.1 (D-B091)"}
 
 
-def mc_grids():
-    """Mc on the 0.1 deg grid (v4_mc_maps.py): uint8 Mc*20+40 and sigma*50, 255 = no value."""
+MC_CAT = {}   # per-catalog Mc grids (D-B104; main(): --mc-cat ID=DIR): registry id -> folder; the Mc layer follows the catalog shown
+
+
+def mc_grids(cats):
+    """Mc on the 0.1 deg grid (v4_mc_maps.py): uint8 Mc*20+40 and sigma*50, 255 = no value. One set per folder: the
+    reference grids (MC, arrays mc_*, sg_*, n_*) and, for each catalog of MC_CAT on the atlas, its own grids (computed
+    with its hypocentres and magnitudes; arrays c<k>_mc_* ...), all on one lattice (the union of the folders' nodes).
+    meta sets = [dict(pre, cat, source, layers)]; a catalog without a set is shown with the reference grids."""
     d = Path(MC["dir"]) if MC["dir"] else dd("catalog_v4", "mc_maps", "mc_grid.csv").parent
     if not (d / "mc_grid.csv").exists():
         return None, None
-    base = pd.read_csv(d / "mc_grid.csv")
-    lons, lats = np.round(np.sort(base.lon.unique()), 4), np.round(np.sort(base.lat.unique()), 4)
-    out, layers = {}, []
+    known = {c["id"]: c for c in cats}
+    for cid in MC_CAT:
+        if cid not in known or (not known[cid].get("key") and not known[cid].get("ref")):
+            raise SystemExit(f"--mc-cat {cid}: no catalog {cid} on this atlas")
+    sets = [("", cats[0]["id"], d, MC["source"])] + [
+        (f"{c['key']}_", c["id"], Path(MC_CAT[c["id"]]),
+         f"converged Route A magnitudes and hypocentres of catalog {c['id']} (D-B102, D-B104)")
+        for c in cats if c["id"] in MC_CAT and c.get("key")]
+    base = {pre: pd.read_csv(f / "mc_grid.csv") for pre, _, f, _ in sets}
+    step = float(np.round(np.diff(np.sort(base[""].lon.unique()))[0], 4))
+    alo = np.concatenate([b.lon.to_numpy(float) for b in base.values()])
+    ala = np.concatenate([b.lat.to_numpy(float) for b in base.values()])
+    west, south = float(np.round(alo.min(), 4)), float(np.round(ala.min(), 4))
+    for v, o in ((alo, west), (ala, south)):                 # every folder on the same 0.1 deg lattice
+        r = (v - o) / step
+        if not np.allclose(r, np.round(r), atol=1e-3):
+            raise SystemExit("Mc grids of the folders are not on one lattice: " + ", ".join(str(f) for _, _, f, _ in sets))
+    nx, ny = int(round((alo.max() - west) / step)) + 1, int(round((ala.max() - south) / step)) + 1
+    lons, lats = np.round(west + step * np.arange(nx), 4), np.round(south + step * np.arange(ny), 4)
+    idx = pd.MultiIndex.from_product([lats, lons], names=["lat", "lon"])
+    cpt_txt = (d / "mc.cpt").read_text()
+    out, metas = {}, []
     u8 = lambda v, s, o: np.where(np.isfinite(v), np.clip(np.round(v * s + o), 0, 254), 255).astype("u1")
-    for key, label, f, col in MC_LAYERS:
-        g = pd.read_csv(d / f)
-        g = g.assign(lon=g.lon.round(4), lat=g.lat.round(4)).set_index(["lat", "lon"])
-        idx = pd.MultiIndex.from_product([lats, lons], names=["lat", "lon"])
-        mc = g[col].reindex(idx).to_numpy(float); sg = g[MC_SIG[col]].reindex(idx).to_numpy(float)
-        nn = g["n"].reindex(idx).to_numpy(float)
-        out[f"mc_{key}"], out[f"sg_{key}"] = u8(mc, 20, 40), u8(sg, 50, 0)
-        if key == "best" or key.startswith("p"):
-            out[f"n_{key}"] = np.nan_to_num(nn).astype("<u2")
-        layers.append(dict(key=key, label=label, nodes=int(np.isfinite(mc).sum())))
-        print(f"  Mc {key}: {np.isfinite(mc).sum():,} nodes")
+    for pre, cid, f, src in sets:
+        if (f / "mc.cpt").exists() and (f / "mc.cpt").read_text() != cpt_txt:
+            print(f"  Mc grids {f}: mc.cpt differs from the reference; the reference colours are used")
+        layers = []
+        for key, label, fn, col in MC_LAYERS:
+            g = pd.read_csv(f / fn)
+            g = g.assign(lon=g.lon.round(4), lat=g.lat.round(4)).set_index(["lat", "lon"])
+            mc = g[col].reindex(idx).to_numpy(float); sg = g[MC_SIG[col]].reindex(idx).to_numpy(float)
+            nn = g["n"].reindex(idx).to_numpy(float)
+            out[f"{pre}mc_{key}"], out[f"{pre}sg_{key}"] = u8(mc, 20, 40), u8(sg, 50, 0)
+            if key == "best" or key.startswith("p"):
+                out[f"{pre}n_{key}"] = np.nan_to_num(nn).astype("<u2")
+            layers.append(dict(key=key, label=label, nodes=int(np.isfinite(mc).sum())))
+        metas.append(dict(pre=pre, cat=cid, source=src, layers=layers))
+        print(f"  Mc grids {cid}: {f} ({src}); " + ", ".join(f"{L['key']} {L['nodes']:,}" for L in layers))
     # colour table of the paper figures (GMT cpt: z0 r/g/b z1 r/g/b)
-    cpt = [ln.split() for ln in (d / "mc.cpt").read_text().splitlines() if ln[:1].replace("-", "").replace(".", "").isdigit()]
+    cpt = [ln.split() for ln in cpt_txt.splitlines() if ln[:1].replace("-", "").replace(".", "").isdigit()]
     stops = [[float(r[0])] + [int(round(float(x))) for x in r[1].split("/")] for r in cpt]
     stops.append([float(cpt[-1][2])] + [int(round(float(x))) for x in cpt[-1][3].split("/")])
-    meta = dict(nx=len(lons), ny=len(lats), west=float(lons[0]), south=float(lats[0]), step=float(np.round(lons[1] - lons[0], 4)),
-                layers=layers, cpt=stops, source=MC["source"])
-    print(f"  Mc grids: {d} ({MC['source']})")
+    meta = dict(nx=nx, ny=ny, west=west, south=south, step=step, layers=metas[0]["layers"], cpt=stops,
+                source=MC["source"], sets=metas)
     return out, meta
 
 
@@ -874,6 +902,9 @@ def main(argv=None):
     ap.add_argument("--clusters-catalog", default=CLU["cat"], help="registry id of the catalog whose locations the "
                     f"families were computed on; the Cluster mode is offered in its view only (default {CLU['cat']})")
     mag_paths.add_argument(ap, "v4.1")
+    ap.add_argument("--mc-cat", action="append", metavar="ID=DIR", help="Mc grids of a registry catalog, computed with "
+                    "its own hypocentres and magnitudes (D-B104), e.g. v6.0=/wd1/mdenolle_data/magnitude_converged/mc_maps_v60; "
+                    "repeatable; the Mc layer follows the catalog shown (catalogs without grids show the reference ones)")
     ap.add_argument("--mc-maps", help="folder of the Mc grids (mc_grid*.csv, mc.cpt); default: the converged grids "
                     "(magnitude_converged/mc_maps_v41) with the converged magnitudes, data/catalog_v4/mc_maps with --mag stored")
     a = ap.parse_args(argv)
@@ -883,6 +914,11 @@ def main(argv=None):
         MC.update(dir=Path(a.mc_maps), source=f"Mc grids from {a.mc_maps}")
     elif str(a.mag or "") == "stored" or "magnitude_converged" not in str(MAG):
         MC.update(dir=None, source="stored Route A magnitudes (before D-B091)")
+    for x in a.mc_cat or []:
+        cid, _, d = x.partition("=")
+        if not d or not (Path(d) / "mc_grid.csv").exists():
+            raise SystemExit(f"--mc-cat {x}: expected ID=DIR with DIR/mc_grid.csv")
+        MC_CAT[cid] = Path(d)
     print(f"magnitudes: {MAG}")
     print("building atlas data")
     SEL.update(rel=a.catalog2, rel_label=a.catalog2_label, rel_note=a.catalog2_note, before=a.catalog_before,
@@ -892,7 +928,7 @@ def main(argv=None):
     ter, ter_meta = terrain()
     sl, sl_meta = slab_and_coupling()
     fa, fa_meta = faults()
-    mc, mc_meta = mc_grids()
+    mc, mc_meta = mc_grids(ev_meta["cats"])
     tm, tm_meta = tomo_model(a.model) if a.model else (None, None)
     payload = {
         "meta": dict(lon0=LON0, lat0=LAT0, region=REGION, regions=[dict(key=k, label=l, box=b) for k, l, b in REGIONS],

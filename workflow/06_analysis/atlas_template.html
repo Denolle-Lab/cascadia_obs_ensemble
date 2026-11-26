@@ -704,7 +704,11 @@ const slabDepAt = (lon, lat) => {
 
 // ---------- magnitude of completeness: 0.1 deg cells draped just above the ground ----------
 const MCM = M.mc;
-let mcMesh = null, mcKey = "best";
+let mcMesh = null, mcKey = "best", mcPre = "";
+// Mc grid sets (D-B104): the reference catalog's (pre "") and those computed with a catalog's own hypocentres and
+// magnitudes (pre "c<k>_"); the layer shows the set of the catalog in view (Compare: B), else the reference set
+const MCS = MCM ? (MCM.sets || [{ pre: "", cat: null, source: MCM.source, layers: MCM.layers }]) : [];
+const mcSet = () => { const c = F.cmp ? F.cb : F.cat; return MCS.find(S => S.cat === CATS[c].id) || MCS[0]; };
 const mcCol = v => { const S = MCM.cpt; if (v <= S[0][0]) return S[0].slice(1);
   for (let j = 1; j < S.length; j++) if (v <= S[j][0]) { const t = (v - S[j - 1][0]) / (S[j][0] - S[j - 1][0]);
     return [0, 1, 2].map(c => S[j - 1][c + 1] + t * (S[j][c + 1] - S[j - 1][c + 1])); }
@@ -713,7 +717,7 @@ const mcCell = [];                                     // display cell -> grid n
 if (MCG) {
   const nx = MCM.nx, ny = MCM.ny, h = MCM.step / 2;
   const any = new Uint8Array(nx * ny);
-  for (const L of MCM.layers) { const a = MCG["mc_" + L.key]; for (let i = 0; i < a.length; i++) if (a[i] !== 255) any[i] = 1; }
+  for (const S of MCS) for (const L of S.layers) { const a = MCG[S.pre + "mc_" + L.key]; for (let i = 0; i < a.length; i++) if (a[i] !== 255) any[i] = 1; }
   for (let i = 0; i < any.length; i++) if (any[i]) mcCell.push(i);
   const nc = mcCell.length, pos = new Float32Array(nc * 12), elev = new Float32Array(nc * 4), col = new Float32Array(nc * 12);
   mcCell.forEach((i, k) => {
@@ -741,7 +745,7 @@ function placeMc() {                                   // follow the vertical ex
 }
 function setMc(key) {
   if (!mcMesh) return;
-  mcKey = key; const a = MCG["mc_" + key], g = mcMesh.geometry, c = g.attributes.color.array, idx = [];
+  mcKey = key; mcPre = mcSet().pre; const a = MCG[mcPre + "mc_" + key], g = mcMesh.geometry, c = g.attributes.color.array, idx = [];
   mcCell.forEach((i, k) => {
     if (a[i] === 255) return;
     const rgb = mcCol((a[i] - 40) / 20).map(v => (v / 255) ** 2.2);   // sRGB table -> linear for the renderer
@@ -1361,6 +1365,8 @@ function applyView() {
   }
   setDv();
   evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true; magAttr.needsUpdate = true;
+  if (mcMesh) { setMc(mcKey); const S = mcSet();      // Mc grids of the catalog in view (D-B104)
+    [...mcSel.options].forEach(o => { const L = S.layers.find(L_ => L_.key === o.value); o.textContent = `${L.label} (${L.nodes.toLocaleString()} cells)`; }); }
   const refView = !F.cmp && c === 0, dbtn = $("segDatum").querySelectorAll("button");
   if (!refView && !F.datumLocked) { F.datum4 = F.datum; F.datumLocked = true; }
   if (refView && F.datumLocked) { F.datum = F.datum4; F.datumLocked = false; }
@@ -1650,11 +1656,13 @@ function drawLegend() {
     <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the reference (${CATS[0].id}) location${TIER_N[6] ? `; ${TIER_N[6].toLocaleString()} of them have no hypocentre in ${esc(CATS[tierSrc()].id)} and are not drawn in its view` : ""}</div>`;
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
     ? `<div><h4>Slab2 coloured by coupling (${sc.value})</h4><div class="ramp" style="background:linear-gradient(90deg,#4578b3,#d9d9d1,#cc4038)"></div><div class="ramp-labels"><span>0 creeping</span><span>0.5</span><span>1 locked</span></div></div>` : "";
-  const mcL = MCM && layer("mc") && layer("mc").on ? MCM.layers.find(L => L.key === mcKey) : null;
+  const mcL = MCM && layer("mc") && layer("mc").on ? mcSet().layers.find(L => L.key === mcKey) : null;
+  const mcNote = () => { const S = mcSet(), c = viewCat();
+    return (S.source ? ` From the ${esc(S.source)}.` : "") + (S.cat !== CATS[c].id && c !== 0 ? ` ${esc(CATS[c].id)} has no Mc grids of its own: these are ${esc(CATS[0].id)}'s.` : ""); };
   const mcLeg = mcL ? `<div><h4>Magnitude of completeness, ${mcL.label}</h4><div class="ramp" style="background:linear-gradient(90deg,${
     [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(v => `rgb(${mcCol(v).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.${MCM.source ? ` From the ${esc(MCM.source)}.` : ""}</div></div>` : "";
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.${mcNote()}</div></div>` : "";
   const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
   const tIv = tV ? tIso(tV) : null, tRes = tV && TS.mask === -1 ? tResKm(tV) : "";
   const tomoLeg = tV ? `<div><h4>Velocity model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}: ${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
@@ -1758,8 +1766,8 @@ function hover(mx, my) {
   }
   if (mcMesh && layer("mc").on) {
     const h = ray.intersectObject(mcMesh)[0];
-    if (h) { const i = mcCell[Math.floor(h.face.a / 4)], nx = MCM.nx, v = k => MCG["mc_" + k][i], f = k => v(k) === 255 ? "–" : ((v(k) - 40) / 20).toFixed(1);
-      const s = MCG["sg_" + mcKey][i], nk = mcKey.startsWith("p") ? mcKey : "best", n = MCG["n_" + nk] ? MCG["n_" + nk][i] : 0;
+    if (h) { const i = mcCell[Math.floor(h.face.a / 4)], nx = MCM.nx, v = k => MCG[mcPre + "mc_" + k][i], f = k => v(k) === 255 ? "–" : ((v(k) - 40) / 20).toFixed(1);
+      const s = MCG[mcPre + "sg_" + mcKey][i], nk = mcKey.startsWith("p") ? mcKey : "best", n = MCG[mcPre + "n_" + nk] ? MCG[mcPre + "n_" + nk][i] : 0;
       const per = ["p2010", "p2011", "p2013", "p2016"].map(k => `${MCM.layers.find(L => L.key === k).label.split(" ")[0]} ${f(k)}`).join(" · ");
       return showTip(`<b>Mc ${f(mcKey)}</b>${s !== 255 ? ` ± ${(s / 50).toFixed(2)}` : ""} <span class="k">${MCM.layers.find(L => L.key === mcKey).label}</span><br>
         ${(MCM.south + Math.floor(i / nx) * MCM.step).toFixed(1)}°N ${(-(MCM.west + (i % nx) * MCM.step)).toFixed(1)}°W${n ? ` · ${n} events in the sample` : ""}<br>

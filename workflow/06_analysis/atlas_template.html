@@ -1612,7 +1612,7 @@ function catNote() {                          // the catalog shown: registry not
   if (F.cmp) return `<div class="attribution" style="border-top:0;padding-top:0">Compare: ${CMPQ.n.toLocaleString()} events located in both ${st(F.ca)} (A) and ${st(F.cb)} (B), drawn at B${nh(F.ca) + nh(F.cb) ? "; events without a hypocentre in A or B are not drawn" : ""}.${F.segs ? ` Lines join A (faint end) to B for at most ${F.segN.toLocaleString()} of the events shown (${F.segs === 1 ? "largest shifts" : "random subset"}).` : ""}</div>`;
   if (!F.cat) return "";
   const c = CATS[F.cat], nU = N - (c.n_loc ?? N) - nh(F.cat);
-  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(c.label)}. Depths below sea level.${nU ? ` Rings mark the ${nU.toLocaleString()} events not located in this catalog, at their ${esc(CATS[0].id)} location.` : ""}${nh(F.cat) ? ` The ${nh(F.cat).toLocaleString()} events without a hypocentre in this catalog (tier U) are not shown.` : ""}</div>`;
+  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(c.label)}. Depths below sea level.${nU ? ` Rings mark the ${nU === 1 ? "event" : `${nU.toLocaleString()} events`} not located in this catalog, at ${nU === 1 ? "its" : "their"} ${esc(CATS[0].id)} location.` : ""}${nh(F.cat) ? ` The ${nh(F.cat).toLocaleString()} event${nh(F.cat) === 1 ? "" : "s"} without a hypocentre in this catalog (tier U) ${nh(F.cat) === 1 ? "is" : "are"} not shown.` : ""}</div>`;
 }
 function catNotes() {                         // registry notes, folded under "Symbols and sources": the catalogs in view, else the relocated one
   const ks = F.cmp ? [F.ca, F.cb] : [F.cat || REL];

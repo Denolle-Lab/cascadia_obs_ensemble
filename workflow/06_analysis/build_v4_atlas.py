@@ -26,7 +26,7 @@ Layers packed here (gzip + base64 blobs, decoded in the browser with Decompressi
 
 Usage (default env, from the repo root):
   LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \
-      workflow/06_analysis/build_v4_atlas.py [--model MODEL.nc] [--out FILE]
+      workflow/06_analysis/build_v4_atlas.py [--model MODEL.nc] [--mag converged|stored|FILE] [--out FILE]
 Output: data/catalog_v4/atlas/cascadia_v4_atlas.html (template: workflow/06_analysis/atlas_template.html)
 
 Catalogs come from the registry only. Its top-level keys atlas_relocated (the relocated catalog: default B of Compare,
@@ -34,12 +34,14 @@ tier colours of the reference view, end of the Moves layer) and atlas_moves_from
 two catalogs the page singles out; --catalog2 and --catalog-before override them for one build with a registry id or
 the registered file path, and --catalog2-label, --catalog2-note, --catalog-before-label override the registry label and
 note. A catalog that is not in the registry has to be added to it (and to compare_catalogs.py's tables) first.
-Example, the live configuration of 2026-11-25 with model v0.4.2 in place of v0.3.2 (2026-11-26; relocated catalog v5.1
-and Moves from NLL3D-i1 come from the registry; --catalog2 v5.1 --catalog-before NLL3D-i1, or the two csv paths, give
-the same page; catalogs, clusters and Moves as the v0.3.2 page):
+Example, the configuration of 2026-11-26 (branch atlas/v6): model v0.4.2, converged Route A magnitudes (D-B091, the
+default; --mag stored gives the magnitudes before it), relocated catalog v6.0 and Moves from v5.1 from the registry
+(--catalog2 v6.0 --catalog-before v5.1, or the two csv paths, give the same page), Cluster mode on the v5.1 view:
   ATLAS_DATA_DIRS=/home/mdenolle/wt_atlas/data LD_LIBRARY_PATH=.pixi/envs/default/lib .pixi/envs/default/bin/python \\
       workflow/06_analysis/build_v4_atlas.py --model /wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.2.nc \\
-      --catalog-before-label "v4-NLL3D (start model)" --out /tmp/cascadia_atlas.html
+      --out /tmp/cascadia_atlas.html
+The 2026-11-25 command's --catalog-before-label "v4-NLL3D (start model)" is dropped: Moves now start from v5.1, and the
+option would rename it.
 
 Clusters (colour mode Cluster, in the view of --clusters-catalog only): events_zbz_v51.csv.gz and families_zbz_v51.csv
 (and sensitivity_zbz.csv for the Axial caveat) are read from the --clusters folder (default CLU_DIR), else from

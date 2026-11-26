@@ -30,7 +30,7 @@ a { color: var(--link); }
 <body>
 <main>
   <h1>Cascadia Catalog Reports</h1>
-  <p class="muted">Working reports of the Cascadia OBS ensemble catalog and the Track B tomography, as of 25 November 2026. Each report is a self-contained page. Status says how far you can rely on it today.</p>
+  <p class="muted">Working reports of the Cascadia OBS ensemble catalog and the Track B tomography, as of 25 November 2026, 20:40 Pacific. Each report is a self-contained page. Status says how far you can rely on it today.</p>
   <p class="muted"><span class="tag ok">current</span> verified and current &nbsp; <span class="tag warn">to update</span> verified, but a known change is coming &nbsp; <span class="tag old">superseded soon</span> replaced by the next version</p>
 
   <section>
@@ -46,6 +46,7 @@ a { color: var(--link); }
     <h2>Catalog v5.1 analysis</h2>
     <p class="muted">Each piece was built, checked by an independent verifier, fixed and re-checked. v5.1 will be replaced by catalog v6.0 (model v0.4.1, corrected picks, SSST station terms), and the analyses will be redone on it.</p>
     <div class="wrap"><table>
+      <tr><td><a href="paper_figures_converged.html">Paper figures, converged magnitudes</a></td><td>Each paper figure before and after the switch to the converged magnitudes (PRs #46, #47), with the manuscript change list. Fig. 6B here has the colour scale from M 1.5; the M 1.0 version is in PR #48.</td><td><span class="tag ok">current</span></td></tr>
       <tr><td><a href="magnitudes_converged.html">Magnitudes, converged</a></td><td>Exact solution of the Route A station-term inversion for v4.1 (the paper) and v5.1, gauge analysis, independent verification, paper-impact list (D-B091; PR #45). Offshore ML drops (Blanco -0.67); Mc offshore 2.2 -> 1.7.</td><td><span class="tag ok">current</span></td></tr>
       <tr><td><a href="v51_magnitudes.html">Magnitudes</a></td><td>Route A ML on the v5.1 hypocentres, Mc and b, comparison with v4.1 and ComCat. Uses the unconverged inversion; replaced by the converged magnitudes above.</td><td><span class="tag old">superseded soon</span></td></tr>
       <tr><td><a href="v51_fault_surfaces.html">Fault surfaces v1</a></td><td>Plane fits on tiers A-C, assignment of every located event, comparison with v0 and the literature.</td><td><span class="tag old">superseded soon</span></td></tr>
@@ -53,6 +54,16 @@ a { color: var(--link); }
       <tr><td><a href="v51_interpretation.html">Re-interpretation</a></td><td>Region by region: what the v5.1 locations change, active faults, sequences and swarms, agreement with published studies.</td><td><span class="tag old">superseded soon</span></td></tr>
       <tr><td><a href="v51_structure_seismicity.html">Structure vs seismicity</a></td><td>Vp, Vs, Vp/Vs on resolved model nodes against seismicity, with randomized-catalog and coverage controls.</td><td><span class="tag old">superseded soon</span></td></tr>
       <tr><td><a href="pick_retiming.html">Pick re-timing</a></td><td>Re-timing of the drifting analog picks from their record headers (D-B072, D-B075), with the co-located GPS-station test.</td><td><span class="tag ok">current</span></td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Catalog v6.0 preparation</h2>
+    <p class="muted">v6.0 relocates every event in model v0.4.1 with NonLinLoc SSST station terms (16, 8, 4 km) and the waveform-coherence stage (D-B095, D-B096); running now.</p>
+    <div class="wrap"><table>
+      <tr><td><a href="v6_station_terms_test.html">Station-term test</a></td><td>Static terms vs SSST, with and without coherence, on independent clusters scored on held-out stations, CC fit and literature depths; where to stop the SSST schedule (4 km).</td><td><span class="tag ok">current</span></td></tr>
+      <tr><td><a href="v6_prep.html">v6.0 preparation</a></td><td>v0.4.1 travel-time grids, SSST availability and the first cluster tests (v5.1 and v0.4.1 grids), run plan.</td><td><span class="tag ok">current</span></td></tr>
+      <tr><td><a href="cc_all_families.html">Cross-correlation, all families</a></td><td>Waveform CC differential times for 114,410 events (7.7 M pairs, 8.9 M accepted measurements), quality by region, clock screen.</td><td><span class="tag ok">current</span></td></tr>
     </table></div>
   </section>
 

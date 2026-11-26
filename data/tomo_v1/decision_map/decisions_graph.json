@@ -2314,6 +2314,35 @@
     }
    ],
    "key": true
+  },
+  {
+   "id": "D-B098",
+   "date": "2026-11-25",
+   "time": "20:35",
+   "title": "v6.0: no coherence relocation in the Mendocino region",
+   "status": "adopted",
+   "by": "PI",
+   "theme": "relocation",
+   "summary": "Coherence hurt on held-out stations at the 2015 Mendocino sequence (P +8, S +20 ms), so Mendocino compact events keep their SSST 4 km location; still stacking partners. Provisional: one test cluster.",
+   "trigger": "PI answer \"Skip at Mendocino\" after the held-out effect of coherence by region (helps at Axial, MSH, Puget, Georgia).",
+   "relations": [
+    {
+     "type": "amends",
+     "target": "D-B095"
+    },
+    {
+     "type": "follows_from",
+     "target": "D-B096"
+    }
+   ],
+   "alternatives": [
+    {
+     "option": "Apply coherence everywhere",
+     "outcome": "rejected",
+     "reason": "Worse on held-out stations at Mendocino."
+    }
+   ],
+   "key": false
   }
  ],
  "forks": [
@@ -2500,7 +2529,8 @@
     "D-B093",
     "D-B095",
     "D-B096",
-    "D-B097"
+    "D-B097",
+    "D-B098"
    ],
    "current": "NLL-SSST 9999 -> 16 -> 8 -> 4 km, then coherence; chosen on held-out stations in 5 clusters independent of the D-B078 sets."
   },
@@ -2515,5 +2545,5 @@
    "current": "No at iter_lim 3000 (istop 7); converged run (istop 2) lowers offshore ML up to 0.68; v4.1 and v5.1 recomputed (PR #45)."
   }
  ],
- "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B083 and D-B090 to D-B097; D-B084 to D-B089 are reserved for session -18 and not yet in the register) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
+ "footer": "Source: workflow/10_tomography/DECISIONS.md on branch tomo/tiles (D-B001 to D-B083 and D-B090 to D-B098; D-B084 to D-B089 are reserved for session -18 and not yet in the register) and five choices the PI made in the working session that are not in the register (S-01 to S-05). Statuses, themes, turning points and some links between decisions were read from the text and checked for consistency; links named in the register headings are exact, others are inferred from the content. Times are Pacific. Built 25 November 2026."
 }

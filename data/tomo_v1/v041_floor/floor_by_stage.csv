@@ -1,0 +1,6 @@
+stage,run,events_start,floor_lines,events_hit,floor_not_met,hit_height_above_floor_m_p50_max,events_at_floor_final,events_above_floor_by_more_than_2m,events_above_floor_within_2m,air_quakes_v040,air_quakes_v041,iterations_v040,iterations_v041,events_final_v040,events_final_v041,above_true_surface_final_v040,above_true_surface_final_v041,rms_abs_final_v040,rms_abs_final_v041,rms_wt_final_v040,rms_wt_final_v041
+M0,margin_m0_v4/d200_s480,6943,2090,266,0,"[467.6, 3094.5]",156,0,2,88,0,24,12,6855,6943,132,0,0.2812,0.2819,0.1844,0.1844
+mendocino_gorda_c,mendocino_gorda_c_m0f/d200_s480,12191,503,70,0,"[463.2, 2817.5]",48,0,0,20,0,21,12,12170,12190,42,0,0.2413,0.2413,0.1536,0.1538
+blanco,blanco_m0f/d200_s20,4378,100,21,0,"[222.8, 1355.8]",11,0,0,4,0,15,12,4374,4378,14,0,0.2405,0.2404,0.1284,0.1284
+oregon,oregon_m0f/d200_s480,3390,1724,218,0,"[308.5, 3079.7]",125,0,0,66,0,24,12,3324,3390,114,0,0.191,0.1921,0.1155,0.1158
+washington,washington_m0f/d200_s480,9332,2008,278,0,"[919.4, 3361.4]",154,0,1,141,0,24,12,9190,9329,84,0,0.2146,0.2155,0.1319,0.1323

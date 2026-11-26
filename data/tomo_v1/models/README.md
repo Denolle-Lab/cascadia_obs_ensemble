@@ -16,6 +16,9 @@ overwritten; a change gives a new version number.
 | version | what | status |
 |---|---|---|
 | 0.1.0 | M0: coarse whole-margin model (nodes ~0.375 x 0.3 deg), damping 200, smoothing 480 (D-B044, D-B046); the common starting model of the tiles | intermediate |
+| 0.3.0 | merged model of the five tiles restarted from M0 (superseded by 0.3.1) | candidate |
+| 0.3.1 | merged model: resolution-gated merge (D-B049), ridges_north out (D-B050), Vs reverted where Vp/Vs < 1.6 or no S rays (D-B051) | candidate |
+| 0.3.2 | 0.3.1 with the solid surface (variable `medium`: water Vp 1.5 km/s and NaN Vs, air NaN above the merged GMRT / earth_relief surface, D-B068) and the shallow oceanic crust rule at the rock nodes (Vs <= Vp / 2.1 within 2.5 km below the seafloor offshore, D-B073); the inversion's values kept as `Vp_tomography`, `Vs_tomography`. Its NonLinLoc grids are the exact velocity fields of the v5.1 relocation (Earth-flattened, 1 km cells, rule applied per cell); `v0.3.2_surface_lattice.nc` and `velocity_model_tools.py` evaluate that rule at any point | candidate |
 
 Planned: 0.2.x the tiles restarted from M0 (D-B046), 0.3.x the merged model (notes/merge_design.md), 1.0 the merged
 ensemble model with uncertainties and resolution masks.
@@ -29,6 +32,10 @@ ensemble model with uncertainties and resolution masks.
 * `v<version>.provenance.json`: source run, git commit, region definition, tomoDD input file, checksums.
 * `v<version>_nll/` (versions exported for relocation): NonLinLoc SLOW_LEN grids `model.P|S.mod.buf|hdr` on the
   1 km Lambert grid of the v4-NLL3D starting model.
+  Up to 0.3.1 they are true-depth grids with the v4-NLL3D water and air cells; from 0.3.2 they are the exact
+  Earth-flattened fields of the v5.1 relocation (see `model.P.mod.README` in the folder).
+* `v<version>_surface_lattice.nc` (0.3.2 on): the merged solid surface and the offshore mask of the shallow-crust rule
+  on the 1 km NonLinLoc lattice, read by `velocity_model_tools.py` to evaluate the rule at any point.
 
 ## Reading a model
 

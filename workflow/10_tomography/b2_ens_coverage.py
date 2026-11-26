@@ -1,19 +1,22 @@
-"""Track B Bayesian ensemble (D-B030): calibration of a synthetic ensemble against its known truth.
+"""Track B Bayesian ensemble: the D-B030 calibration gate on the synthetic ensemble (bayes_design section 5).
 
-  python b2_ens_coverage.py ENS [--tag pilot] [--members m000-m019]
+  python b2_ens_coverage.py [--members s000-s099] [--no-exit]      -> ROOT/synth/coverage.{json,md}; exit 0 PASS, 2 FAIL
 
-Nodes (interior, Vp, Vs, Vp/Vs): ensemble 68% and 95% intervals, two ways: empirical quantiles (16-84, 2.5-97.5%)
-and Gaussian (mean +- 1 / 1.96 std; less noisy for small ensembles). Coverage = fraction of mask nodes whose truth lies
-inside. Masks:
-  * provisional: DWS (P for Vp, S for Vs, both for Vp/Vs) above the run threshold (params tomodd.inp.thres) in >= 90%
-    of the members
-  * dws100: same with DWS >= 100 (a stricter, illustrative cut)
-  * chk100 / chk60: checkerboard masks of the parallel resolution tests (data/tomo_v1/b2_res_tests/
-    resolution_mask.npz, b2_res_checker.py; D-B018 corr >= 0.7 and amp >= 0.5) at any cell size <= 100 km / <= 60 km
-Hypocentres: per event and coordinate (east, north, depth, km from the truth = baseline relocation), same intervals,
-for events relocated by >= 90% of the members; also by v4-NLL3D tier and depth class.
-Noise floor: members nf0..nf4 and their parent (identical draws, 1e-6 s data perturbation): std per node and event.
-Writes data/tomo_v1/b2_ensemble/<ENS>_<tag>_*.csv/.md/.png and <ens>/coverage_<tag>.json.
+Nodes (merge grid, the merged member models before the D-B073 node rule, against the synthetic truth model, which has
+no rule either): for Vp, Vs and Vp/Vs, the ensemble 68 % and 95 % intervals (empirical quantiles 16-84 and 2.5-97.5;
+Gaussian mean +- 1 and 1.96 std reported as well) and the share of nodes whose truth lies inside, on
+* resolved: nodes resolved by the deterministic checkerboard tests (v<truth_model> resolution_p / resolution_s > 0,
+  D-B018) with the tiles' share R > 0 in every member (the gate mask);
+* sampled: nodes with DWS >= 100 (P for Vp, S for Vs) in >= member_frac of the members and R > 0 (reported).
+Hypocentres: per tile, the members' tomoDD relocations (east, north, depth, km) against the truth hypocentres, for
+events relocated in >= member_frac of the members; empirical intervals as above.
+PASS when, on the gate mask with >= min_nodes nodes, Vp and Vs and each hypocentre coordinate have 68 % coverage in
+calibration.cov68 and 95 % coverage in calibration.cov95. Vp/Vs is reported, not gated.
+Noise floor: the clones nf* of s000 (identical draws, 1e-6 s data perturbation): their node and hypocentre spread,
+reported against the ensemble spread.
+N_eff-aware consistency (review 2026-11-25), reported next to the D-B030 verdict without changing it: per item the
+observed coverage, N_eff (n^2 / sum rho, and / sum rho^2, rho the prior's 30 km / 8 km correlation; events binned
+5 x 5 x 2 km) and the Clopper-Pearson 95 % interval with n = N_eff, and whether 0.68 / 0.95 lies inside.
 """
 import argparse
 import json
@@ -22,237 +25,240 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from b2_ens_common import BASE, FIGS, INPUTS, T, ens_dir, read_reloc  # noqa: E402
+import b2_ens_common as C  # noqa: E402
+from b2_ens_common import CFG, E, PR, ROOT, T  # noqa: E402
 
-INNER = (slice(1, -1), slice(1, -1), slice(1, -1))
+SD = ROOT / "synth"
+CAL = E["calibration"]
 
 
-def load_members(E, names):
-    mods, dws, rel, ok = [], [], [], []
+def members(kind, names=None):
+    d = ROOT / kind
+    names = names or sorted(p.name for p in d.iterdir() if p.is_dir() and p.name[0] in "sr")
+    return [n for n in names if (d / n / "MERGED").exists()]
+
+
+def load_merged(kind, names):
+    keys = ("vp", "vs", "r_p", "r_s", "dws_p", "dws_s")
+    out = {k: [] for k in keys}
     for n in names:
-        md = E / n
-        if not (md / "DONE").exists():
-            continue
-        g = np.load(md / "run" / "Output_Files" / "model_geo.npz")
-        d = np.load(md / "dws.npz")
-        mods.append((g["vp"][INNER], g["vs"][INNER]))
-        dws.append((d["p"][INNER], d["s"][INNER]))
-        rel.append(read_reloc(md / "run" / "Output_Files" / "tomoDD.reloc_geo"))
-        ok.append(n)
-    return ok, mods, dws, rel
+        z = np.load(ROOT / kind / n / "merged.npz")
+        for k in keys:
+            out[k].append(z[k])
+    return {k: np.array(v) for k, v in out.items()}
 
 
 def intervals(X, truth):
-    """X [n_members, ...]; returns dict of boolean arrays (inside) and stats."""
     q = np.nanpercentile(X, [2.5, 16, 84, 97.5], axis=0)
     mu, sd = np.nanmean(X, axis=0), np.nanstd(X, axis=0, ddof=1)
     return dict(e68=(truth >= q[1]) & (truth <= q[2]), e95=(truth >= q[0]) & (truth <= q[3]),
-                g68=np.abs(truth - mu) <= sd, g95=np.abs(truth - mu) <= 1.96 * sd, mu=mu, sd=sd,
+                g68=np.abs(truth - mu) <= sd, g95=np.abs(truth - mu) <= 1.96 * sd, sd=sd,
                 z=(mu - truth) / np.where(sd > 0, sd, np.nan))
 
 
-def cov_row(I, m, label):
+def row(I, m):
     n = int(m.sum())
-    if n == 0:
-        return dict(group=label, n=0)
-    return dict(group=label, n=n, e68=I["e68"][m].mean(), e95=I["e95"][m].mean(), g68=I["g68"][m].mean(),
-                g95=I["g95"][m].mean(), rms_z=float(np.sqrt(np.nanmean(I["z"][m] ** 2))))
+    if not n:
+        return dict(n=0)
+    return dict(n=n, e68=round(float(I["e68"][m].mean()), 4), e95=round(float(I["e95"][m].mean()), 4),
+                g68=round(float(I["g68"][m].mean()), 4), g95=round(float(I["g95"][m].mean()), 4),
+                rms_z=round(float(np.sqrt(np.nanmean(I["z"][m] ** 2))), 3), sd_median=float(np.nanmedian(I["sd"][m])))
 
 
-def checker_mask(shape):
-    """Parallel checkerboard tests (b2_res_checker.py analyse): finest resolved cell (km, 0 = unresolved) per node.
-    Returns {name: (mask_vp, mask_vs)}: chk100 = resolved at any tested cell size (<= 100 km), chk60 = <= 60 km."""
-    f = FIGS.parent / "b2_res_tests" / "resolution_mask.npz"
-    if not f.exists():
-        return {}, None
-    z = np.load(f)
+def ok(r):
+    return r.get("n", 0) >= CAL["min_nodes"] and CAL["cov68"][0] <= r["e68"] <= CAL["cov68"][1] and \
+        CAL["cov95"][0] <= r["e95"] <= CAL["cov95"][1]
 
-    def fit(a):
-        if a.shape == shape:
-            return a
-        if a.shape == tuple(s + 2 for s in shape):
-            return a[INNER]
-        raise ValueError(f"mask shape {a.shape} vs {shape}")
-    fp, fs = fit(z["finest_p"]), fit(z["finest_s"])
-    return {"chk100": (fp > 0, fs > 0), "chk60": ((fp > 0) & (fp <= 60), (fs > 0) & (fs <= 60))}, str(f)
+
+def hypo_cov(names):
+    tr = pd.read_parquet(SD / "truth" / "truth_hypo.parquet").set_index("ID")
+    out = {}
+    for tile in CFG["tiles"]:
+        rel = []
+        for n in names:
+            f = SD / n / tile / "run" / "Output_Files" / "tomoDD.reloc_geo"
+            rel.append(C.read_reloc(f)[["lat", "lon", "depth"]].add_prefix(f"{n}_"))
+        R = pd.concat(rel, axis=1)
+        frac = R.filter(like="_lat").notna().mean(axis=1)
+        R = R[frac >= CAL["member_frac"]]
+        R = R[R.index.isin(tr.index)]
+        t = tr.loc[R.index]
+        lat = R.filter(like="_lat").values
+        lon = R.filter(like="_lon").values
+        dep = R.filter(like="_depth").values
+        km_n = (lat - t.lat.values[:, None]) * 111.19
+        km_e = (lon - t.lon.values[:, None]) * 111.19 * np.cos(np.radians(t.lat.values[:, None]))
+        km_z = dep - t.depth.values[:, None]
+        res = {"neff": neff_events(t.lat.values, t.lon.values, t.depth.values) if len(t) else (0, 0.0, 0.0)}
+        for nm, X in (("east", km_e), ("north", km_n), ("depth", km_z)):
+            I = intervals(X.T, np.zeros(X.shape[0]))
+            res[nm] = row(I, np.ones(X.shape[0], bool))
+            res[nm]["median_abs_err_km"] = round(float(np.nanmedian(np.abs(np.nanmean(X, axis=1)))), 3)
+        out[tile] = dict(events=int(len(R)), **res)
+    return out
+
+
+def noise_floor():
+    nf = sorted(p.name for p in SD.iterdir() if p.is_dir() and p.name.startswith("nf") and (p / "MERGED").exists())
+    if not nf or not (SD / "s000" / "MERGED").exists():
+        return dict(n=0)
+    M = load_merged("synth", ["s000"] + nf)
+    sdp, sds = np.nanstd(M["vp"], axis=0, ddof=1), np.nanstd(M["vs"], axis=0, ddof=1)
+    cov = (M["r_p"] > 0).all(0)
+    out = dict(n=len(nf) + 1, vp_std_median=float(np.median(sdp[cov])), vp_std_p95=float(np.percentile(sdp[cov], 95)),
+               vs_std_median=float(np.median(sds[cov])), vs_std_p95=float(np.percentile(sds[cov], 95)))
+    hz = []
+    for tile in CFG["tiles"]:
+        R = pd.concat([C.read_reloc(SD / n / tile / "run" / "Output_Files" / "tomoDD.reloc_geo").depth.rename(n)
+                       for n in ["s000"] + nf], axis=1).dropna()
+        hz.append(R.std(axis=1, ddof=1).values)
+    hz = np.concatenate(hz)
+    out.update(depth_std_median_km=float(np.median(hz)), depth_std_p95_km=float(np.percentile(hz, 95)))
+    return out
+
+
+# ---------------------------------------------------------------- N_eff-aware consistency (review 2026-11-25; reported,
+# not part of the D-B030 pass rule, which is the PI's): the truth is ONE random field with 30 km / 8 km correlation, so
+# the gate's nodes (and events) are not independent trials. N_eff = n^2 / sum_ij rho_ij^k with rho the prior's
+# correlation exp(-(dh/Lh)^2) exp(-(dz/Lz)^2): k = 1 for the field itself (conservative), k = 2 for the coverage
+# indicators (leading term). Clopper-Pearson 95 % interval of the coverage with n = N_eff; consistent = the nominal
+# value (0.68 or 0.95) lies inside.
+def _rho_sums(x, y, z, w=None, chunk=2000):
+    Lh, Lz = float(PR["rf"]["len_lat_km"]), float(PR["rf"]["len_z_km"])
+    w = np.ones(len(x)) if w is None else np.asarray(w, float)
+    s1 = s2 = 0.0
+    for i in range(0, len(x), chunk):
+        sl = slice(i, i + chunk)
+        r = (np.exp(-((x[sl, None] - x[None]) ** 2 + (y[sl, None] - y[None]) ** 2) / Lh ** 2)
+             * np.exp(-((z[sl, None] - z[None]) / Lz) ** 2))
+        ww = w[sl, None] * w[None]
+        s1 += float((ww * r).sum())
+        s2 += float((ww * r ** 2).sum())
+    n = float(w.sum())
+    return n, n ** 2 / s1, n ** 2 / s2
+
+
+def neff_nodes(mask, lon, lat, z):
+    LO, LA, Z = np.meshgrid(lon, lat, z, indexing="ij")
+    X, Y = C.proj()(LO[mask], LA[mask])
+    return _rho_sums(X / 1e3, Y / 1e3, Z[mask])
+
+
+def neff_events(lat, lon, depth, cell_km=5.0, cell_z_km=2.0):
+    """Events binned into cell_km x cell_km x cell_z_km cells (counts as weights; within-cell rho taken as 1)."""
+    X, Y = C.proj()(np.asarray(lon), np.asarray(lat))
+    k = pd.DataFrame({"i": np.floor(X / 1e3 / cell_km), "j": np.floor(Y / 1e3 / cell_km),
+                      "k": np.floor(np.asarray(depth) / cell_z_km)}).value_counts().reset_index(name="n")
+    return _rho_sums((k.i.values + 0.5) * cell_km, (k.j.values + 0.5) * cell_km, (k.k.values + 0.5) * cell_z_km, k.n.values)
+
+
+def cp_interval(p, n):
+    from scipy.stats import beta
+    x = p * n
+    lo = float(beta.ppf(0.025, x, n - x + 1)) if x > 0 else 0.0
+    hi = float(beta.ppf(0.975, x + 1, n - x)) if x < n else 1.0
+    return [round(lo, 3), round(hi, 3)]
+
+
+def consistency(r, n_field, n_ind):
+    out = dict(n=r.get("n", 0), neff_field=round(n_field, 1), neff_indicator=round(n_ind, 1))
+    for lev, key in ((0.68, "e68"), (0.95, "e95")):
+        if key not in r:
+            continue
+        obs = r[key]
+        for lab, ne in (("field", n_field), ("indicator", n_ind)):
+            iv = cp_interval(obs, ne)
+            out[f"{key}_{lab}_ci95"] = iv
+            out[f"{key}_{lab}_nominal_inside"] = bool(iv[0] <= lev <= iv[1])
+        out[key] = obs
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("ens")
-    ap.add_argument("--tag", default="all")
-    ap.add_argument("--members", default="0-99")
+    ap.add_argument("--members", help="range like s000-s099 (default: every merged synth member s*)")
+    ap.add_argument("--no-exit", action="store_true")
     a = ap.parse_args()
-    E = ens_dir(a.ens)
-    lo, hi = (int(v) for v in a.members.split("-"))
-    names = [f"m{i:03d}" for i in range(lo, hi + 1)]
-    ok, mods, dws, rel = load_members(E, names)
-    N = len(ok)
-    print(f"{a.ens}: {N} members done of {len(names)}")
-    tm = np.load(E / "truth" / "truth_model.npz")
-    tvp, tvs = tm["vp"][INNER], tm["vs"][INNER]
-    s = np.load(INPUTS / "start_model.npz")
-    z = s["z"]
-    VP = np.array([m[0] for m in mods])
-    VS = np.array([m[1] for m in mods])
-    DP = np.array([d[0] for d in dws])
-    DS = np.array([d[1] for d in dws])
-    thr = T["inp"]["thres"]
-    masks = {"provisional": ((DP > thr).mean(0) >= 0.9, (DS > thr).mean(0) >= 0.9),
-             "dws100": ((DP >= 100).mean(0) >= 0.9, (DS >= 100).mean(0) >= 0.9)}
-    cm, cpath = checker_mask(tvp.shape)
-    masks.update(cm)
-    quant = {"Vp": (VP, tvp, 0), "Vs": (VS, tvs, 1), "VpVs": (VP / VS, tvp / tvs, 2)}
-    rows = []
-    summary = dict(ens=a.ens, tag=a.tag, members=N, checker_mask=cpath, nodes={}, hypo={})
+    if a.members:
+        lo, hi = (int(v[1:]) for v in a.members.split("-"))
+        names = members("synth", [f"s{i:03d}" for i in range(lo, hi + 1)])
+    else:
+        names = members("synth")
+    N = len(names)
+    tm = np.load(SD / "truth" / "truth_model.npz")
+    M = load_merged("synth", names)
+    nd = xr.open_dataset(Path(T["models"]["store"]) / T["models"]["name"] / f"v{CFG['truth_model']}.nc")
+    resp, ress = (nd[v].values.transpose(2, 1, 0) > 0 for v in ("resolution_p", "resolution_s"))
+    rp_all, rs_all = (M["r_p"] > 0).all(0), (M["r_s"] > 0).all(0)
+    f = CAL["member_frac"]
+    masks = {"resolved": (resp & rp_all, ress & rs_all),
+             "sampled": ((M["dws_p"] >= 100).mean(0) >= f) & rp_all, }
+    masks["sampled"] = (masks["sampled"], ((M["dws_s"] >= 100).mean(0) >= f) & rs_all)
+    quant = {"Vp": (M["vp"], tm["vp"], 0), "Vs": (M["vs"], tm["vs"], 1), "VpVs": (M["vp"] / M["vs"], tm["vp"] / tm["vs"], 2)}
+    nodes = {}
     for mk, (mp, ms) in masks.items():
         for q, (X, tr, kind) in quant.items():
-            mask = mp if kind == 0 else ms if kind == 1 else (mp & ms)
-            I = intervals(X, tr)
-            r = cov_row(I, mask, "all")
-            summary["nodes"][f"{mk}_{q}"] = r
-            rows.append(dict(mask=mk, q=q, depth="all", **{k: v for k, v in r.items() if k != "group"}))
-            for k, zk in enumerate(z):
-                mm = np.zeros_like(mask)
-                mm[:, :, k] = mask[:, :, k]
-                rr = cov_row(I, mm, f"{zk:g}")
-                if rr["n"]:
-                    rows.append(dict(mask=mk, q=q, depth=f"{zk:g}", **{k2: v for k2, v in rr.items() if k2 != "group"},
-                                     sd_mean=float(np.mean(I["sd"][mm] / (tr[mm] if q != "VpVs" else 1.0)))))
-    nodes = pd.DataFrame(rows)
-    FIGS.mkdir(parents=True, exist_ok=True)
-    pre = FIGS / f"{a.ens}_{a.tag}"
-    nodes.round(4).to_csv(f"{pre}_nodes.csv", index=False)
-    # spread: ensemble std (%) on provisional nodes by depth, and error of the mean
-    sp = []
-    for k, zk in enumerate(z):
-        m = masks["provisional"][0][:, :, k]
-        if m.sum() == 0:
+            m = mp if kind == 0 else ms if kind == 1 else (mp & ms)
+            nodes[f"{mk}_{q}"] = row(intervals(X, tr), m)
+    hyp = hypo_cov(names)
+    gate_nodes = {q: nodes[f"resolved_{q}"] for q in ("Vp", "Vs")}
+    gate_hypo = {f"{t}_{c}": h[c] for t, h in hyp.items() for c in ("east", "north", "depth") if h["events"] > 0}
+    verdict = {k: ok(r) for k, r in gate_nodes.items()}
+    verdict.update({k: (CAL["cov68"][0] <= r["e68"] <= CAL["cov68"][1] and CAL["cov95"][0] <= r["e95"] <= CAL["cov95"][1])
+                    for k, r in gate_hypo.items()})
+    passed = bool(N >= 2 and all(verdict.values()))
+    cons = {}
+    for mk, (mp, ms) in masks.items():
+        for q, kind in (("Vp", 0), ("Vs", 1), ("VpVs", 2)):
+            m = mp if kind == 0 else ms if kind == 1 else (mp & ms)
+            if m.sum():
+                _, nf, ni = neff_nodes(m, tm["lon"], tm["lat"], tm["z"])
+                cons[f"{mk}_{q}"] = consistency(nodes[f"{mk}_{q}"], nf, ni)
+    for t, h in hyp.items():
+        if h["events"]:
+            _, nf, ni = h["neff"]
+            for c in ("east", "north", "depth"):
+                cons[f"{t}_{c}"] = consistency(h[c], nf, ni)
+    out = dict(members=N, names=names, criteria=CAL, nodes=nodes, hypocentres=hyp, verdict=verdict,
+               result="PASS" if passed else "FAIL", neff_consistency=cons, noise_floor=noise_floor())
+    C.jdump(SD / "coverage.json", out)
+    md = [f"# Calibration of the {C.CONFIG} ensemble on synthetic data ({N} members)", "",
+          f"Result: **{out['result']}** (68 % coverage in {CAL['cov68']}, 95 % in {CAL['cov95']}, gate mask 'resolved', "
+          f">= {CAL['min_nodes']} nodes; hypocentres per tile and coordinate)", "",
+          "| mask / quantity | nodes | 68 % (quantile) | 95 % (quantile) | 68 % (Gauss) | 95 % (Gauss) | rms z | median sd |",
+          "|---|---|---|---|---|---|---|---|"]
+    for k, r in nodes.items():
+        md.append(f"| {k} | {r.get('n', 0)} | {r.get('e68', '')} | {r.get('e95', '')} | {r.get('g68', '')} | "
+                  f"{r.get('g95', '')} | {r.get('rms_z', '')} | {r.get('sd_median', '')} |")
+    md += ["", "| tile | coordinate | events | 68 % | 95 % | median abs error of the mean (km) |", "|---|---|---|---|---|---|"]
+    for t, h in hyp.items():
+        for c in ("east", "north", "depth"):
+            r = h[c]
+            md.append(f"| {t} | {c} | {h['events']} | {r.get('e68', '')} | {r.get('e95', '')} | {r.get('median_abs_err_km', '')} |")
+    md += ["", f"Noise floor: {json.dumps(out['noise_floor'])}", "", f"Verdict per item (D-B030 rule): {json.dumps(verdict)}",
+           "", "## N_eff-aware consistency (reported next to the D-B030 verdict; does not change it)", "",
+           "One truth field with 30 km / 8 km correlation: nodes and events are not independent. N_eff = n^2 / sum rho^k "
+           "(k = 1 field, k = 2 coverage indicators). Clopper-Pearson 95 % interval of the observed coverage with n = "
+           "N_eff; 'in' = the nominal value lies inside (consistent with calibration). Gate items (D-B030) marked *.", "",
+           "| item | n | N_eff field / indicator | 68 % obs | 95 % CI (field) | 95 % CI (indicator) | 0.68 in (f / i) | "
+           "95 % obs | 95 % CI (field) | 95 % CI (indicator) | 0.95 in (f / i) |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+    gate_items = {"resolved_Vp", "resolved_Vs"} | {f"{t}_{c}" for t in hyp for c in ("east", "north", "depth")}
+    for k, r in cons.items():
+        if "e68" not in r:
             continue
-        sp.append(dict(depth=zk, n_vp=int(m.sum()), sd_vp_pct=float(np.median(100 * VP[:, m].std(0, ddof=1) / tvp[:, :, k][m])),
-                       sd_vs_pct=float(np.median(100 * VS[:, m].std(0, ddof=1) / tvs[:, :, k][m])),
-                       sd_vpvs=float(np.median((VP / VS)[:, :, :, k][:, m].std(0, ddof=1))),
-                       err_vp_pct=float(np.median(100 * np.abs(VP[:, m].mean(0) / tvp[:, :, k][m] - 1))),
-                       true_rf_vp_pct=float(np.median(100 * np.abs(tm["fp"][:, :, k][m])))))
-    spread = pd.DataFrame(sp)
-    spread.round(4).to_csv(f"{pre}_spread.csv", index=False)
-    # hypocentres
-    th = pd.read_csv(E / "truth" / "truth_hypo.csv").set_index("ID")
-    ids = th.index.values
-    H = np.full((N, len(ids), 3), np.nan)
-    for i, r in enumerate(rel):
-        rr = r.reindex(ids)
-        H[i, :, 0] = (rr.lon.values - th.lon.values) * 111.19 * np.cos(np.radians(th.lat.values))
-        H[i, :, 1] = (rr.lat.values - th.lat.values) * 111.19
-        H[i, :, 2] = rr.depth.values - th.depth.values
-    present = np.isfinite(H[:, :, 0]).mean(0) >= 0.9
-    ev = pd.read_csv(INPUTS / "events.csv").set_index("ID").reindex(ids)
-    hrows = []
-    for c, lab in enumerate(("east", "north", "depth")):
-        I = intervals(H[:, :, c], np.zeros(len(ids)))
-        for grp, m in [("all", present)] + [(f"tier {t}", present & (ev.tier.values == t)) for t in ("A", "B", "C")] + \
-                [(f"z {a_}-{b_} km", present & (th.depth.values >= a_) & (th.depth.values < b_))
-                 for a_, b_ in ((-5, 10), (10, 20), (20, 35), (35, 100))]:
-            r = cov_row(I, m, grp)
-            if r["n"]:
-                r.update(coord=lab, sd_median_km=float(np.median(I["sd"][m])), err_median_km=float(np.median(np.abs(I["mu"][m]))))
-                hrows.append(r)
-    hyp = pd.DataFrame(hrows)
-    hyp.round(4).to_csv(f"{pre}_hypo.csv", index=False)
-    summary["hypo"] = hyp[hyp.group == "all"].round(4).to_dict("records")
-    summary["events_present"] = int(present.sum())
-    # noise floor
-    nf = [n for n in ["nf0", "nf1", "nf2", "nf3", "nf4"] if (E / n / "DONE").exists()]
-    if nf:
-        par = json.loads((E / nf[0] / "inputs" / "draws.json").read_text())["seed"]
-        okf, modf, _, relf = load_members(E, [f"m{par:03d}"] + nf)
-        Vf = np.array([m[0] for m in modf])
-        Sf = np.array([m[1] for m in modf])
-        mprov = masks["provisional"][0]
-        sdp = 100 * Vf.std(0, ddof=1) / Vf.mean(0)
-        sds = 100 * Sf.std(0, ddof=1) / Sf.mean(0)
-        Hf = np.full((len(relf), len(ids), 3), np.nan)
-        for i, r in enumerate(relf):
-            rr = r.reindex(ids)
-            Hf[i, :, 0] = (rr.lon.values - th.lon.values) * 111.19 * np.cos(np.radians(th.lat.values))
-            Hf[i, :, 1] = (rr.lat.values - th.lat.values) * 111.19
-            Hf[i, :, 2] = rr.depth.values - th.depth.values
-        hsd = np.nanstd(Hf, axis=0, ddof=1)
-        ens_sd_vp = 100 * VP.std(0, ddof=1) / VP.mean(0)
-        hsd_ens = np.nanstd(H, axis=0, ddof=1)
-        summary["noise_floor"] = dict(
-            runs=okf, vp_sd_pct_median=float(np.median(sdp[mprov])), vp_sd_pct_p95=float(np.percentile(sdp[mprov], 95)),
-            vs_sd_pct_median=float(np.median(sds[masks["provisional"][1]])),
-            vs_sd_pct_p95=float(np.percentile(sds[masks["provisional"][1]], 95)),
-            ratio_to_ensemble_vp_median=float(np.median(sdp[mprov] / ens_sd_vp[mprov])),
-            hypo_sd_km_median={c: float(np.nanmedian(hsd[:, k])) for k, c in enumerate(("east", "north", "depth"))},
-            hypo_sd_km_p95={c: float(np.nanpercentile(hsd[:, k], 95)) for k, c in enumerate(("east", "north", "depth"))},
-            hypo_ratio_to_ensemble_median={c: float(np.nanmedian(hsd[:, k] / hsd_ens[:, k])) for k, c in enumerate(("east", "north", "depth"))})
-    # run statistics
-    rl = [json.loads((E / n / "DONE").read_text()) for n in ok + nf]
-    wall = np.array([r["wall_min"] for r in rl])
-    rss = np.array([float(r["time"].split()[-2]) / 1e6 for r in rl])
-    du = [sum(p.stat().st_size for p in (E / n).rglob("*") if p.is_file()) / 1e6 for n in ok + nf]
-    summary["runs"] = dict(n=len(rl), wall_min_median=float(np.median(wall)), wall_min_max=float(wall.max()),
-                           rss_gb_max=float(rss.max()), rss_gb_median=float(np.median(rss)), mb_per_member=float(np.median(du)),
-                           rms_abs_final=[float(np.min([r["rms_abs_final"] for r in rl])), float(np.max([r["rms_abs_final"] for r in rl]))])
-    summary["spread_by_depth"] = spread.round(3).to_dict("records")
-    (E / f"coverage_{a.tag}.json").write_text(json.dumps(summary, indent=1, default=float))
-    (FIGS / f"{a.ens}_{a.tag}_summary.json").write_text(json.dumps(summary, indent=1, default=float))
-    with pd.option_context("display.width", 200, "display.max_columns", 30):
-        print(nodes[nodes.depth == "all"].round(3).to_string(index=False))
-        print(nodes[(nodes["mask"] == "provisional")].round(3).to_string(index=False))
-        print(spread.round(3).to_string(index=False))
-        print(hyp.round(3).to_string(index=False))
-    print(json.dumps({k: summary[k] for k in ("noise_floor", "runs", "events_present") if k in summary}, indent=1, default=float))
-    figures(pre, nodes, spread, hyp, VP, tvp, masks, z, s, a)
-
-
-def figures(pre, nodes, spread, hyp, VP, tvp, masks, z, s, a):
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    fig, axs = plt.subplots(1, 3, figsize=(10, 4.2), sharey=True)
-    for ax, q in zip(axs, ("Vp", "Vs", "VpVs")):
-        d = nodes[(nodes["mask"] == "provisional") & (nodes.q == q) & (nodes.depth != "all")]
-        zz = d.depth.astype(float)
-        ax.axvspan(0.60, 0.76, color="0.85")
-        ax.axvspan(0.90, 0.98, color="0.92")
-        ax.plot(d.e68, zz, "o-", color="#1f5f99", label="68% (quantile)")
-        ax.plot(d.e95, zz, "s-", color="#b3541e", label="95% (quantile)")
-        ax.plot(d.g68, zz, "o--", color="#1f5f99", mfc="none", label="68% (Gaussian)")
-        ax.plot(d.g95, zz, "s--", color="#b3541e", mfc="none", label="95% (Gaussian)")
-        ax.set_xlim(0, 1)
-        ax.set_title(f"{q}: truth inside interval", fontsize=9)
-        ax.set_xlabel("fraction of resolved nodes")
-    axs[0].invert_yaxis()
-    axs[0].set_ylabel("node depth (km)")
-    axs[0].legend(fontsize=7, loc="lower left")
-    fig.suptitle(f"{a.ens} ({a.tag}): coverage by depth, provisional DWS mask; grey = target bands", fontsize=9)
-    fig.tight_layout()
-    fig.savefig(f"{pre}_coverage_depth.png", dpi=150)
-    plt.close(fig)
-    ks = [k for k, zk in enumerate(z) if zk in (7, 15, 25, 40)]
-    fig, axs = plt.subplots(2, len(ks), figsize=(3.2 * len(ks), 6.2))
-    sd = 100 * VP.std(0, ddof=1) / VP.mean(0)
-    err = 100 * (VP.mean(0) / tvp - 1)
-    for c, k in enumerate(ks):
-        m = masks["provisional"][0][:, :, k]
-        for r, (arr, lab, cmap, lim) in enumerate(((sd, "ensemble std Vp (%)", "viridis", (0, 3)),
-                                                   (err, "mean - truth Vp (%)", "RdBu_r", (-4, 4)))):
-            ax = axs[r, c]
-            im = ax.pcolormesh(s["lon"], s["lat"], np.where(m, arr[:, :, k], np.nan).T, cmap=cmap, vmin=lim[0], vmax=lim[1],
-                               shading="nearest")
-            ax.set_title(f"{z[k]:g} km: {lab}", fontsize=8)
-            ax.set_aspect(1 / np.cos(np.radians(41.3)))
-            ax.tick_params(labelsize=7)
-            plt.colorbar(im, ax=ax, shrink=0.7)
-    fig.tight_layout()
-    fig.savefig(f"{pre}_maps_vp.png", dpi=130)
-    plt.close(fig)
+        md.append(f"| {k}{' *' if k in gate_items else ''} | {r['n']} | {r['neff_field']} / {r['neff_indicator']} | "
+                  f"{r['e68']} | {r['e68_field_ci95']} | {r['e68_indicator_ci95']} | "
+                  f"{'yes' if r['e68_field_nominal_inside'] else 'no'} / {'yes' if r['e68_indicator_nominal_inside'] else 'no'} | "
+                  f"{r['e95']} | {r['e95_field_ci95']} | {r['e95_indicator_ci95']} | "
+                  f"{'yes' if r['e95_field_nominal_inside'] else 'no'} / {'yes' if r['e95_indicator_nominal_inside'] else 'no'} |")
+    (SD / "coverage.md").write_text("\n".join(md) + "\n")
+    print("\n".join(md))
+    if not a.no_exit:
+        sys.exit(0 if passed else 2)
 
 
 if __name__ == "__main__":

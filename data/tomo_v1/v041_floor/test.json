@@ -1,0 +1,77 @@
+{
+ "floor_lines": 97,
+ "events_hit": 20,
+ "hits_by_iteration": {
+  "1": 10,
+  "2": 7,
+  "3": 7,
+  "4": 7,
+  "5": 6,
+  "6": 6,
+  "7": 6,
+  "8": 8,
+  "9": 10,
+  "10": 8,
+  "11": 11,
+  "12": 11
+ },
+ "floor_not_met": 0,
+ "height_above_floor_m_p50_p90_max": [
+  223.2,
+  863.0,
+  1371.1
+ ],
+ "air_quakes_v040": 4,
+ "air_quakes_test": 0,
+ "iterations_v040_incl_aq_repeats": 15,
+ "iterations_test": 12,
+ "events_start": 4378,
+ "events_final_v040": 4374,
+ "events_final_test": 4378,
+ "shift_hit": {
+  "n": 19,
+  "dz_median_km": 0.678,
+  "dz_absp90_km": 1.2946,
+  "dh_median_km": 0.1163,
+  "moved_gt_1m": 19
+ },
+ "shift_not_hit": {
+  "n": 4355,
+  "dz_median_km": 0.006,
+  "dz_absp90_km": 0.526,
+  "dh_median_km": 0.0579,
+  "moved_gt_1m": 4355
+ },
+ "final_at_floor": 12,
+ "final_above_floor_by_more_than_2m": 0,
+ "final_above_floor_within_2m": 0,
+ "final_above_true_surface_v040": 14,
+ "final_above_true_surface_test": 0,
+ "dVp_pct_rms_max_changed_nodes": [
+  0.5285,
+  14.591,
+  7318,
+  49335
+ ],
+ "dVs_pct_rms_max_changed_nodes": [
+  0.1108,
+  8.848,
+  5949,
+  49335
+ ],
+ "rms_abs_final_v040_test": [
+  0.2405,
+  0.2407
+ ],
+ "rms_wt_final_v040_test": [
+  0.1284,
+  0.1277
+ ],
+ "wall_min_v040_test": [
+  12.5,
+  19.3
+ ],
+ "nohit_files_compared": 20,
+ "nohit_different": [],
+ "nohit_floor_lines": 0
+}

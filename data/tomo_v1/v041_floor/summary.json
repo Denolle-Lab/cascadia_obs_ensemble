@@ -1,0 +1,444 @@
+{
+ "identity": [
+  {
+   "run": "blanco_m0t_d200_s20",
+   "binary": "tomoDD-SE_e10k",
+   "binary_md5": "9cdc329c0976",
+   "exit": "exit 0",
+   "output_files": 20,
+   "different": [
+    "tomoDD-SE.log",
+    "stdout.txt"
+   ],
+   "log_identical": false,
+   "wall_min": 24.0
+  },
+  {
+   "run": "margin_m0_v3_d200_s480",
+   "binary": "tomoDD-SE_m",
+   "binary_md5": "a334ef5e0c78",
+   "exit": "exit 0",
+   "output_files": 20,
+   "different": [
+    "tomoDD-SE.log",
+    "stdout.txt"
+   ],
+   "log_identical": false,
+   "wall_min": 33.6
+  },
+  {
+   "run": "mendocino_gorda_c_m0t_d200_s480",
+   "binary": "tomoDD-SE_e13k",
+   "binary_md5": "c441d6ad7814",
+   "exit": "exit 0",
+   "output_files": 20,
+   "different": [
+    "tomoDD-SE.log",
+    "stdout.txt"
+   ],
+   "log_identical": false,
+   "wall_min": 55.5
+  },
+  {
+   "run": "washington_m0t_d200_s480",
+   "binary": "tomoDD-SE_w",
+   "binary_md5": "aee014d37d67",
+   "exit": "exit 0",
+   "output_files": 20,
+   "different": [
+    "tomoDD-SE.log",
+    "stdout.txt"
+   ],
+   "log_identical": false,
+   "wall_min": 76.1
+  }
+ ],
+ "test": {
+  "floor_lines": 97,
+  "events_hit": 20,
+  "hits_by_iteration": {
+   "1": 10,
+   "2": 7,
+   "3": 7,
+   "4": 7,
+   "5": 6,
+   "6": 6,
+   "7": 6,
+   "8": 8,
+   "9": 10,
+   "10": 8,
+   "11": 11,
+   "12": 11
+  },
+  "floor_not_met": 0,
+  "height_above_floor_m_p50_p90_max": [
+   223.2,
+   863.0,
+   1371.1
+  ],
+  "air_quakes_v040": 4,
+  "air_quakes_test": 0,
+  "iterations_v040_incl_aq_repeats": 15,
+  "iterations_test": 12,
+  "events_start": 4378,
+  "events_final_v040": 4374,
+  "events_final_test": 4378,
+  "shift_hit": {
+   "n": 19,
+   "dz_median_km": 0.678,
+   "dz_absp90_km": 1.2946,
+   "dh_median_km": 0.1163,
+   "moved_gt_1m": 19
+  },
+  "shift_not_hit": {
+   "n": 4355,
+   "dz_median_km": 0.006,
+   "dz_absp90_km": 0.526,
+   "dh_median_km": 0.0579,
+   "moved_gt_1m": 4355
+  },
+  "final_at_floor": 12,
+  "final_above_floor_by_more_than_2m": 0,
+  "final_above_floor_within_2m": 0,
+  "final_above_true_surface_v040": 14,
+  "final_above_true_surface_test": 0,
+  "dVp_pct_rms_max_changed_nodes": [
+   0.5285,
+   14.591,
+   7318,
+   49335
+  ],
+  "dVs_pct_rms_max_changed_nodes": [
+   0.1108,
+   8.848,
+   5949,
+   49335
+  ],
+  "rms_abs_final_v040_test": [
+   0.2405,
+   0.2407
+  ],
+  "rms_wt_final_v040_test": [
+   0.1284,
+   0.1277
+  ],
+  "wall_min_v040_test": [
+   12.5,
+   19.3
+  ],
+  "nohit_files_compared": 20,
+  "nohit_different": [],
+  "nohit_floor_lines": 0
+ },
+ "floor_by_stage": [
+  {
+   "stage": "M0",
+   "run": "margin_m0_v4/d200_s480",
+   "events_start": 6943,
+   "floor_lines": 2090,
+   "events_hit": 266,
+   "floor_not_met": 0,
+   "hit_height_above_floor_m_p50_max": [
+    467.6,
+    3094.5
+   ],
+   "events_at_floor_final": 156,
+   "events_above_floor_by_more_than_2m": 0,
+   "events_above_floor_within_2m": 2,
+   "air_quakes_v040": 88,
+   "air_quakes_v041": 0,
+   "iterations_v040": 24,
+   "iterations_v041": 12,
+   "events_final_v040": 6855,
+   "events_final_v041": 6943,
+   "above_true_surface_final_v040": 132,
+   "above_true_surface_final_v041": 0,
+   "rms_abs_final_v040": 0.2812,
+   "rms_abs_final_v041": 0.2819,
+   "rms_wt_final_v040": 0.1844,
+   "rms_wt_final_v041": 0.1844
+  },
+  {
+   "stage": "mendocino_gorda_c",
+   "run": "mendocino_gorda_c_m0f/d200_s480",
+   "events_start": 12191,
+   "floor_lines": 503,
+   "events_hit": 70,
+   "floor_not_met": 0,
+   "hit_height_above_floor_m_p50_max": [
+    463.2,
+    2817.5
+   ],
+   "events_at_floor_final": 48,
+   "events_above_floor_by_more_than_2m": 0,
+   "events_above_floor_within_2m": 0,
+   "air_quakes_v040": 20,
+   "air_quakes_v041": 0,
+   "iterations_v040": 21,
+   "iterations_v041": 12,
+   "events_final_v040": 12170,
+   "events_final_v041": 12190,
+   "above_true_surface_final_v040": 42,
+   "above_true_surface_final_v041": 0,
+   "rms_abs_final_v040": 0.2413,
+   "rms_abs_final_v041": 0.2413,
+   "rms_wt_final_v040": 0.1536,
+   "rms_wt_final_v041": 0.1538
+  },
+  {
+   "stage": "blanco",
+   "run": "blanco_m0f/d200_s20",
+   "events_start": 4378,
+   "floor_lines": 100,
+   "events_hit": 21,
+   "floor_not_met": 0,
+   "hit_height_above_floor_m_p50_max": [
+    222.8,
+    1355.8
+   ],
+   "events_at_floor_final": 11,
+   "events_above_floor_by_more_than_2m": 0,
+   "events_above_floor_within_2m": 0,
+   "air_quakes_v040": 4,
+   "air_quakes_v041": 0,
+   "iterations_v040": 15,
+   "iterations_v041": 12,
+   "events_final_v040": 4374,
+   "events_final_v041": 4378,
+   "above_true_surface_final_v040": 14,
+   "above_true_surface_final_v041": 0,
+   "rms_abs_final_v040": 0.2405,
+   "rms_abs_final_v041": 0.2404,
+   "rms_wt_final_v040": 0.1284,
+   "rms_wt_final_v041": 0.1284
+  },
+  {
+   "stage": "oregon",
+   "run": "oregon_m0f/d200_s480",
+   "events_start": 3390,
+   "floor_lines": 1724,
+   "events_hit": 218,
+   "floor_not_met": 0,
+   "hit_height_above_floor_m_p50_max": [
+    308.5,
+    3079.7
+   ],
+   "events_at_floor_final": 125,
+   "events_above_floor_by_more_than_2m": 0,
+   "events_above_floor_within_2m": 0,
+   "air_quakes_v040": 66,
+   "air_quakes_v041": 0,
+   "iterations_v040": 24,
+   "iterations_v041": 12,
+   "events_final_v040": 3324,
+   "events_final_v041": 3390,
+   "above_true_surface_final_v040": 114,
+   "above_true_surface_final_v041": 0,
+   "rms_abs_final_v040": 0.191,
+   "rms_abs_final_v041": 0.1921,
+   "rms_wt_final_v040": 0.1155,
+   "rms_wt_final_v041": 0.1158
+  },
+  {
+   "stage": "washington",
+   "run": "washington_m0f/d200_s480",
+   "events_start": 9332,
+   "floor_lines": 2008,
+   "events_hit": 278,
+   "floor_not_met": 0,
+   "hit_height_above_floor_m_p50_max": [
+    919.4,
+    3361.4
+   ],
+   "events_at_floor_final": 154,
+   "events_above_floor_by_more_than_2m": 0,
+   "events_above_floor_within_2m": 1,
+   "air_quakes_v040": 141,
+   "air_quakes_v041": 0,
+   "iterations_v040": 24,
+   "iterations_v041": 12,
+   "events_final_v040": 9190,
+   "events_final_v041": 9329,
+   "above_true_surface_final_v040": 84,
+   "above_true_surface_final_v041": 0,
+   "rms_abs_final_v040": 0.2146,
+   "rms_abs_final_v041": 0.2155,
+   "rms_wt_final_v040": 0.1319,
+   "rms_wt_final_v041": 0.1323
+  }
+ ],
+ "model_total": [
+  {
+   "quantity": "Vp",
+   "nodes": "resolved",
+   "depth_km": "all",
+   "n_nodes": 888,
+   "rms_pct": 0.7905,
+   "max_abs_pct": 8.19,
+   "gt1_pct": 12.05,
+   "noise_v041_rms_pct": 0.8394,
+   "noise_v040_rms_pct": 0.7384,
+   "noise_max_abs_pct": 9.103,
+   "above_noise_pct": 1.58
+  },
+  {
+   "quantity": "Vs",
+   "nodes": "resolved",
+   "depth_km": "all",
+   "n_nodes": 320,
+   "rms_pct": 0.6954,
+   "max_abs_pct": 8.898,
+   "gt1_pct": 4.38,
+   "noise_v041_rms_pct": 0.8692,
+   "noise_v040_rms_pct": 0.8154,
+   "noise_max_abs_pct": 8.876,
+   "above_noise_pct": 0.0
+  },
+  {
+   "quantity": "Vp",
+   "nodes": "tile-covered",
+   "depth_km": "all",
+   "n_nodes": 94656,
+   "rms_pct": 0.1443,
+   "max_abs_pct": 11.371,
+   "gt1_pct": 0.26,
+   "noise_v041_rms_pct": 0.1395,
+   "noise_v040_rms_pct": 0.1022,
+   "noise_max_abs_pct": 10.276,
+   "above_noise_pct": 6.04
+  },
+  {
+   "quantity": "Vs",
+   "nodes": "tile-covered",
+   "depth_km": "all",
+   "n_nodes": 94626,
+   "rms_pct": 0.0611,
+   "max_abs_pct": 8.898,
+   "gt1_pct": 0.03,
+   "noise_v041_rms_pct": 0.0651,
+   "noise_v040_rms_pct": 0.0578,
+   "noise_max_abs_pct": 8.876,
+   "above_noise_pct": 13.45
+  }
+ ],
+ "masks_identical": true,
+ "registration": [
+  {
+   "model": "cascadia_obs_tomo",
+   "version": "0.4.1",
+   "status": "candidate",
+   "created": "2026-11-25T18:18:46+00:00",
+   "description": "v0.4.0 (v0.3.1 configuration, re-timed picks) re-inverted with tomoDD's event updates floored at the local solid surface (D-B081 floor in the inversion, D-B083); product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values, NonLinLoc grids by the field rule",
+   "run": "merge: mendocino_gorda_c_m0f/d200_s480, blanco_m0f/d200_s20, oregon_m0f/d200_s480, washington_m0f/d200_s480",
+   "git_commit": "94b084dca1a3a30bfc6991572a46e1553f54891f",
+   "zarr": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.1.zarr",
+   "zarr_sha256": "6d0cb1ee550473f6d31d68cc5a7ee1698d8fc3061a35982d0f5bc3d58d25bc45",
+   "netcdf": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.1.nc",
+   "netcdf_sha256": "88370da494332869040955d167d933596dc2f775c153478d5b793e66000d2d81",
+   "netcdf_git": "data/tomo_v1/models/cascadia_obs_tomo/v0.4.1.nc",
+   "nll": "/wd1/mdenolle_data/tomo_v1/models/cascadia_obs_tomo/v0.4.1_nll"
+  }
+ ],
+ "product_info": {
+  "nodes": 232932,
+  "rock": 203988,
+  "water": 8538,
+  "air": 20406,
+  "offshore_columns": 6791,
+  "columns_outside_lattice": 108,
+  "outside_lattice_below_sea_level": 6,
+  "rule_nodes": 9585,
+  "rule_changed": 8739,
+  "water_dws_p_gt0": 405,
+  "air_dws_p_gt0": 1332,
+  "offshore_above_surface": 22108,
+  "onshore_above_surface": 6836,
+  "above_surface_vp_median": 4.718863010406494,
+  "above_surface_vs_median": 2.4756360054016113,
+  "by_depth": {
+   "-3": {
+    "water": 0,
+    "air": 11091,
+    "rule_changed": 0
+   },
+   "-1": {
+    "water": 0,
+    "air": 9315,
+    "rule_changed": 0
+   },
+   "1": {
+    "water": 6032,
+    "air": 0,
+    "rule_changed": 765
+   },
+   "3": {
+    "water": 2506,
+    "air": 0,
+    "rule_changed": 2878
+   },
+   "5": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 4882
+   },
+   "7": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 214
+   },
+   "9": {
+    "water": 0,
+    "air": 0,
+    "rule_changed": 0
+   }
+  },
+  "rule_dvs_pct_median_max": [
+   14.49,
+   23.81
+  ]
+ },
+ "product_checks": {
+  "Vp_nc_eq_zarr": true,
+  "Vs_nc_eq_zarr": true,
+  "VpVs_nc_eq_zarr": true,
+  "medium_nc_eq_zarr": true,
+  "shallow_crust_node_nc_eq_zarr": true,
+  "Vp_tomography_nc_eq_zarr": true,
+  "Vs_tomography_nc_eq_zarr": true,
+  "vp_rock_eq_inversion": true,
+  "vs_rock_unchanged_off_rule": true,
+  "vp_water_1p5": true,
+  "vs_nan_above": true,
+  "vp_air_nan": true,
+  "vpvs_min_rule_nodes": 2.0999999046325684,
+  "vpvs_rock_min_max": [
+   1.5999999046325684,
+   2.733883857727051
+  ],
+  "tomography_eq_merge": true,
+  "other_vars_eq_merge": {
+   "Vp_start": true,
+   "Vs_start": true,
+   "Vp_perturbation": true,
+   "Vs_perturbation": true,
+   "dws_p": true,
+   "dws_s": true,
+   "resolution_p": true,
+   "resolution_s": true,
+   "n_tiles": true,
+   "tile_weight_p": true,
+   "tile_weight_s": true,
+   "vs_reverted": true
+  }
+ },
+ "nll_md5": {
+  "P": {
+   "md5": "52fff8c47faf3c4223c80e1bb6da383d",
+   "work_md5": "52fff8c47faf3c4223c80e1bb6da383d"
+  },
+  "S": {
+   "md5": "1105aadd408cc0d53db681d83f81034c",
+   "work_md5": "1105aadd408cc0d53db681d83f81034c"
+  }
+ }
+}

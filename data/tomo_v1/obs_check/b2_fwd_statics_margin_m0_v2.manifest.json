@@ -1,0 +1,57 @@
+{
+ "name": "b2_fwd_statics_margin_m0_v2",
+ "script": "/home/mdenolle/wt_tomo_res/workflow/10_tomography/b2_fwd_statics.py",
+ "argv": [
+  "margin_m0_v2"
+ ],
+ "utc": "2026-11-23T22:36:48.820763+00:00",
+ "git_commit": "bc73862d193efa3e6d4e837ea05142478004303b",
+ "git_dirty": false,
+ "params_md5": "b87ce46555ee7b78ac20502412e0e504",
+ "params": {
+  "forward": {
+   "coords": "ellipsoid",
+   "mod": "box",
+   "station_corr": true,
+   "statics_file": "data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv",
+   "p1_reference": "margin_m0_v2/p1_reference"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/b2_tomodd/margin_m0_v2/p1_reference/obs_S_iter1_p1.parquet",
+   "size": 20999577,
+   "mtime": "2026-11-23T22:36:43.971010+00:00",
+   "md5": "32a1a6b23047c7e176696ed82fc90abf"
+  },
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms.csv",
+   "size": 22192,
+   "mtime": "2026-11-23T14:16:13.586080+00:00",
+   "md5": "272837c1eb6b1a52a61d1e8f8bff998a"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_tomo_res/data/tomo_v1/obs_check/obs_near_station_S_terms_p1_margin_m0.csv",
+   "size": 20552,
+   "mtime": "2026-11-23T22:36:48.810985+00:00",
+   "md5": "c16e040cde5875d0825c8588690104ba"
+  }
+ ],
+ "counts": {
+  "stations": 236,
+  "with_static": 207,
+  "with_static_old": 207,
+  "check_obs_minus_ttpred_minus_res0_maxabs": 0.0001,
+  "old_recomputed_vs_file_maxabs": 0.0005,
+  "change_median": 0.306,
+  "change_p5_p95": [
+   0.164,
+   0.735
+  ],
+  "below_minus_0p5_new": 1,
+  "below_minus_0p5_old": 10
+ },
+ "notes": null
+}

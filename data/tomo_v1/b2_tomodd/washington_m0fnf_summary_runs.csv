@@ -1,0 +1,2 @@
+tag,damp,smooth_x,smooth_z,rms_abs_start,rms_abs_final,rms_wt_start,rms_wt_final,cnd_last,cnd_first,passes,iterations,aq_repeats,events,rms_dlnvp_pct,rms_dlnvs_pct,max_abs_dlnvp_pct,max_abs_dlnvs_pct,rms_dvpvs,frac_nodes_changed,shift_h_med_km,shift_z_med_km,shift_z_abs_med_km
+d200_s480,200.0,480.0,240.0,0.3676,0.2155,0.7179,0.1323,160.1,186.6,12,12,0,9329,0.7338,0.3506,18.3757,18.5281,0.0126,0.1583,1.3861,0.0828,1.5029

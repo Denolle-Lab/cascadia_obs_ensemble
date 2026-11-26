@@ -1,0 +1,5 @@
+quantity,nodes,depth_km,n_nodes,rms_pct,max_abs_pct,gt1_pct,noise_v041_rms_pct,noise_v040_rms_pct,noise_max_abs_pct,above_noise_pct
+Vp,resolved,all,888,0.7905,8.19,12.05,0.8394,0.7384,9.103,1.58
+Vs,resolved,all,320,0.6954,8.898,4.38,0.8692,0.8154,8.876,0.0
+Vp,tile-covered,all,94656,0.1443,11.371,0.26,0.1395,0.1022,10.276,6.04
+Vs,tile-covered,all,94626,0.0611,8.898,0.03,0.0651,0.0578,8.876,13.45

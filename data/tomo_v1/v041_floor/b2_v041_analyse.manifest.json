@@ -1,0 +1,141 @@
+{
+ "name": "b2_v041_analyse",
+ "script": "/home/mdenolle/wt_v041/workflow/10_tomography/b2_v041_analyse.py",
+ "argv": [],
+ "utc": "2026-11-25T18:19:50.049712+00:00",
+ "git_commit": "94b084dca1a3a30bfc6991572a46e1553f54891f",
+ "git_dirty": false,
+ "params_md5": "29eb04cfdc6fbce750fc04a2b205bf0e",
+ "params": {
+  "v041": {
+   "out": "/wd1/mdenolle_data/tomo_v1/v041_floor",
+   "version": "0.4.1",
+   "status": "candidate",
+   "base": "0.4.0",
+   "description": "v0.4.0 (v0.3.1 configuration, re-timed picks) re-inverted with tomoDD's event updates floored at the local solid surface (D-B081 floor in the inversion, D-B083); product as D-B076: medium (rock / water / air at the D-B068 merged surface), D-B073 shallow-crust node rule, Vp_tomography / Vs_tomography = the inversion values, NonLinLoc grids by the field rule"
+  },
+  "tomodd.floor": {
+   "air_dep_km": -1000.0,
+   "margin_deg": 0.05,
+   "files": {
+    "30": "/wd1/mdenolle_data/tomo_v1/v041_floor/floor/topo_30s_cons_merged.bin",
+    "45": "/wd1/mdenolle_data/tomo_v1/v041_floor/floor/topo_45s_cons_merged.bin"
+   }
+  }
+ },
+ "inputs": [],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/above_surface_final_v041.csv",
+   "size": 1,
+   "mtime": "2026-11-25T18:19:25.088901+00:00",
+   "md5": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/floor_by_region.csv",
+   "size": 1289,
+   "mtime": "2026-11-25T18:19:25.088901+00:00",
+   "md5": "1fe6ccb1320e45dbe6954bc40fde13ef"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/floor_by_stage.csv",
+   "size": 1058,
+   "mtime": "2026-11-25T18:19:25.088901+00:00",
+   "md5": "bcdaec60f980a1c795713ddf3526a580"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/floor_events_map.png",
+   "size": 188014,
+   "mtime": "2026-11-25T18:19:28.001889+00:00",
+   "md5": "92de25002d898fa19ac5af2bbcc37bdd"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/hypocentre_shifts.csv",
+   "size": 7889,
+   "mtime": "2026-11-25T18:19:28.783886+00:00",
+   "md5": "fc8249ab5bbbe9f086bfe7b0bf894514"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/identity.csv",
+   "size": 499,
+   "mtime": "2026-11-25T18:19:22.269913+00:00",
+   "md5": "dd5eff2066e3a11847dedcb8b37d636d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/maps_diff.png",
+   "size": 156917,
+   "mtime": "2026-11-25T18:19:26.744894+00:00",
+   "md5": "e0f636d701e92b82a0133d0f1f15229b"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/maps_noise.png",
+   "size": 112115,
+   "mtime": "2026-11-25T18:19:27.577891+00:00",
+   "md5": "e4b48d36576fa67ed4952ac252a847bd"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/model_diff_by_depth.csv",
+   "size": 864,
+   "mtime": "2026-11-25T18:19:25.343900+00:00",
+   "md5": "3f6bef0a53b9cf1e118f5cb6393482bb"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/model_diff_total.csv",
+   "size": 240,
+   "mtime": "2026-11-25T18:19:25.344900+00:00",
+   "md5": "37e87f52d8eab37bb14c5920854bfbe8"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/report.html",
+   "size": 695689,
+   "mtime": "2026-11-25T18:19:50.046796+00:00",
+   "md5": "b49f90df88ea27c353afa7509d884b8c"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/residual_rms.csv",
+   "size": 1673,
+   "mtime": "2026-11-25T18:19:50.013796+00:00",
+   "md5": "0a79663524d2b40e0636f90d5bbe0bb0"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/residual_rms_long.csv",
+   "size": 4396,
+   "mtime": "2026-11-25T18:19:50.012796+00:00",
+   "md5": "47364224a2edeb76ea1cc8e4116e3609"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/run_times.csv",
+   "size": 946,
+   "mtime": "2026-11-25T18:19:50.015796+00:00",
+   "md5": "ae19e4cdf6ff8a3e9c8788cee8e3e295"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/summary.json",
+   "size": 9954,
+   "mtime": "2026-11-25T18:19:50.019796+00:00",
+   "md5": "c9ed4188c2bc81afd9a950415a21987e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/test.json",
+   "size": 1290,
+   "mtime": "2026-11-25T18:19:23.253909+00:00",
+   "md5": "e78873505335cc70fa4bee1b466f98a2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/writer_check.csv",
+   "size": 1239,
+   "mtime": "2026-11-25T18:19:22.282913+00:00",
+   "md5": "ba0501aad4bb6e861d218339e455ee42"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/v041_floor/report/writer_check_events.csv",
+   "size": 7806,
+   "mtime": "2026-11-25T18:19:22.283913+00:00",
+   "md5": "2ea6d3bad9e9d10549b3bd3d72314ab7"
+  }
+ ],
+ "counts": {
+  "stages": 5
+ },
+ "notes": null
+}

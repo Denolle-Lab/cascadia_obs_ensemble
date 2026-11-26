@@ -83,6 +83,18 @@ print("source run:", ds.attrs["provenance_run"], "| git commit:", ds.attrs["prov
 #     `dws_s` < `dws_s_min`, 2 = set back and then lowered to Vp / `vpvs_min` (Vp/Vs was still too low).
 #   * global attributes `vpvs_min`, `dws_s_min`, the node counts `vs_check_nodes`, `vs_reverted_nodes`,
 #     `vs_reverted_vpvs_nodes`, `vs_reverted_dws_s_nodes`, `vs_capped_nodes`, and `excluded_tiles`.
+# * From v0.3.2 on: the solid surface and the shallow oceanic crust rule (D-B068, D-B073).
+#   * `medium` (int8): 0 rock, 1 water, 2 air, from the merged solid surface (GMRT multibeam patches, GMT earth_relief
+#     01m elsewhere) sampled at the node: a node above the surface is water if it is at or below sea level
+#     (depth >= 0), air otherwise. **`Vp` is 1.5 km/s in water and NaN in air; `Vs` and `VpVs` are NaN in water and
+#     air.** `surface_elevation` (km, positive up) is that surface at the nodes; `offshore` the rule's offshore mask.
+#   * `Vs` at rock nodes in offshore columns, below sea level and at most `shallow_crust_thickness_km` (2.5 km) below
+#     the seafloor: min(Vs, Vp / `shallow_crust_vpvs`) (2.1); `shallow_crust_node` = 1 where this lowered Vs.
+#   * `Vp_tomography`, `Vs_tomography`: the inversion's values at every node, unchanged. The inversion had no surface,
+#     so above the solid surface these are rock velocities that describe no real medium: use `Vp`/`Vs` instead.
+#   * The node values carry a 2-km-node approximation of the rule. The NonLinLoc grids `v<version>_nll` carry the
+#     exact rule on 1 km cells: they are the velocity fields the v5.1 relocation used. `velocity_model_tools.py`
+#     evaluates the same rule at any point (section 6b).
 
 # %%
 for v in ds.data_vars:
@@ -98,6 +110,8 @@ for v in ds.data_vars:
 z = 15.0
 sl = ds.sel(depth=z, method="nearest")
 ok = sl.dws_p > 0
+if "medium" in sl:                                   # v0.3.2 on: water and air nodes are not rock
+    ok = ok & (sl.medium == 0)
 if "tile_weight_p" in sl:
     ok = ok & (sl.tile_weight_p > 0)
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
@@ -135,11 +149,37 @@ pts["Vp"], pts["Vs"], pts["sampled"] = q.Vp.values, q.Vs.values, q.dws_p.values 
 print(pts.round(3).to_string(index=False))
 
 # %% [markdown]
+# ## 6b. Velocities with the solid surface and the shallow-crust rule (v0.3.2 and later)
+#
+# `velocity_model_tools.velocity_at` (shipped next to this tutorial) returns Vp, Vs, Vp/Vs and the medium at any
+# points. `mode="field"` evaluates the rule of the v5.1 relocation's velocity field at the point: water (Vp 1.5,
+# Vs NaN) or air (NaN) above the merged solid surface; below it the inversion's values (trilinear, as tomoDD) with
+# Vs <= Vp / 2.1 within 2.5 km below the seafloor offshore. At the centres of the 1 km NonLinLoc cells it equals the
+# NonLinLoc grids (checked to 1e-7 relative at 50,000 cells). `mode="nll"` returns the NonLinLoc cell values
+# themselves (piecewise constant, including the D-B005 model outside the tomography volume and water Vs 0.4 km/s);
+# `mode="nodes"` interpolates the stored node values (only the 2-km-node approximation; NaN or water mixed in within
+# one node spacing of the surface).
+
+# %%
+sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else ".")
+if "medium" in ds:
+    from velocity_model_tools import velocity_at
+    prof = pd.DataFrame({"depth": np.arange(0.0, 12.01, 0.5)})
+    for mode in ("field", "nll", "nodes"):
+        r = velocity_at(ROOT, version, np.full(len(prof), 45.95), np.full(len(prof), -130.0), prof.depth.values, mode=mode)
+        prof[f"Vs_{mode}"] = r["Vs"]
+        if mode == "field":
+            prof["medium"] = r["medium"]
+    print("Axial Seamount, 45.95 N 130.0 W (medium 0 rock, 1 water, 2 air):")
+    print(prof.round(3).to_string(index=False))
+
+# %% [markdown]
 # ## 7. A 1D profile, for codes that need a layered model (hypoDD, GrowClust)
 
 # %%
 box = ds.sel(longitude=slice(-125.0, -123.0), latitude=slice(44.0, 46.0))
-prof = box[["Vp", "Vs"]].where(box.dws_p > 0).median(["latitude", "longitude"]).to_dataframe()
+use = (box.dws_p > 0) & (box.medium == 0) if "medium" in box else box.dws_p > 0   # rock nodes with rays
+prof = box[["Vp", "Vs"]].where(use).median(["latitude", "longitude"]).to_dataframe()
 print(prof.round(3))
 
 # %% [markdown]
@@ -157,6 +197,11 @@ print(prof.round(3))
 #
 # Note: the grids are true velocities on a flat (Lambert) grid. For long paths, apply the same Earth-flattening and
 # grid-refinement corrections as the v4-NLL3D processing (see notes/forward_accuracy.md, D-B028) before Grid2Time.
+#
+# From v0.3.2 on the grids are the exact fields of the v5.1 relocation: cell-centred and **Earth-flattened** (depth
+# axis z' = Re ln(Re / (Re - z)), velocity v' = v Re / (Re - z), Re = 6371 km), with water and air cells from the
+# merged solid surface and the D-B073 rule (see `v<version>_nll/model.P.mod.README`). Run Grid2Time on them with the
+# station depths flattened the same way, and map located depths back with z = Re (1 - exp(-z' / Re)).
 
 # %%
 nll = ROOT / f"v{version}_nll"

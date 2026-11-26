@@ -150,3 +150,58 @@
 - Fig. 4: unchanged (it does not use M; pixel-identical).
 - Fig. 6A axis label now reads "events >= Mc (0.85) per week" (was 0.75).
 - Fig. 6B in-panel note now reads "503 events in 12 days (850 in the family, 100 days)" (was "501 ... (755 ..., 64 days)").
+
+# D-B105: Mc maps without the events flagged as not earthquakes
+
+- Decision D-B105 (PI, 2026-11-26 15:42): the Mc maps leave out the events flagged as not earthquakes (`event_flag`: Texada quarry-blast rule, ComCat explosion / quarry blast / other event within 3 s and 20 km; D-B071).
+- Catalog v4.1 has no flag column: an event is left out when catalog v5.1 or v6.0 flags it. 3,298 of the 130,769 events with a magnitude go; 127,471 stay.
+- Values: `data/magnitude_converged/paper_numbers_mc_no_flags.csv` (before = main 08d9dbe4, after = this branch; `workflow/05_magnitude/paper_numbers_compare.py`). Line numbers as in the D-B091 list above.
+- "D-B091" below is the value of the D-B091 bullet above; apply the **D-B105** value instead. Every other Mc number of the D-B091 list stays as given there.
+- Only the maps change. The clustering (Table S5, Text S6, Figs. 5 and 6) is not rerun and still includes the flagged events; its Mc and every clustering number are unchanged.
+
+## Main text
+
+- OL 81-82, repo 81-82, "Puget Lowland and offshore Washington (node medians 1.0--1.1)": D-B091 1.1--1.2 -> **1.1** (Puget 1.1, Washington 1.1).
+- OL 83-85, repo 83-85, "Pooled by region, Mc is 1.2--1.7 onshore and in the forearc":
+  - D-B091 1.3--1.5 -> **1.2--1.6** (WA 1.3, PU 1.2, ON 1.3, OR 1.6, MT 1.5);
+  - offshore plate boundaries: no change from D-B091 (1.6--1.9).
+- OL 439-450, repo 409-420, Methods, "Mc was mapped on a 0.1° grid from the nearest 250 events": add **"leaving out the 3,298 events flagged as quarry blasts or explosions"** (or the like).
+- No change from D-B091:
+  - lowest nodes (Mount St. Helens -0.2, Axial 0.3);
+  - highest nodes (western Blanco 2.6--2.8, Gorda at most 2.4);
+  - no offshore node in 2010 and 2016;
+  - Blanco M >= 2.5 rate 28% (2010) and 29% (2016);
+  - offshore Mc 2011--2012 against 2013--2015;
+  - median period change (-0.1 and 0.0);
+  - Mendocino 2016 rate 11%.
+
+## Supplementary text
+
+- Text S7, OL/repo 245, after "Magnitudes rounded to 0.1": add **"events flagged as quarry blasts or explosions (3,298) are left out"**.
+- Text S7, OL/repo 250-252, "Maximum curvature + 0.2 is the most conservative at 84% of nodes; b-value stability averages 0.19 lower and the best estimate 0.14 lower": D-B091 83%; 0.19; 0.13 -> **83%; 0.18; 0.14**.
+- Text S7, OL/repo 254-256, clustering Mc against the map methods:
+  - D-B091 "below the b-value-stability value at Axial (0.85 against 1.5) and by half a bin at Blanco (1.75 against 1.8) and Puget (1.35 against 1.4)";
+  - -> **"below the b-value-stability value at Axial (0.85 against 1.5) and by half a bin at Blanco (1.75 against 1.8)"**: the pooled Puget b-value-stability Mc is now 1.3.
+- No change from D-B091:
+  - Text S7 QC-only catalog (median 0.0, interquartile range +-0.1; 3,234 nodes instead of 3,395);
+  - Text S7 Axial (sigma 0.63, maximum curvature 0.7, nodes 0.4--1.2).
+
+## Figures and tables (same paths)
+
+- Fig. 2 (`paper_sciadv/figures/fig2a_mc_three_methods.png`, `fig2b_mc_periods.png`): replaced. The cells that change are onshore and along the coast (onshore box 370 changed and 106 lost, Puget 156 and 4, Oregon box 68 and 57, Washington box 40 and 3, Gorda 6 changed); Axial, Endeavour, Blanco and Mendocino are unchanged. Node counts:
+  - all years 4,578 -> 4,408;
+  - 2010 1,222 -> 1,098;
+  - 2011--2012 2,663 -> 2,481;
+  - 2013--2015 4,420 -> 4,252;
+  - 2016 661 -> 645.
+- Table S6 (`data/catalog_v4/mc_maps/mc_regional.csv`): replaced. Pooled Mc_best, whole period:
+  - changed: OR 1.5 -> **1.6**, PU 1.3 -> **1.2**;
+  - unchanged: AX 0.3, EN 1.6, BL 1.6, GO 1.9, MT 1.5, WA 1.3, ON 1.3, OFF 1.7, ALL 1.5.
+- Table S6, period rows whose Mc_best moves (all others unchanged):
+  - WA 2011--2012 1.3 -> 1.2, 2013--2015 1.3 -> 1.1;
+  - PU 2011--2012 1.1 -> 1.3, 2013--2015 1.2 -> 1.1, 2016 1.5 -> 1.3;
+  - OR 2011--2012 1.6 -> 1.5, 2013--2015 1.5 -> 1.6, 2016 1.7 -> 2.3;
+  - ON 2010 1.4 -> 1.3, 2016 1.2 -> 1.1;
+  - OFF 2010 1.6 -> 1.8;
+  - ALL 2011--2012 1.5 -> 1.6, 2013--2015 1.5 -> 1.6, 2016 1.1 -> 1.0.
+- Figs. S3--S7 (`data/catalog_v4/mc_maps/fig1`--`fig5`): replaced. README numbers in `data/catalog_v4/mc_maps/README.md` updated.

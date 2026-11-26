@@ -27,5 +27,29 @@
     ]
   },
   "magnitudes": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
-  "magnitudes_md5": "fb49ecc28b75432f49cf1a6e399cd90f"
+  "magnitudes_md5": "fb49ecc28b75432f49cf1a6e399cd90f",
+  "exclude_flagged": true,
+  "flags_from": [
+    "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+    "/wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv"
+  ],
+  "flags_md5": [
+    "deaa594cf80bd2c624dc48858e562825",
+    "923aa0622d5dc62929240b58b5a52636"
+  ],
+  "flags_rule": "event_flag set (not empty) in any of flags_from",
+  "selection": {
+    "rows": 172342,
+    "with_magnitude": 130769,
+    "flagged_with_magnitude": 3298,
+    "exclude_flagged": true,
+    "used": 127471
+  },
+  "selection_qc": {
+    "rows": 172342,
+    "with_magnitude": 88856,
+    "flagged_with_magnitude": 2524,
+    "exclude_flagged": true,
+    "used": 86332
+  }
 }

@@ -947,4 +947,4 @@ PI chose: fix the builder (tomo/ensemble-fix 53a3b868) and adopt the patched tom
 three affected tiles as v0.4.2; rerun the ensemble on v0.4.2; then redo the synthetic calibration on the fixed configuration
 and register the ensemble only once the inflation factors are confirmed (updated if they move by more than 0.05). Catalog
 v6.0 stays on v0.4.1 (local difference; stated in its README). B5 code (b5_common.diff_times) has the same bug (session -18
-told 2026-11-25 22:2x).
+told 2026-11-25 22:20).

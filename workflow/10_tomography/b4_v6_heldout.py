@@ -1,4 +1,5 @@
-"""Track B, catalog v6.0 QC (D-B096): held-out effect of the NLL-coherence stage by region, with the v6.0 recipe.
+"""Track B, catalog v6.0 QC (D-B096): held-out effect of the NLL-coherence stage by region, with the v6.0 recipe (and the
+recipe of a later version run by the same chain: catalog v6.1 = model v0.4.2 grids, SSST 9999 -> 16 km, D-B103, D-B104).
 
 D-B096: the coherence stage helped where it relocates many events (Puget, Georgia), was neutral where it relocates few
 (Gorda, western Blanco) and hurt at the Mendocino 2015 sequence; v6.0's QC reports its held-out effect by region. Here the
@@ -20,6 +21,9 @@ Each cluster box is the set's v5.1 epicentres +- 30 km (b4_v6_ssst.MARGIN), as i
   python b4_v6_heldout.py run [--sets axial,puget] [--nproc 8]     # relocation (resumable; one set-fold at a time)
   python b4_v6_heldout.py score                                      # -> reloc_v6/heldout/scores.json, heldout.csv
 Output: /wd1/mdenolle_data/reloc_v6/heldout/<set>/{grids_base, fold<k>/{obs, picks.csv, ssst/it<k>, ssst/g<k>, coherence}}
+Environment (set by b4_v6_relocate.sh): V6_ROOT (run root: outputs in V6_ROOT/heldout, control/nproc_heldout), VERSION /
+TIME (grids V6_ROOT/TIME and wide_TIME), V6_SCHEDULE (Loc2ssst CharDist per pass). The test sets' inputs (picks, events,
+CC of the nine clusters) are the ones prepared for v6.0 under reloc_v6 (ssst_test/inputs, termtest), read only.
 """
 import argparse
 import json
@@ -39,22 +43,25 @@ sys.path.insert(0, str(TA))
 import a2_run_nlloc as RN  # noqa: E402
 import b4_v6_ssst as S  # noqa: E402
 
-R6 = Path("/wd1/mdenolle_data/reloc_v6")
+R6IN = Path("/wd1/mdenolle_data/reloc_v6")                     # the test sets' inputs (prepared for v6.0; read only)
+R6 = Path(os.environ.get("V6_ROOT", str(R6IN)))                # run root (outputs, control files)
 OUT = Path(os.environ.get("V6_HELDOUT_OUT", str(R6 / "heldout")))
-GR = dict(fine=Path(os.environ.get("V6_FINE", str(R6 / "time_v6_v0.4.1"))),
-          wide=Path(os.environ.get("V6_WIDE", str(R6 / "wide_time_v6_v0.4.1"))))
-SCHEDULE = (9999.0, 16.0, 8.0, 4.0)        # D-B096
+_TIME = os.environ.get("TIME", f"time_v6_v{os.environ.get('VERSION', '0.4.1')}")
+GR = dict(fine=Path(os.environ.get("V6_FINE", str(R6 / _TIME))),
+          wide=Path(os.environ.get("V6_WIDE", str(R6 / f"wide_{_TIME}"))))
+# D-B096 (v6.0) 9999 -> 16 -> 8 -> 4 km; D-B103 (v6.1) 9999 -> 16 km
+SCHEDULE = tuple(float(v) for v in os.environ.get("V6_SCHEDULE", "9999,16,8,4").split(","))
 FOLDS, SEED = 3, 78
-TT = R6 / "termtest"
+TT = R6IN / "termtest"
 SETS = {   # set: (events (v5.1 positions), picks, v4 events, CC parquet, seed index, region)
-    "axial": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_axial.csv", R6 / "ssst_test/inputs/picks_axial.csv",
-              R6 / "ssst_test/inputs/events_axial.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_axial.parquet", 0, "Axial"),
-    "blanco": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_blanco.csv", R6 / "ssst_test/inputs/picks_blanco.csv",
-               R6 / "ssst_test/inputs/events_blanco.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_blanco.parquet", 1, "Blanco"),
-    "msh": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_msh.csv", R6 / "ssst_test/inputs/picks_msh.csv",
-            R6 / "ssst_test/inputs/events_msh.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_msh.parquet", 2, "Cascades (Mount St Helens)"),
-    "jdf": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_jdf.csv", R6 / "ssst_test/inputs/picks_jdf.csv",
-            R6 / "ssst_test/inputs/events_jdf.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_jdf.parquet", 3, "JdF ridge/plate"),
+    "axial": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_axial.csv", R6IN / "ssst_test/inputs/picks_axial.csv",
+              R6IN / "ssst_test/inputs/events_axial.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_axial.parquet", 0, "Axial"),
+    "blanco": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_blanco.csv", R6IN / "ssst_test/inputs/picks_blanco.csv",
+               R6IN / "ssst_test/inputs/events_blanco.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_blanco.parquet", 1, "Blanco"),
+    "msh": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_msh.csv", R6IN / "ssst_test/inputs/picks_msh.csv",
+            R6IN / "ssst_test/inputs/events_msh.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_msh.parquet", 2, "Cascades (Mount St Helens)"),
+    "jdf": ("/wd1/mdenolle_data/tomo_v1/b5/cc_test/events_jdf.csv", R6IN / "ssst_test/inputs/picks_jdf.csv",
+            R6IN / "ssst_test/inputs/events_jdf.csv", "/wd1/mdenolle_data/tomo_v1/cc_dt/cc_jdf.parquet", 3, "JdF ridge/plate"),
     "puget": (TT / "sets/events_puget.csv", TT / "inputs/picks_puget.csv", TT / "inputs/events_puget.csv",
               TT / "cc/cc_puget.parquet", 4, "Puget/Georgia"),
     "mtj": (TT / "sets/events_mtj.csv", TT / "inputs/picks_mtj.csv", TT / "inputs/events_mtj.csv",

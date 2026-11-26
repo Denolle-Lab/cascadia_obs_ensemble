@@ -1,19 +1,23 @@
-"""Track B, catalog v6.0 (D-B079, D-B096, D-B097): the catalog of the v6 relocation (b4_v6_reloc.py, run ROOT), with the
-v5.1 columns (b4_catalog.py / a2_build_catalog.py rules) and the v6.0 columns of notes/v6_plan.md.
+"""Track B, catalog v6.0 (D-B079, D-B096, D-B097) and v6.1 (D-B103, D-B104): the catalog of the v6 relocation
+(b4_v6_reloc.py, run ROOT), with the v5.1 columns (b4_catalog.py / a2_build_catalog.py rules) and the v6.0 columns of
+notes/v6_plan.md. The final SSST pass is it<NPASS> of b4_v6_reloc.SCHEDULE (V6_SCHEDULE: v6.0 it4, CharDist 4 km; v6.1
+it2, 16 km); its label is ssst_it<NPASS>.
 
 Hypocentre of each event (one row per event of the catalog v4.1 event list), first that applies:
   deep pass LOCATED (deep_pass; D-B067) > edge pass LOCATED (edge_pass) > coherence stage LOCATED (coherence_relocated)
-  > final SSST pass it4 LOCATED > no hypocentre (loc_source none, tier U, u_reason).
+  > final SSST pass (v6.0 it4, v6.1 it2) LOCATED > no hypocentre (loc_source none, tier U, u_reason).
 Depths are true depths (the Earth-flattening of the grids undone, z = Re (1 - exp(-z'/Re))); nothing is moved or clamped
 (D-B055): surface_km (merged surface, D-B068) and above_surface are reported, and the acceptance stage stops the chain if
 any event is above the surface.
 
 Columns (v5.1 ones as b4_catalog.py; new ones):
-  model_version            velocity model of the travel-time grids (v0.4.1)
-  loc_pass                 ssst_it4, coherence, deep or edge (the NLLoc run of the hypocentre)
-  station_terms            ssst (NLL-SSST grids, CharDist schedule 9999-16-8-4 km) or static (deep and edge passes:
-                           static terms of it0, the SSST corrections stop at z' = 80 km and at the tile box)
-  ssst_char_km             final Loc2ssst CharDist of the event's grids (4 km; empty for static rows)
+  model_version            velocity model of the travel-time grids (v6.0 v0.4.1, v6.1 v0.4.2)
+  loc_pass                 ssst_it<NPASS> (v6.0 ssst_it4, v6.1 ssst_it2), coherence, deep or edge (the NLLoc run of the
+                           hypocentre)
+  station_terms            ssst (NLL-SSST grids, CharDist schedule 9999-16-8-4 km in v6.0, 9999-16 km in v6.1) or static
+                           (deep and edge passes: static terms of it0, the SSST corrections stop at z' = 80 km and at the
+                           tile box)
+  ssst_char_km             final Loc2ssst CharDist of the event's grids (v6.0 4 km, v6.1 16 km; empty for static rows)
   rms_unweighted           unweighted rms of the residuals of the used arrivals (weight > 0), s (NLLoc's RMS is
                            EDT-weighted, D-B069)
   n_picks_retimed          picks of the event re-timed from a short read (D-B072/D-B075; timing_corrected)
@@ -29,12 +33,18 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
   review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097)
   M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id, magnitude_source   converged Route A magnitudes
                            (D-B091): the v5.1 table (computed with v5.1 hypocentres) where it has the event, else the
-                           v4.1 table (v4 hypocentres); magnitude_source names which (not recomputed on v6.0 hypocentres)
+                           v4.1 table (v4 hypocentres); magnitude_source names which, with the short labels of
+                           catalog_version.py (v5.1_converged, v4.1_converged; PR #58); not recomputed on v6 hypocentres
 
-  python b4_v6_catalog.py ROOT --out CSV
+  python b4_v6_catalog.py ROOT --out CSV [--mag-tables LABEL=CSV,LABEL=CSV]
+--mag-tables: the ordered magnitude tables (first with an M per event; key column ID or event_id), each with its
+magnitude_source label. Default v5.1_converged (MAG_V51), v4.1_converged (MAG_V41). Catalog v6.1 (D-B105): the chain's
+magnitudes stage computes the converged Route A magnitudes on the v6.1 hypocentres and rebuilds the catalog with
+v6.1_converged=<that table>,v4.1_converged=MAG_V41 (hypocentre columns unchanged).
 """
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -56,10 +66,12 @@ V51 = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
 REVIEW = Path("/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv")
 MAG_V51 = Path("/wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv")
 MAG_V41 = Path("/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv")
-PICKS = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv")
+# the chain's picks (b4_v6_relocate.sh PICKS, exported as V6_PICKS)
+PICKS = Path(os.environ.get("V6_PICKS", "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv"))
 MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id"]
 PRIO = {("deep", True): 4, ("edge", True): 3, ("coh", True): 2, ("it4", True): 1, ("it4", False): 0}
-LOC_PASS = {"it4": "ssst_it4", "coh": "coherence", "deep": "deep", "edge": "edge"}
+# "it4" = the run label of the final SSST pass inside this script (it<NPASS>); its catalog label names the pass
+LOC_PASS = {"it4": f"ssst_it{V.NPASS}", "coh": "coherence", "deep": "deep", "edge": "edge"}
 
 
 def log(*a):
@@ -173,21 +185,35 @@ def review_columns(ids):
     return out.reset_index()
 
 
-def magnitude_columns(ids):
-    m5 = pd.read_csv(MAG_V51).set_index("ID")
-    m4 = pd.read_csv(MAG_V41).set_index("event_id")
+MAG_TABLES = [("v5.1_converged", MAG_V51), ("v4.1_converged", MAG_V41)]   # default order (D-B091, D-B102)
+
+
+def magnitude_columns(ids, tables=None):
+    """magnitude columns from the first table (in order) with an M for the event; magnitude_source = its short label
+    (catalog_version.MAG_TABLES, PR #58: v5.1_converged = v5.1 table on v5.1 hypocentres, v4.1_converged = v4.1 table
+    on v4 hypocentres, v6.1_converged = computed on the v6.1 hypocentres, D-B105)."""
     out = pd.DataFrame({"ID": ids})
-    has5 = out.ID.map(m5.M).notna()
-    has4 = out.ID.map(m4.M).notna() & ~has5
+    got = pd.Series(False, index=out.index)
+    src = pd.Series("", index=out.index, dtype=object)
+    vals = {k: pd.Series(np.nan, index=out.index, dtype=object) for k in MAG_COLS}
+    info = {}
+    for lab, path in (tables or MAG_TABLES):
+        m = pd.read_csv(path, low_memory=False)
+        m = m.set_index("ID" if "ID" in m else "event_id")
+        take = ~got & out.ID.map(m.M).notna()
+        for k in MAG_COLS:
+            if k in m:
+                vals[k] = vals[k].where(~take, out.ID.map(m[k]))
+        src[take] = lab
+        got |= take
+        info[lab] = dict(events=int(take.sum()), path=str(path), md5=V.md5(path))
     for k in MAG_COLS:
-        v5 = out.ID.map(m5[k]) if k in m5 else pd.Series(np.nan, index=out.index)
-        v4 = out.ID.map(m4[k]) if k in m4 else pd.Series(np.nan, index=out.index)
-        out[k] = np.where(has5, v5, np.where(has4, v4, np.nan))
-        if v5.dtype == object or v4.dtype == object:
-            out[k] = out[k].where(has5 | has4, None)
-    out["magnitude_source"] = np.where(has5, "v5.1_converged (D-B091, v5.1 hypocentres)",
-                                       np.where(has4, "v4.1_converged (D-B091, v4 hypocentres)", ""))
-    return out, dict(v51=int(has5.sum()), v41=int(has4.sum()), md5_v51=V.md5(MAG_V51), md5_v41=V.md5(MAG_V41))
+        v = vals[k]
+        out[k] = v if v.dropna().map(lambda x: isinstance(x, str)).any() else pd.to_numeric(v)
+    out["magnitude_source"] = src
+    # v51 / v41 counts as before (acceptance text) plus every table
+    info.update(v51=info.get("v5.1_converged", {}).get("events", 0), v41=info.get("v4.1_converged", {}).get("events", 0))
+    return out, info
 
 
 def pick_counts():
@@ -203,7 +229,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("root")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--mag-tables", help="LABEL=CSV,... ordered magnitude tables (default v5.1_converged, v4.1_converged)")
     a = ap.parse_args()
+    tables = [tuple(x.split("=", 1)) for x in a.mag_tables.split(",")] if a.mag_tables else None
     root, out = Path(a.root), Path(a.out)
     t0 = time.time()
     plan = json.loads((V.plan_dir(root) / "plan.json").read_text())
@@ -295,7 +323,7 @@ def main():
     sk = set(pd.read_csv(skf).ID) if skf.exists() else set()
     c["coherence_skipped_region"] = c.ID.isin(sk)
     c = c.merge(review_columns(c.ID), on="ID", how="left")
-    mags, minfo = magnitude_columns(c.ID)
+    mags, minfo = magnitude_columns(c.ID, tables)
     c = c.merge(mags, on="ID", how="left")
     # v4.1 additions NLLoc did not locate: left out (catalog_version.py adds them with the ComCat hypocentre)
     drop_add = c.ID.isin(BC.CV["v4_1_added"]) & ~nll

@@ -1,4 +1,5 @@
-"""Track B, catalog v6.0: acceptance report of the v6 relocation (HTML and Markdown).
+"""Track B, catalog v6.0 (and later versions of the same chain, --label v6.1): acceptance report of the v6 relocation
+(HTML and Markdown).
 
 Sections: located counts and why the others are not located; events above the solid surface (hard requirement: 0, D-B055;
 any event above is a computation error to fix at the root, never clamped or moved: the script exits 1 and the chain stops);
@@ -9,7 +10,10 @@ the same table); the Axial share of tier A-B events within 2 km of the seafloor 
 the termtest protocol on nine clusters); pass statistics (NLLoc passes, Loc2ssst, coherence, deep and edge passes).
 
   python b4_v6_acceptance.py CATALOG.csv [--paired data/tomo_v1/depth_literature/paired_v6.0.md] [--heldout DIR]
-      [--outdir data/tomo_v1/b4/v6.0] [--smoke]
+      [--outdir data/tomo_v1/b4/v6.0] [--smoke] [--label v6.1 --heldout-ref /wd1/mdenolle_data/reloc_v6/heldout]
+--label names the catalog in the tables (default v6.0); the recipe text comes from the catalog manifest (model, Loc2ssst
+CharDist schedule). --heldout-ref: the held-out scores of an earlier version (v6.0) shown next to this one's (plan target
+for v6.1: held-out CC fit no worse than v6.0 beyond 5 % of its MAD).
 """
 import argparse
 import html
@@ -85,9 +89,16 @@ def main():
     ap.add_argument("--heldout")
     ap.add_argument("--outdir", default=str(REPO / "data/tomo_v1/b4/v6.0"))
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--label", default="v6.0", help="catalog version in the tables")
+    ap.add_argument("--heldout-ref", help="held-out scores folder of an earlier version (heldout.csv), for comparison")
     a = ap.parse_args()
+    L = a.label
     cat = Path(a.catalog)
     man = json.loads(cat.with_suffix(".manifest.json").read_text())
+    sched = [float(r["char_dist_km"]) for _, r in sorted(man.get("loc2ssst", {}).items())] or [9999.0, 16.0, 8.0, 4.0]
+    last = f"{sched[-1]:g}"
+    recipe = (f"{man.get('model')} grids, NLL-SSST CharDist " + " -> ".join(f"{s:g}" for s in sched) + " km, then "
+              "coherence")
     c = pd.read_csv(cat, dtype={"tier": str}, low_memory=False)
     v = pd.read_csv(V51, dtype={"tier": str}, low_memory=False)
     if a.smoke:                    # only the events of the smoke tiles
@@ -116,7 +127,7 @@ def main():
     sec("Located events")
     lp = c.loc_pass[nll].value_counts()
     t = pd.DataFrame({"events": [len(c), len(v)], "located": [int(nll.sum()), int(vn.sum())],
-                      "not located": [int((~nll).sum()), int((~vn).sum())]}, index=pd.Index(["v6.0", "v5.1"], name="catalog"))
+                      "not located": [int((~nll).sum()), int((~vn).sum())]}, index=pd.Index([L, "v5.1"], name="catalog"))
     add(t)
     add(pd.DataFrame({"events": lp}).rename_axis("loc_pass"))
     ur = c.u_reason[~nll].fillna("").str.replace(r"rejected: .*boundary (\d+).*", r"rejected: max likelihood on box face \1",
@@ -137,18 +148,18 @@ def main():
     g5 = v[vn].groupby("region").agg(located_v51=("ID", "size"), floor_limited_v51=("floor_limited", lambda s: int(B(s).sum())))
     g = g6.join(g5, how="outer").reindex([r for r in REGION_ORDER if r in set(g6.index) | set(g5.index)])
     g.loc["all"] = g.sum()
-    g["share_v6_%"] = 100 * g.floor_limited / g.located
+    g[f"share_{L}_%"] = 100 * g.floor_limited / g.located
     g["share_v51_%"] = 100 * g.floor_limited_v51 / g.located_v51
-    add(g.fillna(0), fmt={"share_v6_%": "{:.1f}", "share_v51_%": "{:.1f}", "located": "{:,.0f}", "floor_limited": "{:,.0f}",
+    add(g.fillna(0), fmt={f"share_{L}_%": "{:.1f}", "share_v51_%": "{:.1f}", "located": "{:,.0f}", "floor_limited": "{:,.0f}",
                          "located_v51": "{:,.0f}", "floor_limited_v51": "{:,.0f}"})
     # 4. tiers
     sec("Location-quality tiers", "Tier rules of a2_build_catalog.py (D tier also for every 5-phase event, D-B066).")
-    tt = pd.DataFrame({"v6.0": c.tier.value_counts(), "v5.1": v.tier.value_counts()}).fillna(0).astype(int).sort_index()
+    tt = pd.DataFrame({L: c.tier.value_counts(), "v5.1": v.tier.value_counts()}).fillna(0).astype(int).sort_index()
     add(tt.rename_axis("tier"))
     ct = pd.crosstab(c.region, c.tier).reindex([r for r in REGION_ORDER if r in set(c.region)])
-    add(ct.rename_axis("region (v6.0)"))
+    add(ct.rename_axis(f"region ({L})"))
     # 5. shifts vs v5.1
-    sec("Change from catalog v5.1 by region", "Events located in both; dz positive = v6.0 deeper.")
+    sec("Change from catalog v5.1 by region", f"Events located in both; dz positive = {L} deeper.")
     b = c[c.shift_h_v51_km.notna()]
     sh = b.groupby("region").agg(n=("ID", "size"), dh_med=("shift_h_v51_km", "median"),
                                  dh_p90=("shift_h_v51_km", lambda s: s.quantile(.9)),
@@ -175,7 +186,7 @@ def main():
         "Tier A-B Axial events, depth below the seafloor = depth + surface_km. v5.1: 81 %; target 85 %; Waldhauser et al. "
         "(2020): 85 % within 1.6 km, 90 % within 2.0 km.")
     rows = []
-    for lab, cc, nn in (("v6.0", c, nll), ("v5.1", v, vn)):
+    for lab, cc, nn in ((L, c, nll), ("v5.1", v, vn)):
         for tl, tiers in (("A-B", ["A", "B"]), ("A-D", list("ABCD"))):
             s = cc[nn & cc.region.eq("Axial") & cc.tier.isin(tiers)]
             z = s.depth + s.surface_km
@@ -184,8 +195,10 @@ def main():
                              within_2_0_pct=100 * (z <= 2.0).mean() if len(s) else np.nan))
     ax = pd.DataFrame(rows)
     add(ax, index=False, fmt={"n": "{:,.0f}", "within_1_6_pct": "{:.1f}", "within_2_0_pct": "{:.1f}"})
-    ab = ax[(ax.catalog == "v6.0") & (ax.tiers == "A-B")].within_2_0_pct.iloc[0]
-    para(f"v6.0 tier A-B within 2 km: {ab:.1f} % (target 85 %: {'met' if ab >= 85 else 'not met'}).")
+    ab = ax[(ax.catalog == L) & (ax.tiers == "A-B")].within_2_0_pct.iloc[0]
+    ab5 = ax[(ax.catalog == "v5.1") & (ax.tiers == "A-B")].within_2_0_pct.iloc[0]
+    para(f"{L} tier A-B within 2 km: {ab:.1f} % (v5.1 {ab5:.1f} %: {'at or above' if ab >= ab5 else 'below'}; "
+         f"target 85 %: {'met' if ab >= 85 else 'not met'}).")
     # 8. rms
     sec("Residual rms by region", "rms_unweighted: unweighted rms of the residuals of the used arrivals (s); rms: NLLoc's "
         "EDT-weighted RMS (D-B069), also for v5.1.")
@@ -200,7 +213,7 @@ def main():
                  "rms_v51_med": "{:.3f}"})
     # 9. coherence held out
     sec("Held-out effect of the coherence stage by region",
-        "b4_v6_heldout.py: the v6.0 recipe (v0.4.1 grids, SSST to 4 km, then coherence) on nine clusters with waveform CC "
+        f"b4_v6_heldout.py: the {L} recipe ({recipe}) on nine clusters with waveform CC "
         "(termtest protocol: 3 station folds, held-out CC differential times, pair-demeaned); MAD per phase pooled over the "
         "folds on the rows located in both arms; coherence - ssst with a 95 % paired bootstrap interval over event pairs.")
     cr = c[nll].groupby("region").agg(located=("ID", "size"),
@@ -210,8 +223,9 @@ def main():
                                          if "coherence_skipped_region" in c else {}))
     add(cr.reindex([r for r in REGION_ORDER if r in cr.index]))
     para("D-B098 (PI 2026-11-25 20:35): no coherence relocation in the Mendocino region (v5.1 region label), where the "
-         "held-out test on the 2015 sequence found the stage worse (P +8 ms, S +20 ms); those compact events keep their SSST "
-         "4 km location (skipped_region) and can still be stacking partners elsewhere. Provisional: one Mendocino test cluster.")
+         "held-out test on the 2015 sequence found the stage worse (P +8 ms, S +20 ms); those compact events keep their final "
+         f"SSST ({last} km) location (skipped_region) and can still be stacking partners elsewhere. Provisional: one "
+         "Mendocino test cluster.")
     rc = Path(a.heldout) / "coh_rule_check.json" if a.heldout else None
     para("Partner rule of v6.0 (R3, coordinator 2026-11-25 20:00, notes/v6_plan.md): separation <= 3 km, >= 3 accepted "
          "CC rows, median cc_max >= 0.5 over the measured rows, rows straddling a confirmed clock epoch left out; the "
@@ -230,13 +244,27 @@ def main():
         cols = ["set", "region", "phase", "pairs", "mad_ssst_ms", "mad_coh_ms", "diff_ms", "effect"]
         if "mad_coh_r3_ms" in h:
             cols += ["mad_coh_r3_ms", "diff_r3_ms", "lo_r3_ms", "hi_r3_ms", "effect_r3"]
-        para("Held-out MAD (ms): ssst = SSST to 4 km alone; coh = coherence with the test rule; coh_r3 = coherence with "
-             "R3 (the v6.0 rule); diff = coherence - ssst with its 95 % interval (effect: helps / hurts / no clear effect).")
+        para(f"Held-out MAD (ms): ssst = SSST to {last} km alone; coh = coherence with the test rule; coh_r3 = coherence "
+             "with R3 (the v6.0 rule); diff = coherence - ssst with its 95 % interval (effect: helps / hurts / no clear "
+             "effect).")
         add(h[cols], index=False, fmt={k: ("{:+.1f}" if k.startswith(("diff", "lo", "hi")) else "{:.1f}")
                                        for k in cols if k.endswith("_ms")} | {"pairs": "{:,.0f}"})
         js = json.loads((Path(a.heldout) / "scores.json").read_text())
         if js.get("missing"):
             para(f"Clusters not scored (relocation not finished or failed): {', '.join(js['missing'])}.")
+        rf = Path(a.heldout_ref) / "heldout.csv" if a.heldout_ref else None
+        if rf and rf.exists() and "mad_coh_r3_ms" in h:
+            r = pd.read_csv(rf)
+            if "mad_coh_r3_ms" in r:
+                m = h[["set", "region", "phase", "mad_coh_r3_ms"]].merge(
+                    r[["set", "phase", "mad_coh_r3_ms"]].rename(columns={"mad_coh_r3_ms": "mad_ref_ms"}), on=["set", "phase"])
+                m["change_pct"] = 100 * (m.mad_coh_r3_ms - m.mad_ref_ms) / m.mad_ref_ms
+                m["worse_than_5pct"] = m.change_pct > 5
+                para(f"Against {a.heldout_ref} (the earlier version's held-out scores, same clusters, folds and partner "
+                     f"rule R3): MAD of the final arm (coherence R3), ms; change > 5 % = worse by the plan's margin "
+                     f"({int(m.worse_than_5pct.sum())} of {len(m)} cluster-phases).")
+                add(m.rename(columns={"mad_coh_r3_ms": f"mad_{L}_ms"}), index=False,
+                    fmt={f"mad_{L}_ms": "{:.1f}", "mad_ref_ms": "{:.1f}", "change_pct": "{:+.1f}"})
     else:
         para("held-out scores not available" + (" (smoke test)" if a.smoke else ""))
     # 10. passes
@@ -261,14 +289,17 @@ def main():
              "limit (nearest kept).")
         add(ls, index=False)
     k = man["counts"]
+    mg = {kk: vv["events"] for kk, vv in k.get("magnitudes", {}).items() if isinstance(vv, dict) and "events" in vv}
+    mtxt = (", ".join(f"{n:,} {lab}" for lab, n in mg.items()) + " (magnitude_source; D-B091, D-B102, D-B105)" if mg else
+            f"{json.dumps(k.get('magnitudes', {}).get('v51'))} from the v5.1 converged table, "
+            f"{json.dumps(k.get('magnitudes', {}).get('v41'))} from the v4.1 converged table (D-B091)")
     para(f"Flags: {json.dumps(k.get('flags'))}. Review indicators carried on {k.get('review_rows'):,} events "
-         f"(reviewer columns empty, D-B097). Magnitudes: {json.dumps(k.get('magnitudes', {}).get('v51'))} from the v5.1 "
-         f"converged table, {json.dumps(k.get('magnitudes', {}).get('v41'))} from the v4.1 converged table (D-B091).")
+         f"(reviewer columns empty, D-B097). Magnitudes: {mtxt}.")
     # write
     head = (f"Catalog {cat} (md5 {man.get('catalog_md5')}), model {man.get('model')}, grid manifest md5 "
             f"{man.get('grid_manifest_md5')}, floor {man.get('floor')} (md5 {man.get('floor_md5')}), picks {man.get('picks')}. "
             f"Built {time.strftime('%F %T')}.")
-    title = "Catalog v6.0 acceptance" + (" (smoke test)" if a.smoke else "")
+    title = f"Catalog {L} acceptance" + (" (smoke test)" if a.smoke else "")
     css = ("body{font-family:system-ui,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#1d1d1f;"
            "background:#fff}table{border-collapse:collapse;margin:8px 0 18px;font-size:13px}th,td{border:1px solid #ccc;"
            "padding:3px 7px;text-align:right}th{background:#f2f2f2}td:first-child,th:first-child{text-align:left}"

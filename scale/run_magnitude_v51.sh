@@ -18,6 +18,9 @@
 # (CASCADIA_MAIN overrides it; ENV, V4 override each one). CASCADIA_WD1 is the project
 # data disk (default /wd1/mdenolle_data). Same defaults as workflow/05_magnitude/v51_paths.py.
 #   bash scale/run_magnitude_v51.sh
+# Another catalog of the v4.1 events (catalog v6.1, D-B105: magnitudes on its own hypocentres) runs the same chain
+# with CATALOG=<catalog csv> DATA=<its folder> SUFFIX=<_v61> NAME=<6.1>: arrivals from that catalog's hypocentres
+# (file names arrivals_v51*.csv kept inside DATA), table cascadia_catalog_v<NAME>_magnitudes.csv.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/workflow/05_magnitude"
@@ -37,6 +40,8 @@ AMPS="${AMPS:-$CASCADIA_WD1/amps_v6_all}"
 V4="${V4:-$CASCADIA_MAIN/data/magnitude_v4}"
 ANSS="$DATA/anss_2010-16.csv"
 MATCHED="$DATA/comcat_mt_matched$SUFFIX.csv"
+CATALOG="${CATALOG:-}"          # default: catalog v5.1 (v51_paths.V51_CATALOG)
+NAME="${NAME:-5.1}"             # table name cascadia_catalog_v<NAME>_magnitudes.csv
 mkdir -p "$DATA"
 # same ComCat inputs as the v4 run (anchors comparable; no refetch)
 [ -s "$ANSS" ] || cp "$V4/anss_2010-16.csv" "$ANSS"
@@ -44,7 +49,7 @@ mkdir -p "$DATA"
 run() { echo "[$(date +%F' '%T)] $*"; "$@"; }
 need() { [ -n "${FORCE:-}" ] || [ ! -s "$1" ]; }
 
-need "$DATA/arrivals_v51.csv" && run "$PY" v51_build_arrivals.py --outdir "$DATA"
+need "$DATA/arrivals_v51.csv" && run "$PY" v51_build_arrivals.py --outdir "$DATA" ${CATALOG:+--catalog "$CATALOG"}
 need "$DATA/raw_wa_amplitudes_v51.csv" && run "$PY" route_a_day_amplitudes.py select \
     --amps "$AMPS" --arrivals "$DATA/arrivals_v51.csv" --out "$DATA/raw_wa_amplitudes_v51.csv"
 need "$DATA/raw_wa_amplitudes_v51_nohypo_v4hyp.csv" && run "$PY" route_a_day_amplitudes.py select \
@@ -72,5 +77,5 @@ done
 need "$MATCHED" && run "$PY" phase18_moment_tensor_match.py --data "$DATA" --suffix "$SUFFIX" --matched "$MATCHED"
 need "$DATA/cascadia_catalog_M$SUFFIX.csv" && run "$PY" phase19_preferred_magnitude.py \
     --data "$DATA" --suffix "$SUFFIX" --matched "$MATCHED"
-run "$PY" v51_magnitude_table.py --data "$DATA" --suffix "$SUFFIX"
-echo "[$(date +%F' '%T)] done -> $DATA/cascadia_catalog_v5.1_magnitudes.csv"
+run "$PY" v51_magnitude_table.py --data "$DATA" --suffix "$SUFFIX" ${CATALOG:+--catalog "$CATALOG"} --name "$NAME"
+echo "[$(date +%F' '%T)] done -> $DATA/cascadia_catalog_v${NAME}_magnitudes.csv"

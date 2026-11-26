@@ -49,6 +49,12 @@
 #   deep     deep pass (D-B067: rejected at the bottom face or z' >= 78 km, not far_only) and edge pass (rejected at a
 #            lateral face of the tile box): v5.1 recipe, obs tile +- 75 km box, fine then wide grids, static terms
 #   catalog  b4_v6_catalog.py -> reloc_v6/catalog/catalog_b4_v6.0.csv (+ manifest)
+#   magnitudes (catalog v6.1 on, D-B105; not in v6.0) converged Route A magnitudes on the catalog's own hypocentres: the
+#            catalog of stage catalog is kept as catalog_b4_v<CATVER>_hypo.csv; scale/run_magnitude_v51.sh on it
+#            (CATALOG, DATA=MAGDATA, SUFFIX _v61, NAME 6.1), phase19 --solver exact --tag _converged and
+#            v51_magnitude_table.py --v4-mags (the converged v4.1 table), as scale/run_magnitude_converged.sh does for
+#            v5.1; then the catalog is rebuilt with magnitude_source v<CATVER>_converged (v4.1_converged where the
+#            v<CATVER> table has no M) and must equal the _hypo catalog outside the magnitude columns
 #   acceptance b4_lit_paired.py (v6.0 and v5.1), b4_v6_heldout.py score, b4_v6_acceptance.py -> data/tomo_v1/b4/v6.0/
 #            acceptance.html; stops the chain if any event is above the surface (D-B055)
 #   publish  commits the reports, pushes to reloc/v6-prep, writes /wd1/mdenolle_data/tomo_v1/b4_v6.DONE and
@@ -94,12 +100,17 @@ SMOKE_TILES=${SMOKE_TILES:-t10_40,t10_39,t28_41}               # JdF (CC test fa
 CC=${CC:-/wd1/mdenolle_data/tomo_v1/cc_dt_all}                 # all-family CC (tomo/cc-dt-all, ~/wt_ccall)
 CAT=$R6/catalog/catalog_b4_v$CATVER.csv
 V51CAT=/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv
+V60CAT=/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv        # comparison for later versions (acceptance)
+V60HELDOUT=/wd1/mdenolle_data/reloc_v6/heldout
+MAGDATA=${MAGDATA:-/wd1/mdenolle_data/magnitude_converged/v$CATVER}  # magnitudes stage (D-B105)
+MAG41=/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv
+if [ "$CATVER" = 6.0 ]; then MAG_STAGE=""; else MAG_STAGE=magnitudes; fi   # v6.0 kept the v5.1 / v4.1 tables
 OUTREP=$CODE/data/tomo_v1/b4/v$CATVER                           # reports committed by publish
 if [ "$CATVER" = 6.0 ]; then DONE=/wd1/mdenolle_data/tomo_v1/b4_v6.DONE; else DONE=/wd1/mdenolle_data/tomo_v1/b4_v$CATVER.DONE; fi
 PUBLISH_BRANCH=${PUBLISH_BRANCH:-reloc/v6-prep}
 SSST_STAGES=$(echo "$V6_SCHEDULE" | tr ',' '\n' | sed 's/^/ssst/' | tr '\n' ' ')
 NPROC_NLL=${NPROC_NLL:-40}
-export VERSION TIME NPROC_NLL V6_ROOT=$R6 V6_SCHEDULE
+export VERSION TIME NPROC_NLL V6_ROOT=$R6 V6_SCHEDULE V6_PICKS=$PICKS
 RELOC="$PY $W/b4_v6_reloc.py"
 
 log() { echo "$(date '+%F %T') [v6] $*"; }
@@ -225,7 +236,7 @@ stage_smoke() {
   log "smoke: tiles $SMOKE_TILES, CC $C"
   ( export V6_CHUNK=40 TILES_ARG="--tiles $SMOKE_TILES"; relocate $SMOKE $C ) || return 1
   $PY $W/b4_v6_catalog.py $SMOKE --out $SMOKE/catalog/catalog_smoke.csv || return 1
-  $PY $W/b4_v6_acceptance.py $SMOKE/catalog/catalog_smoke.csv --outdir $SMOKE/accept --smoke || return 1
+  $PY $W/b4_v6_acceptance.py $SMOKE/catalog/catalog_smoke.csv --outdir $SMOKE/accept --smoke --label v$CATVER || return 1
   [ ! -e $SMOKE/it4/arrival_problems.csv ] || { log "smoke: undocumented arrival drops"; return 1; }
   log "smoke report: $SMOKE/accept/acceptance.html"
 }
@@ -263,47 +274,80 @@ stage_coherence() { $RELOC coh $ROOT --cc $CC; }
 stage_terms() { $RELOC terms $ROOT; }
 stage_deep() { $RELOC fallback $ROOT; }
 stage_catalog() { $PY $W/b4_v6_catalog.py $ROOT --out $CAT; }
+stage_magnitudes() {   # D-B105 (see the header)
+  local pre=${CAT%.csv}_hypo.csv sfx=_v${CATVER//./} tab=$MAGDATA/cascadia_catalog_v${CATVER}_magnitudes_converged.csv
+  if [ ! -e $pre ]; then cp $CAT $pre.tmp && cp ${CAT%.csv}.manifest.json ${pre%.csv}.manifest.json && mv $pre.tmp $pre || return 1; fi
+  mkdir -p $MAGDATA
+  log "magnitudes: Route A chain on $pre -> $MAGDATA (log $MAGDATA/driver.log)"
+  ( export OMP_NUM_THREADS=12 OPENBLAS_NUM_THREADS=12 MKL_NUM_THREADS=12
+    cd $CODE && CATALOG=$pre DATA=$MAGDATA SUFFIX=$sfx NAME=$CATVER bash scale/run_magnitude_v51.sh >> $MAGDATA/driver.log 2>&1 &&
+    cd $CODE/workflow/05_magnitude && export PYTHONPATH=$PWD &&
+    { [ -s $MAGDATA/cascadia_catalog_M${sfx}_converged.csv ] ||
+      $PY phase19_preferred_magnitude.py --data $MAGDATA --suffix $sfx --matched $MAGDATA/comcat_mt_matched$sfx.csv \
+        --solver exact --outdir $MAGDATA --tag _converged > $MAGDATA/phase19_exact.log 2>&1; } &&
+    { [ -s $tab ] ||
+      $PY v51_magnitude_table.py --data $MAGDATA --suffix $sfx --catalog $pre --name $CATVER \
+        --pm $MAGDATA/cascadia_catalog_M${sfx}_converged.csv --out $MAGDATA --tag _converged --solver exact \
+        --v4-mags $MAG41 > $MAGDATA/table_converged.log 2>&1; } ) || { log "magnitudes: Route A chain failed (logs in $MAGDATA)"; return 1; }
+  $PY $W/b4_v6_catalog.py $ROOT --out $CAT --mag-tables v${CATVER}_converged=$tab,v4.1_converged=$MAG41 || return 1
+  $PY - $pre $CAT <<'EOF2'
+import sys
+import pandas as pd
+a, b = (pd.read_csv(f, low_memory=False) for f in sys.argv[1:3])
+mag = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id", "magnitude_source"]
+keep = [c for c in a.columns if c not in mag]
+same = list(a.columns) == list(b.columns) and a[keep].equals(b[keep])
+print(f"magnitudes: catalog rebuilt, non-magnitude columns {'identical' if same else 'DIFFERENT'} to {sys.argv[1]}; "
+      f"magnitude_source {b.magnitude_source.fillna('').value_counts().to_dict()}")
+sys.exit(0 if same else 1)
+EOF2
+}
 stage_acceptance() {
   heldout_launch
   while pgrep -f "[b]4_v6_heldout.py run" > /dev/null; do sleep 300; done
   $PY $W/b4_v6_heldout.py score || log "held-out scoring failed (the report says so)"
-  (cd $CODE && $PY $W/b4_lit_paired.py v6.0=$CAT v5.1=$V51CAT) || return 1
-  $PY $W/b4_v6_acceptance.py $CAT --paired $CODE/data/tomo_v1/depth_literature/paired_v6.0.md --heldout $R6/heldout \
-    --outdir $OUTREP || return 1
-  cp $OUTREP/acceptance.html $R6/catalog/acceptance_v6.0.html
+  # later versions are compared with v6.0 too (plan targets: literature depths no worse than v5.1, held-out CC fit no
+  # worse than v6.0 beyond 5 %)
+  local ref=() href=()
+  [ "$CATVER" = 6.0 ] || { ref=(v6.0=$V60CAT); href=(--heldout-ref $V60HELDOUT); }
+  (cd $CODE && $PY $W/b4_lit_paired.py v$CATVER=$CAT "${ref[@]}" v5.1=$V51CAT) || return 1
+  $PY $W/b4_v6_acceptance.py $CAT --paired $CODE/data/tomo_v1/depth_literature/paired_v$CATVER.md --heldout $R6/heldout \
+    --outdir $OUTREP --label v$CATVER "${href[@]}" || return 1
+  cp $OUTREP/acceptance.html $R6/catalog/acceptance_v$CATVER.html
 }
 stage_publish() {
   local md5c; md5c=$(md5sum < $CAT | cut -c1-32)
   mkdir -p $OUTREP
-  cp $CAT.manifest.json $OUTREP/catalog_b4_v6.0.manifest.json 2>/dev/null || cp ${CAT%.csv}.manifest.json $OUTREP/
+  cp ${CAT%.csv}.manifest.json $OUTREP/catalog_b4_v$CATVER.manifest.json
   cp $R6/heldout/heldout.csv $R6/heldout/scores.json $OUTREP/ 2>/dev/null
-  cat > $R6/v6.0_for_session18.md <<EOF2
-# Catalog v6.0 relocation: ready for the version bundle ($(date '+%F %T'))
+  local sched=${V6_SCHEDULE//,/-} npass; npass=$(echo "$V6_SCHEDULE" | tr ',' '\n' | wc -l)
+  cat > $R6/v${CATVER}_for_session18.md <<EOF2
+# Catalog v$CATVER relocation: ready for the version bundle ($(date '+%F %T'))
 
 - Catalog: $CAT (md5 $md5c), one row per catalog v4.1 event (v4.1 additions not located are left out for
   catalog_version.py, as b4_catalog.py does); manifest ${CAT%.csv}.manifest.json.
 - Model v$VERSION; grids $R6/$TIME and $R6/wide_$TIME, grid manifest $R6/grids_$TIME.md5
   (md5 $(md5sum < $R6/grids_$TIME.md5 | cut -c1-32)); floor $FLOOR; picks $PICKS (md5 $PICKS_MD5, D-B090: MH07/MG07 clock
   corrections only, D-B097).
-- Station terms: NLL-SSST grids of the run ($ROOT/g3: CharDist 4 km), static terms for the deep and edge passes
-  ($ROOT/terms/station_terms.in).
+- Station terms: NLL-SSST grids of the run ($ROOT/g$((npass - 1)): CharDist schedule $sched km, final pass it$npass,
+  loc_pass ssst_it$npass), static terms for the deep and edge passes ($ROOT/terms/station_terms.in).
 - New columns (b4_v6_catalog.py docstring): model_version, loc_pass, station_terms, ssst_char_km, rms_unweighted,
   n_picks_retimed, n_picks_clock_corrected, shift_h_v51_km, shift_z_v51_km, coherence_relocated, coherence_partners,
   edge_pass, review_problems, review_auto_indicators, review_not_earthquake/review_depth_unreliable/review_relocate/
-  review_depth_km (empty, D-B097), magnitude_source. Magnitude columns M ... comcat_id are the converged D-B091 values
-  (v5.1 table, else v4.1 table): catalog_version.py's build() overwrites MAG_COLS from params v4_1_magnitudes, so the
-  v6.0 entry must keep the catalog's magnitude columns.
-- Acceptance: $OUTREP/acceptance.html (copy $R6/catalog/acceptance_v6.0.html).
+  review_depth_km (empty, D-B097), magnitude_source (short labels v5.1_converged / v4.1_converged). Magnitude columns
+  M ... comcat_id are the converged D-B091 values (v5.1 table, else v4.1 table): the catalog_version.py entry must keep
+  the catalog's magnitude columns (magnitudes: catalog).
+- Acceptance: $OUTREP/acceptance.html (copy $R6/catalog/acceptance_v$CATVER.html).
 EOF2
-  echo "$(date '+%F %T') catalog $CAT md5 $md5c (model v$VERSION, grids $TIME, picks $PICKS md5 $PICKS_MD5); summary $R6/v6.0_for_session18.md" > $DONE
+  echo "$(date '+%F %T') catalog $CAT md5 $md5c (model v$VERSION, grids $TIME, picks $PICKS md5 $PICKS_MD5); summary $R6/v${CATVER}_for_session18.md" > $DONE
   ( cd $CODE || exit 1
-    git add -- data/tomo_v1/b4/v6.0 data/tomo_v1/depth_literature/paired_v6.0.md data/tomo_v1/depth_literature/paired_v6.0.csv \
-      data/tomo_v1/depth_literature/b4_lit_paired_v6.0.manifest.json 2>/dev/null
+    git add -- data/tomo_v1/b4/v$CATVER data/tomo_v1/depth_literature/paired_v$CATVER.md \
+      data/tomo_v1/depth_literature/paired_v$CATVER.csv data/tomo_v1/depth_literature/b4_lit_paired_v$CATVER.manifest.json 2>/dev/null
     if git diff --cached --quiet; then log "nothing new to commit"
-    else git commit -q -m "Track B v6.0: NonLinLoc relocation $(basename $ROOT) (model v$VERSION, NLL-SSST 9999-16-8-4 km + coherence): acceptance report, literature pairs, held-out coherence scores
+    else git commit -q -m "Track B v$CATVER: NonLinLoc relocation $(basename $ROOT) (model v$VERSION, NLL-SSST $sched km + coherence): acceptance report, literature pairs, held-out coherence scores
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" || exit 1; fi
-    git push -q origin HEAD:refs/heads/reloc/v6-prep || { log "PUSH REFUSED: reports committed locally only"; exit 1; }
+    git push -q origin HEAD:refs/heads/$PUBLISH_BRANCH || { log "PUSH REFUSED: reports committed locally only"; exit 1; }
   ) || return 1
 }
 
@@ -314,7 +358,7 @@ while pgrep -f '^bash /wd1/mdenolle_data/reloc_v6/\.b4_v6_relocate_running\.sh' 
 done
 cc_done $CC && log "CC job: done" || log "CC job: not done yet (the coherence stage waits for it: stage ccwait)"
 for s in surface grids wide manifest gridcheck obs smoke heldout plan iter0 $SSST_STAGES ccwait coherence \
-         terms deep catalog acceptance publish; do
+         terms deep catalog $MAG_STAGE acceptance publish; do
   done_stage $s && { log "stage $s already done"; continue; }
   log "stage $s"
   case $s in ssst*) stage_ssst ${s#ssst} ;; *) stage_$s ;; esac || { log "stage $s FAILED"; exit 1; }

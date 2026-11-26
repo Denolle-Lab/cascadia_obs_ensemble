@@ -91,6 +91,7 @@ N_MAX = int(os.environ.get("V6_LSS_NMAX", "4000"))   # input events per Loc2ssst
 LSS_MAXLEN = 990                            # LSSTATIONS line length (NonLinLoc line buffer 1,000)
 MEM_MIN_GB = float(os.environ.get("V6_MEM_MIN_GB", "35"))
 CTRL = R6 / "control" / "nproc"
+CTRL_LSS = R6 / "control" / "nproc_lss"    # Loc2ssst: 'auto 1 32' = one instance while the ensemble runs (coordinator 20:00)
 LOCGAU, LOCGAU2 = S.LOCGAU, S.LOCGAU2       # D-B069
 LATERAL, BOTTOM, DEEP_Z = {10, 11, 20, 21}, 31, 78.0
 ENV = dict(os.environ)
@@ -139,10 +140,11 @@ def machine_busy():
     return _BUSY["busy"]
 
 
-def nproc_limit(default):
-    """process limit: control/nproc holds a number, or 'auto BUSY FREE' (BUSY while tomoDD-SE processes run, else FREE)."""
+def nproc_limit(default, ctrl=None):
+    """process limit: the control file (control/nproc, or control/nproc_lss for Loc2ssst) holds a number, or
+    'auto BUSY FREE' (BUSY while tomoDD-SE processes run, else FREE)."""
     try:
-        t = CTRL.read_text().split()
+        t = (ctrl or CTRL).read_text().split()
         if t[0] == "auto":
             return max(1, int(t[1] if machine_busy() else t[2]))
         return max(1, int(t[0]))
@@ -150,7 +152,7 @@ def nproc_limit(default):
         return default
 
 
-def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default=0.5):
+def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default=0.5, ctrl=None):
     """tasks: [(name, argv, cwd, logfile[, est_gb])]; at most nproc_limit(nproc) at a time, at most one start per `ramp`
     seconds; a task starts only while MemAvailable - (estimates of the running tasks started in the last 20 s, whose
     memory MemAvailable may not show yet) - its own estimate >= MEM_MIN_GB; the first queued task that fits starts (smaller
@@ -168,7 +170,7 @@ def run_pool(tasks, label, nproc, ramp=0.05, env=None, on_done=None, est_default
                 del running[name]
                 if on_done:
                     on_done(name, r)
-        lim = nproc_limit(nproc)
+        lim = nproc_limit(nproc, ctrl)
         while queue and len(running) < lim and time.time() - last_start >= ramp:
             now = time.time()
             recent = [(ts, e, nm) for ts, e, nm in recent if now - ts < 20 and nm in running]
@@ -605,7 +607,8 @@ def lss_tile_setup(root, k, tile, tiles, counts, jobs_by_tile, pos, located):
     for i, st in enumerate(sets):
         (d_out / "work" / f"ssst_{i}.in").write_text(base + "LSSTATIONS =" + "=".join(st) + "=\n")
         # memory: ~1.55 GB per 100,000 input arrivals per instance (measured on g0, 2026-11-25)
-        tasks.append((f"{tile}#{i}", [LOC2SSST, f"ssst_{i}.in"], d_out / "work", d_out / "work" / f"ssst_{i}.log",
+        tasks.append((f"{tile}#{i}", ["/usr/bin/time", "-f", "maxrss_kb %M", "-o", f"ssst_{i}.time", LOC2SSST,
+                                      f"ssst_{i}.in"], d_out / "work", d_out / "work" / f"ssst_{i}.log",
                       0.2 + 1.6e-5 * rec["arrivals_in"]))
     rec.update(char_dist_km=char, lsgrid_km=s, lsgrid=[gx, gy, gz], box=[x0, y0, nx, ny], station_sets=sets,
                weight_floor=S.WEIGHT_FLOOR, lsphstat=S.LSPHSTAT, input=str(d_in))
@@ -635,6 +638,12 @@ def lss_tile_check(args):
                                                                    corr_min=round(float(c.min()), 4),
                                                                    corr_max=round(float(c.max()), 4))
     links = len([f for f in d_out.glob("cascadia3d.*.time.buf") if f.is_symlink()])
+    peak = []
+    for i in range(len(rec["station_sets"])):
+        m = re.search(r"maxrss_kb (\d+)", (d_out / "work" / f"ssst_{i}.time").read_text()) \
+            if (d_out / "work" / f"ssst_{i}.time").exists() else None
+        peak.append(round(int(m.group(1)) / 1048576, 3) if m else None)
+    rec["peak_rss_gb"] = peak
     rec.update(return_codes=rcs, error_lines=len(errs), error_examples=errs[:3], events_accepted=acc,
                corrected_grids=len(new), kept_previous=links, negative_nodes=n_neg, t_min=tmin, grids=grids,
                loc2ssst_md5=md5(LOC2SSST))
@@ -713,7 +722,7 @@ def cmd_lss(a):
     env = dict(ENV, PATH="/usr/bin:/bin")             # no GMT: Loc2ssst's makecpt call fails at once (cpt not needed)
     tasks.sort(key=lambda x: -x[4])                    # largest first; smaller ones fill in while memory allows
     log(f"g{k}: estimated memory per instance {min(x[4] for x in tasks):.1f}-{max(x[4] for x in tasks):.1f} GB")
-    rc = run_pool(tasks, f"g{k}", a.nproc, ramp=0.05, env=env)
+    rc = run_pool(tasks, f"g{k}", a.nproc, ramp=0.05, env=env, ctrl=CTRL_LSS)
     bytile = {}
     for name, r in rc.items():
         bytile.setdefault(name.split("#")[0], []).append(r)
@@ -734,6 +743,7 @@ def cmd_lss(a):
                 tiles_partial_input=sum(bool(r["tiles_partial"]) for r in recs),
                 events_dropped_arrival_limit=sum(r["events_dropped"] for r in recs),
                 n_max=N_MAX, tiles_capped=sum(bool(r["tiles_partial"]) for r in recs),
+                peak_rss_gb_max=max((x for r in recs for x in (r.get("peak_rss_gb") or []) if x is not None), default=None),
                 events_in_max=max(r.get("events_in", 0) for r in recs),
                 max_arrivals_station_phase=max(r["max_arrivals_station_phase"] for r in recs),
                 wall_min=round((time.time() - t0) / 60, 1), loc2ssst_md5=md5(LOC2SSST), utc=time.strftime("%FT%T%z"))

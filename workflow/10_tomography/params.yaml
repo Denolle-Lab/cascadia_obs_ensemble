@@ -850,6 +850,26 @@ tomodd:                          # D-B026 (code/build), D-B027 (B2 setup; first 
           oregon: {region: oregon_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e10k, mask_region: oregon_m0}
           washington: {region: washington_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: w, mask_region: washington_m0}
         mask_damp: 200
+      v0.4.2:                      # D-B099 (PI 2026-11-26 06:27): the real phase on model v0.4.2 (v0.4.1 without self-paired dt, patched tomoDD)
+        root: /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2
+        dataset: b1b_balanced_ct
+        node_model: 0.4.2          # registered v0.4.2 (candidate, 2026-11-26 07:21): medium, offshore, surface for the member node rule
+        truth_model: 0.4.2         # the synthetic calibration of this root (after the real phase) uses v0.4.2 x (1 + f) as truth
+        product_version: "0.4.2"   # products 0.4.2+ens.<merged members> (D-B047)
+        bin_dir: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # D-B099 freeze (main, syn, chk of m, e13k, e10k, w)
+        runtime_files: /wd1/mdenolle_data/tomo_v1/src/frozen_2026-11-26_inv/bin   # ak135.15.SKS, layer-16.dat (md5 = the 2026-11-24/25 runtime_files)
+        floor: true                # D-B083 as v0.4.1: surface.dat per member stage, Air_dep tomodd.floor.air_dep_km
+        merge_product: product_v042   # merge grid, taper, floor, reference margin_m0_v4/d200_s480 (tomodd.merge.product_v042)
+        calibration_order: after_real   # D-B099: the real members first, then this root's own synthetic calibration (truth,
+                                   # synth, calibrate); the products wait for it: they run only after a PASS or with an
+                                   # accepted calibration entry (configs.v0.4.2.calibration) for THIS root's coverage.json
+        m0: {region: margin_m0_v4, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: m}
+        tiles:                     # v0.4.1's runs and masks; mendocino_gorda_c, blanco, washington = the m0g re-inversions (D-B099)
+          mendocino_gorda_c: {region: mendocino_gorda_c_m0g, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e13k, mask_region: mendocino_gorda_c_m0}
+          blanco: {region: blanco_m0g, tag: d200_s20, smooth: [20, 20, 10], damp: 200, bin: e10k, mask_region: blanco_m0}
+          oregon: {region: oregon_m0f, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: e10k, mask_region: oregon_m0}
+          washington: {region: washington_m0g, tag: d200_s480, smooth: [480, 480, 240], damp: 200, bin: w, mask_region: washington_m0}
+        mask_damp: 200
     prior:                         # notes/bayes_design.md section 2 with P-M5 (one draw per member for the whole margin);
                                    # configs.<c>.prior overrides any key (merged key by key; prep records the result, members refuse a changed prior)
       mixture: {v4_176: 0.40, v4_173: 0.20, v4_180: 0.20, delph: 0.20}   # D-B030 (PI: Delph et al. 2018 where it covers)

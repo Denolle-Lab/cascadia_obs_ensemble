@@ -20,6 +20,11 @@ Chain stages (ROOT/chain.state records the finished ones; rerunning the same com
              synth/coverage.json result PASS), or its failed calibration explicitly accepted by configs.<c>.calibration
              (D-B094: decision id, Vp / Vs inflation factors covering every failed item, coverage.json md5);
              otherwise exit 2 before any real member.
+             With configs.<c>.calibration_order = after_real (v0.4.2, D-B099) the order is prep, real, stats, truth,
+             synth, calibrate, products: the real members do not wait for a calibration; this root's own synthetic
+             calibration runs after them (a FAIL verdict is recorded, not fatal), and the products run only after a
+             PASS or with configs.<c>.calibration accepting THIS root's coverage.json (calibration_acceptance); else the
+             chain stops with exit 2 before the products (rerun the same command once the entry is set).
   real       real-data members r000..r(N-1)
   stats      b2_ens_stats.py stats real (per-node statistics)
   products   b2_ens_stats.py products real (dry-run netCDF + HTML report; with B2_ENS_REGISTER=1, after the PI's go,
@@ -233,6 +238,12 @@ def resume_md():
                        f"started; see {ROOT}/synth/coverage.md. Do not remove 'calibrate' from the state by hand "
                        f"without the PI's decision")
     stages = "prep calibrate(gate) real stats products" if cr else "prep truth synth calibrate real stats products"
+    if after_real():
+        gate = (f"none for the real members (calibration_order after_real, D-B099): this root's synthetic calibration "
+                f"runs after them ({ROOT}/synth/coverage.md); the products run only after a PASS or with configs."
+                f"{C.CONFIG}.calibration accepting this root's coverage.json (decision, inflation, coverage_md5)."
+                + (acc_txt if acc else " No calibration entry yet: no factor is accepted"))
+        stages = "prep real stats truth synth calibrate products"
     txt = f"""# Ensemble of model v{C.product_version()} (configuration {C.CONFIG}; products {C.product_version()}+ens.<members>): how to resume
 
 Track B, D-B030/D-B032. Written by b2_ens_run.py at the start of every chain run ({time.strftime('%F %T')}).
@@ -241,7 +252,7 @@ Track B, D-B030/D-B032. Written by b2_ens_run.py at the start of every chain run
   dataset {CFG.get('dataset', 'as the regions')}; binaries {CFG.get('bin_dir', E['bin_dir'])}; floor {'on (D-B083: surface.dat per member stage, Air_dep ' + str(T['floor']['air_dep_km']) + ' km)' if C.FLOOR else 'off'}).
 * Chain state: {STATE} (one finished stage per line: {stages}).
 * Log: {ROOT}/chain.log; per member {ROOT}/<synth|real>/<member>/<stage>.log; run log <kind>/run_log.jsonl.
-* Members: {'real ' + str(N['real']) if cr else f"synth {N['synth']} + {N['floor']} noise-floor clones, real {N['real']}"}; at most {os.environ.get('B2_ENS_MAX_PROCS') or E['max_procs']} tomoDD processes,
+* Members: {'real ' + str(N['real']) if cr else f"real {N['real']}, then synth {N['synth']} + {N['floor']} noise-floor clones" if after_real() else f"synth {N['synth']} + {N['floor']} noise-floor clones, real {N['real']}"}; at most {os.environ.get('B2_ENS_MAX_PROCS') or E['max_procs']} tomoDD processes,
   nice {E['nice']}, MemAvailable kept above {E['min_avail_gb']} GB.
 * Resume after a crash or reboot: run the launch command again (same command). Finished stages and finished member
   stages are skipped; an interrupted member stage is rerun from its inputs. Members marked FAILED_MEMBER are skipped
@@ -310,6 +321,58 @@ def calibration_gate():
     sys.exit(2)
 
 
+def after_real():
+    """configs.<c>.calibration_order = after_real (D-B099): real members first, this root's synthetic calibration after."""
+    return CFG.get("calibration_order") == "after_real"
+
+
+def synthetic_phase():
+    """truth, synthetic members, calibrate of this root. Returns the calibrate rc (0 PASS, 2 FAIL) or exits on errors."""
+    N = E["members"]
+    if not stage_done("truth"):
+        if sh(PYD + [HERE / "b2_ens_synth.py", "truth"], ENVD, "truth"):
+            sys.exit(1)
+        mark("truth")
+    maybe_stop("truth")
+    if not stage_done("synth"):
+        names = [f"s{i:03d}" for i in range(N["synth"])] + [f"nf{i}" for i in range(N["floor"])]
+        merged, failed = run_members("synth", names)
+        if len(failed) > 0.1 * len(names):
+            log(f"too many failed synthetic members ({len(failed)}): stop")
+            sys.exit(3)
+        mark("synth")
+    maybe_stop("synth")
+    rc = 0
+    if not stage_done("calibrate"):
+        rc = sh(PYD + [HERE / "b2_ens_coverage.py"], ENVD, "calibrate")
+        if rc not in (0, 2):
+            sys.exit(1)
+        if rc == 2 and not after_real():
+            log("CALIBRATION FAILED: real-data ensemble not started (see synth/coverage.md)")
+            sys.exit(2)
+        mark("calibrate")
+    return rc
+
+
+def products_gate():
+    """after_real: the products need this root's calibration verdict PASS, or its FAIL accepted by configs.<c>.calibration
+    (calibration_acceptance: decision id, Vp / Vs factors covering every failed item, md5 of this coverage.json)."""
+    cj = ROOT / "synth" / "coverage.json"
+    cov = json.loads(cj.read_text()) if cj.exists() else {}
+    if cov.get("result") == "PASS":
+        log(f"products gate: {cj} result PASS")
+        return
+    why = C.calibration_acceptance(cov, cj)
+    if why is None:
+        log(f"products gate: {cj} result {cov.get('result')}, ACCEPTED by configs.{C.CONFIG}.calibration "
+            f"({C.calibration_entry()['accepted']}): products inflate the spreads {json.dumps(C.inflation())}")
+        return
+    log(f"PRODUCTS WAIT for the calibration: {cj} result {cov.get('result')} (failed: "
+        f"{sorted(k for k, v in (cov.get('verdict') or {}).items() if not v)}); acceptance: {why}. Derive the factors "
+        f"(b2_ens_inflate.py), set configs.{C.CONFIG}.calibration (PI rule) and rerun the chain")
+    sys.exit(2)
+
+
 def chain():
     ROOT.mkdir(parents=True, exist_ok=True)
     lk = C.Lock(ROOT / "chain.lock")
@@ -331,28 +394,8 @@ def chain():
     if cr:
         calibration_gate()                     # every run: the gate is the other root's current verdict
         maybe_stop("calibrate")
-    if not cr and not stage_done("truth"):
-        if sh(PYD + [HERE / "b2_ens_synth.py", "truth"], ENVD, "truth"):
-            sys.exit(1)
-        mark("truth")
-    maybe_stop("truth")
-    if not cr and not stage_done("synth"):
-        names = [f"s{i:03d}" for i in range(N["synth"])] + [f"nf{i}" for i in range(N["floor"])]
-        merged, failed = run_members("synth", names)
-        if len(failed) > 0.1 * len(names):
-            log(f"too many failed synthetic members ({len(failed)}): stop")
-            sys.exit(3)
-        mark("synth")
-    maybe_stop("synth")
-    if not cr and not stage_done("calibrate"):
-        rc = sh(PYD + [HERE / "b2_ens_coverage.py"], ENVD, "calibrate")
-        if rc == 2:
-            log("CALIBRATION FAILED: real-data ensemble not started (see synth/coverage.md)")
-            sys.exit(2)
-        if rc:
-            sys.exit(1)
-        mark("calibrate")
-    if not cr:
+    if not cr and not after_real():
+        synthetic_phase()                      # the D-B030 gate before the real members
         maybe_stop("calibrate")
     if not stage_done("real"):
         names = [f"r{i:03d}" for i in range(N["real"])]
@@ -367,6 +410,11 @@ def chain():
             sys.exit(1)
         mark("stats")
     maybe_stop("stats")
+    if after_real():
+        synthetic_phase()                      # D-B099: this root's calibration, after the real members
+        maybe_stop("calibrate")
+        if not stage_done("products"):
+            products_gate()
     if not stage_done("products"):
         if sh(PYM + [HERE / "b2_ens_stats.py", "products", "real"], ENVM, "products"):
             sys.exit(1)

@@ -6,8 +6,8 @@ onset). A standard pulse has both edges 27.5 s apart; on some Wednesdays the pla
 (~20 min), so the edges are matched separately.
 check_pick(sta, t_pick): reads t_pick - 45 s .. t_pick + 45 s (10-Hz block means of the raw counts), finds edges
 with |cc| >= CC_MIN and |amplitude| / noise >= SNR_MIN (either polarity: some channels carry the pulse inverted)
-and calls the pick matched when an edge lies within EDGE_BEFORE s before to EDGE_AFTER s after... i.e. when
-edge - EDGE_AFTER <= t_pick - ... see in_edge().
+and calls the pick matched when an edge lies at most EDGE_LEAD (3) s after or EDGE_LAG (10) s before the pick,
+i.e. edge - EDGE_LEAD <= t_pick <= edge + EDGE_LAG (in_edge(); the wording of RULE.md).
 """
 import numpy as np
 import pandas as pd

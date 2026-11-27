@@ -13,6 +13,7 @@ $PY maf_calendar.py                 # 4 pulse calendar and windows
 # RULE.md registered here (2026-11-26 16:27:27 PST), before scoring
 $PY maf_score.py --nproc 6          # 5 classes, event_flags_v61.csv, candidates
 $PY maf_sweep.py                    # 5b post-hoc diagnostic (no flag)
+$PY maf_comcat.py                   # 5c rule check (c): candidates and the waveform-only list against ANSS (after 5, 5b)
 $PY maf_figs.py --examples 28237,26754,17439,33276 --real 27434,63183,17438,24181,11422
 $PY maf_html.py --examples 28237,26754,17439,33276 --real 27434,63183 --probable 17438,24181,11422 \
     --notes notes_findings.html

@@ -14,6 +14,8 @@ import pandas as pd
 
 import maf_common as C
 
+RULE_MD5 = "61b3513e6de308ba40da3071fcb1d3b7"   # RULE.md as registered 2026-11-26 16:27:27 PST (commit 7ae9b1a9)
+
 CSS = """
 :root{--ink:#0b0b0b;--muted:#6b6a66;--grid:#d9d8d4;--bg:#fbfbfa;--card:#ffffff;--accent:#c03a2b;--blue:#2a78d6}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#ecebe8;--muted:#a3a29e;--grid:#3a3936;
@@ -62,8 +64,12 @@ def main():
     summ = json.load(open(C.WORK / "summary.json"))
     cal = json.load(open(C.WORK / "calendar.json"))
     sig = json.load(open(C.WORK / "signal_stations.json"))
-    rule = open(C.OUT / "RULE.md").read()
+    # The rule registered before scoring (2026-11-26 16:27:27 PST): the committed copy next to this script, checked
+    # against the registered md5. The time-stamped copy in C.OUT is never written or regenerated here.
+    rule = (C.HERE / "RULE.md").read_text()
     rule_md5 = hashlib.md5(rule.encode()).hexdigest()
+    if rule_md5 != RULE_MD5:
+        raise SystemExit(f"{C.HERE / 'RULE.md'}: md5 {rule_md5} is not the registered {RULE_MD5}")
     ev = pd.read_csv(C.WORK / "events_scored.csv", low_memory=False)
     ev["t_origin"] = pd.to_datetime(ev.t_origin, utc=True, format="ISO8601")
     ev["local"] = ev.t_origin.map(lambda t: C.local(t).strftime("%Y-%m-%d %H:%M:%S %Z %a") if pd.notna(t) else "")
@@ -121,7 +127,7 @@ channel); {summ['n_with_pick_in_W']:,} have a pick on the signal. Of the {deep_s
 {notes}
 <h2>1. The rule (pre-registered)</h2>
 <p>Written to <code>RULE.md</code> at 2026-11-26 16:27:27 PST (time from <code>date</code>) and pushed in commit 7ae9b1a9 before any
-event was scored; md5 of the file now: <code>{rule_md5}</code> (registered: 61b3513e6de308ba40da3071fcb1d3b7).</p>
+event was scored; md5 of the file now: <code>{rule_md5}</code> (registered: {RULE_MD5}).</p>
 <details open><summary>RULE.md</summary><pre>{html.escape(rule)}</pre></details>
 <h2>2. The signal</h2>
 <p>A calibration-type pulse injected at once on the analog UW channels: a clipped negative box of 1.5 s, an exponential rise to a

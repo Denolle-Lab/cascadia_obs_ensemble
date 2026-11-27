@@ -283,3 +283,75 @@ Left (stated, not fixed here):
 * The legacy v5.1 structure and interpretation analyses (`v51_struct*.py`, `v51_interp*.py`) read model v0.3.1 and
   removed worktrees (`wt_a51_clusters`, `wt_a51_faults`); they are superseded by `pb_*.py` and not in the chain.
 * A new catalog version still needs a `CATALOGS` entry in `v51_clusters_zbz.py` (code, three lines).
+
+## Checks (2026-11-27)
+
+Reproduction of the committed results with the parameterised code (defaults; outputs in
+`/wd1/mdenolle_data/pipeline_smoke/repro/`, `cmp_dirs.sh` there):
+* fault surfaces v1 on v5.1: the five detection runs and the three recovery reruns (`v1_recovery.py`) give the same
+  planes as `work/detect_*.npz` and the verifier's `verifier_reruns/`; all 17 committed tables of
+  `data/catalog_v5/v5.1_analysis/faults` byte-identical; assignment, vertices, ensemble, member residuals identical in
+  content (gzip headers differ by time); GeoJSON identical.
+* clustering of v6.0 (`--catalog v6.0`, steps main to checks, `--mcb` = the Mc table that run read, now under
+  `_superseded_2026-11-26_mc_with_blasts/`): 54 of 57 files byte-identical; `families_zbz_v60.csv` identical in all 84
+  columns (the original has 9 more columns written later by its separate compare step); `run_params.json` and
+  `input_commits.json` differ only by the inputs that changed since (catalog md5 after the D-B102 rebuild, short
+  magnitude_source labels, Mc table path, origin/main commit).
+* plate-boundary feasibility study (v6.0 defaults): all 11 tables of `data/paper_plan/plate_boundaries`,
+  `events_segments_v60.parquet` and `level_depth_members.npz` byte-identical.
+* `--dry-run` of the whole v6.1 chain against the real data roots: every input, pinned md5 and code path resolves.
+* the plate-boundary study after the D-B111 merge of analysis/plate-boundaries (136836d5, Vp/Vs raw spread,
+  circularity control): all 12 tables, including `circularity_contrasts.csv`, byte-identical again.
+* full `--dry-run` (2026-11-27 10:02): 24 stages, 76/76 inputs resolve (pinned md5: picks v4.1, catalog v4.1, v4.1t,
+  v4.1tc, bundle CSV), 57 commands, every code path in HEAD; 21 stages done, structure and plate_boundaries pending
+  in the production folders (another job reruns them, D-B111), atlas gated. Saved as
+  `/wd1/mdenolle_data/catalog_v6/v6.1_analysis/_pipeline/dryrun_full.txt`.
+
+## v6.1 production run (D-B111, 2026-11-27 09:39-10:01)
+
+`pipeline.py configs/v6.1.yaml --only mc_b,clustering,swarms,faults,validation --var nproc=7` (validation rerun
+after a fix of `compare_catalogs.py`). Stage times: mc_b 0.3 min, clustering 9.8 min, swarms 0.3 min, faults 10.9 min,
+validation 0.2 min. Provenance and logs in `/wd1/mdenolle_data/catalog_v6/v6.1_analysis/_pipeline/`.
+
+Products: `/wd1/mdenolle_data/magnitude_converged/mc_maps_v61/` (mc_grid*.csv/nc, mc_regional.csv, figures);
+`/wd1/mdenolle_data/catalog_v6/v6.1_analysis/clusters/` (events_zbz_v61.csv.gz, families_zbz_v61.csv with the fault
+join, dbscan_clusters_v61.csv, dbscan_members_v61.csv, completeness, thresholds, sensitivity, nulls, comparisons with
+v6.0 and v4.1); `.../v6.1_analysis/faults/` (fault surfaces v1 on v6.1: summary, members, assignment, rectangles,
+GeoJSON mesh, vertices, ensemble, v0 comparison, work/ caches and detection reruns); `.../v6.1_analysis/validation/`
+(catalog_compare/ summary, anss, faults, pairs, SUMMARY.md, common tables in big/; depth_literature/paired_v6.1.md).
+
+Headline numbers (v6.0 in brackets):
+* Mc and b: 127,430 located earthquakes with M (3,400 flagged events left out); whole catalog Mc 1.5, b 0.983 +-
+  0.004 [0.975]; Axial Mc 0.1, b 0.71; Blanco 1.6, 1.12; Gorda 1.9, 1.24; Mendocino 1.5, 1.01; Puget 1.2, 1.21.
+* clustering: 168,564 located earthquakes (3,433 not earthquakes, 345 without hypocentre); 31,138 events above the
+  regional Mc [30,754]; 59.6 % background, 21.4 % mainshock-aftershock, 12.2 % swarm, 6.9 % multiplet [59.6, 21.3,
+  12.2, 6.9]; 2,125 families: 1,003 mainshock-aftershock, 913 multiplets, 209 swarms [975, 912, 214]; swarm share
+  Blanco 23.9 % [23.1], Axial 21.5 % [22.0], Gorda 11.0 % [10.9], Mendocino 1.1 % [1.3].
+* swarm scan: 449 DBSCAN clusters, 294 swarm-like [470, 311]; against v6.0: 417 kept, 23 new, 6
+  merged.
+* fault surfaces v1 refit on v6.1 [v5.1 fit]: fit set 111,490 [101,296]; 164 detection planes [161]; 23 Blanco
+  strands [12]; 168 surfaces fitted, 159 kept, 9 removed [152, 142, 10]; 63 of 159 stable; 61,213 fit members
+  [64,272].
+* validation: ComCat 2010-2016, 16,577 matched events: median horizontal offset 1.94 km (p90 8.6), median depth
+  difference +1.43 km [v6.0 1.93 km, +1.48 km]; near-station events 1.49 km, +0.77 km; above the surface 0.32 %
+  (earth_relief 01m; 0 against the catalog's own surface); v0 fault-plane thickness median 1.57 km [1.70]. Depth
+  pairs, tiers A-C: Mount St Helens (Hirao 2025) +0.88 km [+0.77]; Blanco (Lange 2026, absolute) +1.01 km [+1.37],
+  Gorda Depression +4.9 km [+7.9].
+
+Driver test of stages structure and plate_boundaries on these products (scratch, not the paper numbers; another job
+reruns them): `/wd1/mdenolle_data/pipeline_smoke/v6.1_pb/` (0.7 min). 105 depth-matched contrasts, 32 above 2 sigma,
+31 survive the circularity control [v6.0 with the D-B111 settings: 39, 36]; Gorda-slab seismicity bottom against the
+7.5 km/s level rho 0.53, p 0.001 [0.52, 0.001]; swarm share Axial 29 % [31], Mount St Helens 28 % [38], Blanco 25 %
+[24], Gorda Ridge 19 % [21], <= 3 % at the Mendocino fault zone, Gorda plate, triple junction and Gorda slab; b 0.74-1.45
+(segments with a bootstrap interval). The Mount St Helens change comes with the 131 analog_test_signal events
+(D-B108) now left out as non-earthquakes (not checked family by family).
+
+## Branches that must merge for main to be self-sufficient
+
+* pipeline/end-to-end (this branch): the driver, the parameters above, and analysis/plate-boundaries (merged in
+  at 136836d5; that branch has no PR).
+* PR #64 (catalog/mag-tables-params): magnitude tables in params; a new magnitude table becomes a params-only step.
+* paper/model-figures (7aea31dd, no PR): `workflow/08_figures/model_figures.py` (paper model figures; not a pipeline
+  stage under D-B107, but the paper needs it). Its `scm_palettes.py` is identical to the one merged here.
+* Already on main: reloc/v61 (#60), analysis/msh-analog-flags (#61), catalog/v6.1 (#62), atlas/v6 (#63),
+  analysis/v51-faults (#41).

@@ -21,6 +21,7 @@ vars:
   nproc: "8"                                              # worker processes of the analysis stages
   catver: "6.1"
   tag: v61                                                # file tag of the clustering outputs
+  atlas_expect_m2: "13705"                                # atlas_check EXPECT: events with M >= 2.0 in the v6.1 view (gh-pages 8e95084a)
   prev_catalog: "{wd1}/catalog_v6/v6.0/cascadia_catalog_v6.0.csv"   # previous version (comparisons)
   model: 0.4.2
   store: "{wd1}/tomo_v1/models/cascadia_obs_tomo"         # registered velocity models (append-only registry)
@@ -559,11 +560,12 @@ stages:
       - "mkdir -p {out_root}/atlas && {py} workflow/06_analysis/build_v4_atlas.py --model {model_nc} --mc-cat v{catver}={mc_dir} --clusters {clu_dir} --clusters-catalog v{catver} --out {out_root}/atlas/cascadia_atlas.html"
       - |
         NE=$HOME/.cache/rattler/cache/cached-envs-v0/55304966f11fb1c1
-        LD_LIBRARY_PATH=$NE/lib PW=$NE/lib/node_modules/playwright PAGE={out_root}/atlas/cascadia_atlas.html $NE/bin/node workflow/06_analysis/atlas_check.js
+        LD_LIBRARY_PATH=$NE/lib PW=$NE/lib/node_modules/playwright PAGE={out_root}/atlas/cascadia_atlas.html EXPECT='{"v{catver}": {atlas_expect_m2}}' $NE/bin/node workflow/06_analysis/atlas_check.js
     notes: >-
       compare_catalogs.py --only writes the shared common table /wd1/mdenolle_data/catalog_compare/v{catver}.parquet
       and data/catalog_compare/ (git). atlas_check.js exits 1 on a page or console error or a count mismatch (EXPECT:
-      JSON of the events with M >= 2.0 per catalog view).
+      JSON of the events with M >= 2.0 per catalog view). The catalogs.yaml entry for v6.1 is in PR #67 (atlas/v61);
+      atlas_expect_m2 = 13705 for v6.1 (session -18's live check of gh-pages 8e95084a, 2026-11-27).
 
   - id: atlas_deploy
     kind: manual

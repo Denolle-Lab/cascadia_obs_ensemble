@@ -784,7 +784,8 @@ MC_SIG = {"mc_best": "sigma_boot", "mc_maxc": "sigma_maxc", "mc_mbs": "sigma_mbs
 
 # Mc grids (main(): --mc-maps): with the converged magnitudes (D-B091) the converged Mc grids; with --mag stored the
 # Mc grids of the stored magnitudes (data/catalog_v4/mc_maps), so that the map and the events use the same magnitudes
-MC = {"dir": mag_paths.CONV / "mc_maps_v41", "source": "converged Route A magnitudes of catalog v4.1 (D-B091)"}
+MC = {"dir": mag_paths.CONV / "mc_maps_v41",
+      "source": "converged Route A magnitudes of catalog v4.1 (D-B091), events flagged as non-earthquakes excluded (D-B105)"}
 
 
 RAMPS = Path("/wd1/mdenolle_data/tomo_v1/models/figures_v0.4.2/atlas_ramps.js")   # D-B104 colour ramps (main(): --ramps)
@@ -805,7 +806,8 @@ def mc_grids(cats):
             raise SystemExit(f"--mc-cat {cid}: no catalog {cid} on this atlas")
     sets = [("", cats[0]["id"], d, MC["source"])] + [
         (f"{c['key']}_", c["id"], Path(MC_CAT[c["id"]]),
-         f"converged Route A magnitudes and hypocentres of catalog {c['id']} (D-B102, D-B104)")
+         f"converged Route A magnitudes and hypocentres of catalog {c['id']} (D-B102, D-B104), events flagged as "
+         "non-earthquakes excluded (D-B105)")
         for c in cats if c["id"] in MC_CAT and c.get("key")]
     base = {pre: pd.read_csv(f / "mc_grid.csv") for pre, _, f, _ in sets}
     step = float(np.round(np.diff(np.sort(base[""].lon.unique()))[0], 4))

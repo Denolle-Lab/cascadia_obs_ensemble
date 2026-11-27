@@ -173,6 +173,13 @@ def main():
 
     off = E[E.seg.isin(list(Q.OFFSHORE))]
     n_null = int(C.n_null.max()) if "n_null" in C else 0
+    if n_null >= 15:
+        c5c_state = (f"The null-truth control C5c is scored on {n_null} of 20 merged members, which meets the "
+                     f"registered minimum of 15. A group whose own valid member count is below 15 stays "
+                     f"provisional (C5c_status column).")
+    else:
+        c5c_state = (f"The null-truth control C5c is provisional: {n_null} of 20 members had merged, below the "
+                     f"registered minimum of 15.")
     six = [f"{gv('frame:oceanic', L, 'bias'):+.1f}" for L in A.ISO_KEYS]
     gs = U[U.grouping.eq("seg") & U.key.eq("GS")].copy()
     gs["below_top"] = gs.D - gs.slab_km
@@ -505,8 +512,8 @@ code{font-size:.92em}li{margin:.25em 0}
              f"percentile ({circ('Gorda slab (GS)', 'rho_null_p95'):.2f}). Its 4 one-degree blocks give a "
              f"block-bootstrap lower bound of {circ('Gorda slab (GS)', 'rho_real_lo90'):.2f}. The earlier column "
              f"result (rho 0.53, p 0.001) treated 67 columns as independent at a 40 km model resolution. With "
-             f"0.5 deg bins and block resampling it is not significant. C5c is provisional until 15 or more null "
-             f"members have merged. To rescore: <code>bash workflow/11_paper_plan/run_q2.sh circ</code>.</p>")
+             f"0.5 deg bins and block resampling it is not significant. {c5c_state} "
+             f"To rescore: <code>bash workflow/11_paper_plan/run_q2.sh circ</code>.</p>")
     H.append("<h3>Not registered: within-cluster correlations</h3>")
     H.append(tbl(WC))
     H.append("<p>Within the Blanco bins and within the Mendocino-Gorda bins, D90 correlates with each predictor at "
@@ -681,8 +688,7 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>Model resolution is about 40 km laterally. Depth nodes are 3-6 km apart at 15-35 km. No 7.5 or "
              "8.0 km/s crossing offshore lies between checkerboard-resolved nodes.</li>"
              "<li>The velocity levels come from an inversion of the same events. The circularity controls reduce "
-             "but do not remove this dependence. The null-truth control is provisional "
-             f"({n_null} of 20 members).</li>"
+             "but do not remove this dependence. " + c5c_state + "</li>"
              "<li>Cooling-model assumptions: conductive cooling from a seafloor at 0 C. There is no hydrothermal "
              "cooling, no shear or frictional heating on transforms, no sediment blanketing and no plate "
              "compression. Transforms use the mean of two one-sided geotherms. Ages come from a global grid that "

@@ -45,6 +45,12 @@ D-B104 (2026-11-26): add the per-catalog Mc grids (the Mc layer follows the cata
 the v4.1 grids) and the Crameri colour ramps of the paper model figures (--ramps, default figures_v0.4.2/atlas_ramps.js):
       ... --mc-cat v5.1=/wd1/mdenolle_data/magnitude_converged/mc_maps_v51 \\
       --mc-cat v6.0=/wd1/mdenolle_data/magnitude_converged/mc_maps_v60
+Catalog v6.1 (2026-11-27): registry atlas_relocated v6.1, atlas_moves_from v6.0; the Mc grids of v6.1 and Cluster mode on
+the v6.1 families (pipeline driver outputs, D-B110/D-B111):
+      ... --mc-cat v5.1=/wd1/mdenolle_data/magnitude_converged/mc_maps_v51 \\
+      --mc-cat v6.0=/wd1/mdenolle_data/magnitude_converged/mc_maps_v60 \\
+      --mc-cat v6.1=/wd1/mdenolle_data/magnitude_converged/mc_maps_v61 \\
+      --clusters /wd1/mdenolle_data/catalog_v6/v6.1_analysis/clusters --clusters-catalog v6.1
 The 2026-11-25 command's --catalog-before-label "v4-NLL3D (start model)" is dropped: Moves now start from v5.1, and the
 option would rename it.
 

@@ -1,0 +1,69 @@
+# Inputs of the paper figures v2 (D-B114): every path the figures read. ${name} expands to another key of this
+# file; a relative path is relative to the repository root of the checkout that runs the script.
+# After the segment fix (D-B113) and the null-truth score (D-B112): point `plan_dir` (and `tables`) at the rerun
+# output, or keep them if the rerun overwrote /wd1/mdenolle_data/paper_plan/v6.1, and run
+#   bash workflow/08_figures/run_figures_v2.sh
+label: v6.1                                    # catalog name in captions
+wd1: /wd1/mdenolle_data
+main: /home/mdenolle/cascadia_obs_ensemble     # main checkout: git-ignored data (Slab2, GMRT tiles of the zooms)
+
+# --- catalog and its products
+catalog: ${wd1}/catalog_v6/v6.1/cascadia_catalog_v6.1.csv
+clusters: ${wd1}/catalog_v6/v6.1_analysis/clusters        # events_zbz_<tag>.csv.gz, families_zbz_<tag>.csv
+cluster_tag: v61
+faults: ${wd1}/catalog_v6/v6.1_analysis/faults            # fault surfaces v1 refit on v6.1
+mc_maps: ${wd1}/magnitude_converged/mc_maps_v61           # mc_grid.nc, mc_grid_periods.nc, run_params.json
+stations: ${wd1}/picks_share/stations/stations_ver5_v6.csv
+
+# --- plate-boundary analysis (workflow/11_paper_plan, run_v61.sh; segment rule pb_common.py)
+plan_dir: ${wd1}/paper_plan/v6.1
+tables: ${plan_dir}/tables
+events_segments: ${plan_dir}/events_segments_v61.parquet
+contrast_nodes: ${plan_dir}/contrast_nodes.npz
+level_depth_members: ${plan_dir}/level_depth_members.npz
+segment_node_dist: ${plan_dir}/segment_node_dist.npz
+seismicity_metrics: ${tables}/seismicity_metrics.csv
+structure_feasibility: ${tables}/structure_feasibility.csv
+structure_contrasts: ${tables}/structure_contrasts.csv
+circularity_contrasts: ${tables}/circularity_contrasts.csv
+null_truth_contrasts: ${tables}/null_truth_contrasts.csv   # D-B112; optional: missing = "null truth pending"
+depth_vs_level: ${tables}/depth_vs_level.csv
+depth_vs_level_columns: ${tables}/depth_vs_level_columns.csv
+segment_axes: ${tables}/segment_axes.csv
+surface_segments: ${tables}/surface_segments.csv
+
+# --- velocity model v0.4.2 and its ensemble
+model: ${wd1}/tomo_v1/models/cascadia_obs_tomo/v0.4.2.nc
+ensemble: ${wd1}/tomo_v1/models/cascadia_obs_tomo/v0.4.2+ens.100.nc
+members: ${wd1}/tomo_v1/ensemble_v0.4.2/real               # r000-r099/merged.npz
+inflation: {Vp: 1.50, Vs: 1.35, VpVs: 1.00}               # D-B099, D-B111
+dws_min: 100
+
+# --- context layers
+slab2: ${main}/data/slab2/cas_slab2_dep.xyz
+pb2002: data/tectonics/PB2002_steps.json
+plate_axes: data/paper_plan/plate_boundaries/plate_axes_v1.csv   # D-B113 axes (replace PB2002 ridges and oceanic transforms)
+focal: data/focal/comcat_mt.csv
+crescent_traces: data/faults/crescent_cfm/crescent_cfm_crustal_traces.geojson
+gmrt_tiles: ${main}/data/gmrt                              # high-resolution GMRT of the zoom regions
+cache: ${wd1}/paper_plan/figures_v2/cache                  # GMRT mosaic, coastlines (built once)
+
+# --- output
+out: ${wd1}/paper_plan/figures_v2
+old_figures: paper_sciadv/figures                          # current paper figures, for the before/after on the page
+
+# --- fault-zone sections (Fig. 4). frame: trace = PB2002 transform steps inside bbox (W, E, S, N), normal distance
+# re-centred on the median of the segment's depth-good events; axis = the segment's strike line (segment_axes.csv,
+# PCA of the epicentres; + normal = left of the strike direction, as for the "across" contrasts); line = a straight
+# line through (lon0, lat0) with `strike`. along: kept range along the frame (km), default the 2-98 % of the events.
+# flip: true draws + normal on the left. Segments listed in `segs` contribute events and contrasts to the panel.
+sections:
+  - {key: BL, title: Blanco transform, segs: [BL], frame: trace, bbox: [-130.7, -126.4, 42.9, 44.7], pos: N, neg: S}
+  - {key: MFZ, title: Mendocino fault zone, segs: [MFZ], frame: trace, bbox: [-129.5, -124.9, 40.0, 41.0], pos: N, neg: S}
+  - {key: GP, title: Gorda plate, segs: [GP], frame: axis, pos: NNE, neg: SSW}
+  - {key: MTJ, title: Triple junction and Gorda slab, segs: [MTJ, GS], frame: line, lon0: -124.75, lat0: 40.7, strike: 0.0, along: [-60, 95], centre: -20, flip: true, pos: E, neg: W}
+  - {key: PU, title: Puget-Georgia crust, segs: [PU], frame: axis, pos: E, neg: W, flip: true}
+  - {key: MSH, title: Mount St Helens, segs: [MSH], frame: axis, pos: ENE, neg: WSW, flip: true}
+section_half_width_km: 45
+section_depth_km: [-3, 40]
+section_bin_km: 5

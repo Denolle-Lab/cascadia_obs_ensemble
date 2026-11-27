@@ -10,6 +10,14 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   v0.4.2 synthetic ensemble required before any contrast is interpreted. Rule below written and committed before any
   synthetic contrast is computed.
 
+- Fri Nov 27 09:42:27 PST 2026: scored (pb_circularity.py, rule unchanged): 105 contrasts testable; 39 pass 2 sigma_ens
+  (Vp/Vs raw); 36 survive the rule; dropped by S95: GS Vp/Vs near-far, MSH Vp along, MSH Vp/Vs across. Spurious sd ~
+  raw member sigma (median ratio 0.97); S95 median 0.90 of 2 sigma_ens; noise-floor clone sd <= 0.0024. Null truth not
+  possible with the existing synthetic set (one truth carrying the v0.4.2 contrasts); cost estimate ~2.1
+  process-hours per member. Table circularity_contrasts.csv; page section 3.
+- Next: rerun everything on catalog v6.1 when the coordinator sends the paths of its clusters, Mc maps and fault
+  surfaces (D-B111); pb_common.CAT, CLU, MCMAP, FLT/FLT_BIG are the places to change.
+
 ## Pre-registered rule: circularity control of the structure contrasts (written Fri Nov 27 09:38:33 PST 2026, before scoring)
 
 Contrasts: every contrast of pb_structure.py, i.e. segment x variable (Vp, Vs, Vp/Vs) x type (near-far, across,

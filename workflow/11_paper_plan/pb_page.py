@@ -114,6 +114,7 @@ def main():
     dl = pd.read_csv(P.OUT / "depth_vs_level.csv")
     sv = pd.read_csv(P.OUT / "swarm_vs_ma.csv")
     sens = pd.read_csv(P.OUT / "segment_rule_sensitivity.csv")
+    circ = pd.read_csv(P.OUT / "circularity_contrasts.csv")
     sec = pd.read_csv(P.OUT / "sections_info.csv", index_col=0)
     sseg = pd.read_csv(P.OUT / "surface_segments.csv")
     m = f.merge(s.drop(columns=["name", "type", "n_events", "n_depth_good", "n_surfaces"]), on="seg")
@@ -170,6 +171,36 @@ def main():
     c2["seg"] = c2.seg.astype(str)
     contrast_table = table(c2, fmts={"Δ (v0.4.2)": "{:+.3f}", "σ of Δ (members)": "{:.3f}", "|Δ|/σ": "{:.1f}",
                                      "node 1σ": "{:.3f}", "|Δ|/node 1σ": "{:.2f}"}, left=("var", "contrast"))
+
+    # ---------------- circularity control
+    ci_ = circ.copy()
+    ci_["seg"] = pd.Categorical(ci_.seg, P.SEG_ORDER, ordered=True)
+    ci_ = ci_.sort_values(["seg", "var", "contrast"])
+    ci_["seg"] = ci_.seg.astype(str)
+    ci_["verdict"] = np.where(ci_.survives, '<span class="resolved">survives</span>',
+                              np.where(ci_.old_rule_2sigma, '<span class="marginal">dropped by S95</span>', "–"))
+    ci_t = ci_[["seg", "var", "contrast", "D_real", "sigma_ens", "D_truth", "spur_mean", "spur_sd", "spur_p05",
+                "spur_p95", "S95", "recovery", "noise_floor_sd", "verdict"]]
+    ci_t = ci_t.rename(columns={"D_real": "Δ real", "sigma_ens": "σ ens", "D_truth": "Δ truth (synth)",
+                                "spur_mean": "spurious mean", "spur_sd": "spurious sd", "spur_p05": "spurious p05",
+                                "spur_p95": "spurious p95", "S95": "S95 = p95 |spurious|", "recovery": "recovery",
+                                "noise_floor_sd": "noise floor sd"})
+    circ_table = table(ci_t, fmts={c: "{:+.3f}" for c in ["Δ real", "Δ truth (synth)", "spurious mean",
+                                                            "spurious p05", "spurious p95"]} |
+                       {"σ ens": "{:.3f}", "spurious sd": "{:.3f}", "S95 = p95 |spurious|": "{:.3f}",
+                        "noise floor sd": "{:.4f}"}, left=("var", "contrast"))
+    n_test, n_old, n_surv = int(circ.testable.sum()), int(circ.old_rule_2sigma.sum()), int(circ.survives.sum())
+    dropped = circ[circ.old_rule_2sigma & ~circ.survives]
+    vn_ = {"Vp": "Vp", "Vs": "Vs", "VpVs": "Vp/Vs"}
+    dropped_s = "; ".join(f"{r.seg} {vn_[r['var']]} {r.contrast} ({r.D_real:+.3f}, S95 {r.S95:.3f})"
+                          for _, r in dropped.iterrows())
+    sv_ = circ[circ.survives]
+
+    def surv_list(segs):
+        x = sv_[sv_.seg.isin(segs)]
+        return "; ".join(f"{r.seg} {vn_[r['var']]} {r.contrast} {r.D_real:+.2f}" for _, r in x.iterrows()) or "none"
+    med_ratio = float(np.median(circ.S95 / (2 * circ.sigma_ens)))
+    rec_med, rec_lo, rec_hi = (float(np.percentile(sv_.recovery.dropna(), q)) for q in (50, 10, 90))
 
     # ---------------- seismicity metrics full
     sm = s[["seg", "type", "n_events", "n_with_M", "Mmax", "n_M4", "Mc", "Mc_lo", "Mc_hi", "Mc_map_median", "b", "b_lo",
@@ -270,14 +301,19 @@ the structure of the plate-boundary zone on a 40 km scale, not a fault damage zo
 to say this.</li>
 <li><b>Ensemble 1σ near the faults</b> (median over nodes within 10 km, calibrated): Vp {g('MSH', 'sd_Vp_10'):.2f}
 km/s at Mount St Helens to {g('BL', 'sd_Vp_10'):.2f} km/s at Blanco; Vp/Vs {g('MSH', 'sd_VpVs_10'):.3f} to
-{g('BL', 'sd_VpVs_10'):.3f} (raw spread x 1.5, no calibrated factor exists for Vp/Vs). The Blanco tile (smoothing
-20) has the largest member spread.</li>
-<li><b>Contrasts against the ensemble.</b> A depth-matched contrast recomputed in each member has a much smaller
-spread than the node 1σ (node errors are correlated in space), so both ratios are given. Of the {n_ct} contrasts on
-resolved and marginal segments, {n_2s} exceed 2σ of the members and {n_node} exceed the node 1σ. Blanco has none at
-2σ (largest {g('BL', 'max_contrast_ratio'):.1f}σ). Vp/Vs reaches 2σ only along the Cascade arc. Inside-zone minus
-10-20 km surroundings (near-far) at ≥ 2σ: {nearfar}. The largest values (0.4-0.6 km/s along strike at MTJ and in the
-Gorda slab) follow the onshore-offshore transition, not a fault zone.</li>
+{g('BL', 'sd_VpVs_10'):.3f} (raw member spread: the synthetic calibration found Vp/Vs calibrated without
+inflation, D-B111). The Blanco tile (smoothing 20) has the largest member spread.</li>
+<li><b>Contrasts after the circularity control</b> (rule pre-registered 2026-11-27 09:38 PST, commit 6b64abf1,
+before scoring: a contrast counts only if |Δ| ≥ 2σ of the real ensemble and |Δ| ≥ S95, the 95th percentile of
+|recovered − truth| over the 100 synthetic members). Of {n_test} contrasts on resolved and marginal segments, {n_old}
+pass 2σ alone (Vp/Vs with the raw σ) and {n_surv} survive both. Dropped by S95: {dropped_s}. The spurious contrasts
+are small and centred: their sd is about the raw member σ and S95 is a median {med_ratio:.2f} of 2σ, so the synthetic
+test removes few contrasts. Surviving on the oceanic boundaries: {surv_list(["GR", "BL", "MFZ", "GP"])}; at the
+triple junction and the Gorda slab: {surv_list(["MTJ", "GS"])}; on land: {surv_list(["PU", "MSH", "CAS"])}. Blanco
+has none (nothing reaches 2σ). No Vp/Vs contrast survives on an oceanic boundary; the Vp/Vs survivors are on the arc (MSH, CAS) and in
+the other-onshore group OC (|Δ| 0.015-0.024). The largest values (0.4-0.6 km/s along strike at MTJ and in the Gorda slab) follow the
+onshore-offshore transition, not a fault zone. A null truth without these contrasts is not in the synthetic set
+(section 3).</li>
 <li><b>Seismicity style</b> separates the boundary types more clearly than structure does. Swarm share of the events
 above Mc: Axial {g('AX', 'pct_swarm'):.0f} %, Mount St Helens {g('MSH', 'pct_swarm'):.0f} %, Blanco
 {g('BL', 'pct_swarm'):.0f} %, Gorda ridge {g('GR', 'pct_swarm'):.0f} %, against ≤ 3.4 % at MFZ, Gorda plate, MTJ and
@@ -319,7 +355,7 @@ Masks as used so far: rock and (checkerboard-resolved or DWS ≥ 100), P for Vp,
 Vs was reverted to the reference (D-B051) are left out of the S mask. Distance of a node: 3-D distance to the
 nearest point of the segment's fault surfaces (1 km mesh) or of its seismicity (depth-good events where there are
 ≥ 50, else tier A-C). Ensemble 1σ: v0.4.2+ens.100 Vp_std (x 1.50) and Vs_std (x 1.35) as stored; Vp/Vs: the raw
-member std x 1.50. Class: <b>resolved</b> ≥ 15 P and ≥ 10 P-and-S nodes within 10 km over ≥ 3 depth layers;
+member std (factor 1.0, D-B111). Class: <b>resolved</b> ≥ 15 P and ≥ 10 P-and-S nodes within 10 km over ≥ 3 depth layers;
 <b>marginal</b> ≥ 5 P nodes within 10 km; else <b>not resolved</b>. Spans list depth layers with ≥ 3 nodes.</p>
 {feas_table}
 <h3>Contrasts against the ensemble</h3>
@@ -328,9 +364,26 @@ member std x 1.50. Class: <b>resolved</b> ≥ 15 P and ≥ 10 P-and-S nodes with
 nodes within 3 km of the line left out; + = left of the strike direction); <i>along</i> = the third of the nodes within 10 km
 at the strike-azimuth end (strike 0-180°, <code>segment_axes.csv</code>) minus the third at the other end. σ of Δ: the same contrast in each of the 100 members, std x calibration
 factor. "members same sign" = share of members whose contrast has the sign of the v0.4.2 value.</p>
-{img("fig_contrasts.png", "Depth-matched contrasts of the resolved and marginal segments with ±2σ of the member "
-     "contrasts; filled where |Δ| ≥ 2σ. Colours by segment type. Draft.")}
 {contrast_table}
+<h3>Circularity control (synthetic ensemble, D-B111)</h3>
+<p><b>Rule, pre-registered</b> in <code>data/paper_plan/plate_boundaries/RESUME.md</code> at Fri Nov 27 09:38:33 PST
+2026 (commit 6b64abf1, pushed before any synthetic contrast was computed): a contrast counts only if |Δ_real| ≥ 2σ_ens
+(Vp x1.50, Vs x1.35, Vp/Vs x1.00) and |Δ_real| ≥ S95, where S95 is the 95th percentile of |Δ_rec,i − Δ_truth| over the
+synthetic members; fewer than 50 members with a value means not testable.</p>
+<p>Synthetic set: <code>/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2/synth</code>, one truth (v0.4.2 tomography x (1 + f),
+3 % random field, 30 km / 8 km correlation, truth hypocentres drawn about v4-NLL3D), synthetic data on the real
+event-station geometry and pick list, 100 members s000-s099 inverted from their own start draws, and five noise-floor
+clones of s000. The same node sets and depth matching as the real contrasts; truth and members compared before the
+D-B073 node rule. Spurious contrast = recovered − truth: it holds what ray sampling, the events' trade-offs and the
+regularisation do to a contrast that is in the truth. All {n_test} contrasts were testable.</p>
+<p><b>Null truth.</b> Every synthetic member inverts data from the same truth, which carries the v0.4.2 contrasts. No
+member sees a truth without an across-fault or along-strike contrast, so the set cannot show whether coverage creates
+a contrast from nothing; this test was not done. It needs a new truth (for example, each depth layer set to its mean
+within 45 km of the segments), new tomoDD-SE_syn data for the five stages and new inversions: about 2.1 process-hours
+per member (v0.4.2 synthetic run log), so about 7 hours on 6 processes for 20 members.</p>
+{img("fig_circularity.png", "Real contrasts with ±2σ of the real ensemble and ±S95 of the synthetic spurious contrasts "
+     "(grey). Filled = survives the pre-registered rule. Colours by segment type. Draft.")}
+{circ_table}
 
 <h2>4. Seismicity-style metrics</h2>
 <p>Mc: maximum curvature + 0.2 on the segment's tier A-C magnitudes (v6.0 M: converged magnitudes of the v5.1
@@ -381,8 +434,8 @@ mock-up for BL and MFZ (below). 40 km resolution stated in the caption.</td><td 
 <tr><td>5</td><td class="l">Structure against seismicity, with controls: (A) seismicity bottom (D90) against the
 7.5 km/s level per model column (GS, BL, MFZ, MTJ) with the permutation null; (B) share of seismicity below the
 7.5 km/s level per segment with the member range; (C) depth-matched contrasts against the member σ; (D) Vp/Vs at swarm
-and mainshock-aftershock families (BL, PU), expected null.</td><td class="l">numbers in sec. 3 and 6; controls to add:
-checkerboard-error (synth) test and location Monte Carlo from <code>v51_struct.py</code>.</td>
+and mainshock-aftershock families (BL, PU), expected null.</td><td class="l">numbers in sec. 3 and 6; circularity
+control done on the synthetic ensemble (sec. 3); null-truth synthetics and the location Monte Carlo still to do.</td>
 <td class="l">new; replaces the v5.1 struct figures.</td></tr>
 <tr><td>6</td><td class="l">Temporal character by boundary type: Axial 2015 eruption, West Blanco 2015 swarm, Gorda
 plate sequences, MFZ; add a Mount St Helens swarm sequence; burstiness values in the panels.</td>
@@ -402,7 +455,7 @@ panel of figure 3 or moves to the supplement. No full-size velocity maps or marg
 {img("fig_sections_BL_MFZ.png", f"Model v0.4.2 on resolved nodes in 5 km bins of fault-normal distance (≥ 2 nodes per "
      f"bin), stacked along {sec.loc['BL', 'length_km']:.0f} km (Blanco) and {sec.loc['MFZ', 'length_km']:.0f} km (MFZ) "
      f"of the PB2002 transform trace and centred on the seismicity (trace offset {sec.loc['BL', 'offset_km']:+.1f} km "
-     f"and {sec.loc['MFZ', 'offset_km']:+.1f} km). Rows: Vp, its 1σ (x1.50), Vp/Vs (P and S mask), its 1σ (raw x1.50). "
+     f"and {sec.loc['MFZ', 'offset_km']:+.1f} km). Rows: Vp, its 1σ (x1.50), Vp/Vs (P and S mask), its 1σ (raw, D-B111). "
      "Dots: depth-good tier A-C events of the segment. Dashed: 7.5 km/s. Draft.")}
 <p>What the mock-up shows: at Blanco the resolved volume spans 3-40 km for Vp and 9-29 km for Vp/Vs and the seismicity
 sits in it; at MFZ only 15-40 km is resolved (P) and 18-34 km (P and S), with the seismicity below the 7.5 km/s level.
@@ -424,10 +477,12 @@ v4.1. Every number here moves with v6.1.</li>
 edges, DWS below 100).</li>
 <li>Resolution: 40 km checkerboard cells and a 10 km node grid. Most nodes near the faults pass the mask on DWS ≥ 100
 only, which shows ray sampling, not resolution. Ray coverage follows the seismicity, so velocity near events can be
-biased in the same place the events are (the v5.1 checkerboard-error control has to be repeated on v0.4.2 before any
-contrast is interpreted).</li>
-<li>Uncertainty: the ensemble 1σ for Vp and Vs is calibrated (x 1.50, x 1.35; D-B099); Vp/Vs has no calibrated factor
-(raw x 1.50 assumed here). The member spread does not include smoothing bias from limited resolution.</li>
+biased in the same place the events are. The synthetic-ensemble control (section 3) bounds the error of contrasts
+present in the truth; a null-truth synthetic, which would show contrasts created from nothing, has not been run.</li>
+<li>Uncertainty: the ensemble 1σ for Vp and Vs is calibrated (x 1.50, x 1.35; D-B099); Vp/Vs uses the raw spread
+(calibrated without inflation, D-B111). The member spread does not include smoothing bias from limited resolution;
+the synthetic recovery ratios of the surviving contrasts (median {rec_med:.2f}, 10-90 % {rec_lo:.2f}-{rec_hi:.2f})
+give its size for this truth.</li>
 <li>Depths: the ridges other than Axial, Explorer and the JdF plate have depth_quality unconstrained; Gorda events are
 mostly biased_deep (618 depth-good of 6,078 Gorda-plate events); Blanco depth-good events have median σz 5 km and a
 deep tail against Lange et al. (2026). Depth rows are marked fair or none accordingly.</li>
@@ -450,7 +505,8 @@ read an earlier file of v6.0 (md5 0daf4880…) whose positions, magnitudes and t
 /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python</code>, nice 10, one process. In
 <code>workflow/11_paper_plan/</code>: <code>pb_structure.py</code> (events with segments, levels, feasibility,
 contrasts; about 40 s), <code>pb_seismicity.py</code>, <code>pb_struct_seis.py</code>,
-<code>pb_sensitivity.py</code>, <code>pb_figures.py</code>, <code>pb_page.py "$(date)"</code>. Small tables:
+<code>pb_sensitivity.py</code>, <code>pb_figures.py</code>, <code>pb_circularity.py</code> (after
+pb_structure.py, which writes the contrast node sets), <code>pb_page.py "$(date)"</code>. Small tables:
 <code>data/paper_plan/plate_boundaries/</code>; page, figures and the event table: /wd1/mdenolle_data/paper_plan/.
 Colour helpers: <code>workflow/08_figures/scm_palettes.py</code> (copy of paper/model-figures 7aea31dd).</p>
 <ul>{inp}</ul>

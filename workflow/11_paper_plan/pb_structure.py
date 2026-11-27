@@ -7,7 +7,7 @@ Per segment (pb_common.SEGMENTS; events = located earthquakes of v6.0, tiers A-C
   segment) together with its seismicity (depth-good events where the segment has >= 50 of them, else tier A-C);
   a node's distance is the 3-D distance to the nearest reference point;
 * resolved nodes within 5, 10 and 20 km (masks of pb_common.Model: P, S and both), share passing the checkerboard
-  tests, depth range, median calibrated ensemble 1 sigma (Vp x1.50, Vs x1.35, Vp/Vs raw x1.50);
+  tests, depth range, median calibrated ensemble 1 sigma (Vp x1.50, Vs x1.35, Vp/Vs raw, D-B111);
 * contrasts, depth-matched (per depth layer, then averaged with weights min(n1, n2)):
     near - far     nodes within 5 km against nodes 10-20 km away (fault-zone signature);
     across         nodes within 20 km on the two sides of the segment's strike line (PCA of epicentres; nodes within
@@ -70,6 +70,11 @@ def depth_matched(vals, layer, g1, g2):
     return num / den, den
 
 
+def xr_shallow():
+    import xarray as xr
+    return xr.open_dataset(P.MODEL)["shallow_crust_node"].values == 1
+
+
 def main():
     P.BIG.mkdir(parents=True, exist_ok=True)
     P.OUT.mkdir(parents=True, exist_ok=True)
@@ -99,6 +104,8 @@ def main():
     LOf, LAf = flat(np.broadcast_to(m.LO, m.Vp.shape)), flat(np.broadcast_to(m.LA, m.Vp.shape))
     depf = flat(m.D)
     rows, crow, axes = [], [], []
+    node_sets = {}                                     # contrast node sets, reused by pb_circularity.py
+    scn = flat(np.asarray(xr_shallow(), bool))
     for seg in P.SEG_ORDER:
         e = E[E.seg == seg]
         if len(e) == 0:
@@ -180,6 +187,8 @@ def main():
                 q1, q2 = np.quantile(s_along[sel10], [1 / 3, 2 / 3])
                 defs["along"] = (sel10 & (s_along >= q2), sel10 & (s_along <= q1))
             for cname, (g1, g2) in defs.items():
+                key = f"{seg}|{vname}|{cname}"
+                node_sets[key + "|1"], node_sets[key + "|2"] = np.flatnonzero(g1), np.flatnonzero(g2)
                 dd, wsum = depth_matched(det[None, :], layer, g1, g2)
                 if dd is None:
                     crow.append(dict(seg=seg, var=vname, contrast=cname, n1=int(g1.sum()), n2=int(g2.sum()),
@@ -196,8 +205,10 @@ def main():
                                  frac_members_same_sign=float(np.mean(np.sign(dm) == np.sign(dd[0]))) if len(dm)
                                  else np.nan,
                                  median_node_sd=med_node_sd,
+                                 frac_nodes_vs_rule=float(scn[g1 | g2].mean()) if vname != "Vp" else 0.0,
                                  ratio_node_sd=float(abs(dd[0]) / med_node_sd) if med_node_sd > 0 else np.nan))
         P.log(seg, row["nP_10"], row["nPS_10"], row["sd_Vp_10"])
+    np.savez_compressed(P.BIG / "contrast_nodes.npz", layer=layer, **node_sets)
     f = pd.DataFrame(rows)
     ct = pd.DataFrame(crow)
     # classification

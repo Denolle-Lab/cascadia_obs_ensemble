@@ -1,0 +1,299 @@
+{
+ "catalog": "/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+ "catalog_md5": "a7f1a54f79d2f3c17dca2d2b744874d1",
+ "root": "/wd1/mdenolle_data/reloc_v61/run/v61",
+ "plan": {
+  "obs": "/wd1/mdenolle_data/reloc_v61/run/obs_tiles_v6",
+  "obs_meta_md5": "9b3302db4efc4ac193e11c9cf57a0f48",
+  "fine": "/wd1/mdenolle_data/reloc_v61/run/time_v6_v0.4.2",
+  "wide": "/wd1/mdenolle_data/reloc_v61/run/wide_time_v6_v0.4.2",
+  "base": "fine grids cut to the tile box (exact node values), wide grids linked",
+  "fine_cuts": 93728,
+  "grid_manifest": "/wd1/mdenolle_data/reloc_v61/run/grids_time_v6_v0.4.2.md5",
+  "grid_manifest_md5": "e989c12e08cabf81ad4eaf6474c94518",
+  "margin_km": 20.0,
+  "tile_km": 25.0,
+  "schedule": [
+   9999.0,
+   16.0
+  ],
+  "tiles": 1227,
+  "jobs": 1448,
+  "events": 172342,
+  "station_phases": 98409,
+  "station_phases_fine": 76813,
+  "station_phases_wide": 21596,
+  "corrected_grid_bytes_per_pass": 147441773952,
+  "utc": "2026-11-26T18:38:05-0800"
+ },
+ "model": "v0.4.2",
+ "grid_manifest": "/wd1/mdenolle_data/reloc_v61/run/grids_time_v6_v0.4.2.md5",
+ "grid_manifest_md5": "e989c12e08cabf81ad4eaf6474c94518",
+ "floor": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin",
+ "floor_md5": "aaf46fe4321b016c9f993c404d12ce22",
+ "picks": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv",
+ "surface": "merged",
+ "surface_source": "D-B068 merged solid surface (b4_surface.py, /wd1/mdenolle_data/reloc_v5/topo): first covering source of [gmrt_-129.55_-128.75_47.65_48.35_high.nc (41 m, md5 7bcc9e645a3cb1b276fbdea079460c2b); gmrt_-130.35_-129.75_45.75_46.2_high.nc (42 m, md5 d2653715b20e7bc172bf88f2bdf48b54); gmrt_-129.7_-127.9_48.55_49.4_med.nc (80 m, md5 077056a5725bd1f92a6ee6d8c38bf7cc); gmrt_-129.3_-127.3_43.3_44.6_med.nc (88 m, md5 0dd4eda9525b07f4323d8255a4f33b94); gmrt_-130.4_-127.2_47.4_49.8_med.nc (162 m, md5 67f460ee394d9b575bc624fd0e8edd93); gmrt_-123.6_-121.4_46.6_48.6_med.nc (165 m, md5 1419d851c3112ef96228a4a3df54ec25); gmrt_-130.6_-126.6_42.6_45.3_med.nc (176 m, md5 9145fd1d13d7d2c0301596b44207fbb1); gmrt_-125.6_-123.2_39.6_41.4_med.nc (186 m, md5 8b0aef3b02017a3eb57f422637b7dac3); gmrt_-127.6_-123.2_46.2_49.2_med.nc (329 m, md5 96b54b1805c70ae9f22223384d558baa); gmrt_-126.8_-123.2_42.8_46.4_med.nc (348 m, md5 9b27b0947fd9bd495e7a1abecbbcd4aa); gmrt_-128.8_-123.8_40.0_43.2_med.nc (366 m, md5 98c18c8677c4bb705eaea0a0afb575d0); earth_relief_01m_g (1558 m, md5 fba0fa3df82fd1b39069850540f55a8f)] (GMRT finest first, then earth_relief 01m gridline; covering = inside the source's grid lines with 4 finite bilinear nodes), bilinear on that source's grid, no blending",
+ "v51": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+ "review": "/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv",
+ "review_verdicts": null,
+ "event_flags": "/wd1/mdenolle_data/reloc_v61/flags/event_flags_v61.csv",
+ "event_flags_md5": "61557436e05af8040ae474497cf8f922",
+ "event_flags_counts": {
+  "analog_test_signal": 131,
+  "anss_explosion": 1679,
+  "anss_other_event": 1,
+  "anss_quarry_blast": 75,
+  "quarry_blast_likely": 1574
+ },
+ "counts": {
+  "events": 172341,
+  "located": 171996,
+  "none": 345,
+  "v4_1_added_left_out": 1,
+  "above_surface": 0,
+  "above_floor_file": 0,
+  "loc_pass": {
+   "ssst_it2": 119955,
+   "coherence": 51415,
+   "edge": 342,
+   "deep": 284
+  },
+  "tiers": {
+   "A": 22516,
+   "B": 33719,
+   "C": 82349,
+   "D": 33412,
+   "U": 345
+  },
+  "flags": {
+   "floor_limited": 7076,
+   "far_only": 347,
+   "deep_pass": 284,
+   "edge_pass": 342,
+   "five_phase": 12036,
+   "coherence_relocated": 51415
+  },
+  "depth_quality": {
+   "ok": 137798,
+   "unconstrained": 24967,
+   "biased_deep": 9231,
+   "": 345
+  },
+  "with_magnitude": 131094,
+  "magnitudes": {
+   "v6.1_converged": {
+    "events": 130558,
+    "path": "/wd1/mdenolle_data/magnitude_converged/v6.1/cascadia_catalog_v6.1_magnitudes_converged.csv",
+    "md5": "60ee0ceb9644eb3652bba705f8bfc800"
+   },
+   "v4.1_converged": {
+    "events": 537,
+    "path": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
+    "md5": "fb49ecc28b75432f49cf1a6e399cd90f"
+   },
+   "v51": 0,
+   "v41": 537
+  },
+  "review_rows": 1340,
+  "u_reason": {
+   "rejected: max likelihood on box face 31": 133,
+   "rejected: max likelihood on box face 10": 101,
+   "rejected: max likelihood on box face 20": 65,
+   "rejected: max likelihood on box face 21": 26,
+   "rejected: max likelihood on box face 11": 20
+  },
+  "nlloc_in_checked": 3870,
+  "publishable": true
+ },
+ "wall_min": 0.2,
+ "runs": {
+  "it0": {
+   "pass_": 0,
+   "events_without_row": 0,
+   "grids": "base (fine/wide links)",
+   "octree": false,
+   "events": 172342,
+   "per_event_files": 172342,
+   "status": {
+    "LOCATED": 171217,
+    "REJECTED": 1125
+   },
+   "rejected_lateral": 550,
+   "rejected_bottom": 575,
+   "located_deep": 71,
+   "jobs": 1448,
+   "jobs_run": 1448,
+   "wall_min": 30.7,
+   "grid_manifest_md5": "e989c12e08cabf81ad4eaf6474c94518",
+   "floor": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin",
+   "floor_md5": "aaf46fe4321b016c9f993c404d12ce22",
+   "nll_md5": "784273841910f10a66a46b37cc6ce35d",
+   "template_md5": "0e3324ba9e631862b06170b769c48f5d",
+   "locgau": "0.2 0.0",
+   "locgau2": "off",
+   "utc": "2026-11-26T19:08:48-0800"
+  },
+  "it1": {
+   "pass_": 1,
+   "events_without_row": 0,
+   "grids": "g0 (Loc2ssst CharDist 9999 km)",
+   "octree": false,
+   "events": 172342,
+   "per_event_files": 172342,
+   "status": {
+    "LOCATED": 171373,
+    "REJECTED": 969
+   },
+   "rejected_lateral": 475,
+   "rejected_bottom": 494,
+   "located_deep": 46,
+   "jobs": 1448,
+   "jobs_run": 1448,
+   "wall_min": 27.6,
+   "grid_manifest_md5": "e989c12e08cabf81ad4eaf6474c94518",
+   "floor": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin",
+   "floor_md5": "aaf46fe4321b016c9f993c404d12ce22",
+   "nll_md5": "784273841910f10a66a46b37cc6ce35d",
+   "template_md5": "0e3324ba9e631862b06170b769c48f5d",
+   "locgau": "0.2 0.0",
+   "locgau2": "off",
+   "utc": "2026-11-26T19:46:02-0800"
+  },
+  "it2": {
+   "pass_": 2,
+   "events_without_row": 0,
+   "grids": "g1 (Loc2ssst CharDist 16 km)",
+   "octree": true,
+   "events": 172342,
+   "per_event_files": 172342,
+   "status": {
+    "LOCATED": 171425,
+    "REJECTED": 917
+   },
+   "rejected_lateral": 554,
+   "rejected_bottom": 363,
+   "located_deep": 61,
+   "jobs": 1448,
+   "jobs_run": 1448,
+   "wall_min": 26.5,
+   "grid_manifest_md5": "e989c12e08cabf81ad4eaf6474c94518",
+   "floor": "/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged_eft.bin",
+   "floor_md5": "aaf46fe4321b016c9f993c404d12ce22",
+   "nll_md5": "784273841910f10a66a46b37cc6ce35d",
+   "template_md5": "8d1e19da31b2c00d7b8f88d7c2e1734d",
+   "locgau": "0.2 0.0",
+   "locgau2": "off",
+   "utc": "2026-11-26T23:57:29-0800"
+  },
+  "coh": {
+   "events_final": 172342,
+   "located_with_octree": 171425,
+   "compact": 51423,
+   "skipped_region": 10500,
+   "skip_regions": [
+    "Mendocino"
+   ],
+   "decision_skip": "D-B098",
+   "compact_with_compact_partner": 31825,
+   "pairs_used": 594612,
+   "coh_min": 0.5,
+   "coh_nmin": 3,
+   "max_se3": 5.0,
+   "cc_dir": "/wd1/mdenolle_data/tomo_v1/cc_dt_all",
+   "pairs": 7722146,
+   "pairs_with_straddling_rows": 1137,
+   "straddling_rows": 2268,
+   "straddling_accepted": 938,
+   "check_mismatch": 0,
+   "pairs_test_rule": 3756076,
+   "pairs_r3": 594665,
+   "sep_max_km": 3.0,
+   "n_accepted_min": 3,
+   "pair_coherence_md5": "a41a444d4d96f89bf33c6aeaa5c45501",
+   "partner_rule": "R3",
+   "rule_check": {
+    "use": "r3",
+    "decision_rule": "R3 worse if MAD(R3)-MAD(test) has a 95% bootstrap interval above 0 and >= 5% of MAD(test) in puget or mtj, P or S",
+    "utc": "2026-11-25T20:09:59-0800",
+    "note": null
+   },
+   "failed": [],
+   "n_failed": 0,
+   "wall_min": 86.9,
+   "grids": "/wd1/mdenolle_data/reloc_v61/run/v61/g1",
+   "utc": "2026-11-27T01:24:44-0800"
+  },
+  "deep": {
+   "kind": "deep",
+   "triggered": 424,
+   "selected": 415,
+   "far_only_not_rerun": 9,
+   "events": 415,
+   "status": {
+    "LOCATED": 284,
+    "REJECTED": 131
+   },
+   "utc": "2026-11-27T01:25:56-0800"
+  },
+  "edge": {
+   "kind": "edge",
+   "triggered": 554,
+   "selected": 554,
+   "far_only_not_rerun": 0,
+   "events": 554,
+   "status": {
+    "LOCATED": 342,
+    "REJECTED": 212
+   },
+   "utc": "2026-11-27T01:28:01-0800"
+  }
+ },
+ "loc2ssst": {
+  "g0": {
+   "char_dist_km": 9999.0,
+   "tiles": 1227,
+   "instances": 1397,
+   "events_accepted_sum": 1861568,
+   "tiles_no_accepted": 24,
+   "corrected_grids": 115644,
+   "kept_previous": 12812,
+   "negative_nodes": 1529,
+   "tiles_with_negative": 273,
+   "t_min": -1.6641041040420532,
+   "tiles_partial_input": 351,
+   "events_dropped_arrival_limit": 3709913,
+   "n_max": 4000,
+   "tiles_capped": 351,
+   "peak_rss_gb_max": 1.978,
+   "events_in_max": 4000,
+   "max_arrivals_station_phase": 3720,
+   "wall_min": 9.5,
+   "loc2ssst_md5": "bcebbbd5e39549272fcf9eeaf29eb0fe",
+   "utc": "2026-11-26T19:18:22-0800"
+  },
+  "g1": {
+   "char_dist_km": 16.0,
+   "tiles": 1227,
+   "instances": 1397,
+   "events_accepted_sum": 1481396,
+   "tiles_no_accepted": 28,
+   "corrected_grids": 114481,
+   "kept_previous": 13975,
+   "negative_nodes": 5186,
+   "tiles_with_negative": 386,
+   "t_min": -1.653804063796997,
+   "tiles_partial_input": 244,
+   "events_dropped_arrival_limit": 2298050,
+   "n_max": 4000,
+   "tiles_capped": 244,
+   "peak_rss_gb_max": 1.883,
+   "events_in_max": 4000,
+   "max_arrivals_station_phase": 3723,
+   "wall_min": 9.3,
+   "loc2ssst_md5": "bcebbbd5e39549272fcf9eeaf29eb0fe",
+   "utc": "2026-11-26T23:30:41-0800"
+  }
+ },
+ "utc": "2026-11-27T01:39:48-0800"
+}

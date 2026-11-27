@@ -1,0 +1,6 @@
+section,O_pb2002,O_lo,O_hi,O_bathy,B_pair,B_ver,B_geo,B,independent_same_sign,independent_own_offsets,verdict
+MFZ,8.628,7.999,8.848,-0.472,2.235,2.500,0.500,2.500,True,Niksejel 2026: +10.2 km (17 bins); Liu 2026 (2024 seq.): +4.1 km (7 bins); Liu 2026 (2016 seq.): +3.8 km (6 bins),offset is not location bias
+GR,13.805,9.711,14.269,0.123,,0.100,0.050,0.100,False,,partly
+BL,-5.957,-6.865,-5.678,2.019,0.612,0.400,1.150,1.150,True,Zhou 2024: -4.6 km (67 bins); Niksejel 2026: -5.4 km (68 bins); Lange 2026 abs: -4.8 km (69 bins); Lange 2026 rel: -4.3 km (67 bins),offset is not location bias
+JRS,6.758,,,,,,,,,,not tested (no seismicity axis)
+JRN,6.764,,,,,,,,,,not tested (no seismicity axis)

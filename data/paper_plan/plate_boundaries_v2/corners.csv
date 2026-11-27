@@ -1,0 +1,6 @@
+name,a,seg_a,b,seg_b,lon,lat,n_draws,sig_major_km,sig_minor_km,az_major_deg,sig_e_km,sig_n_km,note,dist_to_pb2002_tj_km
+GR-MFZ corner (RTI),GR,0.0000,MFZ,0.0000,-127.3577,40.5005,300,17.9223,3.3326,93.5120,17.8600,3.4970,,
+GR-Blanco corner (RTI),GR,3.0000,BL,0.0000,-126.6019,42.9891,300,1.3462,1.1001,131.9617,1.2401,1.2142,,
+"Blanco-JdF corner (RTI, Cleft)",BL,3.0000,JRS,0.0000,-130.4259,44.5269,300,1.6322,0.5915,18.6601,0.7648,1.5554,,
+Axial node,JRS,,JRN,,-129.9893,45.9451,0,,,,,,Axial seismicity centroid (A4),
+Mendocino triple junction,MFZ,1.0000,trench (PB2002),-1.0000,-124.7656,40.3489,300,1.0004,0.0000,153.3678,0.4477,0.8927,trench position (PB2002) taken as exact; its uncertainty is not included,4.4669

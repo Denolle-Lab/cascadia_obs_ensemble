@@ -83,3 +83,20 @@ bins, 95 % interval from the day-block bootstrap.
   the years with >= 5 bins.
 * B = max(B_pair, B_ver, B_geo). Verdict: "offset is not location bias" if |O| >= 2 B and an independent catalog's
   own offset from PB2002 has the same sign; "partly" if |O| >= B; else "bias cannot be excluded".
+
+## Addendum (written after the first fit, Fri Nov 27 14:11:30 PST 2026; post-hoc, reported as such)
+
+The first run (same day, rules above) showed three gaps in the pre-registered rules. Changes, each flagged in the
+outputs:
+* A1. GR across-strike window widened from [-20, +30] to [-35, +30] km. The pre-registered window cut the axial-valley
+  picks between 41.0 and 41.6 N (the axis lies up to 22 km west of the frame line). Frame setting only.
+* A2. Section ends without S0 picks over more than 30 km (Blanco, first 60 km east of the Gorda Ridge corner): a
+  straight segment fitted to the S2 (tier A-C) picks in that span (>= 4 picks; else the bathymetric trace), joined to
+  the next segment by the bend / step-over rule of section 4; flagged "tier A-C".
+* A3. JdF Axial-Endeavour (PI: one straight line from AX to EN): the seismicity between Axial and Endeavour is too
+  sparse for an axis, so the line is drawn through the Axial seismicity centroid (S0, catalog region Axial) and the
+  Endeavour seismicity centroid (S2, region Endeavour: S0 has 10 events), extended to the frame end (48.40 N);
+  uncertainty from the day-block bootstrap of the two centroids. It is compared with the bathymetric axis by rule 5
+  and the bathymetric BIC fit is kept as the alternative.
+* A4. Axial node = the Axial seismicity centroid (the JRS and JRN lines are nearly parallel and offset, so their
+  intersection is not defined); JRS ends at the node's along-strike position and is joined to it.

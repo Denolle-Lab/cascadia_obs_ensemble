@@ -1,0 +1,356 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Plate boundaries v2</title><style>
+:root{--bg:#ffffff;--fg:#1b1b1b;--mut:#5a5a5a;--line:#d9d9d9;--acc:#D55E00;--card:#f6f6f4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#161616;--fg:#e8e8e8;--mut:#a8a8a8;--line:#3a3a3a;--card:#202020}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;margin:0 auto;max-width:1100px;padding:16px}
+h1{font-size:1.6em;margin:.2em 0}h2{margin-top:1.8em;border-bottom:2px solid var(--acc);padding-bottom:.2em}h3{margin-top:1.3em}
+.mut{color:var(--mut)}table{border-collapse:collapse;font-size:12.5px;margin:.6em 0;display:block;overflow-x:auto;max-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:3px 7px;text-align:right;white-space:nowrap}th{text-align:center;background:var(--card)}
+td:first-child,th:first-child{text-align:left}img{max-width:100%;height:auto;border:1px solid var(--line);margin:.4em 0;background:#fff}
+.card{background:var(--card);padding:10px 14px;border-left:4px solid var(--acc);margin:.8em 0}.flag{color:#b04a00}
+code{font-size:12.5px}ul li{margin:.25em 0}
+</style></head><body>
+<h1>Plate boundaries v2: a proposed redrawing of the offshore Cascadia plate boundaries</h1>
+<p class=mut>D-B116 (PI, 2026-11-27 13:34: "we should at least propose to re-draw plate boundaries"). Catalog v6.1. Built Fri Nov 27 14:32:25 PST 2026; code 20b906e5 on branch analysis/plate-boundaries-v2 (workflow/11_paper_plan/pbv2_*.py). <b>Status: proposal for PI review, not adopted.</b> The segment rule is unchanged; <code>PB_AXES=v2</code> switches the plate-boundary analysis to these traces (default stays <code>gmrt</code> = axes v1, D-B113).</p>
+<div class=card><b>Summary</b><ul><li>Relocated seismicity (v6.1, tier A-B, horizontal error &lt;= 3 km) places the active Mendocino transform 8.6 km (95 %: 8.0-8.8) north of the PB2002 trace, at the base of the north-facing slope of the Mendocino Ridge (seismicity minus bathymetric pick -0.5 km); PB2002, NNR-MORVEL56, Hasterok et al. (2022) and MAPRIDGES all put it 8-10 km farther south, on the ridge.</li><li>The Blanco transform seismicity lies 6.0 km (95 %: 5.9-6.9) south of PB2002 on average and 8.0 km along the Blanco Ridge segment (up to 15 km).</li><li>Straight segments chosen by BIC (minimum 30 km, per-break penalty) resolve the Blanco transform into three main segments with two step-overs, each stepping north toward the Juan de Fuca Ridge: 12.4 km at the Cascadia Depression (128.69 W; 68 %: 10.9-12.6 km) and 3.1 km near the Surveyor Depression (129.16 W; 68 %: 2.9-8.9 km); BIC does not support a third step-over.</li><li>The southern Gorda Ridge seismicity sits in the axial valley (seismicity minus valley pick +0.1 km), 15-17 km east of PB2002 south of 41.7 N; going north the ridge axis steps east by 2.6 km at 41.05 N, 10.6 km at 41.66 N, 8.4 km at 42.44 N.</li><li>The offsets are not location bias: the same events in catalogs v4.1-v6.1 move the Blanco and Mendocino axes by &lt;= 2.5 km; common events in three OBS-based catalogs (Lange et al. 2026; Zhou et al. 2024; Niksejel &amp; Zhang 2026) differ across strike by &lt;= 0.6 km at Blanco and 2.2 km at Mendocino; their own seismicity sits on the same side of PB2002.</li><li>The Mendocino triple junction, where the straight Mendocino trace meets the PB2002 deformation front, lies at 124.766 W, 40.349 N (4.5 km from PB2002; +-1.0 km from the transform alone).</li><li>Between Axial Seamount and the Endeavour segment our catalog has too few well-located events to define an axis; a straight Axial-Endeavour line (PI) lies up to 24 km west of the CoAxial-Northern Symmetric axial high (bathymetric picks), so it is flagged and the bathymetric axis is kept as the alternative.</li><li>The Gorda plate interior and the Explorer plate edges are drawn as deformation zones (80 % epicentre density), not lines; Explorer, Sovanco and Nootka are not resolved by our catalog.</li></ul></div>
+<p>Deliverables: <code>proposed_boundaries_v1.geojson</code> (this folder), <code>data/paper_plan/plate_boundaries_v2/</code> in git (offsets_summary.csv, segments.csv, breaks.csv, corners.csv, bias_tests.csv, verdict.csv, model_comparison.csv, plate_axes_v2.csv, RULES.md, manuscript_bullets.md).</p>
+<h2>1. Map</h2>
+<figure><img src="figures/map_proposal.png" alt="Proposal v2 (vermilion, straight segments; dashed vermilion = step-over) against PB2002 (blue dashed) over the shaded D-B068 surface (GMRT where available). Black dots: v6.1 tier A-B earthquakes with horizontal error &lt;= 3 km (S0). Purple: deformation zones, corners (diamonds, 68 % ellipses) and the triple junction (star). Green dotted: bathymetric alternative where it disagrees."><figcaption class="mut">Proposal v2 (vermilion, straight segments; dashed vermilion = step-over) against PB2002 (blue dashed) over the shaded D-B068 surface (GMRT where available). Black dots: v6.1 tier A-B earthquakes with horizontal error &lt;= 3 km (S0). Purple: deformation zones, corners (diamonds, 68 % ellipses) and the triple junction (star). Green dotted: bathymetric alternative where it disagrees.</figcaption></figure>
+<h2>2. Method</h2><ul>
+<li><b>Events (S0)</b>: v6.1, NonLinLoc 3-D, earthquakes only, tier A-B, h_max &le; 3 km, ell_len3 &le; 10 km (47,324 events). Variants: S1 strict (h_max &le; 1.5 km, ell_len3 &le; 6 km); S2 tier A-C. Events are never moved or clamped.</li>
+<li><b>Sections</b> (straight reference frames; u positive north for transforms, east for ridges): MFZ, BL, GR, JRS (Cleft-Axial), JRN (Axial-Endeavour). North of 48.4 N (West Valley, Sovanco, Explorer) PB2002 is kept.</li>
+<li><b>Seismicity axis</b>: in 5 km bins along strike, the peak of the across-strike epicentre density (Gaussian kernel 1.5 km) where &ge; 10 events; 300 day-block bootstrap resamples (whole UTC days, so swarms stay together) give the pick uncertainty and the 68 % band.</li>
+<li><b>Straight segments (parsimony, PI)</b>: K breaks, each segment &ge; 30 km and &ge; 4 picks, offsets between segments allowed (step-overs); BIC = chi2 + (3K+2) ln n + K ln n with pick sigma = bootstrap sigma and the median location error in quadrature (wiggles below the location uncertainty are not resolved); exact minimum by dynamic programming. Blanco drawn with K = 2 (PI); JdF Axial-Endeavour one line (PI). A break with offset &lt; 2 sigma_loc is drawn as a bend.</li>
+<li><b>Bathymetric axis</b> (independent of the locations): D-B113 picks of pb_axes.py on the D-B068 surface (Gorda Ridge axial valley, Mendocino base of the north-facing slope, JdF axial high), decimated to one per 10 km; at Blanco the MAPRIDGES v2602 transform traces (GMRT-based, Sautter et al. 2026).</li>
+<li><b>Combination rule</b>: per segment the seismicity line and a straight bathymetric line over the same span are compared at the two ends and the middle; within 2 sqrt(sigma_seis^2 + sigma_bathy^2) everywhere: the bathymetric line is drawn (source "both"); otherwise the seismicity line is drawn, the bathymetric line kept as a flagged alternative. Sections with too few picks use the bathymetric fit (source "bathymetry").</li>
+<li><b>Corners and triple junction</b>: intersections of the end segments of adjacent sections; the triple junction is the Mendocino trace's intersection with the PB2002 deformation front. Uncertainties from the bootstrap (or the line-fit covariance) of the intersecting lines.</li>
+<li><b>Deformation zones</b>: 80 % highest-density region of epicentres (Gaussian kernel 5 km), events within 10 km of a proposed line left out.</li>
+<li><b>Pre-registration</b>: RULES.md was committed (d9a48a1d, 14:01 PST) before any fit. Post-hoc changes, each written down before the next run and flagged in the outputs: <span class=flag>A1</span> GR window widened (the axis was outside it); <span class=flag>A2</span> Blanco first 60 km without tier A-B picks filled from tier A-C picks; <span class=flag>A3</span> JdF Axial-Endeavour drawn through the Axial and Endeavour seismicity centroids (PI line; seismicity between them too sparse); <span class=flag>A4</span> Axial node = Axial seismicity centroid; <span class=flag>A5</span> ridge bathymetric picks within 5 km of, or beyond, an adjacent transform dropped (the first Gorda valley picks sampled the Mendocino trough and made an oblique 34 km hook).</li></ul>
+<h2>3. Location bias (step 1)</h2>
+<p>Offsets are measured on the seismicity axis (per-bin peaks) minus the PB2002 trace in the same bin; the section offset O is the median over bins with a 95 % day-block bootstrap interval. Bias terms: B_pair = largest across-strike shift (ours minus theirs, common events) against OBS-based catalogs; B_ver = spread of the axis over catalogs v4.1, v5.1, v6.0, v6.1 (same events); B_geo = largest change when only good station geometry (gap &le; 180 deg, nearest station &le; 15 km) or one Cascadia Initiative year is used. Verdict rule (pre-registered): not location bias if |O| &ge; 2 B and an independent catalog's own axis is offset the same way.</p>
+<table class=""><thead><tr><th>section</th><th>O_pb2002</th><th>O_lo</th><th>O_hi</th><th>O_bathy</th><th>B_pair</th><th>B_ver</th><th>B_geo</th><th>B</th><th>independent_own_offsets</th><th>verdict</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>+8.6</td><td>+8.0</td><td>+8.8</td><td>-0.47</td><td>2.23</td><td>2.50</td><td>0.50</td><td>2.50</td><td>Niksejel 2026: +10.2 km (17 bins); Liu 2026 (2024 seq.): +4.1 km (7 bins); Liu 2026 (2016 seq.): +3.8 km (6 bins)</td><td>offset is not location bias</td></tr>
+<tr><td>BL</td><td>-6.0</td><td>-6.9</td><td>-5.9</td><td>+2.02</td><td>0.61</td><td>0.40</td><td>1.15</td><td>1.15</td><td>Zhou 2024: -4.6 km (67 bins); Niksejel 2026: -5.4 km (68 bins); Lange 2026 abs: -4.8 km (69 bins); Lange 2026 rel: -4.3 km (67 bins)</td><td>offset is not location bias</td></tr>
+<tr><td>GR</td><td>+13.8</td><td>+9.5</td><td>+14.3</td><td>+0.09</td><td></td><td>0.10</td><td>0.05</td><td>0.10</td><td></td><td>partly</td></tr>
+<tr><td>JRS</td><td>+6.8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>not tested (no seismicity axis)</td></tr>
+<tr><td>JRN</td><td>+6.8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>not tested (no seismicity axis)</td></tr>
+</tbody></table>
+<ul><li><b>MFZ</b>: +8.6 km north of PB2002; the same events in v4.1 (1-D models, GraphDD) give +5.9 km. Niksejel &amp; Zhang (2026, Cascadia Initiative OBS, deep-learning catalog) put their own axis at +10.2 km; the land-network catalogs of the 2016 and 2024 sequences (Liu et al. 2026) at +3.8 / +4.1 km. The axis agrees with the bathymetric base-of-slope pick (-0.5 km).</li><li><b>Blanco</b>: -6.0 km; Lange et al. 2026 (absolute, relative), Zhou et al. 2024 (both from the 2012-13 Blanco OBS array) and Niksejel &amp; Zhang 2026 put their own axes at -4.3 to -5.4 km; common-event shifts across strike are 0.6 km or less.</li><li><b>Gorda Ridge</b>: +13.8 km over the 26 bins with tier A-B picks (mostly the southern ridge); stable over versions (B_ver 0.1 km) and station geometry; no OBS catalog with enough events there, so by the rule the verdict is "partly". The seismicity coincides with the axial-valley pick (+0.09 km), which is independent of the locations: PB2002 is misplaced there, not the events.</li><li><b>ComCat/ANSS</b> common events differ by 4-14 km across strike, consistent with their own offshore errors (median horizontalError 5-8 km); they are reported, not used in B.</li><li><b>JdF (JRS, JRN)</b>: too few well-located events for an axis; not tested.</li></ul>
+<figure><img src="figures/bias.png" alt="Offset of the seismicity axis from PB2002 (black) and the bias terms; subsets and shifts are plotted as O + shift. Grey band: O +- B."><figcaption class="mut">Offset of the seismicity axis from PB2002 (black) and the bias terms; subsets and shifts are plotted as O + shift. Grey band: O +- B.</figcaption></figure>
+<h3>Independent catalogs</h3>
+<table class=""><thead><tr><th>section</th><th>label</th><th>n_events_window</th><th>n_pairs</th><th>du_median_km</th><th>du_lo</th><th>du_hi</th><th>dh_median_km</th><th>their_herr_median_km</th><th>own_n_bins</th><th>own_O_pb2002</th><th>own_minus_ours</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>ComCat/ANSS</td><td>357</td><td>87</td><td>+3.67</td><td>+1.59</td><td>+5.83</td><td>20.73</td><td>5.0</td><td>13</td><td>+6.0</td><td>-0.3</td></tr>
+<tr><td>MFZ</td><td>Niksejel 2026</td><td>490</td><td>304</td><td>-2.23</td><td>-2.60</td><td>-1.79</td><td>5.14</td><td></td><td>17</td><td>+10.2</td><td>+2.7</td></tr>
+<tr><td>MFZ</td><td>Gong 2025 (land, MTJ)</td><td>42</td><td></td><td></td><td></td><td></td><td></td><td></td><td>1</td><td>+22.2</td><td>+17.9</td></tr>
+<tr><td>MFZ</td><td>Liu 2026 (2024 seq.)</td><td>1263</td><td></td><td></td><td></td><td></td><td></td><td></td><td>7</td><td>+4.1</td><td>-1.6</td></tr>
+<tr><td>MFZ</td><td>Liu 2026 (2016 seq.)</td><td>144</td><td></td><td></td><td></td><td></td><td></td><td></td><td>6</td><td>+3.8</td><td>-7.8</td></tr>
+<tr><td>BL</td><td>ComCat/ANSS</td><td>172</td><td></td><td></td><td></td><td></td><td></td><td></td><td>3</td><td>+6.6</td><td></td></tr>
+<tr><td>BL</td><td>Zhou 2024</td><td>12582</td><td>1875</td><td>+0.12</td><td>+0.06</td><td>+0.16</td><td>1.03</td><td></td><td>67</td><td>-4.6</td><td>-0.1</td></tr>
+<tr><td>BL</td><td>Niksejel 2026</td><td>22463</td><td>1886</td><td>+0.56</td><td>+0.52</td><td>+0.60</td><td>1.26</td><td></td><td>68</td><td>-5.4</td><td>-0.3</td></tr>
+<tr><td>BL</td><td>Lange 2026 abs</td><td>11262</td><td>2158</td><td>+0.03</td><td>-0.01</td><td>+0.08</td><td>1.71</td><td></td><td>69</td><td>-4.8</td><td>+0.5</td></tr>
+<tr><td>BL</td><td>Lange 2026 rel</td><td>10703</td><td>2087</td><td>-0.61</td><td>-0.73</td><td>-0.51</td><td>2.01</td><td></td><td>67</td><td>-4.3</td><td>+1.0</td></tr>
+<tr><td>GR</td><td>ComCat/ANSS</td><td>156</td><td>26</td><td>-13.74</td><td>-18.46</td><td>-9.29</td><td>18.58</td><td>8.2</td><td>0</td><td></td><td></td></tr>
+<tr><td>GR</td><td>Niksejel 2026</td><td>30</td><td></td><td></td><td></td><td></td><td></td><td></td><td>1</td><td>+0.0</td><td></td></tr>
+<tr><td>GR</td><td>Liu 2026 (2024 seq.)</td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>GR</td><td>Lange 2026 abs</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td></tr>
+<tr><td>GR</td><td>Lange 2026 rel</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<p class=mut>du = across-strike shift of common events, ours minus theirs (|dt| &le; 3 s, &le; 50 km; Lange by the pairs of b4_lit_paired.py); own_O_pb2002 = their seismicity axis minus PB2002 (same bins and rule).</p>
+<h3>Versions, station geometry, deployment years, strict selection</h3>
+<table class=""><thead><tr><th>section</th><th>test</th><th>label</th><th>D_km</th><th>n_bins</th><th>O_pb2002</th><th>n_events</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>version</td><td>v4.1</td><td>-2.50</td><td>25</td><td>+5.9</td><td></td></tr>
+<tr><td>MFZ</td><td>version</td><td>v5.1</td><td>-0.10</td><td>29</td><td>+8.4</td><td></td></tr>
+<tr><td>MFZ</td><td>version</td><td>v6.0</td><td>+0.00</td><td>29</td><td>+8.5</td><td></td></tr>
+<tr><td>MFZ</td><td>version</td><td>v6.1</td><td>+0.00</td><td>29</td><td>+8.6</td><td></td></tr>
+<tr><td>MFZ</td><td>geometry</td><td>gap&lt;=180 &amp; dist_min&lt;=15 km</td><td>-0.40</td><td>5</td><td></td><td>131</td></tr>
+<tr><td>MFZ</td><td>geometry</td><td>gap&gt;180 or dist_min&gt;15 km</td><td>+0.00</td><td>27</td><td></td><td>882</td></tr>
+<tr><td>MFZ</td><td>selection</td><td>S1 strict (h_max &lt;= 1.5, ell_len3 &lt;= 6 km)</td><td>-0.10</td><td>20</td><td></td><td>487</td></tr>
+<tr><td>MFZ</td><td>CI year</td><td>CI Y2</td><td>-0.50</td><td>14</td><td></td><td>349</td></tr>
+<tr><td>MFZ</td><td>CI year</td><td>CI Y3</td><td>-0.25</td><td>4</td><td></td><td>128</td></tr>
+<tr><td>MFZ</td><td>CI year</td><td>CI Y4</td><td>+0.30</td><td>24</td><td></td><td>536</td></tr>
+<tr><td>BL</td><td>version</td><td>v4.1</td><td>-0.40</td><td>39</td><td>-7.1</td><td></td></tr>
+<tr><td>BL</td><td>version</td><td>v5.1</td><td>-0.10</td><td>39</td><td>-6.4</td><td></td></tr>
+<tr><td>BL</td><td>version</td><td>v6.0</td><td>+0.00</td><td>39</td><td>-5.9</td><td></td></tr>
+<tr><td>BL</td><td>version</td><td>v6.1</td><td>+0.00</td><td>39</td><td>-6.0</td><td></td></tr>
+<tr><td>BL</td><td>geometry</td><td>gap&lt;=180 &amp; dist_min&lt;=15 km</td><td>+0.10</td><td>33</td><td></td><td>2986</td></tr>
+<tr><td>BL</td><td>geometry</td><td>gap&gt;180 or dist_min&gt;15 km</td><td>-1.00</td><td>22</td><td></td><td>731</td></tr>
+<tr><td>BL</td><td>selection</td><td>S1 strict (h_max &lt;= 1.5, ell_len3 &lt;= 6 km)</td><td>+0.00</td><td>29</td><td></td><td>2268</td></tr>
+<tr><td>BL</td><td>CI year</td><td>CI Y2</td><td>+0.10</td><td>31</td><td></td><td>2065</td></tr>
+<tr><td>BL</td><td>CI year</td><td>CI Y3</td><td>+0.00</td><td>26</td><td></td><td>1055</td></tr>
+<tr><td>BL</td><td>CI year</td><td>CI Y4</td><td>-1.15</td><td>20</td><td></td><td>594</td></tr>
+<tr><td>GR</td><td>version</td><td>v4.1</td><td>-0.10</td><td>23</td><td>+11.6</td><td></td></tr>
+<tr><td>GR</td><td>version</td><td>v5.1</td><td>-0.10</td><td>24</td><td>+13.3</td><td></td></tr>
+<tr><td>GR</td><td>version</td><td>v6.0</td><td>+0.00</td><td>25</td><td>+14.0</td><td></td></tr>
+<tr><td>GR</td><td>version</td><td>v6.1</td><td>+0.00</td><td>26</td><td>+13.8</td><td></td></tr>
+<tr><td>GR</td><td>geometry</td><td>gap&lt;=180 &amp; dist_min&lt;=15 km</td><td>-0.05</td><td>10</td><td></td><td>387</td></tr>
+<tr><td>GR</td><td>geometry</td><td>gap&gt;180 or dist_min&gt;15 km</td><td>+0.00</td><td>9</td><td></td><td>380</td></tr>
+<tr><td>GR</td><td>selection</td><td>S1 strict (h_max &lt;= 1.5, ell_len3 &lt;= 6 km)</td><td>+0.40</td><td>7</td><td></td><td>204</td></tr>
+<tr><td>GR</td><td>CI year</td><td>CI Y2</td><td>+0.00</td><td>6</td><td></td><td>183</td></tr>
+<tr><td>GR</td><td>CI year</td><td>CI Y3</td><td>+0.20</td><td>2</td><td></td><td>53</td></tr>
+<tr><td>GR</td><td>CI year</td><td>CI Y4</td><td>+0.00</td><td>15</td><td></td><td>531</td></tr>
+</tbody></table>
+<p class=mut>D = median over common bins of (subset axis minus all-event axis).</p>
+<h3>Residuals from the proposed line against station geometry</h3>
+<table class=""><thead><tr><th>section</th><th>var</th><th>lo</th><th>hi</th><th>median_residual_km</th><th>n</th></tr></thead><tbody>
+<tr><td>BL</td><td>dist_min</td><td>0</td><td>5</td><td>+0.23</td><td>940</td></tr>
+<tr><td>BL</td><td>dist_min</td><td>5</td><td>10</td><td>+0.23</td><td>1900</td></tr>
+<tr><td>BL</td><td>dist_min</td><td>10</td><td>20</td><td>-0.12</td><td>465</td></tr>
+<tr><td>BL</td><td>dist_min</td><td>20</td><td>40</td><td>-1.63</td><td>241</td></tr>
+<tr><td>BL</td><td>dist_min</td><td>40</td><td>200</td><td>-2.16</td><td>161</td></tr>
+<tr><td>BL</td><td>gap</td><td>0</td><td>90</td><td>+0.06</td><td>1946</td></tr>
+<tr><td>BL</td><td>gap</td><td>90</td><td>135</td><td>-0.03</td><td>1252</td></tr>
+<tr><td>BL</td><td>gap</td><td>135</td><td>180</td><td>+0.29</td><td>394</td></tr>
+<tr><td>BL</td><td>gap</td><td>180</td><td>225</td><td>-0.12</td><td>93</td></tr>
+<tr><td>BL</td><td>gap</td><td>225</td><td>360</td><td>+0.28</td><td>22</td></tr>
+<tr><td>GR</td><td>dist_min</td><td>0</td><td>5</td><td>-0.54</td><td>153</td></tr>
+<tr><td>GR</td><td>dist_min</td><td>5</td><td>10</td><td>-1.20</td><td>203</td></tr>
+<tr><td>GR</td><td>dist_min</td><td>10</td><td>20</td><td>-0.05</td><td>65</td></tr>
+<tr><td>GR</td><td>dist_min</td><td>20</td><td>40</td><td>-1.06</td><td>131</td></tr>
+<tr><td>GR</td><td>dist_min</td><td>40</td><td>200</td><td>+2.01</td><td>86</td></tr>
+<tr><td>GR</td><td>gap</td><td>0</td><td>90</td><td>+0.03</td><td>241</td></tr>
+<tr><td>GR</td><td>gap</td><td>90</td><td>135</td><td>-0.79</td><td>324</td></tr>
+<tr><td>GR</td><td>gap</td><td>135</td><td>180</td><td>-1.10</td><td>64</td></tr>
+<tr><td>MFZ</td><td>dist_min</td><td>5</td><td>10</td><td>+0.03</td><td>50</td></tr>
+<tr><td>MFZ</td><td>dist_min</td><td>10</td><td>20</td><td>-0.25</td><td>171</td></tr>
+<tr><td>MFZ</td><td>dist_min</td><td>20</td><td>40</td><td>+0.08</td><td>555</td></tr>
+<tr><td>MFZ</td><td>dist_min</td><td>40</td><td>200</td><td>+0.41</td><td>145</td></tr>
+<tr><td>MFZ</td><td>gap</td><td>0</td><td>90</td><td>+0.23</td><td>269</td></tr>
+<tr><td>MFZ</td><td>gap</td><td>90</td><td>135</td><td>-0.07</td><td>427</td></tr>
+<tr><td>MFZ</td><td>gap</td><td>135</td><td>180</td><td>+0.11</td><td>194</td></tr>
+<tr><td>MFZ</td><td>gap</td><td>180</td><td>225</td><td>-0.22</td><td>47</td></tr>
+</tbody></table>
+<p class=mut>Events within 10 km of the line. Blanco events more than 20 km from the nearest station sit 1.7-2.1 km south of the line (n = 400): a small geometry effect, much smaller than the offset from PB2002.</p>
+<h2>4. Results (steps 2-3)</h2>
+<h3>Segments</h3>
+<table class=""><thead><tr><th>section</th><th>segment</th><th>type</th><th>data</th><th>source</th><th>length_km</th><th>n_picks</th><th>unc68_km</th><th>minus_pb2002_median_km</th><th>max_abs_from_pb2002_km</th><th>flag</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>0</td><td>transform</td><td>seismicity</td><td>seismicity</td><td>140</td><td>15</td><td>0.23</td><td>+8.7</td><td>11.0</td><td>bathymetric and seismicity axes disagree (alternative feature given)</td></tr>
+<tr><td>MFZ</td><td>1</td><td>transform</td><td>seismicity</td><td>seismicity</td><td>88</td><td>14</td><td>0.23</td><td>+7.1</td><td>9.4</td><td>bathymetric and seismicity axes disagree (alternative feature given)</td></tr>
+<tr><td>BL</td><td>0</td><td>transform</td><td>seismicity (tier A-C)</td><td>seismicity</td><td>61</td><td>12</td><td>0.79</td><td>-1.4</td><td>1.5</td><td>bathymetric and seismicity axes disagree (alternative feature given); A2: fitted to tier A-C picks (no tier A-B picks in this span)</td></tr>
+<tr><td>BL</td><td>1</td><td>transform</td><td>seismicity</td><td>seismicity</td><td>130</td><td>25</td><td>0.07</td><td>-8.2</td><td>16.1</td><td>bathymetric and seismicity axes disagree (alternative feature given)</td></tr>
+<tr><td>BL</td><td>2</td><td>transform</td><td>seismicity</td><td>both</td><td>45</td><td>6</td><td>1.20</td><td>-5.8</td><td>7.2</td><td></td></tr>
+<tr><td>BL</td><td>3</td><td>transform</td><td>seismicity</td><td>both</td><td>117</td><td>8</td><td>0.92</td><td>-5.5</td><td>6.9</td><td></td></tr>
+<tr><td>GR</td><td>0</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>59</td><td>6</td><td>3.38</td><td>+17.3</td><td>23.0</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>GR</td><td>1</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>70</td><td>7</td><td>1.88</td><td>+14.9</td><td>15.2</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>GR</td><td>2</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>90</td><td>9</td><td>0.68</td><td>+0.5</td><td>6.6</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>GR</td><td>3</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>66</td><td>6</td><td>1.41</td><td>+4.8</td><td>6.2</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>JRS</td><td>0</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>65</td><td>6</td><td>0.37</td><td>+8.1</td><td>10.0</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>JRS</td><td>1</td><td>spreading ridge</td><td>bathymetry</td><td>bathymetry</td><td>96</td><td>10</td><td>0.38</td><td>-2.5</td><td>11.5</td><td>seismicity too sparse: bathymetry only</td></tr>
+<tr><td>JRN</td><td>0</td><td>spreading ridge</td><td>seismicity (AX-EN centroids)</td><td>seismicity</td><td>285</td><td>2</td><td>1.06</td><td>-16.4</td><td>19.2</td><td>bathymetric and seismicity axes disagree (alternative feature given); A3: straight line through the Axial and Endeavour seismicity centroids (PI); seismicity between them too sparse for an axis</td></tr>
+</tbody></table>
+<h3>Breaks: step-overs and bends</h3>
+<table class=""><thead><tr><th>section</th><th>break_k</th><th>kind</th><th>origin</th><th>lon</th><th>lat</th><th>s_break</th><th>s_68</th><th>offset_km</th><th>offset_68</th><th>offset_95</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>0</td><td>bend</td><td>BIC fit</td><td>-125.795</td><td>40.465</td><td>140</td><td>125-140</td><td>-1.6</td><td>-1.9--0.0</td><td>-2.3-18.1</td></tr>
+<tr><td>BL</td><td>0</td><td>bend</td><td>A2 junction</td><td>-127.240</td><td>43.269</td><td>60</td><td></td><td>+1.1</td><td></td><td></td></tr>
+<tr><td>BL</td><td>1</td><td>step-over</td><td>BIC fit</td><td>-128.688</td><td>43.781</td><td>190</td><td>182-190</td><td>+12.4</td><td>10.9-12.6</td><td>9.3-12.9</td></tr>
+<tr><td>BL</td><td>2</td><td>step-over</td><td>BIC fit</td><td>-129.160</td><td>44.001</td><td>235</td><td>235-270</td><td>+3.1</td><td>2.9-8.9</td><td>1.2-10.3</td></tr>
+<tr><td>GR</td><td>0</td><td>step-over</td><td>BIC fit</td><td>-127.482</td><td>41.054</td><td>70</td><td></td><td>+2.6</td><td></td><td></td></tr>
+<tr><td>GR</td><td>1</td><td>step-over</td><td>BIC fit</td><td>-127.301</td><td>41.665</td><td>140</td><td></td><td>+10.6</td><td></td><td></td></tr>
+<tr><td>GR</td><td>2</td><td>step-over</td><td>BIC fit</td><td>-126.962</td><td>42.440</td><td>230</td><td></td><td>+8.4</td><td></td><td></td></tr>
+<tr><td>JRS</td><td>0</td><td>step-over</td><td>BIC fit</td><td>-130.171</td><td>45.089</td><td>69</td><td></td><td>-2.1</td><td></td><td></td></tr>
+</tbody></table>
+<p>Blanco: the BIC itself picks K = 2 (three segments), the PI's reading; K = 3 raises BIC by 12.3, so the data do not support more step-overs at this resolution. The first step-over (Cascadia Depression) is well located (s 68 %: 182-190 km); the second lies between the Surveyor Depression and the East Blanco Depression (s 68 %: 235-270 km, 129.16 W at the best fit). MAPRIDGES maps four step-overs; at the Gorda Depression (first 60 km) tier A-B picks are missing and the tier A-C line joins the Blanco Ridge segment with a 1.1 km bend. The Blanco Ridge segment (25 bins) runs 3.8 km north of the MAPRIDGES trace at mid-segment (flagged; both drawn). The fault surfaces v1 (v6.1) give the individual strands (GeoJSON features "transform strand").</p>
+<h3>Corners and the triple junction</h3>
+<table class=""><thead><tr><th>name</th><th>lon</th><th>lat</th><th>sig_major_km</th><th>sig_minor_km</th><th>az_major_deg</th><th>dist_to_PB2002_TJ_km</th><th>note</th></tr></thead><tbody>
+<tr><td>GR-MFZ corner (RTI)</td><td>-127.4509</td><td>40.5015</td><td>4.3</td><td>2.6</td><td>98</td><td></td><td></td></tr>
+<tr><td>GR-Blanco corner (RTI)</td><td>-126.5996</td><td>42.9881</td><td>1.8</td><td>1.3</td><td>131</td><td></td><td></td></tr>
+<tr><td>Blanco-JdF corner (RTI, Cleft)</td><td>-130.4259</td><td>44.5269</td><td>1.6</td><td>0.6</td><td>19</td><td></td><td></td></tr>
+<tr><td>Axial node</td><td>-129.9893</td><td>45.9451</td><td></td><td></td><td></td><td></td><td>Axial seismicity centroid (A4)</td></tr>
+<tr><td>Mendocino triple junction</td><td>-124.7656</td><td>40.3489</td><td>1.0</td><td>0.0</td><td>153</td><td>4.5</td><td>trench position (PB2002) taken as exact; its uncertainty is not included</td></tr>
+</tbody></table>
+<h3>BIC per section</h3>
+<table class=""><thead><tr><th>section</th><th>data</th><th>K</th><th>n</th><th>chi2</th><th>bic</th><th>chosen_bic</th><th>drawn</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>seismicity</td><td>0</td><td>29</td><td>37.4</td><td>44.1</td><td>False</td><td>False</td></tr>
+<tr><td>MFZ</td><td>seismicity</td><td>1</td><td>29</td><td>15.5</td><td>35.7</td><td>True</td><td>True</td></tr>
+<tr><td>MFZ</td><td>seismicity</td><td>2</td><td>29</td><td>14.2</td><td>47.9</td><td>False</td><td>False</td></tr>
+<tr><td>MFZ</td><td>seismicity</td><td>3</td><td>29</td><td>13.5</td><td>60.7</td><td>False</td><td>False</td></tr>
+<tr><td>MFZ</td><td>seismicity</td><td>4</td><td>29</td><td>13.4</td><td>74.0</td><td>False</td><td>False</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>0</td><td>39</td><td>477.7</td><td>485.0</td><td>False</td><td>False</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>1</td><td>39</td><td>35.7</td><td>57.6</td><td>False</td><td>False</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>2</td><td>39</td><td>18.8</td><td>55.5</td><td>True</td><td>True</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>3</td><td>39</td><td>16.5</td><td>67.8</td><td>False</td><td>False</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>4</td><td>39</td><td>14.5</td><td>80.4</td><td>False</td><td>False</td></tr>
+<tr><td>BL</td><td>seismicity</td><td>5</td><td>39</td><td>14.8</td><td>95.4</td><td>False</td><td>False</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>0</td><td>28</td><td>1131.3</td><td>1138.0</td><td>False</td><td>False</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>1</td><td>28</td><td>205.5</td><td>225.5</td><td>False</td><td>False</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>2</td><td>28</td><td>77.4</td><td>110.8</td><td>False</td><td>False</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>3</td><td>28</td><td>37.0</td><td>83.6</td><td>True</td><td>True</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>4</td><td>28</td><td>27.2</td><td>87.2</td><td>False</td><td>False</td></tr>
+<tr><td>GR</td><td>bathymetry</td><td>5</td><td>28</td><td>23.2</td><td>96.5</td><td>False</td><td>False</td></tr>
+<tr><td>JRS</td><td>bathymetry</td><td>0</td><td>16</td><td>58.1</td><td>63.7</td><td>False</td><td>False</td></tr>
+<tr><td>JRS</td><td>bathymetry</td><td>1</td><td>16</td><td>6.4</td><td>23.0</td><td>True</td><td>True</td></tr>
+<tr><td>JRS</td><td>bathymetry</td><td>2</td><td>16</td><td>4.3</td><td>32.0</td><td>False</td><td>False</td></tr>
+<tr><td>JRS</td><td>bathymetry</td><td>3</td><td>16</td><td>6.2</td><td>45.0</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>0</td><td>26</td><td>2967.3</td><td>2973.8</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>1</td><td>26</td><td>547.6</td><td>567.2</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>2</td><td>26</td><td>394.0</td><td>426.6</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>3</td><td>26</td><td>307.2</td><td>352.8</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>4</td><td>26</td><td>290.7</td><td>349.4</td><td>False</td><td>False</td></tr>
+<tr><td>JRN</td><td>bathymetry</td><td>5</td><td>26</td><td>272.0</td><td>343.7</td><td>True</td><td>False</td></tr>
+</tbody></table>
+<h3>Deformation zones</h3>
+<table class=""><thead><tr><th>name</th><th>region</th><th>selection</th><th>confidence</th><th>level</th><th>n_input</th><th>area_km2</th><th>n_events</th></tr></thead><tbody>
+<tr><td>Gorda plate interior deformation zone 1</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>777</td><td>76</td></tr>
+<tr><td>Gorda plate interior deformation zone 2</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>2635</td><td>1012</td></tr>
+<tr><td>Gorda plate interior deformation zone 3</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>204</td><td>21</td></tr>
+<tr><td>Gorda plate interior deformation zone 4</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>986</td><td>87</td></tr>
+<tr><td>Gorda plate interior deformation zone 5</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>1098</td><td>147</td></tr>
+<tr><td>Gorda plate interior deformation zone 6</td><td>GP</td><td>S0</td><td>medium</td><td>0.0462</td><td>1604</td><td>204</td><td>25</td></tr>
+<tr><td>Explorer plate edge deformation zone 1</td><td>EXP</td><td>S2</td><td>low (tier A-C; S0 has 15 events here)</td><td>0.014</td><td>209</td><td>888</td><td>50</td></tr>
+<tr><td>Explorer plate edge deformation zone 2</td><td>EXP</td><td>S2</td><td>low (tier A-C; S0 has 15 events here)</td><td>0.014</td><td>209</td><td>2432</td><td>106</td></tr>
+<tr><td>Explorer plate edge deformation zone 3</td><td>EXP</td><td>S2</td><td>low (tier A-C; S0 has 15 events here)</td><td>0.014</td><td>209</td><td>402</td><td>23</td></tr>
+</tbody></table>
+<h3>Offsets per section and segment</h3>
+<table class=""><thead><tr><th>section</th><th>name</th><th>span</th><th>data</th><th>n_bins_S0</th><th>seis_minus_pb2002_km</th><th>ci95_lo</th><th>ci95_hi</th><th>seis_minus_bathy_km</th><th>proposal_minus_pb2002_median_km</th><th>proposal_minus_pb2002_p10_km</th><th>proposal_minus_pb2002_p90_km</th><th>sign</th><th>verdict</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>Mendocino transform</td><td>section</td><td>seismicity</td><td>29</td><td>+8.6</td><td>+8.0</td><td>+8.8</td><td>-0.47</td><td>+8.1</td><td>+6.3</td><td>+10.3</td><td>+ north</td><td>offset is not location bias</td></tr>
+<tr><td>MFZ</td><td>Mendocino transform</td><td>segment 0</td><td>seismicity</td><td>15</td><td>+9.4</td><td>+8.9</td><td>+9.6</td><td>+3.21</td><td>+8.7</td><td>+6.8</td><td>+10.6</td><td>+ north</td><td></td></tr>
+<tr><td>MFZ</td><td>Mendocino transform</td><td>segment 1</td><td>seismicity</td><td>14</td><td>+7.3</td><td>+7.1</td><td>+7.7</td><td>-1.26</td><td>+7.2</td><td>+5.4</td><td>+9.0</td><td>+ north</td><td></td></tr>
+<tr><td>BL</td><td>Blanco transform</td><td>section</td><td>seismicity</td><td>39</td><td>-6.0</td><td>-6.9</td><td>-5.9</td><td>+2.02</td><td>-5.5</td><td>-11.9</td><td>-1.4</td><td>+ north</td><td>offset is not location bias</td></tr>
+<tr><td>BL</td><td>Blanco transform</td><td>segment 0</td><td>seismicity</td><td>0</td><td></td><td></td><td></td><td></td><td>-1.4</td><td>-1.5</td><td>-1.4</td><td>+ north</td><td></td></tr>
+<tr><td>BL</td><td>Blanco transform</td><td>segment 1</td><td>seismicity</td><td>25</td><td>-8.0</td><td>-8.4</td><td>-7.7</td><td>+2.64</td><td>-8.2</td><td>-14.6</td><td>-2.0</td><td>+ north</td><td></td></tr>
+<tr><td>BL</td><td>Blanco transform</td><td>segment 2</td><td>seismicity</td><td>6</td><td>-6.3</td><td>-8.0</td><td>-6.1</td><td>-0.16</td><td>-5.8</td><td>-6.9</td><td>-4.6</td><td>+ north</td><td></td></tr>
+<tr><td>BL</td><td>Blanco transform</td><td>segment 3</td><td>seismicity</td><td>8</td><td>-4.5</td><td>-5.2</td><td>-4.2</td><td>+0.44</td><td>-5.5</td><td>-6.6</td><td>-4.4</td><td>+ north</td><td></td></tr>
+<tr><td>GR</td><td>Gorda Ridge</td><td>section</td><td>bathymetry</td><td>26</td><td>+13.8</td><td>+9.5</td><td>+14.3</td><td>+0.09</td><td>+5.0</td><td>+0.2</td><td>+17.3</td><td>+ east</td><td>partly</td></tr>
+<tr><td>GR</td><td>Gorda Ridge</td><td>segment 0</td><td>bathymetry</td><td>9</td><td>+18.8</td><td>+15.4</td><td>+23.3</td><td>+0.67</td><td>+17.3</td><td>+12.8</td><td>+21.9</td><td>+ east</td><td></td></tr>
+<tr><td>GR</td><td>Gorda Ridge</td><td>segment 1</td><td>bathymetry</td><td>8</td><td>+13.7</td><td>+11.8</td><td>+14.4</td><td>-0.32</td><td>+14.9</td><td>+2.7</td><td>+15.2</td><td>+ east</td><td></td></tr>
+<tr><td>GR</td><td>Gorda Ridge</td><td>segment 2</td><td>bathymetry</td><td>6</td><td>+2.5</td><td>+1.2</td><td>+3.6</td><td>+1.02</td><td>+0.5</td><td>-0.1</td><td>+1.0</td><td>+ east</td><td></td></tr>
+<tr><td>GR</td><td>Gorda Ridge</td><td>segment 3</td><td>bathymetry</td><td>3</td><td></td><td></td><td></td><td></td><td>+4.8</td><td>+3.7</td><td>+5.9</td><td>+ east</td><td></td></tr>
+<tr><td>JRS</td><td>Juan de Fuca Ridge, Cleft to Axial</td><td>section</td><td>bathymetry</td><td>1</td><td></td><td></td><td></td><td></td><td>+1.8</td><td>-9.2</td><td>+9.0</td><td>+ east</td><td>not tested (no seismicity axis)</td></tr>
+<tr><td>JRS</td><td>Juan de Fuca Ridge, Cleft to Axial</td><td>segment 0</td><td>bathymetry</td><td>0</td><td></td><td></td><td></td><td></td><td>+8.0</td><td>+6.3</td><td>+9.6</td><td>+ east</td><td></td></tr>
+<tr><td>JRS</td><td>Juan de Fuca Ridge, Cleft to Axial</td><td>segment 1</td><td>bathymetry</td><td>1</td><td></td><td></td><td></td><td></td><td>-2.7</td><td>-10.1</td><td>+3.5</td><td>+ east</td><td></td></tr>
+<tr><td>JRN</td><td>Juan de Fuca Ridge, Axial to Endeavour</td><td>section</td><td>seismicity (AX-EN centroids)</td><td>1</td><td></td><td></td><td></td><td></td><td>-16.5</td><td>-18.6</td><td>+8.8</td><td>+ east</td><td>not tested (no seismicity axis)</td></tr>
+<tr><td>JRN</td><td>Juan de Fuca Ridge, Axial to Endeavour</td><td>segment 0</td><td>seismicity (AX-EN centroids)</td><td>1</td><td></td><td></td><td></td><td></td><td>-16.5</td><td>-18.6</td><td>+8.8</td><td>+ east</td><td></td></tr>
+</tbody></table>
+<p class=mut>seis_minus_* only where &ge; 5 bins have tier A-B picks.</p>
+<h3>Along-strike view</h3>
+<figure><img src="figures/profiles.png" alt="Per section, in its frame: tier A-B epicentres (grey), bin picks with 68 % bootstrap (black), tier A-C picks (blue x), PB2002 (blue), MAPRIDGES (orange dashed), bathymetric picks (green squares), proposal with 68 % band (vermilion), bathymetric line where it disagrees (green dotted)."><figcaption class="mut">Per section, in its frame: tier A-B epicentres (grey), bin picks with 68 % bootstrap (black), tier A-C picks (blue x), PB2002 (blue), MAPRIDGES (orange dashed), bathymetric picks (green squares), proposal with 68 % band (vermilion), bathymetric line where it disagrees (green dotted).</figcaption></figure>
+<h3>Section zooms</h3>
+<figure><img src="figures/legend_zoom.png" alt="Legend for the zooms"><figcaption class="mut">Legend for the zooms</figcaption></figure>
+<figure><img src="figures/zoom_mendocino.png" alt="Mendocino transform and the triple junction"><figcaption class="mut">Mendocino transform and the triple junction</figcaption></figure>
+<figure><img src="figures/zoom_gorda_south.png" alt="Southern Gorda Ridge and the GR-MFZ corner"><figcaption class="mut">Southern Gorda Ridge and the GR-MFZ corner</figcaption></figure>
+<figure><img src="figures/zoom_gorda_north.png" alt="Northern Gorda Ridge and the GR-Blanco corner"><figcaption class="mut">Northern Gorda Ridge and the GR-Blanco corner</figcaption></figure>
+<figure><img src="figures/zoom_blanco.png" alt="Blanco transform: three segments, two step-overs (fit offsets with 68 % intervals)"><figcaption class="mut">Blanco transform: three segments, two step-overs (fit offsets with 68 % intervals)</figcaption></figure>
+<figure><img src="figures/zoom_jdf.png" alt="Juan de Fuca Ridge: Cleft-Vance (bathymetry), Axial node, Axial-Endeavour line (PI) against the CoAxial-Northern Symmetric bathymetric axis (green dotted, flagged)"><figcaption class="mut">Juan de Fuca Ridge: Cleft-Vance (bathymetry), Axial node, Axial-Endeavour line (PI) against the CoAxial-Northern Symmetric bathymetric axis (green dotted, flagged)</figcaption></figure>
+<figure><img src="figures/zoom_explorer.png" alt="Explorer region: not resolved (PB2002 kept, low-confidence deformation zones)"><figcaption class="mut">Explorer region: not resolved (PB2002 kept, low-confidence deformation zones)</figcaption></figure>
+<h2>5. Comparison with other boundary models</h2>
+<p>Median offset of each model from the proposal, per section (one value per 5 km bin, model point nearest the proposal, within 40 km). NNR-MORVEL56 (Argus et al. 2011) uses the Bird (2003) geometry here and matches PB2002 to 0.1 km; MORVEL (DeMets et al. 2010) itself has no boundary file. The GEM Global Active Faults database carries the same Bird (2003) segments offshore; USGS Qfaults and Watt et al. (2026) have no ridge or transform traces here (their "Blanco transform fault zone" lies east of the active trace). No digital high-resolution traces were found for the Blanco strands (Ren et al. 2023; Lange et al. 2026), Gorda, Endeavour, Sovanco or Nootka.</p>
+<table class=""><thead><tr><th>section</th><th>model</th><th>n_bins</th><th>median_offset_km</th><th>median_abs_offset_km</th><th>p90_abs_offset_km</th><th>sign</th></tr></thead><tbody>
+<tr><td>MFZ</td><td>PB2002 (Bird 2003)</td><td>42</td><td>-8.1</td><td>8.1</td><td>10.2</td><td>model minus proposal, + = north</td></tr>
+<tr><td>MFZ</td><td>NNR-MORVEL56 (Argus et al. 2011)</td><td>42</td><td>-8.1</td><td>8.1</td><td>10.2</td><td>model minus proposal, + = north</td></tr>
+<tr><td>MFZ</td><td>Hasterok et al. 2022</td><td>42</td><td>-9.2</td><td>10.6</td><td>20.1</td><td>model minus proposal, + = north</td></tr>
+<tr><td>MFZ</td><td>MAPRIDGES v2602 (2026)</td><td>42</td><td>-9.5</td><td>9.5</td><td>12.6</td><td>model minus proposal, + = north</td></tr>
+<tr><td>BL</td><td>PB2002 (Bird 2003)</td><td>71</td><td>+5.3</td><td>5.3</td><td>11.4</td><td>model minus proposal, + = north</td></tr>
+<tr><td>BL</td><td>NNR-MORVEL56 (Argus et al. 2011)</td><td>71</td><td>+5.2</td><td>5.2</td><td>11.1</td><td>model minus proposal, + = north</td></tr>
+<tr><td>BL</td><td>Hasterok et al. 2022</td><td>71</td><td>+15.1</td><td>15.1</td><td>19.3</td><td>model minus proposal, + = north</td></tr>
+<tr><td>BL</td><td>MAPRIDGES v2602 (2026)</td><td>70</td><td>-1.5</td><td>1.8</td><td>3.7</td><td>model minus proposal, + = north</td></tr>
+<tr><td>GR</td><td>PB2002 (Bird 2003)</td><td>58</td><td>-4.8</td><td>4.8</td><td>16.5</td><td>model minus proposal, + = east</td></tr>
+<tr><td>GR</td><td>NNR-MORVEL56 (Argus et al. 2011)</td><td>58</td><td>-4.7</td><td>4.7</td><td>16.3</td><td>model minus proposal, + = east</td></tr>
+<tr><td>GR</td><td>Hasterok et al. 2022</td><td>58</td><td>-0.1</td><td>0.9</td><td>3.1</td><td>model minus proposal, + = east</td></tr>
+<tr><td>GR</td><td>MAPRIDGES v2602 (2026)</td><td>58</td><td>-0.3</td><td>0.8</td><td>2.4</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRS</td><td>PB2002 (Bird 2003)</td><td>33</td><td>-0.4</td><td>6.1</td><td>9.5</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRS</td><td>NNR-MORVEL56 (Argus et al. 2011)</td><td>33</td><td>+0.1</td><td>6.2</td><td>9.3</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRS</td><td>Hasterok et al. 2022</td><td>33</td><td>+3.2</td><td>8.3</td><td>9.7</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRS</td><td>MAPRIDGES v2602 (2026)</td><td>33</td><td>+0.6</td><td>0.8</td><td>2.5</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRN</td><td>PB2002 (Bird 2003)</td><td>57</td><td>+16.5</td><td>16.5</td><td>18.6</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRN</td><td>NNR-MORVEL56 (Argus et al. 2011)</td><td>57</td><td>+16.5</td><td>16.5</td><td>18.6</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRN</td><td>Hasterok et al. 2022</td><td>57</td><td>+11.4</td><td>11.4</td><td>18.6</td><td>model minus proposal, + = east</td></tr>
+<tr><td>JRN</td><td>MAPRIDGES v2602 (2026)</td><td>57</td><td>+9.0</td><td>9.0</td><td>25.6</td><td>model minus proposal, + = east</td></tr>
+</tbody></table>
+<figure><img src="figures/models.png" alt="Proposal (vermilion) against PB2002, NNR-MORVEL56, Hasterok et al. (2022) and MAPRIDGES v2602 (blue dashed); grey: v6.1 tier A-B epicentres."><figcaption class="mut">Proposal (vermilion) against PB2002, NNR-MORVEL56, Hasterok et al. (2022) and MAPRIDGES v2602 (blue dashed); grey: v6.1 tier A-B epicentres.</figcaption></figure>
+<ul><li>Hasterok et al. (2022) and MAPRIDGES agree with the proposed Gorda Ridge to within 1 km (median); MAPRIDGES also with Blanco (1.8 km) and Cleft-Vance (0.8 km).</li><li>All four models put the Mendocino transform 8-10 km south of the seismicity, on the ridge crest.</li><li>Between Axial and Endeavour every model follows the CoAxial-Northern Symmetric ridge, 9-17 km east of the straight Axial-Endeavour line.</li></ul>
+<h2>6. What adopting v2 would change (PB_AXES=v2)</h2>
+<p>Same segment rule; v6.1 tier A-C earthquakes. 2,345 of 135,433 events change segment against axes v1 (D-B113). The triple junction moves 4.5 km, so the MTJ circle and the NAPA latitude limit move with it (the rule text is unchanged).</p>
+<ul><li><b>JR to JP</b>: the straight Axial-Endeavour line lies up to 24 km west of the Northern Symmetric ridge, so events there fall more than 15 km from the ridge trace. Drawing the bathymetric alternative instead would avoid this.</li><li><b>GS and MTJ to NAPA</b>: the triple junction moves 4.5 km, about 4 km north (40.313 to 40.349 N), and NAPA is everything south of the triple-junction latitude. If the PI wants the new traces without this effect, delete the TJ row of plate_axes_v2.csv (pb_common then keeps the PB2002 triple junction).</li><li><b>GR and GP to MFZ</b>: the Mendocino trace moves 8-9 km north, so more events near the GR-MFZ corner lie within 15 km of it (MFZ is matched before GR).</li></ul>
+<table class=""><thead><tr><th>segment</th><th>v1</th><th>v2</th><th>change</th></tr></thead><tbody>
+<tr><td>GS</td><td>11946</td><td>11391</td><td>-555</td></tr>
+<tr><td>JR</td><td>1453</td><td>907</td><td>-546</td></tr>
+<tr><td>GP</td><td>4957</td><td>4672</td><td>-285</td></tr>
+<tr><td>GR</td><td>4128</td><td>3860</td><td>-268</td></tr>
+<tr><td>MTJ</td><td>10474</td><td>10390</td><td>-84</td></tr>
+<tr><td>OC</td><td>7498</td><td>7464</td><td>-34</td></tr>
+<tr><td>EXP</td><td>877</td><td>874</td><td>-3</td></tr>
+<tr><td>EXR</td><td>194</td><td>195</td><td>1</td></tr>
+<tr><td>SOV</td><td>86</td><td>88</td><td>2</td></tr>
+<tr><td>MFZ</td><td>2739</td><td>3221</td><td>482</td></tr>
+<tr><td>JP</td><td>355</td><td>901</td><td>546</td></tr>
+<tr><td>NAPA</td><td>4304</td><td>5048</td><td>744</td></tr>
+</tbody></table>
+<table class=""><thead><tr><th>v1 (gmrt, D-B113)</th><th>v2 (D-B116)</th><th>events</th></tr></thead><tbody>
+<tr><td>JR</td><td>JP</td><td>619</td></tr>
+<tr><td>GS</td><td>NAPA</td><td>521</td></tr>
+<tr><td>GR</td><td>MFZ</td><td>344</td></tr>
+<tr><td>MTJ</td><td>NAPA</td><td>186</td></tr>
+<tr><td>GP</td><td>MFZ</td><td>179</td></tr>
+<tr><td>GS</td><td>MTJ</td><td>133</td></tr>
+<tr><td>MTJ</td><td>GS</td><td>99</td></tr>
+<tr><td>JP</td><td>JR</td><td>73</td></tr>
+<tr><td>GP</td><td>GR</td><td>67</td></tr>
+<tr><td>GP</td><td>MTJ</td><td>43</td></tr>
+<tr><td>OC</td><td>NAPA</td><td>34</td></tr>
+<tr><td>MFZ</td><td>MTJ</td><td>25</td></tr>
+<tr><td>MFZ</td><td>GR</td><td>10</td></tr>
+<tr><td>EXP</td><td>EXR</td><td>3</td></tr>
+<tr><td>MFZ</td><td>NAPA</td><td>3</td></tr>
+</tbody></table>
+<h2>7. Limits and unresolved sections</h2><ul>
+<li><b>JdF Axial-Endeavour</b>: S0 has no picks between the two volcanic centres; the Endeavour anchor rests on 3 tier A-C events with h_max &le; 3 km (catalog region Endeavour). The PI's straight line disagrees with every bathymetric reference by up to 24 km (flagged, alternative in the GeoJSON). Adopting it would move JdF ridge events near the Northern Symmetric segment to the JdF plate group.</li>
+<li><b>Cleft-Vance (JRS)</b>: bathymetry only (two segments, 2.1 km step at 45.09 N).</li>
+<li><b>Gorda Ridge</b>: tier A-B picks cover 44 % of the ridge, below the 50 % rule; the segments come from the axial-valley picks, and the seismicity confirms them where present.</li>
+<li><b>Mendocino</b>: both segments miss the agreement rule by &lt; 0.1 km at one end (seismicity vs base-of-slope pick, 2.6 / 1.7 km at mid-segment): drawn from the seismicity, bathymetric alternative kept.</li>
+<li><b>Triple junction</b>: the uncertainty includes only the Mendocino line; the deformation front is taken from PB2002 (the Watt et al. 2026 frontal thrust stops at 41.0 N).</li>
+<li><b>Explorer, Sovanco, Nootka</b>: 15 S0 events in the Explorer box; PB2002 kept north of 48.4 N; the deformation zones there use tier A-C and are low confidence.</li>
+<li>Uncertainties are statistical (day-block bootstrap) plus the median location error in the pick sigma; a common bias of all OBS-based catalogs (same stations) cannot be excluded by the paired tests, but the bathymetric axes are independent of every location and agree with the seismicity at Gorda and Mendocino.</li>
+<li>Post-hoc rule changes A1-A5 are listed in RULES.md; none changes a pre-registered threshold.</li></ul>
+<h2>8. Manuscript bullets</h2><ul><li>Relocated seismicity (v6.1, tier A-B, horizontal error &lt;= 3 km) places the active Mendocino transform 8.6 km (95 %: 8.0-8.8) north of the PB2002 trace, at the base of the north-facing slope of the Mendocino Ridge (seismicity minus bathymetric pick -0.5 km); PB2002, NNR-MORVEL56, Hasterok et al. (2022) and MAPRIDGES all put it 8-10 km farther south, on the ridge.</li><li>The Blanco transform seismicity lies 6.0 km (95 %: 5.9-6.9) south of PB2002 on average and 8.0 km along the Blanco Ridge segment (up to 15 km).</li><li>Straight segments chosen by BIC (minimum 30 km, per-break penalty) resolve the Blanco transform into three main segments with two step-overs, each stepping north toward the Juan de Fuca Ridge: 12.4 km at the Cascadia Depression (128.69 W; 68 %: 10.9-12.6 km) and 3.1 km near the Surveyor Depression (129.16 W; 68 %: 2.9-8.9 km); BIC does not support a third step-over.</li><li>The southern Gorda Ridge seismicity sits in the axial valley (seismicity minus valley pick +0.1 km), 15-17 km east of PB2002 south of 41.7 N; going north the ridge axis steps east by 2.6 km at 41.05 N, 10.6 km at 41.66 N, 8.4 km at 42.44 N.</li><li>The offsets are not location bias: the same events in catalogs v4.1-v6.1 move the Blanco and Mendocino axes by &lt;= 2.5 km; common events in three OBS-based catalogs (Lange et al. 2026; Zhou et al. 2024; Niksejel &amp; Zhang 2026) differ across strike by &lt;= 0.6 km at Blanco and 2.2 km at Mendocino; their own seismicity sits on the same side of PB2002.</li><li>The Mendocino triple junction, where the straight Mendocino trace meets the PB2002 deformation front, lies at 124.766 W, 40.349 N (4.5 km from PB2002; +-1.0 km from the transform alone).</li><li>Between Axial Seamount and the Endeavour segment our catalog has too few well-located events to define an axis; a straight Axial-Endeavour line (PI) lies up to 24 km west of the CoAxial-Northern Symmetric axial high (bathymetric picks), so it is flagged and the bathymetric axis is kept as the alternative.</li><li>The Gorda plate interior and the Explorer plate edges are drawn as deformation zones (80 % epicentre density), not lines; Explorer, Sovanco and Nootka are not resolved by our catalog.</li></ul>
+<h2>9. Provenance</h2>
+<table class=""><thead><tr><th>input</th><th>path</th><th>md5</th></tr></thead><tbody>
+<tr><td>catalog v6.1</td><td>/wd1/mdenolle_data/catalog_v6/v6.1/cascadia_catalog_v6.1.csv</td><td>1cd909b59cb8493bc823ad60a07fbcde</td></tr>
+<tr><td>D-B068 merged surface</td><td>/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged.bin</td><td>11c118b72ec5cf0a270c617f0f33aa50</td></tr>
+<tr><td>fault surfaces v1 (v6.1) traces</td><td>/wd1/mdenolle_data/catalog_v6/v6.1_analysis/faults/fault_surfaces_v1_traces.csv</td><td>4f415099c99b21fb3d8c60cf2a4f3f9a</td></tr>
+<tr><td>PB2002 steps</td><td>/home/mdenolle/wt_pbv2/data/tectonics/PB2002_steps.json</td><td>a9e8b82bf23bd6c0bd213ba04b7cb255</td></tr>
+<tr><td>ComCat/ANSS 2010-16</td><td>/home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/anss_2010-16.csv</td><td>cf5754baa5f2a55aeb047dd9969ab254</td></tr>
+<tr><td>Lange 2026 pairs (abs)</td><td>/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv</td><td>cf70ec527af3b4f7bb78db938d8e5d53</td></tr>
+<tr><td>Lange 2026 pairs (rel)</td><td>/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_rel_pairs.csv</td><td>9a1f7083827fad9c1a1a74889ad4deb9</td></tr>
+</tbody></table>
+<p>Downloads (public, md5 re-checked; rows in /wd1/mdenolle_data/external_geo/PROVENANCE.csv):</p>
+<table class=""><thead><tr><th>dataset</th><th>doi</th><th>licence</th><th>file</th><th>md5</th></tr></thead><tbody>
+<tr><td>pbv2_nnrmorvel56</td><td>10.1029/2011GC003751</td><td>none stated (academic web page)</td><td>/wd1/mdenolle_data/external_geo/pbv2_nnrmorvel56/NnrMRVL_PltBndsLatLon.zip</td><td>ffb60f68f6d13984073f94dacec1a958</td></tr>
+<tr><td>pbv2_morvel_data</td><td>10.1111/j.1365-246X.2009.04491.x</td><td>none stated</td><td>/wd1/mdenolle_data/external_geo/pbv2_morvel_data/MRVL_data.txt</td><td>a2d1e8a22fcf3a91f0955a1474dc5cdc</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/boundaries.gmt</td><td>811a24a4bbd2daac22d122501b1eee36</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.gmt</td><td>8df463b0859e758c1ad8d97eba0cf65d</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plate_boundaries.shp</td><td>ff2bb805ed232d68d81227f4867227b8</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plate_boundaries.dbf</td><td>fd314e5b7d9db9918315738b96695522</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plate_boundaries.shx</td><td>b255c7823f0fdcc69b754cba1d727970</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plate_boundaries.prj</td><td>c742bee3d4edfc2948a2ad08de1790a5</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plate_boundaries.cpg</td><td>ae3b3df9970b49b6523e608759bc957d</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.shp</td><td>8cd92b07eec267d2933bc784ae146913</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.dbf</td><td>1ae612669714d6c13dafda21703a4734</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.shx</td><td>8f6b78725bc082e84dcab5516f77a3ff</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.prj</td><td>c742bee3d4edfc2948a2ad08de1790a5</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/plates.cpg</td><td>ae3b3df9970b49b6523e608759bc957d</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/README.md</td><td>83ca3f629a3003960a8fbe72b4f91796</td></tr>
+<tr><td>pbv2_hasterok2022</td><td>10.1016/j.earscirev.2022.104069 (static copy 10.5281/zenodo.5093930)</td><td>GPL-3.0 (repo); CC-BY-4.0 (Zenodo static copy)</td><td>/wd1/mdenolle_data/external_geo/pbv2_hasterok2022/LICENSE</td><td>db95b6e40dc7d26d8308b6b7375637b6</td></tr>
+<tr><td>pbv2_gem_gaf</td><td>10.1177/8755293020944182</td><td>CC-BY-SA-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_gem_gaf/gem_active_faults_harmonized.geojson</td><td>82a86082fdd88974f79cd4738f66852c</td></tr>
+<tr><td>pbv2_gem_gaf</td><td>10.1177/8755293020944182</td><td>CC-BY-SA-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_gem_gaf/README.md</td><td>a8916f297f8ca48dbecb270b0183bc10</td></tr>
+<tr><td>pbv2_gem_gaf</td><td>10.1177/8755293020944182</td><td>CC-BY-SA-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_gem_gaf/LICENSE.txt</td><td>a23fc5b4bad824dbb7e60b0061acb0e3</td></tr>
+<tr><td>pbv2_usgs_qfaults</td><td>none</td><td>US Government public domain</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_qfaults/Qfaults_GIS.zip</td><td>e30bf7f7eb70bdd633cb47147017666c</td></tr>
+<tr><td>pbv2_mapridges</td><td>10.17882/99981</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_mapridges/MAPRIDGESv2602_RS.gpkg</td><td>2ff5bc164e62d59701c17c79f2780922</td></tr>
+<tr><td>pbv2_mapridges</td><td>10.17882/99981</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_mapridges/MAPRIDGESv2602_TF.gpkg</td><td>716b62a44236aab4bb3155be229a1af3</td></tr>
+<tr><td>pbv2_mapridges</td><td>10.17882/99981</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_mapridges/MAPRIDGESv2602_TZ.gpkg</td><td>00f42fb8597c9407f09514b7e65d9c1d</td></tr>
+<tr><td>pbv2_mapridges</td><td>10.17882/99981</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_mapridges/MAPRIDGESv2602_ContinuousBoundary.gpkg</td><td>2767e085b27033afe5226dc79f78a18f</td></tr>
+<tr><td>pbv2_mapridges</td><td>10.17882/99981</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_mapridges/MAPRIDGES_ReadMe.pdf</td><td>5a64a9ec105a0950fd5c4c0f90ff6d4c</td></tr>
+<tr><td>pbv2_usgs_watt2026</td><td>10.5066/P14HJMM9</td><td>CC0-1.0 (USGS public domain)</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_watt2026_cascadia_offshore/cascadia_offshore_qfaults.zip</td><td>f52ff9817f133264c526e6ad6822dd24</td></tr>
+<tr><td>pbv2_usgs_watt2026</td><td>10.5066/P14HJMM9</td><td>CC0-1.0 (USGS public domain)</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_watt2026_cascadia_offshore/cascadia_offshore_qfaults_dip.gdb.zip</td><td>66db3a183e509960e895f914cb7f4623</td></tr>
+<tr><td>pbv2_usgs_watt2026</td><td>10.5066/P14HJMM9</td><td>CC0-1.0 (USGS public domain)</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_watt2026_cascadia_offshore/cascadia_offshore_qfaults_metadata.txt</td><td>57fcd585765db3611b43548037e61caf</td></tr>
+<tr><td>pbv2_usgs_watt2026</td><td>10.5066/P14HJMM9</td><td>CC0-1.0 (USGS public domain)</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_watt2026_cascadia_offshore/cascadia_offshore_qfaults_dip_metadata.txt</td><td>9043ae3e62ed660c9a2a56e569dbd52f</td></tr>
+<tr><td>pbv2_usgs_watt2026</td><td>10.5066/P14HJMM9</td><td>CC0-1.0 (USGS public domain)</td><td>/wd1/mdenolle_data/external_geo/pbv2_usgs_watt2026_cascadia_offshore/References.pdf</td><td>2d01eb78b70e22a92dd885913eee080c</td></tr>
+<tr><td>pbv2_zhou2024_blanco</td><td>10.5281/zenodo.12569791</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_zhou2024_blanco/Blanco_EQ_2012to2013.csv</td><td>85fc998ce2e11c6385c0eff45554e1af</td></tr>
+<tr><td>pbv2_niksejel2026_offcasc</td><td>10.5281/zenodo.19003903</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_niksejel2026_offcasc/cascadia_catalog_Niksejel_Zhang_2026.csv</td><td>526781be8d948469259cf830895af223</td></tr>
+<tr><td>pbv2_gong2025_mtj</td><td>10.5281/zenodo.16996036</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_gong2025_mtj/growclust_catalog.txt</td><td>1ba65bc6f3754c733335cf571f52bf3f</td></tr>
+<tr><td>pbv2_gong2025_mtj</td><td>10.5281/zenodo.16996036</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_gong2025_mtj/MTJ_vel.txt</td><td>1057a33f1a97d1ba407ded09cf9672fb</td></tr>
+<tr><td>pbv2_liu2026_mendocino_otf</td><td>10.5281/zenodo.18974108</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_liu2026_mendocino_otf/Dataset_S1.dat</td><td>52748a6591775af44d1514f1fbdcfde7</td></tr>
+<tr><td>pbv2_liu2026_mendocino_otf</td><td>10.5281/zenodo.18974108</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_liu2026_mendocino_otf/Dataset_S2.dat</td><td>bb57f9e9000c5c332d27899255fd30b6</td></tr>
+<tr><td>pbv2_liu2026_mendocino_otf</td><td>10.5281/zenodo.18974108</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_liu2026_mendocino_otf/Dataset_S3.dat</td><td>5d816b129092a596339e9199c7f97136</td></tr>
+<tr><td>pbv2_savard2020_nvi</td><td>10.5281/zenodo.3600534</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_savard2020_nvi/nvi_final_model_relocations.dat</td><td>01f82706ebaf1dcfffa08284d458818d</td></tr>
+<tr><td>pbv2_hutchinson2023_nootka</td><td>10.1038/s41598-023-33310-z</td><td>CC-BY-4.0</td><td>/wd1/mdenolle_data/external_geo/pbv2_hutchinson2023_nootka/41598_2023_33310_MOESM1_ESM.docx</td><td>7d718b8bbff44672fb6ad262844a8077</td></tr>
+</tbody></table>
+<p class=mut>Run: <code>workflow/11_paper_plan/run_pbv2.sh</code> (pbv2_fit, pbv2_bias, pbv2_figures, pbv2_report; pixi python with -I, nice 10, one process).</p>
+</body></html>

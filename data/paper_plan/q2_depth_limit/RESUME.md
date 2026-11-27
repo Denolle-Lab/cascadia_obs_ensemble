@@ -14,6 +14,7 @@ large tables /wd1/mdenolle_data/paper_plan/q2_depth_limit/. Python: LD_LIBRARY_P
   Segment table at that time: /wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet (md5 76542c2e,
   written 13:23 PST, D-B113 axes: GR 5,028, GP 5,832 events).
 - 2026-11-27 13:28:16 PST: coordinator: the D-B113 segments are final (analysis/plate-boundaries ded23ee2, merged here; tables rebuilt in /wd1/mdenolle_data/paper_plan/v6.1/tables/, old ones in tables_pb2002_axes). The segment join uses them; the axis change is an input, noted in the report, not a test choice.
+- 2026-11-27 13:30:11 PST: clarification (no rule change), after a coordinator check: the x1.50 in 'Predictors / velocity levels' is applied once, to the RAW member level depths (level_depth_members.npz is computed by pb_structure.py from the raw member grids ensemble_v0.4.2/real/*/merged.npz, not from the product). It is never applied to the stored, already inflated Vp_std / p05 / p95 of v0.4.2+ens.100.nc. Equivalent to Vp_std_raw x 1.50 = stored Vp_std. Vp/Vs is not used.
 
 ## Pre-registration (written 2026-11-27 13:27:22 PST; not changed after the numbers are seen; any other choice is a reported variant)
 

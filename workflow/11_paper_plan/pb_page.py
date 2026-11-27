@@ -114,6 +114,83 @@ MSH_TEXT = ("38 % (107 of 282 events) to 28 % (69 of 243). Without the 131 analo
             "this is the family instability D-B111 names.")
 
 
+def axes_section():
+    """D-B113: the bathymetric axes, their evaluation, the events moved and the changed metrics (when built)."""
+    mv_f = P.OUT / "axes_moved_by_segment.csv"
+    if P.AXES == "pb2002" or not mv_f.exists():
+        return ""
+    ev = pd.read_csv(P.ROOT / "data/paper_plan/plate_boundaries/plate_axes_v1_evaluation.csv")
+    ev = ev[ev.n_events > 0]
+    cols = ["section", "lat_min", "lat_max", "n_events", "chosen"] + [c for c in ev.columns if c.startswith(("median_km",
+                                                                                                          "within15"))]
+    mv = pd.read_csv(mv_f)
+    mv = mv[(mv.moved_in > 0) | (mv.moved_out > 0)]
+    chg = pd.read_csv(P.OUT / "axes_changed_metrics.csv")
+    keep = ["n_events", "b", "pct_bg", "pct_MA", "pct_swarm", "bsf_med", "bsf_p90", "frac_below_z75", "n_surfaces",
+            "dip_wmed", "burst_all", "nP_10", "nPS_10", "class"]
+    chg = chg[chg.metric.isin(keep)]
+    piv = chg.assign(v=[f"{fmt_v(b)} → {fmt_v(a)}" for b, a in zip(chg.before, chg.after)]).pivot(
+        index="metric", columns="seg", values="v").reindex(keep)
+    piv.index.name = "metric"
+    cc = pd.read_csv(P.OUT / "axes_changed_contrasts.csv")
+    n_moved = int(mv.moved_out.sum())
+    return (f"<h3>Plate-boundary axes (D-B113)</h3><p>PB2002 places the southern Gorda Ridge 10-20 km west of its axial "
+            "valley and of its seismicity, so the 15 km buffer missed it and its events fell in the Gorda plate group. "
+            "The spreading axes and the Mendocino transform are re-picked from the bathymetry (code pb_axes.py): the "
+            "D-B068 merged solid surface (/wd1/mdenolle_data/reloc_v5/topo/topo_15s_cons_merged.bin; GMRT multibeam "
+            "where available, GMT earth_relief 01m elsewhere), profiles across the PB2002 trace every 2 km, two "
+            "candidates per profile (axial valley: deepest point, 1.5 km smoothing, 10 km median filter; axial high: "
+            "highest point within 15 km, 4 km smoothing, 18 km median filter); for the Mendocino transform the crest of "
+            "the Mendocino Ridge and the base of its north-facing slope. PB2002 is replaced in a section only where its "
+            "15 km buffer misses at least 10 % of the nearby tier A-C earthquakes and a bathymetric candidate keeps at "
+            "least 10 percentage points more of them within 15 km without a larger median distance. The candidates "
+            "come from the bathymetry; the seismicity only chooses among them. Chosen: the axial valley for the southern "
+            "Gorda Ridge (40.45-41.6 N) and the axial high for the Juan de Fuca section 46.4-47.7 N; PB2002 elsewhere. "
+            "The Mendocino transform keeps PB2002: its seismicity lies 8-12 km north of the trace, but the buffer "
+            "already holds 66 % of the nearby events and the base-of-slope pick only 71 %; the rest are Gorda-plate "
+            "lineaments north of the transform. Blanco events are assigned by the catalog region, so the Blanco "
+            "trace does not enter the rule; Sovanco and the Explorer ridge keep PB2002 (unconstrained locations). "
+            f"Buffer unchanged (15 km). {n_moved:,} tier A-C earthquakes change segment.</p>"
+            + '<img src="data:image/png;base64,' + b64(FIG / "fig_axes.png") + '" alt="axes"><p class="cap">PB2002 '
+            "(cyan) and the chosen bathymetric axes (yellow) on the shaded merged surface, with the tier A-C "
+            "earthquakes.</p>" + table(ev[cols], fmts={c: "{:.2f}" for c in cols if c.startswith(("median", "within"))},
+                                       left=("section", "chosen"))
+            + '<img src="data:image/png;base64,' + b64(FIG / "fig_axes_before_after.png") + '" alt="before after">'
+            '<p class="cap">Segments before (PB2002) and after (D-B113 axes), and the events that change segment.</p>'
+            "<p>Events per segment before and after:</p>" + table(mv, left=("out_to", "in_from"))
+            + "<p>Changed metrics of the affected segments (before → after):</p>" + table(piv.reset_index(),
+                                                                                         left=("metric",))
+            + "<p>Contrasts whose value or verdict changed (D-B111 rule):</p>"
+            + table(cc, fmts={c: "{:+.3f}" for c in cc.columns if c.startswith("D_real")}, left=("var", "contrast")))
+
+
+def fmt_v(v):
+    try:
+        f = float(v)
+        return f"{f:,.0f}" if abs(f) >= 100 or f == int(f) else f"{f:.2f}"
+    except (TypeError, ValueError):
+        return "–" if v is None or (isinstance(v, float)) else str(v)
+
+
+def zone_note():
+    f = P.OUT / "null_zone_check.csv"
+    if not f.exists():
+        return ""
+    z = pd.read_csv(f)
+    gr = z[(z.seg == "GR") & (z["var"] == "Vp")]
+    return ("<p><b>Null zones and the D-B113 axes.</b> The null truth's flattened zones were built on the segment table "
+            "before the D-B113 axes (null_zones.npz, reconstructed exactly); the members are scored on the current node "
+            "sets. Zones are nearest-segment regions, so with the old or the new node sets only about half of a "
+            f"contrast's nodes lie in its own zone (median {z.own_share_old.median():.2f} / {z.own_share_new.median():.2f})"
+            " and the null truth keeps zone-boundary contrasts (median |Δ truth| "
+            f"{z.D0_old.abs().median():.3f} / {z.D0_new.abs().median():.3f}); the rule (recovered − truth) still measures "
+            "the recovery error, but only contrasts inside one zone are true no-contrast tests. The axis change is "
+            "material for GR only: its node sets reach into the old Gorda-plate zone (own-zone share "
+            f"{gr.own_share_old.min():.2f}-{gr.own_share_old.max():.2f} → {gr.own_share_new.min():.2f}-"
+            f"{gr.own_share_new.max():.2f}; truth contrast Vp along {gr[gr.contrast == 'along'].D0_old.iloc[0]:+.2f} → "
+            f"{gr[gr.contrast == 'along'].D0_new.iloc[0]:+.2f} km/s). GP, MFZ and JR barely change.</p>")
+
+
 def null_section(nt, circ):
     """Short (findings) and long (section 3) text of the null-truth control (pb_null_score.py output)."""
     import json as _json
@@ -154,7 +231,7 @@ def null_section(nt, circ):
             f"Synthetic data from the frozen tomoDD-SE_syn binaries; {nm} members (s000-s{nm - 1:03d}, the same seeds "
             "as the calibration members) through M0, four tiles and the merge in "
             "/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null. The truth contrast is zero where both node sets lie in "
-            f"one zone. N95 is a median {med_ratio:.2f} of S95.</p>"
+            f"one zone. N95 is a median {med_ratio:.2f} of S95.</p>" + zone_note()
             + '<img src="data:image/png;base64,' + b64(FIG / "fig_null.png") + '" alt="null truth"><p class="cap">'
             "Real contrasts with ±2σ of the real ensemble and ±N95 of the null-truth members (grey). Filled = claimed. "
             "Draft.</p>" + tab)
@@ -235,6 +312,7 @@ def main():
                      "7.5 km/s level is claimed for the Gorda slab only.")),
     }
     vnote = VNOTE.get(L, VNOTE["v6.1"])
+    axes_html = axes_section()
     if null_csv.exists():
         null_short, null_long = null_section(pd.read_csv(null_csv), circ)
     else:
@@ -497,6 +575,7 @@ events) left out. Fault surfaces v1 belong to the segment of most of their fit m
 (3-6 km), none (fewer than 50 depth-good events). Shares are of the events above the clustering Mc ({L} nearest-
 neighbour run). Migrating swarms: zbz swarm families ≥ 10 events + DBSCAN swarm-like clusters flagged migrating.</p>
 {seg_table}
+{axes_html}
 
 <h2>3. Structure feasibility</h2>
 <p>Model v0.4.2 on its node grid (0.125° x 0.1°, about 10 x 11 km; depth nodes 2-6 km apart above 30 km).

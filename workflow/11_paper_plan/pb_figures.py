@@ -112,7 +112,7 @@ def fig_sections():
     rows = [("Vp", "Vp (km/s)", CM_VP, dict(vmin=5.5, vmax=8.2), m.mP),
             ("sdVp", "1$\\sigma$ Vp (km/s, x1.50)", CM_SD, dict(vmin=0, vmax=0.4), m.mP),
             ("VpVs", "Vp/Vs", CM_R, dict(norm=TwoSlopeNorm(1.75, 1.60, 1.90)), m.mPS),
-            ("sdVpVs", "1$\\sigma$ Vp/Vs (raw x1.50)", CM_SD, dict(vmin=0, vmax=0.12), m.mPS)]
+            ("sdVpVs", "1$\\sigma$ Vp/Vs (raw, D-B111)", CM_SD, dict(vmin=0, vmax=0.08), m.mPS)]
     fig, axs = plt.subplots(4, 2, figsize=(7.2, 8.6), sharex=True, sharey=True, constrained_layout=True)
     info = {}
     for jc, seg in enumerate(["BL", "MFZ"]):

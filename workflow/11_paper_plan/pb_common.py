@@ -9,7 +9,7 @@ folders; unset, every path is the v6.0 one below, so the committed feasibility s
 CSV), PB_TAG (file tag of its clustering and of the event table, v60), PB_LABEL (catalog name in titles, v6.0),
 PB_CLUSTERS (clustering folder: events_zbz_<tag>.csv.gz, families_zbz_<tag>.csv, dbscan_*_<tag>.csv), PB_MCMAP (Mc map
 folder), PB_FAULTS and PB_FAULTS_BIG (fault surfaces v1: small tables, mesh vertices), PB_MODEL, PB_ENS, PB_MEMBERS
-(model, ensemble statistics, member grids), PB_OUT (small tables), PB_BIG (page, figures, large tables).
+(model, ensemble statistics, member grids), PB_SYNTH (synthetic calibration ensemble), PB_OUT (small tables), PB_BIG (page, figures, large tables).
 
 Conventions: depth km below sea level, positive down; "bsf" = depth below the local solid surface (ground or
 seafloor) = depth + surface_km. Distances are straight-line 3-D distances in an Earth-centred frame (radius 6371 km
@@ -39,7 +39,8 @@ MODELS = WD1 / "tomo_v1/models/cascadia_obs_tomo"
 MODEL = Path(_env("PB_MODEL", MODELS / "v0.4.2.nc"))
 ENS = Path(_env("PB_ENS", MODELS / "v0.4.2+ens.100.nc"))
 MEMBERS = Path(_env("PB_MEMBERS", WD1 / "tomo_v1/ensemble_v0.4.2/real"))
-INFL = {"Vp": 1.50, "Vs": 1.35, "VpVs": 1.50}   # D-B099; Vp/Vs has no calibrated factor: the larger one is used
+INFL = {"Vp": 1.50, "Vs": 1.35, "VpVs": 1.00}   # D-B099; Vp/Vs calibrated without inflation (D-B111: coverage 0.68/0.97)
+SYNTH = Path(_env("PB_SYNTH", WD1 / "tomo_v1/ensemble_v0.4.2/synth"))   # synthetic calibration ensemble (one truth, s000-s099, nf0-nf4)
 PB2002 = ROOT / "data/tectonics/PB2002_steps.json"
 SLAB = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
 OUT = Path(_env("PB_OUT", ROOT / "data/paper_plan/plate_boundaries"))  # small tables (git)
@@ -266,7 +267,7 @@ class Model:
         self.mPS = self.mP & self.mS
         self.cbP, self.cbS = rock & (self.res_p > 0), rock & (self.res_s > 0) & (self.vs_rev == 0)
         self.sdVp, self.sdVs = g(en, "Vp_std"), g(en, "Vs_std")                       # calibrated (D-B099)
-        self.sdVpVs = g(en, "VpVs_std") * INFL["VpVs"]                                  # raw x 1.5 (see INFL)
+        self.sdVpVs = g(en, "VpVs_std") * INFL["VpVs"]                                  # raw spread (D-B111)
         self.ens_med = {"Vp": g(en, "Vp_median"), "Vs": g(en, "Vs_median"), "VpVs": g(en, "VpVs_median")}
         LA, LO = np.meshgrid(self.lat, self.lon, indexing="ij")
         self.LA, self.LO = LA, LO
@@ -306,6 +307,22 @@ def level_depth(V, mP, rock, dep, level):
             out[ok] = dep[k] + w[ok] * (dep[k + 1] - dep[k])
             done |= cross | (both & (V[k] >= level))
     return out
+
+
+def load_synth(names=None):
+    """Synthetic ensemble: truth and members, [.., depth, lat, lon], tomography values before the D-B073 node rule
+    (as the calibration compares them). Returns truth dict, member names, member dict (Vp, Vs, VpVs)."""
+    t = np.load(SYNTH / "truth" / "truth_model.npz")
+    tr = {"Vp": np.transpose(t["vp"], (2, 1, 0)).astype(float), "Vs": np.transpose(t["vs"], (2, 1, 0)).astype(float)}
+    tr["VpVs"] = tr["Vp"] / tr["Vs"]
+    names = names or sorted(p.name for p in SYNTH.iterdir() if p.name[0] == "s" and (p / "merged.npz").exists())
+    vp, vs = [], []
+    for n in names:
+        z = np.load(SYNTH / n / "merged.npz")
+        vp.append(np.transpose(z["vp"], (2, 1, 0)))
+        vs.append(np.transpose(z["vs"], (2, 1, 0)))
+    vp, vs = np.stack(vp).astype(float), np.stack(vs).astype(float)
+    return tr, names, {"Vp": vp, "Vs": vs, "VpVs": vp / vs}
 
 
 def load_members(names=None):

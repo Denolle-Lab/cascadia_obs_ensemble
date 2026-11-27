@@ -2,10 +2,12 @@
 
 Records: script, UTC time, git commit and dirty flag, md5 of params.yaml, the parameters used,
 md5 + size of each input and output file (files > 2 GB: size + mtime only), and free-form counts.
-Written next to the outputs as <name>.manifest.json and appended to <base>/manifests.jsonl.
+Written next to the outputs as <name>.manifest.json and appended to <base>/manifests.jsonl (the environment variable
+CASCADIA_MANIFEST_LOG names another log file instead: the pipeline's scratch runs keep their records there, D-B110).
 """
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -73,7 +75,7 @@ def write_manifest(name, outdir, inputs=(), outputs=(), params=None, counts=None
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     (outdir / f"{name}.manifest.json").write_text(json.dumps(rec, indent=1, default=str))
-    base = Path(load_params()["paths"]["base"])
-    with open(base / "manifests.jsonl", "a") as f:
+    log = os.environ.get("CASCADIA_MANIFEST_LOG") or Path(load_params()["paths"]["base"]) / "manifests.jsonl"
+    with open(log, "a") as f:
         f.write(json.dumps(rec, default=str) + "\n")
     return rec

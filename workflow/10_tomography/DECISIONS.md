@@ -1128,3 +1128,13 @@ plate cooling models, heat flow, slab thermal models) or composition (the 7.5 km
 ensemble uncertainty). Both on catalog v6.1, the D-B113 segments and the D-B114 external data; hypotheses and tests written
 before the numbers are computed; one HTML report each. Q3 (does the incoming plate carry faults and water into subduction)
 is the outlook; the tidal stress meter is dropped.
+
+### D-B116 Propose redrawn offshore plate boundaries from the relocated seismicity and the bathymetry (adopted, 2026-11-27 13:34, PI)
+PI (v6.1 plate-boundary map): "we should at least propose to re-draw plate boundaries". PB2002 is offset from the v6.1
+seismicity along the Blanco transform (seismicity south of the trace), the Gorda Ridge (axial valley east of it), the
+Mendocino transform (seismicity 8-12 km north) and the Juan de Fuca, Endeavour and Explorer reaches; D-B113 replaced the
+ridge axis in three sections only. Build a seismicity- and bathymetry-constrained boundary model of the offshore system
+(ridges, transforms with their strands, the triple junction, and the zones of distributed deformation such as the Gorda plate
+interior), with an uncertainty per section, and test first whether the offsets could be location bias (comparison with
+independent catalogs, catalog versions and station geometry). Delivered as a proposed product (GeoJSON, map, report
+section) next to PB2002; adopted for the segment rule only after PI review.

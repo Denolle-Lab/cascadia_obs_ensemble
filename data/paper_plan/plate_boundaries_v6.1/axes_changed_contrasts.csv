@@ -1,0 +1,12 @@
+seg,var,contrast,D_real_before,sigma_ens_before,S95_before,survives_before,D_real_after,sigma_ens_after,S95_after,survives_after
+JR,Vp,across,0.05025,0.1483,0.2399,False,0.05491,0.1824,0.3467,False
+GR,Vp,near-far,-0.1812,0.05104,0.09745,True,-0.2206,0.04987,0.1482,True
+GR,Vp,across,-0.02153,0.08076,0.1149,False,-0.1835,0.0788,0.1523,True
+GR,Vp,along,0.07623,0.1383,0.2753,False,-0.3074,0.1415,0.2639,True
+GP,Vp,near-far,0.02741,0.03608,0.05245,False,0.1455,0.03986,0.06528,True
+GP,Vp,across,0.1438,0.04431,0.06818,True,0.005279,0.04704,0.04971,False
+GP,Vp,along,0.2942,0.06156,0.1456,True,-0.05737,0.06252,0.09472,False
+GP,Vs,across,0.102,0.02367,0.04573,True,0.09496,0.03227,0.06805,True
+GP,Vs,along,-0.003984,0.04958,0.1093,False,-0.04667,0.04613,0.09421,False
+GP,VpVs,across,-0.01112,0.007243,0.01949,False,-0.01245,0.008321,0.02387,False
+GP,VpVs,along,-0.005868,0.01362,0.03488,False,0.01191,0.01272,0.03044,False

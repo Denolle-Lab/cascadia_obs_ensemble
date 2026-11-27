@@ -2,7 +2,7 @@
 # Waits for the two read stages (state/snippets.json, state/ncedc.json: done true), reruns any of them that ended
 # with missing events (once), then runs measure, write, clock, final (b5_ccall_run.sh). Detached-safe and resumable.
 OUT=${CCALL_OUT:-/wd1/mdenolle_data/tomo_v1/cc_dt_all}
-cd /home/mdenolle/wt_ccall/workflow/10_tomography
+cd "${CCALL_CODE:-$(dirname "$(readlink -f "$0")")}"   # this script's folder (was the worktree ~/wt_ccall; D-B110)
 st() { python3 -c "import json,sys; s=json.load(open('$OUT/state/$1.json')); print('done' if s.get('done') else ('ended' if 'missing' in s else 'running'))" 2>/dev/null || echo running; }
 echo "$(date '+%F %T') chain: waiting for snippets and ncedc" >> $OUT/logs/run.log
 for k in 1 2; do

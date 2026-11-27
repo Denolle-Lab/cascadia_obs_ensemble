@@ -258,10 +258,14 @@ def fault_rows(cid, c, members, nmin=20):
 
 # ------------------------------------------------------------------ main
 def main():
+    global OUT, BIG
     ap = argparse.ArgumentParser()
     ap.add_argument("--registry", default=str(Path(__file__).with_name("catalogs.yaml")))
     ap.add_argument("--only", nargs="*", help="recompute these catalog ids only (others read from the parquet cache)")
+    ap.add_argument("--out", type=Path, default=None, help=f"folder of the small tables (default {OUT})")
+    ap.add_argument("--big", type=Path, default=None, help=f"folder of the common parquet tables (default {BIG})")
     a = ap.parse_args()
+    OUT, BIG = a.out or OUT, a.big or BIG       # pipeline runs into a scratch root (D-B110)
     reg_y = yaml.safe_load(open(a.registry))
     cats = {e["id"]: e for e in reg_y["catalogs"]}
     ref_id = reg_y["reference"]

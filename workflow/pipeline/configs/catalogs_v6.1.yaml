@@ -1,0 +1,57 @@
+# Catalog registry of the pipeline's validation stage for catalog v6.1 (workflow/11_compare/compare_catalogs.py
+# --registry). The same fields as workflow/11_compare/catalogs.yaml (the shared registry of the atlas, entries copied
+# from there unchanged); this file holds only the catalogs the validation of v6.1 compares: the reference v4.1, the
+# earlier relocations v5.1 and v6.0, and v6.1. Its outputs go to the pipeline's out_root, not to data/catalog_compare.
+# The atlas stage adds v6.1 to the shared registry instead (by hand, gated).
+
+reference: v4.1          # shifts are measured from this catalog
+benchmark: anss          # ComCat/ANSS events 2010-2016 (data/magnitude_v4/anss_2010-16.csv)
+
+catalogs:
+  - id: v4.1
+    label: Catalog v4.1 (v4.0 + 2016 repick)
+    adapter: v4
+    file: data/catalog_v4/Cascadia_relocated_catalog_v4.csv
+    keyed_v4: true
+    velocity: PNSN 1D regional models (I. McBrearty); ComCat for 3 added events
+    method: GENIE + GraphDD; targeted ELEP repick of four 2016 offshore events
+    parent: null
+    status: final
+    date: 2026-11-22
+    atlas: false
+
+  - id: v5.1
+    label: Catalog v5.1
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.3.1; offshore rock within 2.5 km of the seafloor with Vp/Vs >= 2.1 (D-B073)
+    method: NonLinLoc EDT, 3D grids, static station terms from a first pass, round-2 fixes, re-timed picks (run b4_v51_iter1); tier U without a hypocentre
+    parent: v4.1
+    status: preliminary
+    date: 2026-11-25
+    atlas: false
+
+  - id: v6.0
+    label: Catalog v6.0
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B083)
+    method: NonLinLoc EDT, 3D grids, NLL-SSST (4 passes, D-B095/D-B096) and NLL-coherence (not in Mendocino, D-B098), picks v4.1tc (D-B090), run v6.0; tier U without a hypocentre (D-B100)
+    parent: v5.1
+    status: preliminary
+    date: 2026-11-26
+    atlas: false
+
+  - id: v6.1
+    label: Catalog v6.1
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v6/v6.1/cascadia_catalog_v6.1.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.4.2 (v0.4.1 without self-paired differential times, patched tomoDD, D-B099)
+    method: NonLinLoc EDT, 3D grids, NLL-SSST 9999 -> 16 km (D-B103) and NLL-coherence (not in Mendocino, D-B098), picks v4.1tc (D-B090), magnitudes on the v6.1 hypocentres (D-B105), run v6.1; tier U without a hypocentre
+    parent: v6.0
+    status: preliminary
+    date: 2026-11-27
+    atlas: false

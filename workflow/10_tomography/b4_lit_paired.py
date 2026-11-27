@@ -12,8 +12,9 @@ For every catalog given (B4 relocation catalogs or v4-NLL3D): median and 10/90th
 depth, by location tier (A-D, A-C, A-B) and, for Blanco, by segment (longitude of the published epicentre, the
 segments of the report). Only events located in 3D (tier A-D) are used.
 
-  python b4_lit_paired.py LABEL=CATALOG.csv [LABEL=CATALOG.csv ...]
-      -> data/tomo_v1/depth_literature/paired_<first label>.md (and .csv)
+  python b4_lit_paired.py [--out DIR] LABEL=CATALOG.csv [LABEL=CATALOG.csv ...]
+      -> data/tomo_v1/depth_literature/paired_<first label>.md (and .csv); --out DIR writes them to DIR instead
+         (pipeline runs into a scratch root, D-B110)
 """
 import sys
 from pathlib import Path
@@ -59,6 +60,10 @@ def compare(cats, pairs, ref, segs=None):
 
 
 def main():
+    global OUT
+    if len(sys.argv) > 2 and sys.argv[1] == "--out":
+        OUT = Path(sys.argv[2])
+        del sys.argv[1:3]
     cats = {}
     for a in sys.argv[1:]:
         lab, path = a.split("=", 1)

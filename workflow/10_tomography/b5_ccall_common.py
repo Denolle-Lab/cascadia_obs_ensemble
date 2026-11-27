@@ -38,7 +38,9 @@ CORR = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_retiming/corrections.csv.gz"
 CLOCK_MODEL = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/clock_model.json")
 CATALOG = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
 CLUSTERS = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/clusters/events_zbz_v51.csv.gz")
-FAMILIES = Path("/home/mdenolle/wt_a51_clusters/data/catalog_v5/v5.1_analysis/clusters/families_zbz_v51.csv")
+# the v5.1 families (2,097) committed on main by PR #42 (blob 4378a0aa); the CC job of 2026-11-25 read the same file from
+# the former worktree /home/mdenolle/wt_a51_clusters, which no longer exists (pipeline, D-B110)
+FAMILIES = HERE.parents[1] / "data/catalog_v5/v5.1_analysis/clusters/families_zbz_v51.csv"
 PARAMS = HERE / "b5_cc_params.yaml"
 
 # scope and pairs (D-B093 brief): neighbours within 3 km of a family event; kNN as in b5_cc_tasks (D-B078 added pairs)

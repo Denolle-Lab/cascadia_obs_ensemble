@@ -1,0 +1,32 @@
+{
+ "main": {
+  "n_event_set": 25948,
+  "seg_counts": {
+   "BL": 8571,
+   "PU": 2805,
+   "AX": 2506,
+   "MTJ": 2313,
+   "GP": 1836,
+   "GS": 1663,
+   "CAS": 1017,
+   "NAPA": 918,
+   "MFZ": 729,
+   "OC": 701,
+   "GR": 559,
+   "IS": 486,
+   "EXP": 392,
+   "SIF": 384,
+   "JR": 366,
+   "MSH": 243,
+   "FA": 171,
+   "JP": 164,
+   "EXR": 60,
+   "SOV": 44,
+   "EN": 20
+  },
+  "segments_axes": "gmrt",
+  "axes_file": "/home/mdenolle/wt_q1/data/paper_plan/plate_boundaries/plate_axes_v1.csv",
+  "axes_file_md5": "2ec99c0bffda2646c636ce045ca3f009",
+  "catalog_md5": "1cd909b59cb8493bc823ad60a07fbcde"
+ }
+}

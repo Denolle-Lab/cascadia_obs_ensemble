@@ -12,6 +12,17 @@ tomoDD null-truth run holds 6); MemAvailable kept above 40 GB.
 ## Status log
 - Fri Nov 27 13:26:14 PST 2026: worktree made, inputs inventoried (no metric or correlation computed in this session
   yet). Pre-registration below written before any covariate is sampled or any correlation is computed.
+- 13:27 pre-registration committed (109915b8) and pushed. 13:28 merged analysis/plate-boundaries ded23ee2 (D-B113
+  axes, final per coordinator); the segment join is recomputed from the catalog inside q1_metrics.py (100 % equal to
+  the rebuilt events_segments_v61.parquet). 13:36 the D-B114 per-event table appeared
+  (external_geo/derived/events_external_geo_v61.parquet); as registered, the decision uses it, interim sampler reported.
+- Fri Nov 27 14:01:37 PST 2026: everything run with run_q1.sh (100 time shuffles, 200 magnitude shuffles, 22 control
+  runs, Vp/Vs on cc_dt_all). Report /wd1/mdenolle_data/paper_plan/q1_slip_style/report_q1.html. Outcome by the
+  registered rules: thermal control INCONCLUSIVE (T1 age rho -0.43, Holm 0.008, sign in 22/22 controls, null rule 4/4,
+  but block interval -0.78..+0.29 includes 0; T4a within types +0.03; T2 heat flow +0.30, Holm 0.24); not falsified
+  (hot > cold at uniform Mc 2.15 reclustered: 23 % vs 1.6 %). Vp/Vs T3 NOT TESTABLE (27 valid families: 7 swarm,
+  18 MA; regression dilution, Axial S window holds P). Rerun: bash workflow/11_paper_plan/run_q1.sh (all steps) or
+  with a step list; the nulls resume from nulls/*_swarm_ids.parquet (delete them to redo).
 
 ## Pre-registration (written Fri Nov 27 13:26:14 PST 2026, before any covariate correlation is computed)
 

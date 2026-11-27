@@ -1,0 +1,133 @@
+{
+ "D1": false,
+ "D2": false,
+ "D3": false,
+ "d1_detail": {
+  "T1": {
+   "significant": true,
+   "block_ci_excludes_0": false,
+   "controls_sign_ok": 22,
+   "controls_n": 22,
+   "controls_pass": true,
+   "null_rule": true,
+   "D1": false
+  },
+  "T2": {
+   "significant": false,
+   "block_ci_excludes_0": false,
+   "controls_sign_ok": 21,
+   "controls_n": 22,
+   "controls_pass": true,
+   "null_rule": true,
+   "D1": false
+  }
+ },
+ "falsification": {
+  "T1_T2_both_reversed": false,
+  "uniform_mc_hot_not_above_cold": false,
+  "null_rule_failed": false,
+  "vpvs_ma_above_swarm": false
+ },
+ "null_rule": {
+  "above": {
+   "AX": true,
+   "BL": true,
+   "GR": true,
+   "MSH": true
+  },
+  "n_above": 4,
+  "passed": true
+ },
+ "hot_cold": {
+  "mcu_recluster_n100": {
+   "hot": {
+    "AX": 76.09,
+    "JR": 10.34,
+    "GR": 21.7,
+    "BL": 24.42
+   },
+   "cold": {
+    "GP": 2.04,
+    "MFZ": 1.78,
+    "MTJ": 0.67,
+    "GS": 1.45
+   },
+   "hot_median": 23.0575,
+   "cold_median": 1.6107,
+   "hot_above_cold": true
+  },
+  "mcu_recluster_n30": {
+   "hot": {
+    "AX": 76.09,
+    "JR": 10.34,
+    "GR": 21.7,
+    "BL": 24.42
+   },
+   "cold": {
+    "GP": 2.04,
+    "MFZ": 1.78,
+    "MTJ": 0.67,
+    "GS": 1.45
+   },
+   "hot_median": 23.0575,
+   "cold_median": 1.6107,
+   "hot_above_cold": true
+  },
+  "mcu_count_n100": {
+   "hot": {
+    "AX": 80.07,
+    "JR": 26.72,
+    "GR": 20.57,
+    "BL": 30.67
+   },
+   "cold": {
+    "GP": 2.04,
+    "MFZ": 1.78,
+    "MTJ": 1.73,
+    "GS": 4.75
+   },
+   "hot_median": 28.697499999999998,
+   "cold_median": 1.90625,
+   "hot_above_cold": true
+  },
+  "mcu_count_n30": {
+   "hot": {
+    "AX": 80.07,
+    "JR": 26.72,
+    "GR": 20.57,
+    "BL": 30.67
+   },
+   "cold": {
+    "GP": 2.04,
+    "MFZ": 1.78,
+    "MTJ": 1.73,
+    "GS": 4.75
+   },
+   "hot_median": 28.697499999999998,
+   "cold_median": 1.90625,
+   "hot_above_cold": true
+  },
+  "main_n100": {
+   "hot": {
+    "AX": 29.17,
+    "JR": 17.21,
+    "GR": 19.5,
+    "BL": 24.57,
+    "MSH": 28.4
+   },
+   "cold": {
+    "GP": 0.65,
+    "MFZ": 1.23,
+    "MTJ": 0.99,
+    "GS": 2.83
+   },
+   "hot_median": 24.571,
+   "cold_median": 1.11449,
+   "hot_above_cold": true
+  }
+ },
+ "verdict_thermal": "inconclusive",
+ "verdict_vpvs": "not testable",
+ "covariate_source": "external",
+ "external_table": "/wd1/mdenolle_data/external_geo/derived/events_external_geo_v61.parquet"
+}

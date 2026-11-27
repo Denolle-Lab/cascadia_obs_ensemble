@@ -1,0 +1,33 @@
+test,family,unit,metric,covariate,pred_sign,rho,p,n,block_lo,block_hi,p_two,within_type,glm_coef_per_sd,glm_se,glm_dispersion,n_swarm,n_ma,note,p_adj,significant,sign_ok
+T1,primary,cell,swarm_share,age_myr,-1,-0.4334,0.0016,45,-0.7845,0.2942,0.0035,,,,,,,,0.007999,True,True
+T2,primary,cell,swarm_share,heatflow_mw,1,0.2958,0.05929,29,-0.1592,0.7214,0.1173,,,,,,,,0.2372,False,True
+T4a,primary,cell,swarm_share,age_myr,-1,0.02598,0.5645,38,,,,"{""intraplate"": [null, 5], ""ridge"": [0.357, 7], ""transform"": [-0.049, 31]}",-1.247,0.839,43.71,,,,1,False,False
+T4b,primary,cell,swarm_share,heatflow_mw,1,0.1085,0.3517,18,,,,"{""arc"": [0.406, 6], ""other"": [-0.351, 7], ""subduction"": [0.395, 5]}",1.087e+13,1.853e+13,1.008e+15,,,,1,False,True
+T3,primary,family,vpvs,family type,1,,,25,,,,,,,,7,18,not testable (< 20 swarm or < 20 MA families with a valid Vp/Vs),1,False,False
+S,secondary,cell,b,age_myr,-1,-0.346,0.0154,40,-0.6424,0.2291,,,,,,,,,0.08469,False,True
+S,secondary,cell,b,heatflow_mw,1,0.2082,0.1552,26,-0.2755,0.6827,,,,,,,,,0.569,False,True
+S,secondary,cell,productivity,age_myr,1,-0.6084,0.9822,12,-0.9832,0.6981,,,,,,,,,0.9925,False,False
+S,secondary,cell,productivity,heatflow_mw,-1,,,3,,,,,,,,,,,,False,False
+S,secondary,cell,fam_mix,age_myr,-1,0.2409,0.854,20,-0.1381,0.5836,,,,,,,,,0.9925,False,False
+S,secondary,cell,fam_mix,heatflow_mw,1,-0.2636,0.7322,7,-0.8986,0.5294,,,,,,,,,0.9925,False,False
+S,secondary,cell,bg_frac,age_myr,0,0.1547,0.3147,45,-0.2579,0.4302,,,,,,,,,0.8653,False,True
+S,secondary,cell,bg_frac,heatflow_mw,0,-0.01729,0.9281,29,-0.5694,0.3798,,,,,,,,,0.9925,False,True
+S,secondary,cell,swarm_share,rate_mmyr,1,-0.3761,0.9925,41,-0.7092,0.0009178,,,,,,,,,0.9925,False,False
+S,secondary,seg,swarm_share,age_myr,-1,-0.7857,0.0151,8,,,,,,,,,,,0.08469,False,True
+S,secondary,seg,swarm_share,heatflow_mw,1,-0.4857,0.8465,6,,,,,,,,,,,0.9925,False,False
+S,secondary,seg,swarm_share,rate_mmyr,1,-0.2857,0.7686,8,,,,,,,,,,,0.9925,False,False
+S,secondary,seg,swarm_share,vpvs_fam,1,,,4,,,,,,,,,,,,False,False
+E,exploratory,cell,swarm_share,rough_m,0,0.4201,0.0007999,57,0.03019,0.6689,,,,,,,,,0.005599,True,True
+E,exploratory,seg,swarm_share,rough_m,0,0.1667,0.6831,9,,,,,,,,,,,0.7357,False,True
+E,exploratory,cell,swarm_share,sed_m,0,-0.6635,9.999e-05,59,-0.7974,-0.1721,,,,,,,,,0.0014,True,True
+E,exploratory,seg,swarm_share,sed_m,0,-0.5152,0.1353,10,,,,,,,,,,,0.2301,False,True
+E,exploratory,cell,swarm_share,z600_km,-1,-0.4362,0.0017,45,-0.7727,0.3148,,,,,,,,,0.007933,True,True
+E,exploratory,seg,swarm_share,z600_km,-1,-0.7665,0.0146,8,,,,,,,,,,,0.0357,True,True
+E,exploratory,cell,swarm_share,Tslab_C,0,0.1873,0.188,50,-0.1427,0.4888,,,,,,,,,0.2392,False,True
+E,exploratory,seg,swarm_share,Tslab_C,0,0.8333,0.0153,8,,,,,,,,,,,0.0357,True,True
+E,exploratory,cell,b,rough_m,0,0.2006,0.1644,49,,,,,,,,,,,0.2301,False,True
+E,exploratory,cell,b,sed_m,0,-0.3662,0.008699,51,,,,,,,,,,,0.03045,True,True
+E,exploratory,cell,productivity,rough_m,0,0.3706,0.1592,16,,,,,,,,,,,0.2301,False,True
+E,exploratory,cell,productivity,sed_m,0,-0.5941,0.0184,16,,,,,,,,,,,0.0368,True,True
+E,exploratory,cell,bg_frac,rough_m,0,-0.004991,0.9694,57,,,,,,,,,,,0.9694,False,True
+E,exploratory,cell,bg_frac,sed_m,0,0.09395,0.4885,59,,,,,,,,,,,0.5699,False,True

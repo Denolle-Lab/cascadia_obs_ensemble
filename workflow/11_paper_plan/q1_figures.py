@@ -87,8 +87,8 @@ def fig_segments():
     hs = [plt.Line2D([], [], marker=TYPE_MK[t], color=TYPE_COL[t], ls="", mec="k", mew=0.4, label=t)
           for t in Q.P.TYPE_ORDER if t in set(m.seg_type_major)]
     ax[2].legend(handles=hs, ncol=4, fontsize=6.5, frameon=False, loc="upper left")
-    ax[0].set_title(f"Slip style by plate-boundary segment, catalog v6.1 (tier A-C earthquakes above the regional Mc; "
-                    f"95 % bootstrap intervals)", loc="left")
+    ax[0].set_title("Slip style by segment, catalog v6.1: tier A-C earthquakes above the regional Mc, 95 % bootstrap "
+                    "intervals", loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "fig_q1_segments.png", dpi=200)
     plt.close(fig)
@@ -126,7 +126,7 @@ def fig_scatter():
     c = pd.read_csv(TAB / f"cells_main_{SRC}.csv")
     T = pd.read_csv(TAB / f"tests_{SRC}.csv")
     covs = [("age_myr", True), ("heatflow_mw", True), ("rough_m", False), ("sed_m", True)]
-    fig, ax = plt.subplots(1, 4, figsize=(7.4, 2.5), sharey=True)
+    fig, ax = plt.subplots(1, 4, figsize=(7.4, 2.8), sharey=True)
     for a, (cov, lg) in zip(ax, covs):
         for t in Q.P.TYPE_ORDER:
             g = c[c.seg_type_major == t]
@@ -137,13 +137,13 @@ def fig_scatter():
         r = T[(T.unit == "cell") & (T.metric == "swarm_share") & (T.covariate == cov)]
         if len(r):
             r = r.iloc[0]
-            a.text(0.03, 0.97, f"rho = {r.rho:.2f}\np = {r.p:.3g} (n = {int(r.n)})", transform=a.transAxes, va="top",
-                   fontsize=6.5)
+            a.set_title(f"rho = {r.rho:.2f}, p = {r.p:.2g}, n = {int(r.n)}", loc="left", fontsize=7)
         a.set_xlabel(Q.COV_LABEL[cov])
         a.grid(lw=0.3, color="0.88")
     ax[0].set_ylabel("swarm share (%)")
-    ax[3].legend(fontsize=5.5, frameon=False, loc="upper right")
-    fig.tight_layout()
+    hs, ls = ax[0].get_legend_handles_labels()
+    fig.legend(hs, ls, ncol=8, fontsize=6.5, frameon=False, loc="lower center")
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
     fig.savefig(FIG / "fig_q1_scatter.png", dpi=200)
     plt.close(fig)
 

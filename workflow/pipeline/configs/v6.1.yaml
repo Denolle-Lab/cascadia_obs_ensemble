@@ -457,13 +457,15 @@ stages:
 
   - id: structure
     kind: run
-    decisions: [D-B018, D-B049, D-B051, D-B099, D-B107, D-B109]
-    code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_structure.py, workflow/11_paper_plan/pb_struct_seis.py]
+    decisions: [D-B018, D-B049, D-B051, D-B099, D-B107, D-B109, D-B111]
+    code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_structure.py,
+           workflow/11_paper_plan/pb_circularity.py, workflow/11_paper_plan/pb_struct_seis.py]
     requires: [{branch: analysis/plate-boundaries, pr: "no PR (merged into pipeline/end-to-end)"}]
-    inputs: ["{model_nc}", "{ens_nc}", "{ens_root}/real", "{repo}/data/tectonics/PB2002_steps.json",
+    inputs: ["{model_nc}", "{ens_nc}", "{ens_root}/real", "{ens_root}/synth/truth/truth_model.npz",
+             "{repo}/data/tectonics/PB2002_steps.json",
              "{main}/data/slab2/cas_slab2_dep.xyz", "{flt_dir}/fault_surfaces_v1_summary.csv",
              "{clu_dir}/families_zbz_{tag}.csv"]
-    outputs: ["{pb_dir}/structure_feasibility.csv", "{pb_dir}/structure_contrasts.csv",
+    outputs: ["{pb_dir}/structure_feasibility.csv", "{pb_dir}/structure_contrasts.csv", "{pb_dir}/circularity_contrasts.csv",
               "{pb_dir}/depth_vs_level.csv", "{pb_dir}/swarm_vs_ma.csv",
               "{pb_dir}/big/events_segments_{tag}.parquet"]
     env: &pbenv
@@ -477,16 +479,19 @@ stages:
       PB_MODEL: "{model_nc}"
       PB_ENS: "{ens_nc}"
       PB_MEMBERS: "{ens_root}/real"
+      PB_SYNTH: "{ens_root}/synth"
       PB_OUT: "{pb_dir}"
       PB_BIG: "{pb_dir}/big"
     runtime: "~10 min"
     resources: "1 process, ~10 GB (100 member grids)"
     commands:
       - "{py} workflow/11_paper_plan/pb_structure.py"
+      - "{py} workflow/11_paper_plan/pb_circularity.py"
       - "{py} workflow/11_paper_plan/pb_struct_seis.py"
     notes: >-
       Per plate-boundary segment: resolved nodes near the faults, depth-matched contrasts against the calibrated
-      ensemble 1 sigma (Vp x1.50, Vs x1.35), seismicity bottom against the 7.5 / 8 km/s levels, swarm against
+      ensemble 1 sigma (Vp x1.50, Vs x1.35, Vp/Vs raw, D-B111), the circularity control on the synthetic ensemble
+      (a contrast survives if |D| >= 2 sigma and >= the 95th percentile of the spurious contrasts), seismicity bottom against the 7.5 / 8 km/s levels, swarm against
       mainshock-aftershock families on resolved nodes. The legacy v5.1 analysis (v51_struct*.py, model v0.3.1) is
       not part of the chain.
 

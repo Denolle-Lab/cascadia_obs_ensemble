@@ -59,7 +59,7 @@ def catalog():
     c = pd.read_csv(CAT, low_memory=False,
                     usecols=["ID", "time", "lat", "lon", "depth", "tier", "nphs", "sig_z", "region", "event_flag",
                              "M", "v4_time", "v4_lat", "v4_lon", "v4_depth", "review_problems",
-                             "review_auto_indicators", "deep_pass"])
+                             "review_auto_indicators", "deep_pass", "comcat_id", "loc_source"])
     c["event_flag"] = c.event_flag.fillna("").astype(str)
     c.to_parquet(f)
     return c

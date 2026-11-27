@@ -2,9 +2,9 @@ volcano,n_events_15km,pct_background,n_families,n_swarm,n_MA,n_multiplet,largest
 Mount Baker,3,100.0,0,0,0,0,0,
 Glacier Peak,3,100.0,0,0,0,0,0,
 Mount Rainier,109,84.4,7,0,3,4,4,mainshock-aftershock
-Mount St. Helens,444,37.6,65,12,19,34,21,swarm
+Mount St. Helens,444,33.3,68,14,18,36,21,swarm
 Mount Adams,1,100.0,0,0,0,0,0,
-Mount Hood,61,37.7,9,2,3,4,13,swarm
+Mount Hood,60,36.7,9,2,3,4,13,swarm
 Mount Jefferson,1,100.0,0,0,0,0,0,
 Three Sisters,2,100.0,0,0,0,0,0,
 Medicine Lake,2,100.0,0,0,0,0,0,

@@ -668,9 +668,10 @@ TYPES = [("pct_background", "background", "#d9d9d9"), ("pct_MA", "mainshock-afte
          ("pct_swarm", "swarm", "#D55E00"), ("pct_multiplet", "multiplet", "#CC79A7")]
 
 
-# label positions in panel E, set for the converged magnitudes (D-B091; Blanco, Gorda, WA and OR moved)
+# label positions in panel E, set for the converged magnitudes (D-B091; Blanco, Gorda, WA and OR moved) and the
+# clustering without the events flagged as not earthquakes (D-B106; Puget left of its symbol, clear of Axial and Blanco)
 LABPOS = {"AX": ("TC", "0c/-0.45c"), "BL": ("BC", "0c/0.5c"), "GO": ("TL", "0.1c/-0.2c"), "ON": ("BC", "0c/0.32c"),
-          "PU": ("BC", "0c/0.3c"), "EN": ("LM", "0.22c/0c"), "MT": ("RM", "-0.42c/0c"), "WA": ("RM", "-0.2c/0c"), "OR": ("BC", "0c/0.2c")}
+          "PU": ("RM", "-0.32c/0c"), "EN": ("LM", "0.22c/0c"), "MT": ("RM", "-0.42c/0c"), "WA": ("RM", "-0.2c/0c"), "OR": ("BC", "0c/0.2c")}
 
 
 def fig_clusters(a):

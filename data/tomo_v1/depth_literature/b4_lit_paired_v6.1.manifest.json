@@ -1,0 +1,76 @@
+{
+ "name": "b4_lit_paired_v6.1",
+ "script": "/home/mdenolle/wt_v61/workflow/10_tomography/b4_lit_paired.py",
+ "argv": [
+  "v6.1=/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+  "v6.0=/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+  "v5.1=/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+ ],
+ "utc": "2026-11-27T09:42:19.618406+00:00",
+ "git_commit": "0dbfcc99846cda61d1b917e2e9ce4835e161f750",
+ "git_dirty": false,
+ "params_md5": "fc639c58a842a5f8dac84921c37ae732",
+ "params": {
+  "catalogs": {
+   "v6.1": "/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+   "v6.0": "/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+   "v5.1": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+  }
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+   "size": 86383905,
+   "mtime": "2026-11-27T09:39:48.000287+00:00",
+   "md5": "a7f1a54f79d2f3c17dca2d2b744874d1"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v6/catalog/catalog_b4_v6.0.csv",
+   "size": 90067133,
+   "mtime": "2026-11-26T16:03:00.897820+00:00",
+   "md5": "ae77ad3c66aa6fbaa48528660a1c09ec"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+   "size": 67745580,
+   "mtime": "2026-11-26T21:53:16.889153+00:00",
+   "md5": "deaa594cf80bd2c624dc48858e562825"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv",
+   "size": 1042674,
+   "mtime": "2026-11-24T18:46:13.229669+00:00",
+   "md5": "cf70ec527af3b4f7bb78db938d8e5d53"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/blanco_lange2026_rel_pairs.csv",
+   "size": 933819,
+   "mtime": "2026-11-24T18:46:13.262669+00:00",
+   "md5": "9a1f7083827fad9c1a1a74889ad4deb9"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/depth_literature/pairs/msh_hirao2025_pairs.csv",
+   "size": 248846,
+   "mtime": "2026-11-24T18:46:13.190669+00:00",
+   "md5": "fc334714358bfadc7cb79f36d9ec795b"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/home/mdenolle/wt_v61/data/tomo_v1/depth_literature/paired_v6.1.md",
+   "size": 4805,
+   "mtime": "2026-11-27T09:42:19.616427+00:00",
+   "md5": "7ce1e16fbd25d748abe8307ac6b50850"
+  },
+  {
+   "path": "/home/mdenolle/wt_v61/data/tomo_v1/depth_literature/paired_v6.1.csv",
+   "size": 11428,
+   "mtime": "2026-11-27T09:42:19.596427+00:00",
+   "md5": "a451f6071a88448a921cc1556839c841"
+  }
+ ],
+ "counts": {
+  "rows": 117
+ },
+ "notes": null
+}

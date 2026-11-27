@@ -1,19 +1,23 @@
-"""Track B, catalog v6.0 (D-B079, D-B096, D-B097): the catalog of the v6 relocation (b4_v6_reloc.py, run ROOT), with the
-v5.1 columns (b4_catalog.py / a2_build_catalog.py rules) and the v6.0 columns of notes/v6_plan.md.
+"""Track B, catalog v6.0 (D-B079, D-B096, D-B097) and v6.1 (D-B103, D-B104): the catalog of the v6 relocation
+(b4_v6_reloc.py, run ROOT), with the v5.1 columns (b4_catalog.py / a2_build_catalog.py rules) and the v6.0 columns of
+notes/v6_plan.md. The final SSST pass is it<NPASS> of b4_v6_reloc.SCHEDULE (V6_SCHEDULE: v6.0 it4, CharDist 4 km; v6.1
+it2, 16 km); its label is ssst_it<NPASS>.
 
 Hypocentre of each event (one row per event of the catalog v4.1 event list), first that applies:
   deep pass LOCATED (deep_pass; D-B067) > edge pass LOCATED (edge_pass) > coherence stage LOCATED (coherence_relocated)
-  > final SSST pass it4 LOCATED > no hypocentre (loc_source none, tier U, u_reason).
+  > final SSST pass (v6.0 it4, v6.1 it2) LOCATED > no hypocentre (loc_source none, tier U, u_reason).
 Depths are true depths (the Earth-flattening of the grids undone, z = Re (1 - exp(-z'/Re))); nothing is moved or clamped
 (D-B055): surface_km (merged surface, D-B068) and above_surface are reported, and the acceptance stage stops the chain if
 any event is above the surface.
 
 Columns (v5.1 ones as b4_catalog.py; new ones):
-  model_version            velocity model of the travel-time grids (v0.4.1)
-  loc_pass                 ssst_it4, coherence, deep or edge (the NLLoc run of the hypocentre)
-  station_terms            ssst (NLL-SSST grids, CharDist schedule 9999-16-8-4 km) or static (deep and edge passes:
-                           static terms of it0, the SSST corrections stop at z' = 80 km and at the tile box)
-  ssst_char_km             final Loc2ssst CharDist of the event's grids (4 km; empty for static rows)
+  model_version            velocity model of the travel-time grids (v6.0 v0.4.1, v6.1 v0.4.2)
+  loc_pass                 ssst_it<NPASS> (v6.0 ssst_it4, v6.1 ssst_it2), coherence, deep or edge (the NLLoc run of the
+                           hypocentre)
+  station_terms            ssst (NLL-SSST grids, CharDist schedule 9999-16-8-4 km in v6.0, 9999-16 km in v6.1) or static
+                           (deep and edge passes: static terms of it0, the SSST corrections stop at z' = 80 km and at the
+                           tile box)
+  ssst_char_km             final Loc2ssst CharDist of the event's grids (v6.0 4 km, v6.1 16 km; empty for static rows)
   rms_unweighted           unweighted rms of the residuals of the used arrivals (weight > 0), s (NLLoc's RMS is
                            EDT-weighted, D-B069)
   n_picks_retimed          picks of the event re-timed from a short read (D-B072/D-B075; timing_corrected)
@@ -26,15 +30,30 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
   review_problems, review_auto_indicators   v5.1 location-review package (review_v51_events.csv): problem groups and
                            the automatic indicators (auto_indicator_rule_not_verdict), joined with ';' (D-B097: carried
                            as columns; no reviewer verdict is applied)
-  review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097)
+  review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097),
+                           or, with --review-dir (the outputs of review_v51/ingest_review.py: review_answers_merged.csv,
+                           review_flag_not_earthquake.csv, review_depth_unreliable.csv, review_relocate.csv), True for the
+                           listed events, False for the other reviewed events, empty for events nobody reviewed;
+                           review_depth_km = the corrected depth of review_relocate.csv when one value is given
+  event_flag               v5.1 rules (b4_catalog.flags), merged with the flags of --event-flags (CSV ID, event_flag;
+                           catalog v6.1, D-B108: the Mount St Helens analog-signal events, analog_test_signal): ';'-joined
+                           with the event's own flags, never replacing them; no event removed
   M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id, magnitude_source   converged Route A magnitudes
-                           (D-B091): the v5.1 table (computed with v5.1 hypocentres) where it has the event, else the
-                           v4.1 table (v4 hypocentres); magnitude_source names which (not recomputed on v6.0 hypocentres)
+                           (D-B091) from the ordered --mag-tables, first table with an M per event. v6.0: the v5.1
+                           table (v5.1 hypocentres), else the v4.1 table. v6.1 and later: the chain's magnitudes stage
+                           rebuilds the catalog with the table computed on its own hypocentres (D-B105), else v4.1.
+                           magnitude_source names which, with short labels (v6.1_converged, v5.1_converged,
+                           v4.1_converged; PR #58)
 
-  python b4_v6_catalog.py ROOT --out CSV
+  python b4_v6_catalog.py ROOT --out CSV [--mag-tables LABEL=CSV,LABEL=CSV] [--event-flags CSV] [--review-dir DIR]
+--mag-tables: the ordered magnitude tables (first with an M per event; key column ID or event_id), each with its
+magnitude_source label. Default v5.1_converged (MAG_V51), v4.1_converged (MAG_V41). Catalog v6.1 (D-B105): the chain's
+magnitudes stage computes the converged Route A magnitudes on the v6.1 hypocentres and rebuilds the catalog with
+v6.1_converged=<that table>,v4.1_converged=MAG_V41 (hypocentre columns unchanged).
 """
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -56,10 +75,12 @@ V51 = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
 REVIEW = Path("/wd1/mdenolle_data/catalog_v5/v5.1_review/review_v51_events.csv")
 MAG_V51 = Path("/wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv")
 MAG_V41 = Path("/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv")
-PICKS = Path("/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv")
+# the chain's picks (b4_v6_relocate.sh PICKS, exported as V6_PICKS)
+PICKS = Path(os.environ.get("V6_PICKS", "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv"))
 MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id"]
 PRIO = {("deep", True): 4, ("edge", True): 3, ("coh", True): 2, ("it4", True): 1, ("it4", False): 0}
-LOC_PASS = {"it4": "ssst_it4", "coh": "coherence", "deep": "deep", "edge": "edge"}
+# "it4" = the run label of the final SSST pass inside this script (it<NPASS>); its catalog label names the pass
+LOC_PASS = {"it4": f"ssst_it{V.NPASS}", "coh": "coherence", "deep": "deep", "edge": "edge"}
 
 
 def log(*a):
@@ -157,7 +178,36 @@ def arrivals_check(root, chosen):
     return au
 
 
-def review_columns(ids):
+def merge_flags(own, extra):
+    """';'-joined union of an event's own event_flag and the extra flags (own first, never replaced, no duplicates)."""
+    out = []
+    for a_, b_ in zip(own, extra):
+        toks = [x.strip() for x in (a_ if isinstance(a_, str) else "").split(";") if x.strip()]
+        toks += [x.strip() for x in (b_ if isinstance(b_, str) else "").split(";") if x.strip() and x.strip() not in toks]
+        out.append(";".join(toks))
+    return out
+
+
+def read_event_flags(path, ids):
+    """--event-flags CSV (ID, event_flag): every row an event of the catalog, a non-empty flag; flags per ID joined."""
+    ef = pd.read_csv(path, dtype={"event_flag": str})
+    if not {"ID", "event_flag"} <= set(ef.columns):
+        raise SystemExit(f"{path}: columns ID, event_flag needed, found {list(ef.columns)}")
+    ef = ef[["ID", "event_flag"]].copy()
+    ef["event_flag"] = ef.event_flag.fillna("").map(lambda v: ";".join(t.strip() for t in v.split(";") if t.strip()))
+    if ef.event_flag.eq("").any() or ef.ID.isna().any():
+        raise SystemExit(f"{path}: {int(ef.event_flag.eq('').sum())} rows without a flag, {int(ef.ID.isna().sum())} without an ID")
+    idf = pd.to_numeric(ef.ID, errors="coerce")
+    if idf.isna().any() or (idf != idf.round()).any():
+        raise SystemExit(f"{path}: IDs must be integers, e.g. {ef.ID[idf.isna() | (idf != idf.round())].head(3).tolist()}")
+    ef["ID"] = idf.astype(int)
+    unknown = sorted(set(ef.ID) - set(ids))
+    if unknown:
+        raise SystemExit(f"{path}: {len(unknown)} IDs not in the catalog event list, e.g. {unknown[:5]}")
+    return ef.groupby("ID").event_flag.agg(lambda s: ";".join(sorted(set(";".join(s).split(";")) - {""})))
+
+
+def review_columns(ids, review_dir=None):
     r = pd.read_csv(REVIEW, usecols=["ID", "problem", "auto_indicator_rule_not_verdict"])
     g = r.groupby("ID").agg(review_problems=("problem", lambda s: ";".join(sorted(set(s.dropna().astype(str))))),
                             review_auto_indicators=("auto_indicator_rule_not_verdict",
@@ -170,24 +220,50 @@ def review_columns(ids):
     for k in ("review_not_earthquake", "review_depth_unreliable", "review_relocate"):
         out[k] = pd.array([pd.NA] * len(out), dtype="boolean")
     out["review_depth_km"] = np.nan
+    if review_dir:                                   # reviewer verdicts (ingest_review.py rules)
+        d = Path(review_dir)
+        seen = set(pd.read_csv(d / "review_answers_merged.csv", dtype={"ID": "Int64"}).ID.dropna().astype(int))
+        rev = out.index.isin(list(seen))
+        for k, f in (("review_not_earthquake", "review_flag_not_earthquake.csv"),
+                     ("review_depth_unreliable", "review_depth_unreliable.csv"), ("review_relocate", "review_relocate.csv")):
+            lst = set(pd.read_csv(d / f, dtype={"ID": "Int64"}).ID.dropna().astype(int))
+            out.loc[rev, k] = out.index[rev].isin(list(lst))
+        rl = pd.read_csv(d / "review_relocate.csv", dtype=str, keep_default_na=False)
+        one = rl[rl.corrected_depth_km.str.len().gt(0) & ~rl.corrected_depth_km.str.contains(";")]
+        z = pd.Series(pd.to_numeric(one.corrected_depth_km).to_numpy(), index=one.ID.astype(int))
+        out["review_depth_km"] = out.index.map(z)
     return out.reset_index()
 
 
-def magnitude_columns(ids):
-    m5 = pd.read_csv(MAG_V51).set_index("ID")
-    m4 = pd.read_csv(MAG_V41).set_index("event_id")
+MAG_TABLES = [("v5.1_converged", MAG_V51), ("v4.1_converged", MAG_V41)]   # default order (D-B091, D-B102)
+
+
+def magnitude_columns(ids, tables=None):
+    """magnitude columns from the first table (in order) with an M for the event; magnitude_source = its short label
+    (catalog_version.MAG_TABLES, PR #58: v5.1_converged = v5.1 table on v5.1 hypocentres, v4.1_converged = v4.1 table
+    on v4 hypocentres, v6.1_converged = computed on the v6.1 hypocentres, D-B105)."""
     out = pd.DataFrame({"ID": ids})
-    has5 = out.ID.map(m5.M).notna()
-    has4 = out.ID.map(m4.M).notna() & ~has5
+    got = pd.Series(False, index=out.index)
+    src = pd.Series("", index=out.index, dtype=object)
+    vals = {k: pd.Series(np.nan, index=out.index, dtype=object) for k in MAG_COLS}
+    info = {}
+    for lab, path in (tables or MAG_TABLES):
+        m = pd.read_csv(path, low_memory=False)
+        m = m.set_index("ID" if "ID" in m else "event_id")
+        take = ~got & out.ID.map(m.M).notna()
+        for k in MAG_COLS:
+            if k in m:
+                vals[k] = vals[k].where(~take, out.ID.map(m[k]))
+        src[take] = lab
+        got |= take
+        info[lab] = dict(events=int(take.sum()), path=str(path), md5=V.md5(path))
     for k in MAG_COLS:
-        v5 = out.ID.map(m5[k]) if k in m5 else pd.Series(np.nan, index=out.index)
-        v4 = out.ID.map(m4[k]) if k in m4 else pd.Series(np.nan, index=out.index)
-        out[k] = np.where(has5, v5, np.where(has4, v4, np.nan))
-        if v5.dtype == object or v4.dtype == object:
-            out[k] = out[k].where(has5 | has4, None)
-    out["magnitude_source"] = np.where(has5, "v5.1_converged (D-B091, v5.1 hypocentres)",
-                                       np.where(has4, "v4.1_converged (D-B091, v4 hypocentres)", ""))
-    return out, dict(v51=int(has5.sum()), v41=int(has4.sum()), md5_v51=V.md5(MAG_V51), md5_v41=V.md5(MAG_V41))
+        v = vals[k]
+        out[k] = v if v.dropna().map(lambda x: isinstance(x, str)).any() else pd.to_numeric(v)
+    out["magnitude_source"] = src
+    # v51 / v41 counts as before (acceptance text) plus every table
+    info.update(v51=info.get("v5.1_converged", {}).get("events", 0), v41=info.get("v4.1_converged", {}).get("events", 0))
+    return out, info
 
 
 def pick_counts():
@@ -203,7 +279,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("root")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--mag-tables", help="LABEL=CSV,... ordered magnitude tables (default v5.1_converged, v4.1_converged)")
+    ap.add_argument("--event-flags", help="CSV ID,event_flag merged into event_flag (D-B108)")
+    ap.add_argument("--review-dir", help="ingest_review.py output folder -> reviewer columns")
     a = ap.parse_args()
+    tables = [tuple(x.split("=", 1)) for x in a.mag_tables.split(",")] if a.mag_tables else None
     root, out = Path(a.root), Path(a.out)
     t0 = time.time()
     plan = json.loads((V.plan_dir(root) / "plan.json").read_text())
@@ -265,6 +345,13 @@ def main():
     q, f = BC.flags(c.assign(time=c.time.fillna("1970-01-01T00:00:00")))
     c["depth_quality"] = np.where(nll, q, "")
     c["event_flag"] = np.where(nll, f, "")
+    n_extra = {}
+    if a.event_flags:                                # extra flags (D-B108), merged with the event's own; no event removed
+        ef = read_event_flags(a.event_flags, c.ID)
+        c["event_flag"] = merge_flags(c.event_flag, c.ID.map(ef).fillna(""))
+        n_extra = {f: int(c.event_flag.str.split(";").apply(lambda s, f=f: f in s).sum())
+                   for f in sorted({x for v in ef for x in v.split(";")})}
+        log(f"event flags from {a.event_flags}: {len(ef)} events, {n_extra}")
     # v5.1 flags
     fl = BC.read_floor(V.FLOOR)
     h_fl = c.depth_flat + BC.floor_at(fl, c.lat.fillna(0), c.lon.fillna(0)) / 1e3
@@ -294,12 +381,15 @@ def main():
     skf = root / "coh" / "coherence_skipped_region.csv"     # D-B098: compact events not coherence-relocated (Mendocino)
     sk = set(pd.read_csv(skf).ID) if skf.exists() else set()
     c["coherence_skipped_region"] = c.ID.isin(sk)
-    c = c.merge(review_columns(c.ID), on="ID", how="left")
-    mags, minfo = magnitude_columns(c.ID)
+    c = c.merge(review_columns(c.ID, a.review_dir), on="ID", how="left")
+    mags, minfo = magnitude_columns(c.ID, tables)
     c = c.merge(mags, on="ID", how="left")
     # v4.1 additions NLLoc did not locate: left out (catalog_version.py adds them with the ComCat hypocentre)
     drop_add = c.ID.isin(BC.CV["v4_1_added"]) & ~nll
     c = c[~drop_add].reset_index(drop=True)
+    for lab in minfo:                                       # counts of the rows the catalog keeps
+        if isinstance(minfo[lab], dict) and "events" in minfo[lab]:
+            minfo[lab]["events"] = int((c.magnitude_source == lab).sum())
     nll = c.loc_source == "nll3d"
     keep = ["ID", "raw_ID", "v4_time", "v4_lat", "v4_lon", "v4_depth", "v4_npick", "v4_sigma_m", "time", "lat", "lon",
             "depth", "exp_depth", "loc_source", "tier", "nphs", "n_sta", "gap", "rms", "rms_unweighted", "h_min", "h_max",
@@ -329,7 +419,9 @@ def main():
     man = dict(catalog=str(out), catalog_md5=V.md5(out), root=str(root), plan=plan, model=f"v{V.VERSION}",
                grid_manifest=str(V.GRID_MD5), grid_manifest_md5=V.grid_manifest_md5(), floor=V.FLOOR,
                floor_md5=V.md5(V.FLOOR), picks=str(PICKS), surface=BC.SURFACE, surface_source=BC.surface_source(),
-               v51=str(V51), review=str(REVIEW), counts=counts, wall_min=round((time.time() - t0) / 60, 1),
+               v51=str(V51), review=str(REVIEW), review_verdicts=a.review_dir, event_flags=a.event_flags,
+               event_flags_md5=V.md5(a.event_flags) if a.event_flags else None, event_flags_counts=n_extra or None,
+               counts=counts, wall_min=round((time.time() - t0) / 60, 1),
                runs={k: json.loads((root / k / "run.json").read_text()) for k in
                      [f"it{i}" for i in range(V.NPASS + 1)] + ["coh", "deep", "edge"] if (root / k / "run.json").exists()},
                loc2ssst={f"g{i}": json.loads((root / f"g{i}" / "summary.json").read_text())

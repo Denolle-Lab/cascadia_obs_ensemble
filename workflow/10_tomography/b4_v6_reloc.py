@@ -67,7 +67,7 @@ sys.path.insert(0, str(TA))
 import a2_run_nlloc as RN  # noqa: E402
 import b4_v6_ssst as S  # noqa: E402
 
-R6 = Path("/wd1/mdenolle_data/reloc_v6")
+R6 = Path(os.environ.get("V6_ROOT", "/wd1/mdenolle_data/reloc_v6"))   # run root (catalog v6.1: reloc_v61/run)
 VERSION = os.environ.get("VERSION", "0.4.1")
 TIME = os.environ.get("TIME", f"time_v6_v{VERSION}")
 FINE = Path(os.environ.get("V6_FINE", str(R6 / TIME)))
@@ -79,9 +79,10 @@ FLOOR = S.FLOOR
 NLL = RN.NLL
 LOC2SSST = S.BIN / "Loc2ssst"
 TEMPLATE = TA / "nlloc_template.in"
-SCHEDULE = (9999.0, 16.0, 8.0, 4.0)       # D-B096
+# Loc2ssst CharDist per SSST pass: D-B096 (v6.0) 9999 -> 16 -> 8 -> 4 km; D-B103 (v6.1) 9999 -> 16 km (V6_SCHEDULE=9999,16)
+SCHEDULE = tuple(float(v) for v in os.environ.get("V6_SCHEDULE", "9999,16,8,4").split(","))
 V51_CATALOG = Path(os.environ.get("V6_V51_CATALOG", "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"))
-NPASS = len(SCHEDULE)                       # NLLoc passes it0..it4; it4 is the final SSST pass
+NPASS = len(SCHEDULE)                       # NLLoc passes it0..it<NPASS>; it<NPASS> is the final SSST pass (v6.0: it4)
 MARGIN = 20.0                               # km: SSST tile box = 25 km tile +- MARGIN
 TILE = 25.0
 X0, Y0, X1, Y1 = -513.0, -709.0, 457.0, 724.0     # model lattice (a2_make_obs.py)
@@ -765,7 +766,8 @@ def event_files(rd, pattern="loc.*_v4_*.grid0.loc.hyp"):
 
 
 SEP_MAX, NACC_MIN = 3.0, 3          # coherence partner rule R3 (coordinator 20:00; notes/v6_plan.md)
-RULECHECK = R6 / "heldout" / "coh_rule_check.json"
+# the R3 partner-rule check of v6.0 (a decision record; v6.1 reads v6.0's: V6_RULECHECK)
+RULECHECK = Path(os.environ.get("V6_RULECHECK", str(R6 / "heldout" / "coh_rule_check.json")))
 
 
 def pair_coherence(cc_dir, check=True):

@@ -27,7 +27,8 @@ Rules:
     in v4.1, Mw_mt_v4 is carried. These values are never written to M.
   * Explosions and quarry blasts keep their magnitude; is_earthquake is False for
     them (event_flag anss_explosion, anss_quarry_blast, anss_other_event,
-    anss_sonic_boom, quarry_blast_likely). They are dropped from Mc and b fits.
+    anss_sonic_boom, quarry_blast_likely; catalog v6.1: analog_test_signal, the Mount St Helens
+    weekly analog test signal, D-B108). They are dropped from Mc and b fits.
 
   * ml_caution (rows with an ML): semicolon-separated reasons why the ML may not hold,
     empty when none applies:
@@ -54,6 +55,9 @@ Usage:
   python v51_magnitude_table.py --data /wd1/.../v5.1_analysis/mag --suffix _v51 \
       --pm <dir>/cascadia_catalog_M_v51_converged.csv --out <dir> --tag _converged \
       --v4-mags <dir>/cascadia_catalog_M_routeA_converged.csv
+  --catalog / --name: another catalog of the v4.1 events (catalog v6.1, D-B105: --catalog its csv --name 6.1 ->
+  cascadia_catalog_v6.1_magnitudes<tag>.csv); its M, M_type, ML, ML_method, Mw_mt, comcat_id columns play the role of
+  the v4.1 columns below (with --v4-mags, only Mw_mt, comcat_id: the tensor carried when the relocation loses a match).
   --solver sets the phase19 solver of the near inversion redone here (default: phase19's,
   "exact"); --v4-mags replaces M_v4, M_type_v4, ML_v4, ML_method_v4 (otherwise copied from
   the v5.1 catalog, i.e. the stored v4.1 Route A values) by those of the given phase19 file.
@@ -71,7 +75,8 @@ import v51_paths as vp
 from phase18_moment_tensor_match import hutton_boore, RMAX
 
 NONQUAKE = ("anss_explosion", "anss_quarry_blast", "anss_other_event", "anss_sonic_boom",
-            "quarry_blast_likely")
+            "quarry_blast_likely",
+            "analog_test_signal")   # catalog v6.1 (D-B108): Mount St Helens weekly analog test signal, not an earthquake
 R_EARTH_KM = 6371.0
 
 
@@ -131,6 +136,7 @@ def main(argv=None):
     ap.add_argument("--tag", default="", help="appended to the output file stems")
     ap.add_argument("--solver", default=None, help="phase19 solver (default phase19's)")
     ap.add_argument("--v4-mags", default=None, help="phase19 file whose M, M_type, ML, ML_method replace the v4.1 columns")
+    ap.add_argument("--name", default="5.1", help="catalog name in the output stem cascadia_catalog_v<name>_magnitudes")
     a = ap.parse_args(argv)
     D, S = a.data, a.suffix
     O, T = a.out or a.data, a.tag
@@ -286,7 +292,7 @@ def main(argv=None):
     out = out[cols]
     for c_ in ("n_ML", "n_sta_ML", "n_obs_inv"):
         out[c_] = out[c_].astype("Int64")
-    fo = f"{O}/cascadia_catalog_v5.1_magnitudes{T}.csv"
+    fo = f"{O}/cascadia_catalog_v{a.name}_magnitudes{T}.csv"
     out.round({"M": 3, "M_unc": 3, "ML": 3, "ML_unc": 3, "ML_inv": 3, "ML_inv_unc": 3,
                "ML_v4hyp": 3, "ML_v4hyp_unc": 3}).to_csv(fo, index=False)
     print(f"wrote {fo}: {len(out):,} rows; with M {int(out.M.notna().sum()):,}; "

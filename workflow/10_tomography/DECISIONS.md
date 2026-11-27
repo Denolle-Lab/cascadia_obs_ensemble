@@ -1037,3 +1037,11 @@ seismic structure and seismicity style at the various plate boundaries." The mod
 maps, M2 margin-normal sections) are not paper figures; the gallery and the atlas stay for exploration. Paper model figures
 show velocity structure only near the faults where it is resolved, set against the seismicity style (clustering, b and Mc,
 depth extent, fault surfaces) of each plate boundary; a feasibility check of which boundaries the model resolves comes first.
+
+### D-B108 Run catalog v6.1 tonight with the computational fixes; clock corrections and review flags go to v6.2; Mount St Helens analog-signal events are flagged in v6.1 (adopted, 2026-11-26 16:09, PI)
+v6.1 = model v0.4.2 grids (D-B104), SSST 9999 -> 16 km + coherence (D-B103), no coherence at Mendocino (D-B098), converged
+magnitudes on the v6.1 hypocentres (D-B105); launched automatically when the grids finish (~19:30, about 6 h). The 129
+clock-candidate epochs and the 1,512-event location-review flags wait for the PI's review and go into v6.2. A flag list of the
+likely false events from the weekly artificial signal on the analog UW channels HSR, EDM and STD near Mount St Helens
+(Wednesdays about 11:30-13:00 local) is built with waveform evidence before the catalog stage; v6.1 carries it as event_flag
+(flag only; no event deleted).

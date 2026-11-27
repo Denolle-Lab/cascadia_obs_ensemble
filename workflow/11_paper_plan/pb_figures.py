@@ -98,7 +98,7 @@ def section_grid(m, field, mask, normal, inside, nbins, var_sd=None):
 
 def fig_sections():
     m = P.Model()
-    c = pd.read_parquet(P.BIG / "events_segments_v60.parquet")
+    c = pd.read_parquet(P.BIG / f"events_segments_{P.TAG}.parquet")
     E = c[c.is_eq & c.abc & ~c.review_P1 & c.depth_good]
     pts, _, _ = P.pb2002()
     otf = pts["OTF"]
@@ -210,7 +210,7 @@ def fig_fingerprint():
     for t in P.TYPE_ORDER[:-1]:
         axs[0].plot([], [], TYPE_MK[t], color=TYPE_COL[t], label=t)
     fig.legend(*axs[0].get_legend_handles_labels(), fontsize=6.5, loc="lower center", ncol=7, frameon=False)
-    fig.suptitle("DRAFT: seismicity-style fingerprint, catalog v6.0 (tier A-C; flagged non-earthquakes and review P1 "
+    fig.suptitle(f"DRAFT: seismicity-style fingerprint, catalog {P.CATLABEL} (tier A-C; flagged non-earthquakes and review P1 "
                  "left out); label = segment (structure class r/m/n).\nBars: 95 % bootstrap CI (Mc, b, shares); depth "
                  "p10-p90 (hollow: depth fair, median sigma_z 3-6 km); 7.5 km/s share: ensemble members 5-95 %; dip: "
                  "min-max over surfaces.", fontsize=7)
@@ -259,7 +259,7 @@ def fig_contrasts():
 
 
 def fig_segments():
-    c = pd.read_parquet(P.BIG / "events_segments_v60.parquet")
+    c = pd.read_parquet(P.BIG / f"events_segments_{P.TAG}.parquet")
     E = c[c.is_eq & c.abc & ~c.review_P1]
     f = pd.read_csv(P.OUT / "structure_feasibility.csv").set_index("seg")
     ax_t = pd.read_csv(P.OUT / "segment_axes.csv").set_index("seg")
@@ -293,7 +293,7 @@ def fig_segments():
     ax.set_xlim(-131.8, -120.2)
     ax.set_ylim(39.2, 51.0)
     ax.set_aspect(1 / np.cos(np.radians(45)))
-    ax.set_title("DRAFT: segment rule on catalog v6.0 (tier A-C earthquakes); label fill = structure class\n"
+    ax.set_title(f"DRAFT: segment rule on catalog {P.CATLABEL} (tier A-C earthquakes); label fill = structure class\n"
                  "black resolved, grey marginal, white not resolved; dots = PB2002 traces, star = triple junction",
                  fontsize=7.5)
     fig.tight_layout()

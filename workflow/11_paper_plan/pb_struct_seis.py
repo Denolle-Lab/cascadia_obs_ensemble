@@ -32,7 +32,7 @@ RNG = np.random.default_rng(P.SEED + 7)
 
 def main():
     m = P.Model()
-    c = pd.read_parquet(P.BIG / "events_segments_v60.parquet")
+    c = pd.read_parquet(P.BIG / f"events_segments_{P.TAG}.parquet")
     E = c[c.is_eq & c.abc & ~c.review_P1 & c.depth_good].copy()
     E["iy"], E["ix"] = m.column_index(E.lon.values, E.lat.values)
     # (a)
@@ -60,8 +60,8 @@ def main():
     dl.to_csv(P.OUT / "depth_vs_level.csv", index=False, float_format="%.4g")
     P.log(dl.dropna(subset=["sd_real"]).to_string())
     # (b)
-    z = pd.read_csv(P.CLU / "events_zbz_v60.csv.gz", usecols=["event_id", "family_id"])
-    fam = pd.read_csv(P.CLU / "families_zbz_v60.csv", usecols=["family_id", "type", "n"])
+    z = pd.read_csv(P.CLU / f"events_zbz_{P.TAG}.csv.gz", usecols=["event_id", "family_id"])
+    fam = pd.read_csv(P.CLU / f"families_zbz_{P.TAG}.csv", usecols=["family_id", "type", "n"])
     g = E.merge(z.rename(columns={"event_id": "ID"}), on="ID")
     g = g[g.family_id >= 0]
     f = g.groupby("family_id").agg(nd=("ID", "size"), lon=("lon", "median"), lat=("lat", "median"),

@@ -81,7 +81,7 @@ def main():
         c[tag] = zz[iy, ix]
         c[f"{tag}_bsf"] = c[tag] + m.surf[iy, ix]       # level depth below the node-column surface
         c[f"rel_{tag}"] = c.depth - c[tag]              # > 0: event below the level
-    c.to_parquet(P.BIG / "events_segments_v60.parquet")
+    c.to_parquet(P.BIG / f"events_segments_{P.TAG}.parquet")
     E = c[c.is_eq & c.abc & ~c.review_P1]
     summ, mem, vert = P.fault_tables()
     sseg = P.surface_segments(summ, mem, c.set_index("ID").seg)

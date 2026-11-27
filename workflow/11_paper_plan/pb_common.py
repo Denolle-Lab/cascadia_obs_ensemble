@@ -4,6 +4,13 @@ Reads only: catalog v6.0, its v6.0 clustering, the v6.0 Mc maps, the fault surfa
 v0.4.2 and its ensemble v0.4.2+ens.100 (statistics file and the 100 member grids), PB2002 plate boundaries and Slab2.
 Writes nothing (the scripts pb_*.py write).
 
+Other catalog versions (end-to-end pipeline, D-B110): environment variables replace the v6.0 inputs and the output
+folders; unset, every path is the v6.0 one below, so the committed feasibility study reproduces. PB_CATALOG (catalog
+CSV), PB_TAG (file tag of its clustering and of the event table, v60), PB_LABEL (catalog name in titles, v6.0),
+PB_CLUSTERS (clustering folder: events_zbz_<tag>.csv.gz, families_zbz_<tag>.csv, dbscan_*_<tag>.csv), PB_MCMAP (Mc map
+folder), PB_FAULTS and PB_FAULTS_BIG (fault surfaces v1: small tables, mesh vertices), PB_MODEL, PB_ENS, PB_MEMBERS
+(model, ensemble statistics, member grids), PB_OUT (small tables), PB_BIG (page, figures, large tables).
+
 Conventions: depth km below sea level, positive down; "bsf" = depth below the local solid surface (ground or
 seafloor) = depth + surface_km. Distances are straight-line 3-D distances in an Earth-centred frame (radius 6371 km
 minus depth) unless called horizontal.
@@ -11,6 +18,7 @@ minus depth) unless called horizontal.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -19,20 +27,23 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 WD1 = Path("/wd1/mdenolle_data")
-CAT = WD1 / "catalog_v6/v6.0/cascadia_catalog_v6.0.csv"
-CLU = WD1 / "catalog_v6/v6.0_analysis/clusters"
-MCMAP = WD1 / "magnitude_converged/mc_maps_v60"
-FLT_BIG = WD1 / "catalog_v5/v5.1_analysis/faults"
-FLT = ROOT / "data/catalog_v5/v5.1_analysis/faults"
+_env = os.environ.get
+CAT = Path(_env("PB_CATALOG", WD1 / "catalog_v6/v6.0/cascadia_catalog_v6.0.csv"))
+TAG = _env("PB_TAG", "v60")                              # file tag of the clustering and of events_segments_<tag>
+CATLABEL = _env("PB_LABEL", "v6.0")                      # catalog name in titles
+CLU = Path(_env("PB_CLUSTERS", WD1 / "catalog_v6/v6.0_analysis/clusters"))
+MCMAP = Path(_env("PB_MCMAP", WD1 / "magnitude_converged/mc_maps_v60"))
+FLT_BIG = Path(_env("PB_FAULTS_BIG", WD1 / "catalog_v5/v5.1_analysis/faults"))
+FLT = Path(_env("PB_FAULTS", ROOT / "data/catalog_v5/v5.1_analysis/faults"))
 MODELS = WD1 / "tomo_v1/models/cascadia_obs_tomo"
-MODEL = MODELS / "v0.4.2.nc"
-ENS = MODELS / "v0.4.2+ens.100.nc"
-MEMBERS = WD1 / "tomo_v1/ensemble_v0.4.2/real"
+MODEL = Path(_env("PB_MODEL", MODELS / "v0.4.2.nc"))
+ENS = Path(_env("PB_ENS", MODELS / "v0.4.2+ens.100.nc"))
+MEMBERS = Path(_env("PB_MEMBERS", WD1 / "tomo_v1/ensemble_v0.4.2/real"))
 INFL = {"Vp": 1.50, "Vs": 1.35, "VpVs": 1.50}   # D-B099; Vp/Vs has no calibrated factor: the larger one is used
 PB2002 = ROOT / "data/tectonics/PB2002_steps.json"
 SLAB = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
-OUT = ROOT / "data/paper_plan/plate_boundaries"        # small tables (git)
-BIG = WD1 / "paper_plan"                                 # page, figures, large tables
+OUT = Path(_env("PB_OUT", ROOT / "data/paper_plan/plate_boundaries"))  # small tables (git)
+BIG = Path(_env("PB_BIG", WD1 / "paper_plan"))                          # page, figures, large tables
 RE = 6371.0
 KM = 111.195
 SEED = 20261126
@@ -74,7 +85,7 @@ SLAB_CRUST_KM = 10.0                 # onshore crust: more than 10 km above Slab
 LAT_GS = 41.5                        # south of it, east of the trench and outside MTJ: Gorda slab group GS
 
 SEGMENT_RULE = [
-    "Located events of catalog v6.0 (any tier), first match wins; distances are horizontal.",
+    f"Located events of catalog {CATLABEL} (any tier), first match wins; distances are horizontal.",
     "AX: catalog region Axial. BL: catalog region Blanco. EN: catalog region Endeavour.",
     f"MTJ: within {R_MTJ_KM:.0f} km of the PB2002 triple junction (southern end of the JF\\NA subduction trace).",
     f"MFZ: within {D_AXIS_KM:.0f} km of a PB2002 PA-JF transform step, south of 41 N.",

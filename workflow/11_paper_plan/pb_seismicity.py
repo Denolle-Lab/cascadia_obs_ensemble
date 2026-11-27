@@ -72,14 +72,14 @@ def interevent_stats(t_days):
 
 
 def main():
-    c = pd.read_parquet(P.BIG / "events_segments_v60.parquet")
+    c = pd.read_parquet(P.BIG / f"events_segments_{P.TAG}.parquet")
     E = c[c.is_eq & c.abc & ~c.review_P1].copy()
-    z = pd.read_csv(P.CLU / "events_zbz_v60.csv.gz", usecols=["event_id", "in_analysis", "family_id", "family_type",
+    z = pd.read_csv(P.CLU / f"events_zbz_{P.TAG}.csv.gz", usecols=["event_id", "in_analysis", "family_id", "family_type",
                                                                 "cls", "role", "background", "region"])
     z = z.rename(columns={"event_id": "ID", "region": "zbz_region"})
-    fam = pd.read_csv(P.CLU / "families_zbz_v60.csv", low_memory=False)
-    dbc = pd.read_csv(P.CLU / "dbscan_clusters_v60.csv")
-    dbm = pd.read_csv(P.CLU / "dbscan_members_v60.csv")
+    fam = pd.read_csv(P.CLU / f"families_zbz_{P.TAG}.csv", low_memory=False)
+    dbc = pd.read_csv(P.CLU / f"dbscan_clusters_{P.TAG}.csv")
+    dbm = pd.read_csv(P.CLU / f"dbscan_members_{P.TAG}.csv")
     seg_of = c.set_index("ID").seg
     E = E.merge(z, on="ID", how="left")
     # family -> segment (all members, any tier)

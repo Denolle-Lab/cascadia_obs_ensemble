@@ -348,6 +348,9 @@ def main():
     big = sv_[sv_.seg.isin(["MTJ", "GS"]) & (sv_.contrast == "along") & sv_["var"].isin(["Vp", "Vs"])].D_real.abs()
     big_lo, big_hi = float(big.min()), float(big.max())
     sw_max = float(s.set_index("seg").loc[["MFZ", "GP", "MTJ", "GS"], "pct_swarm"].max())
+    mg = s[(s.n_swarm_fam_migrating + s.n_dbscan_migrating) > 0]
+    mig_txt = ", ".join(f"{r.seg} {int(r.n_swarm_fam_migrating)} zbz + {int(r.n_dbscan_migrating)} DBSCAN"
+                        for _, r in mg.iterrows()) or "none flagged"
 
     # ---------------- seismicity metrics full
     sm = s[["seg", "type", "n_events", "n_with_M", "Mmax", "n_M4", "Mc", "Mc_lo", "Mc_hi", "Mc_map_median", "b", "b_lo",
@@ -587,7 +590,7 @@ plate sequences, MFZ; add a Mount St Helens swarm sequence; burstiness values in
 nearest-neighbour density plots by segment type (current fig5 A-C, regrouped); S5 structure feasibility: node counts,
 checkerboard share and ensemble 1σ maps limited to the segment areas; S6 five individual ensemble members of the BL
 and MFZ sections (what the 1σ means); S7 Mendocino perspective view (current perspective_mendocino_fault); S8
-migrating swarms (Blanco 3 zbz + 10 DBSCAN, Axial 2, Gorda ridge 1, Mount St Helens 1); S9 the unresolved boundaries
+migrating swarms ({mig_txt}); S9 the unresolved boundaries
 (Axial, Endeavour, Explorer, JdF plate): seismicity-only panels.</p>
 <p><b>Leaves the main text:</b> fig2a and fig2b (Mc maps) move to the supplement; fig5 A-C move to S4; fig4 becomes a
 panel of figure 3 or moves to the supplement. No full-size velocity maps or margin-normal model sections (D-B107).</p>
@@ -598,9 +601,11 @@ panel of figure 3 or moves to the supplement. No full-size velocity maps or marg
      f"of the PB2002 transform trace and centred on the seismicity (trace offset {sec.loc['BL', 'offset_km']:+.1f} km "
      f"and {sec.loc['MFZ', 'offset_km']:+.1f} km). Rows: Vp, its 1σ (x1.50), Vp/Vs (P and S mask), its 1σ (raw, D-B111). "
      "Dots: depth-good tier A-C events of the segment. Dashed: 7.5 km/s. Draft.")}
-<p>What the mock-up shows: at Blanco the resolved volume spans 3-40 km for Vp and 9-29 km for Vp/Vs and the seismicity
-sits in it; at MFZ only 15-40 km is resolved (P) and 18-34 km (P and S), with the seismicity below the 7.5 km/s level.
-Blanco's Vp 1σ (0.2-0.4 km/s) is about twice MFZ's. Structure within ±10 km of the faults is near the node spacing.</p>
+<p>What the mock-up shows: within 10 km of the Blanco faults and seismicity the resolved layers span
+{g('BL', 'span_P10')} km for Vp and {g('BL', 'span_PS10')} km for Vp/Vs and the seismicity sits in them; at MFZ
+{g('MFZ', 'span_P10')} km (P) and {g('MFZ', 'span_PS10')} km (P and S), with {g('MFZ', 'frac_below_z75'):.0%} of the
+seismicity below the 7.5 km/s level. Median Vp 1σ: Blanco {g('BL', 'sd_Vp_10'):.2f} km/s, MFZ
+{g('MFZ', 'sd_Vp_10'):.2f} km/s. Structure within ±10 km of the faults is near the node spacing.</p>
 <h3>Depth extent against the velocity level, per model column</h3>{depth_level_table}
 <p class="small">Columns with ≥ 20 depth-good events and a resolved level. p = share of 1000 permutations of the level
 among the segment's columns with a smaller sd(D90 − level).</p>

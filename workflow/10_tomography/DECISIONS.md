@@ -1058,3 +1058,13 @@ seismicity follows the 7.5 km/s level (rho 0.52, p 0.001). PI: adopt the plan - 
 feasibility; seismicity-style fingerprint; fault geometry per boundary; fault-normal sections with the ensemble 1 sigma for the
 resolved segments; structure versus seismicity; temporal character), the rest supplementary - and rerun it on catalog v6.1:
 fault surfaces refit on v6.1, the circularity (synthetic) control before interpreting contrasts, a calibrated Vp/Vs uncertainty.
+
+### D-B085 Catalog v6.1 is registered with the Axial depth limit stated; the shallow Vp/Vs fix goes to v6.2 (adopted, 2026-11-27 06:38, PI, in session -18)
+v6.1 (D-B103, D-B104, D-B105, D-B108) passes every acceptance check except the Axial depth target: 73 % of the 12,584 tier
+A-B Axial events are within 2 km of the seafloor (target 85 %; v6.0 66 %, v5.1 81 %). The Axial events sit in a narrow
+depth band (median 1.79 km below the seafloor, 90th percentile 2.25 km), so the miss is a systematic bias of about
+0.2-0.4 km, not a scatter problem. Cause (D-B103): the trade-off between station terms and depth, plus a real near-surface
+Vp/Vs error. Axial has no tomography tile (D-B109), so the model there is the start model; the fix needs a local shallow
+model. PI: register and upload v6.1 now with the limit stated in its README; the Axial (and Puget) shallow Vp/Vs
+correction goes into v6.2 with the clock epochs and the review verdicts (D-B108). Done: catalog_v6.zip 1c87dc0a
+(v6.0 + v6.1) on the private draft 23084158, v6.1 CSV md5 1cd909b5; PR #62 (catalog/v6.1).

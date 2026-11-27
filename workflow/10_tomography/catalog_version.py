@@ -29,7 +29,8 @@ Rules:
 * surface (params versions.<v>.surface_source, b4_catalog.py's b4.surface.source values): the solid surface of the
   version's B4 run, also used for the ComCat rows (v5.0 earth_relief_01m, v5.1 merged, D-B068).
 * extra_files: repository paths or absolute paths, or {path, name} to copy under another name.
-* magnitudes (params versions.<v>.magnitude_tables, default [v4.1]): per event the first table with a magnitude, all
+* magnitudes (params versions.<v>.magnitude_tables, default [v4.1]; each name a table of params
+  catalog_versions.magnitude_table_files: path, md5, key column, label): per event the first table with a magnitude, all
   magnitude columns from it; with more than one table the column magnitude_source names it (v5.1: [v5.1, v4.1],
   D-B102). `magnitudes: catalog` (v6.0): the catalog brings its own magnitude columns and magnitude_source (checked
   present); only the v4.1 additions it leaves out take the tables. Ian's v4 magnitude column is not carried.
@@ -41,6 +42,7 @@ import argparse
 import functools
 import gzip
 import hashlib
+import re
 import shutil
 import sys
 import zipfile
@@ -63,17 +65,16 @@ sys.path.insert(0, str(TA))
 from a2_parse_hyp import region  # noqa: E402
 
 MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt", "comcat_id"]
-# converged Route A magnitude tables (D-B091): path, md5, key column, magnitude_source label (short and machine-readable;
-# the README column description says what each label means)
-MAG_TABLES = {"v4.1": dict(path=P["v4_1_magnitudes"], md5=P.get("v4_1_magnitudes_md5"), key="event_id",
-                           label="v4.1_converged"),
-              "v5.1": dict(path=P.get("v5_1_magnitudes"), md5=P.get("v5_1_magnitudes_md5"), key="ID",
-                           label="v5.1_converged"),
-              "v6.1": dict(path=P.get("v6_1_magnitudes"), md5=P.get("v6_1_magnitudes_md5"), key="ID",
-                           label="v6.1_converged")}
-# long labels written by b4_v6_catalog.py (catalog v6.0 input) -> the short labels above
-MAG_LABEL_LONG = {"v4.1_converged (D-B091, v4 hypocentres)": "v4.1_converged",
-                  "v5.1_converged (D-B091, v5.1 hypocentres)": "v5.1_converged"}
+# converged Route A magnitude tables (D-B091): params catalog_versions.magnitude_table_files, name -> path, md5, key
+# column, label (the magnitude_source value; the README column description says what it means)
+MAG_TABLES = P["magnitude_table_files"]
+MAG_LABELS = {t["label"] for t in MAG_TABLES.values()}
+
+
+def short_label(x):
+    """magnitude_source of a B4 catalog -> the table label: b4_v6_catalog.py wrote v6.0's labels long,
+    e.g. 'v5.1_converged (D-B091, v5.1 hypocentres)'."""
+    return x if not isinstance(x, str) else re.sub(r" \(.*\)$", "", x)
 
 
 def version_columns(version, seen=()):
@@ -93,8 +94,9 @@ def need(ok, msg):
 @functools.lru_cache(maxsize=None)
 def mag_table(name):
     """The md5-checked table, read once per process (callers must not modify it)."""
+    need(name in MAG_TABLES, f"magnitude table {name}: not in params catalog_versions.magnitude_table_files")
     t = MAG_TABLES[name]
-    if not t["md5"] or md5(t["path"]) != t["md5"]:
+    if not t.get("md5") or md5(t["path"]) != t["md5"]:
         raise SystemExit(f"magnitude table {name} ({t['path']}): md5 missing or different from params; refusing to build")
     return pd.read_csv(t["path"], low_memory=False).set_index(t["key"])
 
@@ -209,8 +211,8 @@ def build(version, out=None, rd=None):
         missing = [k for k in MAG_COLS + ["magnitude_source"] if k not in c]       # v4.1 additions it leaves out take
         if missing:                                                                  # the tables
             raise SystemExit(f"{src}: magnitudes: catalog, but columns missing: {missing}")
-        ms = c["magnitude_source"].replace(MAG_LABEL_LONG)                           # short labels
-        bad = sorted(set(ms.dropna()) - {t["label"] for t in MAG_TABLES.values()})
+        ms = c["magnitude_source"].map(short_label)                                  # short labels
+        bad = sorted(set(ms.dropna()) - MAG_LABELS)
         if bad:
             raise SystemExit(f"{src}: unknown magnitude_source labels {bad}")
         c["magnitude_source"] = ms

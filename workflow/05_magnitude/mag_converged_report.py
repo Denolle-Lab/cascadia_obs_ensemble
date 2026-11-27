@@ -438,7 +438,7 @@ def paper_impact():
         "cascadia_catalog_v5.1_magnitudes_slim.csv.gz from V51_MAG (default the old worktree wt_a51_mag)",
         "stored slim table", "data/catalog_v5/v5.1_analysis/mag/cascadia_catalog_v5.1_magnitudes_converged_slim.csv.gz "
         "(new name, next to the stored one)", "repoint and rerun (PR body)")
-    add("workflow/10_tomography/params.yaml catalog_versions.v4_1_magnitudes (main)", "catalog v5.x bundles take M from "
+    add("workflow/10_tomography/params.yaml catalog_versions.magnitude_table_files (main)", "catalog v5.x bundles take M from "
         "the v4.1 Route A file", "data/magnitude_v4/cascadia_catalog_M_routeA.csv (main checkout)",
         "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv", "switch when adopted (PR body)")
     add("Data availability; atlas; catalog v5 bundles; Zenodo", "Route A magnitudes in the released products", "stored",

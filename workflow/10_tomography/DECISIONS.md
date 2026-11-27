@@ -1083,3 +1083,12 @@ hypocentres, Mc and b per region, clustering, swarms, fault fitting, structure v
 networks and published catalogs, plate-boundary science; catalog bundling, Zenodo upload and atlas deploy stay manual, gated
 steps. Clustering, swarm statistics and b need the magnitudes and Mc, so they follow the magnitudes stage. Session -18 keeps
 D-B085..D-B089; this session uses D-B110..D-B119.
+
+### D-B111 Paper stance on three limitations; the D-B109 paper analyses are done now on catalog v6.1 (adopted, 2026-11-27 09:36, PI)
+(1) Deep events under Mount St Helens are not interpreted (non-earthquakes remain beyond the D-B108 pulse flags); claims about
+individual earthquake families only for large sequences (families shift between catalog versions); the link between the
+bottom of the seismicity and the 7.5 km/s level is claimed for the Gorda slab only (data/paper_plan/limitations_bullets.md,
+PR #65). (2) The D-B109 analyses (fault surfaces refit, clustering, Mc maps and plate-boundary metrics on v6.1, the
+circularity control for structure contrasts, the Vp/Vs uncertainty) are paper work on the registered catalog v6.1 and are done
+now; only catalog fixes wait for v6.2 (D-B110). The v0.4.2 synthetic calibration found Vp/Vs calibrated without inflation
+(68 % / 95 % coverage 0.68 / 0.97), so Vp/Vs uses the raw ensemble spread.

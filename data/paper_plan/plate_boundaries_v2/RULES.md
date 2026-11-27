@@ -100,3 +100,8 @@ outputs:
   and the bathymetric BIC fit is kept as the alternative.
 * A4. Axial node = the Axial seismicity centroid (the JRS and JRN lines are nearly parallel and offset, so their
   intersection is not defined); JRS ends at the node's along-strike position and is joined to it.
+* A5 (written Fri Nov 27 14:24:59 PST 2026, after the second run): ridge bathymetric picks within 5 km of an adjacent
+  transform's proposed line, or on its far side, are dropped before the ridge fit. The Gorda Ridge frame starts 5 km
+  south of the Mendocino transform, so its first two valley picks (40.45 and 40.50 N) sampled the transform valley and
+  produced a 34 km oblique "hook" segment and an 18 km corner uncertainty. Transforms are therefore fitted first
+  (MFZ, BL, then GR, JRS, JRN).

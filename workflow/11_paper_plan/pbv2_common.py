@@ -104,8 +104,8 @@ class Section:
 # p0 -> p1: the along-strike direction; u > 0 north (transforms) or east (ridges)
 SECTIONS = {
     "MFZ": Section("MFZ", "Mendocino transform", "transform", (-127.45, 40.44), (-125.00, 40.33), (-20, 25), "OTF", "base"),
-    "GR": Section("GR", "Gorda Ridge", "ridge", (-127.45, 40.40), (-126.60, 43.00), (-35, 30), "OSR", "valley"),   # A1
     "BL": Section("BL", "Blanco transform", "transform", (-126.60, 43.00), (-130.45, 44.52), (-30, 20), "OTF", "mapridges", 2),
+    "GR": Section("GR", "Gorda Ridge", "ridge", (-127.45, 40.40), (-126.60, 43.00), (-35, 30), "OSR", "valley"),   # A1
     "JRS": Section("JRS", "Juan de Fuca Ridge, Cleft to Axial", "ridge", (-130.45, 44.50), (-130.00, 45.95), (-25, 25), "OSR", "crest"),
     "JRN": Section("JRN", "Juan de Fuca Ridge, Axial to Endeavour", "ridge", (-130.00, 45.95), (-128.90, 48.40), (-25, 25), "OSR", "crest", 0),
 }

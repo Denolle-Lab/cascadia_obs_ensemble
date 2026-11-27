@@ -96,7 +96,34 @@ def band_of(UB):
 
 
 # ------------------------------------------------------------------ one section
-def fit_section(code, sec, ev, cat, cands, mr, pts, rng):
+ADJ = {"GR": ("MFZ", "BL"), "JRS": ("BL",), "JRN": ()}     # A5: transforms adjacent to each ridge section
+RTI_KM = 5.0
+
+
+def drop_rti(sec, bs, bu, bg, done):
+    """A5: ridge bathymetric picks within 5 km of an adjacent transform's line, or on its far side, are dropped."""
+    keep = np.ones(len(bs), bool)
+    lo, la = sec.lonlat(bs, bu)
+    for tc in ADJ.get(sec.code, ()):
+        if tc not in done:
+            continue
+        tsec, L = done[tc]["sec"], done[tc]["lines_raw"]
+        st, ut = tsec.su(lo, la)
+        mid = sec.lonlat(sec.length / 2, 0.0)
+        sm_, um_ = tsec.su(*mid)
+        ul = np.full(len(st), np.nan)
+        for k, g in enumerate(L):
+            m = (st >= (g["s0"] if k else -np.inf)) & (st <= (g["s1"] if k < len(L) - 1 else np.inf))
+            ul[m] = C.line_u(g, st[m])
+        side = np.sign(float(um_) - float(np.interp(float(sm_), [g["s0"] for g in L] + [L[-1]["s1"]],
+                                                     [C.line_u(g, g["s0"]) for g in L] + [C.line_u(L[-1], L[-1]["s1"])])))
+        d = (ut - ul) * side
+        keep &= ~(d <= RTI_KM)
+    log(f"{sec.code}: A5 dropped {int((~keep).sum())} bathymetric candidate points near or beyond adjacent transforms")
+    return bs[keep], bu[keep], bg[keep]
+
+
+def fit_section(code, sec, ev, cat, cands, mr, pts, rng, done=None):
     s, u = sec.su(ev.lon.values, ev.lat.values)
     m = (s >= 0) & (s < sec.length) & (u >= sec.uwin[0]) & (u <= sec.uwin[1])
     e, s, u = ev[m], s[m], u[m]
@@ -116,6 +143,8 @@ def fit_section(code, sec, ev, cat, cands, mr, pts, rng):
     mode = "seismicity" if (npk >= C.MIN_PICKS and cover >= 0.5) else "bathymetry"
     log(f"{code}: {len(e):,} S0 events, {npk} picks, coverage {cover:.2f}, sigma_loc {sig_loc:.2f} km -> {mode}")
     bs, bu, bg = section_bathy(sec, cands, mr)
+    if sec.kind == "ridge" and done:
+        bs, bu, bg = drop_rti(sec, bs, bu, bg, done)
     ps, pu = pb2002_su(sec, pts)
     e2 = cat[cat.S2]
     s2, u2 = sec.su(e2.lon.values, e2.lat.values)
@@ -331,11 +360,14 @@ def main():
     mr = C.mapridges()
     res, pick_rows, seg_rows, bic_rows, brk_rows = {}, [], [], [], []
     for code, sec in SECTIONS.items():
-        r = fit_section(code, sec, ev, cat, cands, mr, pts, rng)
+        r = fit_section(code, sec, ev, cat, cands, mr, pts, rng, res)
         fill_end_gaps(r, rng)
         if code == "JRN":
             jrn_chord(r, cat, rng)
         seg_rows += compare_bathy(r)
+        r["lines_raw"] = [dict(s0=g["s0"], s1=g["s1"], a=(g["bathy"] or g)["a"] if g["source"] != "seismicity" else g["a"],
+                               b=(g["bathy"] or g)["b"] if g["source"] != "seismicity" else g["b"],
+                               sm=(g["bathy"] or g)["sm"] if g["source"] != "seismicity" else g["sm"]) for g in r["geo"]]
         brk_rows += breaks_of(r)
         bic_rows.append(r["bic"])
         for i in range(len(r["pk"])):
@@ -590,7 +622,7 @@ def build_features(res, lines, corners, zones, seg, brk, pts):
                 unc = float(np.median(np.interp(s, r["sgrid"], hw_all)))
             off, offmax = pb_offset(ln, r["ps"], r["pu"])
             flags = []
-            if srow["source"] == "seismicity" and srow.get("agree") is False:
+            if srow["source"] == "seismicity" and str(srow.get("agree")) == "False":
                 flags.append("bathymetric and seismicity axes disagree (alternative feature given)")
             if srow["source"] == "seismicity" and g.get("bathy") is None:
                 flags.append("no bathymetric axis in this span")
@@ -631,8 +663,10 @@ def build_features(res, lines, corners, zones, seg, brk, pts):
             u1 = L[k + 1]["a"] + L[k + 1]["b"] * (sb - L[k + 1]["sm"])
             lo, la = sec.lonlat([sb, sb], [u0, u1])
             props = dict(type=b["kind"], section=sec.name, section_code=code, break_k=k, origin=b["origin"],
-                         source=r["mode"],
-                         offset_km=round(float(u1 - u0), 2))
+                         source=r["mode"], offset_km=round(float(u1 - u0), 2),
+                         offset_fit_km=round(float(b["offset_km"]), 2),
+                         offset_note="offset_km: between the drawn lines; offset_fit_km: of the seismicity (or "
+                                     "bathymetric) BIC fit, with its bootstrap interval off_p16-off_p84")
             for q in ("s_p16", "s_p84", "off_p16", "off_p84", "off_p2.5", "off_p97.5"):
                 if q in b and np.isfinite(b[q]):
                     props[q] = round(float(b[q]), 2)
@@ -643,6 +677,7 @@ def build_features(res, lines, corners, zones, seg, brk, pts):
     lo, la = sec.lonlat(ln["s1"], ln["a"] + ln["b"] * (ln["s1"] - ln["sm"]))
     F.append(feat("LineString", [[float(lo), float(la)], [ax["lon"], ax["lat"]]], type="step-over",
                   section="Juan de Fuca Ridge at Axial", section_code="JRS", break_k=99, origin="A4 Axial node",
+                  source="A4 Axial node (seismicity centroid)",
                   offset_km=round(float(P.hav(float(la), float(lo), ax["lat"], ax["lon"])), 2)))
     for c in corners:
         F.append(feat("Point", [c["lon"], c["lat"]], type="triple junction" if "triple" in c["name"] else "corner",

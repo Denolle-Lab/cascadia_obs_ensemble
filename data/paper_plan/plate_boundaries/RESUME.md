@@ -107,3 +107,8 @@ For each contrast k (v6.1 node sets, contrast_nodes.npz of /wd1/mdenolle_data/pa
    with the 95th percentile of |D0_rec,i| itself; the paired difference null minus calibration member for the same
    member seed (s000-s019).
 4. The rule is not changed after the null results are seen; any other threshold is a reported variant only.
+- Fri Nov 27 14:32:23 PST 2026: D-B116 plate boundaries v2 (branch analysis/plate-boundaries-v2, worktree /home/mdenolle/wt_pbv2): proposal
+  from the v6.1 seismicity (tier A-B, h_max <= 3 km) and the bathymetry, straight segments by BIC (rules pre-registered in
+  data/paper_plan/plate_boundaries_v2/RULES.md, post-hoc A1-A5 flagged). Run: bash workflow/11_paper_plan/run_pbv2.sh.
+  Outputs /wd1/mdenolle_data/paper_plan/plate_boundaries_v2/ (proposed_boundaries_v1.geojson, report_boundaries.html,
+  figures/). Not adopted: PB_AXES=v2 switches pb_common to it (default stays gmrt); awaiting PI review.

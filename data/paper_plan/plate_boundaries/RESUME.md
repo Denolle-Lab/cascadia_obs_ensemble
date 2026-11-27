@@ -49,3 +49,27 @@ For each contrast k:
    along-strike contrast needs new synthetic inversions; if the existing members do not allow it, this is stated, not
    approximated.
 7. The rule is not changed after the synthetic results are seen; any other threshold is reported as a variant only.
+
+## Pre-registered rule: null-truth control of the structure contrasts (D-B112; written Fri Nov 27 10:13:48 PST 2026, before the null truth is built or scored)
+
+Null truth T0 (root /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null; never ensemble_v0.4.2): the calibration truth
+(v0.4.2 tomography x (1 + f), the same random-field draw, truth_seed 100000) with, for each of the 15 segments that have
+contrasts on catalog v6.1 (resolved or marginal: JR, GR, BL, MFZ, GP, MTJ, GS, FA, SIF, IS, PU, MSH, CAS, OC, NAPA),
+every rock node (v0.4.2 medium = 0) within 45 km (3-D, the same reference sets as the contrasts: the segment's fault
+surfaces and seismicity) set to the mean of those nodes in its depth layer, Vp and Vs separately; a node within 45 km
+of several segments belongs to the nearest one; then the start floor Vs >= Vp / 1.65 as in the calibration truth.
+Truth hypocentres, statics, forward offsets and pick noise: the same seed as the calibration truth. Synthetic data with
+the frozen tomoDD-SE_syn binaries through b2_ens_synth.py; members s000-s019 (the same member seeds as the calibration
+members s000-s019) through M0, the four tiles and the merge (b2_ens_run.py scheduler, at most 6 tomoDD processes, nice
+10, MemAvailable kept above 40 GB).
+
+For each contrast k (v6.1 node sets, contrast_nodes.npz of /wd1/mdenolle_data/paper_plan/v6.1; depth-matched as before):
+1. D0_truth = the contrast in T0 (zero where both node sets lie in one zone; reported for every k);
+   D0_rec,i = the contrast in null member i; null spurious n_i = D0_rec,i - D0_truth; N95 = 95th percentile
+   (numpy, linear) of |n_i| over the null members.
+2. **Rule: a real v6.1 contrast is claimed only if |D_real| >= 2 sigma_ens AND |D_real| >= S95 (D-B111 rule) AND
+   |D_real| >= N95.** Fewer than 15 null members with a value, or no D0_truth: not testable, not claimed.
+3. Reported, not part of the rule: mean null spurious contrast (bias) and whether it has the sign of D_real; the variant
+   with the 95th percentile of |D0_rec,i| itself; the paired difference null minus calibration member for the same
+   member seed (s000-s019).
+4. The rule is not changed after the null results are seen; any other threshold is a reported variant only.

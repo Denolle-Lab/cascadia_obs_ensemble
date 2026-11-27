@@ -1,0 +1,567 @@
+# End-to-end pipeline configuration: catalog v6.1 (model v0.4.2), the worked example of D-B110.
+# Driver: workflow/pipeline/pipeline.py (stage order, kinds, resume, provenance); documentation: PIPELINE.md.
+#
+# A new version = a copy of this file with new variables (catver, tag, model, roots) and, where a stage changed, new
+# commands. Variables are written {name}; ${NAME} stays a shell variable. --out-root DIR moves every analysis output
+# (stages mc_b onward) to DIR, e.g. a scratch root; the upstream stages keep their own run roots (reloc_root, ...).
+
+version: "6.1"
+description: >-
+  Catalog v6.1: catalog v4.1 events relocated with NonLinLoc in the merged tomoDD model v0.4.2 with NLL-SSST
+  (9999 -> 16 km) and NLL-coherence (not at Mendocino), clock-corrected picks v4.1tc, converged Route A magnitudes on
+  the v6.1 hypocentres, Mount St Helens analog-signal flags (D-B103, D-B104, D-B105, D-B108, D-B085).
+
+vars:
+  wd1: /wd1/mdenolle_data
+  main: /home/mdenolle/cascadia_obs_ensemble             # main checkout: pixi envs and the gitignored v4.1 catalog and picks
+  env: "{main}/.pixi/envs/default"                        # pixi env "default" (python 3.10, pandas, obspy, xarray)
+  menv: /home/mdenolle/wt_tomo_res/.pixi/envs/models      # pixi env "models" (zarr, netCDF; model export, merge, grids)
+  py: "{env}/bin/python"                                  # with the environment block below (LD_LIBRARY_PATH)
+  mpy: "env LD_LIBRARY_PATH={menv}/lib {menv}/bin/python"
+  nproc: "8"                                              # worker processes of the analysis stages
+  catver: "6.1"
+  tag: v61                                                # file tag of the clustering outputs
+  prev_catalog: "{wd1}/catalog_v6/v6.0/cascadia_catalog_v6.0.csv"   # previous version (comparisons)
+  model: 0.4.2
+  store: "{wd1}/tomo_v1/models/cascadia_obs_tomo"         # registered velocity models (append-only registry)
+  model_nc: "{store}/v{model}.nc"
+  ens_nc: "{store}/v{model}+ens.100.nc"
+  ens_root: "{wd1}/tomo_v1/ensemble_v{model}"
+  tomo_out: "{wd1}/tomo_v1/v042"                          # params v042.out
+  events_v41: "{main}/data/catalog_v4/Cascadia_relocated_catalog_v4.csv"   # catalog v4.1 event list (gitignored)
+  picks_v41: "{main}/data/catalog_v4/Cascadia_picks_catalog_v4.csv"
+  picks_v41t: "{wd1}/tomo_v1/checks/pick_retiming/Cascadia_picks_catalog_v4.1t.csv"
+  picks_v41tc: "{wd1}/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv"
+  reloc_root: "{wd1}/reloc_v61/run"                       # b4_v6_relocate.sh V6_ROOT
+  v6_schedule: "9999,16"                                  # NLL-SSST characteristic distances (D-B103)
+  event_flags: "{wd1}/reloc_v61/flags/event_flags_v61.csv"
+  mag_dir: "{wd1}/magnitude_converged/v{catver}"
+  catalog: "{wd1}/catalog_v6/v{catver}/cascadia_catalog_v{catver}.csv"     # the registered bundle CSV
+  catalog_md5: 1cd909b59cb8493bc823ad60a07fbcde
+  picks_bundle: "{wd1}/catalog_v6/v{catver}/Cascadia_picks_catalog_v4.1tc.csv.gz"
+  out_root: "{wd1}/catalog_v6/v{catver}_analysis"          # analysis outputs (stages mc_b onward); --out-root overrides
+  state_dir: "{out_root}/_pipeline"                        # driver logs, provenance, lock
+  md5_max_mb: "4000"                                       # provenance: md5 of files up to this size (else size + mtime)
+
+env:                               # environment of every command (a stage's env adds to it); the driver runs at nice 10
+  LD_LIBRARY_PATH: "{env}/lib"
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+
+repo_links:                        # gitignored data the scripts read inside the checkout; a new worktree has none, so the
+  data/slab2: "{main}/data/slab2"  # driver links them from the main checkout before a run (fault_surfaces_v0, pb_common)
+  data/tomography: "{main}/data/tomography"          # CRESCENT Gen0 (a1_build_model.py)
+  data/catalog_v4/Cascadia_relocated_catalog_v4.csv: "{events_v41}"
+  data/catalog_v4/Cascadia_picks_catalog_v4.csv: "{picks_v41}"
+  data/magnitude_v4/anss_2010-16.csv: "{main}/data/magnitude_v4/anss_2010-16.csv"
+
+stages:
+  # ------------------------------------------------------------------ inputs
+  - id: picks
+    kind: check
+    decisions: [D-B072, D-B075, D-B090, D-B097, D-B108]
+    code: [tools/pick_timing/pick_timing/cli.py, tools/pick_timing/configs/cascadia_v6.yaml, workflow/10_tomography/b1t_retime_dataset.py]
+    inputs:
+      - {path: "{picks_v41}", md5: caad05557a58f9cc8a05f1ad4ce96bf1}
+      - {path: "{events_v41}", md5: 722975b82ac5f3e6761c7f1f57cd346d}
+      - {path: "{picks_v41t}", md5: 762f18e8f181eaaaa247d367c2d2c302}
+      - {path: "{picks_v41tc}", md5: 1b21ab1c2cf5aba8b48c64a58fc37356}
+      - "{wd1}/tomo_v1/checks/pick_timing_v6/clock_model.json"
+      - "{wd1}/tomo_v1/checks/pick_timing_v6/confirmed_epochs.csv"
+    outputs: ["{picks_v41tc}"]
+    runtime: "re-timing ~h (waveform headers); clock screen ~30 min"
+    resources: "pnwstore waveforms (headers), 12 workers"
+    commands:
+      - |
+        # rebuild (not run by the driver; a person reviews the clock candidates between detect-clock and apply):
+        # re-timing of drifting channels -> v4.1t (D-B072, D-B075): python -m pick_timing retime (configs/cascadia_v6.yaml)
+        # clock epochs -> v4.1tc (D-B090): {wd1}/tomo_v1/checks/pick_timing_v6/run_v6.sh with the committed toolkit:
+        PYTHONPATH={repo}/tools/pick_timing {py} -m pick_timing detect-clock -c tools/pick_timing/configs/cascadia_v6.yaml --workers 12 --out detect_full
+        # ... report -> PI review -> ingest-review -> model-clock -> apply --output Cascadia_picks_catalog_v4.1tc.csv
+    notes: >-
+      The 129 other clock-candidate epochs and the 1,512-event review flags wait for the PI (v6.2, D-B108); a new pick
+      file changes picks_v41tc and its md5 here and in the relocation stage (PICKS, PICKS_MD5: the obs stage is redone).
+
+  # ------------------------------------------------------------------ relocation in the start model (Track A)
+  - id: reloc_start
+    kind: run
+    decisions: [D-B004, D-B005, D-B024, D-B055, D-B066, D-B067]
+    code: [workflow/08_relocation/a1_build_model.py, workflow/08_relocation/a2_make_obs.py,
+           workflow/08_relocation/a2_run_nlloc.py, workflow/08_relocation/a2_parse_hyp.py,
+           workflow/08_relocation/a2_station_terms.py, workflow/08_relocation/a2_build_catalog.py,
+           workflow/10_tomography/b1_hyp_phases.py]
+    inputs: ["{picks_v41}", "{events_v41}", "{main}/data/tomography/CRESCENT_Gen0.nc"]
+    outputs:
+      - "{wd1}/reloc_v5/model_vpvs176/stations_GTSRCE.in"
+      - "{wd1}/reloc_v5/time_vpvs176"
+      - "{wd1}/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv"
+      - "{wd1}/tomo_v1/b1_dataset/cache/phases_iter0_vpvs176.parquet"
+      - "{wd1}/tomo_v1/b1_dataset/cache/phases_iter1_vpvs176.parquet"
+    runtime: "model 10 min; grids ~3 h; two NLLoc passes ~2 h each"
+    resources: "100 NLLoc processes; ~240 GB of grids"
+    commands:
+      - "{py} workflow/08_relocation/a1_build_model.py"
+      - |
+        # travel-time grids time_vpvs176: GridCut + Grid2Time per station (NonLinLoc v7 in {wd1}/reloc_v5/src); the
+        # loop that built them is not in git (gap); b4_time_grids.py builds the grids of a registered tomography model only
+        test -d {wd1}/reloc_v5/time_vpvs176
+      - "{py} workflow/08_relocation/a2_make_obs.py --picks {picks_v41} --events {events_v41} --out {wd1}/reloc_v5/obs_tiles --time time_vpvs176"
+      - "{py} workflow/08_relocation/a2_run_nlloc.py iter0_vpvs176 --obs-dir {wd1}/reloc_v5/obs_tiles --time time_vpvs176 --nproc 100"
+      - "{py} workflow/08_relocation/a2_parse_hyp.py iter0_vpvs176 && {py} workflow/08_relocation/a2_station_terms.py iter0_vpvs176"
+      - "{py} workflow/08_relocation/a2_run_nlloc.py iter1_vpvs176 --obs-dir {wd1}/reloc_v5/obs_tiles --time time_vpvs176 --nproc 100 --stat {wd1}/reloc_v5/runs/iter0_vpvs176/station_terms.in"
+      - "{py} workflow/08_relocation/a2_parse_hyp.py iter1_vpvs176 && {py} workflow/08_relocation/a2_build_catalog.py iter1_vpvs176"
+      - "{py} workflow/10_tomography/b1_hyp_phases.py iter0_vpvs176 && {py} workflow/10_tomography/b1_hyp_phases.py iter1_vpvs176"
+    notes: >-
+      The run folders iter0_vpvs176 / iter1_vpvs176 were cleared from /wd1; their catalog and the phase caches that
+      B1 reads remain. The current runner is the round-2 runner of v5.1 (no distance cap with --time-wide, guards,
+      arrival accounting), so a rerun gives the v5.1-style first pass, not byte-identical iter1_vpvs176.
+
+  # ------------------------------------------------------------------ near-source tomography
+  - id: tomo_dataset
+    kind: run
+    decisions: [D-B003, D-B006, D-B008, D-B020, D-B022, D-B023, D-B035, D-B072, D-B075]
+    code: [workflow/10_tomography/b1_select_events.py, workflow/10_tomography/b1b_balance.py,
+           workflow/10_tomography/b1t_retime_dataset.py, workflow/10_tomography/params.yaml]
+    inputs: ["{wd1}/reloc_v5/catalog/catalog_v5_trackA_iter1_vpvs176.csv", "{picks_v41t}",
+             "{wd1}/tomo_v1/b1_dataset/cache/phases_iter1_vpvs176.parquet",
+             "{wd1}/tomo_v1/checks/pick_retiming/corrections.csv.gz"]
+    outputs: ["{wd1}/tomo_v1/b1_dataset_c/picks.csv", "{wd1}/tomo_v1/b1b_balanced_c/picks.csv",
+              "{wd1}/tomo_v1/b1_dataset_ct/picks.csv", "{wd1}/tomo_v1/b1b_balanced_ct/picks.csv"]
+    runtime: "~15 min"
+    resources: "1 process"
+    commands:
+      - "{py} workflow/10_tomography/b1_select_events.py"
+      - "{py} workflow/10_tomography/b1b_balance.py"
+      - "{py} workflow/10_tomography/b1t_retime_dataset.py"
+
+  - id: tomo_inversion
+    kind: run
+    decisions: [D-B026, D-B027, D-B028, D-B031, D-B034, D-B035, D-B044, D-B045, D-B046, D-B047, D-B049, D-B050,
+                D-B051, D-B068, D-B073, D-B076, D-B081, D-B082, D-B083, D-B099]
+    code: [workflow/10_tomography/b2_v041_chain.py, workflow/10_tomography/b2_tomodd_inputs.py,
+           workflow/10_tomography/b2_v040_noise.py, workflow/10_tomography/b2_v042_tile.sh,
+           workflow/10_tomography/b2_tomodd_floor.py, workflow/10_tomography/b2_tomodd_run.py,
+           workflow/10_tomography/b2_merge.py, workflow/10_tomography/b2_model_v041.py,
+           workflow/10_tomography/b2_model_v042.py, workflow/10_tomography/b2_v042_analyse.py]
+    inputs: ["{wd1}/tomo_v1/b1b_balanced_ct/picks.csv", "{wd1}/tomo_v1/src/frozen_2026-11-26_inv/bin",
+             "{wd1}/tomo_v1/src/frozen_2026-11-25_inv/bin", "{menv}/bin/python"]
+    outputs: ["{tomo_out}/product/merged_v042.nc", "{tomo_out}/product/nodes_written.json",
+              "{wd1}/tomo_v1/models/staging_v0.4.2/cascadia_obs_tomo",
+              "{wd1}/tomo_v1/b2_tomodd/margin_m0_v4/d200_s480", "{wd1}/tomo_v1/b2_tomodd/oregon_m0f/d200_s480",
+              "{wd1}/tomo_v1/b2_tomodd/washington_m0g/d200_s480",
+              "{wd1}/tomo_v1/b2_tomodd/mendocino_gorda_c_m0g/d200_s480", "{wd1}/tomo_v1/b2_tomodd/blanco_m0g/d200_s20"]
+    runtime: "v0.4.1 chain ~3 h (M0, tiles, noise floor); v0.4.2 tiles ~1.5 h; merge + product 15 min"
+    resources: "tomoDD-SE frozen binaries (D-B054, D-B099), <= 16 tomoDD processes, ~3.5 GB each"
+    commands:
+      - |
+        # M0 margin_m0_v4 and the oregon_m0f tile (v0.4.1 chain, D-B083; v0.4.2 reuses them, reproduced byte for byte)
+        {py} workflow/10_tomography/b2_v041_chain.py
+      - |
+        # v0.4.2 (D-B099): m0g tile inputs without self-paired dt, then their noise-floor copies
+        for r in washington_m0g mendocino_gorda_c_m0g blanco_m0g washington_m0gnf mendocino_gorda_c_m0gnf blanco_m0gnf; do
+          test -e {wd1}/tomo_v1/b2_tomodd/$r/inputs/summary.json && continue
+          {py} workflow/10_tomography/b2_tomodd_inputs.py $r || exit 1
+          case $r in *nf) {py} workflow/10_tomography/b2_v040_noise.py $r || exit 1;; esac
+        done
+      - |
+        # floor, input check against v0.4.1, check01, joint run, back-transform (b2_v042_tile.sh NEW OLD TAG SMOOTH)
+        bash workflow/10_tomography/b2_v042_tile.sh washington_m0g washington_m0f d200_s480 480 &&
+        bash workflow/10_tomography/b2_v042_tile.sh mendocino_gorda_c_m0g mendocino_gorda_c_m0f d200_s480 480 &&
+        bash workflow/10_tomography/b2_v042_tile.sh blanco_m0g blanco_m0f d200_s20 20 &&
+        bash workflow/10_tomography/b2_v042_tile.sh washington_m0gnf washington_m0fnf d200_s480 480 nocheck &&
+        bash workflow/10_tomography/b2_v042_tile.sh mendocino_gorda_c_m0gnf mendocino_gorda_c_m0fnf d200_s480 480 nocheck &&
+        bash workflow/10_tomography/b2_v042_tile.sh blanco_m0gnf blanco_m0fnf d200_s20 20 nocheck
+      - "mkdir -p {tomo_out}/product {tomo_out}/noise && {mpy} workflow/10_tomography/b2_merge.py --product product_v042 --dry-run {tomo_out}/product/merged_v042.nc"
+      - "{mpy} workflow/10_tomography/b2_merge.py --product product_v042nf --dry-run {tomo_out}/noise/merged_v042nf.nc"
+      - "{mpy} workflow/10_tomography/b2_model_v042.py nodes"
+      - "{py} workflow/10_tomography/b2_v042_analyse.py"
+    notes: >-
+      Each script resumes through its own done-checks. The v0.4.2 sequence was run by hand (build_inputs.sh in
+      {tomo_out} and the tile logs); the commands above are that sequence with the committed scripts.
+
+  - id: tomo_register
+    kind: gated
+    decisions: [D-B047, D-B099, D-B104]
+    code: [workflow/10_tomography/b2_model_export.py]
+    inputs: ["{wd1}/tomo_v1/models/staging_v0.4.2/cascadia_obs_tomo"]
+    outputs: ["{model_nc}", "{store}/v{model}.provenance.json", "{store}/v{model}_surface_lattice.nc"]
+    runtime: "minutes"
+    resources: "registry lock (append-only)"
+    commands:
+      - |
+        # the PI's session copies the staging files into the store and appends the registry row (append-only,
+        # read-back checked): data/tomo_v1/models/registry.csv and {store}/registry.csv
+        ls {wd1}/tomo_v1/models/staging_v0.4.2/cascadia_obs_tomo
+
+  - id: tomo_ensemble
+    kind: run
+    decisions: [D-B030, D-B032, D-B054, D-B094, D-B099]
+    code: [workflow/10_tomography/b2_ens_run.py, workflow/10_tomography/b2_ens_member.py,
+           workflow/10_tomography/b2_ens_synth.py, workflow/10_tomography/b2_ens_coverage.py,
+           workflow/10_tomography/b2_ens_stats.py, workflow/10_tomography/b2_ens_inflate.py]
+    inputs: ["{model_nc}", "{wd1}/tomo_v1/src/frozen_2026-11-26_inv/bin"]
+    outputs: ["{ens_root}/products/ensemble_real_0.4.2+ens.100_dryrun.nc", "{ens_root}/synth/coverage.json"]
+    done:
+      - {state: "{ens_root}/chain.state", lines: [prep, real, stats, truth, synth, calibrate, products]}
+    env: {B2_ENS_CONFIG: "v{model}"}
+    runtime: "~8 h (100 real + 105 synthetic members)"
+    resources: "up to 64 tomoDD processes (max_procs), MemAvailable >= 30 GB"
+    commands:
+      - "{py} workflow/10_tomography/b2_ens_run.py chain"
+
+  - id: ens_register
+    kind: gated
+    decisions: [D-B047, D-B094, D-B099]
+    code: [workflow/10_tomography/b2_ens_stats.py]
+    inputs: ["{ens_root}/products/ensemble_real_0.4.2+ens.100_dryrun.nc"]
+    outputs: ["{ens_nc}"]
+    env: {B2_ENS_CONFIG: "v{model}", B2_ENS_REGISTER: "1"}
+    runtime: "minutes"
+    resources: "registry lock"
+    commands:
+      - "{py} workflow/10_tomography/b2_ens_stats.py products real"
+
+  # ------------------------------------------------------------------ inputs of the relocation on the model
+  - id: cc_dt
+    kind: run
+    decisions: [D-B040, D-B078, D-B084, D-B093]
+    code: [workflow/10_tomography/b5_ccall_run.sh, workflow/10_tomography/b5_ccall_tasks.py,
+           workflow/10_tomography/b5_ccall_snippets.py, workflow/10_tomography/b5_ccall_ncedc.py,
+           workflow/10_tomography/b5_ccall_measure.py, workflow/10_tomography/b5_ccall_write.py,
+           workflow/10_tomography/b5_ccall_clock.py, workflow/10_tomography/b5_ccall_final.py,
+           workflow/10_tomography/b5_ccall_common.py]
+    inputs: ["{picks_v41tc}", "{wd1}/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+             "{repo}/data/catalog_v5/v5.1_analysis/clusters/families_zbz_v51.csv",
+             "{wd1}/catalog_v5/v5.1_analysis/clusters/events_zbz_v51.csv.gz"]
+    outputs: ["{wd1}/tomo_v1/cc_dt_all/pair_coherence.parquet"]
+    done:
+      - {json: "{wd1}/tomo_v1/cc_dt_all/state/final.json", key: done, value: true}
+    env: {CCALL_OUT: "{wd1}/tomo_v1/cc_dt_all"}
+    runtime: "~7 h (snippets and NCEDC reads dominate)"
+    resources: "24-48 I/O workers; pnwstore and NCEDC waveforms"
+    commands:
+      - "STAGES=tasks bash workflow/10_tomography/b5_ccall_run.sh"
+      - "(STAGES=snippets bash workflow/10_tomography/b5_ccall_run.sh & STAGES=ncedc bash workflow/10_tomography/b5_ccall_run.sh & wait)"
+      - "STAGES='measure write clock final' bash workflow/10_tomography/b5_ccall_run.sh"
+    notes: >-
+      Computed once on the v5.1 families (2,097) and reused by every v6.x relocation; a version with new families or
+      new clock epochs (straddles_clock_epoch) needs a new CCALL_OUT.
+
+  - id: event_flags
+    kind: run
+    decisions: [D-B108]
+    code: [workflow/10_tomography/msh_flags/run.sh, workflow/10_tomography/msh_flags/maf_common.py,
+           workflow/10_tomography/msh_flags/maf_score.py, workflow/10_tomography/msh_flags/RULE.md]
+    inputs: ["{prev_catalog}", "{picks_v41tc}"]
+    outputs: ["{event_flags}", "{wd1}/reloc_v61/flags/msh_analog_candidates.csv", "{wd1}/reloc_v61/flags/msh_analog_flags.html"]
+    runtime: "~1.5 h (continuous-data scan)"
+    resources: "6 processes; pnwstore continuous data of HSR, EDM, STD"
+    commands:
+      - "bash workflow/10_tomography/msh_flags/run.sh"
+    notes: >-
+      maf_common.py writes to /wd1/mdenolle_data/reloc_v61/flags and reads catalog v6.0: a v6.2 run needs those two
+      paths as parameters (gap).
+
+  # ------------------------------------------------------------------ relocation on the model (b4_v6_relocate.sh)
+  - id: relocation
+    kind: run
+    decisions: [D-B052, D-B055, D-B067, D-B068, D-B073, D-B079, D-B084, D-B092, D-B095, D-B098, D-B103, D-B104, D-B108]
+    code: [workflow/10_tomography/b4_v6_relocate.sh, workflow/10_tomography/b4_time_grids.py,
+           workflow/10_tomography/b4_wide_grids.py, workflow/10_tomography/b4_v6_reloc.py,
+           workflow/10_tomography/b4_v6_catalog.py, workflow/10_tomography/b4_v6_heldout.py,
+           workflow/08_relocation/a2_make_obs.py, workflow/08_relocation/a2_station_terms.py]
+    inputs: ["{model_nc}", {path: "{picks_v41tc}", md5: 1b21ab1c2cf5aba8b48c64a58fc37356}, "{events_v41}",
+             "{wd1}/reloc_v5/topo/topo_15s_cons_merged_eft.bin", "{wd1}/reloc_v5/model_vpvs176/stations_GTSRCE.in",
+             "{event_flags}", "{wd1}/reloc_v6/heldout/coh_rule_check.json", "{wd1}/tomo_v1/cc_dt_all/pair_coherence.parquet",
+             "{wd1}/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"]
+    outputs: ["{reloc_root}/catalog/catalog_b4_v{catver}_hypo.csv", "{reloc_root}/grids_time_v6_v{model}.md5"]
+    done:
+      - {state: "{reloc_root}/b4_v6_relocate.state",
+         lines: [surface, grids, wide, manifest, gridcheck, obs, smoke, heldout, plan, iter0, ssst9999, ssst16, ccwait,
+                 coherence, terms, deep, catalog]}
+    env: &b4env
+      VERSION: "{model}"
+      CATVER: "{catver}"
+      V6_ROOT: "{reloc_root}"
+      V6_SCHEDULE: "{v6_schedule}"
+      PUBLISH_BRANCH: reloc/v61
+      NPROC_GRID: "48"
+      V6_EVENT_FLAGS: "{event_flags}"
+      STOP_AFTER: catalog
+    runtime: "grids 1.5 h + wide 1 h + NLLoc passes ~4 h"
+    resources: "48-84 grid processes, 64-110 NLLoc processes (control/nproc), ~225 GB of grids, MemAvailable >= 40 GB"
+    commands:
+      - "bash workflow/10_tomography/b4_v6_relocate.sh 9>&-"
+
+  - id: magnitudes
+    kind: run
+    decisions: [D-B091, D-B102, D-B105]
+    code: [scale/run_magnitude_v51.sh, workflow/05_magnitude/v51_build_arrivals.py,
+           workflow/05_magnitude/route_a_day_amplitudes.py, workflow/05_magnitude/route_a_build_dataset.py,
+           workflow/05_magnitude/phase3_route_b_relative_magnitude.py, workflow/05_magnitude/phase2_anchor_comcat_ml.py,
+           workflow/05_magnitude/phase16_calibrate_magnitude.py, workflow/05_magnitude/phase18_moment_tensor_match.py,
+           workflow/05_magnitude/phase19_preferred_magnitude.py, workflow/05_magnitude/phase19_solver.py,
+           workflow/05_magnitude/v51_magnitude_table.py]
+    inputs: ["{wd1}/amps_v6_all", "{main}/data/magnitude_v4/anss_2010-16.csv",
+             "{wd1}/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv"]
+    outputs: ["{mag_dir}/cascadia_catalog_v{catver}_magnitudes_converged.csv", "{reloc_root}/catalog/catalog_b4_v{catver}.csv"]
+    done:
+      - {state: "{reloc_root}/b4_v6_relocate.state", lines: [magnitudes]}
+    env:
+      <<: *b4env
+      STOP_AFTER: magnitudes
+    runtime: "~25 min"
+    resources: "12 BLAS threads; Route A amplitudes amps_v6_all (not re-measured)"
+    commands:
+      - "bash workflow/10_tomography/b4_v6_relocate.sh 9>&-"
+    notes: >-
+      Stage magnitudes of b4_v6_relocate.sh: scale/run_magnitude_v51.sh on the catalog's own hypocentres, phase19
+      --solver exact (converged), v51_magnitude_table.py, catalog rebuilt with magnitude_source v6.1_converged and
+      checked equal outside the magnitude columns.
+
+  - id: reloc_acceptance
+    kind: run
+    decisions: [D-B055, D-B096, D-B103, D-B085]
+    code: [workflow/10_tomography/b4_lit_paired.py, workflow/10_tomography/b4_v6_heldout.py,
+           workflow/10_tomography/b4_v6_acceptance.py]
+    inputs: ["{wd1}/tomo_v1/depth_literature/pairs", "{wd1}/reloc_v6/heldout"]
+    outputs: ["{reloc_root}/catalog/acceptance_v{catver}.html"]
+    done:
+      - {state: "{reloc_root}/b4_v6_relocate.state", lines: [acceptance]}
+    env:
+      <<: *b4env
+      STOP_AFTER: acceptance
+    runtime: "~1 h (held-out scoring runs beside the passes)"
+    resources: "6 held-out processes"
+    commands:
+      - "bash workflow/10_tomography/b4_v6_relocate.sh 9>&-"
+
+  - id: reloc_publish
+    kind: gated
+    decisions: [D-B085]
+    code: [workflow/10_tomography/b4_v6_relocate.sh]
+    outputs: ["{wd1}/tomo_v1/b4_v{catver}.DONE", "{repo}/data/tomo_v1/b4/v{catver}/acceptance.html"]
+    done:
+      - {state: "{reloc_root}/b4_v6_relocate.state", lines: [publish]}
+    env:
+      <<: *b4env
+      STOP_AFTER: publish
+    runtime: "1 min"
+    resources: "git commit + push to PUBLISH_BRANCH"
+    commands:
+      - "bash workflow/10_tomography/b4_v6_relocate.sh 9>&-"
+
+  - id: catalog_bundle
+    kind: gated
+    decisions: [D-B058, D-B080, D-B100, D-B085, D-B101]
+    code: [workflow/10_tomography/catalog_version.py, workflow/10_tomography/params.yaml]
+    inputs: ["{reloc_root}/catalog/catalog_b4_v{catver}.csv", "{mag_dir}/cascadia_catalog_v{catver}_magnitudes_converged.csv"]
+    outputs: ["{catalog}", "{wd1}/catalog_v6/v{catver}/MD5SUMS", "{repo}/data/catalog_v6/v{catver}/catalog_v{catver}.manifest.json"]
+    done:
+      - {md5: "{catalog_md5}", path: "{catalog}"}
+    runtime: "~5 min"
+    resources: "1 process"
+    commands:
+      - |
+        # params: catalog_versions.versions."{catver}" (b4_catalog, terms_file, model, magnitude_tables, picks_file +
+        # picks_md5, extra_files, columns_from, method_notes, known_limits); a new magnitude table is one entry of
+        # catalog_versions.magnitude_table_files (path, md5, key, label; PR #64), listed in the version's magnitude_tables
+        cd workflow/10_tomography && {py} catalog_version.py {catver} --test {out_root}/_bundle_test
+      - "# compare {out_root}/_bundle_test with the previous version's CSV for columns that should not change, then:"
+      - "cd workflow/10_tomography && {py} catalog_version.py {catver}"
+      - "cd {wd1}/catalog_v6/v{catver} && md5sum -c MD5SUMS"
+    notes: >-
+      Built-in gates of catalog_version.py: SystemExit integrity checks, an unknown magnitude_source label stops the
+      build, above_surface > 0 means not publishable. The Zenodo upload is stage zenodo_upload (manual).
+
+  # ------------------------------------------------------------------ analysis of the catalog (cheap stages)
+  - id: mc_b
+    kind: run
+    decisions: [D-B091, D-B104, D-B105]
+    code: [workflow/06_analysis/v4_mc_maps.py]
+    inputs: [{path: "{catalog}", md5: "{catalog_md5}"}, "{picks_bundle}"]
+    outputs: ["{out_root}/mc_maps/mc_grid.csv", "{out_root}/mc_maps/mc_regional.csv", "{out_root}/mc_maps/run_params.json"]
+    runtime: "~10 min at 8 processes"
+    resources: "nproc processes"
+    commands:
+      - "{py} workflow/06_analysis/v4_mc_maps.py --stage compute --nproc {nproc} --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --out {out_root}/mc_maps"
+    notes: >-
+      Mc (MAXC+0.2, MBS, GFT90/95, best) and b (Aki-Utsu, Shi-Bolt) per 0.1 deg node and per region box, events
+      flagged as not earthquakes left out (event_flag, including analog_test_signal). Figures in stage clustering
+      (fig4 draws the clustering Mc).
+
+  - id: clustering
+    kind: run
+    decisions: [D-B091, D-B104, D-B106, D-B109]
+    code: [workflow/06_analysis/v51_clusters_zbz.py, workflow/06_analysis/v4_clusters_zbz.py, workflow/06_analysis/v4_mc_maps.py]
+    inputs: ["{catalog}", "{out_root}/mc_maps/mc_regional.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/events_zbz_v60.csv.gz",
+             "{wd1}/catalog_v5/v5.1_review/review_v51_events.csv"]
+    outputs: ["{out_root}/clusters/events_zbz_{tag}.csv.gz", "{out_root}/clusters/families_zbz_{tag}.csv",
+              "{out_root}/clusters/completeness_b_df.csv", "{out_root}/clusters/null_test_summary.csv",
+              "{out_root}/mc_maps/fig4_regional_fmd.png"]
+    runtime: "~15 min at 8 workers"
+    resources: "nproc workers"
+    commands:
+      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps main,shuffle,variants,nulls,checks,compare --workers {nproc} --out {out_root}/clusters --big {out_root}/clusters --mcb {out_root}/mc_maps/mc_regional.csv"
+      - "{py} workflow/06_analysis/v4_mc_maps.py --stage plot --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --zbz {out_root}/clusters/completeness_b_df.csv --out {out_root}/mc_maps"
+    notes: >-
+      Families, background / mainshock-aftershock / swarm / multiplet classes per region above the regional Mc,
+      sensitivity variants, null tests, comparison with v6.0 (primary) and v4.1. The fault join is in stage faults.
+
+  - id: swarms
+    kind: run
+    decisions: [D-B106, D-B109]
+    code: [workflow/06_analysis/v51_swarms.py, workflow/06_analysis/v4_swarms.py]
+    inputs: ["{out_root}/clusters/families_zbz_{tag}.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/dbscan_members_v60.csv"]
+    outputs: ["{out_root}/clusters/dbscan_clusters_{tag}.csv", "{out_root}/clusters/dbscan_members_{tag}.csv"]
+    runtime: "~3 min"
+    resources: "1 process"
+    commands:
+      - "{py} workflow/06_analysis/v51_swarms.py --catalog v{catver} --out {out_root}/clusters --big {out_root}/clusters"
+
+  - id: faults
+    kind: run
+    decisions: [D-B109]
+    code: [workflow/07_faults/v1_common.py, workflow/07_faults/v1_detect.py, workflow/07_faults/v1_recovery.py,
+           workflow/07_faults/v1_build.py, workflow/07_faults/fault_surfaces_planes.py, workflow/07_faults/split_strands.py,
+           workflow/06_analysis/v51_clusters_zbz.py]
+    inputs: ["{catalog}", "{repo}/data/faults/v0/fault_surfaces_v0_members.csv", "{out_root}/clusters/families_zbz_{tag}.csv"]
+    outputs: ["{out_root}/faults/fault_surfaces_v1_summary.csv", "{out_root}/faults/fault_surfaces_v1_assignment.csv.gz",
+              "{out_root}/faults/fault_surfaces_v1_members.csv", "{out_root}/faults/big/fault_surfaces_v1_vertices.csv.gz",
+              "{out_root}/clusters/faults_v1_cluster_counts.csv"]
+    env:
+      FAULTS_V1_CATALOG: "{catalog}"
+      FAULTS_V1_OUT: "{out_root}/faults"
+      FAULTS_V1_BIG: "{out_root}/faults/big"
+      FAULTS_V1_LABEL: "Cascadia catalog v{catver}"
+    runtime: "~15 min (detection 5 min, recovery reruns 4 min, build 6 min)"
+    resources: "5 + 3 processes, then nproc"
+    commands:
+      - "{py} workflow/07_faults/v1_detect.py --procs 5"
+      - "{py} workflow/07_faults/v1_recovery.py --procs 3"
+      - "{py} workflow/07_faults/v1_build.py --procs {nproc}"
+      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps faults --workers {nproc} --out {out_root}/clusters --big {out_root}/clusters --mcb {out_root}/mc_maps/mc_regional.csv --faults {out_root}/faults"
+    notes: >-
+      Fault surfaces v1 (v0 detection, dip rule after reassignment, Blanco strands, location-error Monte Carlo,
+      screening, stability, assignment, comparison with v0 and its literature matches) refit on this catalog (D-B109),
+      then joined to the clusters (faults_v1_cluster_counts.csv). v1_report.py is not run: its text is written for v5.1.
+
+  - id: structure
+    kind: run
+    decisions: [D-B018, D-B049, D-B051, D-B099, D-B107, D-B109]
+    code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_structure.py, workflow/11_paper_plan/pb_struct_seis.py]
+    requires: [{branch: analysis/plate-boundaries, pr: "no PR (merged into pipeline/end-to-end)"}]
+    inputs: ["{model_nc}", "{ens_nc}", "{ens_root}/real", "{repo}/data/tectonics/PB2002_steps.json",
+             "{main}/data/slab2/cas_slab2_dep.xyz", "{out_root}/faults/fault_surfaces_v1_summary.csv",
+             "{out_root}/clusters/families_zbz_{tag}.csv"]
+    outputs: ["{out_root}/plate_boundaries/structure_feasibility.csv", "{out_root}/plate_boundaries/structure_contrasts.csv",
+              "{out_root}/plate_boundaries/depth_vs_level.csv", "{out_root}/plate_boundaries/swarm_vs_ma.csv",
+              "{out_root}/plate_boundaries/big/events_segments_{tag}.parquet"]
+    env: &pbenv
+      PB_CATALOG: "{catalog}"
+      PB_TAG: "{tag}"
+      PB_LABEL: "v{catver}"
+      PB_CLUSTERS: "{out_root}/clusters"
+      PB_MCMAP: "{out_root}/mc_maps"
+      PB_FAULTS: "{out_root}/faults"
+      PB_FAULTS_BIG: "{out_root}/faults/big"
+      PB_MODEL: "{model_nc}"
+      PB_ENS: "{ens_nc}"
+      PB_MEMBERS: "{ens_root}/real"
+      PB_OUT: "{out_root}/plate_boundaries"
+      PB_BIG: "{out_root}/plate_boundaries/big"
+    runtime: "~10 min"
+    resources: "1 process, ~10 GB (100 member grids)"
+    commands:
+      - "{py} workflow/11_paper_plan/pb_structure.py"
+      - "{py} workflow/11_paper_plan/pb_struct_seis.py"
+    notes: >-
+      Per plate-boundary segment: resolved nodes near the faults, depth-matched contrasts against the calibrated
+      ensemble 1 sigma (Vp x1.50, Vs x1.35), seismicity bottom against the 7.5 / 8 km/s levels, swarm against
+      mainshock-aftershock families on resolved nodes. The legacy v5.1 analysis (v51_struct*.py, model v0.3.1) is
+      not part of the chain.
+
+  - id: validation
+    kind: run
+    decisions: [D-B055, D-B071, D-B103, D-B085]
+    code: [workflow/11_compare/compare_catalogs.py, workflow/10_tomography/b4_lit_paired.py,
+           workflow/pipeline/configs/catalogs_v6.1.yaml]
+    inputs: ["{catalog}", "{prev_catalog}", "{events_v41}", "{main}/data/magnitude_v4/anss_2010-16.csv",
+             "{repo}/data/faults/v0/fault_surfaces_v0_members.csv", "{wd1}/tomo_v1/depth_literature/pairs",
+             "{wd1}/picks_share/stations/stations_ver5_v6.csv"]
+    outputs: ["{out_root}/validation/catalog_compare/summary.csv", "{out_root}/validation/catalog_compare/anss.csv",
+              "{out_root}/validation/catalog_compare/faults_summary.csv",
+              "{out_root}/validation/depth_literature/paired_v{catver}.md"]
+    runtime: "~10 min"
+    resources: "1 process"
+    commands:
+      - "{py} workflow/11_compare/compare_catalogs.py --registry workflow/pipeline/configs/catalogs_v6.1.yaml --out {out_root}/validation/catalog_compare --big {out_root}/validation/catalog_compare/big"
+      - "{py} workflow/10_tomography/b4_lit_paired.py --out {out_root}/validation/depth_literature v{catver}={catalog} v6.0={prev_catalog} v5.1={wd1}/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+    notes: >-
+      ComCat (ANSS 2010-2016) offsets and depth differences per region, above-surface share, shifts from v4.1 and
+      v6.0, plane-fit thickness of the v0 fault surfaces in each catalog; event-paired depths against Hirao et al.
+      (2025, Mount St Helens) and Lange et al. (2026, Blanco). Magnitudes against ComCat: stage magnitudes (phase2
+      anchors, phase16 calibration, phase18 moment tensors). Fault surfaces against published faults: stage faults
+      (literature matches carried from v0, new surfaces listed for a check).
+
+  - id: plate_boundaries
+    kind: run
+    decisions: [D-B107, D-B109]
+    code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_seismicity.py,
+           workflow/11_paper_plan/pb_sensitivity.py, workflow/11_paper_plan/pb_figures.py]
+    requires: [{branch: analysis/plate-boundaries, pr: "no PR (merged into pipeline/end-to-end)"}]
+    inputs: ["{out_root}/plate_boundaries/big/events_segments_{tag}.parquet", "{out_root}/mc_maps/mc_grid.csv",
+             "{out_root}/clusters/dbscan_clusters_{tag}.csv"]
+    outputs: ["{out_root}/plate_boundaries/seismicity_metrics.csv", "{out_root}/plate_boundaries/segment_rule_sensitivity.csv",
+              "{out_root}/plate_boundaries/big/figures/fig_fingerprint.png"]
+    env: *pbenv
+    runtime: "~10 min"
+    resources: "1 process"
+    commands:
+      - "{py} workflow/11_paper_plan/pb_seismicity.py"
+      - "{py} workflow/11_paper_plan/pb_sensitivity.py"
+      - "{py} workflow/11_paper_plan/pb_figures.py"
+    notes: >-
+      19 segments by boundary type (ridge, transform, intraplate, triple junction, subduction, crustal, arc): counts,
+      Mc and b, clustering shares, migrating swarms, depth extent, fault-surface geometry, with bootstrap intervals.
+      pb_page.py is not run: its text is written for the v6.0 feasibility study.
+
+  # ------------------------------------------------------------------ products (gated / manual)
+  - id: atlas
+    kind: gated
+    decisions: [D-B080, D-B104, D-B105]
+    code: [workflow/06_analysis/build_v4_atlas.py, workflow/06_analysis/atlas_template.html,
+           workflow/06_analysis/atlas_check.js, workflow/11_compare/catalogs.yaml, workflow/11_compare/compare_catalogs.py]
+    inputs: ["{catalog}", "{model_nc}", "{out_root}/mc_maps/mc_grid.csv", "{out_root}/clusters/families_zbz_{tag}.csv"]
+    outputs: ["{out_root}/atlas/cascadia_atlas.html"]
+    runtime: "~10 min"
+    resources: "1 process; Playwright + Chromium env for the check"
+    commands:
+      - |
+        # 1. (by hand, git) workflow/11_compare/catalogs.yaml: entry id v{catver}, file {catalog}, atlas: true,
+        #    own_surface: true (atlas_relocated / atlas_moves_from if it becomes the headline catalog)
+        grep -q "id: v{catver}$" workflow/11_compare/catalogs.yaml
+      - "{py} workflow/11_compare/compare_catalogs.py --only v{catver}"
+      - "mkdir -p {out_root}/atlas && {py} workflow/06_analysis/build_v4_atlas.py --model {model_nc} --mc-cat v{catver}={out_root}/mc_maps --clusters {out_root}/clusters --clusters-catalog v{catver} --out {out_root}/atlas/cascadia_atlas.html"
+      - |
+        NE=$HOME/.cache/rattler/cache/cached-envs-v0/55304966f11fb1c1
+        LD_LIBRARY_PATH=$NE/lib PW=$NE/lib/node_modules/playwright PAGE={out_root}/atlas/cascadia_atlas.html $NE/bin/node workflow/06_analysis/atlas_check.js
+    notes: >-
+      compare_catalogs.py --only writes the shared common table /wd1/mdenolle_data/catalog_compare/v{catver}.parquet
+      and data/catalog_compare/ (git). atlas_check.js exits 1 on a page or console error or a count mismatch (EXPECT:
+      JSON of the events with M >= 2.0 per catalog view).
+
+  - id: atlas_deploy
+    kind: manual
+    decisions: [D-B104]
+    commands:
+      - "# copy {out_root}/atlas/cascadia_atlas.html to the gh-pages branch (worktree of gh-pages), commit, push; only with the PI's go"
+
+  - id: zenodo_upload
+    kind: manual
+    decisions: [D-B085, D-B101]
+    code: [utils/zenodo_picks_draft.py]
+    commands:
+      - "# only with the PI's go (the draft stays private): {py} utils/zenodo_picks_draft.py upload 23084158 {wd1}/catalog_v6/catalog_v6.zip"
+      - "# then append a row to data/catalog_v6/zenodo_uploads.csv"

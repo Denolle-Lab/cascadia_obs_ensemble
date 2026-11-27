@@ -521,8 +521,11 @@ def build(df, ctab, variant, a, thr_override=None, shuffle_seed=None, null="regi
             migrating=bool(np.isfinite(rho) and rho >= 0.5 and p < 0.01 and v > 0)))
     fam = pd.DataFrame(fam_rows)
     if shuffle_seed is not None:
+        # event_id / family_id: family membership of the shuffled catalog (analysis set), for per-unit null shares
+        # (workflow/11_paper_plan/q1_recluster.py); the other keys are unchanged
         return dict(log_eta=o[:, 0], log_T=o[:, 1], log_R=o[:, 2], region=reg, below=below, linked=linked,
-                    fam=fam, n_in_family=pd.Series(reg[fid > 0]).value_counts())
+                    fam=fam, n_in_family=pd.Series(reg[fid > 0]).value_counts(),
+                    event_id=A.event_id.values, family_id=fid)
     ev = pd.DataFrame(dict(
         event_id=A.event_id.values, region=reg, in_analysis=True, M=m,
         parent_id=np.where(par >= 0, A.event_id.values[np.maximum(par, 0)], -1),

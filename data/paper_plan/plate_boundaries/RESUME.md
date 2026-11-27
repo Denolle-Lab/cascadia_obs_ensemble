@@ -15,8 +15,50 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   raw member sigma (median ratio 0.97); S95 median 0.90 of 2 sigma_ens; noise-floor clone sd <= 0.0024. Null truth not
   possible with the existing synthetic set (one truth carrying the v0.4.2 contrasts); cost estimate ~2.1
   process-hours per member. Table circularity_contrasts.csv; page section 3.
-- Next: rerun everything on catalog v6.1 when the coordinator sends the paths of its clusters, Mc maps and fault
-  surfaces (D-B111); pb_common.CAT, CLU, MCMAP, FLT/FLT_BIG are the places to change.
+- Fri Nov 27 10:11:44 PST 2026: task A (D-B112) done. Merged origin/pipeline/end-to-end (f21e87c6, PB_* variables). Ran every pb_*
+  step on catalog v6.1 with workflow/11_paper_plan/run_v61.sh -> /wd1/mdenolle_data/paper_plan/v6.1/ (page
+  plate_boundaries_plan.html, figures, tables/; small tables copied to data/paper_plan/plate_boundaries_v6.1/). All 7
+  result tables byte-identical to the pipeline scratch run (/wd1/mdenolle_data/pipeline_smoke/v6.1_pb). 105 contrasts,
+  32 >= 2 sigma_ens, 31 survive the D-B111 rule. Mount St Helens swarm share 38 -> 28 %: not the analog flags
+  (v6.0 without them 38.4 %); family 144 retyped mainshock-aftershock, 13 swarm events to tier D, two 2014-15
+  families split (pb_swarm_change.py, swarm_change_MSH_v60_v61.csv). pb_page.py made catalog-aware (v6.0 defaults
+  unchanged in substance).
+- 2026-11-27 10:13:48 PST: null-truth rule pre-registered (commit 6d45ad98, section below).
+- 2026-11-27 10:14-10:16: pb_structure.py saves segment_node_dist.npz (tables unchanged); pb_null_truth.py built the
+  null truth in /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null (prior/ copied from ensemble_v0.4.2, read only there;
+  109,661 rock nodes set to zone layer means; median |dVp| 0.23 km/s, p95 0.85) and its synthetic data (5 x
+  tomoDD-SE_syn, frozen binaries; synthetic minus real MAD 0.44-0.65 s, calibration truth 0.35-0.52 s).
+- 2026-11-27 10:17:03: null members s000-s019 launched detached (pb_null_run.py: b2_ens_run scheduler, 6 tomoDD
+  processes, nice 10, MemAvailable throttle 40 GB; draws identical to the calibration members of the same name,
+  checked on s000). Expected about 7 h (2.1 process-hours per member). When all have merged, pb_null_run.py runs
+  pb_null_score.py on v6.1 (writes /wd1/mdenolle_data/paper_plan/v6.1/tables/null_truth_contrasts.csv and
+  figures/fig_null.png; no commit).
+- Fri Nov 27 10:19:31 PST 2026: code committed; v6.1 page shows "null truth not yet scored".
+- 2026-11-27 10:31:52: first null M0 stages done (s000, s002, s005: ok, 14.8 min; M0 residuals close to the
+  calibration member s000); tiles started. Expected end about 17:00-17:30 PST.
+- Fri Nov 27 13:26:13 PST 2026: D-B113 (PI 13:13): southern Gorda Ridge seismicity was in GP because PB2002 lies 10-20 km west of
+  the axial valley. pb_axes.py re-picks the spreading axes and the Mendocino transform from the D-B068 merged surface
+  (GMRT where available); a section's PB2002 trace is replaced only where its 15 km buffer misses >= 10 % of the
+  nearby tier A-C earthquakes and a bathymetric candidate keeps >= 10 points more within 15 km (median distance not
+  larger). Chosen: axial valley for the southern Gorda Ridge (OSR00, OSR01: 40.45-41.6 N), axial high for JdF 46.4-47.7 N
+  (OSR05); PB2002 elsewhere, Mendocino transform included (base-of-slope pick 71 % vs 66 % within 15 km). Buffer 15 km.
+  plate_axes_v1.csv, plate_axes_v1_evaluation.csv here; pb_common PB_AXES (gmrt default, pb2002 = old). v6.1 rerun
+  (run_v61.sh, now with pb_axes and pb_axes_compare): 1,280 tier A-C earthquakes move (GP->GR 1,046, JP->JR 228,
+  MFZ->GR 3, GR->GP 2, EXR->SOV 1); 33 contrasts >= 2 sigma, 32 survive D-B111. Old v6.1 tables kept in
+  /wd1/mdenolle_data/paper_plan/v6.1/tables_pb2002_axes; changes in axes_changed_metrics.csv, axes_changed_contrasts.csv.
+  The v6.0 tables in data/paper_plan/plate_boundaries/ were built with PB2002: rebuild them with PB_AXES=pb2002.
+- Null truth and D-B113: the null zones were built on the PB2002 segments; reconstructed exactly (null_zones.npz in the
+  null root's synth/truth/: 270 zone-layers constant, 109,661 nodes). The null members are scored on the NEW node sets
+  (pb_null_score.py lists the zones of each contrast). Check (null_zone_check.csv): with old or new node sets only about
+  half of a contrast's nodes lie in its own null zone (median 0.53 / 0.52) and the null truth keeps zone-boundary
+  contrasts (median |D0_truth| 0.034 / 0.037 km/s); the rule (recovered - truth) still measures recovery error, but only
+  single-zone contrasts are true null tests. D-B113 is material for GR only: its node sets reach into the old GP zone
+  (own-zone share 0.59-0.71 -> 0.45-0.56; truth contrast Vp along -0.07 -> -0.29 km/s); GP, MFZ, JR barely change.
+- To resume: log /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/run.log; status: B2_ENS_CONFIG=v0.4.2
+  B2_ENS_ROOT=/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null python workflow/10_tomography/b2_ens_run.py status;
+  relaunch (resumes) with the pb_null_run.py command in its docstring. After scoring: bash workflow/11_paper_plan/run_v61.sh
+  is NOT needed again; rebuild the page only (pb_page.py with the run_v61.sh environment), copy tables/null_truth_contrasts.csv
+  to data/paper_plan/plate_boundaries_v6.1/, commit, push.
 
 ## Pre-registered rule: circularity control of the structure contrasts (written Fri Nov 27 09:38:33 PST 2026, before scoring)
 
@@ -41,3 +83,27 @@ For each contrast k:
    along-strike contrast needs new synthetic inversions; if the existing members do not allow it, this is stated, not
    approximated.
 7. The rule is not changed after the synthetic results are seen; any other threshold is reported as a variant only.
+
+## Pre-registered rule: null-truth control of the structure contrasts (D-B112; written Fri Nov 27 10:13:48 PST 2026, before the null truth is built or scored)
+
+Null truth T0 (root /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null; never ensemble_v0.4.2): the calibration truth
+(v0.4.2 tomography x (1 + f), the same random-field draw, truth_seed 100000) with, for each of the 15 segments that have
+contrasts on catalog v6.1 (resolved or marginal: JR, GR, BL, MFZ, GP, MTJ, GS, FA, SIF, IS, PU, MSH, CAS, OC, NAPA),
+every rock node (v0.4.2 medium = 0) within 45 km (3-D, the same reference sets as the contrasts: the segment's fault
+surfaces and seismicity) set to the mean of those nodes in its depth layer, Vp and Vs separately; a node within 45 km
+of several segments belongs to the nearest one; then the start floor Vs >= Vp / 1.65 as in the calibration truth.
+Truth hypocentres, statics, forward offsets and pick noise: the same seed as the calibration truth. Synthetic data with
+the frozen tomoDD-SE_syn binaries through b2_ens_synth.py; members s000-s019 (the same member seeds as the calibration
+members s000-s019) through M0, the four tiles and the merge (b2_ens_run.py scheduler, at most 6 tomoDD processes, nice
+10, MemAvailable kept above 40 GB).
+
+For each contrast k (v6.1 node sets, contrast_nodes.npz of /wd1/mdenolle_data/paper_plan/v6.1; depth-matched as before):
+1. D0_truth = the contrast in T0 (zero where both node sets lie in one zone; reported for every k);
+   D0_rec,i = the contrast in null member i; null spurious n_i = D0_rec,i - D0_truth; N95 = 95th percentile
+   (numpy, linear) of |n_i| over the null members.
+2. **Rule: a real v6.1 contrast is claimed only if |D_real| >= 2 sigma_ens AND |D_real| >= S95 (D-B111 rule) AND
+   |D_real| >= N95.** Fewer than 15 null members with a value, or no D0_truth: not testable, not claimed.
+3. Reported, not part of the rule: mean null spurious contrast (bias) and whether it has the sign of D_real; the variant
+   with the 95th percentile of |D0_rec,i| itself; the paired difference null minus calibration member for the same
+   member seed (s000-s019).
+4. The rule is not changed after the null results are seen; any other threshold is a reported variant only.

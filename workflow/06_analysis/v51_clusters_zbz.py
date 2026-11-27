@@ -70,6 +70,12 @@ Catalog version (--catalog; configure() sets inputs, folders and file tags):
 Run (from this folder):
     python v51_clusters_zbz.py --catalog v5.1 --mag stored --steps main,shuffle,variants,faults,nulls,checks,compare
     python v51_clusters_zbz.py --catalog v6.0 --steps main,shuffle,variants,faults,nulls,checks,compare,repo
+Later catalogs (end-to-end pipeline, D-B110): --catalog v6.1 runs the v6.0 recipe on catalog v6.1 (magnitudes and
+event_flag of the catalog; analog_test_signal is a flag, so those events are not earthquakes here), compared with v6.0
+(primary) and v4.1 (converged M). --mcb names the Mc map table of the catalog's own hypocentres (v4_mc_maps.py
+--catalog, mc_regional.csv) for variant mc_best, and --faults a folder holding the fault surfaces v1 of the catalog
+(fault_surfaces_v1_assignment.csv.gz, fault_surfaces_v1_summary.csv) for step faults, instead of the v5.1 surfaces
+read from git. Without these options v5.1 and v6.0 run exactly as before.
 """
 from __future__ import annotations
 
@@ -105,6 +111,10 @@ CATALOGS = {
                  out="data/catalog_v5/v5.1_analysis/clusters", big=WD1 / "catalog_v5/v5.1_analysis/clusters"),
     "v6.0": dict(tag="v60", csv=WD1 / "catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
                  out=None, big=WD1 / "catalog_v6/v6.0_analysis/clusters"),
+    # pipeline (D-B110): the v6.0 recipe, compared with v6.0 and v4.1; Mc_best from its own Mc maps (D-B104)
+    "v6.1": dict(tag="v61", csv=WD1 / "catalog_v6/v6.1/cascadia_catalog_v6.1.csv",
+                 out=None, big=WD1 / "catalog_v6/v6.1_analysis/clusters",
+                 mcb=WD1 / "catalog_v6/v6.1_analysis/mc_maps/mc_regional.csv", refs=["v6.0", "v4"]),
 }
 CATV = "v5.1"
 TAG = "v51"
@@ -123,6 +133,7 @@ MCB = mag_paths.mcb_v51()
 MCB_V60 = WD1 / "magnitude_converged/mc_maps_v41/mc_regional.csv"
 FAULTS_REF = "origin/main"   # fault surfaces v1 (PR #41; same blobs as origin/analysis/v51-faults 6ebe0230)
 FAULTS = "data/catalog_v5/v5.1_analysis/faults"
+FAULTS_DIR = None            # --faults: a folder with the catalog's own fault surfaces v1 (read instead of git)
 # waveform review of four v5.1 location problems (P1 Mount St Helens deep events, P2 Brookings 2012,
 # P3 tensor events, P4 deep_pass / far_only), review/v51-locations
 REVIEW = WD1 / "catalog_v5/v5.1_review/review_v51_events.csv"
@@ -145,7 +156,8 @@ VARIANTS_V60 = ["d3", "d3q", "mc+0.3", "mc_best", "df_est", "df1.3", "df2.0", "n
                 "eta0_shuf5", "tierABC", "storedM"]
 
 
-def configure(catalog: str = "v5.1", mag: str | None = None, out: str | None = None, big: str | None = None) -> None:
+def configure(catalog: str = "v5.1", mag: str | None = None, out: str | None = None, big: str | None = None,
+              mcb: str | None = None, faults: str | None = None) -> None:
     """Set the catalog version, magnitudes, output folders and file names (module globals).
 
     v5.1: magnitudes from --mag (mag_paths: converged by default, 'stored' = the committed v5.1 results). The outputs
@@ -153,8 +165,9 @@ def configure(catalog: str = "v5.1", mag: str | None = None, out: str | None = N
     '_Mconv' (or to --out / --big), so a converged run never overwrites the committed stored-magnitude results.
     v6.0: magnitudes from the catalog (--mag is refused); every output in one folder on /wd1 (OUT = BIG) so the atlas
     finds the events, families and sensitivity tables together."""
-    global CATV, TAG, CAT, MAG, MCB, OUT, BIG, EVF, FAMF, REFS, VARIANTS
+    global CATV, TAG, CAT, MAG, MCB, OUT, BIG, EVF, FAMF, REFS, VARIANTS, FAULTS_DIR
     cfg = CATALOGS[catalog]
+    FAULTS_DIR = Path(faults) if faults else None
     CATV, TAG, CAT = catalog, cfg["tag"], cfg["csv"]
     EVF, FAMF = f"events_zbz_{TAG}.csv.gz", f"families_zbz_{TAG}.csv"
     if catalog == "v5.1":
@@ -170,10 +183,23 @@ def configure(catalog: str = "v5.1", mag: str | None = None, out: str | None = N
     else:
         if mag:
             raise SystemExit("--mag: catalog v6.0 carries its magnitudes (converged, D-B091); use variant storedM")
-        MAG, MCB = CAT, str(MCB_V60)
+        MAG, MCB = CAT, str(mcb or cfg.get("mcb", MCB_V60))
         BIG = Path(big) if big else cfg["big"]
         OUT = Path(out) if out else BIG
         v51 = CATALOGS["v5.1"]
+        if "refs" in cfg:        # later catalogs (v6.1): the earlier v6.x runs (events and DBSCAN scan in one folder), v4.1
+            REFS = {}
+            for r in cfg["refs"]:
+                if r == "v4":
+                    REFS["v4"] = dict(dir=V4_CONV / "clusters_zbz", events="events_zbz.csv.gz",
+                                      families="families_zbz.csv", swarms=V4_CONV / "swarms", label="v4.1 (converged M)")
+                else:
+                    R = CATALOGS[r]
+                    REFS[R["tag"]] = dict(dir=R["big"], big=R["big"], events=f"events_zbz_{R['tag']}.csv.gz",
+                                          families=f"families_zbz_{R['tag']}.csv", swarms=R["big"],
+                                          swarms_tag=R["tag"], label=f"{r} (catalog M)")
+            VARIANTS = list(VARIANTS_V60)
+            return
         REFS = {
             "v51": dict(dir=ROOT / v51["out"], big=v51["big"], events="events_zbz_v51.csv.gz",
                         families="families_zbz_v51.csv", swarms=ROOT / v51["out"], label="v5.1 (stored M)"),
@@ -889,12 +915,15 @@ def step_faults(ev, fam):
     without floor_limited, far_only or deep_pass), as its README asks; the looser join of the first build (fit
     members plus every 'assigned' event) is kept as frac_on_faults_loose. Fractions leave out events at Axial
     Seamount, which was not fitted (NaN for families with no member in a fitted region)."""
-    asg = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_assignment.csv.gz",
-                  usecols=["event_id", "assignment", "surface_id", "on_surface_strict", "removed_surface",
-                           "catalog_note"])
-    summ = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_summary.csv",
-                   usecols=["surface_id", "region", "n_events", "strike", "dip", "kind", "stable", "flags",
-                            "change_from_v0", "v0_surfaces", "lit_match"])
+    acols = ["event_id", "assignment", "surface_id", "on_surface_strict", "removed_surface", "catalog_note"]
+    scols = ["surface_id", "region", "n_events", "strike", "dip", "kind", "stable", "flags", "change_from_v0",
+             "v0_surfaces", "lit_match"]
+    if FAULTS_DIR is not None:   # --faults: the catalog's own surfaces (pipeline, D-B110)
+        asg = pd.read_csv(FAULTS_DIR / "fault_surfaces_v1_assignment.csv.gz", usecols=acols)
+        summ = pd.read_csv(FAULTS_DIR / "fault_surfaces_v1_summary.csv", usecols=scols)
+    else:
+        asg = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_assignment.csv.gz", usecols=acols)
+        summ = git_csv(FAULTS_REF, f"{FAULTS}/fault_surfaces_v1_summary.csv", usecols=scols)
     asg["strict"] = _bool(asg.on_surface_strict)
     a2 = asg.set_index("event_id")
     on = asg[asg.strict][["event_id", "surface_id", "assignment"]]
@@ -1465,9 +1494,13 @@ def main():
     ap.add_argument("--out", default=None, help="folder of the tables (default: set by --catalog and --mag)")
     ap.add_argument("--big", default=None, help="folder of the large outputs (default: set by --catalog and --mag)")
     ap.add_argument("--force", action="store_true", help="recompute cached steps")
+    ap.add_argument("--mcb", default=None, help="v6.x: Mc map table (mc_regional.csv) for variant mc_best "
+                    "(default: the catalog's entry in CATALOGS)")
+    ap.add_argument("--faults", default=None, help="folder of the catalog's fault surfaces v1 for step faults "
+                    "(default: the v5.1 surfaces committed on origin/main)")
     mag_paths.add_argument(ap, "v5.1")
     a = ap.parse_args()
-    configure(a.catalog, a.mag, a.out, a.big)
+    configure(a.catalog, a.mag, a.out, a.big, a.mcb, a.faults)
     if a.variants is None:
         a.variants = ",".join(VARIANTS)
     print(f"catalog {CATV}: {CAT}; magnitudes: {MAG}; Mc_best: {MCB}; OUT {OUT}; BIG {BIG}; "

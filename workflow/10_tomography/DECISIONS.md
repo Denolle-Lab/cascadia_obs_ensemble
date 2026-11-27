@@ -1023,3 +1023,9 @@ converged Route A magnitudes (exact phase19 solver) on the v6.1 hypocentres as p
 values, as its README states. The v4.1 Mc maps (and so the paper's Mc figures) kept blasts and explosions; removing them
 changes 368 cells by >= 0.15 (range -1.0 to +0.7) and drops 170 cells in v6.0. PI: Mc maps exclude events flagged as not
 earthquakes (event_flag) for v4.1, v5.1 and v6.0; the paper's Mc figures and the numbers they report are regenerated.
+
+### D-B106 The paper clustering also leaves out the events flagged as not earthquakes (adopted, 2026-11-26 16:01, PI; extends D-B105)
+The Mc maps leave out the 3,298 events flagged as quarry blasts or explosions (D-B105), and the v6.0 clustering already left
+them out; the paper's v4.1 clustering (Table S5, Text S6, Figs. 5-6) still counted them. PI: same rule everywhere - rerun the
+v4.1 clustering without the flagged events, regenerate Table S5 and Figs. 5-6, and list the changed numbers as manuscript
+bullets, in the same PR as the Mc change (#59).

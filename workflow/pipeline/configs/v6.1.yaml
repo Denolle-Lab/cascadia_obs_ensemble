@@ -390,7 +390,7 @@ stages:
     code: [workflow/06_analysis/v4_mc_maps.py]
     inputs: [{path: "{catalog}", md5: "{catalog_md5}"}, "{picks_bundle}"]
     outputs: ["{mc_dir}/mc_grid.csv", "{mc_dir}/mc_regional.csv", "{mc_dir}/run_params.json"]
-    runtime: "~10 min at 8 processes"
+    runtime: "0.3 min at 7 processes (v6.1, 2026-11-27)"
     resources: "nproc processes"
     commands:
       - "{py} workflow/06_analysis/v4_mc_maps.py --stage compute --nproc {nproc} --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --out {mc_dir}"
@@ -408,7 +408,7 @@ stages:
     outputs: ["{clu_dir}/events_zbz_{tag}.csv.gz", "{clu_dir}/families_zbz_{tag}.csv",
               "{clu_dir}/completeness_b_df.csv", "{clu_dir}/null_test_summary.csv",
               "{mc_dir}/fig4_regional_fmd.png"]
-    runtime: "~15 min at 8 workers"
+    runtime: "10 min at 7 workers"
     resources: "nproc workers"
     commands:
       - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps main,shuffle,variants,nulls,checks,compare --workers {nproc} --out {clu_dir} --big {clu_dir} --mcb {mc_dir}/mc_regional.csv"
@@ -423,7 +423,7 @@ stages:
     code: [workflow/06_analysis/v51_swarms.py, workflow/06_analysis/v4_swarms.py]
     inputs: ["{clu_dir}/families_zbz_{tag}.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/dbscan_members_v60.csv"]
     outputs: ["{clu_dir}/dbscan_clusters_{tag}.csv", "{clu_dir}/dbscan_members_{tag}.csv"]
-    runtime: "~3 min"
+    runtime: "0.3 min"
     resources: "1 process"
     commands:
       - "{py} workflow/06_analysis/v51_swarms.py --catalog v{catver} --out {clu_dir} --big {clu_dir}"
@@ -443,7 +443,7 @@ stages:
       FAULTS_V1_OUT: "{flt_dir}"
       FAULTS_V1_BIG: "{flt_dir}"
       FAULTS_V1_LABEL: "Cascadia catalog v{catver}"
-    runtime: "~15 min (detection 5 min, recovery reruns 4 min, build 6 min)"
+    runtime: "11 min (detection 6 min, recovery reruns 4 min, build and join 1 min)"
     resources: "5 + 3 processes, then nproc"
     commands:
       - "{py} workflow/07_faults/v1_detect.py --procs 5"

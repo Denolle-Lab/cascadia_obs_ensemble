@@ -66,7 +66,7 @@ provenance `.../v6.1_analysis/_pipeline`.
 
 ## Stages
 
-Times are wall-clock times of the v6.0 / v6.1 runs on this machine (the analysis stages at 8 processes).
+Times are wall-clock times of the v6.0 / v6.1 runs on this machine (stages 14-20: the v6.1 run of 2026-11-27 at 7 processes).
 
 | # | stage | kind | what | runtime | decisions |
 |---|---|---|---|---|---|
@@ -84,13 +84,13 @@ Times are wall-clock times of the v6.0 / v6.1 runs on this machine (the analysis
 | 11 | reloc_acceptance | run | literature depths, held-out scores, above-surface check | ~1 h | D-B055, D-B096, D-B103, D-B085 |
 | 12 | reloc_publish | gated | relocation reports committed to the relocation branch | 1 min | D-B085 |
 | 13 | catalog_bundle | gated | version folder, README, registry row, zip | ~5 min | D-B058, D-B080, D-B100, D-B085, D-B101 |
-| 14 | mc_b | run | Mc maps and b per region | ~10 min | D-B091, D-B104, D-B105 |
-| 15 | clustering | run | nearest-neighbour clustering | ~15 min | D-B091, D-B104, D-B106, D-B109 |
-| 16 | swarms | run | swarm scan and statistics | ~3 min | D-B106, D-B109 |
-| 17 | faults | run | fault surfaces v1 refit, joined to the clusters | ~15 min | D-B109 |
-| 18 | structure | run | structure versus seismicity near the faults | ~10 min | D-B018, D-B049, D-B051, D-B099, D-B107, D-B109 |
-| 19 | validation | run | ComCat, earlier catalogs, published local catalogs | ~10 min | D-B055, D-B071, D-B103, D-B085 |
-| 20 | plate_boundaries | run | seismicity style per plate-boundary segment | ~10 min | D-B107, D-B109 |
+| 14 | mc_b | run | Mc maps and b per region | 0.3 min (compute) | D-B091, D-B104, D-B105 |
+| 15 | clustering | run | nearest-neighbour clustering | 10 min | D-B091, D-B104, D-B106, D-B109 |
+| 16 | swarms | run | swarm scan and statistics | 0.3 min | D-B106, D-B109 |
+| 17 | faults | run | fault surfaces v1 refit, joined to the clusters | 11 min | D-B109 |
+| 18 | structure | run | structure versus seismicity near the faults | ~1 min | D-B018, D-B049, D-B051, D-B099, D-B107, D-B109, D-B111 |
+| 19 | validation | run | ComCat, earlier catalogs, published local catalogs | 0.2 min | D-B055, D-B071, D-B103, D-B085 |
+| 20 | plate_boundaries | run | seismicity style per plate-boundary segment | 0.3 min | D-B107, D-B109 |
 | 21 | atlas | gated | atlas build and headless check | ~10 min | D-B080, D-B104, D-B105 |
 | 22 | atlas_deploy | manual | gh-pages | - | D-B104 |
 | 23 | zenodo_upload | manual | private draft 23084158 | - | D-B085, D-B101 |
@@ -175,8 +175,9 @@ subsample, tiers A-B, perturbed locations), Blanco strands, rectangles with loca
 assignment of every event, comparison with v0 and its literature matches; then the clustering's `faults` step joins
 the families to these surfaces.
 
-**18 structure (run).** `pb_structure.py`, `pb_struct_seis.py`: per plate-boundary segment, resolved model nodes near
-the faults, depth-matched contrasts (near/far, across, along strike) against the calibrated ensemble 1 sigma, the
+**18 structure (run).** `pb_structure.py`, `pb_circularity.py`, `pb_struct_seis.py`: per plate-boundary segment,
+resolved model nodes near the faults, depth-matched contrasts (near/far, across, along strike) against the calibrated
+ensemble 1 sigma (Vp x1.50, Vs x1.35, Vp/Vs raw, D-B111) and the circularity control on the synthetic ensemble, the
 seismicity bottom against the 7.5 and 8 km/s levels, swarm against mainshock-aftershock families on resolved nodes.
 
 **19 validation (run).** `compare_catalogs.py` with the version's registry: ComCat (ANSS 2010-2016) offsets and depth
@@ -216,7 +217,7 @@ configuration change. "main" = origin/main 9a18536f (PRs #60-#63 merged); "this 
 | clustering | v51_clusters_zbz.py | main (#56) + this branch (v6.1, --mcb, --faults) | CATALOGS entry | out_root/clusters | CATALOGS entry (3 lines) |
 | swarms | v51_swarms.py | main (#42, #56) + this branch | CATALOGS entry | out_root/clusters | as clustering |
 | faults | 07_faults/v1_*.py, v1_recovery.py | main (#41) + this branch (FAULTS_V1_*) | catalog CSV | out_root/faults | config (environment) |
-| structure | 11_paper_plan/pb_structure, pb_struct_seis | analysis/plate-boundaries (no PR), merged here + PB_* | PB_* environment | out_root/plate_boundaries | config |
+| structure | 11_paper_plan/pb_structure, pb_circularity, pb_struct_seis | analysis/plate-boundaries (no PR), merged here + PB_* | PB_* environment | out_root/plate_boundaries | config |
 | validation | 11_compare/compare_catalogs.py, b4_lit_paired.py | main (#31, #63) + this branch (--out, --big) | registry YAML | out_root/validation | config + registry file |
 | plate_boundaries | pb_seismicity, pb_sensitivity, pb_figures (pb_page: v6.0 text) | as structure | PB_* environment | out_root/plate_boundaries | config |
 | atlas | build_v4_atlas.py, atlas_template.html, atlas_check.js | main (#63) | catalogs.yaml entry, --mc-cat, --clusters-catalog | out_root/atlas | catalogs.yaml entry (by hand) |
@@ -278,6 +279,7 @@ Left (stated, not fixed here):
 * `msh_flags/maf_common.py` hard-codes the v6.1 output folder and the v6.0 catalog (a v6.2 run needs parameters).
 * The pixi env `models` lives in the worktree `wt_tomo_res` (`b2_ens_common.PY_MODELS`, `b2_ens_member.TOMO_RES`,
   `b4_v6_relocate.sh MENV`, `b2_v040_chain.MENV`); it should move to the main checkout's pixi environments.
+* `v1_build.py` flag and note texts name v5.1 (the review sets P1/P2 are v5.1 review IDs; the counts are v6.1's).
 * Report texts written for one version are not run for v6.1: `v1_report.py` (v5.1), `v60_clusters_report.py` (v6.0),
   `pb_page.py` (v6.0 feasibility study); their tables and figures are made by the stages above.
 * The legacy v5.1 structure and interpretation analyses (`v51_struct*.py`, `v51_interp*.py`) read model v0.3.1 and

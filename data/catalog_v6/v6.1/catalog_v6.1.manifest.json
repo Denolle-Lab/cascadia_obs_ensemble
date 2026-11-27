@@ -1,0 +1,235 @@
+{
+ "name": "catalog_v6.1",
+ "script": "/home/mdenolle/wt_cat/workflow/10_tomography/catalog_version.py",
+ "argv": [
+  "6.1"
+ ],
+ "utc": "2026-11-27T14:39:09.068057+00:00",
+ "git_commit": "ef9f64d7ac0321a0fbc36ef2bd6e4d9aba13eae7",
+ "git_dirty": false,
+ "params_md5": "8aab47a831f7cdac4226755fb6fb8f84",
+ "params": {
+  "version": "6.1",
+  "series": "v6",
+  "out": "/wd1/mdenolle_data/catalog_v6",
+  "b4_run": "v6.1",
+  "b4_catalog": "/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+  "terms_file": "/wd1/mdenolle_data/reloc_v61/run/v61/terms/station_terms.in",
+  "model": "0.4.2",
+  "note": "Catalog v6.1 (D-B103, D-B104, D-B108): catalog v4.1 events relocated with NonLinLoc in the merged model v0.4.2, with source-specific station terms (NLL-SSST, characteristic distances 9999 and 16 km) and waveform-coherence relocation (NLL-coherence), on the re-timed and clock-corrected picks (v4.1tc); magnitudes recomputed with these hypocentres; events NonLinLoc does not locate have no hypocentre.",
+  "surface_source": "merged",
+  "tier_u": "none",
+  "decisions": [
+   "D-B055",
+   "D-B068",
+   "D-B084",
+   "D-B090",
+   "D-B091",
+   "D-B098",
+   "D-B099",
+   "D-B103",
+   "D-B104",
+   "D-B105",
+   "D-B108"
+  ],
+  "flags": [
+   "floor_limited",
+   "far_only",
+   "deep_pass",
+   "edge_pass",
+   "five_phase",
+   "coherence_relocated",
+   "coherence_skipped_region"
+  ],
+  "magnitudes": "catalog",
+  "magnitude_tables": [
+   "v6.1",
+   "v4.1"
+  ],
+  "magnitudes_text": "Magnitudes: converged Route A preferred magnitudes (exact station-term solver, D-B091; M, M_type ML / Mw / Mw_cal) computed with the v6.1 hypocentres (D-B105; magnitude_source v6.1_converged) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres; v4.1_converged).",
+  "hypocentres_text": "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model} (velocity_models.zip in this record), with source-specific station terms and coherence relocation (below), run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone). station_terms_v{version}.in: the static terms of the first pass, used only by the deep and edge passes.",
+  "picks_file": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv",
+  "picks_md5": "1b21ab1c2cf5aba8b48c64a58fc37356",
+  "picks_note": "Picks: Cascadia_picks_catalog_v4.1tc.csv.gz in this folder, as in v6.0: the v4.1 picks re-timed on drifting channels (v4.1t, D-B072/D-B075) plus the clock-drift corrections of MH07.XD and MG07.XD (spring 2016, D-B090; columns clock_correction_s, clock_correction_sd_s, clock_epoch, clock_flag, total_correction_s). The other candidate clock epochs wait for the PI's review (v6.2, D-B108). Method: pick_timing_README.md.",
+  "extra_files": [
+   {
+    "path": "/wd1/mdenolle_data/reloc_v61/run/catalog/acceptance_v6.1.html",
+    "name": "b4_acceptance_v6.1.html"
+   },
+   {
+    "path": "/wd1/mdenolle_data/reloc_v61/flags/msh_analog_flags.html",
+    "name": "msh_analog_flags.html"
+   },
+   {
+    "path": "/wd1/mdenolle_data/reloc_v61/flags/msh_analog_candidates.csv",
+    "name": "msh_analog_candidates.csv"
+   },
+   {
+    "path": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/README.md",
+    "name": "pick_timing_README.md"
+   },
+   {
+    "path": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/confirmed_epochs.csv",
+    "name": "pick_timing_confirmed_epochs.csv"
+   }
+  ],
+  "columns_from": "6.0",
+  "columns": {
+   "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091) computed with the v6.1 hypocentres (D-B105); magnitude_source names the table",
+   "magnitude_source": "table of the magnitude columns: v6.1_converged = converged Route A table computed with the v6.1 hypocentres (D-B091, D-B105); v4.1_converged = the same with the v4 hypocentres, for events the v6.1 table has no magnitude for; empty without a magnitude",
+   "model_version": "velocity model of the travel-time grids (v0.4.2)",
+   "loc_pass": "NonLinLoc run of the hypocentre: ssst_it2 (final SSST pass), coherence, deep or edge",
+   "station_terms": "ssst (NLL-SSST, characteristic distances 9999-16 km, D-B103) or static (deep and edge passes)",
+   "ssst_char_km": "final Loc2ssst characteristic distance of the event's station terms (16 km; empty for static rows)",
+   "event_flag": "quarry_blast_likely (Texada Island box, weekday working hours) and/or anss_explosion, anss_quarry_blast, anss_other_event, anss_sonic_boom (within 3 s and 20 km of a ComCat event of that type, D-B071; a surface depth is right for these), joined with ';'; analog_test_signal: likely false event from the weekly artificial test signal on the UW analog channels HSR, EDM and STD near Mount St Helens (D-B108; evidence msh_analog_flags.html and msh_analog_candidates.csv in this folder); empty otherwise. A flag only: no event is removed"
+  },
+  "method_notes": [
+   "Model v0.4.2 (D-B099, D-B104): model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B082, D-B083) with event self-pairs removed from the inversion data and a tomoDD numerical fix. Travel-time grids as for v5.1 and v6.0: merged solid surface (D-B068), fine and wide grids, deep pass below 80 km (D-B067).",
+   "Source-specific station terms (NLL-SSST, Loc2ssst; Lomax & Savvaidis 2022): two passes, characteristic distances 9999 and 16 km (D-B103). A pre-registered depth test (Axial, Mount St Helens, western Blanco, Gorda Depression) kept only this schedule with coherence within the held-out-fit gate; v6.0's further passes at 8 and 4 km deepened events through the trade-off between station terms and depth. The deep and edge passes use the static terms of the first pass (column station_terms).",
+   "Coherence relocation (NLL-coherence, Lomax & Savvaidis 2022), as in v6.0: an event with a compact location density is relocated on its density stacked with those of its waveform-coherent neighbours (pair coherence from waveform cross-correlation, D-B040; D-B084). Not applied in the Mendocino region (D-B098; column coherence_skipped_region).",
+   "Edge pass: events rejected at a lateral face of their tile box are located again in a box centred on them (column edge_pass).",
+   "event_flag marks events that ComCat lists as explosions, quarry blasts or other non-earthquakes (D-B071) and, new in v6.1, likely false events from the weekly artificial test signal on the UW analog channels near Mount St Helens (analog_test_signal, D-B108). Flags only: no event is removed.",
+   "review_* columns: the automatic indicators of the v5.1 location review (D-B097); no reviewer verdict is applied in this version."
+  ],
+  "known_limits": [
+   "Axial depths: {axial}. The target (85 % of tier A-B events within 2 km of the seafloor) is still missed (v6.0 66 %, v5.1 81 %). Cause (D-B103): the station-term/depth trade-off and a real near-surface Vp/Vs error of the model (common S terms about -60 ms relative to P at Axial, about -150 ms at Puget). Fix path: correct the near-surface Vp/Vs of the model, then relocate. Acceptance report: b4_acceptance_v6.1.html.",
+   "Flagged events (event_flag) stay in the catalog and also fed the station terms of this run; station terms without them are a candidate for v6.2.",
+   "Deferred to v6.2 (D-B108): the other candidate station clock epochs (129, including the Axial cabled array, Dec 2014 - Jan 2015) and the location-review verdicts (1,512 events; review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km empty).",
+   "No coherence relocation in the Mendocino region (D-B098; 10,500 compact events keep their final SSST location). Provisional.",
+   "floor_limited, far_only and five_phase events have poorly constrained depths, as in v6.0 (counts above)."
+  ],
+  "v4_1_removed": [],
+  "v4_1_added": [
+   900003
+  ]
+ },
+ "inputs": [
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv",
+   "size": 86383905,
+   "mtime": "2026-11-27T09:39:48.000287+00:00",
+   "md5": "a7f1a54f79d2f3c17dca2d2b744874d1"
+  },
+  {
+   "path": "/home/mdenolle/cascadia_obs_ensemble/data/catalog_v4/Cascadia_relocated_catalog_v4.csv",
+   "size": 18155178,
+   "mtime": "2026-11-23T04:30:00.638894+00:00",
+   "md5": "722975b82ac5f3e6761c7f1f57cd346d"
+  },
+  {
+   "path": "/wd1/mdenolle_data/magnitude_converged/v6.1/cascadia_catalog_v6.1_magnitudes_converged.csv",
+   "size": 34268037,
+   "mtime": "2026-11-27T09:39:33.355371+00:00",
+   "md5": "60ee0ceb9644eb3652bba705f8bfc800"
+  },
+  {
+   "path": "/wd1/mdenolle_data/magnitude_converged/v4.1/cascadia_catalog_M_routeA_converged.csv",
+   "size": 14896031,
+   "mtime": "2026-11-25T20:18:39.736922+00:00",
+   "md5": "fb49ecc28b75432f49cf1a6e399cd90f"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/run/v61/terms/station_terms.in",
+   "size": 37150,
+   "mtime": "2026-11-27T09:24:50.038280+00:00",
+   "md5": "fc7370333fcb8ff08511ae6c74b8541e"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/run/catalog/acceptance_v6.1.html",
+   "size": 28816,
+   "mtime": "2026-11-27T09:42:22.749409+00:00",
+   "md5": "8bf348275ef9f104d9019bbbe9eca5c2"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/flags/msh_analog_flags.html",
+   "size": 2275386,
+   "mtime": "2026-11-27T00:39:57.087804+00:00",
+   "md5": "34735c8d3f0558b51fbd0a1fdbec1536"
+  },
+  {
+   "path": "/wd1/mdenolle_data/reloc_v61/flags/msh_analog_candidates.csv",
+   "size": 24256,
+   "mtime": "2026-11-27T00:30:02.270252+00:00",
+   "md5": "a8c58985ff34a96f892d3d0cceb75511"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/README.md",
+   "size": 12463,
+   "mtime": "2026-11-25T17:52:17.009887+00:00",
+   "md5": "58f67e05211fb5c59af70eb0196626bf"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/confirmed_epochs.csv",
+   "size": 722,
+   "mtime": "2026-11-25T17:49:17.867631+00:00",
+   "md5": "ef2e22864a8c3ef759c25c65e32824ae"
+  },
+  {
+   "path": "/wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv",
+   "size": 342034758,
+   "mtime": "2026-11-25T17:49:29.377583+00:00",
+   "md5": "1b21ab1c2cf5aba8b48c64a58fc37356"
+  }
+ ],
+ "outputs": [
+  {
+   "path": "/wd1/mdenolle_data/catalog_v6/v6.1/cascadia_catalog_v6.1.csv",
+   "size": 86384146,
+   "mtime": "2026-11-27T14:38:36.034344+00:00",
+   "md5": "1cd909b59cb8493bc823ad60a07fbcde"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v6/v6.1/README_v6.1.md",
+   "size": 11746,
+   "mtime": "2026-11-27T14:39:00.564198+00:00",
+   "md5": "bca09aa4a38c844496860a7c3ac29b33"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v6/v6.1/MD5SUMS",
+   "size": 533,
+   "mtime": "2026-11-27T14:39:00.736197+00:00",
+   "md5": "f0da981aca72dd0e245f563762261e99"
+  },
+  {
+   "path": "/wd1/mdenolle_data/catalog_v6/catalog_v6.zip",
+   "size": 154319027,
+   "mtime": "2026-11-27T14:39:08.870149+00:00",
+   "md5": "1c87dc0ab6547418dd61c51a741c0a7a"
+  },
+  {
+   "path": "/home/mdenolle/wt_cat/data/catalog_v6/registry.csv",
+   "size": 992,
+   "mtime": "2026-11-27T14:39:00.848197+00:00",
+   "md5": "72f9ce5e274ec83b6aba870bf7b17039"
+  }
+ ],
+ "counts": {
+  "events": 172342,
+  "loc_source": {
+   "nll3d": 171996,
+   "none": 345,
+   "comcat": 1
+  },
+  "tiers": {
+   "A": 22516,
+   "B": 33719,
+   "C": 82349,
+   "D": 33412,
+   "U": 346
+  },
+  "above_surface": 0,
+  "above_surface_by_source": {},
+  "flags": {
+   "floor_limited": 7076,
+   "far_only": 347,
+   "deep_pass": 284,
+   "edge_pass": 342,
+   "five_phase": 12036,
+   "coherence_relocated": 51415,
+   "coherence_skipped_region": 10500
+  },
+  "with_magnitude": 131095,
+  "publishable": true
+ },
+ "notes": null
+}

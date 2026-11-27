@@ -68,10 +68,20 @@ MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt"
 MAG_TABLES = {"v4.1": dict(path=P["v4_1_magnitudes"], md5=P.get("v4_1_magnitudes_md5"), key="event_id",
                            label="v4.1_converged"),
               "v5.1": dict(path=P.get("v5_1_magnitudes"), md5=P.get("v5_1_magnitudes_md5"), key="ID",
-                           label="v5.1_converged")}
+                           label="v5.1_converged"),
+              "v6.1": dict(path=P.get("v6_1_magnitudes"), md5=P.get("v6_1_magnitudes_md5"), key="ID",
+                           label="v6.1_converged")}
 # long labels written by b4_v6_catalog.py (catalog v6.0 input) -> the short labels above
 MAG_LABEL_LONG = {"v4.1_converged (D-B091, v4 hypocentres)": "v4.1_converged",
                   "v5.1_converged (D-B091, v5.1 hypocentres)": "v5.1_converged"}
+
+
+def version_columns(version, seen=()):
+    """README column descriptions of a version: those of its columns_from chain (oldest first), then its own."""
+    V = P["versions"][version]
+    need(version not in seen, f"columns_from loop: {seen + (version,)}")
+    base = version_columns(V["columns_from"], seen + (version,)) if V.get("columns_from") else {}
+    return {**base, **V.get("columns", {})}
 
 
 def need(ok, msg):
@@ -210,8 +220,7 @@ def build(version, out=None, rd=None):
     c = c.drop(columns=["v4_magnitude"], errors="ignore").sort_values("ID").reset_index(drop=True)
     need(c.ID.is_unique and len(c) == len(v41), f"IDs not unique or {len(c)} rows against {len(v41)} catalog v4.1 events")
     # every column described in the README
-    cols = {**COLUMNS, **(P["versions"][V["columns_from"]].get("columns", {}) if V.get("columns_from") else {}),
-            **V.get("columns", {})}
+    cols = {**COLUMNS, **version_columns(version)}
     ls = c.loc_source.value_counts().to_dict()
     cols["loc_source"] = ", ".join(f"{k} ({LOC_SOURCE[k][0]})" for k in LOC_SOURCE if k in ls)
     need(set(ls) <= set(LOC_SOURCE), f"unknown loc_source {set(ls) - set(LOC_SOURCE)}")

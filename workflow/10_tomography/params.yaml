@@ -1021,6 +1021,8 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
   v4_1_magnitudes_md5: fb49ecc28b75432f49cf1a6e399cd90f   # checked by catalog_version.py (MD5SUMS.txt in data/magnitude_converged)
   v5_1_magnitudes: /wd1/mdenolle_data/magnitude_converged/v5.1/cascadia_catalog_v5.1_magnitudes_converged.csv   # converged Route A on the v5.1 hypocentres (D-B091, D-B102), key ID
   v5_1_magnitudes_md5: d8c68099cbb529d5b0315f18d3b1c2ec
+  v6_1_magnitudes: /wd1/mdenolle_data/magnitude_converged/v6.1/cascadia_catalog_v6.1_magnitudes_converged.csv   # converged Route A on the v6.1 hypocentres (D-B091, D-B105), key ID
+  v6_1_magnitudes_md5: 60ee0ceb9644eb3652bba705f8bfc800
   v4_1_magnitudes_note: "station-term inversion solved exactly, D-B091"   # README text for this magnitude file (catalog_version.py)
   v4_1_magnitudes_stored: /home/mdenolle/cascadia_obs_ensemble/data/magnitude_v4/cascadia_catalog_M_routeA.csv  # before D-B091 (LSQR stopped at 3,000 iterations); not read; md5 78a445098dd76ccf8c08085cb86f67ca
   v4_1_removed: [172113]           # mis-associated in v4.0 (v4.1 patch)
@@ -1154,6 +1156,53 @@ catalog_versions:                  # D-B058: catalog v5.x (catalog_version.py); 
         - "Deferred to v6.1 (D-B097): the weekly artificial signal on UW analog stations near Mount St Helens (HSR, EDM, STD.UW; candidate false deep events), the other candidate station clock epochs (including the Axial cabled array, Dec 2014 - Jan 2015), and the reviewer verdicts (review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km empty)."
         - "Magnitudes are not recomputed with the v6.0 hypocentres (magnitude_source)."
         - "floor_limited, far_only and five_phase events have poorly constrained depths, as in v5.1 (counts above)."
+    "6.1":
+      series: v6                   # bundle catalog_v6.zip, registry data/catalog_v6/registry.csv
+      out: /wd1/mdenolle_data/catalog_v6
+      b4_run: v6.1                 # NLL-SSST 9999-16 km + coherence in model v0.4.2 (reloc/v61, D-B103, D-B104, D-B108)
+      b4_catalog: /wd1/mdenolle_data/reloc_v61/run/catalog/catalog_b4_v6.1.csv     # md5 a7f1a54f79d2f3c17dca2d2b744874d1 (b4_v6.1.DONE, v6.1_for_session18.md)
+      terms_file: /wd1/mdenolle_data/reloc_v61/run/v61/terms/station_terms.in       # static terms of the first pass, used by the deep and edge passes only
+      model: 0.4.2
+      note: "Catalog v6.1 (D-B103, D-B104, D-B108): catalog v4.1 events relocated with NonLinLoc in the merged model v0.4.2, with source-specific station terms (NLL-SSST, characteristic distances 9999 and 16 km) and waveform-coherence relocation (NLL-coherence), on the re-timed and clock-corrected picks (v4.1tc); magnitudes recomputed with these hypocentres; events NonLinLoc does not locate have no hypocentre."
+      surface_source: merged       # D-B068 (same floor file as v5.1 and v6.0)
+      tier_u: none
+      decisions: [D-B055, D-B068, D-B084, D-B090, D-B091, D-B098, D-B099, D-B103, D-B104, D-B105, D-B108]
+      flags: [floor_limited, far_only, deep_pass, edge_pass, five_phase, coherence_relocated, coherence_skipped_region]
+      magnitudes: catalog          # keep the catalog's magnitudes and magnitude_source (v6.1_converged / v4.1_converged; D-B105)
+      magnitude_tables: [v6.1, v4.1]   # for the v4.1 additions the relocation leaves out, as for v6.0
+      magnitudes_text: "Magnitudes: converged Route A preferred magnitudes (exact station-term solver, D-B091; M, M_type ML / Mw / Mw_cal) computed with the v6.1 hypocentres (D-B105; magnitude_source v6.1_converged) where that table has a magnitude for the event, else the v4.1 table (v4 hypocentres; v4.1_converged)."
+      hypocentres_text: "Hypocentres: NonLinLoc (EDT likelihood, oct-tree) in the 3D merged Vp/Vs model v{model} (velocity_models.zip in this record), with source-specific station terms and coherence relocation (below), run {run}. Depth is km below sea level (true depth; the Earth-flattening of the travel-time grids is undone). station_terms_v{version}.in: the static terms of the first pass, used only by the deep and edge passes."
+      picks_file: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/Cascadia_picks_catalog_v4.1tc.csv
+      picks_md5: 1b21ab1c2cf5aba8b48c64a58fc37356
+      picks_note: "Picks: Cascadia_picks_catalog_v4.1tc.csv.gz in this folder, as in v6.0: the v4.1 picks re-timed on drifting channels (v4.1t, D-B072/D-B075) plus the clock-drift corrections of MH07.XD and MG07.XD (spring 2016, D-B090; columns clock_correction_s, clock_correction_sd_s, clock_epoch, clock_flag, total_correction_s). The other candidate clock epochs wait for the PI's review (v6.2, D-B108). Method: pick_timing_README.md."
+      extra_files:
+        - {path: /wd1/mdenolle_data/reloc_v61/run/catalog/acceptance_v6.1.html, name: b4_acceptance_v6.1.html}
+        - {path: /wd1/mdenolle_data/reloc_v61/flags/msh_analog_flags.html, name: msh_analog_flags.html}
+        - {path: /wd1/mdenolle_data/reloc_v61/flags/msh_analog_candidates.csv, name: msh_analog_candidates.csv}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/README.md, name: pick_timing_README.md}
+        - {path: /wd1/mdenolle_data/tomo_v1/checks/pick_timing_v6/confirmed_epochs.csv, name: pick_timing_confirmed_epochs.csv}
+      columns_from: "6.0"          # v6.0 descriptions (themselves over v5.1's), then these added or changed
+      columns:
+        "M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id": "converged Route A magnitudes (D-B091) computed with the v6.1 hypocentres (D-B105); magnitude_source names the table"
+        "magnitude_source": "table of the magnitude columns: v6.1_converged = converged Route A table computed with the v6.1 hypocentres (D-B091, D-B105); v4.1_converged = the same with the v4 hypocentres, for events the v6.1 table has no magnitude for; empty without a magnitude"
+        "model_version": "velocity model of the travel-time grids (v0.4.2)"
+        "loc_pass": "NonLinLoc run of the hypocentre: ssst_it2 (final SSST pass), coherence, deep or edge"
+        "station_terms": "ssst (NLL-SSST, characteristic distances 9999-16 km, D-B103) or static (deep and edge passes)"
+        "ssst_char_km": "final Loc2ssst characteristic distance of the event's station terms (16 km; empty for static rows)"
+        "event_flag": "quarry_blast_likely (Texada Island box, weekday working hours) and/or anss_explosion, anss_quarry_blast, anss_other_event, anss_sonic_boom (within 3 s and 20 km of a ComCat event of that type, D-B071; a surface depth is right for these), joined with ';'; analog_test_signal: likely false event from the weekly artificial test signal on the UW analog channels HSR, EDM and STD near Mount St Helens (D-B108; evidence msh_analog_flags.html and msh_analog_candidates.csv in this folder); empty otherwise. A flag only: no event is removed"
+      method_notes:
+        - "Model v0.4.2 (D-B099, D-B104): model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B082, D-B083) with event self-pairs removed from the inversion data and a tomoDD numerical fix. Travel-time grids as for v5.1 and v6.0: merged solid surface (D-B068), fine and wide grids, deep pass below 80 km (D-B067)."
+        - "Source-specific station terms (NLL-SSST, Loc2ssst; Lomax & Savvaidis 2022): two passes, characteristic distances 9999 and 16 km (D-B103). A pre-registered depth test (Axial, Mount St Helens, western Blanco, Gorda Depression) kept only this schedule with coherence within the held-out-fit gate; v6.0's further passes at 8 and 4 km deepened events through the trade-off between station terms and depth. The deep and edge passes use the static terms of the first pass (column station_terms)."
+        - "Coherence relocation (NLL-coherence, Lomax & Savvaidis 2022), as in v6.0: an event with a compact location density is relocated on its density stacked with those of its waveform-coherent neighbours (pair coherence from waveform cross-correlation, D-B040; D-B084). Not applied in the Mendocino region (D-B098; column coherence_skipped_region)."
+        - "Edge pass: events rejected at a lateral face of their tile box are located again in a box centred on them (column edge_pass)."
+        - "event_flag marks events that ComCat lists as explosions, quarry blasts or other non-earthquakes (D-B071) and, new in v6.1, likely false events from the weekly artificial test signal on the UW analog channels near Mount St Helens (analog_test_signal, D-B108). Flags only: no event is removed."
+        - "review_* columns: the automatic indicators of the v5.1 location review (D-B097); no reviewer verdict is applied in this version."
+      known_limits:
+        - "Axial depths: {axial}. The target (85 % of tier A-B events within 2 km of the seafloor) is still missed (v6.0 66 %, v5.1 81 %). Cause (D-B103): the station-term/depth trade-off and a real near-surface Vp/Vs error of the model (common S terms about -60 ms relative to P at Axial, about -150 ms at Puget). Fix path: correct the near-surface Vp/Vs of the model, then relocate. Acceptance report: b4_acceptance_v6.1.html."
+        - "Flagged events (event_flag) stay in the catalog and also fed the station terms of this run; station terms without them are a candidate for v6.2."
+        - "Deferred to v6.2 (D-B108): the other candidate station clock epochs (129, including the Axial cabled array, Dec 2014 - Jan 2015) and the location-review verdicts (1,512 events; review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km empty)."
+        - "No coherence relocation in the Mendocino region (D-B098; 10,500 compact events keep their final SSST location). Provisional."
+        - "floor_limited, far_only and five_phase events have poorly constrained depths, as in v6.0 (counts above)."
 b5_test:                           # D-B048: relative relocation tested before B5, tomoDD-SE (velocity frozen) vs GrowClust3D
   out: /wd1/mdenolle_data/b5_test  # large files; scripts b5_*.py, note notes/b5_blanco_test.md
   model_version: 0.3.0             # D-B047 registry; tomoDD MOD from the netCDF nodes, GrowClust3D from the B4 grids

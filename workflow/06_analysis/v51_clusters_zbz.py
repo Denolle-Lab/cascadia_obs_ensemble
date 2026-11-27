@@ -114,7 +114,7 @@ CATALOGS = {
     # pipeline (D-B110): the v6.0 recipe, compared with v6.0 and v4.1; Mc_best from its own Mc maps (D-B104)
     "v6.1": dict(tag="v61", csv=WD1 / "catalog_v6/v6.1/cascadia_catalog_v6.1.csv",
                  out=None, big=WD1 / "catalog_v6/v6.1_analysis/clusters",
-                 mcb=WD1 / "catalog_v6/v6.1_analysis/mc_maps/mc_regional.csv", refs=["v6.0", "v4"]),
+                 mcb=WD1 / "magnitude_converged/mc_maps_v61/mc_regional.csv", refs=["v6.0", "v4"]),
 }
 CATV = "v5.1"
 TAG = "v51"

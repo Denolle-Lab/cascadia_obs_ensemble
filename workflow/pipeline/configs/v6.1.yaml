@@ -40,8 +40,16 @@ vars:
   catalog_md5: 1cd909b59cb8493bc823ad60a07fbcde
   picks_bundle: "{wd1}/catalog_v6/v{catver}/Cascadia_picks_catalog_v4.1tc.csv.gz"
   out_root: "{wd1}/catalog_v6/v{catver}_analysis"          # analysis outputs (stages mc_b onward); --out-root overrides
+  mc_dir: "{wd1}/magnitude_converged/mc_maps_{tag}"       # canonical product folders (D-B111); scratch_vars below
+  clu_dir: "{out_root}/clusters"                          #   move them all under --out-root
+  flt_dir: "{out_root}/faults"
+  val_dir: "{out_root}/validation"
+  pb_dir: "{out_root}/plate_boundaries"
   state_dir: "{out_root}/_pipeline"                        # driver logs, provenance, lock
   md5_max_mb: "4000"                                       # provenance: md5 of files up to this size (else size + mtime)
+
+scratch_vars:                      # with --out-root (scratch run): products kept outside out_root move under it
+  mc_dir: "{out_root}/mc_maps"
 
 env:                               # environment of every command (a stage's env adds to it); the driver runs at nice 10
   LD_LIBRARY_PATH: "{env}/lib"
@@ -381,11 +389,11 @@ stages:
     decisions: [D-B091, D-B104, D-B105]
     code: [workflow/06_analysis/v4_mc_maps.py]
     inputs: [{path: "{catalog}", md5: "{catalog_md5}"}, "{picks_bundle}"]
-    outputs: ["{out_root}/mc_maps/mc_grid.csv", "{out_root}/mc_maps/mc_regional.csv", "{out_root}/mc_maps/run_params.json"]
+    outputs: ["{mc_dir}/mc_grid.csv", "{mc_dir}/mc_regional.csv", "{mc_dir}/run_params.json"]
     runtime: "~10 min at 8 processes"
     resources: "nproc processes"
     commands:
-      - "{py} workflow/06_analysis/v4_mc_maps.py --stage compute --nproc {nproc} --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --out {out_root}/mc_maps"
+      - "{py} workflow/06_analysis/v4_mc_maps.py --stage compute --nproc {nproc} --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --out {mc_dir}"
     notes: >-
       Mc (MAXC+0.2, MBS, GFT90/95, best) and b (Aki-Utsu, Shi-Bolt) per 0.1 deg node and per region box, events
       flagged as not earthquakes left out (event_flag, including analog_test_signal). Figures in stage clustering
@@ -395,16 +403,16 @@ stages:
     kind: run
     decisions: [D-B091, D-B104, D-B106, D-B109]
     code: [workflow/06_analysis/v51_clusters_zbz.py, workflow/06_analysis/v4_clusters_zbz.py, workflow/06_analysis/v4_mc_maps.py]
-    inputs: ["{catalog}", "{out_root}/mc_maps/mc_regional.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/events_zbz_v60.csv.gz",
+    inputs: ["{catalog}", "{mc_dir}/mc_regional.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/events_zbz_v60.csv.gz",
              "{wd1}/catalog_v5/v5.1_review/review_v51_events.csv"]
-    outputs: ["{out_root}/clusters/events_zbz_{tag}.csv.gz", "{out_root}/clusters/families_zbz_{tag}.csv",
-              "{out_root}/clusters/completeness_b_df.csv", "{out_root}/clusters/null_test_summary.csv",
-              "{out_root}/mc_maps/fig4_regional_fmd.png"]
+    outputs: ["{clu_dir}/events_zbz_{tag}.csv.gz", "{clu_dir}/families_zbz_{tag}.csv",
+              "{clu_dir}/completeness_b_df.csv", "{clu_dir}/null_test_summary.csv",
+              "{mc_dir}/fig4_regional_fmd.png"]
     runtime: "~15 min at 8 workers"
     resources: "nproc workers"
     commands:
-      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps main,shuffle,variants,nulls,checks,compare --workers {nproc} --out {out_root}/clusters --big {out_root}/clusters --mcb {out_root}/mc_maps/mc_regional.csv"
-      - "{py} workflow/06_analysis/v4_mc_maps.py --stage plot --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --zbz {out_root}/clusters/completeness_b_df.csv --out {out_root}/mc_maps"
+      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps main,shuffle,variants,nulls,checks,compare --workers {nproc} --out {clu_dir} --big {clu_dir} --mcb {mc_dir}/mc_regional.csv"
+      - "{py} workflow/06_analysis/v4_mc_maps.py --stage plot --label v{catver} --exclude-flagged --catalog {catalog} --picks {picks_bundle} --zbz {clu_dir}/completeness_b_df.csv --out {mc_dir}"
     notes: >-
       Families, background / mainshock-aftershock / swarm / multiplet classes per region above the regional Mc,
       sensitivity variants, null tests, comparison with v6.0 (primary) and v4.1. The fault join is in stage faults.
@@ -413,12 +421,12 @@ stages:
     kind: run
     decisions: [D-B106, D-B109]
     code: [workflow/06_analysis/v51_swarms.py, workflow/06_analysis/v4_swarms.py]
-    inputs: ["{out_root}/clusters/families_zbz_{tag}.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/dbscan_members_v60.csv"]
-    outputs: ["{out_root}/clusters/dbscan_clusters_{tag}.csv", "{out_root}/clusters/dbscan_members_{tag}.csv"]
+    inputs: ["{clu_dir}/families_zbz_{tag}.csv", "{wd1}/catalog_v6/v6.0_analysis/clusters/dbscan_members_v60.csv"]
+    outputs: ["{clu_dir}/dbscan_clusters_{tag}.csv", "{clu_dir}/dbscan_members_{tag}.csv"]
     runtime: "~3 min"
     resources: "1 process"
     commands:
-      - "{py} workflow/06_analysis/v51_swarms.py --catalog v{catver} --out {out_root}/clusters --big {out_root}/clusters"
+      - "{py} workflow/06_analysis/v51_swarms.py --catalog v{catver} --out {clu_dir} --big {clu_dir}"
 
   - id: faults
     kind: run
@@ -426,14 +434,14 @@ stages:
     code: [workflow/07_faults/v1_common.py, workflow/07_faults/v1_detect.py, workflow/07_faults/v1_recovery.py,
            workflow/07_faults/v1_build.py, workflow/07_faults/fault_surfaces_planes.py, workflow/07_faults/split_strands.py,
            workflow/06_analysis/v51_clusters_zbz.py]
-    inputs: ["{catalog}", "{repo}/data/faults/v0/fault_surfaces_v0_members.csv", "{out_root}/clusters/families_zbz_{tag}.csv"]
-    outputs: ["{out_root}/faults/fault_surfaces_v1_summary.csv", "{out_root}/faults/fault_surfaces_v1_assignment.csv.gz",
-              "{out_root}/faults/fault_surfaces_v1_members.csv", "{out_root}/faults/big/fault_surfaces_v1_vertices.csv.gz",
-              "{out_root}/clusters/faults_v1_cluster_counts.csv"]
+    inputs: ["{catalog}", "{repo}/data/faults/v0/fault_surfaces_v0_members.csv", "{clu_dir}/families_zbz_{tag}.csv"]
+    outputs: ["{flt_dir}/fault_surfaces_v1_summary.csv", "{flt_dir}/fault_surfaces_v1_assignment.csv.gz",
+              "{flt_dir}/fault_surfaces_v1_members.csv", "{flt_dir}/fault_surfaces_v1_vertices.csv.gz",
+              "{clu_dir}/faults_v1_cluster_counts.csv"]
     env:
       FAULTS_V1_CATALOG: "{catalog}"
-      FAULTS_V1_OUT: "{out_root}/faults"
-      FAULTS_V1_BIG: "{out_root}/faults/big"
+      FAULTS_V1_OUT: "{flt_dir}"
+      FAULTS_V1_BIG: "{flt_dir}"
       FAULTS_V1_LABEL: "Cascadia catalog v{catver}"
     runtime: "~15 min (detection 5 min, recovery reruns 4 min, build 6 min)"
     resources: "5 + 3 processes, then nproc"
@@ -441,7 +449,7 @@ stages:
       - "{py} workflow/07_faults/v1_detect.py --procs 5"
       - "{py} workflow/07_faults/v1_recovery.py --procs 3"
       - "{py} workflow/07_faults/v1_build.py --procs {nproc}"
-      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps faults --workers {nproc} --out {out_root}/clusters --big {out_root}/clusters --mcb {out_root}/mc_maps/mc_regional.csv --faults {out_root}/faults"
+      - "{py} workflow/06_analysis/v51_clusters_zbz.py --catalog v{catver} --steps faults --workers {nproc} --out {clu_dir} --big {clu_dir} --mcb {mc_dir}/mc_regional.csv --faults {flt_dir}"
     notes: >-
       Fault surfaces v1 (v0 detection, dip rule after reassignment, Blanco strands, location-error Monte Carlo,
       screening, stability, assignment, comparison with v0 and its literature matches) refit on this catalog (D-B109),
@@ -453,24 +461,24 @@ stages:
     code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_structure.py, workflow/11_paper_plan/pb_struct_seis.py]
     requires: [{branch: analysis/plate-boundaries, pr: "no PR (merged into pipeline/end-to-end)"}]
     inputs: ["{model_nc}", "{ens_nc}", "{ens_root}/real", "{repo}/data/tectonics/PB2002_steps.json",
-             "{main}/data/slab2/cas_slab2_dep.xyz", "{out_root}/faults/fault_surfaces_v1_summary.csv",
-             "{out_root}/clusters/families_zbz_{tag}.csv"]
-    outputs: ["{out_root}/plate_boundaries/structure_feasibility.csv", "{out_root}/plate_boundaries/structure_contrasts.csv",
-              "{out_root}/plate_boundaries/depth_vs_level.csv", "{out_root}/plate_boundaries/swarm_vs_ma.csv",
-              "{out_root}/plate_boundaries/big/events_segments_{tag}.parquet"]
+             "{main}/data/slab2/cas_slab2_dep.xyz", "{flt_dir}/fault_surfaces_v1_summary.csv",
+             "{clu_dir}/families_zbz_{tag}.csv"]
+    outputs: ["{pb_dir}/structure_feasibility.csv", "{pb_dir}/structure_contrasts.csv",
+              "{pb_dir}/depth_vs_level.csv", "{pb_dir}/swarm_vs_ma.csv",
+              "{pb_dir}/big/events_segments_{tag}.parquet"]
     env: &pbenv
       PB_CATALOG: "{catalog}"
       PB_TAG: "{tag}"
       PB_LABEL: "v{catver}"
-      PB_CLUSTERS: "{out_root}/clusters"
-      PB_MCMAP: "{out_root}/mc_maps"
-      PB_FAULTS: "{out_root}/faults"
-      PB_FAULTS_BIG: "{out_root}/faults/big"
+      PB_CLUSTERS: "{clu_dir}"
+      PB_MCMAP: "{mc_dir}"
+      PB_FAULTS: "{flt_dir}"
+      PB_FAULTS_BIG: "{flt_dir}"
       PB_MODEL: "{model_nc}"
       PB_ENS: "{ens_nc}"
       PB_MEMBERS: "{ens_root}/real"
-      PB_OUT: "{out_root}/plate_boundaries"
-      PB_BIG: "{out_root}/plate_boundaries/big"
+      PB_OUT: "{pb_dir}"
+      PB_BIG: "{pb_dir}/big"
     runtime: "~10 min"
     resources: "1 process, ~10 GB (100 member grids)"
     commands:
@@ -490,14 +498,14 @@ stages:
     inputs: ["{catalog}", "{prev_catalog}", "{events_v41}", "{main}/data/magnitude_v4/anss_2010-16.csv",
              "{repo}/data/faults/v0/fault_surfaces_v0_members.csv", "{wd1}/tomo_v1/depth_literature/pairs",
              "{wd1}/picks_share/stations/stations_ver5_v6.csv"]
-    outputs: ["{out_root}/validation/catalog_compare/summary.csv", "{out_root}/validation/catalog_compare/anss.csv",
-              "{out_root}/validation/catalog_compare/faults_summary.csv",
-              "{out_root}/validation/depth_literature/paired_v{catver}.md"]
+    outputs: ["{val_dir}/catalog_compare/summary.csv", "{val_dir}/catalog_compare/anss.csv",
+              "{val_dir}/catalog_compare/faults_summary.csv",
+              "{val_dir}/depth_literature/paired_v{catver}.md"]
     runtime: "~10 min"
     resources: "1 process"
     commands:
-      - "{py} workflow/11_compare/compare_catalogs.py --registry workflow/pipeline/configs/catalogs_v6.1.yaml --out {out_root}/validation/catalog_compare --big {out_root}/validation/catalog_compare/big"
-      - "{py} workflow/10_tomography/b4_lit_paired.py --out {out_root}/validation/depth_literature v{catver}={catalog} v6.0={prev_catalog} v5.1={wd1}/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
+      - "{py} workflow/11_compare/compare_catalogs.py --registry workflow/pipeline/configs/catalogs_v6.1.yaml --out {val_dir}/catalog_compare --big {val_dir}/catalog_compare/big"
+      - "{py} workflow/10_tomography/b4_lit_paired.py --out {val_dir}/depth_literature v{catver}={catalog} v6.0={prev_catalog} v5.1={wd1}/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"
     notes: >-
       ComCat (ANSS 2010-2016) offsets and depth differences per region, above-surface share, shifts from v4.1 and
       v6.0, plane-fit thickness of the v0 fault surfaces in each catalog; event-paired depths against Hirao et al.
@@ -511,10 +519,10 @@ stages:
     code: [workflow/11_paper_plan/pb_common.py, workflow/11_paper_plan/pb_seismicity.py,
            workflow/11_paper_plan/pb_sensitivity.py, workflow/11_paper_plan/pb_figures.py]
     requires: [{branch: analysis/plate-boundaries, pr: "no PR (merged into pipeline/end-to-end)"}]
-    inputs: ["{out_root}/plate_boundaries/big/events_segments_{tag}.parquet", "{out_root}/mc_maps/mc_grid.csv",
-             "{out_root}/clusters/dbscan_clusters_{tag}.csv"]
-    outputs: ["{out_root}/plate_boundaries/seismicity_metrics.csv", "{out_root}/plate_boundaries/segment_rule_sensitivity.csv",
-              "{out_root}/plate_boundaries/big/figures/fig_fingerprint.png"]
+    inputs: ["{pb_dir}/big/events_segments_{tag}.parquet", "{mc_dir}/mc_grid.csv",
+             "{clu_dir}/dbscan_clusters_{tag}.csv"]
+    outputs: ["{pb_dir}/seismicity_metrics.csv", "{pb_dir}/segment_rule_sensitivity.csv",
+              "{pb_dir}/big/figures/fig_fingerprint.png"]
     env: *pbenv
     runtime: "~10 min"
     resources: "1 process"
@@ -533,7 +541,7 @@ stages:
     decisions: [D-B080, D-B104, D-B105]
     code: [workflow/06_analysis/build_v4_atlas.py, workflow/06_analysis/atlas_template.html,
            workflow/06_analysis/atlas_check.js, workflow/11_compare/catalogs.yaml, workflow/11_compare/compare_catalogs.py]
-    inputs: ["{catalog}", "{model_nc}", "{out_root}/mc_maps/mc_grid.csv", "{out_root}/clusters/families_zbz_{tag}.csv"]
+    inputs: ["{catalog}", "{model_nc}", "{mc_dir}/mc_grid.csv", "{clu_dir}/families_zbz_{tag}.csv"]
     outputs: ["{out_root}/atlas/cascadia_atlas.html"]
     runtime: "~10 min"
     resources: "1 process; Playwright + Chromium env for the check"
@@ -543,7 +551,7 @@ stages:
         #    own_surface: true (atlas_relocated / atlas_moves_from if it becomes the headline catalog)
         grep -q "id: v{catver}$" workflow/11_compare/catalogs.yaml
       - "{py} workflow/11_compare/compare_catalogs.py --only v{catver}"
-      - "mkdir -p {out_root}/atlas && {py} workflow/06_analysis/build_v4_atlas.py --model {model_nc} --mc-cat v{catver}={out_root}/mc_maps --clusters {out_root}/clusters --clusters-catalog v{catver} --out {out_root}/atlas/cascadia_atlas.html"
+      - "mkdir -p {out_root}/atlas && {py} workflow/06_analysis/build_v4_atlas.py --model {model_nc} --mc-cat v{catver}={mc_dir} --clusters {clu_dir} --clusters-catalog v{catver} --out {out_root}/atlas/cascadia_atlas.html"
       - |
         NE=$HOME/.cache/rattler/cache/cached-envs-v0/55304966f11fb1c1
         LD_LIBRARY_PATH=$NE/lib PW=$NE/lib/node_modules/playwright PAGE={out_root}/atlas/cascadia_atlas.html $NE/bin/node workflow/06_analysis/atlas_check.js

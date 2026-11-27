@@ -155,13 +155,15 @@ def describe(p: Path, cache: dict | None, max_mb: float) -> dict:
 
 # ------------------------------------------------------------------ configuration
 class Config:
-    def __init__(self, path: Path, overrides: dict):
+    def __init__(self, path: Path, overrides: dict, scratch: bool = False):
         self.path = path.resolve()
         raw = yaml.safe_load(self.path.read_text())
         self.raw = raw
         self.version = str(raw["version"])
         v = {"repo": str(REPO), "version": self.version, "config": str(self.path)}
         v.update({k: str(x) for k, x in (raw.get("vars") or {}).items()})
+        if scratch:   # --out-root: products that production keeps outside out_root move under it (scratch_vars)
+            v.update({k: str(x) for k, x in (raw.get("scratch_vars") or {}).items()})
         v.update(overrides)
         v.setdefault("state_dir", "{out_root}/_pipeline")
         self.vars = self._resolve(v)
@@ -570,7 +572,7 @@ def main():
         # scratch runs keep the Track B manifest records (manifest.write_manifest) in their own log, not in the shared
         # /wd1/mdenolle_data/tomo_v1/manifests.jsonl
         ov.setdefault("manifest_log", "{state_dir}/manifests.jsonl")
-    cfg = Config(a.config, ov)
+    cfg = Config(a.config, ov, scratch=bool(a.out_root))
     d = Driver(cfg, a)
     if a.list:
         d.listing()

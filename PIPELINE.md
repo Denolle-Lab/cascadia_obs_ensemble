@@ -24,9 +24,16 @@ arguments written in the version's configuration. Choices are set by the decisio
 
 Options: `--from/--to/--only` select stages; `--force S` reruns a done stage; `--run-gated S` runs a gated stage
 after the PI's go; `--allow-unmerged` runs a stage whose required branch is not merged; `--out-root DIR` moves the
-analysis outputs (stages `mc_b` onward) to DIR; `--var NAME=VALUE` overrides a configuration variable. Long stages:
+analysis outputs (stages `mc_b` onward) to DIR, including the products that production keeps elsewhere
+(`scratch_vars` of the configuration, e.g. the Mc maps); `--var NAME=VALUE` overrides a configuration variable. Long stages:
 run the driver detached (`setsid nohup ... > LOG 2>&1 < /dev/null &`); it runs at nice 10 and holds a lock in its
 state folder, so a second driver on the same version refuses to start.
+
+Production folders of the v6.1 analysis products (D-B111): Mc maps `/wd1/mdenolle_data/magnitude_converged/mc_maps_v61`;
+clustering and swarms `/wd1/mdenolle_data/catalog_v6/v6.1_analysis/clusters` (`events_zbz_v61.csv.gz`,
+`families_zbz_v61.csv`, `dbscan_*_v61.csv`); fault surfaces `.../v6.1_analysis/faults`; validation
+`.../v6.1_analysis/validation`; plate-boundary tables `.../v6.1_analysis/plate_boundaries`; driver state, logs and
+provenance `.../v6.1_analysis/_pipeline`.
 
 ## How the driver works
 

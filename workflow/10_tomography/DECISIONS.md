@@ -1102,3 +1102,19 @@ invert one truth that carries the contrasts, so a surviving contrast is "recover
 artifacts. PI: run a null truth now - a model with the fault-zone contrasts removed (depth-layer means within 45 km of the
 segments), synthetic data from the frozen tomoDD-SE_syn, about 20 members through the five stages (~7 h on 6 processes), with
 the rule written before scoring; a contrast that the null truth reproduces is not claimed.
+
+### D-B113 Plate-boundary segments: Gorda Ridge events misassigned to the Gorda plate; fix the ridge axis, not the buffer (adopted, 2026-11-27 13:13, PI)
+PI (map of the v6.1 segment rule): seismicity along the southern Gorda Ridge, east of the PB2002 ridge trace near
+40.4-41.5 N, 127.5-127 W, is classified as Gorda plate (intraplate) and should be Gorda Ridge. The rule assigns ridge events
+within 15 km of the PB2002 PA-JF ridge trace (pb_common.py D_AXIS_KM); PB2002 traces are offset from the seismicity (5-8 km at
+Blanco and the Mendocino fault zone). The ridge axis is replaced by a better-located one (published high-resolution axis or
+one picked from GMRT bathymetry, chosen on evidence), with the buffer unchanged; segments, metrics and contrasts are
+recomputed; the change is shown as a before/after map and count table.
+
+### D-B114 Bring published geophysical data into the plate-boundary analysis (adopted, 2026-11-27 13:13, PI)
+PI: pull other published geophysical data that could corroborate the conclusions - heat flow, bathymetric roughness, plate
+age, estimated thermal structure. Downloaded from public repositories with provenance (DOI, URL, licence, md5, date) under the
+data root, gridded or sampled at the events and segments, and used as covariates of seismicity style and depth extent
+(e.g. depth of seismicity against isotherms from plate cooling models and slab thermal models).
+Paper figures: one consistent Science Advances style across all figures, the fault-zone tomography sections included (D-B104
+colour maps).

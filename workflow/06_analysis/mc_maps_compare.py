@@ -17,6 +17,7 @@ import html
 import json
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -55,7 +56,8 @@ def pooled(d) -> pd.Series:
 
 def diff_grid(da, db) -> pd.DataFrame:
     a, b = pd.read_csv(Path(da) / "mc_grid.csv"), pd.read_csv(Path(db) / "mc_grid.csv")
-    assert np.array_equal(a.lon.values, b.lon.values) and np.array_equal(a.lat.values, b.lat.values), "grids differ"
+    if not (np.array_equal(a.lon.values, b.lon.values) and np.array_equal(a.lat.values, b.lat.values)):
+        raise SystemExit(f"Mc grids differ in their lon/lat nodes: {da} vs {db}; difference maps need the same lattice")
     return a[["lon", "lat"]].assign(d=a.mc_best.values - b.mc_best.values)
 
 
@@ -182,9 +184,12 @@ def main():
     p0 = params[labs[0]]
     par = (f"the {p0['n_events']} nearest events per cell (periods {p0['n_events_period']}) within {p0['rmax_km']:g} km, "
            f"{p0['nboot']} bootstrap resamples, {p0['step_deg']} deg grid; Mc best = GFT95, else GFT90, else MAXC+0.2")
-    commit = subprocess.run(["git", "-C", str(mm.ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
-                            text=True).stdout.strip()
-    stamp = subprocess.run(["date", "+%Y-%m-%d %H:%M %Z"], capture_output=True, text=True).stdout.strip()
+    try:
+        commit = subprocess.run(["git", "-C", str(mm.ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
+                                text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        commit = "unknown (git unavailable)"
+    stamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")
     notes = "".join(f"<li>{html.escape(n)}</li>" for n in a.note)
 
     page = f"""<!doctype html>

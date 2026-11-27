@@ -15,7 +15,9 @@ export PB_MEMBERS=$W/tomo_v1/ensemble_v0.4.2/real PB_SYNTH=$W/tomo_v1/ensemble_v
 export PB_OUT=$W/paper_plan/v6.1/tables PB_BIG=$W/paper_plan/v6.1
 mkdir -p "$PB_OUT"
 cd workflow/11_paper_plan
-for s in pb_structure pb_circularity pb_struct_seis pb_seismicity pb_sensitivity pb_figures; do
+for s in pb_axes pb_structure pb_circularity pb_struct_seis pb_seismicity pb_sensitivity pb_figures pb_axes_compare; do
     echo "== $s $(date)"; nice -n 10 $PY $s.py
 done
+# D-B113 before/after metrics (needs the PB2002-axes tables kept in $PB_BIG/tables_pb2002_axes)
+[ -d "$PB_BIG/tables_pb2002_axes" ] && nice -n 10 $PY pb_axes_changes.py
 nice -n 10 $PY pb_page.py "${1:-$(date)}"

@@ -36,6 +36,24 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
 - Fri Nov 27 10:19:31 PST 2026: code committed; v6.1 page shows "null truth not yet scored".
 - 2026-11-27 10:31:52: first null M0 stages done (s000, s002, s005: ok, 14.8 min; M0 residuals close to the
   calibration member s000); tiles started. Expected end about 17:00-17:30 PST.
+- Fri Nov 27 13:26:13 PST 2026: D-B113 (PI 13:13): southern Gorda Ridge seismicity was in GP because PB2002 lies 10-20 km west of
+  the axial valley. pb_axes.py re-picks the spreading axes and the Mendocino transform from the D-B068 merged surface
+  (GMRT where available); a section's PB2002 trace is replaced only where its 15 km buffer misses >= 10 % of the
+  nearby tier A-C earthquakes and a bathymetric candidate keeps >= 10 points more within 15 km (median distance not
+  larger). Chosen: axial valley for the southern Gorda Ridge (OSR00, OSR01: 40.45-41.6 N), axial high for JdF 46.4-47.7 N
+  (OSR05); PB2002 elsewhere, Mendocino transform included (base-of-slope pick 71 % vs 66 % within 15 km). Buffer 15 km.
+  plate_axes_v1.csv, plate_axes_v1_evaluation.csv here; pb_common PB_AXES (gmrt default, pb2002 = old). v6.1 rerun
+  (run_v61.sh, now with pb_axes and pb_axes_compare): 1,280 tier A-C earthquakes move (GP->GR 1,046, JP->JR 228,
+  MFZ->GR 3, GR->GP 2, EXR->SOV 1); 33 contrasts >= 2 sigma, 32 survive D-B111. Old v6.1 tables kept in
+  /wd1/mdenolle_data/paper_plan/v6.1/tables_pb2002_axes; changes in axes_changed_metrics.csv, axes_changed_contrasts.csv.
+  The v6.0 tables in data/paper_plan/plate_boundaries/ were built with PB2002: rebuild them with PB_AXES=pb2002.
+- Null truth and D-B113: the null zones were built on the PB2002 segments; reconstructed exactly (null_zones.npz in the
+  null root's synth/truth/: 270 zone-layers constant, 109,661 nodes). The null members are scored on the NEW node sets
+  (pb_null_score.py lists the zones of each contrast). Check (null_zone_check.csv): with old or new node sets only about
+  half of a contrast's nodes lie in its own null zone (median 0.53 / 0.52) and the null truth keeps zone-boundary
+  contrasts (median |D0_truth| 0.034 / 0.037 km/s); the rule (recovered - truth) still measures recovery error, but only
+  single-zone contrasts are true null tests. D-B113 is material for GR only: its node sets reach into the old GP zone
+  (own-zone share 0.59-0.71 -> 0.45-0.56; truth contrast Vp along -0.07 -> -0.29 km/s); GP, MFZ, JR barely change.
 - To resume: log /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/run.log; status: B2_ENS_CONFIG=v0.4.2
   B2_ENS_ROOT=/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null python workflow/10_tomography/b2_ens_run.py status;
   relaunch (resumes) with the pb_null_run.py command in its docstring. After scoring: bash workflow/11_paper_plan/run_v61.sh

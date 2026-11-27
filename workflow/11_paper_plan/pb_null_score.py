@@ -12,6 +12,9 @@ contrast_nodes.npz; depth-matched):
 * reported: mean n_i and its sign against D_real; the variant with the 95th percentile of |D0_rec,i|; the paired
   difference calibration member minus null member with the same seed (s000-s019) and the truth difference.
 Writes <PB_OUT>/null_truth_contrasts.csv and <PB_BIG>/figures/fig_null.png.
+The null truth's flattened zones were built on the segment table before the D-B113 axes (null_zones.npz); the
+contrasts are scored on the current node sets, so each row lists the null zones its nodes fall in (null_zones) and
+whether they all lie in one zone (D0_truth = 0 there).
 Environment: PB_NULL_ROOT (default /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null) besides the PB_* variables.
 """
 from __future__ import annotations
@@ -57,6 +60,9 @@ def main():
     n = layer.size
     circ = pd.read_csv(P.OUT / "circularity_contrasts.csv")
     tr0, m0 = load_root(sd, names)
+    zf = sd / "truth" / "null_zones.npz"                     # zones of the null truth (old segment table, D-B113 note)
+    zmap = np.load(zf)["zone"].reshape(-1) if zf.exists() else None
+    zsegs = list(np.load(zf)["segs"]) if zf.exists() else []
     trc, mc = load_root(P.SYNTH, names)                     # calibration members with the same seeds
     f = lambda d: {k: v.reshape(v.shape[0] if v.ndim == 4 else 1, -1) for k, v in d.items()}  # noqa: E731
     tr0f, m0f, trcf, mcf = f(tr0), f(m0), f(trc), f(mc)
@@ -71,6 +77,11 @@ def main():
         drc = contrast(mcf[v], layer, i1, i2, n)
         row = dict(seg=r.seg, var=v, contrast=r.contrast, D_real=r.D_real, sigma_ens=r.sigma_ens, S95=r.get("S95"),
                    survives_DB111=bool(r.survives), n_null=0)
+        if zmap is not None:
+            zz = np.r_[zmap[i1], zmap[i2]]
+            u, cnt = np.unique(zz, return_counts=True)
+            row["null_zones"] = ";".join(f"{zsegs[k] if k >= 0 else 'outside'}:{c}" for k, c in zip(u, cnt))
+            row["null_single_zone"] = bool(len(u) == 1 and u[0] >= 0)
         d0t = float(dt0[0]) if dt0 is not None else np.nan
         row["D0_truth"] = d0t
         if dr0 is not None and np.isfinite(d0t):

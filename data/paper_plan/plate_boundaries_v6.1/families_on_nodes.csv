@@ -295,7 +295,7 @@ family_id,nd,lon,lat,depth,seg,n,type,iz,iy,ix,inP,inPS,Vp,VpVs
 888,9,-128.55,43.675,10.449,BL,5,swarm,6,48,26,True,False,6.6372,1.7768
 896,5,-124.56,40.311,21.416,MTJ,4,mainshock-aftershock,10,14,58,True,True,7.0611,1.7201
 908,13,-122.46,40.679,21.379,OC,7,swarm,10,18,74,False,False,6.2029,1.7452
-926,6,-127.41,41.213,14.481,GP,4,mainshock-aftershock,8,23,35,True,False,6.892,1.6627
+926,6,-127.41,41.213,14.481,GR,4,mainshock-aftershock,8,23,35,True,False,6.892,1.6627
 952,13,-121.67,47.877,10.182,CAS,12,swarm,6,90,81,False,False,6.1042,1.7152
 986,203,-122.87,47.747,18.244,PU,29,mainshock-aftershock,9,88,71,True,False,6.6484,1.689
 996,6,-124.48,40.301,10.376,MTJ,5,swarm,6,14,58,True,False,5.6908,1.7834
@@ -349,7 +349,7 @@ family_id,nd,lon,lat,depth,seg,n,type,iz,iy,ix,inP,inPS,Vp,VpVs
 1331,24,-122.96,47.572,17.669,PU,6,mainshock-aftershock,9,87,70,True,False,6.3882,1.6716
 1338,8,-124.72,40.516,23.768,MTJ,2,mainshock-aftershock,11,16,56,True,True,7.9831,1.7283
 1340,8,-124.21,40.667,16.551,GS,4,multiplet,9,18,60,True,False,6.871,1.7982
-1345,15,-127.44,41.127,15.53,GP,5,swarm,8,22,34,True,False,7.0039,1.707
+1345,15,-127.44,41.127,15.53,GR,5,swarm,8,22,34,True,False,7.0039,1.707
 1349,8,-123.46,39.492,15.015,NAPA,8,mainshock-aftershock,8,6,66,False,False,6.081,1.76
 1353,17,-123.22,40.166,38.554,NAPA,4,mainshock-aftershock,14,13,68,True,False,7.645,1.7289
 1356,7,-124.7,48.454,17.214,FA,2,multiplet,9,96,56,False,False,5.9884,1.7372

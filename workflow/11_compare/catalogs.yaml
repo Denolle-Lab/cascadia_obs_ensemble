@@ -13,9 +13,26 @@
 #   status     final | preliminary | superseded
 #   date       when the locations were produced
 #   atlas      true -> shown as a catalog in the 3D atlas
+# Optional fields (atlas only; leave out when not needed)
+#   note         one or two sentences on the catalog for the atlas legend when it is shown (default: the label)
+#   own_surface  true -> the atlas tests "above the surface" against the catalog's own surface_km column (the solid
+#                surface the catalog was located and checked against, e.g. the D-B068 GMRT/earth_relief surface of
+#                v5.1) instead of the atlas terrain; needs the common table rebuilt by compare_catalogs.py (column
+#                surface_cat_km). compare_catalogs.py's own above-surface metric uses GMT earth_relief 01m for every catalog.
+#
+# Adapter nll_catalog (columns of a2_build_catalog.py / catalog_version.py): loc_source nll3d = located in this run;
+# v4 or comcat = another catalog's hypocentre kept (tier U: not located here, drawn as a ring at the reference location);
+# none = no hypocentre (v5.1+: tier U with empty lat/lon/depth; common-table column no_hypo): not drawn in the catalog's
+# atlas view and left out of the atlas Compare mode with any other catalog.
+#
+# Atlas choices (build_v4_atlas.py; --catalog2 / --catalog-before override them for one build)
+#   atlas_relocated   the relocated catalog: default B of Compare, tier colours of the reference view, end of the Moves layer
+#   atlas_moves_from  the Moves layer draws a line from each event's location in this catalog to its location in atlas_relocated
 
 reference: v4.1          # shifts are measured from this catalog
 benchmark: anss          # ComCat/ANSS events 2010-2016 (data/magnitude_v4/anss_2010-16.csv)
+atlas_relocated: v6.0
+atlas_moves_from: v5.1
 
 catalogs:
   - id: v3
@@ -77,6 +94,61 @@ catalogs:
     status: preliminary
     date: 2026-11-22
     atlas: true
+
+  - id: v5.0
+    label: Catalog v5.0 (interim)
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.3.1 (tomo_v1/models/cascadia_obs_tomo)
+    method: NonLinLoc EDT, 3D grids, static station terms from a first pass (run b4_iter1_v0.3.1); tier U keeps the v4 hypocentre (D-B058, D-B059)
+    parent: NLL3D-i1
+    status: superseded
+    date: 2026-11-24
+    atlas: true
+    own_surface: true
+    note: >-
+      the catalog v4.1 events relocated with NonLinLoc in the merged tomography model v0.3.1, before the round-2
+      workflow fixes; events NonLinLoc could not locate keep their v4 hypocentre (tier U). Depths below sea level.
+      Superseded by v5.1.
+
+  - id: v5.1
+    label: Catalog v5.1
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.3.1; offshore rock within 2.5 km of the seafloor with Vp/Vs >= 2.1 (D-B073)
+    method: NonLinLoc EDT, 3D grids, static station terms from a first pass, round-2 fixes (every arrival, five-pick events, deep pass, D-B068 solid surface), re-timed picks (run b4_v51_iter1); tier U without a hypocentre
+    parent: v5.0
+    status: preliminary
+    date: 2026-11-25
+    atlas: true
+    own_surface: true
+    note: >-
+      the catalog v4.1 events relocated with NonLinLoc in the merged tomography model v0.3.1 (offshore, a Vp/Vs of at
+      least 2.1 in the top 2.5 km of crust), with re-timed picks and station terms from a first pass; depths below sea
+      level, checked against the catalog's GMRT and earth_relief surface (no event above it). v5.2 will add the
+      double-difference relocation. Against published local studies, 81 % of the best-located Axial events are within
+      2 km of the seafloor (90 % published) and Blanco events are about 1.4 km deeper; Endeavour, Explorer and Juan de
+      Fuca ridge events are poorly constrained, and the catalog flags events whose depth is set by the topography floor,
+      by distant stations only, or by five phases.
+
+  - id: v6.0
+    label: Catalog v6.0
+    adapter: nll_catalog
+    file: /wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv
+    keyed_v4: true
+    velocity: merged tomoDD model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B083)
+    method: NonLinLoc EDT, 3D grids, source-specific station terms (NLL-SSST, 4 passes, D-B095/D-B096) and NLL-coherence relocation (not in Mendocino, D-B098), re-timed and clock-corrected picks v4.1tc (D-B090), run v6.0; tier U without a hypocentre (D-B100)
+    parent: v5.1
+    status: preliminary
+    date: 2026-11-26
+    atlas: true
+    own_surface: true
+    note: >-
+      NonLinLoc with source-specific station terms (NLL-SSST) and waveform-coherence relocation in model v0.4.1,
+      re-timed and clock-corrected picks; Axial depths biased deep by the station-term passes (66 % of tier A-B events
+      within 2 km of the seafloor), fixed in v6.1.
 
   # Template for Track B (tomoDD) relocations -- uncomment when a run is accepted:
   # - id: tomoDD-MG1

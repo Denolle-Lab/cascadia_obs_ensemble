@@ -1,6 +1,8 @@
 {
  "reference": "v4.1",
  "benchmark": "anss",
+ "atlas_relocated": "v6.0",
+ "atlas_moves_from": "v5.1",
  "catalogs": [
   {
    "id": "v4.1",
@@ -76,6 +78,57 @@
    "atlas": true,
    "_rows": 172340,
    "_md5": "de44780c3dbe49b404d785914e132459"
+  },
+  {
+   "id": "v5.0",
+   "label": "Catalog v5.0 (interim)",
+   "adapter": "nll_catalog",
+   "file": "/wd1/mdenolle_data/catalog_v5/v5.0/cascadia_catalog_v5.0.csv",
+   "keyed_v4": true,
+   "velocity": "merged tomoDD model v0.3.1 (tomo_v1/models/cascadia_obs_tomo)",
+   "method": "NonLinLoc EDT, 3D grids, static station terms from a first pass (run b4_iter1_v0.3.1); tier U keeps the v4 hypocentre (D-B058, D-B059)",
+   "parent": "NLL3D-i1",
+   "status": "superseded",
+   "date": "2026-11-24",
+   "atlas": true,
+   "own_surface": true,
+   "note": "the catalog v4.1 events relocated with NonLinLoc in the merged tomography model v0.3.1, before the round-2 workflow fixes; events NonLinLoc could not locate keep their v4 hypocentre (tier U). Depths below sea level. Superseded by v5.1.",
+   "_rows": 172342,
+   "_md5": "192d3195516ad59cc1a7cf841c8d89d5"
+  },
+  {
+   "id": "v5.1",
+   "label": "Catalog v5.1",
+   "adapter": "nll_catalog",
+   "file": "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv",
+   "keyed_v4": true,
+   "velocity": "merged tomoDD model v0.3.1; offshore rock within 2.5 km of the seafloor with Vp/Vs >= 2.1 (D-B073)",
+   "method": "NonLinLoc EDT, 3D grids, static station terms from a first pass, round-2 fixes (every arrival, five-pick events, deep pass, D-B068 solid surface), re-timed picks (run b4_v51_iter1); tier U without a hypocentre",
+   "parent": "v5.0",
+   "status": "preliminary",
+   "date": "2026-11-25",
+   "atlas": true,
+   "own_surface": true,
+   "note": "the catalog v4.1 events relocated with NonLinLoc in the merged tomography model v0.3.1 (offshore, a Vp/Vs of at least 2.1 in the top 2.5 km of crust), with re-timed picks and station terms from a first pass; depths below sea level, checked against the catalog's GMRT and earth_relief surface (no event above it). v5.2 will add the double-difference relocation. Against published local studies, 81 % of the best-located Axial events are within 2 km of the seafloor (90 % published) and Blanco events are about 1.4 km deeper; Endeavour, Explorer and Juan de Fuca ridge events are poorly constrained, and the catalog flags events whose depth is set by the topography floor, by distant stations only, or by five phases.",
+   "_rows": 172342,
+   "_md5": "ca4b7f27ba0d06504c2f2a2b38ea5e53"
+  },
+  {
+   "id": "v6.0",
+   "label": "Catalog v6.0",
+   "adapter": "nll_catalog",
+   "file": "/wd1/mdenolle_data/catalog_v6/v6.0/cascadia_catalog_v6.0.csv",
+   "keyed_v4": true,
+   "velocity": "merged tomoDD model v0.4.1 (re-inverted with the re-timed picks and the tomoDD surface floor, D-B083)",
+   "method": "NonLinLoc EDT, 3D grids, source-specific station terms (NLL-SSST, 4 passes, D-B095/D-B096) and NLL-coherence relocation (not in Mendocino, D-B098), re-timed and clock-corrected picks v4.1tc (D-B090), run v6.0; tier U without a hypocentre (D-B100)",
+   "parent": "v5.1",
+   "status": "preliminary",
+   "date": "2026-11-26",
+   "atlas": true,
+   "own_surface": true,
+   "note": "NonLinLoc with source-specific station terms (NLL-SSST) and waveform-coherence relocation in model v0.4.1, re-timed and clock-corrected picks; Axial depths biased deep by the station-term passes (66 % of tier A-B events within 2 km of the seafloor), fixed in v6.1.",
+   "_rows": 172342,
+   "_md5": "0daf48808af466859e6804793486c2a5"
   }
  ]
 }

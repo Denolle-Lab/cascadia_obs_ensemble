@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Cascadia Catalog v4 Atlas</title>
+<title>Cascadia OBS Ensemble Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
@@ -58,7 +58,19 @@
   .seg button + button { border-left: 1px solid var(--hairline-strong); }
   .seg button.on { background: var(--text-primary); color: var(--surface-0); }
   .seg button:disabled { opacity: 0.4; cursor: default; }
+  /* catalog switch: one button per registry catalog + Compare, wrapped on several rows */
+  #segCat, #segColor { display: flex; flex-wrap: wrap; max-width: 100%; }
+  #segCat button, #segCat button + button, #segColor button, #segColor button + button { flex: 1 0 auto; white-space: nowrap; border: 0; box-shadow: inset -1px -1px 0 var(--hairline-strong); margin: 0 -1px -1px 0; }
   .sep { border-top: 1px solid var(--hairline); margin: 2px 0; }
+  details.grp { border-top: 1px solid var(--hairline); padding-top: 7px; }
+  details.grp:first-child { border-top: 0; padding-top: 0; }
+  details.grp > summary { list-style: none; cursor: pointer; color: var(--text-secondary); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
+  details.grp > summary::-webkit-details-marker { display: none; }
+  details.grp > summary::after { content: "+"; color: var(--text-muted); font-size: 13px; }
+  details.grp[open] > summary::after { content: "−"; }
+  details.grp > summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  .grp-body { display: flex; flex-direction: column; gap: 9px; margin-top: 8px; }
   input[type=range] { width: 108px; accent-color: #d9d6cc; }
   select { background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--hairline-strong); border-radius: 4px; font: inherit; font-size: 12px; padding: 3px 4px; }
   .layers { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
@@ -105,9 +117,16 @@
   #tip b { font-weight: 600; } #tip .k { color: var(--text-muted); }
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 30; color: var(--text-secondary); background: var(--surface-0); }
   .panel.closed { display: none !important; }
-  #faultCard { top: 64px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100vw - 32px)); padding: 12px 14px; display: none; font-size: 12.5px; line-height: 1.5; max-height: 46vh; overflow-y: auto; }
-  #faultCard .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  #faultCard b.id { font-size: 14px; } #faultCard .k { color: var(--text-muted); }
+  #faultCard, #famCard { top: 64px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100vw - 32px)); padding: 12px 14px; display: none; font-size: 12.5px; line-height: 1.5; max-height: 46vh; overflow-y: auto; }
+  #faultCard .top, #famCard .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  #faultCard b.id, #famCard b.id { font-size: 14px; } #faultCard .k, #famCard .k { color: var(--text-muted); }
+  #famCard .flag { color: #d9b26b; } #famCard .btns { display: flex; gap: 6px; }
+  /* Cluster colour mode: one toggle per event class (swatch, name, count) */
+  #cluTypes { grid-template-columns: 1fr; width: 100%; }
+  #cluTypes button { justify-content: flex-start; padding: 3px 6px; } #cluTypes button .n { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+  #cluTypes.nosw button:not(:first-child) .sw { visibility: hidden; }   /* by family: the class colours are not in use */
+  .legend .lgtxt { margin-top: 4px; font-size: 11px; line-height: 15px; color: var(--text-secondary); }
+  .legend .lgtxt.caveat { color: #d9b26b; }
   #faultCard a { color: #9fd0ff; text-decoration: none; } #faultCard a:hover { text-decoration: underline; }
   #faultCard ul { margin: 4px 0 0; padding-left: 16px; } #faultCard .flag { color: #d9b26b; }
   .toolbar { position: fixed; z-index: 6; display: flex; gap: 4px; padding: 4px; background: rgba(26,26,25,0.9);
@@ -149,7 +168,7 @@
     .layers button { padding: 8px 6px; font-size: 13px; }
     .hint { display: none; }
     #tip { max-width: 80vw; }
-    #faultCard { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); max-height: 40vh; }
+    #faultCard, #famCard { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); max-height: 40vh; }
   }
 </style>
 </head>
@@ -158,7 +177,7 @@
 <div id="loading">Unpacking catalog…</div>
 
 <header class="panel">
-  <h1>Cascadia Catalog v4</h1>
+  <h1>Cascadia OBS Ensemble</h1>
   <p id="sub">Machine-learning catalog, 2010–2016, from land and ocean-bottom stations. Depths below the datum of the relocation.</p>
   <div class="stats mono">
     <div><b id="nShown">–</b><span>shown</span></div>
@@ -172,6 +191,7 @@
   <button data-p="controls">Controls</button><button data-p="regions">Places</button><button data-p="timeline">Time</button><button data-p="legend">Legend</button>
 </div>
 <div class="controls panel" id="controls">
+  <details class="grp" open><summary>View</summary><div class="grp-body">
   <div class="ctl-row" id="catRow" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Catalog</span>
     <div class="seg" id="segCat"></div></div>
   <div id="cmpBox" style="display:none;flex-direction:column;gap:9px">
@@ -183,12 +203,18 @@
     <div class="ctl-row"><span class="lab">Max lines</span><input type="range" id="segN" min="250" max="20000" step="250" value="3000"><span class="val mono" id="segNV">3,000</span></div>
   </div>
   <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:5px"><span class="lab">Color by</span>
-    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier (A-D, U) of the catalog shown, or of the latest catalog with tiers">Tier</button></div></div>
+    <div class="seg" id="segColor"><button data-v="0" class="on">Depth</button><button data-v="1">Time</button><button data-v="2">New picks</button><button data-v="3">Fault</button><button data-v="4" id="btnTier" title="Location tier (A-D, U) of the catalog shown, or of the relocated catalog">Tier</button><button data-v="7" id="btnClu" title="Earthquake families of the nearest-neighbour clustering">Cluster</button></div>
+    <div class="hint" id="cluNote" style="display:none"></div></div>
+  <div id="cluBox" style="display:none;flex-direction:column;gap:7px">
+    <div class="ctl-row"><span class="lab">Clusters</span><div class="seg" id="segClu"><button data-v="0" class="on" title="One colour per family (12 colours reused; neighbouring families get different ones)">By family</button><button data-v="1" title="One colour per class: mainshock-aftershock, swarm, multiplet, linked to a single">By type</button></div></div>
+    <div class="ctl-row" style="flex-direction:column;align-items:flex-start;gap:4px"><span class="lab">Show</span><div class="layers" id="cluTypes"></div></div>
+    <div class="ctl-row" id="famRow" style="display:none"><span class="val" id="famV" style="width:auto;text-align:left"></span><button class="btn" id="famClear">Show all</button></div>
+  </div>
   <div class="ctl-row"><span class="lab">Vertical ×</span><input type="range" id="exag" min="1" max="10" step="0.5" value="3"><span class="val mono" id="exagV">3×</span></div>
   <div class="ctl-row"><span class="lab">Ground</span><input type="range" id="ground" min="0" max="1" step="0.05" value="0.55"><span class="val mono" id="groundV">solid</span></div>
   <div class="ctl-row"><span class="lab">Point size</span><input type="range" id="psize" min="0.3" max="3" step="0.1" value="1"><span class="val mono" id="psizeV">1.0</span></div>
-  <div class="sep"></div>
-  <h4>Filter events</h4>
+  </div></details>
+  <details class="grp"><summary>Filter events</summary><div class="grp-body">
   <div class="ctl-row"><span class="lab">Fault</span><select id="faultSel" style="max-width:170px"><option value="-1">All faults</option></select></div>
   <div class="ctl-row"><span class="lab">Events</span><div class="seg" id="segOnF"><button data-v="0" class="on">All</button><button data-v="1">On a fault</button><button data-v="2">Off</button></div></div>
   <div class="ctl-row"><span class="lab">QC only</span><div class="seg" id="segQC"><button data-v="0" class="on">All</button><button data-v="1">≥4 P &amp; ≥4 S</button></div></div>
@@ -196,19 +222,28 @@
   <div class="ctl-row" id="tierRow"><span class="lab">Location tier</span><div class="seg" id="segTier"><button data-v="4" class="on">All</button><button data-v="2">A–C</button><button data-v="1">A–B</button></div></div>
   <div class="ctl-row"><span class="lab">Max σ loc</span><input type="range" id="sig" min="1" max="30" step="0.5" value="30"><span class="val mono" id="sigV">all</span></div>
   <div class="ctl-row"><span class="lab">Depth datum</span><div class="seg" id="segDatum"><button data-v="0" class="on">Sea level</button><button data-v="1">Local surface</button></div></div>
-  <div class="ctl-row"><span class="lab">Above ground</span><div class="seg" id="segAir"><button data-v="0">Show</button><button data-v="1" class="on">Grey</button><button data-v="2">Hide</button></div></div>
+  <div class="ctl-row"><span class="lab">Above surface</span><div class="seg" id="segAir"><button data-v="0">Show</button><button data-v="1" class="on">Grey</button><button data-v="2">Hide</button></div></div>
   <div class="ctl-row" id="datumNote" style="display:none"><span class="lab"></span><span class="val" id="datumNoteT" style="width:auto;text-align:left">depths below sea level for this catalog</span></div>
   <div class="ctl-row"><span class="lab"></span><span class="val mono" id="airV" style="width:auto;text-align:left"></span></div>
   <div class="ctl-row"><span class="lab">Depth from</span><input type="range" id="d0" min="-5" max="80" step="1" value="-5"><span class="val mono" id="d0V">−5 km</span></div>
   <div class="ctl-row"><span class="lab">Depth to</span><input type="range" id="d1" min="-5" max="80" step="1" value="80"><span class="val mono" id="d1V">80 km</span></div>
-  <div class="sep"></div>
-  <h4>Layers</h4>
+  </div></details>
+  <details class="grp" open><summary>Layers</summary><div class="grp-body">
   <div class="layers" id="layers"></div>
-  <div class="ctl-row"><span class="lab">Slab color</span><select id="slabColor"></select></div>
-  <div class="ctl-row" id="mcRow"><span class="lab">Mc map</span><select id="mcSel"></select></div>
-  <div class="sep"></div>
-  <div class="ctl-row"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
-  <div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events, <kbd>Esc</kbd> to clear</div>
+  <div class="ctl-row optRow" data-layer="slab"><span class="lab">Slab color</span><select id="slabColor"></select></div>
+  <div class="ctl-row optRow" id="mcRow" data-layer="mc"><span class="lab">Mc map</span><select id="mcSel"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model</span><select id="tomoVar"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Model depth</span><input type="range" id="tomoDep" min="-3" max="80" step="1" value="12"><span class="val mono" id="tomoDepV">12 km</span></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Ray mask</span><select id="tomoMask"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Isocontours</span><div class="seg" id="segIso"><button data-v="1" class="on">On</button><button data-v="0">Off</button></div></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Interval</span><select id="tomoIso" title="Contour interval of the model shown; bold lines and labels at the major interval"></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Isosurface</span><div class="seg" id="segSurf"><button data-v="0" class="on">Off</button><button data-v="1">On</button></div></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Iso value</span><input type="range" id="tomoSurf" min="0" max="1" step="0.01" value="0.5"><span class="val mono" id="tomoSurfV"></span></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Vertical cut</span><select id="tomoCut"><option value="0">none</option><option value="1">east–west</option><option value="2">north–south</option></select></div>
+  <div class="ctl-row tomoRow optRow" data-layer="tomo"><span class="lab">Cut at</span><input type="range" id="tomoCutAt" min="0" max="1000" step="1" value="500"><span class="val mono" id="tomoCutV"></span></div>
+  </div></details>
+  <div class="ctl-row" style="border-top:1px solid var(--hairline);padding-top:9px"><button class="btn" id="btnSection">Cross-section</button><button class="btn" id="btnBelow">From below</button><button class="btn" id="btnReset">Reset</button></div>
+  <details class="grp"><summary>Help</summary><div class="grp-body"><div class="hint">Drag to move · right-drag or <kbd>Ctrl</kbd>-drag to rotate · scroll to zoom · arrows glide · <kbd>S</kbd> section · <kbd>G</kbd> ground · <kbd>Space</kbd> play · click a fault or an event to see that fault's events (Cluster colours: an event's family), <kbd>Esc</kbd> to clear</div></div></details>
 </div>
 
 <nav class="regions panel" id="regions"><div class="title"><span>Go to</span><span>QC events</span></div></nav>
@@ -217,7 +252,7 @@
   <div class="top"><span class="t">Cross-section</span><span class="s" id="secInfo">Click two points on the map.</span>
     <span style="flex:1"></span>
     <span class="lab" style="color:var(--text-secondary);font-size:11px">Half-width</span><input type="range" id="secW" min="1" max="60" step="1" value="10"><span class="val mono" id="secWV">10 km</span>
-    <div class="seg" id="segSecScale"><button data-v="1" class="on">1:1</button><button data-v="0">Fit</button></div>
+    <div class="seg" id="segSecScale"><button data-v="1">1:1</button><button data-v="0" class="on">Fit</button></div>
     <button class="btn" id="secClose">Close</button></div>
   <canvas id="secCanvas"></canvas>
 </div>
@@ -232,6 +267,7 @@
 <div class="legend panel" id="legend"></div>
 <div id="tip"></div>
 <div class="panel" id="faultCard"></div>
+<div class="panel" id="famCard"></div>
 
 <script type="importmap">
 { "imports": {
@@ -255,8 +291,9 @@ async function unblob(b) {
   for (const [k, t] of Object.entries(b.table)) out[k] = new T[t.dtype](buf, t.off, t.n);
   return out;
 }
-const [EV, TER, SLAB, FLT, MCG] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
-  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null), ATLAS.mc ? unblob(ATLAS.mc) : Promise.resolve(null)]);
+const [EV, TER, SLAB, FLT, MCG, TMG] = await Promise.all([unblob(ATLAS.events), unblob(ATLAS.terrain), unblob(ATLAS.slab),
+  ATLAS.faults ? unblob(ATLAS.faults) : Promise.resolve(null), ATLAS.mc ? unblob(ATLAS.mc) : Promise.resolve(null),
+  ATLAS.tomo ? unblob(ATLAS.tomo) : Promise.resolve(null)]);
 
 // ---------- projection: local equirectangular, 1 unit = 1 km; y up, depth down ----------
 const LON0 = M.lon0, LAT0 = M.lat0;
@@ -288,15 +325,15 @@ canvas.addEventListener("contextmenu", e => e.preventDefault());
 const terrainVert = `
   attribute float elev; attribute vec2 grad;
   uniform float uExag;
-  varying float vElev; varying vec3 vN;
+  varying float vElev; varying vec3 vN; varying vec2 vXZ;
   void main() {
-    vec3 p = position; p.y = elev * 0.001 * uExag;
+    vec3 p = position; p.y = elev * 0.001 * uExag; vXZ = position.xz;
     vElev = elev; vN = normalize(vec3(-grad.x * 0.001 * uExag, 1.0, -grad.y * 0.001 * uExag));
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   }`;
 const terrainFrag = `
-  uniform float uInterval, uOpacity;
-  varying float vElev; varying vec3 vN;
+  uniform float uInterval, uOpacity; uniform vec4 uCut;
+  varying float vElev; varying vec3 vN; varying vec2 vXZ;
   vec3 depthRamp(float d) {
     vec3 c0 = vec3(0.86,0.86,0.80), c1 = vec3(0.62,0.71,0.69), c2 = vec3(0.38,0.51,0.53), c3 = vec3(0.21,0.31,0.35), c4 = vec3(0.12,0.16,0.19);
     if (d < 700.0) return mix(c0, c1, d / 700.0);
@@ -309,6 +346,7 @@ const terrainFrag = `
     return 1.0 - smoothstep(0.0, w, f);
   }
   void main() {
+    if (uCut.w > 0.5 && dot(vXZ, uCut.xy) > uCut.z) discard;   // ground removed in front of the model cut
     vec3 n = normalize(gl_FrontFacing ? vN : -vN);
     float shade = clamp(dot(n, normalize(vec3(-0.8, 1.0, -0.9))), 0.0, 1.0);
     vec3 base = vElev > 0.0 ? mix(vec3(0.40,0.39,0.36), vec3(0.62,0.60,0.56), clamp(vElev / 1800.0, 0.0, 1.0)) : depthRamp(-vElev);
@@ -320,6 +358,7 @@ const terrainFrag = `
     gl_FragColor = vec4(col, uOpacity);
   }`;
 const terrainOpacity = { value: 1 };
+const uCut = { value: new THREE.Vector4(0, 0, 0, 0) };   // vertical model cut: ground with dot(xz, (x, y)) > z is removed when w = 1
 const grids = {};
 function buildGrid(key, g) {
   const z = TER[key], nx = g.nx, ny = g.ny;
@@ -345,7 +384,7 @@ function buildGrid(key, g) {
   geo.setAttribute("grad", new THREE.BufferAttribute(grad, 2));
   geo.setIndex(new THREE.BufferAttribute(idx.subarray(0, k), 1));
   const mat = new THREE.ShaderMaterial({ vertexShader: terrainVert, fragmentShader: terrainFrag, side: THREE.DoubleSide,
-    transparent: true, uniforms: { uExag: U.exag, uInterval: { value: g.interval }, uOpacity: terrainOpacity } });
+    transparent: true, uniforms: { uExag: U.exag, uInterval: { value: g.interval }, uOpacity: terrainOpacity, uCut } });
   const sample = (lon, lat) => {
     const fc = (lon - g.west) / dlon, fr = (lat - g.south) / dlat;
     if (fc < 0 || fr < 0 || fc > nx - 1 || fr > ny - 1) return null;
@@ -374,31 +413,49 @@ const elevAt = (lon, lat) => { for (const k of patchKeys) { const v = grids[k].s
 const N = EV.lon.length;
 // Catalogs of the registry (workflow/11_compare/catalogs.yaml, atlas: true), one event set (the reference catalog's
 // events, same order). CATS[0] is the reference (positions EV.lon/lat/dep); the others are stored as offsets from it
-// (c<k>_dlon/dlat/ddep, -32768 = not located in that catalog). elon/elat/ecat hold the positions and catalog depth
-// (km) of the catalog shown (catalog B in Compare mode); everything else per event (time, magnitude, picks, fault) is shared.
+// (c<k>_dlon/dlat, -32768 = not located in that catalog) and exact depths (c<k>_dep, float32, NaN = not located;
+// older builds: c<k>_ddep in 10 m steps). elon/elat/ecat hold the positions and catalog depth (km) of the catalog shown
+// (catalog B in Compare mode); everything else per event (time, magnitude, picks, fault) is shared.
 const CATS = (M.events.cats && M.events.cats.length) ? M.events.cats
   : [{ id: "v4", label: "Catalog v4", ref: true, key: null, has_tiers: false, status: "final", num: {} }];
 const NC = CATS.length;
-const TIERS = "ABCDU";                       // tier codes 0-4; 5 = located, catalog without tier classes
-const TIER_LAB = k => k === 5 ? "–" : TIERS[k];
+const TIERS = "ABCDU";                       // tier codes 0-4 = A-D, U (not located here: ring at the reference location);
+                                             // 5 = located, catalog without tier classes; 6 = no hypocentre in this catalog
+                                             // (loc_source none, catalog v5.1+): not drawn in its view nor in Compare
 const CP = CATS.map(c => {
-  if (!c.key) return { lon: EV.lon, lat: EV.lat, dep: EV.dep, tier: null };
-  const dl = EV[c.key + "_dlon"], da = EV[c.key + "_dlat"], dz = EV[c.key + "_ddep"];
+  // magnitudes (D-B102: each catalog with the magnitudes computed on its own hypocentres): c.magk names the arrays,
+  // null = the reference catalog's (the catalog has none of its own, or they are the same)
+  const mag = c.magk ? EV[c.magk + "_mag"] : EV.mag, mty = c.magk ? EV[c.magk + "_mty"] : EV.mtype;
+  if (!c.key) return { lon: EV.lon, lat: EV.lat, dep: EV.dep, tier: null, surf: null, mag, mty };
+  const dl = EV[c.key + "_dlon"], da = EV[c.key + "_dlat"], de = EV[c.key + "_dep"], dz = EV[c.key + "_ddep"];
   const lon = new Float32Array(N), lat = new Float32Array(N), dep = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     const k = dl[i] === -32768;
-    lon[i] = k ? NaN : EV.lon[i] + dl[i] * 1e-4; lat[i] = k ? NaN : EV.lat[i] + da[i] * 1e-4; dep[i] = k ? NaN : EV.dep[i] + dz[i] / 100;
+    lon[i] = k ? NaN : EV.lon[i] + dl[i] * 1e-4; lat[i] = k ? NaN : EV.lat[i] + da[i] * 1e-4;
+    dep[i] = k ? NaN : de ? de[i] : EV.dep[i] + dz[i] / 100;   // exact depth: 10 m steps could put a near-surface event above it
   }
-  return { lon, lat, dep, tier: EV[c.key + "_tier"], nph: EV[c.key + "_nph"], gap: EV[c.key + "_gap"], rms: EV[c.key + "_rms"] };
+  return { lon, lat, dep, tier: EV[c.key + "_tier"], nph: EV[c.key + "_nph"], gap: EV[c.key + "_gap"], rms: EV[c.key + "_rms"],
+    surf: EV[c.key + "_surf"] || null, mag, mty };   // the catalog's own solid surface (km, up; registry own_surface), NaN = none
 });
 const ANY_TIERS = CATS.some(c => c.has_tiers);
 const isLoc = (k, i) => !Number.isNaN(CP[k].lon[i]);
+const noHypo = (k, i) => !!CP[k].tier && CP[k].tier[i] === 6;
+// relocated catalog (registry atlas_relocated or --catalog2): default B in Compare, tier colours of the reference view
+const REL = Math.min(NC - 1, Math.max(0, M.events.rel ?? NC - 1));
+// Moves layer (registry atlas_moves_from -> the relocated catalog, or --catalog-before): a line from each event's location
+// in one catalog to its location in another, for the events located in both
+const MV = M.events.moves && NC > 1 ? M.events.moves : null;
+const MOVES = !!MV;
 const elon = Float32Array.from(EV.lon), elat = Float32Array.from(EV.lat), ecat = Float32Array.from(EV.dep);
-const etier = new Float32Array(N).fill(5);   // tier of the catalog shown (or of the latest catalog with tiers)
+const etier = new Float32Array(N).fill(5);   // tier of the catalog shown (or of the relocated catalog), codes 0-6 as above
 const cdz = new Float32Array(N).fill(NaN), cdh = new Float32Array(N).fill(NaN);   // Compare: B − A depth, A → B horizontal (km)
-const cdv = new Float32Array(N).fill(-9999); // value coloured in Compare mode; -9999 = not located in both
+const cdv = new Float32Array(N).fill(0);     // value coloured in Compare mode; -9999 = not drawn in this view
+                                             // (Compare: not located in both; single view: no hypocentre in the catalog shown)
+// Events above the ground or seafloor are location errors (PI 2026-11-24, D-B055): they are drawn where the catalog
+// puts them, flagged (eair) and greyed or hidden with "Above surface"; nothing is moved.
 const eflt = new Float32Array(N);            // fault index of each event (-1 = none)
 const esurf = new Float32Array(N), edep = new Float32Array(N), eair = new Float32Array(N);   // surface elev (km, up), displayed depth (km bsl), above-ground flag
+const emty = Uint8Array.from(EV.mtype);       // magnitude type of the catalog shown (codes of fmtM)
 const ex = new Float32Array(N), ez = new Float32Array(N), emag = new Float32Array(N), eflag = new Float32Array(N), esig = new Float32Array(N), enew = new Float32Array(N);
 for (let i = 0; i < N; i++) {
   ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]);
@@ -411,23 +468,39 @@ for (let i = 0; i < N; i++) {
 }
 const esurf4 = esurf.slice();                       // surface under each epicentre, per catalog (computed on first use)
 const esurfC = [esurf4];
-function catSurf(k) {
-  if (!esurfC[k]) { const a = esurf4.slice(), P = CP[k]; for (let i = 0; i < N; i++) if (isLoc(k, i)) a[i] = elevAt(P.lon[i], P.lat[i]) / 1000; esurfC[k] = a; }
+function catSurf(k) {   // the catalog's own surface (surface_km, the surface of its above-surface test) where it has one, else the atlas terrain
+  if (!esurfC[k]) { const a = esurf4.slice(), P = CP[k];
+    for (let i = 0; i < N; i++) if (isLoc(k, i)) a[i] = P.surf && Number.isFinite(P.surf[i]) ? P.surf[i] : elevAt(P.lon[i], P.lat[i]) / 1000;
+    esurfC[k] = a; }
   return esurfC[k];
 }
+// Earthquake families (colour mode Cluster, 7; build option --clusters): the nearest-neighbour clustering of one catalog
+// (CLU.cat, catalog v5.1), offered in that catalog's view only, since the families come from its locations. Per event:
+// class code ecls (CLU.cls: 0 background, 1 mainshock-aftershock, 2 swarm, 3 multiplet, 4 linked to a single,
+// 5 excluded: not drawn in this mode; 255 not in the table), family row efam (-1 none), role (CLU.roles[EV.cl_role]);
+// per family: the column lists of CLU.fam and a colour (index into CLU.pal, chosen so that neighbouring families differ).
+const CLU = M.events.clu || null;
+const ecls = new Float32Array(N).fill(255), efam = new Float32Array(N).fill(-1), ecol = new Float32Array(N * 3);
+if (CLU) for (let i = 0; i < N; i++) { ecls[i] = EV.cl_cls[i]; efam[i] = EV.cl_fam[i] === 65535 ? -1 : EV.cl_fam[i]; }
+// by type: background grey, then a set that keeps every pair apart under normal and simulated protan, deutan, tritan vision
+const CLU_TYPE_RGB = ["#6b6b6b", "#d55e00", "#f0e442", "#3987e5", "#a6dcef"];
+const CLU_LAB = ["Background", "Mainshock–aftershock", "Swarm", "Multiplet", "Linked to a single"];
+let CLU_ON = false;                          // Cluster colours in use: mode 7 in the clustered catalog's view
 const evGeo = new THREE.BufferGeometry();
 const evPos = new Float32Array(N * 3);
 for (let i = 0; i < N; i++) { evPos[i * 3] = ex[i]; evPos[i * 3 + 1] = 0; evPos[i * 3 + 2] = ez[i]; }
 evGeo.setAttribute("position", new THREE.BufferAttribute(evPos, 3));
 // Depth datum of the relocation is not confirmed. "Sea level": the catalog depth is km below sea level (as reported).
 // "Local surface": the catalog depth is km below the ground/seafloor under the epicentre, so we add the water depth or
-// subtract the elevation. Events still above the surface after that are flagged (eair) and greyed or hidden.
-let nAir = 0;
+// subtract the elevation. Events still above the surface after that are flagged (eair) as location errors and greyed
+// or hidden with "Above surface".
+let nAir = 0, nDrawn = N;                   // events above the surface among the events drawn in this view
 function applyDatum(mode) {
-  nAir = 0;
+  nAir = 0; nDrawn = 0;
   for (let i = 0; i < N; i++) {
     edep[i] = mode ? ecat[i] - esurf[i] : ecat[i];
-    eair[i] = edep[i] < -esurf[i] ? 1 : 0; nAir += eair[i];
+    eair[i] = edep[i] < -esurf[i] ? 1 : 0;
+    if (cdv[i] > -9000) { nAir += eair[i]; nDrawn++; }   // events without a hypocentre here (or, in Compare, in A or B) are not drawn
   }
 }
 applyDatum(0);
@@ -435,7 +508,8 @@ const depAttr = new THREE.BufferAttribute(edep, 1), airAttr = new THREE.BufferAt
 evGeo.setAttribute("dep", depAttr);
 evGeo.setAttribute("air", airAttr);
 evGeo.setAttribute("day", new THREE.BufferAttribute(EV.day, 1));
-evGeo.setAttribute("mag", new THREE.BufferAttribute(emag, 1));
+const magAttr = new THREE.BufferAttribute(emag, 1);   // magnitudes of the catalog shown (applyView)
+evGeo.setAttribute("mag", magAttr);
 evGeo.setAttribute("qc", new THREE.BufferAttribute(eflag, 1));
 evGeo.setAttribute("sig", new THREE.BufferAttribute(esig, 1));
 evGeo.setAttribute("nw", new THREE.BufferAttribute(enew, 1));
@@ -443,11 +517,17 @@ evGeo.setAttribute("flt", new THREE.BufferAttribute(eflt, 1));
 const tierAttr = new THREE.BufferAttribute(etier, 1), dvAttr = new THREE.BufferAttribute(cdv, 1);
 evGeo.setAttribute("tier", tierAttr);
 evGeo.setAttribute("dv", dvAttr);
-const F = { cat: 0, cmp: false, ca: 0, cb: NC - 1, cq: 5, cs: 8, segs: 0, segN: 3000, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1 };
+const ccolAttr = new THREE.BufferAttribute(ecol, 3);
+evGeo.setAttribute("ccls", new THREE.BufferAttribute(ecls, 1));
+evGeo.setAttribute("cfam", new THREE.BufferAttribute(efam, 1));
+evGeo.setAttribute("ccol", ccolAttr);
+// clu: Cluster mode state: sub 0 by family, 1 by type; show = classes 0-4 drawn; fam = isolated family row (-1 none)
+const F = { cat: 0, cmp: false, ca: 0, cb: REL, cq: 5, cs: 8, segs: 0, segN: 3000, datum4: 0, tmax: 4, fault: -1, onf: 0, datum: 0, air: 1, t0: 0, t1: M.events.days_max + 1, mmin: -9, sig: 999, qc: 0, d0: -99, d1: 999, box: null, mode: 0, size: 1,
+  clu: { sub: 0, show: [true, true, true, true, true], fam: -1 } };
 const EU = { uExag: U.exag, uT0: { value: F.t0 }, uT1: { value: F.t1 }, uMmin: { value: -9 }, uSig: { value: 999 }, uQC: { value: 0 },
   uD0: { value: -99 }, uD1: { value: 999 }, uBox: { value: new THREE.Vector4() }, uBoxOn: { value: 0 }, uMode: { value: 0 },
   uSize: { value: 1 }, uAir: { value: 1 }, uFault: { value: -1 }, uOnF: { value: 0 }, uPix: { value: renderer.getPixelRatio() }, uTmax: { value: M.events.days_max },
-  uRing: { value: 0 }, uTierMax: { value: 4 }, uCmp: { value: 0 }, uDvS: { value: 8 } };
+  uRing: { value: 0 }, uTierMax: { value: 4 }, uCmp: { value: 0 }, uDvS: { value: 8 }, uClu: { value: 0 }, uCluOn: { value: 31 }, uFam: { value: -1 } };
 const ramps = `
   vec3 rampDepth(float d) {   // shallow pale gold -> deep violet, all readable on dark
     float t = clamp(d / 45.0, 0.0, 1.0);
@@ -466,9 +546,10 @@ const ramps = `
     vec3 c = clamp(vec3(abs(h - 3.0) - 1.0, 2.0 - abs(h - 2.0), 2.0 - abs(h - 4.0)), 0.0, 1.0);
     return mix(vec3(1.0), c, 0.75 + 0.25 * fract(f * 0.37));
   }
-  vec3 tierCol(float t) {      // A green, B blue, C yellow, D red, U grey (not relocated), no tier class pale
+  vec3 tierCol(float t) {      // A green, B blue, C yellow, D red, U grey (not relocated, or 6 no hypocentre), no tier class (5) pale
     if (t < 0.5) return vec3(0.31,0.75,0.55); if (t < 1.5) return vec3(0.34,0.66,0.90);
-    if (t < 2.5) return vec3(0.91,0.77,0.28); if (t < 3.5) return vec3(0.88,0.36,0.36); if (t < 4.5) return vec3(0.62,0.61,0.58); return vec3(0.85,0.84,0.80);
+    if (t < 2.5) return vec3(0.91,0.77,0.28); if (t < 3.5) return vec3(0.88,0.36,0.36); if (abs(t - 5.0) < 0.5) return vec3(0.85,0.84,0.80);
+    return vec3(0.62,0.61,0.58);   // U and no hypocentre (6): grey
   }
   vec3 rampDz(float t) {       // Compare, depth change B − A, t in [-1, 1]: shallower blue, deeper warm
     t = clamp(t, -1.0, 1.0);
@@ -483,13 +564,15 @@ const ramps = `
   }`;
 const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthWrite: true,
   vertexShader: `
-    attribute float dep, day, mag, qc, sig, nw, air, flt, tier, dv;
+    attribute float dep, day, mag, qc, sig, nw, air, flt, tier, dv, ccls, cfam; attribute vec3 ccol;
     uniform float uRing, uCmp, uDvS, uTierMax, uFault, uOnF, uAir, uExag, uT0, uT1, uMmin, uSig, uQC, uD0, uD1, uBoxOn, uMode, uSize, uPix, uTmax; uniform vec4 uBox;
+    uniform float uClu, uCluOn, uFam;
     varying vec3 vCol; varying float vFade, vRing;
     ${ramps}
     void main() {
       bool keep = day >= uT0 && day <= uT1 && mag >= uMmin && sig <= uSig && qc >= uQC && dep >= uD0 && dep <= uD1 && !(uAir > 1.5 && air > 0.5)
-        && (tier <= uTierMax + 0.5 || tier > 4.5) && (uCmp < 0.5 || dv > -9000.0) && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5));
+        && (abs(tier - 5.0) < 0.5 || min(tier, 4.0) <= uTierMax + 0.5) && dv > -9000.0 && (uFault < -0.5 || abs(flt - uFault) < 0.5) && (uOnF < 0.5 || (uOnF < 1.5 ? flt > -0.5 : flt < -0.5))
+        && (uClu < 0.5 || (ccls < 4.5 && mod(floor(uCluOn / exp2(ccls) + 0.001), 2.0) > 0.5));   // Cluster mode: classes shown (bit k of uCluOn), excluded never
       if (uBoxOn > 0.5) keep = keep && position.x >= uBox.x && position.x <= uBox.y && position.z >= uBox.z && position.z <= uBox.w;
       if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
       vec4 mv = modelViewMatrix * vec4(position.x, -dep * uExag, position.z, 1.0);
@@ -498,9 +581,13 @@ const evMat = new THREE.ShaderMaterial({ uniforms: EU, transparent: true, depthW
       float s = 0.8 + 0.9 * pow(1.85, clamp(m, -1.0, 3.0) + 1.0) * pow(1.25, max(m - 3.0, 0.0));
       gl_PointSize = clamp(s * uSize * uPix * clamp(pow(320.0 / -mv.z, 0.45), 0.35, 1.6), 1.2 * uPix, 30.0 * uPix);
       vCol = uMode < 0.5 ? rampDepth(dep) : (uMode < 1.5 ? rampTime(day / uTmax) : (uMode < 2.5 ? rampNew(nw) : (uMode < 3.5 ? faultCol(flt)
-        : (uMode < 4.5 ? tierCol(tier) : (uMode < 5.5 ? rampDz(dv / uDvS) : rampDh(dv / uDvS))))));
-      vRing = tier > 3.5 && tier < 4.5 && (uRing > 0.5 || (uMode > 3.5 && uMode < 4.5)) ? 1.0 : 0.0;   // tier U: ring = reference location, not relocated
+        : (uMode < 4.5 ? tierCol(tier) : (uMode < 5.5 ? rampDz(dv / uDvS) : (uMode < 6.5 ? rampDh(dv / uDvS) : ccol))))));
+      vRing = tier > 3.5 && abs(tier - 5.0) > 0.5 && (uRing > 0.5 || (uMode > 3.5 && uMode < 4.5)) ? 1.0 : 0.0;   // tier U (4, or 6 = no hypocentre in the tier catalog): ring at the reference location
       vFade = qc > 0.5 ? 1.0 : 0.7;
+      if (uClu > 0.5) {                          // Cluster mode: background recedes; with a family isolated, the others dim
+        if (ccls < 0.5) vFade *= 0.5;
+        if (uFam > -0.5) { if (abs(cfam - uFam) > 0.5) { vCol = mix(vCol, vec3(0.4), 0.6); vFade *= 0.2; gl_PointSize *= 0.6; } else gl_PointSize *= 1.35; }
+      }
       if (uAir > 0.5 && uAir < 1.5 && air > 0.5) { vCol = vec3(0.55); vFade *= 0.45; }
     }`,
   fragmentShader: `
@@ -550,8 +637,9 @@ function buildSegs() {
 function passes(i) {
   const d = edep[i];
   if (F.air === 2 && eair[i]) return false;
-  if (etier[i] > F.tmax && etier[i] < 5) return false;
-  if (F.cmp && !(cdv[i] > -9000)) return false;
+  if (etier[i] !== 5 && Math.min(etier[i], 4) > F.tmax) return false;   // no tier class: always kept; no hypocentre: as U
+  if (!(cdv[i] > -9000)) return false;           // no hypocentre in the catalog shown; Compare: not located in both
+  if (CLU_ON && !(ecls[i] < 5 && F.clu.show[ecls[i]])) return false;   // Cluster mode: class hidden, or excluded from the clustering
   if (F.fault >= 0 && eflt[i] !== F.fault) return false;
   if (F.onf === 1 && eflt[i] < 0 || F.onf === 2 && eflt[i] >= 0) return false;
   if (EV.day[i] < F.t0 || EV.day[i] > F.t1 || emag[i] < F.mmin || esig[i] > F.sig || eflag[i] < F.qc || d < F.d0 || d > F.d1) return false;
@@ -616,7 +704,11 @@ const slabDepAt = (lon, lat) => {
 
 // ---------- magnitude of completeness: 0.1 deg cells draped just above the ground ----------
 const MCM = M.mc;
-let mcMesh = null, mcKey = "best";
+let mcMesh = null, mcKey = "best", mcPre = "";
+// Mc grid sets (D-B104): the reference catalog's (pre "") and those computed with a catalog's own hypocentres and
+// magnitudes (pre "c<k>_"); the layer shows the set of the catalog in view (Compare: B), else the reference set
+const MCS = MCM ? (MCM.sets || [{ pre: "", cat: null, source: MCM.source, layers: MCM.layers }]) : [];
+const mcSet = () => { const c = F.cmp ? F.cb : F.cat; return MCS.find(S => S.cat === CATS[c].id) || MCS[0]; };
 const mcCol = v => { const S = MCM.cpt; if (v <= S[0][0]) return S[0].slice(1);
   for (let j = 1; j < S.length; j++) if (v <= S[j][0]) { const t = (v - S[j - 1][0]) / (S[j][0] - S[j - 1][0]);
     return [0, 1, 2].map(c => S[j - 1][c + 1] + t * (S[j][c + 1] - S[j - 1][c + 1])); }
@@ -625,7 +717,7 @@ const mcCell = [];                                     // display cell -> grid n
 if (MCG) {
   const nx = MCM.nx, ny = MCM.ny, h = MCM.step / 2;
   const any = new Uint8Array(nx * ny);
-  for (const L of MCM.layers) { const a = MCG["mc_" + L.key]; for (let i = 0; i < a.length; i++) if (a[i] !== 255) any[i] = 1; }
+  for (const S of MCS) for (const L of S.layers) { const a = MCG[S.pre + "mc_" + L.key]; for (let i = 0; i < a.length; i++) if (a[i] !== 255) any[i] = 1; }
   for (let i = 0; i < any.length; i++) if (any[i]) mcCell.push(i);
   const nc = mcCell.length, pos = new Float32Array(nc * 12), elev = new Float32Array(nc * 4), col = new Float32Array(nc * 12);
   mcCell.forEach((i, k) => {
@@ -653,7 +745,7 @@ function placeMc() {                                   // follow the vertical ex
 }
 function setMc(key) {
   if (!mcMesh) return;
-  mcKey = key; const a = MCG["mc_" + key], g = mcMesh.geometry, c = g.attributes.color.array, idx = [];
+  mcKey = key; mcPre = mcSet().pre; const a = MCG[mcPre + "mc_" + key], g = mcMesh.geometry, c = g.attributes.color.array, idx = [];
   mcCell.forEach((i, k) => {
     if (a[i] === 255) return;
     const rgb = mcCol((a[i] - 40) / 20).map(v => (v / 255) ** 2.2);   // sRGB table -> linear for the renderer
@@ -663,6 +755,314 @@ function setMc(key) {
   g.attributes.color.needsUpdate = true; g.setIndex(idx);
 }
 placeMc(); setMc("best");
+
+// ---------- velocity model (Track B): 3D textures cut by a horizontal slice and the cross-section ----------
+// As in the mt-rainier-digital-model viewer: one 3D texture per property, sampled in the fragment shader (linear in
+// longitude, latitude and depth between the model nodes); nothing above the ground or seafloor is drawn. The same
+// values feed the model image behind the events in the 2D cross-section.
+const TMM = M.tomo;
+// Colour ramps (D-B104): Crameri scientific colour maps from atlas_ramps.js of the paper model figures, inlined by the
+// builder (--ramps): RAMP_DV, RAMP_V, RAMP_VPVS and ATLAS_RAMPS (per variable: kind, map, lo, hi, centre, ends, stops),
+// on t in [-1, 1] (-1 = lo, +1 = hi; diverging maps have their centre colour at t = 0). Without the file
+// (ATLAS_RAMPS null) the earlier matplotlib "seismic" ramps below stay in use.
+/*__ATLAS_RAMPS__*/
+const RAMP_RED_LOW = [[-1, 128, 0, 0], [-0.5, 255, 0, 0], [0, 255, 255, 255], [0.5, 0, 0, 255], [1, 0, 0, 77]];    // slow / low red, fast / high blue
+const RAMP_RED_HIGH = [[-1, 0, 0, 77], [-0.5, 0, 0, 255], [0, 255, 255, 255], [0.5, 255, 0, 0], [1, 128, 0, 0]];   // Vp/Vs: high red
+// iso: contour intervals offered, [minor, major] (bold lines with value labels at the major one), isoDef the default;
+// dig: decimals of the labels at least; surf: isosurface slider [min, max, step, default]
+const TVARS = [
+  { key: "dvp", label: "Vp change from the start model", unit: "%", wave: "p", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"],
+    iso: [[0.5, 2.5], [1, 5], [2, 10]], isoDef: 1, dig: 0, surf: [-10, 10, 0.25, -3] },
+  { key: "dvs", label: "Vs change from the start model", unit: "%", wave: "s", dec: c => (c - 127) / 4, lo: -6, hi: 6, ramp: RAMP_RED_LOW, ends: ["slow", "fast"],
+    iso: [[0.5, 2.5], [1, 5], [2, 10]], isoDef: 1, dig: 0, surf: [-10, 10, 0.25, -3] },
+  { key: "vpvs", label: "Vp/Vs", unit: "", wave: "s", dec: c => 1.4 + c / 200, lo: 1.65, hi: 1.95, ramp: RAMP_RED_HIGH, ends: ["", ""],
+    iso: [[0.025, 0.1], [0.05, 0.1], [0.1, 0.5]], isoDef: 1, dig: 1, surf: [1.55, 2.3, 0.01, 1.85] },
+  { key: "vp", label: "Vp", unit: "km/s", wave: "p", dec: c => 1.5 + c / 32, lo: 4.5, hi: 8.2, ramp: RAMP_RED_LOW, ends: ["", ""],
+    iso: [[0.1, 0.5], [0.25, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [3, 8.6, 0.05, 7.5] },
+  { key: "vs", label: "Vs", unit: "km/s", wave: "s", dec: c => 0.5 + c / 50, lo: 2.5, hi: 4.7, ramp: RAMP_RED_LOW, ends: ["", ""],
+    iso: [[0.1, 0.5], [0.2, 1], [0.5, 1]], isoDef: 1, dig: 1, surf: [1.5, 4.8, 0.05, 4.2] }];
+if (ATLAS_RAMPS) for (const V of TVARS) {               // the paper figures' map, display range and end labels
+  const R = ATLAS_RAMPS[V.key]; if (!R) continue;
+  if (R.kind === "diverging" && Math.abs((R.lo + R.hi) / 2 - R.centre) > 1e-9)
+    console.error(`atlas_ramps.js ${V.key}: centre ${R.centre} is not the middle of ${R.lo}-${R.hi}`);
+  Object.assign(V, { lo: R.lo, hi: R.hi, ramp: R.stops, ends: R.ends, cmap: R.map, kind: R.kind });
+}
+const TMASK = [[0, "all cells"], [10, "DWS ≥ 10"], [100, "DWS ≥ 100"], [1000, "DWS ≥ 1,000"]]
+  .concat(TMG && TMG.resp ? [[-1, "resolved in checkerboard tests"]] : []);
+// iso: contour lines on; isoI: interval index per variable; surf: isosurface on; sv: isosurface value per variable
+const TS = { v: "dvp", d: 12, mask: 10, iso: true, isoI: Object.fromEntries(TVARS.map(V => [V.key, V.isoDef])),
+  surf: false, sv: Object.fromEntries(TVARS.map(V => [V.key, V.surf[3]])) };
+const tIso = V => V.iso[TS.isoI[V.key]];                // [minor, major] interval in use
+const tLin = V => [V.dec(0), V.dec(1) - V.dec(0)];      // value = a + b code (every decoding is linear)
+const tUnit = V => V.unit ? (V.unit === "%" ? " %" : " " + V.unit) : "";
+const tDig = (V, x) => Math.max(V.dig, (String(x).split(".")[1] || "").length);
+// a contour or isosurface value as written on the page: minus sign, + on positive changes
+const tFmt = (V, x, dig) => { const s = Math.abs(x).toFixed(dig); return (x < 0 && +s !== 0 ? "−" : V.unit === "%" && x > 0 && +s !== 0 ? "+" : "") + s; };
+// sizes of the finest resolved checkerboard cells in the model (km), for the legend of the checkerboard mask
+const tResC = {};
+const tResKm = V => { const k = V.wave === "p" ? "resp" : "ress";
+  if (!(k in tResC)) tResC[k] = TMG[k] ? [...new Set(TMG[k])].filter(x => x > 0 && x < 255).sort((a, b) => a - b) : [];
+  const s = tResC[k]; return s.length ? `finest resolved cell ${s.length > 1 ? s.slice(0, -1).join(", ") + " or " + s[s.length - 1] : s[0]} km` : ""; };
+const TDMAX = 80;                                       // deepest level drawn (km)
+const rampCol = (R, t) => { t = Math.max(-1, Math.min(1, t)); if (t <= R[0][0]) return R[0].slice(1);
+  for (let j = 1; j < R.length; j++) if (t <= R[j][0]) { const f = (t - R[j - 1][0]) / (R[j][0] - R[j - 1][0]);
+    return [1, 2, 3].map(c => R[j - 1][c] + f * (R[j][c] - R[j - 1][c])); }
+  return R[R.length - 1].slice(1); };
+const tvarT = (V, x) => (x - (V.lo + V.hi) / 2) / ((V.hi - V.lo) / 2);   // -1 at lo, 0 at the centre, 1 at hi
+const tVar = () => TVARS.find(t => t.key === TS.v);
+const tMaskArr = V => TS.mask === -1 ? TMG[V.wave === "p" ? "resp" : "ress"] : TS.mask > 0 ? TMG[V.wave === "p" ? "dwsp" : "dwss"] : null;
+const tThr = () => TS.mask === -1 ? 1 : TS.mask > 0 ? Math.round(50 * Math.log10(1 + TS.mask)) : 0;
+// fractional node index of a depth (nodes are unevenly spaced)
+const tK = d => { const z = TMM.depths; if (d <= z[0]) return 0; for (let k = 0; k < z.length - 1; k++) if (d <= z[k + 1]) return k + (d - z[k]) / (z[k + 1] - z[k]); return z.length - 1; };
+// Nodes without a value (code 255: the water and air nodes of models with a medium variable, v0.3.2+; NaN in the
+// netCDF) are never drawn: the slice and the section draw nothing above the ground or seafloor. For the linear
+// interpolation just below it, the display copies TMF give such a node the value of the first node with one below it
+// in the same column, so a rock cell under the surface is coloured by rock values only (TMG keeps the codes as built).
+const tFill = a => { const o = a.slice(), nxy = TMM.nx * TMM.ny;
+  for (let j = 0; j < nxy; j++) { let v = 255; for (let k = TMM.nz - 1; k >= 0; k--) { const q = k * nxy + j; if (o[q] !== 255) v = o[q]; else o[q] = v; } }
+  return o; };
+const TMF = TMG ? Object.fromEntries(TVARS.map(V => [V.key, tFill(TMG[V.key])])) : null;
+// CPU sample for the 2D section: value (trilinear) or null where masked, above the ground or seafloor, or outside the model
+function tmSample(V, lon, lat, d) {
+  const fi = (lon - TMM.west) / TMM.dx, fj = (lat - TMM.south) / TMM.dy, fk = tK(d), nx = TMM.nx, ny = TMM.ny, nz = TMM.nz;
+  if (fi < 0 || fj < 0 || fi > nx - 1 || fj > ny - 1) return null;
+  if (d < -elevAt(lon, lat) / 1000) return null;          // water or air
+  const ms = tMaskArr(V);
+  if (ms) { const idx = Math.round(fk) * nx * ny + Math.round(fj) * nx + Math.round(fi); if (ms[idx] === 255 || ms[idx] < tThr()) return null; }
+  const a = TMF[V.key], i0 = Math.min(Math.floor(fi), nx - 2), j0 = Math.min(Math.floor(fj), ny - 2), k0 = Math.min(Math.floor(fk), nz - 2);
+  const u = fi - i0, v = fj - j0, w = fk - k0; let acc = 0;
+  for (let dk = 0; dk < 2; dk++) for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) {
+    const c = a[(k0 + dk) * nx * ny + (j0 + dj) * nx + i0 + di]; if (c === 255) return null;
+    acc += (di ? u : 1 - u) * (dj ? v : 1 - v) * (dk ? w : 1 - w) * V.dec(c); }
+  return acc;
+}
+let tomoSlice = null, tomoMat = null;
+if (TMG) {
+  const tex3 = (arr, linear) => { const t = new THREE.Data3DTexture(arr, TMM.nx, TMM.ny, TMM.nz);
+    t.format = THREE.RedFormat; t.type = THREE.UnsignedByteType; t.unpackAlignment = 1;
+    t.minFilter = t.magFilter = linear ? THREE.LinearFilter : THREE.NearestFilter; t.needsUpdate = true; return t; };
+  const VT = Object.fromEntries(TVARS.map(V => [V.key, tex3(TMF[V.key], true)]));
+  const MT = Object.fromEntries(["dwsp", "dwss", "resp", "ress"].filter(k => TMG[k]).map(k => [k, tex3(TMG[k], false)]));
+  const LUT = Object.fromEntries(TVARS.map(V => { const b = new Uint8Array(256 * 4);
+    for (let c = 0; c < 255; c++) b.set([...rampCol(V.ramp, tvarT(V, V.dec(c))).map(Math.round), 255], c * 4);
+    const t = new THREE.DataTexture(b, 256, 1); t.colorSpace = THREE.NoColorSpace; t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true;
+    return [V.key, t]; }));
+  const TB = M.terrain.base, tz = new Float32Array(TB.nx * TB.ny);   // ground and seafloor for the above-ground test (m)
+  for (let i = 0; i < tz.length; i++) tz[i] = TER.base[i] === -32768 ? 0 : TER.base[i];
+  const terTex = new THREE.DataTexture(tz, TB.nx, TB.ny, THREE.RedFormat, THREE.FloatType);
+  terTex.minFilter = terTex.magFilter = THREE.NearestFilter; terTex.needsUpdate = true;   // R32F: nearest works everywhere
+  const dep = new Float32Array(32); TMM.depths.forEach((z, k) => dep[k] = z);
+  const TU = { uVal: { value: null }, uMask: { value: null }, uLut: { value: null }, uTer: { value: terTex }, uExag: U.exag,
+    uOpacity: { value: 0.92 }, uThr: { value: 0 }, uMaskOn: { value: 0 }, uDep: { value: dep },
+    uGeo: { value: new THREE.Vector4(KX, KZ, LON0, LAT0) }, uGrid: { value: new THREE.Vector4(TMM.west, TMM.south, TMM.dx, TMM.dy) },
+    uN: { value: new THREE.Vector3(TMM.nx, TMM.ny, TMM.nz) }, uTerBox: { value: new THREE.Vector4(TB.west, TB.east, TB.south, TB.north) },
+    uTerN: { value: new THREE.Vector2(TB.nx, TB.ny) },
+    uDec: { value: new THREE.Vector2(0, 1) }, uIso: { value: new THREE.Vector4(1, 5, 0, 1) } };   // decoding a + b code; contours: minor, major, on, pixel ratio
+  // shared by the slice and the isosurface: scene position -> fractional node indices, and the cells never drawn
+  // (outside the model, above the ground or seafloor, hidden by the ray mask: the mask is nearest-node, as the slice)
+  const TGLSL = `precision highp float; precision highp sampler3D;
+      uniform sampler3D uMask; uniform sampler2D uTer;
+      uniform float uExag, uThr, uMaskOn; uniform float uDep[32];
+      uniform vec4 uGeo, uGrid, uTerBox; uniform vec3 uN; uniform vec2 uTerN;
+      varying vec3 vPos;
+      float kOf(float d) {
+        if (d <= uDep[0]) return 0.0;
+        for (int i = 0; i < 31; i++) { if (float(i) >= uN.z - 1.0) break;
+          if (d <= uDep[i + 1]) return float(i) + (d - uDep[i]) / (uDep[i + 1] - uDep[i]); }
+        return uN.z - 1.0; }
+      vec3 gridOf(vec3 p) {
+        float lon = p.x / uGeo.x + uGeo.z, lat = -p.z / uGeo.y + uGeo.w;
+        return vec3((lon - uGrid.x) / uGrid.z, (lat - uGrid.y) / uGrid.w, kOf(-p.y / uExag)); }
+      bool hidden(vec3 p, vec3 g) {
+        if (g.x < 0.0 || g.y < 0.0 || g.x > uN.x - 1.0 || g.y > uN.y - 1.0) return true;
+        float lon = p.x / uGeo.x + uGeo.z, lat = -p.z / uGeo.y + uGeo.w;
+        vec2 tt = vec2(((lon - uTerBox.x) / (uTerBox.y - uTerBox.x) * (uTerN.x - 1.0) + 0.5) / uTerN.x,
+                       ((lat - uTerBox.z) / (uTerBox.w - uTerBox.z) * (uTerN.y - 1.0) + 0.5) / uTerN.y);
+        if (-p.y / uExag < -texture(uTer, tt).r * 0.001) return true;     // above the ground or seafloor
+        if (uMaskOn > 0.5) { float m = texture(uMask, (g + 0.5) / uN).r * 255.0; if (m > 254.5 || m < uThr) return true; }
+        return false; }`;
+  // drawn before the terrain (renderOrder 10), like the events (3) and faults (4-7), so the see-through ground
+  // blends over it; opaque and writing depth, so events behind a slice are hidden and events in front show
+  tomoMat = new THREE.ShaderMaterial({ uniforms: TU, transparent: false, depthWrite: true, side: THREE.DoubleSide,
+    vertexShader: `varying vec3 vPos; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: TGLSL + `
+      uniform sampler3D uVal; uniform sampler2D uLut; uniform float uOpacity; uniform vec2 uDec; uniform vec4 uIso;
+      // code at fractional node indices, trilinear in full float precision from the 8 nodes (the hardware filter of an
+      // 8-bit texture may round its weights, which would break the contour lines into steps); the same field as tmSample
+      float codeAt(vec3 g) {
+        ivec3 i = clamp(ivec3(floor(g)), ivec3(0), ivec3(uN) - 2); vec3 f = clamp(g - vec3(i), 0.0, 1.0);
+        float c000 = texelFetch(uVal, i, 0).r, c100 = texelFetch(uVal, i + ivec3(1, 0, 0), 0).r;
+        float c010 = texelFetch(uVal, i + ivec3(0, 1, 0), 0).r, c110 = texelFetch(uVal, i + ivec3(1, 1, 0), 0).r;
+        float c001 = texelFetch(uVal, i + ivec3(0, 0, 1), 0).r, c101 = texelFetch(uVal, i + ivec3(1, 0, 1), 0).r;
+        float c011 = texelFetch(uVal, i + ivec3(0, 1, 1), 0).r, c111 = texelFetch(uVal, i + ivec3(1, 1, 1), 0).r;
+        return 255.0 * mix(mix(mix(c000, c100, f.x), mix(c010, c110, f.x), f.y), mix(mix(c001, c101, f.x), mix(c011, c111, f.x), f.y), f.z); }
+      // anti-aliased line at the integers of x, hw pixels half-width; none where x does not change across the pixel
+      float isoLine(float x, float hw) { float fw = fwidth(x), f = abs(fract(x - 0.5) - 0.5);
+        return fw > 1e-5 ? 1.0 - smoothstep(hw - 0.5, hw + 0.5, f / fw) : 0.0; }
+      void main() {
+        vec3 g = gridOf(vPos);
+        // contour weight before any discard (derivatives need every pixel of the 2 x 2 block)
+        float val = uDec.x + uDec.y * codeAt(g), ln = 0.0;
+        if (uIso.z > 0.5) ln = max(0.5 * isoLine(val / uIso.x, 0.5 * uIso.w), 0.88 * isoLine(val / uIso.y, 0.95 * uIso.w));
+        if (hidden(vPos, g)) discard;
+        vec4 c = texture(uLut, vec2((texture(uVal, (g + 0.5) / uN).r * 255.0 + 0.5) / 256.0, 0.5));
+        if (c.a < 0.5) discard;
+        gl_FragColor = vec4(mix(c.rgb, vec3(0.05, 0.05, 0.07), ln), uOpacity);   // dark lines: read on the blues and the reds
+      }` });
+  // isosurface: translucent, cut like the slice (model box, ground and seafloor, ray mask) and, as the ground, in front of the vertical cut
+  const IU = { uMask: TU.uMask, uTer: TU.uTer, uExag: U.exag, uThr: TU.uThr, uMaskOn: TU.uMaskOn, uDep: TU.uDep, uGeo: TU.uGeo,
+    uGrid: TU.uGrid, uN: TU.uN, uTerBox: TU.uTerBox, uTerN: TU.uTerN, uCut, uCol: { value: new THREE.Vector3(200, 230, 110).divideScalar(255) }, uOp: { value: 0.55 } };   // yellow-green #c8e66e (as written: no colour management in this shader), apart from the red-white-blue ramp
+  const isoMat = new THREE.ShaderMaterial({ uniforms: IU, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    vertexShader: `uniform float uExag; varying vec3 vPos, vN;
+      void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vPos = wp.xyz; vN = vec3(normal.x, normal.y / uExag, normal.z);   // mesh scaled by uExag in y
+        gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: TGLSL + `
+      uniform vec4 uCut; uniform vec3 uCol; uniform float uOp; varying vec3 vN;
+      void main() {
+        if (hidden(vPos, gridOf(vPos))) discard;
+        if (uCut.w > 0.5 && dot(vPos.xz, uCut.xy) > uCut.z) discard;
+        float l = abs(dot(normalize(vN), normalize(vec3(-0.45, 0.8, -0.4))));
+        gl_FragColor = vec4(uCol * (0.42 + 0.68 * l), uOp);
+      }` });
+  tomoMat.userData = { VT, MT, LUT, isoMat };
+  const x0 = toX(TMM.west), x1 = toX(TMM.west + (TMM.nx - 1) * TMM.dx), z0 = toZ(TMM.south), z1 = toZ(TMM.south + (TMM.ny - 1) * TMM.dy);
+  tomoSlice = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z0 - z1), tomoMat);
+  tomoSlice.rotation.x = -Math.PI / 2; tomoSlice.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
+  tomoSlice.frustumCulled = false; tomoSlice.renderOrder = 2; scene.add(tomoSlice);
+}
+let isoMesh = null, isoKey = "";
+function placeTomo() { if (tomoSlice) tomoSlice.position.y = -TS.d * U.exag.value; if (isoMesh) isoMesh.scale.y = U.exag.value; }
+function setTomo() {
+  if (!tomoMat) return;
+  const V = tVar(), D = tomoMat.userData, u = tomoMat.uniforms, ms = tMaskArr(V), [a, b] = tLin(V), [iv, mj] = tIso(V);
+  u.uVal.value = D.VT[V.key]; u.uLut.value = D.LUT[V.key];
+  u.uMaskOn.value = ms ? 1 : 0; u.uThr.value = tThr();
+  u.uMask.value = ms ? D.MT[TS.mask === -1 ? (V.wave === "p" ? "resp" : "ress") : (V.wave === "p" ? "dwsp" : "dwss")] : null;
+  u.uDec.value.set(a, b); u.uIso.value.set(iv, mj, TS.iso ? 1 : 0, renderer.getPixelRatio());
+  placeTomo();
+}
+// Isosurface of one value of the variable shown: surface nets on the model nodes (down to TDMAX, uneven depth spacing),
+// on the display values TMF (the field the slice shows); one vertex per cell the level crosses, at the mean of the edge
+// crossings, its normal the gradient of the trilinear field there. Geometry in (x, -depth, z), the mesh scaled by the
+// exaggeration in y; the shader removes what lies above the ground or seafloor or in cells the ray mask hides.
+function isoGeometry(V, value) {
+  const A = TMF[V.key], nx = TMM.nx, ny = TMM.ny, nxy = nx * ny, Z = TMM.depths, nz = Z.filter(z => z <= TDMAX).length;
+  const [a, b] = tLin(V), L = (value - a) / b;                    // the level in code units
+  const ddx = TMM.dx * KX, ddz = -TMM.dy * KZ;                    // scene x, z per node step (z decreases northward)
+  const cell = new Int32Array((nx - 1) * (ny - 1) * (nz - 1)).fill(-1), cid = (i, j, k) => (k * (ny - 1) + j) * (nx - 1) + i;
+  const pos = [], nrm = [], idx = [], c = new Float64Array(8);
+  const E = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];   // corner b: i + (b & 1), j + (b >> 1 & 1), k + (b >> 2)
+  const quad = (p, q, r, s) => { if (p < 0 || q < 0 || r < 0 || s < 0) return; idx.push(p, q, r, p, r, s); };
+  for (let k = 0; k < nz - 1; k++) for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    let m = 0, bad = false;
+    for (let q = 0; q < 8; q++) { const v = A[(k + (q >> 2)) * nxy + (j + (q >> 1 & 1)) * nx + i + (q & 1)]; if (v === 255) { bad = true; break; } c[q] = v; if (v > L) m |= 1 << q; }
+    if (bad || m === 0 || m === 255) continue;
+    let su = 0, sv = 0, sw = 0, n = 0;
+    for (const [p, q] of E) { if ((m >> p & 1) === (m >> q & 1)) continue;
+      const t = (L - c[p]) / (c[q] - c[p]); su += (p & 1) + t * ((q & 1) - (p & 1)); sv += (p >> 1 & 1) + t * ((q >> 1 & 1) - (p >> 1 & 1));
+      sw += (p >> 2) + t * ((q >> 2) - (p >> 2)); n++; }
+    const u = su / n, v = sv / n, w = sw / n, dz = Z[k + 1] - Z[k];
+    let gu = 0, gv = 0, gw = 0;                                   // gradient of the trilinear field in the cell, per node step
+    for (let q = 0; q < 8; q++) { const di = q & 1, dj = q >> 1 & 1, dk = q >> 2, wu = di ? u : 1 - u, wv = dj ? v : 1 - v, ww = dk ? w : 1 - w;
+      gu += (di ? 1 : -1) * wv * ww * c[q]; gv += (dj ? 1 : -1) * wu * ww * c[q]; gw += (dk ? 1 : -1) * wu * wv * c[q]; }
+    const gx = gu / ddx, gz = gv / ddz, gy = -gw / dz, gl = Math.hypot(gx, gy, gz) || 1;   // scene y = -depth
+    cell[cid(i, j, k)] = pos.length / 3;
+    pos.push(toX(TMM.west + (i + u) * TMM.dx), -(Z[k] + w * dz), toZ(TMM.south + (j + v) * TMM.dy));
+    nrm.push(gx / gl, gy / gl, gz / gl);
+    // the quad of each crossed node edge at the cell's low corner, joining the 4 cells around it (all seen already)
+    const at = (ii, jj, kk) => ii < 0 || jj < 0 || kk < 0 ? -1 : cell[cid(ii, jj, kk)];
+    if ((m & 1) !== (m >> 1 & 1)) quad(at(i, j, k), at(i, j - 1, k), at(i, j - 1, k - 1), at(i, j, k - 1));   // edge along x
+    if ((m & 1) !== (m >> 2 & 1)) quad(at(i, j, k), at(i - 1, j, k), at(i - 1, j, k - 1), at(i, j, k - 1));   // along y (latitude)
+    if ((m & 1) !== (m >> 4 & 1)) quad(at(i, j, k), at(i - 1, j, k), at(i - 1, j - 1, k), at(i, j - 1, k));   // along depth
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));
+  g.setIndex(idx); return g;
+}
+function setIso() {                       // build, rebuild or hide the isosurface after a change of variable, value or layer
+  if (!tomoMat) return;
+  const V = tVar(), on = TS.surf && layer("tomo").on, key = V.key + "|" + TS.sv[V.key];
+  if (on && key !== isoKey) {
+    if (isoMesh) { scene.remove(isoMesh); isoMesh.geometry.dispose(); }
+    const t0 = performance.now();
+    isoMesh = new THREE.Mesh(isoGeometry(V, TS.sv[V.key]), tomoMat.userData.isoMat);
+    isoMesh.frustumCulled = false; isoMesh.renderOrder = 8; scene.add(isoMesh); isoKey = key;
+    isoMesh.userData.ms = performance.now() - t0;
+  }
+  if (isoMesh) isoMesh.visible = on;
+  placeTomo();
+}
+function tomoSectionMesh(a, b) {          // vertical model section along the cross-section line (scene coordinates)
+  const e = U.exag.value, top = 5 * e, bot = -TDMAX * e, g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array([a.x, top, a.z, b.x, top, b.z, b.x, bot, b.z, a.x, top, a.z, b.x, bot, b.z, a.x, bot, a.z]), 3));
+  const m = new THREE.Mesh(g, tomoMat); m.frustumCulled = false; m.renderOrder = 2; return m;
+}
+setTomo();
+
+// ---------- vertical model cut: east-west at a latitude or north-south at a longitude ----------
+// The model is drawn on the cut plane and the ground in front of it is removed (as the terrain cut of the
+// mt-rainier-digital-model viewer); the 2D section panel follows the same line, with the events within its half-width.
+const CUT = { mode: 0, f: 0.5 };         // mode 0 none, 1 east-west, 2 north-south; f = position across the model box
+let cutPlane = null;
+function cutLine() {
+  const w = TMM.west, e = TMM.west + (TMM.nx - 1) * TMM.dx, s0 = TMM.south, n = TMM.south + (TMM.ny - 1) * TMM.dy;
+  if (CUT.mode === 1) { const la = s0 + CUT.f * (n - s0); return [[w, la], [e, la]]; }
+  const lo = w + CUT.f * (e - w); return [[lo, s0], [lo, n]];
+}
+function viewCut() {                     // fly to a low view facing the cut: from the south (east-west), from the west (north-south)
+  if (!CUT.mode) return;
+  const [[lo0, la0], [lo1, la1]] = cutLine(), a = new THREE.Vector3(toX(lo0), 0, toZ(la0)), b = new THREE.Vector3(toX(lo1), 0, toZ(la1));
+  const L = a.distanceTo(b), tgt = new THREE.Vector3((a.x + b.x) / 2, -25 * U.exag.value, (a.z + b.z) / 2);
+  const dist = L * 0.6 * Math.max(1, Math.pow(1 / camera.aspect, 0.75)), el = 0.45;
+  const pos = CUT.mode === 1 ? new THREE.Vector3(tgt.x, tgt.y + dist * Math.sin(el), tgt.z + dist * Math.cos(el))
+    : new THREE.Vector3(tgt.x - dist * Math.cos(el), tgt.y + dist * Math.sin(el), tgt.z);
+  fly = { t: 0, p0: camera.position.clone(), p1: pos, q0: controls.target.clone(), q1: tgt };
+}
+function setCut(openPanel) {
+  if (!tomoMat) return;
+  if (cutPlane) { scene.remove(cutPlane); cutPlane.geometry.dispose(); cutPlane = null; }
+  if (!CUT.mode) { uCut.value.w = 0; $("tomoCutV").textContent = ""; return; }
+  const [[lo0, la0], [lo1, la1]] = cutLine(), a = new THREE.Vector3(toX(lo0), 0, toZ(la0)), b = new THREE.Vector3(toX(lo1), 0, toZ(la1));
+  cutPlane = tomoSectionMesh(a, b); cutPlane.visible = layer("tomo").on; scene.add(cutPlane);
+  // ground removed in front of the cut: south of an east-west cut (the default view looks north), west of a north-south one
+  if (CUT.mode === 1) uCut.value.set(0, 1, a.z, layer("tomo").on ? 1 : 0); else uCut.value.set(-1, 0, -a.x, layer("tomo").on ? 1 : 0);
+  $("tomoCutV").textContent = CUT.mode === 1 ? `${la0.toFixed(2)}°N` : `${(-lo0).toFixed(2)}°W`;
+  if (openPanel) { SEC.a = a; SEC.b = b; if (!SEC.on) setSection(true); drawSection3D(); drawSection(); }
+}
+
+// ---------- moves: a line from each event's location in one catalog (before) to its location in another (after) ----------
+// The pair comes from the build (registry atlas_moves_from -> atlas_relocated); events located in both only.
+let moveLines = null, MOVE_STATS = null, mvIn = null;
+if (MOVES) {
+  const P0 = CP[MV.from], P1 = CP[MV.to];
+  mvIn = new Uint8Array(N);
+  const pos = new Float32Array(N * 6), dep = new Float32Array(N * 2), col = new Float32Array(N * 6), dzs = [];
+  for (let i = 0; i < N; i++) {
+    if (!isLoc(MV.from, i) || !isLoc(MV.to, i)) continue;
+    mvIn[i] = 1;
+    pos.set([toX(P0.lon[i]), 0, toZ(P0.lat[i]), toX(P1.lon[i]), 0, toZ(P1.lat[i])], i * 6);
+    dep[i * 2] = P0.dep[i]; dep[i * 2 + 1] = P1.dep[i];
+    const dz = P1.dep[i] - P0.dep[i], t = Math.min(1, Math.abs(dz) / 5); dzs.push(dz);
+    const c = dz > 0 ? [0.88, 0.36, 0.33] : [0.35, 0.62, 0.90], g = [0.55, 0.55, 0.52];   // deeper red, shallower blue
+    const m = g.map((v, j) => v + t * (c[j] - v)); col.set([...m, ...m], i * 6);
+  }
+  dzs.sort((p, q) => p - q);
+  MOVE_STATS = { n: dzs.length, med: dzs.length ? dzs[Math.floor(dzs.length / 2)] : 0, deeper: dzs.length ? dzs.filter(d => d > 0).length / dzs.length : 0,
+    absMed: dzs.length ? dzs.map(Math.abs).sort((p, q) => p - q)[Math.floor(dzs.length / 2)] : 0 };
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("dep", new THREE.BufferAttribute(dep, 1));
+  geo.setAttribute("col", new THREE.BufferAttribute(col, 3));
+  moveLines = new THREE.LineSegments(geo, new THREE.ShaderMaterial({ uniforms: { uExag: U.exag }, transparent: true, depthWrite: false,
+    vertexShader: `attribute float dep; attribute vec3 col; uniform float uExag; varying vec3 vC;
+      void main() { vec3 p = position; p.y = -dep * uExag; vC = col; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }`,
+    fragmentShader: `varying vec3 vC; void main() { gl_FragColor = vec4(vC, 0.55); }` }));
+  moveLines.frustumCulled = false; moveLines.renderOrder = 3; scene.add(moveLines);
+}
+function updateMoves() {                       // only events passing the filters, rebuilt when they change
+  if (!moveLines || !moveLines.visible) return;
+  const idx = []; for (let i = 0; i < N; i++) if (mvIn[i] && passes(i)) idx.push(i * 2, i * 2 + 1);
+  moveLines.geometry.setIndex(idx);
+}
 
 // ---------- faults: CRESCENT CFM crustal meshes + CASIE21 megathrust ----------
 const FM = M.faults || {};
@@ -776,15 +1176,25 @@ const LAYERS = [
   { key: "stations", label: "Stations", color: "#66ccf2", obj: [stPoints], on: true },
   { key: "tensors", label: "Tensors", color: "#e8a33d", obj: [tensorGroup], on: true },
   { key: "mc", label: "Mc map", color: "#6f9f6b", obj: [mcMesh].filter(Boolean), on: false },
+  { key: "tomo", label: "Velocity model", color: "#c06cd8", obj: [tomoSlice].filter(Boolean), on: false },
+  { key: "moves", label: "Moves", color: "#e05c5c", obj: [moveLines].filter(Boolean), on: false },
 ];
 const lay = $("layers");
 for (const L of LAYERS) {
   if (!L.obj.length) continue;
   const b = document.createElement("button"); b.innerHTML = `<span class="sw" style="background:${L.color}"></span>${L.label}`;
-  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); };
+  const set = on => { L.on = on; L.obj.forEach(o => o.visible = on); b.classList.toggle("muted", !on); syncOptRows();
+    if (L.key === "tomo" && on) groundSeeThrough(); };
   b.onclick = () => set(!L.on); set(L.on); L.set = set; lay.appendChild(b);
 }
 const layer = k => LAYERS.find(L => L.key === k);
+function groundSeeThrough() {                          // the model lies under the ground: make it see-through
+  const g = $("ground"); if (g && +g.value > 0.35) { g.value = 0.25; g.dispatchEvent(new Event("input")); }
+}
+function syncOptRows() {                               // a layer's options show only while the layer is on
+  document.querySelectorAll(".optRow").forEach(r => { const L = LAYERS.find(x => x.key === r.dataset.layer); r.hidden = !(L && L.on); });
+}
+syncOptRows();
 const sc = $("slabColor");
 sc.innerHTML = `<option value="depth">Depth (10 km contours)</option>` + SM.models.map(m => `<option value="${m}">Coupling: ${m}</option>`).join("");
 sc.onchange = () => { setSlabColor(sc.value); if (!layer("slab").on) layer("slab").set(true); drawLegend(); };
@@ -793,25 +1203,133 @@ if (MCM) mcSel.innerHTML = MCM.layers.map(L => `<option value="${L.key}">${L.lab
 else $("mcRow").style.display = "none";
 mcSel.onchange = () => { setMc(mcSel.value); if (!layer("mc").on) layer("mc").set(true); drawLegend(); };
 { const L = layer("mc"); if (L && L.set) { const s0 = L.set; L.set = on => { s0(on); drawLegend(); }; } }
-lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend(); }; });
+if (TMM) {
+  const tv = $("tomoVar"), td = $("tomoDep"), tk = $("tomoMask");
+  tv.innerHTML = TVARS.map(V => `<option value="${V.key}">${V.label}</option>`).join("");
+  tk.innerHTML = TMASK.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); tk.value = TS.mask;
+  td.value = TS.d; $("tomoDepV").textContent = TS.d + " km";
+  const on = () => { if (!layer("tomo").on) layer("tomo").set(true); };
+  const ti = $("tomoIso"), ts = $("tomoSurf"), segMark = (id, v) => $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.v === v));
+  const surfV = () => { const V = tVar(), x = TS.sv[V.key]; $("tomoSurfV").textContent = tFmt(V, x, tDig(V, x)) + tUnit(V); };
+  const syncIsoCtl = () => { const V = tVar();         // interval list and isosurface slider of the variable shown (each keeps its choice)
+    ti.innerHTML = V.iso.map(([iv, mj], j) => `<option value="${j}">${iv}${tUnit(V)} (bold ${mj})</option>`).join(""); ti.value = TS.isoI[V.key];
+    ts.min = V.surf[0]; ts.max = V.surf[1]; ts.step = V.surf[2]; ts.value = TS.sv[V.key]; surfV(); };
+  syncIsoCtl();
+  tv.onchange = tk.onchange = () => { TS.v = tv.value; TS.mask = +tk.value; syncIsoCtl(); setTomo(); on(); setIso(); drawLegend(); drawSection(); };
+  seg("segIso", v => { TS.iso = !!v; setTomo(); on(); drawLegend(); drawSection(); });
+  ti.onchange = () => { TS.isoI[TS.v] = +ti.value; TS.iso = true; segMark("segIso", 1); setTomo(); on(); drawLegend(); drawSection(); };
+  seg("segSurf", v => { TS.surf = !!v; on(); setIso(); drawLegend(); });
+  let isoRaf = 0;                                       // rebuild at most once per frame while the slider moves
+  ts.oninput = () => { TS.sv[TS.v] = +ts.value; surfV(); TS.surf = true; segMark("segSurf", 1); on();
+    cancelAnimationFrame(isoRaf); isoRaf = requestAnimationFrame(() => { setIso(); drawLegend(); }); };
+  td.oninput = () => { TS.d = +td.value; $("tomoDepV").textContent = TS.d + " km"; placeTomo(); on(); drawLegend(); };
+  const tc = $("tomoCut"), ta = $("tomoCutAt");
+  tc.onchange = () => { CUT.mode = +tc.value; on(); setCut(true); viewCut(); drawLegend(); };
+  ta.oninput = () => { CUT.f = +ta.value / 1000; if (!CUT.mode) { CUT.mode = 1; tc.value = "1"; } on(); setCut(true); };
+} else document.querySelectorAll(".tomoRow").forEach(r => r.style.display = "none");
+lay.querySelectorAll("button").forEach(b => { const o = b.onclick; b.onclick = () => { o(); if (typeof drawLegend === "function") drawLegend();
+  const tOn = layer("tomo") && layer("tomo").on; if (cutPlane) cutPlane.visible = tOn; uCut.value.w = tOn && CUT.mode ? 1 : 0; setIso();
+  updateMoves(); if (SEC.on) { drawSection3D(); drawSection(); } }; });
 
 // ---------- controls ----------
 let refreshT = 0, segT = 0;                                        // debounce timers of refresh() and the shift lines
-const SEC = { on: false, a: null, b: null, w: 10, scale: 1 };       // cross-section state (used by control handlers)
+const SEC = { on: false, a: null, b: null, w: 10, scale: 0 };       // cross-section state (used by control handlers); scale 0 = fit (long sections are unreadable at 1:1)
 const secCurtain = new THREE.Group(); scene.add(secCurtain);
 function seg(id, cb) {
   const el = $(id);
   el.querySelectorAll("button").forEach(b => b.onclick = () => { el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); cb(+b.dataset.v); });
 }
 const effMode = () => F.cmp && F.cq >= 0 ? F.cq : F.mode;   // colour mode in use (Compare: Δ depth 5, Δ horiz. 6)
-function setMode() { EU.uMode.value = effMode(); drawLegend(); drawSection(); buildSegs(); }
+function setMode() { const ch = syncClu(); EU.uMode.value = effMode(); if (CLU_ON) setCluCol(); drawLegend(); drawSection(); buildSegs(); if (ch) refresh(); }
+// ---------- Cluster mode: families of the clustered catalog, in its view only ----------
+const cluView = () => !!CLU && !F.cmp && F.cat === CLU.cat;
+function syncClu() {                          // offer the mode in the clustered catalog's view only; returns true when it switched on or off
+  if (!CLU) return false;
+  const v = cluView();
+  if (!v && F.mode === 7) { F.mode = 0; $("segColor").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "0")); }
+  const was = CLU_ON; CLU_ON = v && F.mode === 7;
+  $("cluNote").style.display = v ? "none" : "";        // the button stays on: outside the view it switches there
+  $("cluBox").style.display = CLU_ON ? "flex" : "none";
+  EU.uClu.value = CLU_ON ? 1 : 0;
+  if (!CLU_ON && F.clu.fam >= 0) selectFamily(-1, false);
+  if (CLU_ON && !was) groundSeeThrough();      // the family colours lie under the seafloor: see-through ground, as for the model
+  return was !== CLU_ON;
+}
+function setCluCol() {                        // event colours: by family (CLU.pal; grey without a family) or by class
+  if (!CLU) return;
+  const pal = CLU.pal.map(hexRGB), typ = CLU_TYPE_RGB.map(hexRGB), fc = CLU.fam.col;
+  for (let i = 0; i < N; i++) {
+    const c = ecls[i] > 4 ? typ[0] : F.clu.sub ? typ[ecls[i]] : efam[i] >= 0 ? pal[fc[efam[i]]] : typ[0];
+    ecol[i * 3] = c[0]; ecol[i * 3 + 1] = c[1]; ecol[i * 3 + 2] = c[2];
+  }
+  ccolAttr.needsUpdate = true;
+  $("cluTypes").classList.toggle("nosw", !F.clu.sub);
+}
+const durTxt = d => d == null ? "–" : d < 1 ? `${(d * 24).toFixed(1)} h` : `${d.toFixed(d < 10 ? 1 : 0)} days`;
+function selectFamily(k, redraw = true) {     // isolate one family (others dimmed, still counted and pickable); -1 = none
+  F.clu.fam = k; EU.uFam.value = k;
+  $("famRow").style.display = k >= 0 ? "" : "none";
+  if (k >= 0) $("famV").textContent = `Family ${CLU.fam.id[k]} isolated`;
+  showFamCard(k);
+  if (redraw) { drawSection(); drawLegend(); }
+}
+function showFamCard(k) {
+  const card = $("famCard");
+  if (k < 0) { card.style.display = "none"; return; }
+  const f = CLU.fam, t = f.type[k];
+  let nd = 0, w = 999, e = -999, s = 999, n = -999; const dz = [];
+  for (let i = 0; i < N; i++) if (efam[i] === k && passes(i)) { nd++; w = Math.min(w, elon[i]); e = Math.max(e, elon[i]); s = Math.min(s, elat[i]); n = Math.max(n, elat[i]); dz.push(edep[i]); }
+  const mig = f.res[k] == null ? "" : f.res[k] === 0 ? "migration not resolvable (spread under twice the location error)"
+    : f.mig[k] ? "migrating (permutation test)" : "migration resolvable, none found";
+  const flags = [f.p1[k] ? `${f.p1[k]} Mount St Helens deep events of review set P1 (probably false events)` : "",
+    f.day[k] ? `${f.day[k]} weekday-daytime events of fault surfaces removed as possible blasts` : "",
+    f.p2[k] ? `${f.p2[k]} events of review set P2` : ""].filter(Boolean);
+  card.innerHTML = `<div class="top"><span><span class="sw" style="display:inline-block;background:${CLU.pal[f.col[k]]}"></span> <b class="id">Family ${f.id[k]}</b> <span class="k">${esc(CLU_LAB[t])} · ${esc(f.reg[k] || "")} · ${esc(CLU.cat_id)} locations</span></span><span class="btns"><button class="btn" id="famZoom">Zoom</button><button class="btn" id="famClose">Close</button></span></div>
+    <div><b>n ${f.n[k].toLocaleString()}</b> above Mc${f.n_all[k] != null && f.n_all[k] !== f.n[k] ? ` · ${f.n_all[k].toLocaleString()} with the events below Mc attached` : ""} · <b>Mmax ${fx(f.M[k], 2)}</b>${f.main[k] != null ? ` <span class="k">(largest: event ${f.main[k]})</span>` : ""}</div>
+    <div><span class="mono">${esc(f.t0[k])} → ${esc(f.t1[k])}</span> · ${durTxt(f.dur[k])} · extent ${fx(f.ext[k])} km</div>
+    ${f.dq[k] ? `<div><span class="k">depth, well-constrained events</span> ${fx(f.dq[k][1])} km (10–90 %: ${fx(f.dq[k][0])}–${fx(f.dq[k][2])} km)</div>` : ""}
+    ${mig || f.v4[k] ? `<div>${mig}${mig && f.v4[k] ? " · " : ""}${f.v4[k] ? `<span class="k">against v4:</span> ${esc(f.v4[k])}` : ""}</div>` : ""}
+    ${flags.length ? `<div class="flag">${flags.join(" · ")}</div>` : ""}
+    <div class="k" style="margin-top:4px">${nd.toLocaleString()} of its events drawn with the current filters; other events dimmed. <kbd>Esc</kbd> or Close to show all.</div>`;
+  card.style.display = "block";
+  const fc = $("faultCard");                   // under the fault card when both are open (desktop)
+  card.style.top = innerWidth > 700 && fc.style.display === "block" ? `${fc.getBoundingClientRect().bottom + 8}px` : "";
+  $("famClose").onclick = () => selectFamily(-1);
+  $("famZoom").onclick = () => {                // frame the family's events: centred on their median depth, its map span and 10-90 % depth span in view
+    if (!nd) return;
+    const box = [w - 0.05, e + 0.05, s - 0.05, n + 0.05], q = quant(dz, [0.1, 0.5, 0.9]);
+    flyToBox(box);
+    const size = Math.max((box[1] - box[0]) * KX, (box[3] - box[2]) * KZ, 10), tall = (q[2] - q[0]) * U.exag.value;
+    const dy = -q[1] * U.exag.value - fly.q1.y; fly.q1.y += dy; fly.p1.y += dy;
+    const dist = 1.4 * (size + tall) / (2 * Math.tan(camera.fov * Math.PI / 360)) * Math.max(1, Math.pow(1 / camera.aspect, 0.75));   // room for the card
+    fly.p1.sub(fly.q1).setLength(dist).add(fly.q1);
+  };
+}
+const cluTxt = i => {                          // tooltip line in the clustered catalog's view
+  if (!CLU || F.cmp || F.cat !== CLU.cat || ecls[i] > 5) return "";
+  const c = ecls[i], role = CLU.roles[EV.cl_role[i]] || "", below = role.endsWith("_belowMc");
+  if (c === 5) return `<br><span class="k">cluster</span> <span class="caveat">left out: ${role === "excluded_not_earthquake" ? "not an earthquake" : "no hypocentre"}</span>`;
+  if (efam[i] < 0) return `<br><span class="k">cluster</span> ${c === 4 ? "linked to a background single (event below Mc)" : `background${below ? " (below Mc, no link)" : ""}`}`;
+  const k = efam[i], f = CLU.fam, r = role.replace("_belowMc", "");
+  const rl = [r === "swarm" || r === "multiplet" ? "" : r, below ? "below Mc, attached" : ""].filter(Boolean).join(", ");
+  return `<br><span class="k">cluster</span> <span class="sw" style="display:inline-block;background:${CLU.pal[f.col[k]]}"></span> <b>${CLU_LAB[c]} family ${f.id[k]}</b> <span class="k">${rl}</span>
+    <br><span class="k">family</span> n ${f.n[k]}${f.n_all[k] != null && f.n_all[k] !== f.n[k] ? ` (${f.n_all[k]} with below Mc)` : ""} · Mmax ${fx(f.M[k], 2)} · ${esc(f.t0[k].slice(0, 10))} → ${esc(f.t1[k].slice(0, 10))} (${durTxt(f.dur[k])}) · ${fx(f.ext[k])} km${CLU_ON ? ' · <span class="k">click to isolate</span>' : ""}`;
+};
+function clustersOn() {                      // Cluster from any view: the clustered catalog's view, Compare off, Cluster on
+  if (!CLU) return;
+  F.mode = 7;
+  $("segColor").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "7"));
+  if (!cluView()) setCatalog(CLU.cat);
+  setMode();
+}
 seg("segColor", v => {
+  if (v === 7 && CLU && !cluView()) { clustersOn(); return; }
   F.mode = v;
   if (F.cmp && F.cq >= 0) { F.cq = -1; $("segCmp").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === "-1")); }
   setMode();
 });
 seg("segQC", v => { F.qc = v; EU.uQC.value = v; refresh(); });
-const airText = () => $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / N).toFixed(1)}%) above ground`;
+const airText = () => $("airV").textContent = `${nAir.toLocaleString()} events (${(100 * nAir / Math.max(1, nDrawn)).toFixed(1)}%) above the surface: location errors`;
 airText();
 seg("segDatum", v => { F.datum = v; applyDatum(v); depAttr.needsUpdate = true; airAttr.needsUpdate = true; airText(); refresh(); });
 seg("segAir", v => { F.air = v; EU.uAir.value = v; refresh(); });
@@ -826,22 +1344,25 @@ const viewCat = () => F.cmp ? F.cb : F.cat;
 function tierSrc() {                         // catalog whose tiers are shown / filtered
   const c = viewCat(); if (CATS[c].has_tiers) return c;
   if (F.cmp && CATS[F.ca].has_tiers) return F.ca;
+  if (CATS[REL].has_tiers) return REL;       // reference view: the relocated catalog's tiers (as the live page)
   let t = -1; CATS.forEach((x, k) => { if (x.has_tiers) t = k; }); return t;
 }
-const TIER_N = [0, 0, 0, 0, 0, 0];
+const TIER_N = [0, 0, 0, 0, 0, 0, 0];         // events per tier code 0-6 (of the tier catalog)
 const CMPQ = { n: 0, dh: [], dz: [] };       // B − A over all events located in both (quantiles)
 const quant = (a, ps) => { if (!a.length) return ps.map(() => null); const s = Float32Array.from(a).sort(); return ps.map(p => s[Math.min(s.length - 1, Math.floor(p * (s.length - 1) + 0.5))]); };
 function applyView() {
+  syncClu(); if (CLU_ON) setCluCol();          // Cluster mode only in the clustered catalog's view (else back to Depth)
   const c = viewCat(), P = CP[c], R = CP[0], S = catSurf(c), ts = tierSrc();
   for (let i = 0; i < N; i++) {
     const ok = isLoc(c, i);
+    emag[i] = P.mag[i] === -32768 ? -9 : P.mag[i] / 100; emty[i] = P.mty[i];   // the shown catalog's magnitudes
     elon[i] = ok ? P.lon[i] : R.lon[i]; elat[i] = ok ? P.lat[i] : R.lat[i]; ecat[i] = ok ? P.dep[i] : R.dep[i];
     ex[i] = toX(elon[i]); ez[i] = toZ(elat[i]); evPos[i * 3] = ex[i]; evPos[i * 3 + 2] = ez[i];
     esurf[i] = S[i];
     etier[i] = ts < 0 ? 5 : CP[ts].tier[i];
   }
   TIER_N.fill(0); for (let i = 0; i < N; i++) TIER_N[etier[i]]++;
-  cdz.fill(NaN); cdh.fill(NaN); cdv.fill(-9999);
+  cdz.fill(NaN); cdh.fill(NaN);
   if (F.cmp) {
     const A = CP[F.ca], B = CP[F.cb], dh = [], dz = [];
     for (let i = 0; i < N; i++) {
@@ -853,7 +1374,9 @@ function applyView() {
     CMPQ.n = dh.length; CMPQ.dh = quant(dh, [0.5, 0.9]); CMPQ.dz = quant(dz, [0.1, 0.5, 0.9]);
   }
   setDv();
-  evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true;
+  evGeo.attributes.position.needsUpdate = true; tierAttr.needsUpdate = true; magAttr.needsUpdate = true;
+  if (mcMesh) { setMc(mcKey); const S = mcSet();      // Mc grids of the catalog in view (D-B104)
+    [...mcSel.options].forEach(o => { const L = S.layers.find(L_ => L_.key === o.value); o.textContent = `${L.label} (${L.nodes.toLocaleString()} cells)`; }); }
   const refView = !F.cmp && c === 0, dbtn = $("segDatum").querySelectorAll("button");
   if (!refView && !F.datumLocked) { F.datum4 = F.datum; F.datumLocked = true; }
   if (refView && F.datumLocked) { F.datum = F.datum4; F.datumLocked = false; }
@@ -864,12 +1387,13 @@ function applyView() {
   EU.uRing.value = !F.cmp && c !== 0 ? 1 : 0; EU.uCmp.value = F.cmp ? 1 : 0; EU.uMode.value = effMode();
   $("btnTier").disabled = ts < 0;
   $("sub").textContent = F.cmp ? `Compare ${catName(F.ca)} (A) and ${catName(F.cb)} (B): the same events, shown at their B location. Depths in km below sea level.`
-    : c === 0 ? SUB4 : `${CATS[c].label}${CATS[c].status === "preliminary" ? " (preliminary)" : ""}: catalog v4 events relocated. Depths in km below sea level.`;
+    : c === 0 ? SUB4 : `${CATS[c].label}${CATS[c].status === "preliminary" ? " (preliminary)" : ""}: the ${CATS[0].id} events relocated. Depths in km below sea level.`;
   drawCatCard(); drawLegend(); refresh(); drawSection();
 }
-function setDv() {
-  const m = effMode();
-  for (let i = 0; i < N; i++) cdv[i] = Number.isNaN(cdz[i]) ? -9999 : (m === 6 ? cdh[i] : cdz[i]);
+function setDv() {   // Compare: the value coloured, -9999 where not located in both; single view: -9999 = no hypocentre here
+  const m = effMode(), c = F.cat;
+  if (F.cmp) for (let i = 0; i < N; i++) cdv[i] = Number.isNaN(cdz[i]) ? -9999 : (m === 6 ? cdh[i] : cdz[i]);
+  else for (let i = 0; i < N; i++) cdv[i] = noHypo(c, i) ? -9999 : 0;
   dvAttr.needsUpdate = true;
 }
 function setCatalog(k) {
@@ -898,6 +1422,23 @@ seg("segCmp", v => { F.cq = v; setDv(); setMode(); });
 seg("segSegs", v => { F.segs = v; buildSegs(); drawLegend(); drawSection(); });
 if (NC < 2) ["catRow"].forEach(id => $(id).style.display = "none");
 if (!ANY_TIERS) ["tierRow", "btnTier"].forEach(id => $(id).style.display = "none");
+if (CLU) {                                     // Cluster mode controls: by family / by type, one toggle per class
+  $("cluNote").textContent = `Cluster colours: earthquake families of catalog ${CLU.cat_id}; the Cluster button switches to its view.`;
+  $("btnClu").title = `Earthquake families of the nearest-neighbour clustering of ${CLU.cat_id} (switches to its view)`;
+  seg("segClu", v => { F.clu.sub = v; setCluCol(); drawLegend(); drawSection(); });
+  const cnt = [0, 0, 0, 0, 0];                 // events drawn in the clustered catalog's view, per class
+  for (let i = 0; i < N; i++) if (ecls[i] < 5 && !noHypo(CLU.cat, i)) cnt[ecls[i]]++;
+  const rx = CLU.roles.indexOf("excluded_not_earthquake");
+  CLU.drawn = cnt; CLU.notEq = rx < 0 ? 0 : EV.cl_role.reduce((s_, r) => s_ + (r === rx), 0);
+  const ct = $("cluTypes");
+  ct.innerHTML = CLU_LAB.map((l, k) => `<button data-k="${k}" title="Show or hide: ${l.toLowerCase()}"><span class="sw" style="background:${CLU_TYPE_RGB[k]}"></span>${l}<span class="n mono">${cnt[k].toLocaleString()}</span></button>`).join("");
+  ct.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const k = +b.dataset.k; F.clu.show[k] = !F.clu.show[k]; b.classList.toggle("muted", !F.clu.show[k]);
+    EU.uCluOn.value = F.clu.show.reduce((s_, on, j) => s_ + (on ? 2 ** j : 0), 0);
+    refresh();
+  });
+  $("famClear").onclick = () => selectFamily(-1);
+} else $("btnClu").style.display = "none";
 
 // ---------- event <-> fault: pick a fault to see its events ----------
 const faultSel = $("faultSel");
@@ -940,7 +1481,7 @@ function showFaultCard(k) {
   $("fcClose").onclick = () => selectFault(-1);
 }
 const bind = (id, fmt, cb) => { const el = $(id), out = $(id + "V"); const f = () => { out.textContent = fmt(+el.value); cb(+el.value); }; el.oninput = f; f(); };
-bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); placeMc(); drawSection3D(); });
+bind("exag", v => v + "×", v => { U.exag.value = v; placeTensors(); placeMc(); placeTomo(); if (CUT.mode) setCut(false); drawSection3D(); });
 bind("ground", v => v >= 0.99 ? "solid" : v <= 0.01 ? "cut" : Math.round(v * 100) + "%", v => {
   terrainOpacity.value = v; terrainGroup.visible = v > 0.01 && layer("ground").on;
   });
@@ -1034,7 +1575,8 @@ function refresh() {
   clearTimeout(refreshT);
   refreshT = setTimeout(() => {
     let n = 0; for (let i = 0; i < N; i++) if (passes(i)) n++;
-    $("nShown").textContent = n.toLocaleString(); drawHist(); buildSegs(); drawSection(); cmpShown();
+    $("nShown").textContent = n.toLocaleString(); drawHist(); buildSegs(); drawSection(); cmpShown(); updateMoves();
+    if (F.clu.fam >= 0) showFamCard(F.clu.fam);   // its count of events drawn follows the filters
   }, 40);
 }
 
@@ -1048,7 +1590,8 @@ function layoutPanels() {   // keep panels from overlapping
     for (const id of ["section"]) { $(id).style.left = l + "px"; $(id).style.right = r + "px"; }
     document.querySelector(".timeline").style.left = l + "px"; document.querySelector(".timeline").style.right = r + "px"; }
 }
-const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94", "#d9d6cc"];
+const TIER_RGB = ["#4fbf8c", "#57a8e5", "#e8c547", "#e05c5c", "#9e9c94", "#d9d6cc", "#9e9c94"];   // A-D, U, no tier class, no hypocentre (as U)
+const LEG_SRC = { open: false };                       // "Symbols and sources" folded unless opened
 const fx = (v, d = 1) => v == null ? "–" : (+v).toFixed(d);
 const sg = (v, d = 1) => { if (v == null || Number.isNaN(v)) return "–"; const r = Math.abs(v) < 0.5 * 10 ** -d ? 0 : v; return (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(d); };
 const fi = v => v == null ? "–" : Math.round(v).toLocaleString();
@@ -1061,15 +1604,15 @@ function drawCatCard() {
     return `<div class="ci">${lab[j] ? `<span class="k">${lab[j]}</span> ` : ""}${esc(c.label)}<br><span class="k">velocity</span> ${esc(c.velocity || "–")}<br><span class="k">method</span> ${esc(c.method || "–")}${c.parent ? `<br><span class="k">parent</span> ${esc(c.parent)}` : ""}</div>`; }).join("")}</details>`;
   const nu = k => CATS[k].num || {};
   const rows = [
-    ["Located", k => fi(nu(k).n_located ?? CATS[k].n_loc), ""],
+    ["Located", k => fi(nu(k).n_located ?? CATS[k].n_loc), k => CATS[k].n_nohypo ? `${fi(CATS[k].n_nohypo)} events without a hypocentre in this catalog` : ""],
     ["Median depth (km)", k => fx(nu(k).depth_p50), k => `p10 ${fx(nu(k).depth_p10)}, p90 ${fx(nu(k).depth_p90)} km`],
-    ["Above surface", k => nu(k).pct_above_surface == null ? "–" : fx(nu(k).pct_above_surface) + "%", ""],
+    ["Above surface", k => nu(k).pct_above_surface == null ? "–" : fx(nu(k).pct_above_surface) + "%", () => "against GMT earth_relief 01m for every catalog (workflow/11_compare); the count under Filter events uses the surface drawn here, or the catalog's own"],
     ["ANSS Δz near (km)", k => { const a = nu(k).anss_near; return a ? `${sg(a.dz_p50)} ± ${fx(a.dz_mad)}` : "–"; }, k => `${fi((nu(k).anss_near || {}).n)} ComCat events with a station within max(depth, 5 km)`],
     ["ANSS Δz all (km)", k => { const a = nu(k).anss_all; return a ? `${sg(a.dz_p50)} ± ${fx(a.dz_mad)}` : "–"; }, k => `${fi((nu(k).anss_all || {}).n)} matched ComCat events`],
     [`Δh from ${CATS[0].id} p50/90`, k => CATS[k].ref ? "–" : `${fx(nu(k).dh_ref_p50)}/${fx(nu(k).dh_ref_p90)}`, k => `median depth change from ${CATS[0].id}: ${sg(nu(k).dz_ref_p50)} km`],
     ["Fault-plane RMS (km)", k => fx(nu(k).fault_rms, 2), k => `median over ${nu(k).fault_n ?? "–"} fault surfaces`],
   ];
-  const tb = `<table><colgroup><col style="width:${F.cmp ? 46 : 62}%">${ks.map(() => "<col>").join("")}</colgroup>${F.cmp ? `<tr><th></th><th>A</th><th>B</th></tr>` : ""}${rows.map(([l, f, t]) => `<tr><td title="${l}">${l}</td>${ks.map(k => `<td class="n"${t ? ` title="${esc(t(k))}"` : ""}>${f(k)}</td>`).join("")}</tr>`).join("")}</table>`;
+  const tb = `<table><colgroup><col style="width:${F.cmp ? 46 : 62}%">${ks.map(() => "<col>").join("")}</colgroup>${F.cmp ? `<tr><th></th><th>A</th><th>B</th></tr>` : ""}${rows.map(([l, f, t]) => `<tr><td title="${l}">${l}</td>${ks.map(k => `<td class="n"${t && t(k) ? ` title="${esc(t(k))}"` : ""}>${f(k)}</td>`).join("")}</tr>`).join("")}</table>`;
   const cmp = F.cmp ? `<table><colgroup><col style="width:46%"><col></colgroup>
       <tr><td class="k" colspan="2">B − A, ${fi(CMPQ.n)} events located in both</td></tr>
       <tr><td>Δh p50 / p90</td><td class="n">${fx(CMPQ.dh[0])} / ${fx(CMPQ.dh[1])} km</td></tr>
@@ -1085,12 +1628,28 @@ function cmpShown() {                         // B − A medians over the events
   const dh = [], dz = []; for (let i = 0; i < N; i++) if (passes(i)) { dh.push(cdh[i]); dz.push(cdz[i]); }
   el.textContent = dh.length ? `${fx(quant(dh, [0.5])[0])} · ${sg(quant(dz, [0.5])[0])} (${dh.length.toLocaleString()})` : "–";
 }
-function catNote() {
+function catNote() {                          // the catalog shown: registry note (or label), rings and events not drawn
   const st = k => `<b style="color:var(--text-secondary)">${esc(CATS[k].id)}</b>${CATS[k].status === "preliminary" ? " (preliminary)" : ""}`;
-  if (F.cmp) return `<div class="attribution" style="border-top:0;padding-top:0">Compare: ${CMPQ.n.toLocaleString()} events located in both ${st(F.ca)} (A) and ${st(F.cb)} (B), drawn at B.${F.segs ? ` Lines join A (faint end) to B for at most ${F.segN.toLocaleString()} of the events shown (${F.segs === 1 ? "largest shifts" : "random subset"}).` : ""}</div>`;
+  const nh = k => CATS[k].n_nohypo || 0;
+  if (F.cmp) return `<div class="attribution" style="border-top:0;padding-top:0">Compare: ${CMPQ.n.toLocaleString()} events located in both ${st(F.ca)} (A) and ${st(F.cb)} (B), drawn at B${nh(F.ca) + nh(F.cb) ? "; events without a hypocentre in A or B are not drawn" : ""}.${F.segs ? ` Lines join A (faint end) to B for at most ${F.segN.toLocaleString()} of the events shown (${F.segs === 1 ? "largest shifts" : "random subset"}).` : ""}</div>`;
   if (!F.cat) return "";
-  const nU = CATS.length > F.cat && CATS[F.cat].has_tiers ? TIER_N[4] : N - (CATS[F.cat].n_loc ?? N);
-  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(CATS[F.cat].label)}. Depths below sea level. Rings mark the ${nU.toLocaleString()} events not located in this catalog, at their ${esc(CATS[0].id)} location.</div>`;
+  const c = CATS[F.cat], nU = N - (c.n_loc ?? N) - nh(F.cat);
+  return `<div class="attribution" style="border-top:0;padding-top:0">${st(F.cat)}: ${esc(c.label)}. Depths below sea level.${nU ? ` Rings mark the ${nU === 1 ? "event" : `${nU.toLocaleString()} events`} not located in this catalog, at ${nU === 1 ? "its" : "their"} ${esc(CATS[0].id)} location.` : ""}${nh(F.cat) ? ` The ${nh(F.cat).toLocaleString()} event${nh(F.cat) === 1 ? "" : "s"} without a hypocentre in this catalog (tier U) ${nh(F.cat) === 1 ? "is" : "are"} not shown.` : ""}</div>`;
+}
+function catNotes() {                         // registry notes, folded under "Symbols and sources": the catalogs in view, else the relocated one
+  const ks = F.cmp ? [F.ca, F.cb] : [F.cat || REL];
+  return [...new Set(ks)].filter(k => CATS[k].note).map(k => `<div class="attribution" style="border-top:0;padding-top:0"><b style="color:var(--text-secondary)">${esc(CATS[k].label)}</b>: ${esc(CATS[k].note)}</div>`).join("");
+}
+function cluLeg() {                           // Cluster mode: what the colours mean, how below-Mc events enter, two caveats
+  const f = CLU.fam, nT = [0, 0, 0, 0], C = CLU.cav || {};
+  f.type.forEach(t => nT[t]++);
+  const key = F.clu.sub
+    ? `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${CLU_LAB.map((l, k) => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="${CLU_TYPE_RGB[k]}"/></svg>${l}</div>`).join("")}</div>`
+    : `<div style="display:flex;align-items:center;gap:3px">${CLU.pal.map(h => `<span class="sw" style="background:${h}"></span>`).join("")}<span class="sw" style="background:${CLU_TYPE_RGB[0]};margin-left:8px"></span><span style="font-size:11px;color:var(--text-secondary)">no family</span></div>
+       <div class="lgtxt">One colour per family (${CLU.pal.length} colours reused, neighbouring families differ).</div>`;
+  return key + `<div class="lgtxt">${f.id.length.toLocaleString()} families of ${esc(CLU.cat_id)}: ${nT[1]} mainshock–aftershock, ${nT[2]} swarms, ${nT[3]} multiplets. Built from events above the regional Mc; an event below Mc joins its parent's family when the link passes the threshold, else it stays background.${CLU.notEq ? ` ${CLU.notEq.toLocaleString()} non-earthquakes not drawn.` : ""} Click an event to isolate its family.</div>
+    ${C.ax_bg ? `<div class="lgtxt caveat">Axial's background/clustered split is not robust (${C.ax_bg[0]} % background in the main run, ${C.ax_bg[1]} % without tier D).</div>` : ""}
+    ${C.mig && C.mig.n ? `<div class="lgtxt caveat">Swarm migration is unresolved for ${Math.round(100 * C.mig.unres / C.mig.n)} % of swarms (${C.mig.unres} of ${C.mig.n} tested; location errors ~${fx(C.mig.herr, 0)} km).</div>` : ""}`;
 }
 function drawLegend() {
   const modes = [
@@ -1100,19 +1659,34 @@ function drawLegend() {
     { t: "Fault (one colour per fault surface; grey = on no fault)", g: "linear-gradient(90deg,#f25c54,#f7b267,#e9f27a,#7ae582,#57c4e5,#8f7cf2,#f27ad6)", l: ["", ""] },
     { t: `${tierSrc() >= 0 ? CATS[tierSrc()].id : ""} location tier`, tiers: true },
     { t: `Depth change B − A (km), ${CATS[F.cb].id} − ${CATS[F.ca].id}`, g: "linear-gradient(90deg,#4066d9,#6badf2,#dbd9cc,#f59e54,#db4d52)", l: [`−${F.cs} B shallower`, "0", `+${F.cs} deeper`] },
-    { t: `Horizontal shift A → B (km)`, g: "linear-gradient(90deg,#737880,#66b3cc,#f5bf59,#f25c5c)", l: ["0", String(F.cs / 2), `≥${F.cs}`] }][effMode()];
-  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${[0, 1, 2, 3, 4, 5].filter(k => k < 5 || TIER_N[5]).map(k => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${k === 5 ? "no tier" : TIERS[k]} <span class="mono" style="color:var(--text-muted)">${TIER_N[k].toLocaleString()}</span></div>`).join("")}</div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the reference (${CATS[0].id}) location</div>`;
+    { t: `Horizontal shift A → B (km)`, g: "linear-gradient(90deg,#737880,#66b3cc,#f5bf59,#f25c5c)", l: ["0", String(F.cs / 2), `≥${F.cs}`] },
+    { t: CLU ? `Earthquake ${F.clu.sub ? "clusters by type" : "families"}, ${CLU.cat_id}` : "", clu: true }][effMode()];
+  // U counts the events not located in the tier catalog, with or without a hypocentre there (as in the catalog's tier column)
+  const tierLeg = `<div style="display:flex;flex-wrap:wrap;gap:2px 12px">${[0, 1, 2, 3, 4, 5].filter(k => k < 5 || TIER_N[5]).map(k => `<div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="${k === 4 ? 4 : 5}" ${k === 4 ? `fill="none" stroke="${TIER_RGB[k]}" stroke-width="2.4"` : `fill="${TIER_RGB[k]}"`}/></svg>${k === 5 ? "no tier" : TIERS[k]} <span class="mono" style="color:var(--text-muted)">${(k === 4 ? TIER_N[4] + TIER_N[6] : TIER_N[k]).toLocaleString()}</span></div>`).join("")}</div>
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">A–B: depth constrained by a nearby station · C: epicentre usable, depth not · D: poorly located · U: not relocated, ring at the reference (${CATS[0].id}) location${TIER_N[6] ? `; ${TIER_N[6].toLocaleString()} of them have no hypocentre in ${esc(CATS[tierSrc()].id)} and are not drawn in its view` : ""}</div>`;
   const slab = slabUni.uMode.value > 0.5 && layer("slab").on
     ? `<div><h4>Slab2 coloured by coupling (${sc.value})</h4><div class="ramp" style="background:linear-gradient(90deg,#4578b3,#d9d9d1,#cc4038)"></div><div class="ramp-labels"><span>0 creeping</span><span>0.5</span><span>1 locked</span></div></div>` : "";
-  const mcL = MCM && layer("mc") && layer("mc").on ? MCM.layers.find(L => L.key === mcKey) : null;
+  const mcL = MCM && layer("mc") && layer("mc").on ? mcSet().layers.find(L => L.key === mcKey) : null;
+  const mcNote = () => { const S = mcSet(), c = viewCat();
+    return (S.source ? ` From the ${esc(S.source)}.` : "") + (S.cat !== CATS[c].id && c !== 0 ? ` ${esc(CATS[c].id)} has no Mc grids of its own: these are ${esc(CATS[0].id)}'s.` : ""); };
   const mcLeg = mcL ? `<div><h4>Magnitude of completeness, ${mcL.label}</h4><div class="ramp" style="background:linear-gradient(90deg,${
     [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(v => `rgb(${mcCol(v).map(Math.round).join(",")})`).join(",")})"></div>
     <div class="ramp-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>≥3.5</span></div>
-    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.</div></div>` : "";
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">Nearest 250 events (150 per period) within 50 km; empty where too few. Offshore cells exist only while the OBS were deployed.${mcNote()}</div></div>` : "";
+  const tV = TMM && layer("tomo") && layer("tomo").on ? TVARS.find(t => t.key === TS.v) : null;
+  const tIv = tV ? tIso(tV) : null, tRes = tV && TS.mask === -1 ? tResKm(tV) : "";
+  const tomoLeg = tV ? `<div><h4>Velocity model v${TMM.version.replace(/^v/, "")}${TMM.status ? ` (${TMM.status})` : ""}: ${tV.label}${tV.unit ? ` (${tV.unit})` : ""}, slice at ${TS.d} km</h4><div class="ramp" style="background:linear-gradient(90deg,${
+    Array.from({ length: 17 }, (_, j) => j / 16).map(f => `rgb(${rampCol(tV.ramp, 2 * f - 1).map(Math.round).join(",")})`).join(",")})"></div>
+    <div class="ramp-labels"><span>≤ ${tV.lo} ${tV.ends[0]}</span><span>${+((tV.lo + tV.hi) / 2).toFixed(2)}</span><span>≥ ${tV.hi} ${tV.ends[1]}</span></div>
+    ${tV.cmap ? `<div style="margin-top:2px;font-size:11px;color:var(--text-secondary)">Crameri ${esc(tV.cmap)}, ${tV.kind}${tV.kind === "diverging" ? ` about ${+((tV.lo + tV.hi) / 2).toFixed(2)}` : ""} (scientific colour map, readable with colour-vision deficiency)</div>` : ""}
+    <div style="margin-top:4px;font-size:11px;line-height:15px;color:var(--text-secondary)">tomoDD tiles merged on the whole-margin start model. ${TS.mask === -1 ? `Only cells where the checkerboard tests resolved ${tV.wave === "p" ? "Vp" : "Vs"} shown${tRes ? ` (${tRes})` : ""}.` : TS.mask ? `Cells with ${tV.wave.toUpperCase()}-ray DWS below ${TS.mask.toLocaleString()} hidden.` : "All cells shown, including cells no ray samples."}${TMM.masked && TMM.masked.water + TMM.masked.air ? ` The ${(TMM.masked.water + TMM.masked.air).toLocaleString()} nodes in water or air have no value; nothing is drawn above the ground or seafloor.` : ""}${TS.iso ? ` Isocontours every ${tIv[0]}${tUnit(tV)}, bold and labelled every ${tIv[1]}${tUnit(tV)}.` : ""}${TS.surf ? ` Translucent green isosurface ${tV.label} = ${tFmt(tV, TS.sv[tV.key], tDig(tV, TS.sv[tV.key]))}${tUnit(tV)}, cut as the slice (ray mask, ground and seafloor) and in front of the vertical cut.` : ""} The cross-section (<kbd>S</kbd>) shows the model along any profile, in 3D and in its panel.</div></div>` : "";
   $("legend").innerHTML = `
-    <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
-    ${slab}${mcLeg}
+    <div><h4>${modes.t}</h4>${modes.tiers ? tierLeg : modes.clu ? cluLeg() : `<div class="ramp" style="background:${modes.g}"></div><div class="ramp-labels">${modes.l.map(x => `<span>${x}</span>`).join("")}</div>`}</div>
+    ${slab}${mcLeg}${tomoLeg}${MOVES && layer("moves") && layer("moves").on ? `<div><h4>Moves: ${esc(CATS[MV.from].label)} → ${esc(CATS[MV.to].label)}</h4>
+      <div style="font-size:11px;line-height:15px;color:var(--text-secondary)">A line from each event's location in ${esc(CATS[MV.from].id)} (before) to its location in ${esc(CATS[MV.to].id)} (after); red deeper, blue shallower, full colour at 5 km. In the section panel a hollow circle marks the location before. ${MOVE_STATS.n.toLocaleString()} events located in both: median depth change ${MOVE_STATS.med >= 0 ? "+" : "−"}${Math.abs(MOVE_STATS.med).toFixed(2)} km, median |change| ${MOVE_STATS.absMed.toFixed(2)} km, ${Math.round(100 * MOVE_STATS.deeper)}% deeper.</div></div>` : ""}
+    ${catNote()}
+    ${F.cmp || F.cat ? "" : `<div class="attribution" style="border-top:0;padding-top:0"><span class="caveat">About a quarter of v4 events lie above the ground or seafloor with either depth datum. No earthquake can be there: these are location errors of the v4 computation, under investigation. Use "Above surface" to grey or hide them.</span></div>`}
+    <details class="grp" id="legSrc" ${LEG_SRC.open ? "open" : ""}><summary>Symbols and sources</summary><div class="grp-body">
     <div><h4>Symbols</h4>
       <div class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#f2a65a"/></svg>Event, size by magnitude; non-QC fainter</div>
       <div class="row"><svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#66ccf2"/></svg>Ocean-bottom station · <svg width="12" height="12"><polygon points="1,1 11,1 6,11" fill="#f2f2eb"/></svg>land</div>
@@ -1120,22 +1694,24 @@ function drawLegend() {
       <div class="row"><span class="sw" style="background:#3d8bff"></span>Fault surfaces v0 from v4 events</div>
       <div class="row"><span class="sw" style="background:#5fb3a6"></span>CASIE21 megathrust · <span class="sw" style="background:#9fb3cc"></span>Slab2</div>
     </div>
-    ${catNote()}
-    <div class="attribution">${F.cmp || F.cat ? "" : `<span class="caveat">Depth datum of the v4 relocation not yet confirmed. About a quarter of events plot above the ground or seafloor with either datum; use "Above ground" to grey or hide them. </span>`}
-      Magnitudes: ${M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
+    ${catNotes()}
+    <div class="attribution">Magnitudes (${catName(viewCat())}): ${CATS[viewCat()].msrc ?? M.events.msrc}. Bathymetry: GMRT (Ryan et al. 2009) and GMT earth_relief. Slab2 (Hayes et al. 2018); coupling models in data/coupling.
       Faults: CRESCENT Community Fault Model v1.0, under review (CC BY 4.0); CASIE21 (Carbotte et al. 2024). Plates: PB2002 (Bird 2003).
-      Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div>`;
+      Tensors: ComCat. Mc: v4_mc_maps.py (three methods; MAXC and b-stability code adapted from AgentSeismo, Z. Zhang). Built ${M.built}.</div></div></details>`;
+  $("legSrc").ontoggle = () => { LEG_SRC.open = $("legSrc").open; layoutPanels(); };
   layoutPanels();
 }
 
 // ---------- tooltip / picking ----------
 const tip = $("tip"), v3 = new THREE.Vector3();
 let mouse = null;
-function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px"; tip.style.top = Math.min(innerHeight - 160, y + 12) + "px"; }
+function showTip(html, x, y) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(innerWidth - 310, x + 14) + "px";
+  tip.style.top = Math.max(8, Math.min(innerHeight - Math.max(160, tip.offsetHeight + 8), y + 12)) + "px"; }   // long tooltips stay on screen
 const hideTip = () => tip.style.opacity = 0;
-const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][EV.mtype[i]] ?? ""}`;
-const locTxt = (k, i) => isLoc(k, i) ? `${CP[k].lat[i].toFixed(3)}°N ${(-CP[k].lon[i]).toFixed(3)}°W · ${CP[k].dep[i].toFixed(1)} km` : `<span class="caveat">not located</span>`;
-const tierTxt = (k, i) => CP[k].tier ? (CP[k].tier[i] < 5 ? ` · tier <b style="color:${TIER_RGB[CP[k].tier[i]]}">${TIERS[CP[k].tier[i]]}</b>` : "") : "";
+const fmtM = i => emag[i] < -8 ? "–" : `${emag[i].toFixed(2)} ${["ML", "Mw", "Mw (cal.)", "M (Ian)"][emty[i]] ?? ""}`;
+const locTxt = (k, i) => isLoc(k, i) ? `${CP[k].lat[i].toFixed(3)}°N ${(-CP[k].lon[i]).toFixed(3)}°W · ${CP[k].dep[i].toFixed(1)} km`
+  : `<span class="caveat">${noHypo(k, i) ? "no hypocentre" : "not located"}</span>`;
+const tierTxt = (k, i) => { if (!CP[k].tier) return ""; const t = CP[k].tier[i]; return t === 5 ? "" : ` · tier <b style="color:${TIER_RGB[t]}">${TIERS[Math.min(t, 4)]}</b>`; };
 const qualTxt = (k, i) => { const P = CP[k]; if (!P.nph || !isLoc(k, i)) return "";
   const f = (v, s, d) => v === 255 ? "–" : (v * s).toFixed(d);
   return `<br><span class="k">${esc(CATS[k].id)}</span> nphs ${P.nph[i]} · <span class="k">gap</span> ${f(P.gap[i], 2, 0)}° · <span class="k">rms</span> ${f(P.rms[i], 0.01, 2)} s`; };
@@ -1145,7 +1721,8 @@ const shiftTxt = (a, b, i) => { const A = CP[a], B = CP[b];
 const catLines = i => {                       // single view: every other catalog's tier and shift from the reference
   let h = "";
   for (let k = 1; k < NC; k++) {
-    if (!isLoc(k, i)) { h += `<br><span class="k">${esc(CATS[k].id)}</span>${tierTxt(k, i)} · <span class="caveat">not located${k === F.cat ? `, ${esc(CATS[0].id)} location` : ""}</span>`; continue; }
+    if (!isLoc(k, i)) { h += `<br><span class="k">${esc(CATS[k].id)}</span>${tierTxt(k, i)} · <span class="caveat">${noHypo(k, i) ? "no hypocentre in this catalog"
+      : `not located${k === F.cat ? `, ${esc(CATS[0].id)} location` : ""}`}</span>`; continue; }
     h += `<br><span class="k">${esc(CATS[k].id)}</span>${tierTxt(k, i)} · <span class="k">shift from ${esc(CATS[0].id)}</span> ${shiftTxt(0, k, i)}`;
   }
   return h + (F.cat ? qualTxt(F.cat, i) : "");
@@ -1154,13 +1731,13 @@ const cmpHtml = i => `<b>Event ${EV.id[i]}</b> <span class="k">Compare · ${efla
   <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span> · M ${fmtM(i)}<br>
   <span class="k">A ${esc(CATS[F.ca].id)}</span> ${locTxt(F.ca, i)}${tierTxt(F.ca, i)}<br>
   <span class="k">B ${esc(CATS[F.cb].id)}</span> ${locTxt(F.cb, i)}${tierTxt(F.cb, i)}<br>
-  <b>Δh ${fx(cdh[i])} km · Δz ${sg(cdz[i])} km</b> <span class="k">(B − A)</span>${qualTxt(F.cb, i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
+  <b>Δh ${fx(cdh[i])} km · Δz ${sg(cdz[i])} km</b> <span class="k">(B − A)</span>${eair[i] ? ' · <span class="caveat">B above the surface: location error</span>' : ""}${qualTxt(F.cb, i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
 const evHtml = i => F.cmp ? cmpHtml(i) : `<b>Event ${EV.id[i]}</b> <span class="k">${esc(catName(F.cat))} · ${eflag[i] ? "QC" : "below QC"}</span><br>
   <span class="mono">${new Date(T0 + EV.day[i] * 864e5).toISOString().replace("T", " ").slice(0, 19)}</span><br>
   ${elat[i].toFixed(3)}°N ${(-elon[i]).toFixed(3)}°W · <b>${edep[i].toFixed(1)} km</b> bsl${F.datum ? ` <span class="k">(catalog ${ecat[i].toFixed(1)})</span>` : ""}<br>
-  <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above ground</span>' : ""}<br>
+  <span class="k">surface</span> ${(esurf[i] * 1000).toFixed(0)} m${eair[i] ? ' · <span class="caveat">above the surface: location error</span>' : ""}<br>
   M ${fmtM(i)} · ${EV.np[i]} P, ${EV.ns[i]} S<br>
-  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${catLines(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}`;
+  <span class="k">σ loc</span> ${esig[i] > 900 ? "–" : esig[i].toFixed(1) + " km"} · <span class="k">added picks</span> ${EV.new[i]}%${catLines(i)}${eflt[i] >= 0 && FM.surf ? `<br><span class="k">fault</span> <b>${FM.surf[eflt[i]].id}</b> ${(FM.surf[eflt[i]].lm || "").slice(0, 70)}` : ""}${cluTxt(i)}`;
 function pickEvent(mx, my) {
   if (!layer("events").on) return -1;
   const e = U.exag.value; let best = -1, bd = 81, bz = 1e9;
@@ -1200,8 +1777,8 @@ function hover(mx, my) {
   }
   if (mcMesh && layer("mc").on) {
     const h = ray.intersectObject(mcMesh)[0];
-    if (h) { const i = mcCell[Math.floor(h.face.a / 4)], nx = MCM.nx, v = k => MCG["mc_" + k][i], f = k => v(k) === 255 ? "–" : ((v(k) - 40) / 20).toFixed(1);
-      const s = MCG["sg_" + mcKey][i], nk = mcKey.startsWith("p") ? mcKey : "best", n = MCG["n_" + nk] ? MCG["n_" + nk][i] : 0;
+    if (h) { const i = mcCell[Math.floor(h.face.a / 4)], nx = MCM.nx, v = k => MCG[mcPre + "mc_" + k][i], f = k => v(k) === 255 ? "–" : ((v(k) - 40) / 20).toFixed(1);
+      const s = MCG[mcPre + "sg_" + mcKey][i], nk = mcKey.startsWith("p") ? mcKey : "best", n = MCG[mcPre + "n_" + nk] ? MCG[mcPre + "n_" + nk][i] : 0;
       const per = ["p2010", "p2011", "p2013", "p2016"].map(k => `${MCM.layers.find(L => L.key === k).label.split(" ")[0]} ${f(k)}`).join(" · ");
       return showTip(`<b>Mc ${f(mcKey)}</b>${s !== 255 ? ` ± ${(s / 50).toFixed(2)}` : ""} <span class="k">${MCM.layers.find(L => L.key === mcKey).label}</span><br>
         ${(MCM.south + Math.floor(i / nx) * MCM.step).toFixed(1)}°N ${(-(MCM.west + (i % nx) * MCM.step)).toFixed(1)}°W${n ? ` · ${n} events in the sample` : ""}<br>
@@ -1233,8 +1810,10 @@ let downAt = null;
 canvas.addEventListener("pointerdown", ev => downAt = [ev.clientX, ev.clientY]);
 let tipT = 0;
 canvas.addEventListener("pointerup", ev => {     // click an event or a fault surface: show that fault's events
-  if (SEC.on || !downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4 || !FM.surf) return;
+  if (SEC.on || !downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4 || !(FM.surf || CLU_ON)) return;
   const i = pickEvent(ev.clientX, ev.clientY);
+  if (CLU_ON && i >= 0 && efam[i] >= 0) { selectFamily(efam[i]); return; }   // Cluster mode: a family event isolates its family
+  if (!FM.surf) return;
   if (i >= 0) { if (eflt[i] >= 0) selectFault(eflt[i]); return; }
   if (!surfMesh || !layer("surf").on) return;
   ray.setFromCamera(new THREE.Vector2(ev.clientX / innerWidth * 2 - 1, -ev.clientY / innerHeight * 2 + 1), camera);
@@ -1272,6 +1851,7 @@ function drawSection3D() {
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xe8a33d, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false }));
     m.renderOrder = 14; secCurtain.add(m); };
   quad(0, 0.10); quad(SEC.w, 0.05); quad(-SEC.w, 0.05);
+  if (tomoMat && layer("tomo") && layer("tomo").on) secCurtain.add(tomoSectionMesh(a, b));   // model on the section plane
   const lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x, top, a.z), new THREE.Vector3(b.x, top, b.z)]);
   secCurtain.add(new THREE.Line(lg, new THREE.LineBasicMaterial({ color: 0xe8a33d })));
 }
@@ -1285,6 +1865,7 @@ const faultColJS = f => {
 };
 const hexRGB = h => [1, 3, 5].map(j => parseInt(h.slice(j, j + 2), 16) / 255);
 const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
+  if (mode === 7) return [ecol[v * 3], ecol[v * 3 + 1], ecol[v * 3 + 2]];   // Cluster: the event's colour (v = event index)
   if (mode === 3) return faultColJS(v).match(/\d+/g).map(x => x / 255);
   if (mode === 4) return hexRGB(TIER_RGB[v] || TIER_RGB[5]);
   const lerp = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
@@ -1297,7 +1878,45 @@ const rgbOf = (mode, v) => {   // same ramps as the shader, 0-1 rgb
 };
 const rampJS = (mode, v) => mode === 3 ? faultColJS(v) : `rgb(${rgbOf(mode, v).map(x => Math.round(x * 255)).join(",")})`;
 const colVal = (i, m) => m === 0 ? edep[i] : m === 1 ? EV.day[i] / M.events.days_max : m === 2 ? enew[i] : m === 3 ? eflt[i] : m === 4 ? etier[i]
-  : m === 5 ? cdz[i] / F.cs : cdh[i] / F.cs;
+  : m === 5 ? cdz[i] / F.cs : m === 6 ? cdh[i] / F.cs : i;
+// Contour lines of the model in the section panel: marching squares on the grid sampled for its image (g, nx x ny
+// values, NaN where nothing is drawn: no line in a cell with a corner masked, in water or air, or outside the model);
+// the major lines carry their value, spaced along each level
+function secIso(V, g, nx, ny, x0, y0, sx, sy) {
+  const [iv, mj] = tIso(V), dig = tDig(V, mj), minor = [], major = [], q = [0, 0, 0, 0], cr = [null, null, null, null];
+  const PX = [0, 1, 1, 0], PY = [0, 0, 1, 1];                    // corners clockwise from the top left; edge e joins corners e and e + 1
+  for (let r = 0; r < ny - 1; r++) for (let c = 0; c < nx - 1; c++) {
+    q[0] = g[r * nx + c]; q[1] = g[r * nx + c + 1]; q[2] = g[(r + 1) * nx + c + 1]; q[3] = g[(r + 1) * nx + c];
+    if (q[0] !== q[0] || q[1] !== q[1] || q[2] !== q[2] || q[3] !== q[3]) continue;
+    const lo = Math.min(q[0], q[1], q[2], q[3]), hi = Math.max(q[0], q[1], q[2], q[3]);
+    for (let n = Math.ceil(lo / iv - 1e-9); n * iv < hi; n++) {
+      const L = n * iv, f = L / mj, out = Math.abs(f - Math.round(f)) < 1e-6 ? major : minor; let k = 0;
+      for (let e = 0; e < 4; e++) { const p = q[e], s = q[(e + 1) & 3], e1 = (e + 1) & 3;
+        if ((p > L) !== (s > L)) { const t = (L - p) / (s - p);
+          cr[e] = [x0 + (c + PX[e] + t * (PX[e1] - PX[e]) + 0.5) * sx, y0 + (r + PY[e] + t * (PY[e1] - PY[e]) + 0.5) * sy]; k++; }
+        else cr[e] = null; }
+      if (k === 2) { const [p, s] = cr.filter(Boolean); out.push(p[0], p[1], s[0], s[1], L); }
+      else if (k === 4) { const up = (q[0] + q[1] + q[2] + q[3]) / 4 > L;   // saddle: cut off the corners on the other side than the centre
+        for (let j = 0; j < 4; j++) if ((q[j] > L) !== up) { const p = cr[(j + 3) & 3], s = cr[j]; out.push(p[0], p[1], s[0], s[1], L); } }
+    }
+  }
+  sctx.save(); sctx.lineCap = "round";
+  for (const [S, w, col] of [[minor, 0.7, "rgba(13,13,18,0.5)"], [major, 1.4, "rgba(13,13,18,0.88)"]]) {
+    sctx.beginPath(); for (let k = 0; k < S.length; k += 5) { sctx.moveTo(S[k], S[k + 1]); sctx.lineTo(S[k + 2], S[k + 3]); }
+    sctx.lineWidth = w; sctx.strokeStyle = col; sctx.stroke(); }
+  // labels: left to right along the section, at least 150 px from a label of the same value and 42 px from any other
+  const cand = []; for (let k = 0; k < major.length; k += 5) cand.push([(major[k] + major[k + 2]) / 2, (major[k + 1] + major[k + 3]) / 2, major[k + 4]]);
+  cand.sort((p, s) => p[0] - s[0]);
+  sctx.font = "10px IBM Plex Mono, monospace"; sctx.textAlign = "center"; sctx.textBaseline = "middle";
+  sctx.lineWidth = 3; sctx.strokeStyle = "rgba(244,243,238,0.92)"; sctx.fillStyle = "#121216";
+  const xmax = x0 + nx * sx, ymax = y0 + ny * sy, put = [];
+  for (const [x, y, L] of cand) {
+    if (x < x0 + 14 || x > xmax - 14 || y < y0 + 6 || y > ymax - 6) continue;
+    if (put.some(([px, py, pL]) => Math.hypot(x - px, y - py) < (Math.abs(pL - L) < 1e-9 ? 150 : 42))) continue;
+    const t = tFmt(V, L, dig); sctx.strokeText(t, x, y); sctx.fillText(t, x, y); put.push([x, y, L]);
+  }
+  sctx.restore();
+}
 function drawSection() {
   if (!SEC.on) return;
   const W = secCv.clientWidth, H = secCv.clientHeight, pr = devicePixelRatio; secCv.width = W * pr; secCv.height = H * pr;
@@ -1323,6 +1942,24 @@ function drawSection() {
   let kx = pw / L, ky = ph / (dmax + 4);
   if (SEC.scale === 1) { const k = Math.min(kx, ky); kx = ky = k; }
   const X = s => pad.l + s * kx, Y = d => pad.t + (d + 4) * ky;
+  // velocity model behind everything, the same values as the 3D slice (2 px cells, smoothed when drawn)
+  if (TMM && layer("tomo") && layer("tomo").on) {
+    const V = tVar(), x0 = X(0), x1 = X(L), y0 = Y(-4), y1 = Y(dmax);
+    const cw = Math.max(2, Math.round((x1 - x0) / 2)), ch = Math.max(2, Math.round((y1 - y0) / 2));
+    const oc = document.createElement("canvas"); oc.width = cw; oc.height = ch;
+    const ox = oc.getContext("2d"), im = ox.createImageData(cw, ch), vals = new Float32Array(cw * ch).fill(NaN);
+    for (let c = 0; c < cw; c++) {
+      const s = L * (c + 0.5) / cw, [lo, la] = fromXZ(a.x + ux * s, a.z + uz * s), gd = -elevAt(lo, la) / 1000;
+      for (let r = 0; r < ch; r++) {
+        const d = -4 + (dmax + 4) * (r + 0.5) / ch; if (d < gd || d > TDMAX) continue;
+        const v = tmSample(V, lo, la, d); if (v === null) continue;
+        const rgb = rampCol(V.ramp, tvarT(V, v)), o = (r * cw + c) * 4; vals[r * cw + c] = v;
+        im.data[o] = rgb[0]; im.data[o + 1] = rgb[1]; im.data[o + 2] = rgb[2]; im.data[o + 3] = 215;
+      }
+    }
+    ox.putImageData(im, 0, 0); sctx.imageSmoothingEnabled = true; sctx.drawImage(oc, x0, y0, x1 - x0, y1 - y0);
+    if (TS.iso) secIso(V, vals, cw, ch, x0, y0, (x1 - x0) / cw, (y1 - y0) / ch);
+  }
   sctx.font = "10.5px IBM Plex Mono, monospace"; sctx.fillStyle = "#6f6d66"; sctx.strokeStyle = "rgba(255,255,255,0.07)";
   for (let d = 0; d <= dmax; d += 10) { sctx.beginPath(); sctx.moveTo(pad.l, Y(d)); sctx.lineTo(X(L), Y(d)); sctx.stroke(); sctx.fillText(d + " km", 2, Y(d) + 3); }
   const step = L > 400 ? 100 : L > 150 ? 50 : L > 60 ? 20 : 10;
@@ -1349,6 +1986,19 @@ function drawSection() {
   };
   if (FLT) { cut(FLT.c_lon, FLT.c_lat, FLT.c_dep, "#5fb3a6", layer("casie").on); cut(FLT.f_lon, FLT.f_lat, FLT.f_dep, "#e8a33d", layer("cfm").on);
     if (FLT.s_lon) cut(FLT.s_lon, FLT.s_lat, FLT.s_dep, "#3d8bff", layer("surf").on); }
+  // moves: hollow circle at the location before, line to the location after (events located in both catalogs)
+  if (MOVES && layer("moves") && layer("moves").on) {
+    const P0 = CP[MV.from], P1 = CP[MV.to];
+    sctx.lineWidth = 0.8;
+    for (const i of sel) {
+      if (!mvIn[i]) continue;
+      const sb = (toX(P0.lon[i]) - a.x) * ux + (toZ(P0.lat[i]) - a.z) * uz, sn = (toX(P1.lon[i]) - a.x) * ux + (toZ(P1.lat[i]) - a.z) * uz;
+      const dz = P1.dep[i] - P0.dep[i];
+      sctx.strokeStyle = dz > 0 ? "rgba(224,92,84,0.6)" : "rgba(90,158,230,0.6)";
+      sctx.beginPath(); sctx.moveTo(X(sb), Y(P0.dep[i])); sctx.lineTo(X(sn), Y(P1.dep[i])); sctx.stroke();
+      sctx.beginPath(); sctx.arc(X(sb), Y(P0.dep[i]), 1.6, 0, 2 * Math.PI); sctx.stroke();
+    }
+  }
   // events
   sel.sort((p, q) => emag[p] - emag[q]);
   for (const i of sel) {
@@ -1356,6 +2006,7 @@ function drawSection() {
     const r = Math.max(1.3, 1.2 + 0.9 * Math.pow(1.7, Math.min(m, 3)) * Math.pow(1.2, Math.max(m - 3, 0)));
     const px = X(s), py = Y(edep[i]);
     sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
+    if (CLU_ON) sctx.globalAlpha *= F.clu.fam >= 0 && efam[i] !== F.clu.fam ? 0.15 : ecls[i] === 0 ? 0.5 : 1;   // as the 3D view
     const em = effMode(), col = rampJS(em, colVal(i, em));
     if (F.cmp && segSet.has(i)) {               // shift line from the A location, projected on the section
       const A = CP[F.ca], s0 = (toX(A.lon[i]) - a.x) * ux + (toZ(A.lat[i]) - a.z) * uz;
@@ -1363,7 +2014,7 @@ function drawSection() {
       sctx.globalAlpha = eflag[i] ? 0.85 : 0.5;
     }
     sctx.beginPath(); sctx.arc(px, py, r, 0, 2 * Math.PI);
-    if (etier[i] === 4 && (EU.uRing.value > 0.5 || em === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U: ring
+    if (etier[i] > 3.5 && etier[i] !== 5 && (EU.uRing.value > 0.5 || em === 4)) { sctx.strokeStyle = col; sctx.lineWidth = Math.max(1, r * 0.45); sctx.stroke(); }   // tier U (or no hypocentre in the tier catalog): ring
     else { sctx.fillStyle = col; sctx.fill(); }
     secPts.push([px, py, i]);
   }
@@ -1389,15 +2040,20 @@ addEventListener("keydown", e => {
   if (e.key === "s" || e.key === "S") setSection(!SEC.on);
   if (e.key === "g" || e.key === "G") { const g = $("ground"); g.value = +g.value > 0.5 ? 0.25 : 1; g.oninput(); }
   if (e.key === " ") { e.preventDefault(); togglePlay(); }
-  if (e.key === "Escape") selectFault(-1);
+  if (e.key === "Escape") { selectFault(-1); if (F.clu.fam >= 0) selectFamily(-1); }
 });
 addEventListener("keyup", e => keys.delete(e.key));
-addEventListener("hashchange", () => flyTo(location.hash.slice(1) || "full"));
+function applyHash() {                       // #<region>, #clusters, or #clusters,<region>
+  const parts = decodeURIComponent(location.hash.slice(1)).split(/[,&/]/).filter(Boolean);
+  if (parts.includes("clusters")) clustersOn();
+  flyTo(parts.find(x => x !== "clusters") || "full");
+}
+addEventListener("hashchange", applyHash);
 addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); layoutPanels(); drawHist(); drawSection(); });
 
 // ---------- loop ----------
 $("nAll").textContent = N.toLocaleString(); $("nSta").textContent = ST.length.toLocaleString();
-// ---------- panel toolbar: all panels open on desktop; on phones all closed, one open at a time ----------
+// ---------- panel toolbar: on desktop Controls and Legend open, Places and Time closed; on phones one at a time ----------
 const PANELS = ["controls", "regions", "timeline", "legend"];
 function setPanel(id, open) {
   $(id).classList.toggle("closed", !open);
@@ -1406,13 +2062,21 @@ function setPanel(id, open) {
   if (id === "timeline" && open) drawHist();
   layoutPanels();
 }
-PANELS.forEach(id => setPanel(id, !PHONE));
+PANELS.forEach(id => setPanel(id, !PHONE && (id === "controls" || id === "legend")));   // Places and Time from the toolbar
 document.querySelectorAll("#toolbar button").forEach(b => b.onclick = () => setPanel(b.dataset.p, $(b.dataset.p).classList.contains("closed")));
 applyView(); layoutPanels();
 camera.position.set(0, 900, 900); controls.target.set(0, 0, 0);
-flyTo(location.hash.slice(1) || "full");
+applyHash();
 $("loading").remove();
-window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, CATS, segCount: () => segSet.size, ex, ez, edep, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; } };   // for scripted checks
+window.__atlas = { camera, controls, flyTo, F, setTime, setCatalog, setCompare, CATS, REL, MV, segCount: () => segSet.size,
+  segNaN: () => { let n = 0; for (const k of ["position", "dep"]) { const t = segGeo.attributes[k]; if (t) for (const v of t.array) if (!Number.isFinite(v)) n++; } return n; },
+  ex, ez, edep, esurf, eair, elevAt,
+  air: () => ({ nAir, nDrawn }), cdh, cdz, cdv, isLoc, noHypo, CP,
+  moves: () => MOVES ? { from: CP[MV.from], to: CP[MV.to], n: MOVE_STATS.n } : null, passes, tier: i => etier[i], id: i => EV.id[i], get fly() { return fly; },
+  clu: { meta: CLU, cls: ecls, fam: efam, col: ecol, active: () => CLU_ON, selectFamily, pick: pickEvent, evHtml },
+  tomo: { tmSample: (lon, lat, d) => TMM ? tmSample(tVar(), lon, lat, d) : null, TS, TMM, codes: TMG, setTomo, setCut: (mode, f) => { CUT.mode = mode; CUT.f = f; setCut(true); viewCut(); },
+    iso: () => isoMesh ? { key: isoKey, visible: isoMesh.visible, verts: isoMesh.geometry.attributes.position.count, tris: isoMesh.geometry.index.count / 3, ms: isoMesh.userData.ms } : null,
+    uniforms: () => tomoMat ? { dec: tomoMat.uniforms.uDec.value.toArray(), iso: tomoMat.uniforms.uIso.value.toArray() } : null } };   // for scripted checks
 let last = performance.now(), playAcc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;

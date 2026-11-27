@@ -316,7 +316,7 @@ def main():
     if null_csv.exists():
         null_short, null_long = null_section(pd.read_csv(null_csv), circ)
     else:
-        null_short = ("The null-truth test (a truth without the contrasts) is approved (D-B112) and not yet scored "
+        null_short = ("The null-truth test (a truth flattened by depth layer near the segments) is approved (D-B112) and not yet scored "
                       "(section 3).")
         null_long = ("<p><b>Null truth.</b> Every member of the calibration set inverts data from the same truth, "
                      "which carries the v0.4.2 contrasts, so that set cannot show whether coverage creates a contrast "

@@ -1029,3 +1029,11 @@ The Mc maps leave out the 3,298 events flagged as quarry blasts or explosions (D
 them out; the paper's v4.1 clustering (Table S5, Text S6, Figs. 5-6) still counted them. PI: same rule everywhere - rerun the
 v4.1 clustering without the flagged events, regenerate Table S5 and Figs. 5-6, and list the changed numbers as manuscript
 bullets, in the same PR as the Mc change (#59).
+
+### D-B107 Paper framing: fault-zone structure and seismicity style at the plate boundaries; no full-size velocity-model maps (adopted, 2026-11-26 16:05, PI)
+PI: "Figures in the paper will focus on the velocity model that is close to the fault ... just a fault zone structure and
+seismicity type of paper. We don't need full-size velocity model plots. We will focus on analyzing the difference in the
+seismic structure and seismicity style at the various plate boundaries." The model figure candidates of D-B104 (M1 overview
+maps, M2 margin-normal sections) are not paper figures; the gallery and the atlas stay for exploration. Paper model figures
+show velocity structure only near the faults where it is resolved, set against the seismicity style (clustering, b and Mc,
+depth extent, fault surfaces) of each plate boundary; a feasibility check of which boundaries the model resolves comes first.

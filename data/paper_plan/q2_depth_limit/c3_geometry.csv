@@ -1,0 +1,101 @@
+group,level,n_units,rho,lo90,hi90,flagged
+ridge,HSC_600,6,0.8857,-1,1,False
+ridge,V7.5,0,,,,
+ridge,GDH1_600,6,0.8857,-1,1,False
+ridge,V8.0,0,,,,
+ridge (no AX),HSC_600,4,,,,
+ridge (no AX),V7.5,0,,,,
+ridge (no AX),GDH1_600,4,,,,
+ridge (no AX),V8.0,0,,,,
+transform,HSC_600,14,0.7582,0.3027,0.9889,True
+transform,V7.5,14,0.7275,0.2496,0.9529,True
+transform,GDH1_600,14,0.7582,0.2472,0.9853,True
+transform,V8.0,4,,,,
+intraplate,HSC_600,3,,,,
+intraplate,V7.5,2,,,,
+intraplate,GDH1_600,3,,,,
+intraplate,V8.0,1,,,,
+triple junction,HSC_600,5,-0.1,-0.1,0,False
+triple junction,V7.5,5,-0.3,-0.4,-0.3,True
+triple junction,GDH1_600,5,0.5,0,0.5,False
+triple junction,V8.0,2,,,,
+slab,HSC_600,25,0.1515,-0.2098,0.5499,False
+slab,V7.5,12,0.6224,0.427,0.9259,True
+slab,GDH1_600,25,0.1477,-0.1869,0.5534,False
+slab,V8.0,1,,,,
+Gorda slab (GS),HSC_600,11,-0.01818,-0.7404,0.5714,False
+Gorda slab (GS),V7.5,10,0.4303,0.3986,1,True
+Gorda slab (GS),GDH1_600,11,-0.01818,-0.7404,0.4,False
+Gorda slab (GS),V8.0,1,,,,
+seg:AX,HSC_600,2,,,,
+seg:AX,V7.5,0,,,,
+seg:AX,GDH1_600,2,,,,
+seg:AX,V8.0,0,,,,
+seg:EN,HSC_600,0,,,,
+seg:EN,V7.5,0,,,,
+seg:EN,GDH1_600,0,,,,
+seg:EN,V8.0,0,,,,
+seg:JR,HSC_600,0,,,,
+seg:JR,V7.5,0,,,,
+seg:JR,GDH1_600,0,,,,
+seg:JR,V8.0,0,,,,
+seg:EXR,HSC_600,0,,,,
+seg:EXR,V7.5,0,,,,
+seg:EXR,GDH1_600,0,,,,
+seg:EXR,V8.0,0,,,,
+seg:GR,HSC_600,4,,,,
+seg:GR,V7.5,0,,,,
+seg:GR,GDH1_600,4,,,,
+seg:GR,V8.0,0,,,,
+seg:BL,HSC_600,9,0.1333,-0.5536,1,False
+seg:BL,V7.5,9,0.1,-0.6,0.8558,False
+seg:BL,GDH1_600,9,0.1333,-0.5536,1,False
+seg:BL,V8.0,4,,,,
+seg:MFZ,HSC_600,5,0.7,-0.7778,1,False
+seg:MFZ,V7.5,5,0.7,-0.7778,1,False
+seg:MFZ,GDH1_600,5,0.7,-0.7778,1,False
+seg:MFZ,V8.0,0,,,,
+seg:SOV,HSC_600,0,,,,
+seg:SOV,V7.5,0,,,,
+seg:SOV,GDH1_600,0,,,,
+seg:SOV,V8.0,0,,,,
+seg:GP,HSC_600,3,,,,
+seg:GP,V7.5,2,,,,
+seg:GP,GDH1_600,3,,,,
+seg:GP,V8.0,1,,,,
+seg:JP,HSC_600,0,,,,
+seg:JP,V7.5,0,,,,
+seg:JP,GDH1_600,0,,,,
+seg:JP,V8.0,0,,,,
+seg:EXP,HSC_600,0,,,,
+seg:EXP,V7.5,0,,,,
+seg:EXP,GDH1_600,0,,,,
+seg:EXP,V8.0,0,,,,
+seg:MTJ,HSC_600,5,-0.1,-0.1,0,False
+seg:MTJ,V7.5,5,-0.3,-0.4,-0.3,True
+seg:MTJ,GDH1_600,5,0.5,0,0.5,False
+seg:MTJ,V8.0,2,,,,
+seg:GS,HSC_600,11,-0.01818,-0.7404,0.5714,False
+seg:GS,V7.5,10,0.4303,0.3966,1,True
+seg:GS,GDH1_600,11,-0.01818,-0.7404,0.4,False
+seg:GS,V8.0,1,,,,
+seg:SIF,HSC_600,11,0.2909,-0.194,0.7151,False
+seg:SIF,V7.5,1,,,,
+seg:SIF,GDH1_600,11,0.2909,-0.2,0.7032,False
+seg:SIF,V8.0,0,,,,
+seg:IS,HSC_600,3,,,,
+seg:IS,V7.5,1,,,,
+seg:IS,GDH1_600,3,,,,
+seg:IS,V8.0,0,,,,
+frame:oceanic,HSC_600,26,0.6745,0.3916,0.8741,True
+frame:oceanic,V7.5,19,0.5404,0.2388,0.781,True
+frame:oceanic,GDH1_600,26,0.7046,0.434,0.8931,True
+frame:oceanic,V8.0,6,-0.02857,-0.7419,0.8233,False
+frame:slab,HSC_600,31,-0.1133,-0.4997,0.3718,False
+frame:slab,V7.5,13,0.2857,0.04147,0.8,False
+frame:slab,GDH1_600,31,-0.1117,-0.4999,0.3718,False
+frame:slab,V8.0,2,,,,
+frame:oceanic+slab,HSC_600,57,-0.1839,-0.4821,0.1368,False
+frame:oceanic+slab,V7.5,32,0.5231,0.3087,0.7578,True
+frame:oceanic+slab,GDH1_600,57,-0.1501,-0.4374,0.1623,False
+frame:oceanic+slab,V8.0,8,0.4524,-0.5484,0.8902,False

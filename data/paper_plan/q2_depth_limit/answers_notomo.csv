@@ -1,0 +1,18 @@
+group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
+ridge,5,5,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.064
+ridge (no AX),3,3,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.064
+transform,10,10,10,,,True,True,False,False,False,True,composition-limited,994,1123,7.654
+intraplate,1,1,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1126,1273,7.521
+triple junction,3,3,3,HSC_800,,False,False,False,False,False,False,"H_T supported, not preferred",854.5,994.1,7.97
+slab,6,6,6,HSC_350;GDH1_350;GDH1_600,V7.5,True,True,False,False,False,False,both consistent,401.4,478.1,7.589
+Gorda slab (GS),6,6,6,HSC_350;GDH1_350;GDH1_600,V7.5,True,True,False,False,False,False,both consistent,401.4,478.1,7.589
+seg:AX,2,2,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),1026,1174,
+seg:GR,3,3,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.064
+seg:BL,8,8,8,HSC_800,V7.5,False,False,False,False,False,True,composition-limited,978.5,1114,7.592
+seg:MFZ,2,2,2,,,False,False,True,False,False,False,neither,994,1123,7.787
+seg:GP,1,1,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1126,1273,7.521
+seg:MTJ,3,3,3,HSC_800,,False,False,False,False,False,False,"H_T supported, not preferred",854.5,994.1,7.97
+seg:GS,6,6,6,HSC_350;GDH1_350;GDH1_600,V7.5,True,True,False,False,False,False,both consistent,401.4,478.1,7.589
+frame:oceanic,17,17,11,,V8.0,True,True,True,False,False,True,composition-limited,992.3,1115,7.621
+frame:slab,8,8,8,HSC_350;GDH1_350;GDH1_600,,False,False,True,False,False,True,"H_T supported, not preferred",413.9,492.8,7.649
+frame:oceanic+slab,25,25,19,HSC_800,V8.0,True,True,False,False,False,True,composition-limited,842.5,968.8,7.635

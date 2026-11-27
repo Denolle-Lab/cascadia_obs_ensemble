@@ -1,0 +1,21 @@
+group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
+ridge,10,10,1,,,False,False,True,False,False,False,neither,1350,1450,7.096
+ridge (no AX),7,7,1,,,False,False,True,False,False,False,neither,1350,1450,7.096
+transform,21,21,16,,,True,True,True,False,False,True,composition-limited,1115,1238,7.715
+intraplate,12,12,3,,,True,False,True,True,False,True,"H_T supported, not preferred",1246,1379,7.799
+triple junction,5,5,5,,,False,False,True,True,False,True,neither,1025,1174,8.038
+slab,45,45,11,HSC_350;HSC_600;GDH1_600,,True,True,False,True,False,True,composition-limited,385.6,459.5,7.63
+Gorda slab (GS),11,11,9,HSC_600;GDH1_600;GDH1_800,,False,True,True,True,True,True,both consistent,479.5,569.6,7.805
+seg:AX,3,3,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),1113,1260,
+seg:GR,7,7,1,,,False,False,True,False,False,False,neither,1350,1450,7.096
+seg:BL,12,12,10,,,False,False,True,False,False,True,neither,1234,1369,7.755
+seg:MFZ,9,9,6,,,False,False,True,False,False,True,neither,1097,1220,7.676
+seg:GP,8,8,3,,,False,False,True,True,False,True,neither,1219,1357,7.799
+seg:JP,4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1274,1402,
+seg:MTJ,5,5,5,,,False,False,True,True,False,True,neither,1025,1174,8.038
+seg:GS,11,11,9,HSC_600;GDH1_600;GDH1_800,,False,True,True,True,True,True,both consistent,479.5,569.6,7.805
+seg:SIF,22,22,1,HSC_350;GDH1_350,V7.5,True,False,False,False,False,False,both consistent,206.3,246.7,7.083
+seg:IS,12,12,1,,,False,False,False,False,False,False,neither,969.3,1116,
+frame:oceanic,43,43,21,,,True,True,True,True,False,True,composition-limited,1234,1369,7.682
+frame:slab,49,49,12,HSC_600;GDH1_600;GDH1_800,,True,False,False,True,True,True,"H_T supported, not preferred",615.6,727.1,7.833
+frame:oceanic+slab,92,92,33,,,False,True,True,True,False,True,composition-limited,1026,1139,7.791

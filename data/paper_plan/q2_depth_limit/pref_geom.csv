@@ -1,0 +1,20 @@
+group,n_units_both,primary_P_T,primary_rms_T,primary_rms_C,primary_pref,best_of_family_P_T,best_of_family_rms_T,best_of_family_rms_C,best_of_family_pref,cv_P_T,cv_pref
+ridge,0,,,,,,,,,,
+ridge (no AX),0,,,,,,,,,,
+transform,12,0,9.851,5.247,H_C,0.2232,2.703,1.896,not distinguished,0.043,H_C
+intraplate,1,,,,,,,,,,
+triple junction,5,0.065,8.891,7.466,H_C,0.493,6.985,7.034,not distinguished,0.664,not distinguished
+slab,11,0.9,5.322,6.25,H_T,0.2109,7.411,6.017,not distinguished,0.004,H_C
+Gorda slab (GS),10,0.842,5.116,5.906,not distinguished,0.2109,7.411,6.017,not distinguished,0.004,H_C
+seg:AX,0,,,,,,,,,,
+seg:GR,0,,,,,,,,,,
+seg:BL,9,0.002,6.976,4.821,H_C,0.2232,2.703,1.896,not distinguished,0.339,not distinguished
+seg:MFZ,3,0,15.68,6.337,H_C,,,,not testable,0.6444,not distinguished
+seg:GP,1,,,,,,,,,,
+seg:MTJ,5,0.065,8.891,7.466,H_C,0.493,6.985,7.034,not distinguished,0.664,not distinguished
+seg:GS,10,0.842,5.116,5.906,not distinguished,0.2109,7.411,6.017,not distinguished,0.004,H_C
+seg:SIF,0,,,,,,,,,,
+seg:IS,1,,,,,,,,,,
+frame:oceanic,17,0,13.59,5.383,H_C,0,13.01,3.432,H_C,0,H_C
+frame:slab,13,0.927,6.212,7.273,H_T,0.606,7.439,7.895,not distinguished,0,H_C
+frame:oceanic+slab,30,0,11.21,6.192,H_C,0.014,11.73,6.309,H_C,0,H_C

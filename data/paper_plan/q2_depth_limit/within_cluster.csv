@@ -1,0 +1,13 @@
+cluster,level,n_units,rho,bias,D_range,level_range
+"Blanco cluster (oceanic, lat >= 42.5)",HSC_600,12,0.4266,4.79,17.04,5.783
+"Blanco cluster (oceanic, lat >= 42.5)",GDH1_600,12,0.4545,5.675,17.04,5.189
+"Blanco cluster (oceanic, lat >= 42.5)",HSC_800,12,0.3776,2.585,17.04,7.771
+"Blanco cluster (oceanic, lat >= 42.5)",V7.5,9,0.41,2.51,12.82,1.66
+"Mendocino-Gorda cluster (oceanic, lat < 42.5)",HSC_600,14,0.4286,15.84,23.27,13.84
+"Mendocino-Gorda cluster (oceanic, lat < 42.5)",GDH1_600,14,0.4286,17.95,23.27,11.44
+"Mendocino-Gorda cluster (oceanic, lat < 42.5)",HSC_800,14,0.4286,11.33,23.27,19.9
+"Mendocino-Gorda cluster (oceanic, lat < 42.5)",V7.5,10,0.4134,5.785,11.05,3.33
+"oceanic frame, all",HSC_600,26,0.4694,10.82,32.65,13.84
+"oceanic frame, all",GDH1_600,26,0.4571,12.15,32.65,11.44
+"oceanic frame, all",HSC_800,26,0.5056,8.087,32.65,19.9
+"oceanic frame, all",V7.5,19,0.8534,4.88,28.43,14.63

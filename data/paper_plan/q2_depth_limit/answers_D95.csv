@@ -1,0 +1,20 @@
+group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
+ridge,6,6,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.143
+ridge (no AX),4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.143
+transform,14,14,14,,,True,True,True,False,False,True,composition-limited,1078,1208,7.647
+intraplate,3,3,2,,,False,False,True,False,False,False,neither,1145,1291,7.9
+triple junction,5,5,5,,,False,False,True,True,False,True,neither,891.3,1034,8.009
+slab,25,25,12,HSC_350;HSC_600;GDH1_600,,True,True,False,True,True,True,both consistent,456.9,543.1,7.825
+Gorda slab (GS),11,11,10,HSC_600;GDH1_600;GDH1_800,,False,True,True,True,True,True,both consistent,544.8,645.5,7.831
+seg:AX,2,2,0,HSC_350;HSC_600;HSC_800;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),1105,1251,
+seg:GR,4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.143
+seg:BL,9,9,9,,,False,False,True,False,False,True,neither,1077,1225,7.577
+seg:MFZ,5,5,5,,,False,False,True,False,False,True,neither,1080,1204,7.66
+seg:GP,3,3,2,,,False,False,True,False,False,False,neither,1145,1291,7.9
+seg:MTJ,5,5,5,,,False,False,True,True,False,True,neither,891.3,1034,8.009
+seg:GS,11,11,10,HSC_600;GDH1_600;GDH1_800,,False,True,True,True,True,True,both consistent,544.8,645.5,7.831
+seg:SIF,11,11,1,HSC_350;GDH1_350,V7.5,True,False,False,False,False,False,both consistent,294.5,351.7,7.771
+seg:IS,3,3,1,HSC_800;GDH1_800,,False,False,False,False,False,False,"H_T supported, not preferred",844.4,983.1,
+frame:oceanic,26,26,19,,V8.0,True,True,True,False,False,True,composition-limited,1080,1211,7.659
+frame:slab,31,31,13,HSC_600;GDH1_600;GDH1_800,,True,True,False,True,True,True,both consistent,544.4,645,7.866
+frame:oceanic+slab,57,57,32,HSC_800;GDH1_800,,True,True,False,False,False,True,composition-limited,743.1,871.3,7.752

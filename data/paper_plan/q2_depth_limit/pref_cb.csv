@@ -1,0 +1,20 @@
+group,n_units_both
+ridge,0
+ridge (no AX),0
+transform,0
+intraplate,0
+triple junction,0
+slab,0
+Gorda slab (GS),0
+seg:AX,0
+seg:GR,0
+seg:BL,0
+seg:MFZ,0
+seg:GP,0
+seg:MTJ,0
+seg:GS,0
+seg:SIF,0
+seg:IS,0
+frame:oceanic,0
+frame:slab,0
+frame:oceanic+slab,0

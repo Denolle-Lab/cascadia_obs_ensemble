@@ -1068,3 +1068,18 @@ Vp/Vs error. Axial has no tomography tile (D-B109), so the model there is the st
 model. PI: register and upload v6.1 now with the limit stated in its README; the Axial (and Puget) shallow Vp/Vs
 correction goes into v6.2 with the clock epochs and the review verdicts (D-B108). Done: catalog_v6.zip 1c87dc0a
 (v6.0 + v6.1) on the private draft 23084158, v6.1 CSV md5 1cd909b5; PR #62 (catalog/v6.1).
+
+### D-B110 Caveats become stated limitations in the paper; fixes wait for v6.2; the whole chain must be rerunnable end to end (adopted, 2026-11-27 09:09, PI)
+PI: "All caveats can be written in terms of limitations in the paper, keep next updates for v6.2. make sure the operational
+aspect can rerun the whole thing from earthquake relocation -> near source tomography -> relocation -> clustering --> fault
+trace fitting > magnitudes calculation with Mc and b value in each region -> analys of swarms behavior -> explore
+relationships between structure and seismic characteristics -> validate seismicity, faults from existing networks -> new
+science of analyzing offshore plate boundaries from ridges to transform to subduction zones". (1) Every known caveat (v6.1
+acceptance, depth test, ensemble calibration, plate-boundary feasibility, Mount St Helens flags, PR #60/#61 reviews) is
+written as a manuscript limitation bullet (data/paper_plan/limitations_bullets.md); nothing is fixed in v6.1. (2) The fixes
+and open items go to a v6.2 backlog (workflow/10_tomography/notes/v6_2_backlog.md). (3) One documented driver reruns the chain
+in dependency order: relocation, near-source tomography and ensemble, relocation on the model with magnitudes on its own
+hypocentres, Mc and b per region, clustering, swarms, fault fitting, structure versus seismicity, validation against existing
+networks and published catalogs, plate-boundary science; catalog bundling, Zenodo upload and atlas deploy stay manual, gated
+steps. Clustering, swarm statistics and b need the magnitudes and Mc, so they follow the magnitudes stage. Session -18 keeps
+D-B085..D-B089; this session uses D-B110..D-B119.

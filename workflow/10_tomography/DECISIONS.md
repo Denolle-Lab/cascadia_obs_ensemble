@@ -1045,3 +1045,16 @@ clock-candidate epochs and the 1,512-event location-review flags wait for the PI
 likely false events from the weekly artificial signal on the analog UW channels HSR, EDM and STD near Mount St Helens
 (Wednesdays about 11:30-13:00 local) is built with waveform evidence before the catalog stage; v6.1 carries it as event_flag
 (flag only; no event deleted).
+
+### D-B109 Paper plan: seismicity style leads, velocity structure as plate-boundary-scale context; everything rerun on catalog v6.1 (adopted, 2026-11-26 19:53, PI; implements D-B107)
+Feasibility study (analysis/plate-boundaries cecab0a5; reports/plate_boundaries_plan.html): 19 segments by boundary type. The
+model resolves the Blanco transform, Mendocino fault zone, Gorda plate, triple junction, Gorda slab, Puget, Mount St Helens and
+the Cascades at 40 km scale only (finest checkerboard cell near every fault 40 km; most near-fault nodes pass on DWS alone);
+Axial, Endeavour and Explorer have no tomography tile. Of 105 depth-matched contrasts, 34 exceed 2 sigma of the 100 members
+(Mendocino fault zone lower Vs -0.11 km/s, 4.4 sigma; Blanco none above 2 sigma; Vp/Vs only along the Cascade arc). Seismicity
+style separates boundary types more clearly (swarm share Axial 31 %, Mount St Helens 38 %, Blanco 24 %, Gorda Ridge 21 % against
+<= 3.4 % at the Mendocino fault zone, Gorda plate, triple junction, Gorda slab; b 0.76-1.44); the bottom of the Gorda-slab
+seismicity follows the 7.5 km/s level (rho 0.52, p 0.001). PI: adopt the plan - six main figures (plate boundaries and
+feasibility; seismicity-style fingerprint; fault geometry per boundary; fault-normal sections with the ensemble 1 sigma for the
+resolved segments; structure versus seismicity; temporal character), the rest supplementary - and rerun it on catalog v6.1:
+fault surfaces refit on v6.1, the circularity (synthetic) control before interpreting contrasts, a calibrated Vp/Vs uncertainty.

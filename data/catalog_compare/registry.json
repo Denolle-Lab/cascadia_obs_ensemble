@@ -1,8 +1,8 @@
 {
  "reference": "v4.1",
  "benchmark": "anss",
- "atlas_relocated": "v6.0",
- "atlas_moves_from": "v5.1",
+ "atlas_relocated": "v6.1",
+ "atlas_moves_from": "v6.0",
  "catalogs": [
   {
    "id": "v4.1",
@@ -111,7 +111,7 @@
    "own_surface": true,
    "note": "the catalog v4.1 events relocated with NonLinLoc in the merged tomography model v0.3.1 (offshore, a Vp/Vs of at least 2.1 in the top 2.5 km of crust), with re-timed picks and station terms from a first pass; depths below sea level, checked against the catalog's GMRT and earth_relief surface (no event above it). v5.2 will add the double-difference relocation. Against published local studies, 81 % of the best-located Axial events are within 2 km of the seafloor (90 % published) and Blanco events are about 1.4 km deeper; Endeavour, Explorer and Juan de Fuca ridge events are poorly constrained, and the catalog flags events whose depth is set by the topography floor, by distant stations only, or by five phases.",
    "_rows": 172342,
-   "_md5": "ca4b7f27ba0d06504c2f2a2b38ea5e53"
+   "_md5": "deaa594cf80bd2c624dc48858e562825"
   },
   {
    "id": "v6.0",
@@ -126,9 +126,26 @@
    "date": "2026-11-26",
    "atlas": true,
    "own_surface": true,
-   "note": "NonLinLoc with source-specific station terms (NLL-SSST) and waveform-coherence relocation in model v0.4.1, re-timed and clock-corrected picks; Axial depths biased deep by the station-term passes (66 % of tier A-B events within 2 km of the seafloor), fixed in v6.1.",
+   "note": "NonLinLoc with source-specific station terms (NLL-SSST) and waveform-coherence relocation in model v0.4.1, re-timed and clock-corrected picks; Axial depths biased deep by the station-term passes (66 % of tier A-B events within 2 km of the seafloor); v6.1 stops the passes at 16 km (73 %).",
    "_rows": 172342,
-   "_md5": "0daf48808af466859e6804793486c2a5"
+   "_md5": "923aa0622d5dc62929240b58b5a52636"
+  },
+  {
+   "id": "v6.1",
+   "label": "Catalog v6.1",
+   "adapter": "nll_catalog",
+   "file": "/wd1/mdenolle_data/catalog_v6/v6.1/cascadia_catalog_v6.1.csv",
+   "keyed_v4": true,
+   "velocity": "merged tomoDD model v0.4.2 (v0.4.1 with event self-pairs removed from the inversion and a tomoDD numerical fix, D-B099, D-B104)",
+   "method": "NonLinLoc EDT, 3D grids, source-specific station terms (NLL-SSST 9999-16 km, D-B103) and NLL-coherence relocation (not in Mendocino, D-B098), picks v4.1tc (D-B090), run v6.1; magnitudes on the v6.1 hypocentres (D-B105); Mount St Helens analog test-signal events flagged (D-B108)",
+   "parent": "v6.0",
+   "status": "preliminary",
+   "date": "2026-11-27",
+   "atlas": true,
+   "own_surface": true,
+   "note": "NonLinLoc with source-specific station terms stopped at 16 km and waveform-coherence relocation in model v0.4.2; magnitudes on these hypocentres. Axial depths still biased deep by about 0.2-0.4 km (73 % of tier A-B events within 2 km of the seafloor, target 85 %); the shallow Vp/Vs fix is planned for v6.2 (D-B085).",
+   "_rows": 172342,
+   "_md5": "1cd909b59cb8493bc823ad60a07fbcde"
   }
  ]
 }

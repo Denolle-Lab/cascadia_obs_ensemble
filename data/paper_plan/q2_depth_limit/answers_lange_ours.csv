@@ -1,0 +1,5 @@
+group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
+transform,8,8,8,,V7.5,False,False,False,False,False,True,composition-limited,990,1125,7.631
+seg:BL,8,8,8,,V7.5,False,False,False,False,False,True,composition-limited,990,1125,7.631
+frame:oceanic,8,8,8,,V7.5,False,False,False,False,False,True,composition-limited,990,1125,7.631
+frame:oceanic+slab,8,8,8,,V7.5,False,False,False,False,False,True,composition-limited,990,1125,7.631

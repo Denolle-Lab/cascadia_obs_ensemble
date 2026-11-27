@@ -1,0 +1,20 @@
+group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
+ridge,6,6,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1343,1447,7.138
+ridge (no AX),4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.138
+transform,14,14,14,HSC_800,V7.5,True,True,False,False,False,True,composition-limited,880.9,1018,7.662
+intraplate,3,3,2,,V7.5;V8.0,False,False,True,False,False,False,composition-limited,1058,1206,7.633
+triple junction,5,5,5,HSC_800,,False,False,True,True,False,True,"H_T supported, not preferred",792.2,925.9,7.979
+slab,25,25,12,HSC_350;GDH1_350,V7.5;V8.0,True,True,False,False,False,True,composition-limited,193.9,231.9,7.517
+Gorda slab (GS),11,11,10,HSC_350;GDH1_350;GDH1_600,V7.5;V8.0,False,True,True,False,False,True,composition-limited,287.4,343.2,7.517
+seg:AX,2,2,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),-602.1,-709.5,
+seg:GR,4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,7.138
+seg:BL,9,9,9,HSC_600;HSC_800;GDH1_800,V7.5,False,False,False,False,False,False,both consistent,809.5,944.9,7.023
+seg:MFZ,5,5,5,,,False,False,True,False,False,True,neither,1004,1136,7.765
+seg:GP,3,3,2,,V7.5;V8.0,False,False,True,False,False,False,composition-limited,1058,1206,7.633
+seg:MTJ,5,5,5,HSC_800,,False,False,True,True,False,True,"H_T supported, not preferred",792.2,925.9,7.979
+seg:GS,11,11,10,HSC_350;GDH1_350;GDH1_600,V7.5;V8.0,False,True,True,False,False,True,composition-limited,287.4,343.2,7.517
+seg:SIF,11,11,1,,V7.5,True,False,False,False,False,False,both consistent,82.11,98.33,7.143
+seg:IS,3,3,1,HSC_600;GDH1_600;GDH1_800,,False,False,False,False,False,False,"H_T supported, not preferred",568.7,673.2,7.641
+frame:oceanic,26,26,19,,V7.5,True,True,True,False,False,True,composition-limited,965.5,1084,7.528
+frame:slab,31,31,13,HSC_350;GDH1_350,V7.5,True,True,False,False,False,True,composition-limited,304,363,7.641
+frame:oceanic+slab,57,57,32,HSC_600;GDH1_600;GDH1_800,V7.5;V8.0,True,True,False,False,False,True,composition-limited,535,634.1,7.591

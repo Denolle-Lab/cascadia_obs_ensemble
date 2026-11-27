@@ -147,6 +147,19 @@ def main():
         s = G[G.group.eq(g) & G.level.eq(L)]
         return float(s.iloc[0][c]) if len(s) and c in s and pd.notna(s.iloc[0][c]) else np.nan
 
+    GL = {c: load("groups", c) for c in ("lit_med", "lit_p90", "lit_gd", "lange", "lange_ours")}
+    AL = {c: load("answers", c) for c in ("lit_med", "lit_p90", "lit_gd", "lange", "lange_ours")}
+
+    def gl(cfg, g, L, c="bias"):
+        t = GL.get(cfg)
+        if t is None:
+            return np.nan
+        x = t[t.group.eq(g) & t.level.eq(L)]
+        return float(x.iloc[0][c]) if len(x) and pd.notna(x.iloc[0][c]) else np.nan
+
+    def need(g):                       # depth bias that would bring the 800 C half-space isotherm within 3 km
+        return gv(g, "HSC_800", "bias") - Q.DELTA
+
     def bias_s(g, L):
         return f"{gv(g, L, 'bias'):+.1f} km (95 % {gv(g, L, 'bias_lo95'):+.1f} to {gv(g, L, 'bias_hi95'):+.1f})"
 
@@ -192,7 +205,26 @@ code{font-size:.92em}li{margin:.25em 0}
              f"trench, ridges included), the bias against the six "
              f"isotherms (350, 600, 800 C; half-space and GDH1) is {', '.join(six)} km. The cooling models put the "
              f"base at about {ts('frame:oceanic', 'HSC'):.0f} C (half-space) or {ts('frame:oceanic', 'GDH1'):.0f} C "
-             f"(GDH1). This rejection holds under every control and with the external-data isotherms.</li>")
+             f"(GDH1). This rejection holds under every registered control and with the external-data isotherms, "
+             f"but not under every literature depth offset (next point).</li>")
+    H.append(f"<li><b>Our depths run deep against local OBS catalogs, and the headline survives only in a narrower "
+             f"form</b> (post-registration control L).<ul>"
+             f"<li>Median paired offsets (Blanco segments; +3.17 km elsewhere): the oceanic frame still rejects all "
+             f"six isotherms (bias {gl('lit_med', 'frame:oceanic', 'HSC_800'):+.1f} km for 800 C), and so do the "
+             f"Gorda plate ({gl('lit_med', 'intraplate', 'HSC_800'):+.1f} km) and the MFZ "
+             f"({gl('lit_med', 'seg:MFZ', 'HSC_800'):+.1f} km). The transforms as a group no longer do "
+             f"(800 C {gl('lit_med', 'transform', 'HSC_800'):+.1f} km).</li>"
+             f"<li>Blanco with Lange's own depths for the same events: the base sits at the 600-800 C isotherms "
+             f"({gl('lange', 'seg:BL', 'HSC_600'):+.1f} and {gl('lange', 'seg:BL', 'HSC_800'):+.1f} km; our depths "
+             f"for those events give {gl('lange_ours', 'seg:BL', 'HSC_600'):+.1f} and "
+             f"{gl('lange_ours', 'seg:BL', 'HSC_800'):+.1f} km). At Blanco the deep base is a depth bias.</li>"
+             f"<li>Worst cases: with the p90 offsets, or the Gorda Depression offset (+9.6 km, 23 events) moved to "
+             f"the Mendocino-Gorda system, the 800 C isotherm fits the oceanic frame "
+             f"({gl('lit_p90', 'frame:oceanic', 'HSC_800'):+.1f} and {gl('lit_gd', 'frame:oceanic', 'HSC_800'):+.1f} "
+             f"km).</li>"
+             f"<li>What survives: in the Gorda plate interior and the MFZ the base would reach the 800 C isotherm "
+             f"only if our depths were {need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. No paired OBS "
+             f"catalog tests that there.</li></ul></li>")
     H.append(f"<li>In the same plates the base lies {gv('frame:oceanic', 'V7.5', 'bias'):.1f} km below the 7.5 km/s "
              f"level of v0.4.2 (19 bins). In the 6 bins where the 8.0 km/s level is resolved, the base is "
              f"{-gv('frame:oceanic', 'V8.0', 'bias'):.1f} km above it (within 3 km in "
@@ -204,7 +236,9 @@ code{font-size:.92em}li{margin:.25em 0}
              f"Mendocino-Gorda system (deep base, deep level).</li>"
              f"<li>The residuals grow with the distance to the nearest station (C3 flag).</li>"
              f"<li>No offshore 7.5 km/s crossing lies between checkerboard-resolved nodes (C4).</li></ul>"
-             f"The velocity link is therefore reported, not claimed as robust.</li>")
+             f"The velocity link is therefore reported, not claimed as robust. With the median literature depth "
+             f"offsets the base sits at the 7.5 km/s level instead "
+             f"({gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km).</li>")
     H.append(f"<li>In the subducting Gorda slab, the base lies between two 600 C isotherms:"
              f"<ul><li>{gv('Gorda slab (GS)', 'HSC_600', 'bias'):+.1f} km from the coldest-slab bound (the incoming "
              f"plate's geotherm hung below Slab2);</li>"
@@ -219,9 +253,14 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>The cooling models do not describe the axial magma system.</li>"
              "<li>Gorda Ridge depths (D90 10-28 km below the seafloor at near-zero age) are not trusted.</li>"
              "<li>No ridge bin has a resolved velocity level.</li></ul></li>")
-    H.append("<li>Answer to Q2 for the paper: the depth limit in the young oceanic plates is not a 350-800 C "
-             "isotherm of conductive cooling. The base reaches the uppermost mantle, near the 7.5-8.0 km/s levels. "
-             "These data cannot tell whether composition or a colder-than-conductive thermal state sets it.</li>")
+    H.append("<li>Answer to Q2 for the paper:<ul>"
+             "<li>At Blanco, with independent OBS depths, the base is consistent with a 600-800 C limit.</li>"
+             f"<li>In the Mendocino-Gorda system (Gorda plate interior, MFZ), the base lies "
+             f"{gv('intraplate', 'HSC_800', 'bias'):.0f}-{gv('seg:MFZ', 'HSC_800', 'bias'):.0f} km below the 800 C "
+             f"conductive isotherm. It is not a 350-800 C limit unless our depths there are "
+             f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. No local catalog exists there to check, "
+             f"and the nearest paired segment (Gorda Depression) has an offset of that size.</li>"
+             "<li>A composition (velocity-level) control is not supported robustly.</li></ul></li>")
     H.append("</ul></div>")
     # ---------------------------------------------------------------- question
     H.append("<h2>1. Question</h2><p>What limits the depth of earthquakes across the offshore plate system: ridges, "
@@ -474,31 +513,108 @@ code{font-size:.92em}li{margin:.25em 0}
              f"rho {WC[~WC.cluster.str.startswith('oceanic')].rho.min():.2f}-"
              f"{WC[~WC.cluster.str.startswith('oceanic')].rho.max():.2f} (9-14 units). The oceanic-frame rho of 0.85 for the 7.5 km/s level comes from the "
              "difference between the two clusters.</p>")
+    # ---------------------------------------------------------------- control L
+    H.append("<h3>5b. Post-registration control L: are our depths too deep?</h3>")
+    H.append("<p>Requested by the coordinator after the report, written in RESUME.md at 2026-11-27 13:52:46 PST "
+             "(commit 0ca862fd) before it was computed. The decision rules are unchanged. Event-paired comparisons "
+             "(b4_lit_paired.py, v6.1) put our depths deeper than local OBS catalogs. Against Lange et al. (2026) at "
+             "Blanco the median is +1.01 km (tiers A-C) and +3.17 km (tiers A-B, p90 +9.87). By Blanco segment (tiers "
+             "A-B) it is +5.31 West, -0.24 Surveyor, +1.63 Cascadia Depression, +3.84 Blanco Ridge and +9.58 Gorda "
+             "Depression (23 events). Mount St Helens minus Hirao et al. (2025) is +0.85 km. No paired catalog "
+             "exists for the Gorda plate, the MFZ, the triple junction or the Gorda slab.<ul>"
+             "<li>L1 subtracts each event's regional offset before D90: Blanco segments by longitude, and the "
+             "Blanco-wide value elsewhere. Variants:<ul>"
+             "<li>lit_med: median offsets;</li>"
+             "<li>lit_p90: p90 offsets, the worst case;</li>"
+             "<li>lit_gd: lit_med, but with the Gorda Depression median for the Mendocino-Gorda system.</li></ul>"
+             "Segments, frames and predictors are those of the unshifted events.</li>"
+             "<li>L2 recomputes D90 from Lange's depths for our Blanco events paired with his absolute catalog "
+             "(lange). The same events with our depths are lange_ours. Lange's datum is read as km below sea "
+             "level, as in b4_lit_paired.py; if it were below the seafloor, his depths would be about 3 km deeper "
+             "in our frame.</li></ul></p>")
+    lrows = []
+    for g in ["frame:oceanic", "transform", "seg:BL", "seg:MFZ", "intraplate", "triple junction", "Gorda slab (GS)",
+              "frame:slab"]:
+        r = dict(group=gname(g))
+        for c in ("main", "lit_med", "lit_gd", "lit_p90", "lange_ours", "lange"):
+            if c.startswith("lange") and g != "seg:BL":
+                r[c] = ""
+                continue
+            if c == "main":
+                b6, b8 = gv(g, "HSC_600", "bias"), gv(g, "HSC_800", "bias")
+                a = AN[AN.group.eq(g)]
+            else:
+                b6, b8 = gl(c, g, "HSC_600"), gl(c, g, "HSC_800")
+                t = AL.get(c)
+                a = t[t.group.eq(g)] if t is not None else t
+            if a is None or not len(a) or not np.isfinite(b6):
+                r[c] = ""
+                continue
+            r[c] = (f"600 {b6:+.1f} / 800 {b8:+.1f}; H_T {'falsified' if bool(a.iloc[0].T_falsified) else 'not falsified'}"
+                    f" ({int(a.iloc[0].n_units)} units)")
+        r["shift that fits 800 C"] = f"{need(g):.1f} km" if np.isfinite(need(g)) else ""
+        lrows.append(r)
+    H.append(tbl(pd.DataFrame(lrows)))
+    H.append("<p class='mut'>Each cell gives the bias of D90 against the 600 C and 800 C half-space isotherms (km; "
+             "positive = base deeper) and the registered H_T verdict. The last column is the extra depth bias that "
+             "would bring the 800 C isotherm within the 3 km tolerance: main bias minus 3 km.</p>")
+    H.append("<p><b>Verdict.</b> The headline 'D90 8-14 km below all conductive isotherms' does not survive as "
+             "stated.<ul>"
+             f"<li><b>Velocity levels move too</b>: with the median offsets the oceanic-frame base sits at the "
+             f"7.5 km/s level ({gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km, was "
+             f"{gv('frame:oceanic', 'V7.5', 'bias'):+.1f}). So 'about 5 km below 7.5 km/s' also depends on the depth "
+             f"bias.</li>"
+             f"<li><b>Median offsets</b>: the oceanic-frame rejection of 350-800 C holds; the bias to 800 C drops from "
+             f"{gv('frame:oceanic', 'HSC_800', 'bias'):+.1f} to {gl('lit_med', 'frame:oceanic', 'HSC_800'):+.1f} km. "
+             f"It also holds for the Gorda plate interior, the MFZ and the triple junction (the triple junction "
+             f"through the shape rule). It fails for the transforms as a group.</li>"
+             f"<li><b>Blanco (L2)</b>: Lange's depths put the base within 3 km of the 600 and 800 C mean-geotherm "
+             f"isotherms. The excess depth at Blanco is the known depth bias, not a deep brittle layer.</li>"
+             f"<li><b>Worst-case offsets</b> (p90 everywhere, or the Gorda Depression value in the Mendocino-Gorda "
+             f"system): the 800 C isotherm fits the oceanic frame and the rejection fails.</li>"
+             f"<li><b>What can be stated</b>: in the Gorda plate interior and the MFZ the seismicity base lies "
+             f"{gv('intraplate', 'HSC_800', 'bias'):.0f}-{gv('seg:MFZ', 'HSC_800', 'bias'):.0f} km below the 800 C "
+             f"isotherm. A temperature limit of at most 800 C would need our depths there to be "
+             f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. That is about three times the Blanco "
+             f"median offset, but comparable to the one paired value nearby (Gorda Depression).</li></ul></p>")
     # ---------------------------------------------------------------- claims
     H.append("<h2>6. What the paper can claim, and what it cannot</h2>")
     H.append("<h3>Can claim</h3><ul>"
-             "<li>In the young oceanic plates offshore northern California and southern Oregon (Gorda plate and "
-             "Blanco up to ~5 Myr; the Pacific side of the MFZ ~20 Myr), "
-             "located earthquakes extend 5-18 km below the 600 C isotherm of half-space and GDH1 cooling models of "
-             "their Seton et al. (2020) plate age. Transform ages are taken on both sides.<ul>"
+             "<li>In the Gorda plate interior and along the Mendocino fault zone (plate ages up to ~5 Myr; the "
+             "Pacific side of the MFZ ~20 Myr), located earthquakes extend "
+             f"{gv('intraplate', 'HSC_800', 'bias'):.0f}-{gv('seg:MFZ', 'HSC_800', 'bias'):.0f} km below the 800 C "
+             "isotherm of half-space and GDH1 cooling models of their Seton et al. (2020) plate age. Transform ages "
+             "are taken on both sides. A 350-800 C conductive limit there needs our depths to be "
+             f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep; the median depth offset measured at "
+             "Blanco is 3.2 km.<ul>"
              "<li>In the oceanic frame (26 bins) no isotherm from 350 to 800 C fits the base within 3 km.</li>"
              "<li>This holds for both depth-quality cuts, catalog v6.0, events with a station within one focal "
              "depth, events not used in the tomography, and the external-data isotherms (Tm 1300 C). For the "
              "transforms alone, the 800 C isotherm is not rejected with sig_z &lt;= 2 km or without the inverted "
              "events; the 600 C isotherm is rejected in every control.</li></ul>"
-             "So the depth limit there is not a conductive-cooling isotherm of the standard brittle range.</li>"
-             "<li>In those plates the base lies in the uppermost mantle of model v0.4.2 (Vp 7.5-8.0 km/s at the "
-             f"base). That is {gv('frame:oceanic', 'V7.5', 'bias'):.0f} km below the 7.5 km/s level in the oceanic "
+             "<li>With the median literature offsets the oceanic-frame rejection still holds (control L1).</li>"
+             "</ul>"
+             "So, unless those depths are biased by 7 km or more, the depth limit there is not a conductive-cooling "
+             "isotherm of the standard brittle range.</li>"
+             "<li>At Blanco, Lange's OBS depths put the base within 3 km of the 600-800 C isotherms of the "
+             "two-sided transform geotherm (control L2).</li>"
+             "<li>In the oceanic plates the base lies at or below the 7.5 km/s level of v0.4.2. With our depths "
+             f"it is {gv('frame:oceanic', 'V7.5', 'bias'):.0f} km below it in the oceanic "
              f"frame ({gv('transform', 'V7.5', 'bias'):.1f} km at the transforms, "
              f"{gv('triple junction', 'V7.5', 'bias'):.1f} km at the triple junction), above the 8.0 km/s level "
              f"where it is resolved, and "
              f"{min(gv('frame:oceanic', 'CRUST1_moho', 'bias'), gv('Gorda slab (GS)', 'CRUST1_moho', 'bias')):.0f}-"
              f"{max(gv('frame:oceanic', 'CRUST1_moho', 'bias'), gv('Gorda slab (GS)', 'CRUST1_moho', 'bias')):.0f} km below the "
-             "CRUST1.0 Moho (oceanic frame, Gorda slab).</li>"
+             "CRUST1.0 Moho (oceanic frame, Gorda slab). With the median literature offsets it sits at the 7.5 km/s "
+             f"level ({gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km).</li>"
              "<li>In the subducting Gorda slab the base lies between the 600 C isotherms of a coldest-slab bound "
              "and a warm-top variant. This is consistent with a thermal limit near 600-700 C, with the stated "
              "slab-model simplifications.</li></ul>")
     H.append("<h3>Cannot claim</h3><ul>"
+             "<li>That earthquakes go deeper than conductive isotherms at Blanco, or across all transforms. With "
+             "Lange's depths, or with the median offsets, the 800 C isotherm fits.</li>"
+             "<li>That the rejection holds under any plausible depth bias. With the p90 offsets, or the Gorda "
+             "Depression offset moved to the Mendocino-Gorda system, the 800 C isotherm fits the oceanic frame.</li>"
              "<li>That the base follows the 7.5 km/s level (composition control). The following comes from the "
              "Blanco versus Mendocino-Gorda contrast, and it fails three registered controls:<ul>"
              "<li>no level is checkerboard-resolved (C4);</li>"
@@ -525,12 +641,17 @@ code{font-size:.92em}li{margin:.25em 0}
              f"{gv('frame:oceanic', 'HSC_600', 'bias'):.0f} km below the 600 C half-space isotherm (median of 26 "
              f"bins; 95 % {gv('frame:oceanic', 'HSC_600', 'bias_lo95'):.0f}-"
              f"{gv('frame:oceanic', 'HSC_600', 'bias_hi95'):.0f} km). The base is at about "
-             f"{ts('frame:oceanic', 'HSC'):.0f} C in the cooling model. No 350-800 C isotherm fits within 3 km, "
-             f"under every control.</li>")
+             f"{ts('frame:oceanic', 'HSC'):.0f} C in the cooling model. No 350-800 C isotherm fits within 3 km "
+             f"under the registered controls.</li>")
+    H.append(f"<li>Depth-bias check: removing the median offset against the Blanco OBS catalog (+3.2 km) keeps the "
+             f"rejection in the Gorda plate interior and the MFZ: the base is "
+             f"{gl('lit_med', 'intraplate', 'HSC_800'):.0f}-{gl('lit_med', 'seg:MFZ', 'HSC_800'):.0f} km below "
+             f"800 C. At Blanco, the OBS catalog's own depths put the base at the 600-800 C isotherms of the "
+             f"two-sided transform geotherm.</li>")
     H.append(f"<li>Same plates: D90 lies {gv('frame:oceanic', 'V7.5', 'bias'):.0f} km below the 7.5 km/s level "
-             f"(19 bins) and {-gv('frame:oceanic', 'V8.0', 'bias'):.0f} km above the 8.0 km/s level where that "
-             f"level is resolved (6 bins). Model Vp at the base is 7.7-8.0 km/s outside the ridges: earthquakes "
-             f"reach the uppermost mantle.</li>")
+             f"(19 bins; {gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km after the median literature offset) and "
+             f"{-gv('frame:oceanic', 'V8.0', 'bias'):.0f} km above the 8.0 km/s level where that level is resolved "
+             f"(6 bins). Earthquakes reach at least the 7.5 km/s level of the model.</li>")
     H.append("<li>The apparent link between the seismicity base and the 7.5 km/s level is limited by three "
              "things: the Blanco versus Mendocino-Gorda contrast, levels resolved only by ray density (not "
              "checkerboard), and residuals that grow with station distance. It is not used as evidence for a "
@@ -553,6 +674,10 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>depth_quality is 'unconstrained' for the ridge regions;</li>"
              "<li>the 251 depth-reliable Gorda Ridge events give D90 10-28 km below the seafloor at near-zero "
              "age, which this report does not interpret.</li></ul></li>"
+             "<li>Our depths are deeper than local OBS catalogs: +3.17 km median (tier A-B) at Blanco against Lange "
+             "et al. (2026), +9.6 km at the Gorda Depression (23 events), +0.85 km at Mount St Helens. There is no "
+             "paired reference for the Gorda plate, the MFZ, the triple junction or the Gorda slab. The "
+             "Mendocino-Gorda result rests on depths that no local catalog has checked.</li>"
              "<li>Model resolution is about 40 km laterally. Depth nodes are 3-6 km apart at 15-35 km. No 7.5 or "
              "8.0 km/s crossing offshore lies between checkerboard-resolved nodes.</li>"
              "<li>The velocity levels come from an inversion of the same events. The circularity controls reduce "

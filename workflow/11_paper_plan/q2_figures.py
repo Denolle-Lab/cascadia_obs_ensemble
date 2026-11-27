@@ -276,7 +276,7 @@ CAT_SHORT = {"temperature-limited": "T", "composition-limited": "C", "both consi
 def fig_controls(answers: dict):
     groups = ["frame:oceanic", "frame:slab", "frame:oceanic+slab", "ridge", "ridge (no AX)", "transform", "intraplate",
               "triple junction", "slab", "Gorda slab (GS)", "seg:BL", "seg:MFZ", "seg:MTJ", "seg:SIF"]
-    cfgs = [c for c in A.CONFIGS if c in answers]
+    cfgs = [c for c in A.REGISTERED if c in answers]
     bat = scm_cmap("batlow")
     cols = {"temperature-limited": np.array(bat(0.85)[:3]), "composition-limited": np.array(bat(0.05)[:3]),
             "both consistent": np.array(bat(0.55)[:3]), "mixed": np.array(bat(0.3)[:3]),

@@ -35,7 +35,32 @@ CONFIGS = {
     "main": dict(), "U1": dict(scale="col"), "D95": dict(q=95), "sigz2": dict(sigz=2.0),
     "nosig": dict(sigz=None), "abc": dict(tiers=("A", "B", "C"), sigz=None), "v60": dict(catalog="v6.0"),
     "geom": dict(subset="geom"), "cb": dict(mask="cb"), "notomo": dict(subset="notomo"),
+    # post-registration control L (RESUME.md, rule 2026-11-27 13:52:46 PST): literature depth offsets, Lange depths
+    "lit_med": dict(lit="med"), "lit_p90": dict(lit="p90"), "lit_gd": dict(lit="gd"),
+    "lange": dict(subset="lange", lange="ref"), "lange_ours": dict(subset="lange", lange="ours"),
 }
+REGISTERED = ["main", "U1", "D95", "sigz2", "nosig", "abc", "v60", "geom", "cb", "notomo"]
+PAIRED = Q.WD1 / "catalog_v6/v6.1_analysis/validation/depth_literature/paired_v6.1.csv"
+LANGE_PAIRS = Q.WD1 / "tomo_v1/depth_literature/pairs/blanco_lange2026_abs_pairs.csv"
+BL_SEGS = [(-131.0, -129.3, "West (WBD/EBD)"), (-129.3, -128.75, "Surveyor"),
+           (-128.75, -128.45, "Cascadia Depression"), (-128.45, -127.1, "Blanco Ridge"),
+           (-127.1, -126.0, "Gorda Depression")]
+
+
+def lit_offsets(E, which):
+    """Per-event depth offset (ours minus Lange, tiers A-B, absolute catalog) of control L1."""
+    t = pd.read_csv(PAIRED)
+    t = t[t.reference.str.contains("Lange") & t.reference.str.contains("absolute") & t.catalog.eq("v6.1")
+          & t.tiers.eq("A-B")].set_index("group")
+    col = "p90" if which == "p90" else "med"
+    off = np.full(len(E), float(t.loc["all", col]))
+    bl = E.seg.eq("BL").values
+    for a, b, name in BL_SEGS:
+        m = bl & (E.lon.values >= a) & (E.lon.values < b)
+        off[m] = float(t.loc[name, col])
+    if which == "gd":
+        off[(E.lat.values < 42.5) & ~bl] = float(t.loc["Gorda Depression", "med"])
+    return off
 ISO_KEYS = [f"{m}_{int(T)}" for m in ("HSC", "GDH1") for T in Q.ISOTHERMS]
 ISO_EXTRA = ["HSC_600_basement", "HSC_600_young", "HSC_600_old"]
 # labelled variants from the D-B114 external-data job (v6.1 only; added after the registration, never primary):
@@ -242,7 +267,8 @@ def unit_predictor(vals, minfrac=0.5):
 
 # ------------------------------------------------------------------ draws
 def run_config(cfg_name, E_all=None, meta=None):
-    cfg = dict(catalog="v6.1", tiers=("A", "B"), sigz=3.0, scale="bin", q=90, mask="P", subset=None)
+    cfg = dict(catalog="v6.1", tiers=("A", "B"), sigz=3.0, scale="bin", q=90, mask="P", subset=None, lit=None,
+               lange=None)
     cfg.update(CONFIGS[cfg_name])
     rng = np.random.default_rng(Q.SEED + list(CONFIGS).index(cfg_name))
     if E_all is None:
@@ -253,10 +279,19 @@ def run_config(cfg_name, E_all=None, meta=None):
         E = E[E.dist_min <= (E.depth + E.surface_km)]
     elif cfg["subset"] == "notomo":
         E = E[~E.in_tomo]
+    elif cfg["subset"] == "lange":
+        lp = pd.read_csv(LANGE_PAIRS, usecols=["ID", "ref_depth", "ref_ez"])
+        E = E[E.seg.eq("BL")].merge(lp, on="ID", how="inner")
     if cfg["mask"] == "cb":
         cb_levels()
     _CATALOG[0] = cfg["catalog"]
     E = predictors(E).reset_index(drop=True)
+    if cfg["lit"]:                       # control L1: only the depths entering D90 move (segments, frames fixed)
+        E["depth_offset"] = lit_offsets(E, cfg["lit"])
+        E["depth"] = E.depth - E.depth_offset
+    if cfg["lange"] == "ref":            # control L2: Lange's depths and errors for the same events
+        E["depth"] = E.ref_depth.astype(float)
+        E["sig_z"] = E.ref_ez.astype(float)
     S = statics()
     mk = cfg["mask"]
     zmem = {L: inflate(S["mem"][mk][L], S["lev"][mk][L]) for L in Q.LEVELS}

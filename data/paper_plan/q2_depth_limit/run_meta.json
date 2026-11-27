@@ -209,5 +209,120 @@
   },
   "n_events": 31479,
   "n_units": 50
+ },
+ "lit_med": {
+  "catalog": "v6.1",
+  "segments": "/wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet",
+  "segments_md5": "76542c2e171b95eaad40d3f1d7767190",
+  "segments_mtime": "2026-11-27 13:23 PST",
+  "axes": "D-B113 (plate_axes_v1)",
+  "config": {
+   "catalog": "v6.1",
+   "tiers": [
+    "A",
+    "B"
+   ],
+   "sigz": 3.0,
+   "scale": "bin",
+   "q": 90,
+   "mask": "P",
+   "subset": null,
+   "lit": "med",
+   "lange": null
+  },
+  "n_events": 45253,
+  "n_units": 110
+ },
+ "lit_p90": {
+  "catalog": "v6.1",
+  "segments": "/wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet",
+  "segments_md5": "76542c2e171b95eaad40d3f1d7767190",
+  "segments_mtime": "2026-11-27 13:23 PST",
+  "axes": "D-B113 (plate_axes_v1)",
+  "config": {
+   "catalog": "v6.1",
+   "tiers": [
+    "A",
+    "B"
+   ],
+   "sigz": 3.0,
+   "scale": "bin",
+   "q": 90,
+   "mask": "P",
+   "subset": null,
+   "lit": "p90",
+   "lange": null
+  },
+  "n_events": 45253,
+  "n_units": 110
+ },
+ "lit_gd": {
+  "catalog": "v6.1",
+  "segments": "/wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet",
+  "segments_md5": "76542c2e171b95eaad40d3f1d7767190",
+  "segments_mtime": "2026-11-27 13:23 PST",
+  "axes": "D-B113 (plate_axes_v1)",
+  "config": {
+   "catalog": "v6.1",
+   "tiers": [
+    "A",
+    "B"
+   ],
+   "sigz": 3.0,
+   "scale": "bin",
+   "q": 90,
+   "mask": "P",
+   "subset": null,
+   "lit": "gd",
+   "lange": null
+  },
+  "n_events": 45253,
+  "n_units": 110
+ },
+ "lange": {
+  "catalog": "v6.1",
+  "segments": "/wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet",
+  "segments_md5": "76542c2e171b95eaad40d3f1d7767190",
+  "segments_mtime": "2026-11-27 13:23 PST",
+  "axes": "D-B113 (plate_axes_v1)",
+  "config": {
+   "catalog": "v6.1",
+   "tiers": [
+    "A",
+    "B"
+   ],
+   "sigz": 3.0,
+   "scale": "bin",
+   "q": 90,
+   "mask": "P",
+   "subset": "lange",
+   "lit": null,
+   "lange": "ref"
+  },
+  "n_events": 1800,
+  "n_units": 16
+ },
+ "lange_ours": {
+  "catalog": "v6.1",
+  "segments": "/wd1/mdenolle_data/paper_plan/v6.1/events_segments_v61.parquet",
+  "segments_md5": "76542c2e171b95eaad40d3f1d7767190",
+  "segments_mtime": "2026-11-27 13:23 PST",
+  "axes": "D-B113 (plate_axes_v1)",
+  "config": {
+   "catalog": "v6.1",
+   "tiers": [
+    "A",
+    "B"
+   ],
+   "sigz": 3.0,
+   "scale": "bin",
+   "q": 90,
+   "mask": "P",
+   "subset": "lange",
+   "lit": null,
+   "lange": "ours"
+  },
+  "n_events": 1800,
+  "n_units": 16
  }
 }

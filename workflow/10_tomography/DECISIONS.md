@@ -1092,3 +1092,13 @@ PR #65). (2) The D-B109 analyses (fault surfaces refit, clustering, Mc maps and 
 circularity control for structure contrasts, the Vp/Vs uncertainty) are paper work on the registered catalog v6.1 and are done
 now; only catalog fixes wait for v6.2 (D-B110). The v0.4.2 synthetic calibration found Vp/Vs calibrated without inflation
 (68 % / 95 % coverage 0.68 / 0.97), so Vp/Vs uses the raw ensemble spread.
+
+### D-B112 Null-truth circularity test for the plate-boundary structure contrasts (adopted, 2026-11-27 10:05, PI)
+The D-B111 circularity control (analysis/plate-boundaries 136836d5; rule pre-registered 09:38:33) compared recovered and true
+contrasts in the 100 v0.4.2 synthetic members: 36 of 105 contrasts survive both 2 sigma of the real ensemble and the 95th
+percentile of the spurious-contrast spread (Mendocino fault zone lower Vp -0.08 and Vs -0.11 km/s in its seismic zone; Gorda
+plate, triple junction, Gorda slab, Puget, arc; none at Blanco; no Vp/Vs contrast on an oceanic boundary). Those members all
+invert one truth that carries the contrasts, so a surviving contrast is "recoverable if real", not shown free of coverage
+artifacts. PI: run a null truth now - a model with the fault-zone contrasts removed (depth-layer means within 45 km of the
+segments), synthetic data from the frozen tomoDD-SE_syn, about 20 members through the five stages (~7 h on 6 processes), with
+the rule written before scoring; a contrast that the null truth reproduces is not claimed.

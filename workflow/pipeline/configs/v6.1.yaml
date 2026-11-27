@@ -482,7 +482,7 @@ stages:
       PB_SYNTH: "{ens_root}/synth"
       PB_OUT: "{pb_dir}"
       PB_BIG: "{pb_dir}/big"
-    runtime: "~10 min"
+    runtime: "0.4 min"
     resources: "1 process, ~10 GB (100 member grids)"
     commands:
       - "{py} workflow/11_paper_plan/pb_structure.py"
@@ -506,7 +506,7 @@ stages:
     outputs: ["{val_dir}/catalog_compare/summary.csv", "{val_dir}/catalog_compare/anss.csv",
               "{val_dir}/catalog_compare/faults_summary.csv",
               "{val_dir}/depth_literature/paired_v{catver}.md"]
-    runtime: "~10 min"
+    runtime: "0.2 min"
     resources: "1 process"
     commands:
       - "{py} workflow/11_compare/compare_catalogs.py --registry workflow/pipeline/configs/catalogs_v6.1.yaml --out {val_dir}/catalog_compare --big {val_dir}/catalog_compare/big"
@@ -529,7 +529,7 @@ stages:
     outputs: ["{pb_dir}/seismicity_metrics.csv", "{pb_dir}/segment_rule_sensitivity.csv",
               "{pb_dir}/big/figures/fig_fingerprint.png"]
     env: *pbenv
-    runtime: "~10 min"
+    runtime: "0.3 min"
     resources: "1 process"
     commands:
       - "{py} workflow/11_paper_plan/pb_seismicity.py"

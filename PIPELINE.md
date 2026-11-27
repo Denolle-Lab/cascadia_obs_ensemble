@@ -88,7 +88,7 @@ Times are wall-clock times of the v6.0 / v6.1 runs on this machine (stages 14-20
 | 15 | clustering | run | nearest-neighbour clustering | 10 min | D-B091, D-B104, D-B106, D-B109 |
 | 16 | swarms | run | swarm scan and statistics | 0.3 min | D-B106, D-B109 |
 | 17 | faults | run | fault surfaces v1 refit, joined to the clusters | 11 min | D-B109 |
-| 18 | structure | run | structure versus seismicity near the faults | ~1 min | D-B018, D-B049, D-B051, D-B099, D-B107, D-B109, D-B111 |
+| 18 | structure | run | structure versus seismicity near the faults | 0.4 min | D-B018, D-B049, D-B051, D-B099, D-B107, D-B109, D-B111 |
 | 19 | validation | run | ComCat, earlier catalogs, published local catalogs | 0.2 min | D-B055, D-B071, D-B103, D-B085 |
 | 20 | plate_boundaries | run | seismicity style per plate-boundary segment | 0.3 min | D-B107, D-B109 |
 | 21 | atlas | gated | atlas build and headless check | ~10 min | D-B080, D-B104, D-B105 |

@@ -285,10 +285,10 @@ cat_inputs() {   # catalog options from the environment (D-B108 event flags, rev
 stage_catalog() {
   if [ -n "${V6_EVENT_FLAGS:-}" ]; then   # D-B108: wait for the flag file, never build the catalog without it
     local t0 tl m; t0=$(date +%s); tl=0
-    until [ -s "$V6_EVENT_FLAGS" ]; do
+    until [ -s "$V6_EVENT_FLAGS" ] && [ "$(wc -l < "$V6_EVENT_FLAGS")" -ge 2 ]; do
       m=$(( ($(date +%s) - t0) / 60 ))
       if [ $(( $(date +%s) - tl )) -ge 600 ]; then log "catalog: waiting for the event flags $V6_EVENT_FLAGS (${m} min)"; tl=$(date +%s); fi
-      if [ $m -ge $(( ${V6_FLAGS_WAIT_H:-3} * 60 )) ]; then
+      if [ $m -ge "$(awk -v h="${V6_FLAGS_WAIT_H:-3}" 'BEGIN { printf "%d", h * 60 }')" ]; then
         log "catalog: STOP - event flag file $V6_EVENT_FLAGS (Mount St Helens analog-signal events, D-B108) still missing \
 after ${V6_FLAGS_WAIT_H:-3} h. Put it there (ID,event_flag) and relaunch: the chain resumes at stage catalog."
         return 1
@@ -348,6 +348,21 @@ stage_publish() {
   cp ${CAT%.csv}.manifest.json $OUTREP/catalog_b4_v$CATVER.manifest.json
   cp $R6/heldout/heldout.csv $R6/heldout/scores.json $OUTREP/ 2>/dev/null
   local sched=${V6_SCHEDULE//,/-} npass; npass=$(echo "$V6_SCHEDULE" | tr ',' '\n' | wc -l)
+  local magnote flagnote tab=$MAGDATA/cascadia_catalog_v${CATVER}_magnitudes_converged.csv
+  if [ -n "$MAG_STAGE" ]; then
+    magnote="M ... comcat_id are converged Route A magnitudes on the v$CATVER hypocentres (D-B105), magnitude_source
+  v${CATVER}_converged, else v4.1_converged (the converged v4.1 table, $MAG41); table $tab (md5 $(md5sum < $tab | cut -c1-32));
+  the catalog before the magnitudes stage is ${CAT%.csv}_hypo.csv."
+  else
+    magnote="M ... comcat_id are the converged D-B091 values (v5.1 table, else v4.1 table); magnitude_source v5.1_converged /
+  v4.1_converged; not recomputed on the v$CATVER hypocentres."
+  fi
+  if [ -n "${V6_EVENT_FLAGS:-}" ]; then
+    flagnote="event_flag = the catalog's own flags, then the rows of $V6_EVENT_FLAGS (md5 $(md5sum < $V6_EVENT_FLAGS | cut -c1-32);
+  D-B108, analog_test_signal: $(grep -c ",analog_test_signal" $V6_EVENT_FLAGS) events)."
+  else
+    flagnote="event_flag = the catalog's own flags only (no V6_EVENT_FLAGS file)."
+  fi
   cat > $R6/v${CATVER}_for_session18.md <<EOF2
 # Catalog v$CATVER relocation: ready for the version bundle ($(date '+%F %T'))
 
@@ -361,9 +376,10 @@ stage_publish() {
 - New columns (b4_v6_catalog.py docstring): model_version, loc_pass, station_terms, ssst_char_km, rms_unweighted,
   n_picks_retimed, n_picks_clock_corrected, shift_h_v51_km, shift_z_v51_km, coherence_relocated, coherence_partners,
   edge_pass, review_problems, review_auto_indicators, review_not_earthquake/review_depth_unreliable/review_relocate/
-  review_depth_km (empty, D-B097), magnitude_source (short labels v5.1_converged / v4.1_converged). Magnitude columns
-  M ... comcat_id are the converged D-B091 values (v5.1 table, else v4.1 table): the catalog_version.py entry must keep
-  the catalog's magnitude columns (magnitudes: catalog).
+  review_depth_km (empty, D-B097), magnitude_source (short labels).
+- Magnitudes: $magnote
+  The catalog_version.py entry must keep the catalog's magnitude columns (magnitudes: catalog).
+- Event flags: $flagnote
 - Acceptance: $OUTREP/acceptance.html (copy $R6/catalog/acceptance_v$CATVER.html).
 EOF2
   echo "$(date '+%F %T') catalog $CAT md5 $md5c (model v$VERSION, grids $TIME, picks $PICKS md5 $PICKS_MD5); summary $R6/v${CATVER}_for_session18.md" > $DONE

@@ -39,9 +39,11 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
                            catalog v6.1, D-B108: the Mount St Helens analog-signal events, analog_test_signal): ';'-joined
                            with the event's own flags, never replacing them; no event removed
   M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id, magnitude_source   converged Route A magnitudes
-                           (D-B091): the v5.1 table (computed with v5.1 hypocentres) where it has the event, else the
-                           v4.1 table (v4 hypocentres); magnitude_source names which, with the short labels of
-                           catalog_version.py (v5.1_converged, v4.1_converged; PR #58); not recomputed on v6 hypocentres
+                           (D-B091) from the ordered --mag-tables, first table with an M per event. v6.0: the v5.1
+                           table (v5.1 hypocentres), else the v4.1 table. v6.1 and later: the chain's magnitudes stage
+                           rebuilds the catalog with the table computed on its own hypocentres (D-B105), else v4.1.
+                           magnitude_source names which, with short labels (v6.1_converged, v5.1_converged,
+                           v4.1_converged; PR #58)
 
   python b4_v6_catalog.py ROOT --out CSV [--mag-tables LABEL=CSV,LABEL=CSV] [--event-flags CSV] [--review-dir DIR]
 --mag-tables: the ordered magnitude tables (first with an M per event; key column ID or event_id), each with its
@@ -180,8 +182,8 @@ def merge_flags(own, extra):
     """';'-joined union of an event's own event_flag and the extra flags (own first, never replaced, no duplicates)."""
     out = []
     for a_, b_ in zip(own, extra):
-        toks = [x for x in str(a_ or "").split(";") if x]
-        toks += [x for x in str(b_ or "").split(";") if x and x not in toks]
+        toks = [x.strip() for x in (a_ if isinstance(a_, str) else "").split(";") if x.strip()]
+        toks += [x.strip() for x in (b_ if isinstance(b_, str) else "").split(";") if x.strip() and x.strip() not in toks]
         out.append(";".join(toks))
     return out
 
@@ -192,10 +194,13 @@ def read_event_flags(path, ids):
     if not {"ID", "event_flag"} <= set(ef.columns):
         raise SystemExit(f"{path}: columns ID, event_flag needed, found {list(ef.columns)}")
     ef = ef[["ID", "event_flag"]].copy()
-    ef["event_flag"] = ef.event_flag.fillna("").str.strip()
+    ef["event_flag"] = ef.event_flag.fillna("").map(lambda v: ";".join(t.strip() for t in v.split(";") if t.strip()))
     if ef.event_flag.eq("").any() or ef.ID.isna().any():
         raise SystemExit(f"{path}: {int(ef.event_flag.eq('').sum())} rows without a flag, {int(ef.ID.isna().sum())} without an ID")
-    ef["ID"] = ef.ID.astype(int)
+    idf = pd.to_numeric(ef.ID, errors="coerce")
+    if idf.isna().any() or (idf != idf.round()).any():
+        raise SystemExit(f"{path}: IDs must be integers, e.g. {ef.ID[idf.isna() | (idf != idf.round())].head(3).tolist()}")
+    ef["ID"] = idf.astype(int)
     unknown = sorted(set(ef.ID) - set(ids))
     if unknown:
         raise SystemExit(f"{path}: {len(unknown)} IDs not in the catalog event list, e.g. {unknown[:5]}")
@@ -382,6 +387,9 @@ def main():
     # v4.1 additions NLLoc did not locate: left out (catalog_version.py adds them with the ComCat hypocentre)
     drop_add = c.ID.isin(BC.CV["v4_1_added"]) & ~nll
     c = c[~drop_add].reset_index(drop=True)
+    for lab in minfo:                                       # counts of the rows the catalog keeps
+        if isinstance(minfo[lab], dict) and "events" in minfo[lab]:
+            minfo[lab]["events"] = int((c.magnitude_source == lab).sum())
     nll = c.loc_source == "nll3d"
     keep = ["ID", "raw_ID", "v4_time", "v4_lat", "v4_lon", "v4_depth", "v4_npick", "v4_sigma_m", "time", "lat", "lon",
             "depth", "exp_depth", "loc_source", "tier", "nphs", "n_sta", "gap", "rms", "rms_unweighted", "h_min", "h_max",

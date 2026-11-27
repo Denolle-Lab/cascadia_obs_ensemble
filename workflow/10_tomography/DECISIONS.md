@@ -1138,3 +1138,8 @@ ridge axis in three sections only. Build a seismicity- and bathymetry-constraine
 interior), with an uncertainty per section, and test first whether the offsets could be location bias (comparison with
 independent catalogs, catalog versions and station geometry). Delivered as a proposed product (GeoJSON, map, report
 section) next to PB2002; adopted for the segment rule only after PI review.
+Addendum to D-B116 (PI, 2026-11-27 13:38): the proposed boundaries use few, straight segments: "make sure the plate boundaries
+do not have too many small segments, i can see offsets with the MFZ the GR, the BL clearly has 2 step overs, the JR is clearly
+a straight line from AX to EN". Piecewise-linear traces with a minimum segment length and a break count chosen by a penalised
+criterion fixed before fitting; Blanco as three segments with two step-overs; the Juan de Fuca ridge as one line from Axial to
+Endeavour; the Mendocino transform and Gorda Ridge offsets from PB2002 kept as results.

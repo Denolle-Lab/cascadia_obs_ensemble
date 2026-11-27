@@ -4,7 +4,7 @@
 #   STAGES="measure write clock final" b5_ccall_run.sh
 # Output /wd1/mdenolle_data/tomo_v1/cc_dt_all (CCALL_OUT overrides; snippet caches are fixed). State: state/*.json.
 set -e
-cd /home/mdenolle/wt_ccall/workflow/10_tomography
+cd "${CCALL_CODE:-$(dirname "$(readlink -f "$0")")}"   # this script's folder (was the worktree ~/wt_ccall; D-B110)
 export LD_LIBRARY_PATH=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 PY="nice -n 10 /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python"

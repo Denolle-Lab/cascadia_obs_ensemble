@@ -10,10 +10,16 @@ Per-event location error (convention of workflow/10_tomography, b2_ens_common.h6
 h the 68 % horizontal semi-axis (chi2 with 2 degrees of freedom), sigma_z = sig_z. The catalog gives the two
 horizontal semi-axes but not their azimuth, so one horizontal sigma with the same total variance is used:
 sigma_h = sqrt((h_min^2 + h_max^2) / 2) / 1.515.
+
+Other catalog versions (end-to-end pipeline, D-B110): the environment variables FAULTS_V1_CATALOG (catalog CSV),
+FAULTS_V1_OUT (small outputs), FAULTS_V1_BIG (large outputs and the work/ caches) and FAULTS_V1_LABEL (catalog name in
+the outputs) replace the v5.1 defaults below; unset, every path is the v5.1 one, so the committed v5.1 run reproduces.
+The NONQUAKE flags include analog_test_signal (catalog v6.1, D-B108), which no v5.1 event carries.
 """
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -25,15 +31,15 @@ sys.path.insert(0, str(HERE))
 import fault_surfaces_v0 as v0  # noqa: E402
 
 ROOT = HERE.parents[1]
-CAT = Path("/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv")
-OUT = ROOT / "data" / "catalog_v5" / "v5.1_analysis" / "faults"          # small outputs (git)
-BIG = Path("/wd1/mdenolle_data/catalog_v5/v5.1_analysis/faults")         # large outputs
+CAT = Path(os.environ.get("FAULTS_V1_CATALOG", "/wd1/mdenolle_data/catalog_v5/v5.1/cascadia_catalog_v5.1.csv"))
+OUT = Path(os.environ.get("FAULTS_V1_OUT", ROOT / "data" / "catalog_v5" / "v5.1_analysis" / "faults"))  # small outputs (git)
+BIG = Path(os.environ.get("FAULTS_V1_BIG", "/wd1/mdenolle_data/catalog_v5/v5.1_analysis/faults"))       # large outputs
 WORK = BIG / "work"
 V0DIR = ROOT / "data" / "faults" / "v0"
 H68 = 1.515
-NONQUAKE = "anss_explosion|anss_quarry_blast|anss_other_event|anss_sonic_boom|quarry_blast_likely"
+NONQUAKE = "anss_explosion|anss_quarry_blast|anss_other_event|anss_sonic_boom|quarry_blast_likely|analog_test_signal"
 TAG = "v1"
-CATLABEL = "Cascadia catalog v5.1"
+CATLABEL = os.environ.get("FAULTS_V1_LABEL", "Cascadia catalog v5.1")
 SHIFT_FLAG = 10.0   # flag surfaces whose members moved > 10 km in depth from v4 to v5.1 (v1_build, v1_report)
 
 

@@ -23,8 +23,22 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   (v6.0 without them 38.4 %); family 144 retyped mainshock-aftershock, 13 swarm events to tier D, two 2014-15
   families split (pb_swarm_change.py, swarm_change_MSH_v60_v61.csv). pb_page.py made catalog-aware (v6.0 defaults
   unchanged in substance).
-- Next: task B (null truth, D-B112): pre-register the null rule below, then build the null truth and run ~20 members
-  in /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null (never ensemble_v0.4.2).
+- 2026-11-27 10:13:48 PST: null-truth rule pre-registered (commit 6d45ad98, section below).
+- 2026-11-27 10:14-10:16: pb_structure.py saves segment_node_dist.npz (tables unchanged); pb_null_truth.py built the
+  null truth in /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null (prior/ copied from ensemble_v0.4.2, read only there;
+  109,661 rock nodes set to zone layer means; median |dVp| 0.23 km/s, p95 0.85) and its synthetic data (5 x
+  tomoDD-SE_syn, frozen binaries; synthetic minus real MAD 0.44-0.65 s, calibration truth 0.35-0.52 s).
+- 2026-11-27 10:17:03: null members s000-s019 launched detached (pb_null_run.py: b2_ens_run scheduler, 6 tomoDD
+  processes, nice 10, MemAvailable throttle 40 GB; draws identical to the calibration members of the same name,
+  checked on s000). Expected about 7 h (2.1 process-hours per member). When all have merged, pb_null_run.py runs
+  pb_null_score.py on v6.1 (writes /wd1/mdenolle_data/paper_plan/v6.1/tables/null_truth_contrasts.csv and
+  figures/fig_null.png; no commit).
+- Fri Nov 27 10:19:31 PST 2026: code committed; v6.1 page shows "null truth not yet scored".
+- To resume: log /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/run.log; status: B2_ENS_CONFIG=v0.4.2
+  B2_ENS_ROOT=/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null python workflow/10_tomography/b2_ens_run.py status;
+  relaunch (resumes) with the pb_null_run.py command in its docstring. After scoring: bash workflow/11_paper_plan/run_v61.sh
+  is NOT needed again; rebuild the page only (pb_page.py with the run_v61.sh environment), copy tables/null_truth_contrasts.csv
+  to data/paper_plan/plate_boundaries_v6.1/, commit, push.
 
 ## Pre-registered rule: circularity control of the structure contrasts (written Fri Nov 27 09:38:33 PST 2026, before scoring)
 

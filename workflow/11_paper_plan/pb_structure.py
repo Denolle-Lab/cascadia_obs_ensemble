@@ -105,6 +105,7 @@ def main():
     depf = flat(m.D)
     rows, crow, axes = [], [], []
     node_sets = {}                                     # contrast node sets, reused by pb_circularity.py
+    seg_dist = {}                                      # 3-D node distance to each segment's reference set (<= 50 km)
     scn = flat(np.asarray(xr_shallow(), bool))
     for seg in P.SEG_ORDER:
         e = E[E.seg == seg]
@@ -119,8 +120,9 @@ def main():
         ref = np.vstack([ref_ev, ref_f])
         dist = np.full(xyz.shape[0], np.inf)
         rk = flat(rock)
-        d, _ = cKDTree(ref).query(xyz[rk], distance_upper_bound=25.0)
+        d, _ = cKDTree(ref).query(xyz[rk], distance_upper_bound=50.0)
         dist[rk] = d
+        seg_dist[seg] = dist.astype(np.float32)            # for the null truth (pb_null_truth.py, 45 km zones)
         dfl = np.full(xyz.shape[0], np.inf)
         if len(ref_f):
             d2, _ = cKDTree(ref_f).query(xyz[rk], distance_upper_bound=25.0)
@@ -209,6 +211,7 @@ def main():
                                  ratio_node_sd=float(abs(dd[0]) / med_node_sd) if med_node_sd > 0 else np.nan))
         P.log(seg, row["nP_10"], row["nPS_10"], row["sd_Vp_10"])
     np.savez_compressed(P.BIG / "contrast_nodes.npz", layer=layer, **node_sets)
+    np.savez_compressed(P.BIG / "segment_node_dist.npz", **seg_dist)
     f = pd.DataFrame(rows)
     ct = pd.DataFrame(crow)
     # classification

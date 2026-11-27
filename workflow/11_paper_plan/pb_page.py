@@ -115,10 +115,50 @@ MSH_TEXT = ("38 % (107 of 282 events) to 28 % (69 of 243). Without the 131 analo
 
 
 def null_section(nt, circ):
-    """Short and long text of the null-truth result (filled by pb_null_score.py output)."""
-    n_s = int(nt.survives_null.sum()) if "survives_null" in nt else 0
-    return (f"Null-truth control: {n_s} contrasts survive (section 3).",
-            "<p><b>Null truth.</b> See the null-truth table below.</p>")
+    """Short (findings) and long (section 3) text of the null-truth control (pb_null_score.py output)."""
+    import json as _json
+    nj = Path("/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/synth/truth/null_truth.json")
+    info = _json.loads(nj.read_text()) if nj.exists() else {}
+    nm = int(nt.n_null.max()) if len(nt) else 0
+    vn_ = {"Vp": "Vp", "Vs": "Vs", "VpVs": "Vp/Vs"}
+    cl = nt[nt.claimed]
+    drop = nt[nt.survives_DB111 & ~nt.pass_null]
+    lst = lambda x: "; ".join(f"{r.seg} {vn_[r['var']]} {r.contrast} {r.D_real:+.3f}" for _, r in x.iterrows()) or "none"  # noqa: E731
+    med_ratio = float(np.nanmedian(nt.N95 / nt.S95))
+    short = (f"Null-truth control (rule pre-registered 2026-11-27 10:13:48 PST, commit 6d45ad98; {nm} members): "
+             f"{len(cl)} of the {int(nt.survives_DB111.sum())} D-B111 survivors are claimed (|Δ| also ≥ N95, the 95th "
+             f"percentile of |recovered − truth| when the truth has no contrast near the segments). Dropped by the null "
+             f"truth: {lst(drop)}. Claimed: {lst(cl)}.")
+    t = nt[["seg", "var", "contrast", "D_real", "sigma_ens", "S95", "D0_truth", "null_mean", "null_sd", "N95", "N95_rec",
+            "paired_cal_minus_null_mean", "truth_cal_minus_null", "n_null", "survives_DB111", "pass_null", "claimed"]].copy()
+    t["claimed"] = np.where(t.claimed, '<span class="resolved">claimed</span>',
+                            np.where(t.survives_DB111, '<span class="marginal">dropped by N95</span>', "–"))
+    t = t.rename(columns={"D_real": "Δ real", "sigma_ens": "σ ens", "D0_truth": "Δ null truth",
+                          "null_mean": "null spurious mean", "null_sd": "null spurious sd",
+                          "N95": "N95 = p95 |rec − truth|", "N95_rec": "p95 |rec| (variant)",
+                          "paired_cal_minus_null_mean": "cal − null (paired members)",
+                          "truth_cal_minus_null": "cal − null (truths)", "n_null": "members",
+                          "survives_DB111": "D-B111", "pass_null": "≥ N95", "claimed": "verdict"})
+    tab = table(t, fmts={c: "{:+.3f}" for c in ["Δ real", "Δ null truth", "null spurious mean",
+                                                 "cal − null (paired members)", "cal − null (truths)"]} |
+                {"σ ens": "{:.3f}", "S95": "{:.3f}", "null spurious sd": "{:.3f}", "N95 = p95 |rec − truth|": "{:.3f}",
+                 "p95 |rec| (variant)": "{:.3f}"}, left=("var", "contrast"))
+    nseg = ", ".join(f"{r['seg']} {r['nodes']:,}" for r in info.get("nodes_per_segment", []))
+    long = (f"<p><b>Null truth (D-B112).</b> Rule pre-registered in RESUME.md at Fri Nov 27 10:13:48 PST 2026 (commit "
+            "6d45ad98), before the null truth was built: a contrast is claimed only if it passes the D-B111 rule and "
+            "|Δ_real| ≥ N95, the 95th percentile of |Δ_rec,i − Δ_truth| over the null members (≥ 15 members). Null "
+            "truth: the calibration truth (v0.4.2 x (1 + f), same random field, hypocentres and noise draws) with every "
+            f"rock node within {info.get('zone_km', 45):.0f} km of a segment's faults or seismicity set to its depth-layer "
+            f"mean in that segment's zone ({info.get('nodes_changed', 0):,} nodes; {nseg}; median change of Vp "
+            f"{info.get('dvp_abs_median', float('nan')):.2f} km/s, p95 {info.get('dvp_abs_p95', float('nan')):.2f}). "
+            f"Synthetic data from the frozen tomoDD-SE_syn binaries; {nm} members (s000-s{nm - 1:03d}, the same seeds "
+            "as the calibration members) through M0, four tiles and the merge in "
+            "/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null. The truth contrast is zero where both node sets lie in "
+            f"one zone. N95 is a median {med_ratio:.2f} of S95.</p>"
+            + '<img src="data:image/png;base64,' + b64(FIG / "fig_null.png") + '" alt="null truth"><p class="cap">'
+            "Real contrasts with ±2σ of the real ensemble and ±N95 of the null-truth members (grey). Filled = claimed. "
+            "Draft.</p>" + tab)
+    return short, long
 
 
 def main():

@@ -57,6 +57,7 @@ def main():
     g = s.groupby("ID").agg(n_wf=("has", "sum"), n_match=("matched", "sum"),
                             n_sta_match=("station", lambda x: x[s.loc[x.index, "matched"].astype(bool)].nunique()))
     g["WF"] = (g.n_match >= 2) & (g.n_sta_match >= 2) & (g.n_match >= 0.5 * g.n_wf)
+    ev = ev.drop(columns=["n_wf", "n_match", "WF"])
     out = ev.set_index("ID").join(g[g.WF], how="inner")
     out["local"] = pd.to_datetime(out.t_origin, utc=True, format="ISO8601").map(
         lambda t: C.local(t).strftime("%Y-%m-%d %H:%M:%S %Z %a") if pd.notna(t) else "")

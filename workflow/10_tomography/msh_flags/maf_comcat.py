@@ -1,4 +1,4 @@
-"""Check (c) of the rule: are the candidate events in ComCat/ANSS? (after scoring)
+"""Check (c) of the rule: are the candidate events in ComCat/ANSS? (after scoring; also the post-hoc waveform-only list)
 
 For every certain, probable and mixed event and for every box event deeper than 30 km: nearest ANSS event (cache of
 the magnitude piece, 2010-2016, all types) within 30 s of the origin time and 150 km of the epicentre (v6.0, else v4).
@@ -27,6 +27,9 @@ def main():
     a = a.sort_values("ts").reset_index(drop=True)
     ev = pd.read_csv(C.WORK / "events_scored.csv", low_memory=False)
     ev["ts"] = pd.to_datetime(ev.t_origin, utc=True, format="ISO8601").astype("int64") / 1e9
+    fw = C.OUT / "msh_analog_waveform_only.csv"
+    wo = set(pd.read_csv(fw).ID) if fw.exists() else set()
+    ev.loc[ev.ID.isin(wo) & (ev.cls == "none"), "cls"] = "waveform_only"
     sel = ev[(ev.cls != "none") | (ev.in_box & (ev.depth > 30))].copy()
     lat = sel.lat.where(sel.lat.notna(), sel.v4_lat)
     lon = sel.lon.where(sel.lon.notna(), sel.v4_lon)

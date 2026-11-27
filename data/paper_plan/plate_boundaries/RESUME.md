@@ -15,8 +15,16 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   raw member sigma (median ratio 0.97); S95 median 0.90 of 2 sigma_ens; noise-floor clone sd <= 0.0024. Null truth not
   possible with the existing synthetic set (one truth carrying the v0.4.2 contrasts); cost estimate ~2.1
   process-hours per member. Table circularity_contrasts.csv; page section 3.
-- Next: rerun everything on catalog v6.1 when the coordinator sends the paths of its clusters, Mc maps and fault
-  surfaces (D-B111); pb_common.CAT, CLU, MCMAP, FLT/FLT_BIG are the places to change.
+- Fri Nov 27 10:11:44 PST 2026: task A (D-B112) done. Merged origin/pipeline/end-to-end (f21e87c6, PB_* variables). Ran every pb_*
+  step on catalog v6.1 with workflow/11_paper_plan/run_v61.sh -> /wd1/mdenolle_data/paper_plan/v6.1/ (page
+  plate_boundaries_plan.html, figures, tables/; small tables copied to data/paper_plan/plate_boundaries_v6.1/). All 7
+  result tables byte-identical to the pipeline scratch run (/wd1/mdenolle_data/pipeline_smoke/v6.1_pb). 105 contrasts,
+  32 >= 2 sigma_ens, 31 survive the D-B111 rule. Mount St Helens swarm share 38 -> 28 %: not the analog flags
+  (v6.0 without them 38.4 %); family 144 retyped mainshock-aftershock, 13 swarm events to tier D, two 2014-15
+  families split (pb_swarm_change.py, swarm_change_MSH_v60_v61.csv). pb_page.py made catalog-aware (v6.0 defaults
+  unchanged in substance).
+- Next: task B (null truth, D-B112): pre-register the null rule below, then build the null truth and run ~20 members
+  in /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null (never ensemble_v0.4.2).
 
 ## Pre-registered rule: circularity control of the structure contrasts (written Fri Nov 27 09:38:33 PST 2026, before scoring)
 

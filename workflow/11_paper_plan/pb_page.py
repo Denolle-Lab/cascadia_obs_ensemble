@@ -104,6 +104,23 @@ def cls_html(c):
     return f'<span class="{k}">{c}</span>'
 
 
+MSH_TEXT = ("38 % (107 of 282 events) to 28 % (69 of 243). Without the 131 analog_test_signal events the v6.0 share is "
+            "still 38 % (103 of 268): the flags remove 14 analysis events, 4 of them swarm events. Of the 107 v6.0 "
+            "swarm events, 60 stay swarm events; 13 drop to tier D, 4 carry the analog flag, 2 are not located, 1 "
+            "falls below Mc; 11 move into multiplets, 11 into a mainshock-aftershock family and 5 into the background. "
+            "The largest single change is family 144 (2011-01-28, Mmax 3.96): its v6.1 successor 142 no longer meets "
+            "the chain criterion and is typed mainshock-aftershock. Families 1434 (2014-11) and 1987 (2015-08) break "
+            "into multiplets. The drop is a reclassification of small and medium families, not the analog flags; "
+            "this is the family instability D-B111 names.")
+
+
+def null_section(nt, circ):
+    """Short and long text of the null-truth result (filled by pb_null_score.py output)."""
+    n_s = int(nt.survives_null.sum()) if "survives_null" in nt else 0
+    return (f"Null-truth control: {n_s} contrasts survive (section 3).",
+            "<p><b>Null truth.</b> See the null-truth table below.</p>")
+
+
 def main():
     when = sys.argv[1] if len(sys.argv) > 1 else subprocess.run(["date"], capture_output=True, text=True).stdout.strip()
     git = lambda *a: subprocess.run(["git", "-C", str(P.ROOT), *a], capture_output=True, text=True).stdout.strip()  # noqa
@@ -119,6 +136,83 @@ def main():
     sseg = pd.read_csv(P.OUT / "surface_segments.csv")
     m = f.merge(s.drop(columns=["name", "type", "n_events", "n_depth_good", "n_surfaces"]), on="seg")
     n_all = int(s.n_events.sum())
+    L = P.CATLABEL
+    ev = pd.read_parquet(P.BIG / f"events_segments_{P.TAG}.parquet",
+                         columns=["ID", "seg", "abc", "is_eq", "review_P1", "event_flag", "lat", "lon", "depth", "M",
+                                  "tier"])
+    n_p1 = int((ev.abc & ev.is_eq & ev.review_P1).sum())
+    n_analog = int(ev.event_flag.fillna("").str.contains("analog_test_signal").sum())
+    n_flag = int((~ev.is_eq).sum())
+    gp = s.set_index("seg")
+    gp_good, gp_all = int(gp.loc["GP", "n_depth_good"]), int(gp.loc["GP", "n_events"])
+    bl_sz = float(gp.loc["BL", "sig_z_med_good"])
+    sn = sens.set_index("seg")
+    dlg = dl[(dl.seg == "GS") & (dl.level == "z75")].iloc[0]
+    dlb = dl[(dl.seg == "BL") & (dl.level == "z75")].iloc[0]
+    dlm = dl[(dl.seg == "MFZ") & (dl.level == "z75")]
+    mfz_link = (f"at MFZ none (p = {dlm.iloc[0].p_smaller:.2f})" if len(dlm) and dlm.iloc[0].p_smaller > 0.05
+                else "at MFZ see the table")
+    svb = sv[(sv.seg == "BL") & (sv["var"] == "VpVs")].iloc[0]
+    svp = sv[(sv.seg == "PU") & (sv["var"] == "VpVs")].iloc[0]
+    sv_ps = sv.dropna(subset=["p_two"])
+    sv_pmin = float(sv_ps.p_two.min()) if len(sv_ps) else float("nan")
+    # clustering input check: positions, magnitudes and tiers of the clustering table against the catalog
+    zc = pd.read_csv(P.CLU / f"events_zbz_{P.TAG}.csv.gz", usecols=["event_id", "lat", "lon", "depth", "M", "tier"])
+    zc = zc.merge(ev.rename(columns={"ID": "event_id"}), on="event_id", suffixes=("_z", ""))
+    clu_same = all(((zc[k + "_z"] - zc[k]).abs() > 1e-3).sum() == 0 for k in ("lat", "lon", "depth")) and \
+        int((zc.tier_z != zc.tier).sum()) == 0 and int(((zc.M_z - zc.M).abs() > 1e-6).sum()) == 0
+    summ_v = pd.read_csv(P.FLT / "fault_surfaces_v1_summary.csv")
+    ns = summ_v[summ_v.strand.astype(str).ne("True")]
+    n_stable, n_ns = int(ns.stable.astype(str).eq("True").sum()), len(ns)
+    swc = P.OUT / f"swarm_change_MSH_v60_{P.TAG}.csv"
+    null_csv = P.OUT / "null_truth_contrasts.csv"
+    VNOTE = {
+        "v6.0": dict(
+            status=("Catalog v6.0 is used as a stand-in: v6.1 (D-B103, D-B105) replaces it in the paper and every "
+                    "number here is to be recomputed on it."),
+            mags="v6.0 M: converged magnitudes of the v5.1 hypocentres, D-B105",
+            fig2="ready on v6.0 (sec. 4); recompute on v6.1 with its own magnitudes.",
+            faults=("Fault surfaces v1 were fitted on v5.1 positions; only 42 of 130 non-strand surfaces are stable "
+                    "under detection reruns (v1 README). Dips and widths here are descriptive."),
+            fig3="needs the fault surfaces refit on v6.1 (v1 is fitted on v5.1).",
+            catalog=("Catalog v6.0, not v6.1: Axial depths about 0.2 km too deep and the SSST depth drift elsewhere "
+                     "(Puget, Blanco) (D-B100, D-B103); magnitudes are the converged values of the v5.1 hypocentres "
+                     "(D-B105). The paper text is still on v4.1. Every number here moves with v6.1.")),
+        "v6.1": dict(
+            status=("Catalog v6.1 (registered; D-B103, D-B104, D-B105, D-B108): these are the paper numbers "
+                    "(D-B111). Its clustering, Mc maps and fault surfaces are the v6.1 production products; the v6.0 "
+                    "feasibility study is kept at /wd1/mdenolle_data/paper_plan/plate_boundaries_plan.html."),
+            mags="v6.1 M: converged magnitudes on the v6.1 hypocentres, D-B105",
+            fig2="ready on v6.1 (sec. 4).",
+            faults=(f"Fault surfaces v1 refit on v6.1; {n_stable} of {n_ns} non-strand surfaces are marked stable "
+                    "under detection reruns. Dips and widths here are descriptive."),
+            fig3="fault surfaces refit on v6.1: ready.",
+            catalog=("Catalog v6.1 limits (README, D-B110): Axial tier A-B events 73 % within 2 km of the seafloor "
+                     "(target 85 %; near-surface Vp/Vs of the model, fix in v6.2); flagged events fed the station "
+                     "terms; 129 candidate clock epochs and the location-review verdicts wait for v6.2; no coherence "
+                     "relocation at Mendocino. Paper stance (D-B111): deep events under Mount St Helens are not "
+                     "interpreted; family-level claims only for large sequences; the seismicity-bottom link to the "
+                     "7.5 km/s level is claimed for the Gorda slab only.")),
+    }
+    vnote = VNOTE.get(L, VNOTE["v6.1"])
+    if null_csv.exists():
+        null_short, null_long = null_section(pd.read_csv(null_csv), circ)
+    else:
+        null_short = ("The null-truth test (a truth without the contrasts) is approved (D-B112) and not yet scored "
+                      "(section 3).")
+        null_long = ("<p><b>Null truth.</b> Every member of the calibration set inverts data from the same truth, "
+                     "which carries the v0.4.2 contrasts, so that set cannot show whether coverage creates a contrast "
+                     "from nothing. A null-truth ensemble (D-B112: depth-layer means within 45 km of the segments, "
+                     "about 20 members, root /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null) is approved; its rule is "
+                     "pre-registered in RESUME.md before scoring. Not scored yet.</p>")
+    swc_html = ""
+    if swc.exists():
+        t = pd.read_csv(swc)
+        cols = [c for c in t.columns if c not in ("start",)]
+        swc_html = ("<h3>Mount St Helens swarm share, v6.0 to " + L + ", family by family</h3>"
+                    "<p>Each v6.0 swarm family with events in the Mount St Helens analysis set, the v6.1 families its "
+                    "events fall in, and what became of each event (code pb_swarm_change.py). The share falls from "
+                    + MSH_TEXT + "</p>" + table(t[cols]))
 
     # ---------------- segment table
     rows = []
@@ -201,6 +295,19 @@ def main():
         return "; ".join(f"{r.seg} {vn_[r['var']]} {r.contrast} {r.D_real:+.2f}" for _, r in x.iterrows()) or "none"
     med_ratio = float(np.median(circ.S95 / (2 * circ.sigma_ens)))
     rec_med, rec_lo, rec_hi = (float(np.percentile(sv_.recovery.dropna(), q)) for q in (50, 10, 90))
+    ocean = {"JR", "GR", "BL", "MFZ", "SOV", "GP", "MTJ", "GS"}
+    bl_c = circ[circ.seg == "BL"]
+    bl_note = ("no surviving contrast (nothing reaches 2σ)" if not bl_c.old_rule_2sigma.any()
+               else f"no surviving contrast ({int(bl_c.old_rule_2sigma.sum())} reach 2σ, none passes S95)"
+               if not bl_c.survives.any() else f"{int(bl_c.survives.sum())} surviving contrasts")
+    vv = sv_[sv_["var"] == "VpVs"]
+    vpvs_note = ((("No Vp/Vs contrast survives on an oceanic boundary; " if not vv.seg.isin(ocean).any() else "")
+                  + f"the Vp/Vs survivors are {', '.join(f'{r.seg} {r.contrast}' for _, r in vv.iterrows())} "
+                  f"(|Δ| {vv.D_real.abs().min():.3f}-{vv.D_real.abs().max():.3f}).") if len(vv)
+                 else "No Vp/Vs contrast survives.")
+    big = sv_[sv_.seg.isin(["MTJ", "GS"]) & (sv_.contrast == "along") & sv_["var"].isin(["Vp", "Vs"])].D_real.abs()
+    big_lo, big_hi = float(big.min()), float(big.max())
+    sw_max = float(s.set_index("seg").loc[["MFZ", "GP", "MTJ", "GS"], "pct_swarm"].max())
 
     # ---------------- seismicity metrics full
     sm = s[["seg", "type", "n_events", "n_with_M", "Mmax", "n_M4", "Mc", "Mc_lo", "Mc_hi", "Mc_map_median", "b", "b_lo",
@@ -246,8 +353,8 @@ def main():
     sens_table = table(sens)
 
     # ---------------- inputs
-    inputs = [("catalog v6.0", P.CAT), ("clustering events", P.CLU / "events_zbz_v60.csv.gz"),
-              ("clustering families", P.CLU / "families_zbz_v60.csv"), ("Mc map v6.0", P.MCMAP / "mc_grid.csv"),
+    inputs = [(f"catalog {L}", P.CAT), ("clustering events", P.CLU / f"events_zbz_{P.TAG}.csv.gz"),
+              ("clustering families", P.CLU / f"families_zbz_{P.TAG}.csv"), (f"Mc map {L}", P.MCMAP / "mc_grid.csv"),
               ("model v0.4.2", P.MODEL), ("ensemble v0.4.2+ens.100", P.ENS),
               ("fault surfaces v1 mesh", P.FLT_BIG / "fault_surfaces_v1_vertices.csv.gz"),
               ("fault surfaces v1 summary", P.FLT / "fault_surfaces_v1_summary.csv")]
@@ -268,11 +375,10 @@ def main():
     nres = f[f["class"] == "not resolved"].seg.tolist()
 
     body = f"""
-<h1>Plate-boundary segments: structure feasibility, seismicity style and figure plan</h1>
+<h1>Plate-boundary segments: structure feasibility, seismicity style and figure plan ({L})</h1>
 <p class="small">Draft for the Science Advances re-framing (D-B107, PI 2026-11-26 16:05). Built {html.escape(when)};
 branch <code>{branch}</code> at <code>{head}</code> (worktree /home/mdenolle/wt_pbplan). Private working page; not
-peer reviewed. Catalog v6.0 is used as a stand-in: v6.1 (D-B103, D-B105) replaces it in the paper and every number
-here is to be recomputed on it.</p>
+peer reviewed. {vnote['status']}</p>
 
 <div class="box"><b>What this page answers.</b> D-B107 asks for a paper on fault-zone structure and seismicity style
 at the plate boundaries, with velocity structure shown only near faults and only where the model resolves it. Before
@@ -282,7 +388,7 @@ plan; draft mock-ups are in sections 4 and 6.</div>
 
 <h2>1. Findings</h2>
 <ul>
-<li><b>Coverage.</b> The rule below sorts {n_all:,} located tier A-C earthquakes of v6.0 (flagged non-earthquakes
+<li><b>Coverage.</b> The rule below sorts {n_all:,} located tier A-C earthquakes of {L} (flagged non-earthquakes
 and the waveform-review P1 set left out) into 21 segments, 19 of them on plate boundaries. No tomography tile covers
 the model columns of Axial Seamount, Endeavour or the Explorer segments (n_tiles = 0, DWS = 0), and the JdF plate
 interior lies at the tile edges (largest P DWS 84 in its columns). So {', '.join(nres)} have no resolved node; their
@@ -310,14 +416,12 @@ pass 2σ alone (Vp/Vs with the raw σ) and {n_surv} survive both. Dropped by S95
 are small and centred: their sd is about the raw member σ and S95 is a median {med_ratio:.2f} of 2σ, so the synthetic
 test removes few contrasts. Surviving on the oceanic boundaries: {surv_list(["GR", "BL", "MFZ", "GP"])}; at the
 triple junction and the Gorda slab: {surv_list(["MTJ", "GS"])}; on land: {surv_list(["PU", "MSH", "CAS"])}. Blanco
-has none (nothing reaches 2σ). No Vp/Vs contrast survives on an oceanic boundary; the Vp/Vs survivors are on the arc (MSH, CAS) and in
-the other-onshore group OC (|Δ| 0.015-0.024). The largest values (0.4-0.6 km/s along strike at MTJ and in the Gorda slab) follow the
-onshore-offshore transition, not a fault zone. A null truth without these contrasts is not in the synthetic set
-(section 3).</li>
+has {bl_note}. {vpvs_note} The largest values ({big_lo:.1f}-{big_hi:.1f} km/s along strike at MTJ and in the Gorda
+slab) follow the onshore-offshore transition, not a fault zone. {null_short}</li>
 <li><b>Seismicity style</b> separates the boundary types more clearly than structure does. Swarm share of the events
 above Mc: Axial {g('AX', 'pct_swarm'):.0f} %, Mount St Helens {g('MSH', 'pct_swarm'):.0f} %, Blanco
-{g('BL', 'pct_swarm'):.0f} %, Gorda ridge {g('GR', 'pct_swarm'):.0f} %, against ≤ 3.4 % at MFZ, Gorda plate, MTJ and
-the Gorda slab. Mainshock-aftershock share is highest in the Gorda plate ({g('GP', 'pct_MA'):.0f} %).
+{g('BL', 'pct_swarm'):.0f} %, Gorda ridge {g('GR', 'pct_swarm'):.0f} %, against ≤ {sw_max:.1f} % at MFZ, Gorda plate,
+MTJ and the Gorda slab. Mainshock-aftershock share is highest in the Gorda plate ({g('GP', 'pct_MA'):.0f} %).
 b-values range from {g('IS', 'b'):.2f} (JdF intraslab) and {g('AX', 'b'):.2f} (Axial) to {g('PU', 'b'):.2f} (Puget
 crust). Median depth below the surface: Axial {g('AX', 'bsf_med'):.1f} km, Blanco {g('BL', 'bsf_med'):.1f} km,
 Mount St Helens {g('MSH', 'bsf_med'):.1f} km, Puget {g('PU', 'bsf_med'):.1f} km, Gorda slab
@@ -327,25 +431,27 @@ the 8 km/s level is resolved in few columns; 7.5 km/s is resolved for {g('BL', '
 depth-good Blanco events and {g('MTJ', 'frac_with_z75'):.0%} at MTJ. Share of events below it: MFZ
 {g('MFZ', 'frac_below_z75'):.0%}, Gorda plate {g('GP', 'frac_below_z75'):.0%}, MTJ {g('MTJ', 'frac_below_z75'):.0%},
 Blanco {g('BL', 'frac_below_z75'):.0%}, Gorda slab {g('GS', 'frac_below_z75'):.0%}. Per model column, the bottom of
-the Gorda-slab seismicity (D90) follows the 7.5 km/s level (ρ = 0.52, p = 0.001 against permuted levels, 64 columns);
-at Blanco the link is weak (ρ = 0.12, p = 0.046); at MFZ none.</li>
-<li><b>Swarms against mainshock-aftershock families</b> can be compared on resolved nodes only at Blanco (Vp/Vs: 9
-swarm against 32 MA families) and in Puget (7 against 13). Neither differs (p ≥ 0.1 for Vp and Vp/Vs), as in the v5.1 analysis. A
-panel on this would report a null result with few families.</li>
+the Gorda-slab seismicity (D90) follows the 7.5 km/s level (ρ = {dlg.rho:.2f}, p = {dlg.p_smaller:.3f} against permuted
+levels, {int(dlg.n_columns)} columns); at Blanco ρ = {dlb.rho:.2f}, p = {dlb.p_smaller:.3f}; {mfz_link}. The paper claims
+this link for the Gorda slab only (D-B111).</li>
+<li><b>Swarms against mainshock-aftershock families</b> can be compared on resolved nodes only at Blanco (Vp/Vs:
+{int(svb.n_swarm)} swarm against {int(svb.n_MA)} MA families) and in Puget ({int(svp.n_swarm)} against {int(svp.n_MA)}).
+Neither differs (smallest p {sv_pmin:.2f} over Vp and Vp/Vs), as in the v5.1 analysis. A panel on this would report a
+null result with few families.</li>
 </ul>
 
 <h2>2. Segment rule and segment table</h2>
 <p>Rule (code <code>workflow/11_paper_plan/pb_common.py</code>, first match wins):</p>
 <ol>{''.join(f'<li>{html.escape(x)}</li>' for x in P.SEGMENT_RULE)}</ol>
-<p class="small">Events: located earthquakes of v6.0 (event_flag empty), tiers A-C, review P1 (Mount St Helens
-weekly-signal candidates, 198 tier A-C events) left out. Fault surfaces v1 belong to the segment of most of their fit
-members at the v6.0 positions (table <code>surface_segments.csv</code>; {int((sseg.seg_share >= 0.8).sum())} of
+<p class="small">Events: located earthquakes of {L} (event_flag empty: {n_flag:,} flagged events left out, of them
+{n_analog} analog_test_signal), tiers A-C, review P1 (Mount St Helens weekly-signal candidates, {n_p1} further tier A-C
+events) left out. Fault surfaces v1 belong to the segment of most of their fit members at the {L} positions (table <code>surface_segments.csv</code>; {int((sseg.seg_share >= 0.8).sum())} of
 {len(sseg)} surfaces have ≥ 80 % of their members in one segment). Threshold sensitivity is in section 7.</p>
-{img("fig_segments_map.png", "Segments on catalog v6.0 (tier A-C earthquakes, coloured by type) with the structure class "
+{img("fig_segments_map.png", f"Segments on catalog {L} (tier A-C earthquakes, coloured by type) with the structure class "
      "of each segment (label fill: black resolved, grey marginal, white not resolved). Coastline: zero contour of the "
      "model surface. Draft.")}
 <p>Segment table. Structure class: section 3. Depth class from the depth-good events: good (median σz ≤ 3 km), fair
-(3-6 km), none (fewer than 50 depth-good events). Shares are of the events above the clustering Mc (v6.0 nearest-
+(3-6 km), none (fewer than 50 depth-good events). Shares are of the events above the clustering Mc ({L} nearest-
 neighbour run). Migrating swarms: zbz swarm families ≥ 10 events + DBSCAN swarm-like clusters flagged migrating.</p>
 {seg_table}
 
@@ -376,20 +482,15 @@ event-station geometry and pick list, 100 members s000-s099 inverted from their 
 clones of s000. The same node sets and depth matching as the real contrasts; truth and members compared before the
 D-B073 node rule. Spurious contrast = recovered − truth: it holds what ray sampling, the events' trade-offs and the
 regularisation do to a contrast that is in the truth. All {n_test} contrasts were testable.</p>
-<p><b>Null truth.</b> Every synthetic member inverts data from the same truth, which carries the v0.4.2 contrasts. No
-member sees a truth without an across-fault or along-strike contrast, so the set cannot show whether coverage creates
-a contrast from nothing; this test was not done. It needs a new truth (for example, each depth layer set to its mean
-within 45 km of the segments), new tomoDD-SE_syn data for the five stages and new inversions: about 2.1 process-hours
-per member (v0.4.2 synthetic run log), so about 7 hours on 6 processes for 20 members.</p>
+{null_long}
 {img("fig_circularity.png", "Real contrasts with ±2σ of the real ensemble and ±S95 of the synthetic spurious contrasts "
      "(grey). Filled = survives the pre-registered rule. Colours by segment type. Draft.")}
 {circ_table}
 
 <h2>4. Seismicity-style metrics</h2>
-<p>Mc: maximum curvature + 0.2 on the segment's tier A-C magnitudes (v6.0 M: converged magnitudes of the v5.1
-hypocentres, D-B105); b: Aki-Utsu for continuous magnitudes above Mc; both re-estimated in 500 event bootstrap draws
-(95 % intervals). "Mc map": event-weighted median of the v6.0 Mc map cells (flagged events excluded). Clustering
-shares: v6.0 nearest-neighbour clustering, events in its analysis set (above the regional Mc of that run), with a
+<p>Mc: maximum curvature + 0.2 on the segment's tier A-C magnitudes ({vnote['mags']}); b: Aki-Utsu for continuous magnitudes above Mc; both re-estimated in 500 event bootstrap draws
+(95 % intervals). "Mc map": event-weighted median of the {L} Mc map cells (flagged events excluded). Clustering
+shares: {L} nearest-neighbour clustering, events in its analysis set (above the regional Mc of that run), with a
 bootstrap over units (one background event or one whole family).</p>
 {img("fig_fingerprint.png", "Seismicity-style fingerprint of the plate-boundary segments (mock-up of main figure 2). "
      "Label: segment code and structure class (r resolved, m marginal, n not resolved). Draft.")}
@@ -407,6 +508,7 @@ depth range of depth-ok members).</p>
 Poisson process); burstiness = (σ − μ)/(σ + μ). The network changed with the OBS deployments (2011-2015) and Axial
 enters tier A-C only from 2013-09, so rates and burstiness compare segments only roughly.</p>
 {seis_table3}
+{swc_html}
 
 <h2>5. Figure plan</h2>
 <p>Six main figures, each a set of small multiples with segments on a shared axis and one colour or marker per
@@ -419,13 +521,12 @@ codes and their structure class; (B) stations; (C) margin-normal depth section; 
 <td class="l">fig1 stays; panel A recoloured by segment.</td></tr>
 <tr><td>2</td><td class="l">Seismicity-style fingerprint: per segment b and Mc with 95 % CI; background /
 mainshock-aftershock / swarm / multiplet shares; depth below surface p10-p50-p90; burstiness and largest-sequence
-share; fault-surface dip. Segments grouped by type on one y axis.</td><td class="l">ready on v6.0 (sec. 4); recompute
-on v6.1 with its own magnitudes. Mock-up: fig_fingerprint.</td><td class="l">replaces fig5 D-E (family mix by region)
+share; fault-surface dip. Segments grouped by type on one y axis.</td><td class="l">{vnote['fig2']} Mock-up:
+fig_fingerprint.</td><td class="l">replaces fig5 D-E (family mix by region)
 and the regional b/Mc numbers.</td></tr>
 <tr><td>3</td><td class="l">Fault geometry per boundary: one small multiple per segment with surfaces (BL, MFZ, GR, GP,
 MTJ, GS, PU, MSH, CAS): map of the surfaces with depth-good events and an along-strike depth view with the seismogenic
-depth range; the Blanco strand panel as the BL member.</td><td class="l">needs the fault surfaces refit on v6.1 (v1 is
-fitted on v5.1).</td><td class="l">fig3 and fig4 merged into one small-multiple figure; 3-D views to the
+depth range; the Blanco strand panel as the BL member.</td><td class="l">{vnote['fig3']}</td><td class="l">fig3 and fig4 merged into one small-multiple figure; 3-D views to the
 supplement.</td></tr>
 <tr><td>4</td><td class="l">Fault-zone structure sections: fault-normal sections stacked along strike, shared axes
 (±45 km, 0-40 km bsl) and colour scales, Vp and Vp/Vs with the ensemble 1σ (third row or contours), seismicity and the
@@ -470,9 +571,7 @@ calibration factor.</p>
 
 <h2>7. Caveats</h2>
 <ul>
-<li>Catalog v6.0, not v6.1: Axial depths about 0.2 km too deep and the SSST depth drift elsewhere (Puget, Blanco)
-(D-B100, D-B103); magnitudes are the converged values of the v5.1 hypocentres (D-B105). The paper text is still on
-v4.1. Every number here moves with v6.1.</li>
+<li>{vnote['catalog']}</li>
 <li>No structure for Axial, Endeavour and Explorer (outside every tomography tile) or the JdF plate interior (tile
 edges, DWS below 100).</li>
 <li>Resolution: 40 km checkerboard cells and a 10 km node grid. Most nodes near the faults pass the mask on DWS ≥ 100
@@ -484,23 +583,26 @@ present in the truth; a null-truth synthetic, which would show contrasts created
 the synthetic recovery ratios of the surviving contrasts (median {rec_med:.2f}, 10-90 % {rec_lo:.2f}-{rec_hi:.2f})
 give its size for this truth.</li>
 <li>Depths: the ridges other than Axial, Explorer and the JdF plate have depth_quality unconstrained; Gorda events are
-mostly biased_deep (618 depth-good of 6,078 Gorda-plate events); Blanco depth-good events have median σz 5 km and a
-deep tail against Lange et al. (2026). Depth rows are marked fair or none accordingly.</li>
-<li>Segment rule: PB2002 traces are approximate (MFZ seismicity lies 8 km north of the trace, Blanco 5 km south); the
-thresholds (MTJ radius, axis half-width, 41.5 N, ±5 km about Slab2) are choices. MTJ changes from 6,745 to 14,134
-events between radii of 30 and 50 km; the interface-zone group SIF from 885 to 1,871 between ±3 and ±8 km.</li>
-<li>Fault surfaces v1 were fitted on v5.1 positions; only 42 of 130 non-strand surfaces are stable under detection
-reruns (v1 README). Dips and widths here are descriptive.</li>
-<li>Clustering: the v6.0 run used its own regional Mc (AX, EN, BL, GO, MT, WA, OR, PU, ON), not the segment Mc; it
-read an earlier file of v6.0 (md5 0daf4880…) whose positions, magnitudes and tiers are identical to the current file
-(checked here). Bootstrap intervals ignore correlation in time.</li>
+mostly biased_deep ({gp_good:,} depth-good of {gp_all:,} Gorda-plate events); Blanco depth-good events have median
+σz {bl_sz:.1f} km and a deep tail against Lange et al. (2026). Depth rows are marked fair or none accordingly.</li>
+<li>Segment rule: PB2002 traces are approximate (MFZ seismicity lies {sec.loc['MFZ', 'offset_km']:+.0f} km and Blanco
+{sec.loc['BL', 'offset_km']:+.0f} km from the trace, + north); the thresholds (MTJ radius, axis half-width, 41.5 N, ±5 km
+about Slab2) are choices. MTJ changes from {sn.loc['MTJ', 'R_MTJ_KM=30.0']:,} to {sn.loc['MTJ', 'R_MTJ_KM=50.0']:,}
+events between radii of 30 and 50 km; the interface-zone group SIF from {sn.loc['SIF', 'SLAB_IF_KM=3.0']:,} to
+{sn.loc['SIF', 'SLAB_IF_KM=8.0']:,} between ±3 and ±8 km.</li>
+<li>{vnote['faults']}</li>
+<li>Clustering: the {L} run used its own regional Mc (AX, EN, BL, GO, MT, WA, OR, PU, ON), not the segment Mc.
+Positions, magnitudes and tiers of its event table {'match' if clu_same else 'DO NOT match'} the catalog file read here
+(checked when this page was built). Bootstrap intervals ignore correlation in time.</li>
 <li>Temporal metrics depend on network changes; they are rough comparisons only.</li>
 </ul>
 
 <h3>Threshold sensitivity (tier A-C events per segment)</h3>{sens_table}
 
 <h2>8. Reproduce</h2>
-<p>Worktree /home/mdenolle/wt_pbplan, branch analysis/plate-boundaries (from origin/main 5b42fcd2). Python:
+<p>Worktree /home/mdenolle/wt_pbplan, branch analysis/plate-boundaries (from origin/main 5b42fcd2; merged with
+pipeline/end-to-end f21e87c6, which added the PB_* variables). Catalog {L}: <code>{P.CAT}</code>; tables
+<code>{P.OUT}</code>; page and figures <code>{P.BIG}</code>{'; run with workflow/11_paper_plan/run_v61.sh' if L == 'v6.1' else ''}. Python:
 <code>LD_LIBRARY_PATH=/home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/lib
 /home/mdenolle/cascadia_obs_ensemble/.pixi/envs/default/bin/python</code>, nice 10, one process. In
 <code>workflow/11_paper_plan/</code>: <code>pb_structure.py</code> (events with segments, levels, feasibility,

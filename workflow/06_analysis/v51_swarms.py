@@ -44,8 +44,9 @@ def swarm_refs() -> dict:
         d = Path(d)
         if (d / "v4_cluster_members.csv").exists():
             out[key] = (d / "v4_cluster_members.csv", d / "v4_clusters.csv")
-        elif (d / "dbscan_members_v51.csv").exists():
-            out[key] = (d / "dbscan_members_v51.csv", d / "dbscan_clusters_v51.csv")
+        elif (d / f"dbscan_members_{R.get('swarms_tag', 'v51')}.csv").exists():   # v51; v6.x refs name their tag
+            t = R.get("swarms_tag", "v51")
+            out[key] = (d / f"dbscan_members_{t}.csv", d / f"dbscan_clusters_{t}.csv")
     return out
 
 

@@ -39,10 +39,10 @@ data/_review/
 data/zenodo/
 
 # Slab2 reference grid (fetched from ScienceBase; reproducible, not committed)
-data/slab2/
+data/slab2
 
 # Tomography model (fetched from IRIS EMC; reproducible)
-data/tomography/
+data/tomography
 
 # Cached GMRT topography grids (fetched by phase5 --gmrt)
 data/gmrt/

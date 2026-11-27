@@ -173,6 +173,14 @@ def main():
 
     off = E[E.seg.isin(list(Q.OFFSHORE))]
     n_null = int(C.n_null.max()) if "n_null" in C else 0
+    _gp = C[C.group.eq("Gorda slab (GS)") & C.level.eq("V7.5") & C.status.eq("ok")]
+    if len(_gp) and pd.notna(_gp.iloc[0].get("rho_null_p95", np.nan)):
+        _d = float(_gp.iloc[0].rho_real - _gp.iloc[0].rho_null_p95)
+        gs_c5c = (f"{'exceeds' if _d > 0 else 'does not exceed'} the null 95th percentile "
+                  f"({_gp.iloc[0].rho_null_p95:.2f}) by {abs(_d):.2f}" if _d > 0 else
+                  f"does not exceed the null 95th percentile ({_gp.iloc[0].rho_null_p95:.2f})")
+    else:
+        gs_c5c = "was not scored"
     if n_null >= 15:
         c5c_state = (f"The null-truth control C5c is scored on {n_null} of 20 merged members, which meets the "
                      f"registered minimum of 15. A group whose own valid member count is below 15 stays "
@@ -253,8 +261,9 @@ code{font-size:.92em}li{margin:.25em 0}
              f"slab-surface temperature of the van Keken &amp; Wilson (2023) models.</li></ul>"
              f"Both are consistent with a limit near 600-700 C. Neither the isotherm nor the 7.5 km/s level passes "
              f"every registered test of the down-dip trend. The Gorda-slab correlation with the 7.5 km/s level "
-             f"(rho {circ('Gorda slab (GS)', 'rho_real'):.2f}) fails the block-bootstrap test (C5b). It is below the "
-             f"95th percentile of the null-truth members (C5c, {n_null} of 20 members).</li>")
+             f"(rho {circ('Gorda slab (GS)', 'rho_real'):.2f}) fails the block-bootstrap test (C5b; 90 % lower "
+             f"bound {circ('Gorda slab (GS)', 'rho_real_lo90'):.2f} from 4 blocks). Against the null-truth members "
+             f"(C5c, {n_null} of 20) it {gs_c5c}.</li>")
     H.append("<li>Ridges are not answered:"
              "<ul><li>Axial depths carry the SSST bias.</li>"
              "<li>The cooling models do not describe the axial magma system.</li>"
@@ -508,8 +517,8 @@ code{font-size:.92em}li{margin:.25em 0}
              f"zone, so the contrast between the Blanco and Mendocino-Gorda zones survives in it (null-truth rho "
              f"{circ('frame:oceanic', 'rho_null_truth'):.2f}). The real correlation is therefore hardly larger than "
              f"what the zone means plus the ray coverage produce.</p>"
-             f"<p>For the Gorda slab the real rho {circ('Gorda slab (GS)', 'rho_real'):.2f} is below the null 95th "
-             f"percentile ({circ('Gorda slab (GS)', 'rho_null_p95'):.2f}). Its 4 one-degree blocks give a "
+             f"<p>For the Gorda slab the real rho {circ('Gorda slab (GS)', 'rho_real'):.2f} {gs_c5c}. Its 4 "
+             f"one-degree blocks give a "
              f"block-bootstrap lower bound of {circ('Gorda slab (GS)', 'rho_real_lo90'):.2f}. The earlier column "
              f"result (rho 0.53, p 0.001) treated 67 columns as independent at a 40 km model resolution. With "
              f"0.5 deg bins and block resampling it is not significant. {c5c_state} "
@@ -626,7 +635,7 @@ code{font-size:.92em}li{margin:.25em 0}
              "Blanco versus Mendocino-Gorda contrast, and it fails three registered controls:<ul>"
              "<li>no level is checkerboard-resolved (C4);</li>"
              "<li>the residuals correlate with station distance (C3);</li>"
-             "<li>the Gorda-slab correlation does not pass C5b or C5c, and the oceanic-frame correlation passes "
+             f"<li>the Gorda-slab correlation fails C5b (C5c: it {gs_c5c}), and the oceanic-frame correlation passes "
              f"C5c by {circ('frame:oceanic', 'rho_real') - circ('frame:oceanic', 'rho_null_p95'):.2f} with "
              f"{n_null} members.</li></ul></li>"
              "<li>Which of composition or a colder-than-conductive lithosphere (deep hydrothermal cooling, "

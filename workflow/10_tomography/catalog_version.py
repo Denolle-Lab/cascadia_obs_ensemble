@@ -68,10 +68,7 @@ MAG_COLS = ["M", "M_unc", "M_type", "ML", "ML_unc", "n_ML", "ML_method", "Mw_mt"
 MAG_TABLES = {"v4.1": dict(path=P["v4_1_magnitudes"], md5=P.get("v4_1_magnitudes_md5"), key="event_id",
                            label="v4.1_converged"),
               "v5.1": dict(path=P.get("v5_1_magnitudes"), md5=P.get("v5_1_magnitudes_md5"), key="ID",
-                           label="v5.1_converged"),
-              # D-B105: catalog v6.1 brings magnitudes computed on its own hypocentres (b4_v6_relocate.sh magnitudes)
-              "v6.1": dict(path=P.get("v6_1_magnitudes"), md5=P.get("v6_1_magnitudes_md5"), key="ID",
-                           label="v6.1_converged")}
+                           label="v5.1_converged")}
 # long labels written by b4_v6_catalog.py (catalog v6.0 input) -> the short labels above
 MAG_LABEL_LONG = {"v4.1_converged (D-B091, v4 hypocentres)": "v4.1_converged",
                   "v5.1_converged (D-B091, v5.1 hypocentres)": "v5.1_converged"}

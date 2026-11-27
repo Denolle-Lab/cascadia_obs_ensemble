@@ -1118,3 +1118,13 @@ data root, gridded or sampled at the events and segments, and used as covariates
 (e.g. depth of seismicity against isotherms from plate cooling models and slab thermal models).
 Paper figures: one consistent Science Advances style across all figures, the fault-zone tomography sections included (D-B104
 colour maps).
+
+### D-B115 The paper addresses two science questions, each with its own report (adopted, 2026-11-27 13:19, PI)
+PI: "let tackle 1 and 2, make sure to write a report for each." Q1: what sets how a plate boundary releases slip - swarms or
+mainshock-aftershock sequences (swarm share, family mix and b per segment and per spatial bin against plate age, heat flow,
+isotherm depth, seafloor roughness, spreading rate, sediment thickness, and in-situ Vp/Vs of earthquake families from P and S
+differential times). Q2: what limits the depth of earthquakes across the offshore plate system - temperature (isotherms from
+plate cooling models, heat flow, slab thermal models) or composition (the 7.5 km/s and 8 km/s levels of model v0.4.2 with the
+ensemble uncertainty). Both on catalog v6.1, the D-B113 segments and the D-B114 external data; hypotheses and tests written
+before the numbers are computed; one HTML report each. Q3 (does the incoming plate carry faults and water into subduction)
+is the outlook; the tidal stress meter is dropped.

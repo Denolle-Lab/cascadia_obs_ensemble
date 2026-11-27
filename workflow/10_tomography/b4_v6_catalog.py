@@ -31,18 +31,19 @@ Columns (v5.1 ones as b4_catalog.py; new ones):
                            the automatic indicators (auto_indicator_rule_not_verdict), joined with ';' (D-B097: carried
                            as columns; no reviewer verdict is applied)
   review_not_earthquake, review_depth_unreliable, review_relocate, review_depth_km   reviewer columns: empty (D-B097),
-                           or, with V6_REVIEW_DIR (the outputs of review_v51/ingest_review.py: review_answers_merged.csv,
+                           or, with --review-dir (the outputs of review_v51/ingest_review.py: review_answers_merged.csv,
                            review_flag_not_earthquake.csv, review_depth_unreliable.csv, review_relocate.csv), True for the
                            listed events, False for the other reviewed events, empty for events nobody reviewed;
                            review_depth_km = the corrected depth of review_relocate.csv when one value is given
-  event_flag               v5.1 rules (b4_catalog.flags), plus the flags of V6_EVENT_FLAGS (CSV with ID, event_flag;
-                           e.g. the Mount St Helens analog-signal events; ';'-joined, no event removed)
+  event_flag               v5.1 rules (b4_catalog.flags), merged with the flags of --event-flags (CSV ID, event_flag;
+                           catalog v6.1, D-B108: the Mount St Helens analog-signal events, analog_test_signal): ';'-joined
+                           with the event's own flags, never replacing them; no event removed
   M, M_unc, M_type, ML, ML_unc, n_ML, ML_method, Mw_mt, comcat_id, magnitude_source   converged Route A magnitudes
                            (D-B091): the v5.1 table (computed with v5.1 hypocentres) where it has the event, else the
                            v4.1 table (v4 hypocentres); magnitude_source names which, with the short labels of
                            catalog_version.py (v5.1_converged, v4.1_converged; PR #58); not recomputed on v6 hypocentres
 
-  python b4_v6_catalog.py ROOT --out CSV [--mag-tables LABEL=CSV,LABEL=CSV]
+  python b4_v6_catalog.py ROOT --out CSV [--mag-tables LABEL=CSV,LABEL=CSV] [--event-flags CSV] [--review-dir DIR]
 --mag-tables: the ordered magnitude tables (first with an M per event; key column ID or event_id), each with its
 magnitude_source label. Default v5.1_converged (MAG_V51), v4.1_converged (MAG_V41). Catalog v6.1 (D-B105): the chain's
 magnitudes stage computes the converged Route A magnitudes on the v6.1 hypocentres and rebuilds the catalog with
@@ -175,11 +176,33 @@ def arrivals_check(root, chosen):
     return au
 
 
-REVIEW_DIR = os.environ.get("V6_REVIEW_DIR", "")      # ingest_review.py outputs (one-version v6.1); empty = D-B097
-EVENT_FLAGS = os.environ.get("V6_EVENT_FLAGS", "")    # CSV ID, event_flag (e.g. Mount St Helens analog signal)
+def merge_flags(own, extra):
+    """';'-joined union of an event's own event_flag and the extra flags (own first, never replaced, no duplicates)."""
+    out = []
+    for a_, b_ in zip(own, extra):
+        toks = [x for x in str(a_ or "").split(";") if x]
+        toks += [x for x in str(b_ or "").split(";") if x and x not in toks]
+        out.append(";".join(toks))
+    return out
 
 
-def review_columns(ids):
+def read_event_flags(path, ids):
+    """--event-flags CSV (ID, event_flag): every row an event of the catalog, a non-empty flag; flags per ID joined."""
+    ef = pd.read_csv(path, dtype={"event_flag": str})
+    if not {"ID", "event_flag"} <= set(ef.columns):
+        raise SystemExit(f"{path}: columns ID, event_flag needed, found {list(ef.columns)}")
+    ef = ef[["ID", "event_flag"]].copy()
+    ef["event_flag"] = ef.event_flag.fillna("").str.strip()
+    if ef.event_flag.eq("").any() or ef.ID.isna().any():
+        raise SystemExit(f"{path}: {int(ef.event_flag.eq('').sum())} rows without a flag, {int(ef.ID.isna().sum())} without an ID")
+    ef["ID"] = ef.ID.astype(int)
+    unknown = sorted(set(ef.ID) - set(ids))
+    if unknown:
+        raise SystemExit(f"{path}: {len(unknown)} IDs not in the catalog event list, e.g. {unknown[:5]}")
+    return ef.groupby("ID").event_flag.agg(lambda s: ";".join(sorted(set(";".join(s).split(";")) - {""})))
+
+
+def review_columns(ids, review_dir=None):
     r = pd.read_csv(REVIEW, usecols=["ID", "problem", "auto_indicator_rule_not_verdict"])
     g = r.groupby("ID").agg(review_problems=("problem", lambda s: ";".join(sorted(set(s.dropna().astype(str))))),
                             review_auto_indicators=("auto_indicator_rule_not_verdict",
@@ -192,8 +215,8 @@ def review_columns(ids):
     for k in ("review_not_earthquake", "review_depth_unreliable", "review_relocate"):
         out[k] = pd.array([pd.NA] * len(out), dtype="boolean")
     out["review_depth_km"] = np.nan
-    if REVIEW_DIR:                                   # reviewer verdicts (ingest_review.py rules)
-        d = Path(REVIEW_DIR)
+    if review_dir:                                   # reviewer verdicts (ingest_review.py rules)
+        d = Path(review_dir)
         seen = set(pd.read_csv(d / "review_answers_merged.csv", dtype={"ID": "Int64"}).ID.dropna().astype(int))
         rev = out.index.isin(list(seen))
         for k, f in (("review_not_earthquake", "review_flag_not_earthquake.csv"),
@@ -252,6 +275,8 @@ def main():
     ap.add_argument("root")
     ap.add_argument("--out", required=True)
     ap.add_argument("--mag-tables", help="LABEL=CSV,... ordered magnitude tables (default v5.1_converged, v4.1_converged)")
+    ap.add_argument("--event-flags", help="CSV ID,event_flag merged into event_flag (D-B108)")
+    ap.add_argument("--review-dir", help="ingest_review.py output folder -> reviewer columns")
     a = ap.parse_args()
     tables = [tuple(x.split("=", 1)) for x in a.mag_tables.split(",")] if a.mag_tables else None
     root, out = Path(a.root), Path(a.out)
@@ -315,10 +340,13 @@ def main():
     q, f = BC.flags(c.assign(time=c.time.fillna("1970-01-01T00:00:00")))
     c["depth_quality"] = np.where(nll, q, "")
     c["event_flag"] = np.where(nll, f, "")
-    if EVENT_FLAGS:                                  # extra flags (ID, event_flag), appended; no event removed
-        ef = pd.read_csv(EVENT_FLAGS, dtype={"event_flag": str}).groupby("ID").event_flag.agg(lambda s: ";".join(sorted(set(s))))
-        add = c.ID.map(ef).fillna("")
-        c["event_flag"] = [";".join(x for x in (a_, b_) if x) for a_, b_ in zip(c.event_flag, add)]
+    n_extra = {}
+    if a.event_flags:                                # extra flags (D-B108), merged with the event's own; no event removed
+        ef = read_event_flags(a.event_flags, c.ID)
+        c["event_flag"] = merge_flags(c.event_flag, c.ID.map(ef).fillna(""))
+        n_extra = {f: int(c.event_flag.str.split(";").apply(lambda s, f=f: f in s).sum())
+                   for f in sorted({x for v in ef for x in v.split(";")})}
+        log(f"event flags from {a.event_flags}: {len(ef)} events, {n_extra}")
     # v5.1 flags
     fl = BC.read_floor(V.FLOOR)
     h_fl = c.depth_flat + BC.floor_at(fl, c.lat.fillna(0), c.lon.fillna(0)) / 1e3
@@ -348,7 +376,7 @@ def main():
     skf = root / "coh" / "coherence_skipped_region.csv"     # D-B098: compact events not coherence-relocated (Mendocino)
     sk = set(pd.read_csv(skf).ID) if skf.exists() else set()
     c["coherence_skipped_region"] = c.ID.isin(sk)
-    c = c.merge(review_columns(c.ID), on="ID", how="left")
+    c = c.merge(review_columns(c.ID, a.review_dir), on="ID", how="left")
     mags, minfo = magnitude_columns(c.ID, tables)
     c = c.merge(mags, on="ID", how="left")
     # v4.1 additions NLLoc did not locate: left out (catalog_version.py adds them with the ComCat hypocentre)
@@ -383,8 +411,9 @@ def main():
     man = dict(catalog=str(out), catalog_md5=V.md5(out), root=str(root), plan=plan, model=f"v{V.VERSION}",
                grid_manifest=str(V.GRID_MD5), grid_manifest_md5=V.grid_manifest_md5(), floor=V.FLOOR,
                floor_md5=V.md5(V.FLOOR), picks=str(PICKS), surface=BC.SURFACE, surface_source=BC.surface_source(),
-               v51=str(V51), review=str(REVIEW), review_verdicts=REVIEW_DIR or None, event_flags=EVENT_FLAGS or None,
-               event_flags_md5=V.md5(EVENT_FLAGS) if EVENT_FLAGS else None, counts=counts, wall_min=round((time.time() - t0) / 60, 1),
+               v51=str(V51), review=str(REVIEW), review_verdicts=a.review_dir, event_flags=a.event_flags,
+               event_flags_md5=V.md5(a.event_flags) if a.event_flags else None, event_flags_counts=n_extra or None,
+               counts=counts, wall_min=round((time.time() - t0) / 60, 1),
                runs={k: json.loads((root / k / "run.json").read_text()) for k in
                      [f"it{i}" for i in range(V.NPASS + 1)] + ["coh", "deep", "edge"] if (root / k / "run.json").exists()},
                loc2ssst={f"g{i}": json.loads((root / f"g{i}" / "summary.json").read_text())

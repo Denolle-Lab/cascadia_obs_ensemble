@@ -10,9 +10,12 @@
 #   V6_RULECHECK=/wd1/mdenolle_data/reloc_v6/heldout/coh_rule_check.json (the v6.0 R3 partner-rule check, a record)
 # Environment: V6_ROOT (run root R6, default reloc_v6), CATVER (catalog version, default 6.0), V6_SCHEDULE (Loc2ssst
 # CharDist per SSST pass, default 9999,16,8,4: one stage ssst<CharDist> each), PUBLISH_BRANCH (default reloc/v6-prep).
-# Optional catalog inputs (read by b4_v6_catalog.py, so also by the magnitudes stage's rebuild): V6_REVIEW_DIR (outputs of
-# review_v51/ingest_review.py -> reviewer columns), V6_EVENT_FLAGS (CSV ID,event_flag appended to event_flag, e.g. the
-# Mount St Helens analog-signal events). PICKS / PICKS_MD5: another pick file (confirmed clock epochs) -> redo obs.
+# Optional catalog inputs (stages catalog and magnitudes pass them to b4_v6_catalog.py; the smoke catalog does not):
+# V6_REVIEW_DIR (outputs of review_v51/ingest_review.py -> reviewer columns), V6_EVENT_FLAGS (CSV ID,event_flag merged
+# into event_flag, never replacing a flag; catalog v6.1, D-B108: the Mount St Helens analog-signal events,
+# analog_test_signal). When V6_EVENT_FLAGS is set and the file is missing, stage catalog waits for it (V6_FLAGS_WAIT_H,
+# default 3 h; a log line every 10 min) and then stops: the catalog is never built without it.
+# PICKS / PICKS_MD5: another pick file (confirmed clock epochs) -> redo obs.
 # STOP_AFTER=<stage> stops cleanly after that stage. Each stage is marked in the state file; a rerun skips the done ones
 # (delete a line of the state file to redo a stage). The chain runs from the copy .b4_v6_relocate_running_v6.sh (the grid
 # chain started before the SSST stages existed runs .b4_v6_relocate_running.sh; this chain waits for it to exit and never
@@ -276,7 +279,27 @@ $(pgrep -fc '[b]5_ccall_') processes)"
 stage_coherence() { $RELOC coh $ROOT --cc $CC; }
 stage_terms() { $RELOC terms $ROOT; }
 stage_deep() { $RELOC fallback $ROOT; }
-stage_catalog() { $PY $W/b4_v6_catalog.py $ROOT --out $CAT; }
+cat_inputs() {   # catalog options from the environment (D-B108 event flags, reviewer verdicts)
+  echo ${V6_EVENT_FLAGS:+--event-flags $V6_EVENT_FLAGS} ${V6_REVIEW_DIR:+--review-dir $V6_REVIEW_DIR}
+}
+stage_catalog() {
+  if [ -n "${V6_EVENT_FLAGS:-}" ]; then   # D-B108: wait for the flag file, never build the catalog without it
+    local t0 tl m; t0=$(date +%s); tl=0
+    until [ -s "$V6_EVENT_FLAGS" ]; do
+      m=$(( ($(date +%s) - t0) / 60 ))
+      if [ $(( $(date +%s) - tl )) -ge 600 ]; then log "catalog: waiting for the event flags $V6_EVENT_FLAGS (${m} min)"; tl=$(date +%s); fi
+      if [ $m -ge $(( ${V6_FLAGS_WAIT_H:-3} * 60 )) ]; then
+        log "catalog: STOP - event flag file $V6_EVENT_FLAGS (Mount St Helens analog-signal events, D-B108) still missing \
+after ${V6_FLAGS_WAIT_H:-3} h. Put it there (ID,event_flag) and relaunch: the chain resumes at stage catalog."
+        return 1
+      fi
+      sleep 60
+    done
+    sleep 30                               # a file still being written: settle
+    log "catalog: event flags $V6_EVENT_FLAGS ($(($(wc -l < "$V6_EVENT_FLAGS") - 1)) rows, md5 $(md5sum < "$V6_EVENT_FLAGS" | cut -c1-32))"
+  fi
+  $PY $W/b4_v6_catalog.py $ROOT --out $CAT $(cat_inputs)
+}
 stage_magnitudes() {   # D-B105 (see the header)
   local pre=${CAT%.csv}_hypo.csv sfx=_v${CATVER//./} tab=$MAGDATA/cascadia_catalog_v${CATVER}_magnitudes_converged.csv
   if [ ! -e $pre ]; then cp $CAT $pre.tmp && cp ${CAT%.csv}.manifest.json ${pre%.csv}.manifest.json && mv $pre.tmp $pre || return 1; fi
@@ -292,7 +315,8 @@ stage_magnitudes() {   # D-B105 (see the header)
       $PY v51_magnitude_table.py --data $MAGDATA --suffix $sfx --catalog $pre --name $CATVER \
         --pm $MAGDATA/cascadia_catalog_M${sfx}_converged.csv --out $MAGDATA --tag _converged --solver exact \
         --v4-mags $MAG41 > $MAGDATA/table_converged.log 2>&1; } ) || { log "magnitudes: Route A chain failed (logs in $MAGDATA)"; return 1; }
-  $PY $W/b4_v6_catalog.py $ROOT --out $CAT --mag-tables v${CATVER}_converged=$tab,v4.1_converged=$MAG41 || return 1
+  [ -z "${V6_EVENT_FLAGS:-}" ] || [ -s "$V6_EVENT_FLAGS" ] || { log "magnitudes: event flag file $V6_EVENT_FLAGS missing"; return 1; }
+  $PY $W/b4_v6_catalog.py $ROOT --out $CAT --mag-tables v${CATVER}_converged=$tab,v4.1_converged=$MAG41 $(cat_inputs) || return 1
   $PY - $pre $CAT <<'EOF2'
 import sys
 import pandas as pd

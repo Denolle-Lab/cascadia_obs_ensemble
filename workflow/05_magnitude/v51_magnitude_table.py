@@ -27,7 +27,8 @@ Rules:
     in v4.1, Mw_mt_v4 is carried. These values are never written to M.
   * Explosions and quarry blasts keep their magnitude; is_earthquake is False for
     them (event_flag anss_explosion, anss_quarry_blast, anss_other_event,
-    anss_sonic_boom, quarry_blast_likely). They are dropped from Mc and b fits.
+    anss_sonic_boom, quarry_blast_likely; catalog v6.1: analog_test_signal, the Mount St Helens
+    weekly analog test signal, D-B108). They are dropped from Mc and b fits.
 
   * ml_caution (rows with an ML): semicolon-separated reasons why the ML may not hold,
     empty when none applies:
@@ -74,7 +75,8 @@ import v51_paths as vp
 from phase18_moment_tensor_match import hutton_boore, RMAX
 
 NONQUAKE = ("anss_explosion", "anss_quarry_blast", "anss_other_event", "anss_sonic_boom",
-            "quarry_blast_likely")
+            "quarry_blast_likely",
+            "analog_test_signal")   # catalog v6.1 (D-B108): Mount St Helens weekly analog test signal, not an earthquake
 R_EARTH_KM = 6371.0
 
 

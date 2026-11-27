@@ -34,6 +34,8 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   pb_null_score.py on v6.1 (writes /wd1/mdenolle_data/paper_plan/v6.1/tables/null_truth_contrasts.csv and
   figures/fig_null.png; no commit).
 - Fri Nov 27 10:19:31 PST 2026: code committed; v6.1 page shows "null truth not yet scored".
+- 2026-11-27 10:31:52: first null M0 stages done (s000, s002, s005: ok, 14.8 min; M0 residuals close to the
+  calibration member s000); tiles started. Expected end about 17:00-17:30 PST.
 - To resume: log /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/run.log; status: B2_ENS_CONFIG=v0.4.2
   B2_ENS_ROOT=/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null python workflow/10_tomography/b2_ens_run.py status;
   relaunch (resumes) with the pb_null_run.py command in its docstring. After scoring: bash workflow/11_paper_plan/run_v61.sh

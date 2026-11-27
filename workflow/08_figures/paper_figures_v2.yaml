@@ -14,6 +14,7 @@ cluster_tag: v61
 faults: ${wd1}/catalog_v6/v6.1_analysis/faults            # fault surfaces v1 refit on v6.1
 mc_maps: ${wd1}/magnitude_converged/mc_maps_v61           # mc_grid.nc, mc_grid_periods.nc, run_params.json
 stations: ${wd1}/picks_share/stations/stations_ver5_v6.csv
+catalog_compare: ${wd1}/catalog_v6/v6.1_analysis/validation/catalog_compare   # compare_catalogs.py output (reference v4.1)
 
 # --- plate-boundary analysis (workflow/11_paper_plan, run_v61.sh; segment rule pb_common.py)
 plan_dir: ${wd1}/paper_plan/v6.1
@@ -55,15 +56,16 @@ old_figures: paper_sciadv/figures                          # current paper figur
 # --- fault-zone sections (Fig. 4). frame: trace = PB2002 transform steps inside bbox (W, E, S, N), normal distance
 # re-centred on the median of the segment's depth-good events; axis = the segment's strike line (segment_axes.csv,
 # PCA of the epicentres; + normal = left of the strike direction, as for the "across" contrasts); line = a straight
-# line through (lon0, lat0) with `strike`. along: kept range along the frame (km), default the 2-98 % of the events.
-# flip: true draws + normal on the left. Segments listed in `segs` contribute events and contrasts to the panel.
+# line through (lon0, lat0) with `strike` (triple junction: the PB2002 trench azimuth there, so x = distance from the
+# trench). along: kept range along the frame (km), default the 2-98 % of the events; xlim: default +-half width.
+# bin_km: bin width of this section (default section_bin_km). + x always points into the eastern half. Segments listed in `segs` contribute events and contrasts to the panel.
 sections:
-  - {key: BL, title: Blanco transform, segs: [BL], frame: trace, bbox: [-130.7, -126.4, 42.9, 44.7], pos: N, neg: S}
-  - {key: MFZ, title: Mendocino fault zone, segs: [MFZ], frame: trace, bbox: [-129.5, -124.9, 40.0, 41.0], pos: N, neg: S}
-  - {key: GP, title: Gorda plate, segs: [GP], frame: axis, pos: NNE, neg: SSW}
-  - {key: MTJ, title: Triple junction and Gorda slab, segs: [MTJ, GS], frame: line, lon0: -124.75, lat0: 40.7, strike: 0.0, along: [-60, 95], centre: -20, flip: true, pos: E, neg: W}
-  - {key: PU, title: Puget-Georgia crust, segs: [PU], frame: axis, pos: E, neg: W, flip: true}
-  - {key: MSH, title: Mount St Helens, segs: [MSH], frame: axis, pos: ENE, neg: WSW, flip: true}
+  - {key: BL, title: Blanco transform, segs: [BL], frame: trace, bbox: [-130.7, -126.4, 42.9, 44.7]}
+  - {key: MFZ, title: Mendocino fault zone, segs: [MFZ], frame: trace, bbox: [-129.5, -124.9, 40.0, 41.0]}
+  - {key: GP, title: Gorda plate, segs: [GP], frame: axis}
+  - {key: MTJ, title: Triple junction and Gorda slab, segs: [MTJ, GS], frame: line, lon0: -124.742, lat0: 40.313, strike: 344.5, along: [-20, 125], xlim: [-35, 115], bin_km: 10, xlabel: distance from the trench}
+  - {key: PU, title: Puget-Georgia crust, segs: [PU], frame: axis}
+  - {key: MSH, title: Mount St Helens, segs: [MSH], frame: axis}
 section_half_width_km: 45
 section_depth_km: [-3, 40]
 section_bin_km: 5

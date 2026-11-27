@@ -616,10 +616,9 @@ def draw_plate_motion(m: MapAx, moving, fixed, lat, lon, km_per_mm=3.0, label=Tr
     a = np.radians(az)
     lat2 = lat + L * np.cos(a) / 111.195
     lon2 = lon + L * np.sin(a) / (111.195 * np.cos(np.radians(lat)))
-    for col, lw in (("white", 2.4), (INK, 1.1)):
-        m.ax.annotate("", xy=(lon2, merc(lat2)), xytext=(lon, merc(lat)), zorder=24 if col == "white" else 24.5,
-                      arrowprops=dict(arrowstyle="-|>,head_length=0.45,head_width=0.22", lw=lw, color=col,
-                                      shrinkA=0, shrinkB=0))
+    m.ax.annotate("", xy=(lon2, merc(lat2)), xytext=(lon, merc(lat)), zorder=24,
+                  arrowprops=dict(arrowstyle="-|>,head_length=0.45,head_width=0.22", lw=1.1, color=INK, shrinkA=0,
+                                  shrinkB=0, path_effects=[pe.withStroke(linewidth=2.4, foreground="white")]))
     if label:
         m.text(0.5 * (lon + lon2), 0.5 * (lat + lat2), f"{rate:.0f}", fontsize=fs or FS["small"], ha="left",
                va="top" if az < 180 else "bottom", color=INK, path_effects=halo(1.5), zorder=26)

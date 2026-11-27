@@ -5,7 +5,7 @@
   The fixes are listed in `workflow/10_tomography/notes/v6_2_backlog.md`; nothing is changed now.
 - Bullets only (PI rule of 2026-11-23); the PI writes the text on Overleaf. The manuscript and `paper_sciadv/` are not edited.
 - Each bullet: the limitation and its size, its effect on the results ("Effect"), and what the paper does ("Paper").
-  "Paper (proposed)" marks a response that no decision or plan has fixed yet.
+  The three responses first marked "proposed" were adopted by the PI on 2026-11-27 09:36 (D-B111).
 - Paper catalog: v6.1 (registered 2026-11-27, D-B085), model v0.4.2, ensemble v0.4.2+ens.100.
 - Numbers marked "(v6.0)" come from analyses run on catalog v6.0 as a stand-in (plate-boundary plan, clustering).
   D-B109 reruns them on v6.1, so they will move.
@@ -62,7 +62,7 @@
   <!-- src: MSH (findings, section 7b); HANDOFF 2026-11-26 23:22; README61 (known limits); DEC D-B108 -->
 - Deep events under Mount St Helens: 275 unflagged events deeper than 30 km (v6.0 depths) remain in the volcano box;
   none of 68 with M >= 2.5 is in ComCat (35 of 41 shallow ones are). Effect: this deep population holds other non-earthquakes.
-  Paper (proposed): deep events under the volcano are not interpreted.
+  Paper (D-B111): deep events under the volcano are not interpreted.
   <!-- src: MSH (section 0 ComCat check; section 5 depth table) -->
 - Non-earthquake flags: the quarry-blast and explosion flags were carried from v6.0; 8 events keep a flag that v6.1's
   rules would not give and 6 lack one they would; v5.1 and v6.0 disagree on 27 ComCat matches near the 3 s / 20 km
@@ -142,7 +142,7 @@
   <!-- src: CLU60 ("Unchanged", caveats, sensitivity variants) -->
 - Family stability: of 2,097 v5.1 families, 1,550 are kept in v6.0 and 354 dissolve (magnitude change alone: 204 of
   the 547 not kept; location change alone: 197), but 144 of the 174 with 20 or more events are kept. Effect: small
-  families are unstable. Paper (proposed): claims about single families for large sequences only.
+  families are unstable. Paper (D-B111): claims about single families for large sequences only.
   <!-- src: CLU60 ("What changed against v5.1") -->
 - Offshore Oregon: with 293 events above Mc, the bimodality of the nearest-neighbour distance is not stable (two of three
   time-shuffled catalogs fit a low-eta mode, Ashman D 3.1 and 3.6). Effect: the Oregon background and clustered split
@@ -193,7 +193,7 @@
   <!-- src: PBPLAN (section 1) -->
 - Seismicity depth against velocity: the model rarely reaches 8 km/s offshore, so the 7.5 km/s level is used; the bottom
   of Gorda-slab seismicity follows it (ρ = 0.52, p = 0.001), Blanco weakly (ρ = 0.12, p = 0.046), the Mendocino fault zone
-  not at all (v6.0). Effect: one segment supports a link. Paper (proposed): the link is claimed for the Gorda slab only.
+  not at all (v6.0). Effect: one segment supports a link. Paper (D-B111): the link is claimed for the Gorda slab only.
   <!-- src: PBPLAN (section 1, section 6 table) -->
 - Swarm against mainshock-aftershock structure: only Blanco (9 swarm against 32 mainshock-aftershock families, Vp/Vs)
   and Puget (7 against 13) have enough resolved nodes; no difference (p >= 0.1). Effect: a null result with little power.

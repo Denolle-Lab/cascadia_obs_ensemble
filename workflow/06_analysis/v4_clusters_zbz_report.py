@@ -15,6 +15,7 @@ Run after v4_clusters_zbz.py:
 from __future__ import annotations
 
 import argparse
+import json
 import html
 import sys
 from pathlib import Path
@@ -438,6 +439,10 @@ def main():
     import v4_clusters_zbz as z
     z.MAG = z.mag_paths.v41(a.mag)
     print(f"clustering {OUT}; swarms {SWARMS}; magnitudes {z.MAG}", flush=True)
+    rp = json.loads((OUT / "run_params.json").read_text()) if (OUT / "run_params.json").exists() else {}
+    if rp.get("flags_from"):        # the catalog reload leaves out the same events as the run (D-B106)
+        z.FLAGS = z.set_flags(rp["flags_from"])
+        print(f"left out as not earthquakes: IDs flagged in {', '.join(rp['flags_from'])}", flush=True)
     use()
     ev, fam, reg, thr, comp, sens, sh = load()
     val, vs, vo = validate(ev, fam)
@@ -526,12 +531,18 @@ def prose_note(out):
         mags = ""
     if mags.endswith(PROSE_MAGNITUDES):
         return ""
+    try:
+        rp = json.loads((out / "run_params.json").read_text())
+    except (OSError, ValueError):
+        rp = {}
+    flags = (f" Events flagged as not earthquakes are left out (D-B106): {rp.get('flagged_removed', 0):,} events "
+             f"flagged in {', '.join(Path(f).name for f in rp['flags_from'])}." if rp.get("flags_from") else "")
     return ("<p style='border:1px solid #D55E00;padding:6px 8px'><b>Magnitudes of this run:</b> "
             f"<code>{html.escape(mags)}</code>. The tables and figures below are computed from this run. The numbers "
             "quoted in the prose were written on 2026-11-22 for the stored Route A magnitudes "
             f"(<code>{PROSE_MAGNITUDES}</code>) and are not all updated: where prose and tables differ, the tables "
             "hold. The converged values of every number the paper quotes are in "
-            "<code>data/magnitude_converged/paper_numbers.csv</code> (decision D-B091).</p>")
+            f"<code>data/magnitude_converged/paper_numbers.csv</code> (decision D-B091).{flags}</p>")
 
 
 def write_html(out, ev, fam, reg, thr, comp, sens, sh, val, vs, vo, st, pf, vl, vlf):

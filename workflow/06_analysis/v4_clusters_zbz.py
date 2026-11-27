@@ -34,6 +34,12 @@ Choices (all documented in the report):
   Wells & Coppersmith (1994), log10 L = -2.44 + 0.59 M (10 km floor). Without
   it, M6.5 parents link events 300+ km away within days. The cap does not
   change the nearest-neighbor search or the eta distribution.
+* Not earthquakes (D-B106): --exclude-flagged --flags <files> leaves out every
+  event whose ID carries an event_flag (quarry blast, explosion, other event;
+  workflow/10_tomography/b4_catalog.py, D-B071) in any of the files (ID and
+  event_flag columns; the v4 catalog has none: the paper uses the v5.1 and v6.0
+  catalogs). The events are removed before completeness, b, thresholds and
+  the below-Mc attachment, as if they were not in the catalog.
 * Magnitude: the Route-A magnitude table (ML calibrated to ComCat, Mw from
   moment tensors above 4.5). The catalog magnitude column is not used. Default:
   the converged magnitudes (D-B091); --mag stored gives the earlier run
@@ -90,6 +96,8 @@ disappears; known sequences; comparison with v4_swarms.py clusters
 Outputs in data/catalog_v4/clusters_zbz/ (see --out). Run:
     python workflow/06_analysis/v4_clusters_zbz.py                 # everything
     python workflow/06_analysis/v4_clusters_zbz.py --faults-only   # redo fault join
+    python workflow/06_analysis/v4_clusters_zbz.py --exclude-flagged \\
+        --flags <catalog_v5/v5.1/cascadia_catalog_v5.1.csv> <catalog_v6/v6.0/cascadia_catalog_v6.0.csv>   # the paper
 """
 from __future__ import annotations
 
@@ -116,6 +124,8 @@ MAG = mag_paths.v41()        # --mag / $CASCADIA_MAG_V41: converged (default), s
 FAULTS = ROOT / "data/faults/v0"
 SWARMS = ROOT / "data/catalog_v4/swarms"
 OUT = ROOT / "data/catalog_v4/clusters_zbz"
+# --exclude-flagged (D-B106): {"files": [...], "ids": set of flagged IDs}; None keeps every event (set in main())
+FLAGS: dict | None = None
 
 REGIONS = [  # most specific first
     ("AX", "Axial Seamount", [-130.35, -129.75, 45.75, 46.2]),
@@ -137,6 +147,22 @@ T0 = pd.Timestamp("2010-01-01", tz="UTC")
 
 
 # ---------------------------------------------------------------- loading
+def set_flags(files) -> dict:
+    """FLAGS for --exclude-flagged: the IDs flagged in any of the files (same rule as v4_mc_maps.py, D-B105)."""
+    from v4_mc_maps import flagged_ids
+    files = [Path(f) for f in files]
+    return {"files": files, "ids": flagged_ids(files)}
+
+
+def describe_flags() -> dict:
+    if not FLAGS:
+        return {}
+    return {"exclude_flagged": True, "flags_from": [str(f) for f in FLAGS["files"]],
+            "flags_md5": [mag_paths.md5(f) for f in FLAGS["files"]],
+            "flags_rule": "event_flag set (not empty) in any of flags_from",
+            "flagged_removed": FLAGS.get("removed"), "flagged_removed_with_M": FLAGS.get("removed_with_M")}
+
+
 def load() -> pd.DataFrame:
     cat = pd.read_csv(CAT, skipinitialspace=True)
     cat.columns = [c.strip() for c in cat.columns]
@@ -144,6 +170,10 @@ def load() -> pd.DataFrame:
     df = cat[["ID", "datetime", "latitude", "longitude", "depth(km)"]].rename(
         columns={"ID": "event_id", "latitude": "lat", "longitude": "lon", "depth(km)": "depth"})
     df = df.merge(mag, on="event_id", how="left")
+    if FLAGS:
+        fl = df.event_id.isin(FLAGS["ids"])
+        FLAGS.update(removed=int(fl.sum()), removed_with_M=int((fl & df.M.notna()).sum()))
+        df = df[~fl]
     df["time"] = pd.to_datetime(df["datetime"], utc=True, format="ISO8601")
     df["t_yr"] = (df["time"] - T0).dt.total_seconds() / (365.25 * 86400)
     df["year"] = df["time"].dt.year
@@ -595,11 +625,20 @@ def main():
     ap.add_argument("--variants", default="d3,mc+0.3,df_est,df1.3,df2.0,noM_floor,mc_year,eta0_shuf5",
                     help="comma list of sensitivity variants ('' for none)")
     ap.add_argument("--faults-only", action="store_true", help="redo only the fault join")
+    ap.add_argument("--exclude-flagged", action="store_true",
+                    help="leave out the events flagged as not earthquakes in --flags (D-B106)")
+    ap.add_argument("--flags", type=Path, nargs="+", default=None,
+                    help="files with ID and event_flag columns (e.g. the v5.1 and v6.0 catalogs); the IDs flagged in "
+                         "any of them are left out")
     mag_paths.add_argument(ap, "v4.1")
     a = ap.parse_args()
-    global MAG
+    global MAG, FLAGS
     MAG = mag_paths.v41(a.mag)
     print(f"magnitudes: {MAG}", flush=True)
+    if bool(a.exclude_flagged) != bool(a.flags):
+        ap.error("--exclude-flagged and --flags go together (the v4 catalog has no event_flag column)")
+    if a.exclude_flagged:
+        FLAGS = set_flags(a.flags)
     out = a.out
     out.mkdir(parents=True, exist_ok=True)
     if a.faults_only:
@@ -610,6 +649,8 @@ def main():
         return
     df = load()
     print(f"{len(df)} events, {df.M.notna().sum()} with M", flush=True)
+    if FLAGS:
+        print(f"left out as not earthquakes: {FLAGS['removed']:,} events ({FLAGS['removed_with_M']:,} with M)", flush=True)
     ctab, ytab = completeness_table(df)
     ctab["Mc_year"] = [ytab[ytab.region == r].set_index("year").Mc_maxc.to_dict() for r in ctab.region]
     ctab.drop(columns="Mc_year").to_csv(out / "completeness_b_df.csv", index=False, float_format="%.3f")
@@ -666,7 +707,7 @@ def main():
         print(v, "\n", sv.to_string(), flush=True)
     pd.concat(allv).to_csv(out / "sensitivity_zbz.csv", index=False)
     json.dump(dict(rmin=a.rmin, rcap_min=a.rcap_min, q=Q, nshuffle=a.nshuffle, variants=vs, df_main=1.6,
-                   catalog=str(CAT), **mag_paths.describe(MAG)),
+                   catalog=str(CAT), **mag_paths.describe(MAG), **describe_flags()),
               open(out / "run_params.json", "w"), indent=1)
 
 

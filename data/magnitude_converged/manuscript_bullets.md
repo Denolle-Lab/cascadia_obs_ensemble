@@ -150,3 +150,132 @@
 - Fig. 4: unchanged (it does not use M; pixel-identical).
 - Fig. 6A axis label now reads "events >= Mc (0.85) per week" (was 0.75).
 - Fig. 6B in-panel note now reads "503 events in 12 days (850 in the family, 100 days)" (was "501 ... (755 ..., 64 days)").
+
+# D-B105: Mc maps without the events flagged as not earthquakes
+
+- Decision D-B105 (PI, 2026-11-26 15:42): the Mc maps leave out the events flagged as not earthquakes (`event_flag`: Texada quarry-blast rule, ComCat explosion / quarry blast / other event within 3 s and 20 km; D-B071).
+- Catalog v4.1 has no flag column: an event is left out when catalog v5.1 or v6.0 flags it. 3,298 of the 130,769 events with a magnitude go; 127,471 stay.
+- Values: `data/magnitude_converged/paper_numbers_mc_no_flags.csv` (before = main 08d9dbe4, after = this branch; `workflow/05_magnitude/paper_numbers_compare.py`). Line numbers as in the D-B091 list above.
+- "D-B091" below is the value of the D-B091 bullet above; apply the **D-B105** value instead. Every other Mc number of the D-B091 list stays as given there.
+- Only the maps change. The clustering (Table S5, Text S6, Figs. 5 and 6) is not rerun and still includes the flagged events; its Mc and every clustering number are unchanged.
+
+## Main text
+
+- OL 81-82, repo 81-82, "Puget Lowland and offshore Washington (node medians 1.0--1.1)": D-B091 1.1--1.2 -> **1.1** (Puget 1.1, Washington 1.1).
+- OL 83-85, repo 83-85, "Pooled by region, Mc is 1.2--1.7 onshore and in the forearc":
+  - D-B091 1.3--1.5 -> **1.2--1.6** (WA 1.3, PU 1.2, ON 1.3, OR 1.6, MT 1.5);
+  - offshore plate boundaries: no change from D-B091 (1.6--1.9).
+- OL 439-450, repo 409-420, Methods, "Mc was mapped on a 0.1° grid from the nearest 250 events": add **"leaving out the 3,298 events flagged as quarry blasts or explosions"** (or the like).
+- No change from D-B091:
+  - lowest nodes (Mount St. Helens -0.2, Axial 0.3);
+  - highest nodes (western Blanco 2.6--2.8, Gorda at most 2.4);
+  - no offshore node in 2010 and 2016;
+  - Blanco M >= 2.5 rate 28% (2010) and 29% (2016);
+  - offshore Mc 2011--2012 against 2013--2015;
+  - median period change (-0.1 and 0.0);
+  - Mendocino 2016 rate 11%.
+
+## Supplementary text
+
+- Text S7, OL/repo 245, after "Magnitudes rounded to 0.1": add **"events flagged as quarry blasts or explosions (3,298) are left out"**.
+- Text S7, OL/repo 250-252, "Maximum curvature + 0.2 is the most conservative at 84% of nodes; b-value stability averages 0.19 lower and the best estimate 0.14 lower": D-B091 83%; 0.19; 0.13 -> **83%; 0.18; 0.14**.
+- Text S7, OL/repo 254-256, clustering Mc against the map methods:
+  - D-B091 "below the b-value-stability value at Axial (0.85 against 1.5) and by half a bin at Blanco (1.75 against 1.8) and Puget (1.35 against 1.4)";
+  - -> **"below the b-value-stability value at Axial (0.85 against 1.5) and by half a bin at Blanco (1.75 against 1.8)"**: the pooled Puget b-value-stability Mc is now 1.3.
+- No change from D-B091:
+  - Text S7 QC-only catalog (median 0.0, interquartile range +-0.1; 3,234 nodes instead of 3,395);
+  - Text S7 Axial (sigma 0.63, maximum curvature 0.7, nodes 0.4--1.2).
+
+## Figures and tables (same paths)
+
+- Fig. 2 (`paper_sciadv/figures/fig2a_mc_three_methods.png`, `fig2b_mc_periods.png`): replaced. The cells that change are onshore and along the coast (onshore box 370 changed and 106 lost, Puget 156 and 4, Oregon box 68 and 57, Washington box 40 and 3, Gorda 6 changed); Axial, Endeavour, Blanco and Mendocino are unchanged. Node counts:
+  - all years 4,578 -> 4,408;
+  - 2010 1,222 -> 1,098;
+  - 2011--2012 2,663 -> 2,481;
+  - 2013--2015 4,420 -> 4,252;
+  - 2016 661 -> 645.
+- Table S6 (`data/catalog_v4/mc_maps/mc_regional.csv`): replaced. Pooled Mc_best, whole period:
+  - changed: OR 1.5 -> **1.6**, PU 1.3 -> **1.2**;
+  - unchanged: AX 0.3, EN 1.6, BL 1.6, GO 1.9, MT 1.5, WA 1.3, ON 1.3, OFF 1.7, ALL 1.5.
+- Table S6, period rows whose Mc_best moves (all others unchanged):
+  - WA 2011--2012 1.3 -> 1.2, 2013--2015 1.3 -> 1.1;
+  - PU 2011--2012 1.1 -> 1.3, 2013--2015 1.2 -> 1.1, 2016 1.5 -> 1.3;
+  - OR 2011--2012 1.6 -> 1.5, 2013--2015 1.5 -> 1.6, 2016 1.7 -> 2.3;
+  - ON 2010 1.4 -> 1.3, 2016 1.2 -> 1.1;
+  - OFF 2010 1.6 -> 1.8;
+  - ALL 2011--2012 1.5 -> 1.6, 2013--2015 1.5 -> 1.6, 2016 1.1 -> 1.0.
+- Figs. S3--S7 (`data/catalog_v4/mc_maps/fig1`--`fig5`): replaced. README numbers in `data/catalog_v4/mc_maps/README.md` updated.
+
+# D-B106: clustering without the events flagged as not earthquakes
+
+- Decision D-B106 (PI, 2026-11-26 16:01): the paper's v4.1 clustering also leaves out the events flagged as not earthquakes.
+- Flags: the same union of the v5.1 and v6.0 `event_flag` as the Mc maps (D-B105).
+  - 3,331 events go: the 3,298 with a magnitude, plus 33 without one.
+  - They are removed before completeness, b-values, thresholds and the attachment of events below Mc (`v4_clusters_zbz.py --exclude-flagged --flags`).
+  - Removed events by region: ON 2,694; PU 401; OR 208; WA 24; GO 4. Of these, 827 were in the analysis set.
+- Values: `data/magnitude_converged/paper_numbers_clusters_no_flags.csv` (before = 8452c6e5, the D-B105 commit, which has the clustering of main; after = this commit).
+- "D-B091" below is the value of the D-B091 bullet above; apply the **D-B106** value instead.
+- Every other clustering number of the D-B091 list stays as given there. These are unchanged:
+  - the six large earthquakes;
+  - Mendocino 28% and 74%;
+  - Blanco swarms 4 h and 5 km;
+  - strand swarm shares 28--45%;
+  - eruption week 998 / 975;
+  - the November and March rates;
+  - the West Blanco swarm (503 events in 12 days, 850 in 100 days, 23 / 41 / 46 km);
+  - shuffled events passing the threshold 3--19% (33% at Axial);
+  - the clustering Mc per region (0.85--2.25).
+- Why Axial and Endeavour move slightly: the onshore b-value drops from 1.04 to 0.98. Onshore-box parents link some Endeavour and Axial events (for example the 2014 Mw 6.5 off Vancouver Island, which lies in the onshore box).
+
+## Main text
+
+- OL 232, repo 210, "the 2015 Axial eruption as one 632-event swarm": D-B091 601 -> **599** (events above Mc; 759 with the attached events below Mc).
+- OL 234-236, repo 212-214, ridges and transforms "about half background": no change (Axial 51.7%, Blanco 49.8%, Gorda 62.5%).
+- OL 236-237, repo 214-215, swarms among families of five or more events: range unchanged, **55--63%**. Axial is now 61.3% of 62 families; Blanco 62.8% of 145 and Gorda 55.0% of 20 are unchanged.
+- OL 240-241, repo 218-219, "The forearc, Puget Lowland and onshore regions are 68--84% background": D-B091 67--82% -> **63--82%** (WA 82.0, OR 63.1, PU 76.6, ON 66.2).
+- OL 262-263, repo 240-241, "swarm families from 1 per month to 16 in March and 13 in April": March 15 as in D-B091; April 13 -> **14**.
+- Discussion, OL 352-354, repo 330-332, clustered share: Axial 48.3% (D-B091 48.4%), Blanco 50.2%, Gorda 37.5%. "Half" still holds.
+- Limits, OL 383-385, repo 361-363, "The per-region Mc keeps 27,555 events for the clustering": D-B091 27,423 -> **26,596**.
+- Methods, OL 486-501, repo 456-471, clustering: add **"events flagged as quarry blasts or explosions (3,331) are left out"** (or the like).
+
+## Supplementary text
+
+- Text S6, OL/repo 224, "measured epicentral D2 0.8--1.4": -> **0.8--1.5** (Puget 1.41 -> 1.45; onshore 0.87 -> 0.93).
+- Text S6, OL/repo 228-229, "bimodality index drops from 1.6--3.4 to 0.3--1.6":
+  - D-B091 "1.7--2.9 to 0.4--1.3" -> **"1.7--3.2 to 0.3--1.3 everywhere except offshore Oregon"**.
+  - In offshore Oregon (293 events above Mc) the shuffled mean is 2.6, against 1.7 for the real catalog. Two of its three shuffles fit a small low-eta mode (Ashman D 3.1 and 3.6), and D is not robust at this sample size.
+  - The share of shuffled Oregon events linked below the real threshold stays low: 11--14%.
+- Text S6, OL/repo 234-236, sensitivity:
+  - D-B091 "83--99%" -> **87--99%** of events keep their label;
+  - conservative threshold: D-B091 "2--29 points" -> **3--29 points** (most at Axial: +29.4).
+- Text S6, OL/repo 236-238, "the per-region Mc keeps 27,555 events; Mc differs between regions (0.75--2.45)": D-B091 27,423 -> **26,596**; Mc 0.85--2.25 unchanged.
+- Text S7, clustering Mc against the map methods: no change from D-B105 (the clustering Mc per region is unchanged).
+
+## Figures and tables (same paths)
+
+- Fig. 5 (`paper_sciadv/figures/fig5_clustering.png`): replaced (3.0% of pixels). New numbers on the figure:
+  - A--C labels:
+    - forearc and onshore 8,267 events, 23% clustered -> **7,441 events, 25% clustered**;
+    - ridges and transforms 14,407 -> **14,406** events (42%);
+    - Mendocino triple junction unchanged (4,740, 38%).
+  - D counts: GO 931 -> **930**, WA 428 -> **416**, OR 318 -> **293**, PU 3,345 -> **3,018**, ON 4,180 -> **3,718**.
+  - E labels: Axial (61) -> **(62)**, Puget (28) -> **(29)**, onshore (42) -> **(43)**. The Puget label now sits left of its symbol.
+- Fig. 6 (`paper_sciadv/figures/fig6_short_lived.png`): replaced. Only panel A changes: April 2015 swarm families 13 -> 14 (0.03% of pixels). Fig. 6B keeps the M 1.0 colour floor (PR #48).
+- Table S5 (`data/catalog_v4/clusters_zbz/regions_zbz.csv`, `families_zbz.csv`): replaced.
+  - Families: 1,966 -> **1,946** (mainshock--aftershock 913 -> 912, multiplet 860 -> 835, swarm 193 -> 199).
+  - Background share of the analysis set: 59.4% -> **58.2%** (26,596 events).
+  - Changed rows (n_analysis; % background; families; swarms):
+    - EN: 421; 52.7 -> 53.9%;
+    - GO: 931 -> 930;
+    - WA: 428 -> 416; 82.5 -> 82.0%;
+    - OR: 318 -> 293; 66.7 -> 63.1%; 25 -> 26 families;
+    - PU: 3,345 -> 3,018; 78.7 -> 76.6%; 204 -> 196 families; 12 -> 13 swarms;
+    - ON: 4,180 -> 3,718; 70.0 -> 66.2%; 295 -> 282 families; 27 -> 31 swarms;
+    - AX: swarms 37 -> 38.
+- Family IDs renumber again:
+  - Axial eruption 1750 -> **1729**;
+  - June 2015 West Blanco 1797 -> **1778**;
+  - 2012 Blanco 259 -> **247**;
+  - re-identify the Brookings swarm (GO020) in the new `families_zbz.csv`.
+- Text S6 report (`data/catalog_v4/clusters_zbz/catalog_v4_clusters_report.html`): recomputed. Its provenance note now says that the flagged events are left out.
+- Fig. S6 (`data/catalog_v4/mc_maps/fig4_regional_fmd`) draws the clustering Mc, which is unchanged, so no new figure is needed.

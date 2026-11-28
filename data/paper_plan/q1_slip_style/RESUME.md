@@ -23,6 +23,17 @@ tomoDD null-truth run holds 6); MemAvailable kept above 40 GB.
   (hot > cold at uniform Mc 2.15 reclustered: 23 % vs 1.6 %). Vp/Vs T3 NOT TESTABLE (27 valid families: 7 swarm,
   18 MA; regression dilution, Axial S window holds P). Rerun: bash workflow/11_paper_plan/run_q1.sh (all steps) or
   with a step list; the nulls resume from nulls/*_swarm_ids.parquet (delete them to redo).
+- Fri Nov 27 19:44:01 PST 2026: plate boundaries v2 (D-B117, PI 19:09). Merged origin/analysis/plate-boundaries
+  0904802e; pb_common defaults to PB_AXES=v2 (plate_axes_v2_adopted.csv, md5 4c2797e9); the segment join equals the
+  rebuilt events_segments_v61.parquet (100 %); 727 tier A-C events change segment against the D-B113 run. The D-B113
+  run is kept in /wd1/mdenolle_data/paper_plan/q1_slip_style/runs/db113_axes_v1/. Full rerun of run_q1.sh (nulls
+  recomputed from scratch: time- and magnitude-shuffle memberships, uniform-Mc clustering and family Vp/Vs identical
+  to the first run). Two driver fixes found by the rerun: q1_covariates.py coverage over COVS with Tslab_C (KeyError);
+  MemAvailable wait now Q1_MEM_GB (default 150 GB). Verdicts unchanged (thermal inconclusive, Vp/Vs not testable);
+  T1/T2/T4 identical (no cell changes type). Hot 18.3-29.2 % (was 17.2-29.2), cold 0.7-2.8 % (same); reclustered at
+  Mc 2.15 hot/cold median 23.5/1.5 % (was 23.1/1.6). Segment-level secondary test, swarm share vs age, now significant
+  (-0.93, BH 0.015; was -0.79, BH 0.085). Report text reads every number from the tables; new Boundaries v2 section.
+  Commit 02a047a9 (code, tables, report source).
 
 ## Pre-registration (written Fri Nov 27 13:26:14 PST 2026, before any covariate correlation is computed)
 

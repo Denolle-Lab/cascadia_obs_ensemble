@@ -43,7 +43,8 @@ dws_min: 100
 # --- context layers
 slab2: ${main}/data/slab2/cas_slab2_dep.xyz
 pb2002: data/tectonics/PB2002_steps.json
-plate_axes: data/paper_plan/plate_boundaries/plate_axes_v1.csv   # D-B113 axes (replace PB2002 ridges and oceanic transforms)
+plate_axes: data/paper_plan/plate_boundaries_v2/plate_axes_v2_adopted.csv   # plate boundaries v2 adopted (D-B117): replace the PB2002 ridges and oceanic transforms
+plate_axes_reference: true                     # Fig. 1A: PB2002 ridges and transforms as a faint dashed reference
 focal: data/focal/comcat_mt.csv
 crescent_traces: data/faults/crescent_cfm/crescent_cfm_crustal_traces.geojson
 gmrt_tiles: ${main}/data/gmrt                              # high-resolution GMRT of the zoom regions

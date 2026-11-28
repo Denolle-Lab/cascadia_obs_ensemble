@@ -219,7 +219,8 @@ def context(cfg):
     cache = Path(cfg["cache"])
     cache.mkdir(parents=True, exist_ok=True)
     return dict(coast=S.gmt_lines(cache, "coast_h", "-Dh -W"), borders=S.gmt_lines(cache, "borders_h", "-Dh -N1 -N2"),
-                pb=S.pb2002_lines(cfg.path("pb2002"), axes=cfg.opt("plate_axes")), relief=S.Relief(cache))
+                pb=S.pb2002_lines(cfg.path("pb2002"), axes=cfg.opt("plate_axes")),
+                pb_ref=S.pb2002_lines(cfg.path("pb2002"), oceanic_only=True), relief=S.Relief(cache))
 
 
 def threads():

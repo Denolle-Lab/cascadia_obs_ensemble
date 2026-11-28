@@ -514,11 +514,12 @@ def gmt_lines(cache, name, args, region=(-134, -118, 37.5, 52.5)):
     return segs
 
 
-def pb2002_lines(path, region=(-134, -118, 37.5, 52.5), axes=None):
+def pb2002_lines(path, region=(-134, -118, 37.5, 52.5), axes=None, oceanic_only=False):
     """PB2002 steps joined into polylines: {'OSR': [...], 'TF': [...], 'SUB': [...]} (lon, lat arrays).
-    axes: plate_axes_v1.csv of the segment rule (D-B113, pb_axes.py): its spreading (OSR) and oceanic transform
-    (OTF) sections replace the PB2002 ones (bathymetric axes of the southern Gorda Ridge, the Gorda-Mendocino stub
-    and the JdF ridge 46.4-47.7 N; PB2002 elsewhere), so the maps draw the traces the segments were made with."""
+    axes: the plate-axes table of the segment rule (pb_common.AXES_FILES; the paper uses plate boundaries v2 adopted,
+    plate_axes_v2_adopted.csv, D-B117): its spreading (OSR) and oceanic transform (OTF) sections, step-overs and
+    connectors replace the PB2002 ones, so the maps draw the traces the segments were made with. The subduction trace
+    and the continental boundaries stay PB2002. oceanic_only: PB2002 ridges and oceanic transforms only (reference)."""
     W, E, S, N = region
     groups = {"SUB": [], "OSR": [], "TF": []}
     ax_tab = None
@@ -531,6 +532,8 @@ def pb2002_lines(path, region=(-134, -118, 37.5, 52.5), axes=None):
             continue
         cls = ft["properties"]["STEPCLASS"]
         if ax_tab is not None and cls in ("OSR", "OTF"):
+            continue
+        if oceanic_only and cls not in ("OSR", "OTF"):
             continue
         groups["SUB" if cls == "SUB" else "OSR" if cls == "OSR" else "TF"].append(c)
     if ax_tab is not None:
@@ -584,6 +587,14 @@ def draw_plates(m: MapAx, pb, scale=1.0, color=INK, teeth_km=38.0, zorder=7):
             tri = np.array([[px - tx * size * 0.75, py - ty * size * 0.75], [px + tx * size * 0.75, py + ty * size * 0.75],
                             [px + nx * size * 1.25, py + ny * size * 1.25]])
             ax.add_patch(plt.Polygon(tri, closed=True, facecolor=color, edgecolor="none", zorder=zorder))
+
+
+def draw_plates_reference(m: MapAx, pb_ref, color="#4d4d4d", lw=0.5, zorder=5.5):
+    """PB2002 (Bird 2003) ridges and oceanic transforms as a faint dashed reference under the adopted traces."""
+    for key in ("OSR", "TF"):
+        for L in pb_ref.get(key, []):
+            m.ax.plot(L[:, 0], merc(L[:, 1]), color=color, lw=lw, ls=(0, (2.2, 1.8)), zorder=zorder,
+                      solid_capstyle="butt", dash_capstyle="butt")
 
 
 def draw_coast(m: MapAx, coast, borders=None, zorder=3):

@@ -35,6 +35,29 @@ def _densify(xy, step_km=0.5):
     return np.c_[np.interp(q, s, xy[:, 0]), np.interp(q, s, xy[:, 1])]
 
 
+def _trace_pieces(sec, cfg, ctx):
+    """Transform strands of a trace frame, west to east, each oriented west to east: the oceanic-transform sections of
+    the plate-axes table (plate boundaries v2 adopted, D-B117) with at least half their points in the section's bbox;
+    step-overs and connectors (sections '*_step*', the A7 join) are left out, so every point is measured from the
+    nearest strand. Without a plate-axes table: the PB2002 transform polylines in the bbox."""
+    W, Ea, Sb, N = sec["bbox"]
+    inside = lambda xy: ((xy[:, 0] > W) & (xy[:, 0] < Ea) & (xy[:, 1] > Sb) & (xy[:, 1] < N)).mean()  # noqa: E731
+    pieces = []
+    f = cfg.opt("plate_axes")
+    if f is not None:
+        a = pd.read_csv(f)
+        for name, g in a[a.kind == "OTF"].groupby("section", sort=False):
+            if "_step" in str(name) or str(g.source.iloc[0]).startswith("A7"):
+                continue
+            xy = g[["lon", "lat"]].to_numpy(float)
+            if inside(xy) > 0.5:
+                pieces.append(xy)
+    else:
+        pieces = [L for L in ctx["pb"]["TF"] if inside(L) > 0.5]
+    pieces = [p if p[0, 0] <= p[-1, 0] else p[::-1] for p in pieces]
+    return sorted(pieces, key=lambda p: p[:, 0].mean())
+
+
 class Frame:
     """Normal and along-strike coordinates (km) of points relative to a section frame; + normal = left of the frame
     direction, flipped when needed so that + x points into the eastern half (east on the right of every panel)."""
@@ -44,22 +67,29 @@ class Frame:
         kind = sec.get("frame", "axis")
         self.kind = kind
         if kind == "trace":
-            W, Ea, Sb, N = sec["bbox"]
-            pts = [L for L in ctx["pb"]["TF"] if ((L[:, 0] > W) & (L[:, 0] < Ea) & (L[:, 1] > Sb) & (L[:, 1] < N)).mean() > 0.5]
-            xy = np.vstack([_densify(L) for L in pts])
-            self.lon0, self.lat0 = xy[:, 0].mean(), xy[:, 1].mean()
-            tx, ty = D.local_xy(xy[:, 0], xy[:, 1], self.lon0, self.lat0)
-            o = np.argsort(tx)
-            tx, ty = tx[o], ty[o]
-            self.s = np.r_[0, np.cumsum(np.hypot(np.diff(tx), np.diff(ty)))]
-            dx, dy = np.gradient(tx), np.gradient(ty)
-            nn = np.hypot(dx, dy)
-            self.tx, self.ty, self.dx, self.dy = tx, ty, dx / nn, dy / nn
+            pieces = _trace_pieces(sec, cfg, ctx)
+            self.lon0 = float(np.mean([p[:, 0].mean() for p in pieces]))
+            self.lat0 = float(np.mean([p[:, 1].mean() for p in pieces]))
+            TX, TY, DX, DY, SS, XY = [], [], [], [], [], []
+            s0 = 0.0
+            for p in pieces:                                   # strands west to east, each oriented west to east
+                q = _densify(p)
+                tx, ty = D.local_xy(q[:, 0], q[:, 1], self.lon0, self.lat0)
+                if TX:                                         # jump across a step-over between strands
+                    s0 += float(np.hypot(tx[0] - TX[-1][-1], ty[0] - TY[-1][-1]))
+                ss = s0 + np.r_[0, np.cumsum(np.hypot(np.diff(tx), np.diff(ty)))]
+                dx, dy = np.gradient(tx), np.gradient(ty)
+                nn = np.hypot(dx, dy)
+                TX.append(tx); TY.append(ty); DX.append(dx / nn); DY.append(dy / nn); SS.append(ss); XY.append(q)
+                s0 = float(ss[-1])
+            tx, ty, self.dx, self.dy = np.concatenate(TX), np.concatenate(TY), np.concatenate(DX), np.concatenate(DY)
+            self.s = np.concatenate(SS)
+            self.tx, self.ty = tx, ty
             from scipy.spatial import cKDTree
             self.tree = cKDTree(np.c_[tx, ty])
             mid = len(tx) // 2
             self.az_plus = np.degrees(np.arctan2(-self.dy[mid], self.dx[mid])) % 360     # left normal (east, north)
-            self.trace_xy = xy[o]
+            self.trace_xy = np.vstack(XY)
         else:
             if kind == "axis":
                 ax = pd.read_csv(cfg.path("segment_axes")).set_index("seg").loc[sec["segs"][0]]
@@ -256,6 +286,8 @@ def draw_panel(ax, G, var, ze, fr, ev, xlim, zlim, surf, slab, vp_grid, show_x, 
         import contourpy
         gen = contourpy.contour_generator(xc, zc, np.ma.masked_invalid(vp_grid), name="serial", line_type="Separate")
         segs = [s for s in gen.lines(LEVEL) if len(s) > 2]
+        # closed loops around a single bin (x extent < 10 km) are left out: a one-bin island, not a level
+        segs = [s for s in segs if not (np.allclose(s[0], s[-1]) and np.ptp(s[:, 0]) < 10.0)]
     except Exception:  # noqa: BLE001
         segs = []
     for s in segs:
@@ -472,12 +504,14 @@ def make(cfg):
            f"{len(names)} ensemble members (× {M.infl['Vp']:g} for Vp, × {M.infl['VpVs']:g} for Vp/Vs); full colour at "
            f"≤ {SIG['Vp'][0]:g} km/s and ≤ {SIG['VpVs'][0]:g}, faintest at ≥ {SIG['Vp'][1]:g} km/s and ≥ "
            f"{SIG['VpVs'][1]:g}. Hatched: rock bins without resolved nodes. Pale blue: water. Dots: depth-good tier A-C "
-           f"events of the segment (catalog {cfg['label']}). Solid line: Vp 7.5 km/s; dashed: Slab2. Text: depth-matched "
+           f"events of the segment (catalog {cfg['label']}). Solid line: Vp 7.5 km/s (closed loops around a single bin left out); dashed: Slab2. Text: depth-matched "
            "contrasts of the segment that pass " +
            ("the controls (2σ of the ensemble, synthetic S95 and the null truth N95; D-B111, D-B112)" if null_scored
             else "2σ of the ensemble and the synthetic S95 (D-B111); the null-truth control (D-B112) is pending") +
-           f". Frames: PB2002 transform trace re-centred on the seismicity (BL, MFZ), the strike line of the "
-           "segment's epicentres (GP, PU, MSH), a north-south line at 124.75°W (triple junction and Gorda slab). "
+           f". Frames: the transform strands of the plate boundaries v2 (D-B117; distance from the nearest strand, step-overs "
+           "and connectors left out) re-centred on the seismicity (BL, MFZ), the strike line of the "
+           "segment's epicentres (GP, PU, MSH), a line through the PB2002 triple junction along the trench azimuth (344.5°; "
+           "triple junction and Gorda slab). "
            f"Vertical exaggeration {VE:g}. The model resolves structure on a 40 km scale, not a fault damage zone.")
     return [dict(name="fig4_fault_zone_sections", files=["fig4_fault_zone_sections.pdf", "fig4_fault_zone_sections.png"],
                  size_cm=size, caption=cap, before=[], before_plan=["fig_sections_BL_MFZ.png"], facts=facts,

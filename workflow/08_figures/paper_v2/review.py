@@ -36,8 +36,11 @@ STYLE = [
               "lines 0.9 pt; ridges 1.1 pt, transforms and trench 0.8 pt with filled teeth on the upper plate."),
     ("Base map", "GMRT relief (GridServer 'med' tiles mosaicked once into the cache) as a light hillshade from the "
                  "north-west: grey-blue sea darkening with depth, warm light-grey land; coast 0.4 pt."),
-    ("Plate boundaries", "PB2002 with the D-B113 bathymetric axes (southern Gorda Ridge, Gorda-Mendocino stub, JdF "
-                         "Ridge 46.4-47.7 N) in place of the PB2002 ridges and oceanic transforms."),
+    ("Plate boundaries", "The adopted plate boundaries v2 (D-B117: Gorda Ridge on its axial valley, JdF Ridge on its "
+                         "bathymetric axis with Endeavour from MAPRIDGES, Blanco and Mendocino as straight seismicity "
+                         "segments with their step-overs, Mendocino joined to the PB2002 triple junction) in place of "
+                         "the PB2002 ridges and oceanic transforms; subduction trace PB2002; Fig. 1A shows PB2002 as a "
+                         "faint dashed reference. The straight Axial-Endeavour alternative is not drawn."),
     ("Boundary types", "One colour and one marker per type (ridge, transform, intraplate, triple junction, subduction, "
                        "crustal, arc; other in grey), checked under protanopia, deuteranopia and tritanopia (Machado "
                        "2009); the marker or the segment code always rides with the colour."),
@@ -172,9 +175,10 @@ tables (<code>seismicity_metrics</code>, <code>structure_feasibility</code>, <co
 <code>surface_segments</code>), contrasts (<code>circularity_contrasts</code>, <code>null_truth_contrasts</code>),
 <code>depth_vs_level*</code>, the D-B113 axes (<code>plate_axes</code>), clusters, fault surfaces v1, Mc maps, model
 v0.4.2 and its 100 members. Segment codes, names and types come from the tables, so a new segment rule needs no code
-change. After the null-truth score (D-B112) writes <code>null_truth_contrasts.csv</code> into
-<code>{html.escape(str(cfg['tables']))}</code>, Figs. 4 and 5 switch on their own: filled symbols = claimed, the N95
-bands appear, and the captions drop "pending". Null truth {'scored' if null_scored else 'not scored yet'} at this build.</p>
+change; the plate traces come from <code>plate_axes</code> (now <code>plate_axes_v2_adopted.csv</code>, D-B117). Figs. 4
+and 5 read <code>null_truth_contrasts.csv</code> from <code>{html.escape(str(cfg['tables']))}</code> when it exists
+(filled symbols = claimed: 2σ, S95 and N95; N95 bands drawn); without it they mark the D-B111 survivors as "null truth
+pending". Null truth {'scored: ' + str(int(ct.claimed.sum())) + ' of ' + str(len(ct)) + ' contrasts claimed' if null_scored else 'not scored'} at this build.</p>
 <p class='meta'>Configuration: {html.escape(cfg['config_path'])}</p>"""
     page = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'><title>Paper figures v2</title><style>{CSS}</style>
@@ -183,7 +187,8 @@ bands appear, and the captions drop "pending". Null truth {'scored' if null_scor
 <div class='meta'>D-B114 (PI 2026-11-27 13:13: "Make the paper figures more beautiful, even for the tomography"). Framing
 D-B107/D-B109: seismicity style and fault-zone structure at the offshore plate boundaries; structure only at
 plate-boundary scale (40 km); no full-size model maps. Catalog {html.escape(cfg['label'])}, model v0.4.2, segments
-after D-B113. Built {built}; branch {html.escape(branch)} at {html.escape(head)}. Private working page; nothing here is in
+on the adopted plate boundaries v2 (D-B117, PI 2026-11-27 19:09 PST), structure contrasts with the null-truth control
+{'scored (D-B112, ' + str(int(ct.claimed.sum())) + ' contrasts claimed)' if null_scored else 'pending (D-B112)'}. Built {built}; branch {html.escape(branch)} at {html.escape(head)}. Private working page; nothing here is in
 paper_sciadv/figures/ yet (the PI picks first).</div>
 <p class='toc'>{''.join(toc)} <a href='#style'>Style</a> <a href='#rerun'>Rerun</a></p>
 {''.join(body)}

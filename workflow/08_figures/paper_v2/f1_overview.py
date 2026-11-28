@@ -2,7 +2,7 @@
 
 A  map of the margin: the paper set of the catalog (tier A-C earthquakes; flagged events and the review P1 set left
    out) coloured by the type of its plate-boundary segment, segment codes with their structure class, plate traces
-   (D-B113 axes), NNR-MORVEL56 plate motions
+   (plate boundaries v2 adopted, D-B117; PB2002 dashed for reference), NNR-MORVEL56 plate motions
 B  stations used by the catalog: ocean-bottom stations coloured by their first year, land stations open
 C  depth against longitude (depth-good events, same colours), Slab2 at three latitudes
 D  events per week; E  operating stations per week (ocean-bottom, land): two panels on one time axis (no dual axis)
@@ -48,6 +48,8 @@ def panel_map_events(fig, ax, cfg, ctx, E, segs, axes_tab):
     m = S.MapAx(ax, REGION, labels="WS")
     ctx["relief"].draw(m, px=1500)
     S.draw_coast(m, ctx["coast"], ctx["borders"])
+    if cfg.get("plate_axes_reference") and ctx.get("pb_ref"):
+        S.draw_plates_reference(m, ctx["pb_ref"])
     S.draw_plates(m, ctx["pb"], scale=0.9, zorder=6)
     # events: 'other' underneath, then every typed event by magnitude (large on top)
     oth = E[E.seg_type.eq("other") | E.seg_type.isna()]
@@ -245,8 +247,10 @@ def legend_strip(fig, ax, mscale):
     ax.axis("off")
     hs = S.type_handles(with_other=True, ms=4.6)
     hs[-1] = Line2D([], [], ls="", marker="o", ms=3.6, mfc=S.TYPE_COL["other"], mec="white", mew=0.4,
-                    label="other (not a plate boundary)")
-    ax.legend(handles=hs, loc="upper left", ncol=8, bbox_to_anchor=(0.0, 1.06), frameon=False,
+                    label="other")
+    hs += [Line2D([], [], color=S.INK, lw=S.LW["ridge"] * 0.9, label="plate boundary v2"),
+           Line2D([], [], color="#4d4d4d", lw=0.5, ls=(0, (2.2, 1.8)), label="PB2002")]
+    ax.legend(handles=hs, loc="upper left", ncol=len(hs), bbox_to_anchor=(0.0, 1.06), frameon=False,
               handletextpad=0.25, columnspacing=0.9, title=None, borderaxespad=0)
     # second row: segment label key and magnitude sizes
     W, H = fig.get_size_inches() / S.CM
@@ -306,11 +310,14 @@ def make(cfg):
     counts = E.seg_type.fillna("other").value_counts()
     cap = (f"Plate boundaries and data. (A) {n:,} tier A-C earthquakes of catalog {cfg['label']} (flagged events and "
            f"the waveform-review P1 set left out), coloured by the type of their segment; symbol size scales with "
-           f"magnitude (events without a magnitude drawn at M 0). Labels: segment codes; label fill gives the "
+           f"magnitude (events without a magnitude drawn at M 0); grey: events outside the plate-boundary segments. Labels: segment codes; label fill gives the "
            f"structure class of model v0.4.2 near the segment (black resolved, grey marginal, white not resolved). "
-           f"Black lines: plate boundaries (spreading axes of the southern Gorda Ridge, the Gorda-Mendocino stub "
-           f"and the Juan de Fuca Ridge at 46.4-47.7°N picked from the bathymetry, D-B113; PB2002 elsewhere); "
-           f"teeth on the upper plate. Arrows: NNR-MORVEL56 relative plate motions. Relief: GMRT. "
+           f"Black lines: plate boundaries v2 (D-B117): Gorda Ridge on its axial valley, Juan de Fuca Ridge on its "
+           f"bathymetric axis (Endeavour from MAPRIDGES), Blanco and Mendocino transforms as straight segments fitted "
+           f"to the relocated seismicity with their step-overs, Mendocino joined to the PB2002 triple junction by a "
+           f"connector; subduction trace PB2002, teeth on the upper plate" +
+           ("; thin dashed grey: PB2002 ridges and transforms for reference" if cfg.get("plate_axes_reference") else "")
+           + ". Arrows: NNR-MORVEL56 relative plate motions. Relief: GMRT. "
            f"(B) {n_sea} ocean-bottom stations (inverted triangles, colour = first year, {years[0]}-{years[-1]}) "
            f"and {n_land} land stations (open triangles) with picks in the catalog. (C) Depth against longitude for "
            f"the {n_dg:,} depth-good events, same colours; lines: Slab2 at 42, 45 and 48°N. (D) Events per week "

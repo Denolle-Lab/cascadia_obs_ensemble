@@ -661,14 +661,24 @@ code{font-size:.92em}li{margin:.25em 0}
                             f"{r['min']:.3f}-{r['max']:.3f}, threshold {r.threshold:.2f})"
                             for _, r in straddle.iterrows()) + "." if straddle is not None and len(straddle) else
                   " No seed range straddles its threshold.") + "</p>")
+        # deciding probability of a seed-dependent answer: a straddling probability of that group whose share of
+        # seeds at or above its threshold equals the share of one of the answers
+        deciding = []
+        if straddle is not None and MCA is not None:
+            for g, _, _ in seed_var:
+                cnt = set(MCA[MCA.group.eq(g)].n_seeds.astype(int))
+                for _, r in straddle[straddle.group.eq(g)].iterrows():
+                    if int(round(r.share_at_or_above * r.n_seeds)) in cnt:
+                        deciding.append(r)
+        dec_keys = {(r.group, r["item"], r.prob) for r in deciding}
         others = [] if straddle is None else [r for _, r in straddle.iterrows()
-                                               if r.group not in [g for g, _, _ in seed_var]]
-        H.append("<p>" + (f"The other {len(others)} straddling probabilities do not change any registered answer: each "
-                          "sits inside a rule that another predictor or test already decides. " if others else "") +
-                 " ".join(f"Resolving the {gname(r.group)} {r['item']} {r.prob} (seed mean {r['mean']:.3f}, threshold "
-                          f"{r.threshold:.2f}) at 2 SD would take about {r.draws_for_2sd:,.0f} draws per run."
-                          for _, r in (straddle.iterrows() if straddle is not None else [])
-                          if r.group in [g for g, _, _ in seed_var]) +
+                                               if (r.group, r["item"], r.prob) not in dec_keys]
+        H.append("<p>" + (f"The other {len(others)} straddling probabilities do not change any registered answer: another "
+                          "predictor or test of the same rule already decides it. " if others else "") +
+                 " ".join(f"The deciding probability of the {gname(r.group)} answer is {r['item']} {r.prob} (seed "
+                          f"mean {r['mean']:.3f}, SD {r.sd:.3f}, threshold {r.threshold:.2f}, "
+                          f"{100 * r.share_at_or_above:.0f} % of seeds at or above it). Resolving it at 2 SD would "
+                          f"take about {r.draws_for_2sd:,.0f} draws per run." for r in deciding) +
                  " The registered draw count stays 1000.</p>")
     H.append("<h3>5b. Post-registration control L: are our depths too deep?</h3>")
     H.append("<p>Requested by the coordinator after the report, written in RESUME.md at 2026-11-27 13:52:46 PST "

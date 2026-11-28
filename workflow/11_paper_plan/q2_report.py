@@ -160,6 +160,59 @@ def main():
     def need(g):                       # depth bias that would bring the 800 C half-space isotherm within 3 km
         return gv(g, "HSC_800", "bias") - Q.DELTA
 
+    def nu(g, L=None):
+        if L is None:
+            x = AN[AN.group.eq(g)]
+            return int(x.iloc[0].n_units) if len(x) else 0
+        v = gv(g, L, "n_units")
+        return int(v) if np.isfinite(v) else 0
+
+    def gc(cfg, g, L, c="bias"):
+        t = load("groups", cfg)
+        if t is None:
+            return np.nan
+        x = t[t.group.eq(g) & t.level.eq(L)]
+        if not len(x) or pd.isna(x.iloc[0][c]):
+            return np.nan
+        v = x.iloc[0][c]
+        return v if isinstance(v, str) else float(v)
+
+    def segu(k):
+        return U[U.grouping.eq("seg") & U.key.eq(k)]
+
+    def rng_s(v, f="{:.0f}"):
+        v = pd.Series(v).dropna()
+        return (f.format(v.min()) + "-" + f.format(v.max())) if len(v) else "n/a"
+
+    CTRL = {"sigz2": "sig_z &lt;= 2 km", "nosig": "no sig_z cut", "v60": "catalog v6.0",
+            "geom": "station within one focal depth", "notomo": "events not in the tomography"}
+
+    def ht_fail(g):
+        out = []
+        for c in CTRL:
+            t = load("answers", c)
+            if t is None or g not in set(t.group):
+                continue
+            if not bool(t.set_index("group").loc[g, "T_falsified"]):
+                out.append(c)
+        return out
+
+    def ht_detail(g, c):
+        return f"{gc(c, g, 'HSC_800'):+.1f} km, {gc(c, g, 'HSC_800', 'abs_cat')}"
+
+    def ht_ctrl_text(g):
+        f = ht_fail(g)
+        if not f:
+            return "holds under every registered control"
+        return ("holds under the registered controls except " +
+                "; ".join(f"{CTRL[c]} (800 C half-space isotherm {ht_detail(g, c)})" for c in f))
+
+    def nf6(g):
+        k = sum(G[G.group.eq(g) & G.level.eq(L)].abs_cat.iloc[0] == "falsified" for L in A.ISO_KEYS)
+        return "all" if k == 6 else str(k)
+
+    nf6_tr = nf6("transform")
+
     def bias_s(g, L):
         return f"{gv(g, L, 'bias'):+.1f} km (95 % {gv(g, L, 'bias_lo95'):+.1f} to {gv(g, L, 'bias_hi95'):+.1f})"
 
@@ -215,13 +268,15 @@ code{font-size:.92em}li{margin:.25em 0}
     # ---------------------------------------------------------------- summary
     H.append("<h2>Summary</h2><div class='box'><ul>")
     H.append(f"<li>In the young oceanic plates (Gorda plate, Blanco and Mendocino transforms, triple junction), the "
-             f"base of seismicity (D90) lies 5 to 18 km below the 600 C isotherm of conductive cooling models of "
-             f"their plate age. In the segment-independent oceanic frame (26 bins of 0.5 deg: every bin west of the "
+             f"base of seismicity (D90) lies {min(gv(g, 'HSC_600', 'bias') for g in ('seg:BL', 'seg:MFZ', 'intraplate', 'triple junction')):.0f} to "
+             f"{max(gv(g, 'HSC_600', 'bias') for g in ('seg:BL', 'seg:MFZ', 'intraplate', 'triple junction')):.0f} km below the 600 C isotherm of conductive cooling models of "
+             f"their plate age. In the segment-independent oceanic frame ({nu('frame:oceanic')} bins of 0.5 deg: every bin west of the "
              f"trench, ridges included), the bias against the six "
              f"isotherms (350, 600, 800 C; half-space and GDH1) is {', '.join(six)} km. The cooling models put the "
              f"base at about {ts('frame:oceanic', 'HSC'):.0f} C (half-space) or {ts('frame:oceanic', 'GDH1'):.0f} C "
-             f"(GDH1). This rejection holds under every registered control and with the external-data isotherms, "
-             f"but not under every literature depth offset (next point).</li>")
+             f"(GDH1). In the oceanic frame this rejection {ht_ctrl_text('frame:oceanic')}. In the Gorda plate "
+             f"interior it {ht_ctrl_text('intraplate')}; in the MFZ it {ht_ctrl_text('seg:MFZ')}. It also holds "
+             f"with the external-data isotherms, but not under every literature depth offset (next point).</li>")
     H.append(f"<li><b>Our depths run deep against local OBS catalogs, and the headline survives only in a narrower "
              f"form</b> (post-registration control L).<ul>"
              f"<li>Median paired offsets (Blanco segments; +3.17 km elsewhere): the oceanic frame still rejects all "
@@ -241,7 +296,7 @@ code{font-size:.92em}li{margin:.25em 0}
              f"only if our depths were {need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. No paired OBS "
              f"catalog tests that there.</li></ul></li>")
     H.append(f"<li>In the same plates the base lies {gv('frame:oceanic', 'V7.5', 'bias'):.1f} km below the 7.5 km/s "
-             f"level of v0.4.2 (19 bins). In the 6 bins where the 8.0 km/s level is resolved, the base is "
+             f"level of v0.4.2 ({nu('frame:oceanic', 'V7.5')} bins). In the {nu('frame:oceanic', 'V8.0')} bins where the 8.0 km/s level is resolved, the base is "
              f"{-gv('frame:oceanic', 'V8.0', 'bias'):.1f} km above it (within 3 km in "
              f"{100 * gv('frame:oceanic', 'V8.0', 'P_sit'):.0f} % of draws). The base therefore lies between the two "
              f"levels. Deeper bases go with deeper "
@@ -262,12 +317,12 @@ code{font-size:.92em}li{margin:.25em 0}
              f"Both are consistent with a limit near 600-700 C. Neither the isotherm nor the 7.5 km/s level passes "
              f"every registered test of the down-dip trend. The Gorda-slab correlation with the 7.5 km/s level "
              f"(rho {circ('Gorda slab (GS)', 'rho_real'):.2f}) fails the block-bootstrap test (C5b; 90 % lower "
-             f"bound {circ('Gorda slab (GS)', 'rho_real_lo90'):.2f} from 4 blocks). Against the null-truth members "
+             f"bound {circ('Gorda slab (GS)', 'rho_real_lo90'):.2f} from {int(circ('Gorda slab (GS)', 'n_blocks'))} blocks). Against the null-truth members "
              f"(C5c, {n_null} of 20) it {gs_c5c}.</li>")
     H.append("<li>Ridges are not answered:"
              "<ul><li>Axial depths carry the SSST bias.</li>"
              "<li>The cooling models do not describe the axial magma system.</li>"
-             "<li>Gorda Ridge depths (D90 10-28 km below the seafloor at near-zero age) are not trusted.</li>"
+             f"<li>Gorda Ridge depths (D90 {rng_s(segu('GR').D_bsf)} km below the seafloor at near-zero age) are not trusted.</li>"
              "<li>No ridge bin has a resolved velocity level.</li></ul></li>")
     H.append("<li>Answer to Q2 for the paper:<ul>"
              "<li>At Blanco, with independent OBS depths, the base is consistent with a 600-800 C limit.</li>"
@@ -333,9 +388,8 @@ code{font-size:.92em}li{margin:.25em 0}
              "triple junction had their incoming age sampled where the age grid mixes the Gorda and Pacific sides "
              "(12.8 Myr). It is now sampled 0.2 deg north of the junction (Gorda plate, 4.9 Myr).</li>"
              "<li>(3) Where one transform probe falls on land, the other side is used for both.</li>"
-             "<li>(4) D-B113 axes: the segment join uses the rebuilt v6.1 segment table "
-             f"(md5 {meta['main']['segments_md5'][:8]}, written {meta['main']['segments_mtime']}). "
-             "It moves 1,046 GP events to GR and 228 JP events to JR. This is an input, not a test choice.</li>"
+             "<li>(4) D-B113 axes (first run, 13:23 segment table md5 76542c2e): moved 1,046 GP events to GR and "
+             "228 JP events to JR. This was an input, not a test choice.</li>"
              "<li>(5) Labelled variants from the D-B114 external-data job, added after the registration and "
              "never primary:<ul><li>its half-space isotherms (Tm 1300 C, epicentral age);</li>"
              "<li>a warm-top slab variant using the van Keken &amp; Wilson (2023) D80 slab-surface temperature;</li>"
@@ -343,12 +397,21 @@ code{font-size:.92em}li{margin:.25em 0}
              "The registered outputs were checked identical before and after adding them.</li>"
              "<li>(6) Reading of C5b: the block-bootstrap lower bound &gt; 0 is required in every case, with a "
              "correction of zero when not flagged. This is the stricter of the two readings of the registered "
-             "sentence.</li></ul></p>")
+             "sentence.</li>"
+             "<li>(7) D-B117, plate boundaries v2 (PI 19:09 PST; analysis/plate-boundaries 0904802e): the segment "
+             f"join now uses the v2 segment table (md5 {meta['main']['segments_md5'][:8]}, written "
+             f"{meta['main']['segments_mtime']}). Recomputing the segments with PB_AXES=v2 reproduces it exactly. "
+             "Against the D-B113 table it moves 727 tier A-C events (GR to MFZ 344, GP to MFZ 186, JP to JR 74, "
+             "GP to GR 67, JR to JP 35, others below 11). The Mendocino and Blanco transform traces used for the "
+             "two-sided ages are the v2 traces. Everything was rerun with the same rules (section 5c compares the "
+             "runs). This is an input, not a test choice.</li>"
+             "<li>(8) Control L (literature depth offsets), requested after the first report; rule written before "
+             "it was computed (section 5b).</li></ul></p>")
     # ---------------------------------------------------------------- data
     H.append("<h2>3. Data</h2>")
     dat = pd.DataFrame([
         ("Catalog v6.1", str(Q.CATS["v6.1"]["csv"]), Q.md5(Q.CATS["v6.1"]["csv"])[:8]),
-        ("Segment table v6.1 (D-B113 axes)", meta["main"]["segments"], meta["main"]["segments_md5"][:8]),
+        ("Segment table v6.1 (plate boundaries v2, D-B117)", meta["main"]["segments"], meta["main"]["segments_md5"][:8]),
         ("Catalog v6.0 (C2)", str(Q.CATS["v6.0"]["csv"]), "see run_meta.json"),
         ("Model v0.4.2", str(A.P.MODEL), Q.md5(A.P.MODEL)[:8]),
         ("Ensemble v0.4.2+ens.100 (raw member levels)", "/wd1/mdenolle_data/paper_plan/v6.1/level_depth_members.npz",
@@ -369,7 +432,8 @@ code{font-size:.92em}li{margin:.25em 0}
              f"upper plate (not tested) {int((E.frame == 'upper').sum()):,}. Units (0.5 deg, at least 20 events): "
              f"{int((U.grouping == 'seg').sum())} segment units and {int((U.grouping == 'frame').sum())} frame units. "
              f"Few units for GP ({int(((U.grouping == 'seg') & (U.key == 'GP')).sum())}), JP (0), ridges other "
-             f"than Axial (4, all GR): the depth-reliable set keeps 150 GP events. The 'biased_deep' flag (Gorda, "
+             f"than Axial ({len(segu('GR')) + len(segu('JR')) + len(segu('EN')) + len(segu('EXR'))}, GR {len(segu('GR'))}): "
+             f"the depth-reliable set keeps {int((off.seg == 'GP').sum())} GP events. The 'biased_deep' flag (Gorda, "
              f"nearest station &gt; 15 km) removes most of them.</p>")
     # ---------------------------------------------------------------- results
     H.append("<h2>4. Results</h2>")
@@ -385,32 +449,33 @@ code{font-size:.92em}li{margin:.25em 0}
              f"{MC['shift'].quantile(0.9):.2f} km) relative to the observed D90. That shift is the price of adding "
              f"noise to noisy depths, so the central values are the observed D90.</p>")
     H.append("<p>Fact by fact:<ul>"
-             f"<li><b>Transforms</b> (14 units): the base is {bias_s('transform', 'HSC_600')} below the 600 C "
-             f"half-space isotherm, and every isotherm variant is falsified. The temperature at the base is "
+             f"<li><b>Transforms</b> ({nu('transform')} units): the base is {bias_s('transform', 'HSC_600')} below the 600 C "
+             f"half-space isotherm; {'all six isotherm variants are' if nf6_tr == 'all' else nf6_tr + ' of the six isotherm variants are'} "
+             f"falsified. The temperature at the base is "
              f"{ts('transform', 'HSC'):.0f} C (half-space). Old-side-only variant: "
              f"{gv('transform', 'HSC_600_old', 'bias'):+.1f} km. Blanco alone: "
              f"{gv('seg:BL', 'HSC_600', 'bias'):+.1f} km. MFZ alone: {gv('seg:MFZ', 'HSC_600', 'bias'):+.1f} km.</li>"
-             f"<li><b>Gorda plate interior</b> (3 units): {bias_s('intraplate', 'HSC_600')} below the 600 C "
+             f"<li><b>Gorda plate interior</b> ({nu('intraplate')} units): {bias_s('intraplate', 'HSC_600')} below the 600 C "
              f"isotherm, at {ts('intraplate', 'HSC'):.0f} C.</li>"
-             f"<li><b>Triple junction</b> (5 units): {bias_s('triple junction', 'HSC_600')}, at "
+             f"<li><b>Triple junction</b> ({nu('triple junction')} units): {bias_s('triple junction', 'HSC_600')}, at "
              f"{ts('triple junction', 'HSC'):.0f} C. Neither hypothesis fits: the 7.5 km/s level is "
              f"{gv('triple junction', 'V7.5', 'bias'):+.1f} km off and does not follow.</li>"
-             f"<li><b>Oceanic frame</b> (26 units, segment-independent): {bias_s('frame:oceanic', 'HSC_600')} for "
+             f"<li><b>Oceanic frame</b> ({nu('frame:oceanic')} units, segment-independent): {bias_s('frame:oceanic', 'HSC_600')} for "
              f"600 C; {bias_s('frame:oceanic', 'HSC_800')} for 800 C; {bias_s('frame:oceanic', 'V7.5')} for "
-             f"7.5 km/s (19 units); {bias_s('frame:oceanic', 'V8.0')} for 8.0 km/s (6 units).</li>"
-             f"<li><b>Gorda slab</b> (11 units):<ul>"
+             f"7.5 km/s ({nu('frame:oceanic', 'V7.5')} units); {bias_s('frame:oceanic', 'V8.0')} for 8.0 km/s ({nu('frame:oceanic', 'V8.0')} units).</li>"
+             f"<li><b>Gorda slab</b> ({nu('Gorda slab (GS)')} units):<ul>"
              f"<li>coldest-slab 600 C: {bias_s('Gorda slab (GS)', 'HSC_600')};</li>"
              f"<li>GDH1 600 C: {bias_s('Gorda slab (GS)', 'GDH1_600')};</li>"
              f"<li>warm-top variant (labelled): {gv('Gorda slab (GS)', 'HSC_600_warmtop', 'bias'):+.1f} km;</li>"
-             f"<li>7.5 km/s: {bias_s('Gorda slab (GS)', 'V7.5')} (10 units).</li></ul>"
+             f"<li>7.5 km/s: {bias_s('Gorda slab (GS)', 'V7.5')} ({nu('Gorda slab (GS)', 'V7.5')} units).</li></ul>"
              f"Below the Slab2 top, the base reaches {gs_near.below_top.min():.0f}-{gs_near.below_top.max():.0f} km "
              f"in the bins where the slab is shallower than 13 km, near the deformation front, and "
              f"{gs_far.below_top.min():.0f}-{gs_far.below_top.max():.0f} km where the slab is deeper than 20 km. "
              f"This down-dip pattern is descriptive and was not registered.</li>"
-             f"<li><b>Axial</b> (2 units): the base is within 3 km of all six isotherms (bias "
+             f"<li><b>Axial</b> ({nu('seg:AX')} units): the base is within 3 km of all six isotherms (bias "
              f"{gv('seg:AX', 'HSC_600', 'bias'):+.1f} km for 600 C). The isotherms there are 2-3 km below sea level "
-             f"at ages of 0.04-0.07 Myr, so this is not a test of a thermal limit.</li>"
-             f"<li><b>Gorda Ridge</b> (4 units): D90 10-28 km below the seafloor at near-zero age, "
+             f"at ages of {rng_s(segu('AX').age, '{:.2f}')} Myr, so this is not a test of a thermal limit.</li>"
+             f"<li><b>Gorda Ridge</b> ({nu('seg:GR')} units): D90 {rng_s(segu('GR').D_bsf)} km below the seafloor at near-zero age, "
              f"{gv('seg:GR', 'HSC_600', 'bias'):+.1f} km below 600 C. Not interpreted (see limitations).</li></ul></p>")
     H.append(img("q2_scatter.png", "D90 against predictors"))
     H.append(img("q2_forest.png", "bias per group"))
@@ -447,7 +512,8 @@ code{font-size:.92em}li{margin:.25em 0}
     H.append(img("q2_base_T_V.png", "temperature and Vp at the base"))
     H.append(f"<p>The cooling models put the base at {ts('transform', 'HSC'):.0f} C under the transforms, "
              f"{ts('intraplate', 'HSC'):.0f} C under the Gorda plate and {ts('triple junction', 'HSC'):.0f} C at the "
-             f"triple junction (half-space; GDH1 is 100-150 C hotter). All are outside 350-800 C. In the Gorda slab "
+             f"triple junction (half-space; GDH1 is "
+             f"{rng_s([ts(g, 'GDH1') - ts(g, 'HSC') for g in ('transform', 'intraplate', 'triple junction')])} C hotter). All are outside 350-800 C. In the Gorda slab "
              f"the coldest-slab bound gives {ts('Gorda slab (GS)', 'HSC'):.0f} C, a lower bound on the temperature; "
              f"the warm-top variant gives "
              f"{np.nanmedian(U[U.grouping.eq('seg') & U.key.eq('GS')].Tbase_HSC_warmtop):.0f} C. "
@@ -491,11 +557,15 @@ code{font-size:.92em}li{margin:.25em 0}
              f"station, for the isotherm (rho {C3[(C3.group == 'frame:oceanic') & (C3.level == 'HSC_600')].rho.iloc[0]:.2f}) "
              f"and for the 7.5 km/s level (rho {C3[(C3.group == 'frame:oceanic') & (C3.level == 'V7.5')].rho.iloc[0]:.2f}). "
              f"The Mendocino-Gorda bins are both the deepest and the farthest from stations. Restricting to events "
-             f"with a station within one focal depth (geom) keeps the isotherm bias near 10 km and reduces the "
-             f"7.5 km/s bias to 3.6 km.</li>"
-             f"<li><b>C1, C2</b>: the oceanic-frame answer and the H_T falsification hold for sig_z &lt;= 2 km, "
-             f"without the sig_z cut and on v6.0.</li>"
-             f"<li><b>C5a</b>: without the inverted events (17 oceanic units), the 7.5 km/s bias is 3.7 km and the "
+             f"with a station within one focal depth (geom) gives an isotherm bias of "
+             f"{gc('geom', 'frame:oceanic', 'HSC_600'):+.1f} km (600 C) and a 7.5 km/s bias of "
+             f"{gc('geom', 'frame:oceanic', 'V7.5'):+.1f} km.</li>"
+             f"<li><b>C1, C2</b>: the H_T falsification in the oceanic frame {ht_ctrl_text('frame:oceanic')}. For "
+             f"the MFZ it {ht_ctrl_text('seg:MFZ')}, and for the Gorda plate interior it "
+             f"{ht_ctrl_text('intraplate')}.</li>"
+             f"<li><b>C5a</b>: without the inverted events ({int(gc('notomo', 'frame:oceanic', 'HSC_600', 'n_units'))} oceanic units, "
+             f"{int(gc('notomo', 'frame:oceanic', 'V7.5', 'n_units'))} with a level), the 7.5 km/s bias is "
+             f"{gc('notomo', 'frame:oceanic', 'V7.5'):+.1f} km; shape: {gc('notomo', 'frame:oceanic', 'V7.5', 'shape_cat')}. The "
              f"base still follows the level.</li></ul></p>")
     H.append("<h3>Circularity of the velocity levels (C5b, C5c)</h3>")
     H.append(img("q2_circularity.png", "circularity"))
@@ -505,9 +575,10 @@ code{font-size:.92em}li{margin:.25em 0}
                               "C5c_status"]].copy()
     cc["group"] = cc.group.map(gname)
     H.append(tbl(cc))
-    H.append(f"<p>The synthetic members (truth = v0.4.2 perturbed) recover levels about 0.4-1 km shallower than the "
+    H.append(f"<p>The synthetic members (truth = v0.4.2 perturbed) recover levels "
+             f"{rng_s(-C[C.group.isin(['frame:oceanic', 'transform', 'seg:BL', 'seg:MFZ']) & C.status.eq('ok')].synth_rec_bias_km, '{:.1f}')} km shallower than the "
              f"truth in the oceanic units. In the oceanic frame they increase the D90-level correlation by "
-             f"{circ('frame:oceanic', 'A_median'):.2f} (97 % of members). The correction leaves rho "
+             f"{circ('frame:oceanic', 'A_median'):.2f} ({100 * circ('frame:oceanic', 'A_share_pos'):.0f} % of members positive). The correction leaves rho "
              f"{circ('frame:oceanic', 'rho_corrected'):.2f}, with a 90 % lower bound of "
              f"{circ('frame:oceanic', 'rho_corrected_lo90'):.2f}.</p>"
              f"<p>The null-truth members ({n_null} of 20 merged at the time of this report) give rho "
@@ -527,8 +598,12 @@ code{font-size:.92em}li{margin:.25em 0}
     H.append(tbl(WC))
     H.append("<p>Within the Blanco bins and within the Mendocino-Gorda bins, D90 correlates with each predictor at "
              f"rho {WC[~WC.cluster.str.startswith('oceanic')].rho.min():.2f}-"
-             f"{WC[~WC.cluster.str.startswith('oceanic')].rho.max():.2f} (9-14 units). The oceanic-frame rho of 0.85 for the 7.5 km/s level comes from the "
-             "difference between the two clusters.</p>")
+             f"{WC[~WC.cluster.str.startswith('oceanic')].rho.max():.2f} ({rng_s(WC[~WC.cluster.str.startswith('oceanic')].n_units)} units). "
+             f"For the 7.5 km/s level the within-cluster rho is "
+             f"{' and '.join(f'{v:.2f}' for v in WC[~WC.cluster.str.startswith('oceanic') & WC.level.eq('V7.5')].rho)} "
+             f"(Blanco, Mendocino-Gorda), against "
+             f"{circ('frame:oceanic', 'rho_real'):.2f} for the whole oceanic frame: most of that correlation comes "
+             f"from the difference between the two clusters.</p>")
     # ---------------------------------------------------------------- control L
     H.append("<h3>5b. Post-registration control L: are our depths too deep?</h3>")
     H.append("<p>Requested by the coordinator after the report, written in RESUME.md at 2026-11-27 13:52:46 PST "
@@ -574,8 +649,8 @@ code{font-size:.92em}li{margin:.25em 0}
     H.append("<p class='mut'>Each cell gives the bias of D90 against the 600 C and 800 C half-space isotherms (km; "
              "positive = base deeper) and the registered H_T verdict. The last column is the extra depth bias that "
              "would bring the 800 C isotherm within the 3 km tolerance: main bias minus 3 km.</p>")
-    H.append("<p><b>Verdict.</b> The headline 'D90 8-14 km below all conductive isotherms' does not survive as "
-             "stated.<ul>"
+    H.append(f"<p><b>Verdict.</b> The headline 'D90 {min(float(x) for x in six):.0f}-{max(float(x) for x in six):.0f} km "
+             f"below all conductive isotherms' does not survive as stated.<ul>"
              f"<li><b>Velocity levels move too</b>: with the median offsets the oceanic-frame base sits at the "
              f"7.5 km/s level ({gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km, was "
              f"{gv('frame:oceanic', 'V7.5', 'bias'):+.1f}). So 'about 5 km below 7.5 km/s' also depends on the depth "
@@ -591,26 +666,105 @@ code{font-size:.92em}li{margin:.25em 0}
              f"<li><b>What can be stated</b>: in the Gorda plate interior and the MFZ the seismicity base lies "
              f"{gv('intraplate', 'HSC_800', 'bias'):.0f}-{gv('seg:MFZ', 'HSC_800', 'bias'):.0f} km below the 800 C "
              f"isotherm. A temperature limit of at most 800 C would need our depths there to be "
-             f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. That is about three times the Blanco "
-             f"median offset, but comparable to the one paired value nearby (Gorda Depression).</li></ul></p>")
+             f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep. That is "
+             f"{need('intraplate') / 3.17:.0f}-{need('seg:MFZ') / 3.17:.0f} times the Blanco median offset "
+             f"(3.2 km), and of the size of the one paired value nearby (Gorda Depression, 9.6 km).</li></ul></p>")
+    ctrl_names = CTRL
+    oc_ctrl_sentence = f"This {ht_ctrl_text('frame:oceanic')}; the external-data isotherms (Tm 1300 C) give the same."
+    tr8 = [c for c in ctrl_names if gc(c, "transform", "HSC_800", "abs_cat") != "falsified"]
+    tr6 = [c for c in ctrl_names if gc(c, "transform", "HSC_600", "abs_cat") != "falsified"]
+    tr_ctrl_sentence = ("For the transforms alone, the 800 C isotherm is " +
+                        ("rejected in every control" if not tr8 else "not rejected with " + " or with ".join(CTRL[c] for c in tr8))
+                        + "; the 600 C isotherm is " + ("rejected in every control." if not tr6 else
+                                                         "not rejected with " + " or with ".join(CTRL[c] for c in tr6) + "."))
+    # ---------------------------------------------------------------- 5c: boundaries v2 against the D-B113 run
+    OLD = Q.BIG / "run_DB113_axes_v1"
+    if OLD.exists():
+        oa = pd.read_csv(OLD / "answers_main.csv").set_index("group")
+        og = pd.read_csv(OLD / "groups_main.csv")
+        ol = {c: pd.read_csv(OLD / f"answers_{c}.csv").set_index("group") for c in ("lit_med", "lit_p90", "lange")
+              if (OLD / f"answers_{c}.csv").exists()}
+        oc = pd.read_csv(OLD / "circularity_levels.csv")
+
+        def ogv(g, L, c="bias"):
+            x = og[og.group.eq(g) & og.level.eq(L)]
+            return float(x.iloc[0][c]) if len(x) and pd.notna(x.iloc[0][c]) else np.nan
+        crow = []
+        for g in ["frame:oceanic", "frame:slab", "transform", "seg:BL", "seg:MFZ", "intraplate", "triple junction",
+                  "Gorda slab (GS)", "ridge (no AX)"]:
+            na = AN.set_index("group")
+            r = dict(group=gname(g),
+                     units=f"{int(oa.loc[g, 'n_units']) if g in oa.index else 0} -> {nu(g)}",
+                     answer=(f"{oa.loc[g, 'answer'] if g in oa.index else '-'} -> {na.loc[g, 'answer'] if g in na.index else '-'}"),
+                     H_T_falsified=(f"{bool(oa.loc[g, 'T_falsified']) if g in oa.index else '-'} -> "
+                                    f"{bool(na.loc[g, 'T_falsified']) if g in na.index else '-'}"),
+                     bias_600=f"{ogv(g, 'HSC_600'):+.1f} -> {gv(g, 'HSC_600', 'bias'):+.1f}",
+                     bias_800=f"{ogv(g, 'HSC_800'):+.1f} -> {gv(g, 'HSC_800', 'bias'):+.1f}",
+                     bias_7p5=f"{ogv(g, 'V7.5'):+.1f} -> {gv(g, 'V7.5', 'bias'):+.1f}")
+            for c in ("lit_med", "lit_p90"):
+                t = AL.get(c)
+                new = bool(t.set_index("group").loc[g, "T_falsified"]) if t is not None and g in set(t.group) else "-"
+                old = bool(ol[c].loc[g, "T_falsified"]) if c in ol and g in ol[c].index else "-"
+                r[f"H_T_falsified_{c}"] = f"{old} -> {new}"
+            crow.append(r)
+        v2cmp = pd.DataFrame(crow)
+        v2cmp.to_csv(Q.OUT / "boundaries_v2_vs_DB113.csv", index=False)
+        changed = v2cmp[[a.split(" -> ")[0] != a.split(" -> ")[1] for a in v2cmp.answer]]
+        tf_changed = v2cmp[[a.split(" -> ")[0] != a.split(" -> ")[1] for a in v2cmp.H_T_falsified]]
+
+        def ocirc(g):
+            x = oc[oc.group.eq(g) & oc.level.eq("V7.5") & oc.status.eq("ok")]
+            return x.iloc[0] if len(x) else None
+        v2_note = dict(tab=v2cmp, changed=changed, tf_changed=tf_changed, ocirc=ocirc)
+    else:
+        v2_note = None
+    if v2_note is not None:
+        H.append("<h3>5c. Plate boundaries v2 (D-B117) against the D-B113 run</h3>")
+        H.append("<p>Everything above uses the adopted plate boundaries v2. The first report used the D-B113 axes. "
+                 "The rules, configurations and controls are the same. Each cell reads 'D-B113 run -> v2 run' (main "
+                 "configuration; biases in km against the half-space isotherms and the 7.5 km/s level; H_T verdict "
+                 "of the registered rule, also under the median and p90 literature offsets).</p>")
+        H.append(tbl(v2_note["tab"]))
+        ch = v2_note["changed"]
+        why = []
+        for _, r in ch.iterrows():
+            g = [k for k in KEY_GROUPS if gname(k) == r.group]
+            if not g:
+                continue
+            g = g[0]
+            diffs = []
+            for L in A.ISO_KEYS + A.LEV_KEYS:
+                for col, lab in (("abs_cat", "fit"), ("shape_cat", "shape")):
+                    xo = og[og.group.eq(g) & og.level.eq(L)]
+                    xn = G[G.group.eq(g) & G.level.eq(L)]
+                    if len(xo) and len(xn) and str(xo.iloc[0][col]) != str(xn.iloc[0][col]):
+                        pc = "P_sit" if col == "abs_cat" else "P_skill_pos"
+                        diffs.append(f"{L} {lab} {xo.iloc[0][col]} -> {xn.iloc[0][col]} "
+                                     f"(P {xo.iloc[0][pc]:.3f} -> {xn.iloc[0][pc]:.3f})")
+            why.append(f"{r.group}: " + ("; ".join(diffs) if diffs else "preference probabilities moved"))
+        H.append("<p>Registered answers that changed: " + ("; ".join(f"{r.group}: {r.answer}" for _, r in ch.iterrows())
+                 if len(ch) else "none") + ". Components that moved: " + (" | ".join(why) if why else "none") +
+                 ". Where the unit data did not change (the slab frame does not use the segments), the shift comes "
+                 "from the Monte Carlo draw sequence: one segment unit fewer precedes the frame units, so their "
+                 "draws differ. A probability at the 0.9 threshold can then fall on either side. H_T verdicts that changed (main): " +
+                 ("; ".join(f"{r.group}: {r.H_T_falsified}" for _, r in v2_note["tf_changed"].iterrows())
+                  if len(v2_note["tf_changed"]) else "none") + ".</p>")
     # ---------------------------------------------------------------- claims
     H.append("<h2>6. What the paper can claim, and what it cannot</h2>")
     H.append("<h3>Can claim</h3><ul>"
-             "<li>In the Gorda plate interior and along the Mendocino fault zone (plate ages up to ~5 Myr; the "
-             "Pacific side of the MFZ ~20 Myr), located earthquakes extend "
+             f"<li>In the Gorda plate interior and along the Mendocino fault zone (Gorda plate ages up to "
+             f"~{np.nanmax(segu('GP').age):.0f} Myr; Pacific side of the MFZ {rng_s(segu('MFZ').age_old)} Myr), "
+             "located earthquakes extend "
              f"{gv('intraplate', 'HSC_800', 'bias'):.0f}-{gv('seg:MFZ', 'HSC_800', 'bias'):.0f} km below the 800 C "
              "isotherm of half-space and GDH1 cooling models of their Seton et al. (2020) plate age. Transform ages "
              "are taken on both sides. A 350-800 C conductive limit there needs our depths to be "
              f"{need('intraplate'):.0f}-{need('seg:MFZ'):.0f} km too deep; the median depth offset measured at "
              "Blanco is 3.2 km.<ul>"
-             "<li>In the oceanic frame (26 bins) no isotherm from 350 to 800 C fits the base within 3 km.</li>"
-             "<li>This holds for both depth-quality cuts, catalog v6.0, events with a station within one focal "
-             "depth, events not used in the tomography, and the external-data isotherms (Tm 1300 C). For the "
-             "transforms alone, the 800 C isotherm is not rejected with sig_z &lt;= 2 km or without the inverted "
-             "events; the 600 C isotherm is rejected in every control.</li></ul>"
+             f"<li>In the oceanic frame ({nu('frame:oceanic')} bins) no isotherm from 350 to 800 C fits the base within 3 km.</li>"
+             f"<li>{oc_ctrl_sentence} {tr_ctrl_sentence}</li></ul>"
              "<li>With the median literature offsets the oceanic-frame rejection still holds (control L1).</li>"
              "</ul>"
-             "So, unless those depths are biased by 7 km or more, the depth limit there is not a conductive-cooling "
+             f"So, unless those depths are biased by {min(need('intraplate'), need('seg:MFZ')):.0f} km or more, the depth limit there is not a conductive-cooling "
              "isotherm of the standard brittle range.</li>"
              "<li>At Blanco, Lange's OBS depths put the base within 3 km of the 600-800 C isotherms of the "
              "two-sided transform geotherm (control L2).</li>"
@@ -657,17 +811,18 @@ code{font-size:.92em}li{margin:.25em 0}
              f"{gv('frame:oceanic', 'HSC_600', 'bias'):.0f} km below the 600 C half-space isotherm (median of 26 "
              f"bins; 95 % {gv('frame:oceanic', 'HSC_600', 'bias_lo95'):.0f}-"
              f"{gv('frame:oceanic', 'HSC_600', 'bias_hi95'):.0f} km). The base is at about "
-             f"{ts('frame:oceanic', 'HSC'):.0f} C in the cooling model. No 350-800 C isotherm fits within 3 km "
-             f"under the registered controls.</li>")
+             f"{ts('frame:oceanic', 'HSC'):.0f} C in the cooling model. No 350-800 C isotherm fits within 3 km. "
+             f"This {ht_ctrl_text('frame:oceanic')}; in the Gorda plate interior and the MFZ it "
+             f"{'holds under every registered control' if not ht_fail('intraplate') and not ht_fail('seg:MFZ') else 'does not hold under every control'}.</li>")
     H.append(f"<li>Depth-bias check: removing the median offset against the Blanco OBS catalog (+3.2 km) keeps the "
              f"rejection in the Gorda plate interior and the MFZ: the base is "
              f"{gl('lit_med', 'intraplate', 'HSC_800'):.0f}-{gl('lit_med', 'seg:MFZ', 'HSC_800'):.0f} km below "
              f"800 C. At Blanco, the OBS catalog's own depths put the base at the 600-800 C isotherms of the "
              f"two-sided transform geotherm.</li>")
     H.append(f"<li>Same plates: D90 lies {gv('frame:oceanic', 'V7.5', 'bias'):.0f} km below the 7.5 km/s level "
-             f"(19 bins; {gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km after the median literature offset) and "
+             f"({nu('frame:oceanic', 'V7.5')} bins; {gl('lit_med', 'frame:oceanic', 'V7.5'):+.1f} km after the median literature offset) and "
              f"{-gv('frame:oceanic', 'V8.0', 'bias'):.0f} km above the 8.0 km/s level where that level is resolved "
-             f"(6 bins). Earthquakes reach at least the 7.5 km/s level of the model.</li>")
+             f"({nu('frame:oceanic', 'V8.0')} bins). Earthquakes reach at least the 7.5 km/s level of the model.</li>")
     H.append("<li>The apparent link between the seismicity base and the 7.5 km/s level is limited by three "
              "things: the Blanco versus Mendocino-Gorda contrast, levels resolved only by ray density (not "
              "checkerboard), and residuals that grow with station distance. It is not used as evidence for a "
@@ -688,7 +843,7 @@ code{font-size:.92em}li{margin:.25em 0}
              "axial magma system.</li>"
              "<li>Ridge depths other than Axial are poorly constrained:<ul>"
              "<li>depth_quality is 'unconstrained' for the ridge regions;</li>"
-             "<li>the 251 depth-reliable Gorda Ridge events give D90 10-28 km below the seafloor at near-zero "
+             f"<li>the {int((off.seg == 'GR').sum())} depth-reliable Gorda Ridge events give D90 {rng_s(segu('GR').D_bsf)} km below the seafloor at near-zero "
              "age, which this report does not interpret.</li></ul></li>"
              "<li>Our depths are deeper than local OBS catalogs: +3.17 km median (tier A-B) at Blanco against Lange "
              "et al. (2026), +9.6 km at the Gorda Depression (23 events), +0.85 km at Mount St Helens. There is no "
@@ -706,7 +861,9 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>the incoming geotherm is hung below Slab2 with a 0 C top (coldest slab);</li>"
              "<li>the warm-top variant uses the slab-surface temperature of the 2-D North and Central Cascadia "
              "models, not their interior temperatures.</li></ul></li>"
-             "<li>Small samples: 3 Gorda-plate units, 5 triple-junction units and 4 Gorda-slab 1-degree blocks. "
+             f"<li>Small samples: {nu('intraplate')} Gorda-plate units, {nu('seg:MFZ')} MFZ units, "
+             f"{nu('triple junction')} triple-junction units and {int(circ('Gorda slab (GS)', 'n_blocks'))} "
+             f"Gorda-slab 1-degree blocks. "
              "The 0.5 deg units are still not independent at a 40 km resolution.</li>"
              "<li>The depth Monte Carlo adds noise to depths that already contain it, which shifts the D90 draws "
              "about 0.4 km deeper. The intervals are therefore slightly wide on the deep side.</li></ul>")

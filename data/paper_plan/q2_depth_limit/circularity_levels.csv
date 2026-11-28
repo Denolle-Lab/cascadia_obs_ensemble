@@ -1,51 +1,51 @@
 group,level,n_units,n_synth,n_null,status,rho_real,rho_real_lo90,n_blocks,rho_truth,A_median,A_share_pos,A_p95,synth_rec_bias_km,C5b_flag,rho_corrected,rho_corrected_lo90,C5b_pass,rho_null_median,rho_null_p95,n_null_valid,rho_null_truth,C5c_pass,C5c_status
-ridge,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-ridge,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-ridge (no AX),V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-ridge (no AX),V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-transform,V7.5,14,100,15,ok,0.8229,0.5531,8,0.542,0.1293,0.79,0.3433,-0.6175,False,0.8229,0.5531,True,0.5429,0.7751,15,0.5222,True,final
-transform,V8.0,4,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-intraplate,V7.5,2,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-intraplate,V8.0,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-triple junction,V7.5,5,100,15,ok,-0.6,-0.8,2,-0.7,0.2,0.63,0.5,-0.0419,False,-0.6,-0.8,False,-0.6,-0.1,15,0.7071,False,final
-triple junction,V8.0,2,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-slab,V7.5,12,100,15,ok,0.6993,0.05556,6,0.4909,0.04279,0.67,0.3008,0.1819,False,0.6993,0.05556,True,-0.1667,0.3598,15,,True,final
-slab,V8.0,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-Gorda slab (GS),V7.5,10,100,15,ok,0.6606,-0.3548,4,0.2619,0.07143,0.72,0.4786,0.1394,False,0.6606,-0.3548,False,0.1333,0.6517,15,,True,final
-Gorda slab (GS),V8.0,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:AX,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:AX,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EN,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EN,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:JR,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:JR,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EXR,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EXR,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:GR,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:GR,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:BL,V7.5,9,100,15,ok,0.41,0.1481,5,0.008368,0.07531,0.62,0.672,-0.487,False,0.41,0.1481,True,-0.0251,0.4703,15,,False,final
-seg:BL,V8.0,4,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:MFZ,V7.5,5,100,15,ok,0.5,-0.6667,3,1,-0.6,0,0,-1.004,False,0.5,-0.6667,False,0.05,0.695,8,,False,provisional (8 of >= 15 members)
-seg:MFZ,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:SOV,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:SOV,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:GP,V7.5,2,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:GP,V8.0,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:JP,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:JP,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EXP,V7.5,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:EXP,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:MTJ,V7.5,5,100,15,ok,-0.6,-0.8,2,-0.7,0.2,0.63,0.5,-0.0419,False,-0.6,-0.8,False,-0.6,-0.1,15,0.7071,False,final
-seg:MTJ,V8.0,2,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:GS,V7.5,10,100,15,ok,0.6606,-0.3548,4,0.2619,0.07143,0.72,0.4786,0.1394,False,0.6606,-0.3548,False,0.1333,0.6517,15,,True,final
-seg:GS,V8.0,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:SIF,V7.5,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:SIF,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:IS,V7.5,1,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-seg:IS,V8.0,0,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-frame:oceanic,V7.5,19,100,15,ok,0.8534,0.6184,9,0.5926,0.1922,0.97,0.3306,-0.4062,True,0.6611,0.4262,True,0.7758,0.8274,15,0.7644,True,final
-frame:oceanic,V8.0,6,100,15,ok,0.2899,-0.6364,6,0.4255,-0.06695,0.1717,0.1512,-0.5602,False,0.2899,-0.6364,False,0.6879,0.9512,15,,False,final
-frame:slab,V7.5,13,100,15,ok,0.6484,0.008357,6,0.5105,-0.1519,0.07,0.009242,0.1079,False,0.6484,0.008357,True,0.1049,0.4882,15,0.2635,True,final
-frame:slab,V8.0,2,100,15,not testable (< 5 units),,,,,,,,,,,,,,,,,,
-frame:oceanic+slab,V7.5,32,100,15,ok,0.8323,0.5876,14,0.7137,0.04041,0.87,0.08852,-0.1314,False,0.8323,0.5876,True,0.7679,0.8101,15,0.8308,True,final
-frame:oceanic+slab,V8.0,8,100,15,ok,0.3473,-0.6,6,0.4928,-0.01062,0.4,0.1405,-0.08484,False,0.3473,-0.6,False,0.5695,0.8632,15,,False,final
+ridge,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+ridge,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+ridge (no AX),V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+ridge (no AX),V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+transform,V7.5,14,100,20,ok,0.8229,0.5531,8,0.542,0.1293,0.79,0.3433,-0.6175,False,0.8229,0.5531,True,0.5884,0.7392,20,0.5222,True,final
+transform,V8.0,4,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+intraplate,V7.5,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+intraplate,V8.0,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+triple junction,V7.5,5,100,20,ok,-0.6,-0.8,2,-0.7,0.2,0.63,0.5,-0.0419,False,-0.6,-0.8,False,-0.6,-0.1,20,0.7071,False,final
+triple junction,V8.0,2,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+slab,V7.5,12,100,20,ok,0.6993,0.05556,6,0.4909,0.04279,0.67,0.3008,0.1819,False,0.6993,0.05556,True,0.03995,0.4986,20,,True,final
+slab,V8.0,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+Gorda slab (GS),V7.5,10,100,20,ok,0.6606,-0.3548,4,0.2619,0.07143,0.72,0.4786,0.1394,False,0.6606,-0.3548,False,0.1998,0.5783,20,,True,final
+Gorda slab (GS),V8.0,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:AX,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:AX,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EN,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EN,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:JR,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:JR,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EXR,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EXR,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:GR,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:GR,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:BL,V7.5,9,100,20,ok,0.41,0.1481,5,0.008368,0.07531,0.62,0.672,-0.487,False,0.41,0.1481,True,0,0.4837,20,,False,final
+seg:BL,V8.0,4,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:MFZ,V7.5,5,100,20,ok,0.5,-0.6667,3,1,-0.6,0,0,-1.004,False,0.5,-0.6667,False,-0.2,0.68,9,,False,provisional (9 of >= 15 members)
+seg:MFZ,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:SOV,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:SOV,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:GP,V7.5,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:GP,V8.0,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:JP,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:JP,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EXP,V7.5,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:EXP,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:MTJ,V7.5,5,100,20,ok,-0.6,-0.8,2,-0.7,0.2,0.63,0.5,-0.0419,False,-0.6,-0.8,False,-0.6,-0.1,20,0.7071,False,final
+seg:MTJ,V8.0,2,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:GS,V7.5,10,100,20,ok,0.6606,-0.3548,4,0.2619,0.07143,0.72,0.4786,0.1394,False,0.6606,-0.3548,False,0.1998,0.5783,20,,True,final
+seg:GS,V8.0,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:SIF,V7.5,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:SIF,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:IS,V7.5,1,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+seg:IS,V8.0,0,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+frame:oceanic,V7.5,19,100,20,ok,0.8534,0.6184,9,0.5926,0.1922,0.97,0.3306,-0.4062,True,0.6611,0.4262,True,0.7772,0.8426,20,0.7644,True,final
+frame:oceanic,V8.0,6,100,20,ok,0.2899,-0.6364,6,0.4255,-0.06695,0.1717,0.1512,-0.5602,False,0.2899,-0.6364,False,0.6773,0.9465,20,,False,final
+frame:slab,V7.5,13,100,20,ok,0.6484,0.008357,6,0.5105,-0.1519,0.07,0.009242,0.1079,False,0.6484,0.008357,True,0.1274,0.4703,20,0.2635,True,final
+frame:slab,V8.0,2,100,20,not testable (< 5 units),,,,,,,,,,,,,,,,,,
+frame:oceanic+slab,V7.5,32,100,20,ok,0.8323,0.5876,14,0.7137,0.04041,0.87,0.08852,-0.1314,False,0.8323,0.5876,True,0.77,0.806,20,0.8308,True,final
+frame:oceanic+slab,V8.0,8,100,20,ok,0.3473,-0.6,6,0.4928,-0.01062,0.4,0.1405,-0.08484,False,0.3473,-0.6,False,0.5502,0.856,20,,False,final

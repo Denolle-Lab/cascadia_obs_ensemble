@@ -1,20 +1,20 @@
 group,n_units_both,primary_P_T,primary_rms_T,primary_rms_C,primary_pref,best_of_family_P_T,best_of_family_rms_T,best_of_family_rms_C,best_of_family_pref,cv_P_T,cv_pref
 ridge,0,,,,,,,,,,
 ridge (no AX),0,,,,,,,,,,
-transform,14,0.397,6.874,6.14,not distinguished,1,3.549,8.937,H_T,0.005,H_C
-intraplate,2,,,,,,,,,,
-triple junction,5,0.93,3.392,4.536,H_T,0.958,0.7631,1.82,H_T,0.384,not distinguished
-slab,12,0,12.2,5.952,H_C,0.5922,0.5684,0.7544,not distinguished,0.008,H_C
-Gorda slab (GS),10,0,11.46,5.515,H_C,0.5922,0.5684,0.7544,not distinguished,0.016,H_C
+transform,14,0.374,6.847,6.14,not distinguished,1,3.699,8.937,H_T,0.004,H_C
+intraplate,1,,,,,,,,,,
+triple junction,5,0.936,3.427,4.541,H_T,0.977,0.7746,1.812,H_T,0.365,not distinguished
+slab,12,0,12.26,5.931,H_C,0.6144,0.5402,0.7173,not distinguished,0.008,H_C
+Gorda slab (GS),10,0,11.49,5.501,H_C,0.6144,0.5402,0.7173,not distinguished,0.018,H_C
 seg:AX,0,,,,,,,,,,
 seg:GR,0,,,,,,,,,,
-seg:BL,9,1,4.646,7.077,H_T,1,3.549,8.937,H_T,0.461,not distinguished
-seg:MFZ,5,0.012,9.639,2.97,H_C,,,,not testable,0.503,not distinguished
-seg:GP,2,,,,,,,,,,
-seg:MTJ,5,0.93,3.392,4.536,H_T,0.958,0.7631,1.82,H_T,0.384,not distinguished
-seg:GS,10,0,11.46,5.515,H_C,0.5922,0.5684,0.7544,not distinguished,0.016,H_C
+seg:BL,9,1,4.67,7.077,H_T,1,3.699,8.937,H_T,0.409,not distinguished
+seg:MFZ,5,0.008,9.644,3.018,H_C,,,,not testable,0.548,not distinguished
+seg:GP,1,,,,,,,,,,
+seg:MTJ,5,0.936,3.427,4.541,H_T,0.977,0.7746,1.812,H_T,0.365,not distinguished
+seg:GS,10,0,11.49,5.501,H_C,0.6144,0.5402,0.7173,not distinguished,0.018,H_C
 seg:SIF,1,,,,,,,,,,
 seg:IS,1,,,,,,,,,,
-frame:oceanic,19,0.024,7.979,6.085,H_C,0.123,8.975,7.549,not distinguished,0,H_C
-frame:slab,13,0,10.75,4.876,H_C,0.921,0.8543,1.897,H_T,0,H_C
-frame:oceanic+slab,32,0,9.159,5.682,H_C,0.105,7.717,6.327,not distinguished,0,H_C
+frame:oceanic,19,0.137,7.172,6.062,not distinguished,0.965,5.459,7.51,H_T,0,H_C
+frame:slab,13,0,10.77,4.889,H_C,0.92,0.8244,1.921,H_T,0,H_C
+frame:oceanic+slab,32,0,8.717,5.697,H_C,0.96,4.897,6.295,H_T,0,H_C

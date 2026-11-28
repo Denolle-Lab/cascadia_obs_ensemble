@@ -1,20 +1,20 @@
 group,n_units_both,primary_P_T,primary_rms_T,primary_rms_C,primary_pref,best_of_family_P_T,best_of_family_rms_T,best_of_family_rms_C,best_of_family_pref,cv_P_T,cv_pref
 ridge,0,,,,,,,,,,
 ridge (no AX),0,,,,,,,,,,
-transform,14,0,13.86,7.961,H_C,0.2036,3.751,2.792,not distinguished,0.017,H_C
-intraplate,2,,,,,,,,,,
-triple junction,5,0.036,10.24,8.461,H_C,0.462,8.12,8.095,not distinguished,0.325,not distinguished
-slab,12,0.963,5.972,7.459,H_T,0.1611,9.715,7.919,not distinguished,0.011,H_C
-Gorda slab (GS),10,0.998,5.274,7.529,H_T,0.1611,9.715,7.919,not distinguished,0.016,H_C
+transform,14,0,13.86,7.971,H_C,0.5081,2.802,2.792,not distinguished,0.013,H_C
+intraplate,1,,,,,,,,,,
+triple junction,5,0.031,10.16,8.454,H_C,0.485,8.09,8.103,not distinguished,0.338,not distinguished
+slab,12,0.971,6.004,7.493,H_T,0.1726,9.758,7.922,not distinguished,0.011,H_C
+Gorda slab (GS),10,0.999,5.315,7.527,H_T,0.1726,9.758,7.922,not distinguished,0.024,H_C
 seg:AX,0,,,,,,,,,,
 seg:GR,0,,,,,,,,,,
-seg:BL,9,0.008,8.195,6.019,H_C,0.2036,3.751,2.792,not distinguished,0.331,not distinguished
-seg:MFZ,5,0,20.95,10.94,H_C,,,,not testable,0.562,not distinguished
-seg:GP,2,,,,,,,,,,
-seg:MTJ,5,0.036,10.24,8.461,H_C,0.462,8.12,8.095,not distinguished,0.325,not distinguished
-seg:GS,10,0.998,5.274,7.529,H_T,0.1611,9.715,7.919,not distinguished,0.016,H_C
+seg:BL,9,0.01,8.112,6.019,H_C,0.5081,2.802,2.792,not distinguished,0.405,not distinguished
+seg:MFZ,5,0,21.04,10.9,H_C,,,,not testable,0.603,not distinguished
+seg:GP,1,,,,,,,,,,
+seg:MTJ,5,0.031,10.16,8.454,H_C,0.485,8.09,8.103,not distinguished,0.338,not distinguished
+seg:GS,10,0.999,5.315,7.527,H_T,0.1726,9.758,7.922,not distinguished,0.024,H_C
 seg:SIF,1,,,,,,,,,,
 seg:IS,1,,,,,,,,,,
-frame:oceanic,19,0,15.85,7.313,H_C,0,13.85,4.359,H_C,0,H_C
-frame:slab,13,0.997,6.478,8.284,H_T,0.45,8.759,8.653,not distinguished,0,H_C
-frame:oceanic+slab,32,0,13.1,7.769,H_C,0.004,12.63,7.135,H_C,0,H_C
+frame:oceanic,19,0,14.68,7.308,H_C,0.146,6.434,4.38,not distinguished,0,H_C
+frame:slab,13,0.993,6.527,8.256,H_T,0.437,8.838,8.647,not distinguished,0,H_C
+frame:oceanic+slab,32,0,12.23,7.769,H_C,0.511,7.224,7.169,not distinguished,0,H_C

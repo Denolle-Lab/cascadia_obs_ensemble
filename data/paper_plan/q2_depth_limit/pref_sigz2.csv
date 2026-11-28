@@ -1,20 +1,20 @@
 group,n_units_both,primary_P_T,primary_rms_T,primary_rms_C,primary_pref,best_of_family_P_T,best_of_family_rms_T,best_of_family_rms_C,best_of_family_pref,cv_P_T,cv_pref
 ridge,0,,,,,,,,,,
 ridge (no AX),0,,,,,,,,,,
-transform,11,0,8.773,4.592,H_C,0.3742,2.415,1.901,not distinguished,0.057,H_C
+transform,11,0,8.798,4.606,H_C,0.7364,1.661,1.901,not distinguished,0.056,H_C
 intraplate,0,,,,,,,,,,
-triple junction,5,0.043,8.907,7.271,H_C,0.495,6.688,6.767,not distinguished,0.407,not distinguished
-slab,12,0.569,5.637,5.788,not distinguished,0.2082,6.696,5.089,not distinguished,0.007,H_C
+triple junction,5,0.052,8.876,7.265,H_C,0.498,6.677,6.736,not distinguished,0.422,not distinguished
+slab,12,0.573,5.656,5.766,not distinguished,0.2082,6.696,5.089,not distinguished,0.004,H_C
 Gorda slab (GS),10,0.601,5.246,5.435,not distinguished,0.2082,6.696,5.089,not distinguished,0.011,H_C
 seg:AX,0,,,,,,,,,,
 seg:GR,0,,,,,,,,,,
-seg:BL,8,0.056,6.225,4.513,H_C,0.3742,2.415,1.901,not distinguished,0.519,not distinguished
-seg:MFZ,3,0,13.37,4.51,H_C,,,,not testable,0.586,not distinguished
+seg:BL,8,0.067,6.157,4.513,H_C,0.7364,1.661,1.901,not distinguished,0.573,not distinguished
+seg:MFZ,3,0,13.5,4.484,H_C,,,,not testable,0.535,not distinguished
 seg:GP,0,,,,,,,,,,
-seg:MTJ,5,0.043,8.907,7.271,H_C,0.495,6.688,6.767,not distinguished,0.407,not distinguished
+seg:MTJ,5,0.052,8.876,7.265,H_C,0.498,6.677,6.736,not distinguished,0.422,not distinguished
 seg:GS,10,0.601,5.246,5.435,not distinguished,0.2082,6.696,5.089,not distinguished,0.011,H_C
 seg:SIF,1,,,,,,,,,,
 seg:IS,1,,,,,,,,,,
-frame:oceanic,12,0,9.636,4.725,H_C,0.039,6.82,3.46,H_C,0.025,H_C
-frame:slab,14,0.971,5.92,7.255,H_T,0.539,6.926,7.129,not distinguished,0,H_C
-frame:oceanic+slab,26,0.002,7.969,6.158,H_C,0.416,6.856,6.536,not distinguished,0,H_C
+frame:oceanic,12,0,8.561,4.738,H_C,0.959,1.818,3.474,H_T,0.109,not distinguished
+frame:slab,14,0.972,5.909,7.255,H_T,0.549,6.908,7.137,not distinguished,0,H_C
+frame:oceanic+slab,26,0.021,7.339,6.159,H_C,0.943,4.522,6.544,H_T,0,H_C

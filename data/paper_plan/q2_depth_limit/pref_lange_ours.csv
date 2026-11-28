@@ -1,5 +1,5 @@
 group,n_units_both,primary_P_T,primary_rms_T,primary_rms_C,primary_pref,best_of_family_P_T,best_of_family_rms_T,best_of_family_rms_C,best_of_family_pref,cv_P_T,cv_pref
-transform,8,0.031,6.939,5.069,H_C,0.2135,3.121,2.383,not distinguished,0.382,not distinguished
-seg:BL,8,0.031,6.939,5.069,H_C,0.2135,3.121,2.383,not distinguished,0.382,not distinguished
-frame:oceanic,8,0.028,6.926,5.061,H_C,0.2185,3.115,2.374,not distinguished,0.384,not distinguished
-frame:oceanic+slab,8,0.028,6.926,5.061,H_C,0.2185,3.115,2.374,not distinguished,0.384,not distinguished
+transform,8,0.038,6.869,5.069,H_C,0.5257,2.274,2.383,not distinguished,0.488,not distinguished
+seg:BL,8,0.038,6.869,5.069,H_C,0.5257,2.274,2.383,not distinguished,0.488,not distinguished
+frame:oceanic,8,0.034,6.846,5.061,H_C,0.5086,2.286,2.374,not distinguished,0.492,not distinguished
+frame:oceanic+slab,8,0.034,6.846,5.061,H_C,0.5086,2.286,2.374,not distinguished,0.492,not distinguished

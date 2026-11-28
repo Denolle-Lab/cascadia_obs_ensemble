@@ -1,0 +1,10 @@
+group,units,answer,H_T_falsified,bias_600,bias_800,bias_7p5,H_T_falsified_lit_med,H_T_falsified_lit_p90
+frame: oceanic,26 -> 26,composition-limited -> composition-limited,True -> True,+10.8 -> +9.5,+8.1 -> +7.4,+4.9 -> +4.9,True -> True,False -> False
+frame: slab,31 -> 31,"both consistent -> H_T supported, not preferred",False -> False,-2.5 -> -2.5,-6.7 -> -6.7,+5.7 -> +5.7,False -> False,True -> True
+transform,14 -> 14,composition-limited -> composition-limited,True -> True,+7.5 -> +7.8,+4.9 -> +5.3,+5.4 -> +5.4,False -> False,False -> False
+segment BL,9 -> 9,composition-limited -> composition-limited,False -> False,+5.4 -> +5.3,+2.7 -> +2.5,+2.5 -> +2.5,False -> False,False -> False
+segment MFZ,5 -> 5,neither -> neither,True -> True,+17.7 -> +17.8,+11.8 -> +12.2,+7.9 -> +7.9,True -> True,False -> False
+intraplate,3 -> 2,composition-limited -> composition-limited,True -> True,+13.7 -> +12.6,+9.9 -> +9.0,+1.8 -> +1.3,True -> True,False -> False
+triple junction,5 -> 5,neither -> neither,True -> True,+10.3 -> +10.3,+3.7 -> +3.7,+5.5 -> +5.5,True -> True,True -> True
+Gorda slab (GS),11 -> 11,composition-limited -> composition-limited,True -> True,-2.5 -> -2.5,-6.7 -> -6.7,+5.0 -> +5.0,True -> True,True -> True
+ridge (no AX),4 -> 4,H_T not supported; H_C not testable -> H_T not supported; H_C not testable,True -> True,+10.5 -> +10.5,+9.9 -> +9.9,+nan -> +nan,True -> True,False -> False

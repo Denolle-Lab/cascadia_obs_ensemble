@@ -1,20 +1,20 @@
 group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
 ridge,6,6,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),-42.6,-50.99,6.966
 ridge (no AX),4,4,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),568.2,645.7,6.966
-transform,14,14,14,HSC_350;HSC_600;GDH1_350;GDH1_600,,True,True,False,True,True,True,both consistent,335.9,400.8,7.165
-intraplate,3,3,2,HSC_800,,False,False,False,True,False,False,temperature-limited,794.2,928.1,7.392
+transform,14,14,14,HSC_350;HSC_600;GDH1_350;GDH1_600;GDH1_800,,True,True,False,True,True,True,both consistent,354.4,422.3,7.165
+intraplate,2,2,1,HSC_800;GDH1_800,,False,False,False,True,False,False,temperature-limited,739.1,865.9,7.597
 triple junction,5,5,5,HSC_600;GDH1_600;GDH1_800,V8.0,False,False,True,True,True,False,temperature-limited,594.3,702.6,6.953
 slab,25,25,12,,,True,True,True,False,False,True,composition-limited,0,0,6.658
 Gorda slab (GS),11,11,10,,,False,True,True,False,False,True,composition-limited,0,0,6.641
 seg:AX,2,2,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,-1350,-1450,
 seg:GR,4,4,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),568.2,645.7,6.966
-seg:BL,9,9,9,HSC_350;GDH1_350;GDH1_600,,False,False,False,True,True,False,temperature-limited,205.1,245.4,6.3
-seg:MFZ,5,5,5,HSC_800,V7.5,False,False,False,False,False,True,composition-limited,853.8,981.5,7.5
-seg:GP,3,3,2,HSC_800,,False,False,False,True,False,False,temperature-limited,794.2,928.1,7.392
+seg:BL,9,9,9,HSC_350;GDH1_350;GDH1_600,,False,False,False,True,True,False,temperature-limited,207.1,247.7,6.3
+seg:MFZ,5,5,5,HSC_800,V7.5,False,False,False,False,False,True,composition-limited,862.7,994,7.5
+seg:GP,2,2,1,HSC_800;GDH1_800,,False,False,False,True,False,False,temperature-limited,739.1,865.9,7.597
 seg:MTJ,5,5,5,HSC_600;GDH1_600;GDH1_800,V8.0,False,False,True,True,True,False,temperature-limited,594.3,702.6,6.953
 seg:GS,11,11,10,,,False,True,True,False,False,True,composition-limited,0,0,6.641
 seg:SIF,11,11,1,,,True,False,True,False,False,False,"H_T supported, not preferred",0,0,6.698
 seg:IS,3,3,1,HSC_350;GDH1_350,V7.5,False,False,False,False,False,False,both consistent,150.1,179.7,7.512
-frame:oceanic,26,26,19,HSC_600;HSC_800;GDH1_600;GDH1_800,,True,True,False,True,False,True,composition-limited,503.3,597.3,7.065
+frame:oceanic,26,26,19,HSC_600;HSC_800;GDH1_600;GDH1_800,,True,True,False,True,True,True,both consistent,504.1,598.2,7.065
 frame:slab,31,31,13,,V8.0,True,True,True,False,True,True,both consistent,0,0,6.902
-frame:oceanic+slab,57,57,32,GDH1_350,,True,True,False,True,False,True,composition-limited,37.5,44.92,6.95
+frame:oceanic+slab,57,57,32,GDH1_350,,True,True,False,True,True,True,both consistent,31.37,37.58,6.95

@@ -1,39 +1,39 @@
 group,model,n_units,T_med,T_unit_lo95_med,T_unit_hi95_med,T_min,T_max,outside_350_800
-ridge,HSC,6,-42.6,-496.6,1065,-1350,1350,False
-ridge,GDH1,6,-50.99,-584.9,1187,-1450,1450,False
-ridge (no AX),HSC,4,568.2,433.5,1341,-121.2,1350,False
-ridge (no AX),GDH1,4,645.7,483.4,1446,-145,1450,False
-transform,HSC,14,335.9,324,571,-511,976.7,False
-transform,GDH1,14,400.8,386.6,675.6,-604.5,1082,False
-intraplate,HSC,3,794.2,755.7,948.8,651.2,826.9,False
-intraplate,GDH1,3,928.1,885.4,1095,767.7,964,True
-triple junction,HSC,5,594.3,576.8,636.1,303.4,660.7,False
-triple junction,GDH1,5,702.6,682.5,750.5,362.2,778.5,False
+ridge,HSC,6,-42.6,-498.4,1059,-1350,1350,False
+ridge,GDH1,6,-50.99,-587.2,1182,-1450,1450,False
+ridge (no AX),HSC,4,568.2,428.8,1340,-121.2,1350,False
+ridge (no AX),GDH1,4,645.7,478.1,1445,-145,1450,False
+transform,HSC,14,354.4,343.6,583.7,-432.2,1022,False
+transform,GDH1,14,422.3,409.7,688.8,-512,1134,False
+intraplate,HSC,2,739.1,699.8,888.5,651.2,826.9,False
+intraplate,GDH1,2,865.9,821.4,1029,767.7,964,True
+triple junction,HSC,5,594.3,573.3,636.2,303.4,660.7,False
+triple junction,GDH1,5,702.6,678.4,750.6,362.2,778.5,False
 slab,HSC,25,0,0,0,0,891.6,True
 slab,GDH1,25,0,0,0,0,1034,True
 Gorda slab (GS),HSC,11,0,0,0,0,891.6,True
 Gorda slab (GS),GDH1,11,0,0,0,0,1034,True
 seg:AX,HSC,2,-1350,-1350,-1350,-1350,-1350,True
 seg:AX,GDH1,2,-1450,-1450,-1450,-1450,-1450,True
-seg:GR,HSC,4,568.2,433.5,1341,-121.2,1350,False
-seg:GR,GDH1,4,645.7,483.4,1446,-145,1450,False
-seg:BL,HSC,9,205.1,187.7,329.8,-511,686.6,True
-seg:BL,GDH1,9,245.4,224.5,393.5,-604.5,807.8,False
-seg:MFZ,HSC,5,853.8,822.4,911.1,804.7,976.7,True
-seg:MFZ,GDH1,5,981.5,949.3,1042,921.1,1082,True
-seg:GP,HSC,3,794.2,755.7,948.8,651.2,826.9,False
-seg:GP,GDH1,3,928.1,885.4,1095,767.7,964,True
-seg:MTJ,HSC,5,594.3,576.8,636.1,303.4,660.7,False
-seg:MTJ,GDH1,5,702.6,682.5,750.5,362.2,778.5,False
+seg:GR,HSC,4,568.2,428.8,1340,-121.2,1350,False
+seg:GR,GDH1,4,645.7,478.1,1445,-145,1450,False
+seg:BL,HSC,9,207.1,210.1,368.7,-432.2,673.7,False
+seg:BL,GDH1,9,247.7,251.2,439.1,-512,793.1,False
+seg:MFZ,HSC,5,862.7,830.6,920.5,836.5,1022,True
+seg:MFZ,GDH1,5,994,956.5,1053,959,1134,True
+seg:GP,HSC,2,739.1,699.8,888.5,651.2,826.9,False
+seg:GP,GDH1,2,865.9,821.4,1029,767.7,964,True
+seg:MTJ,HSC,5,594.3,573.3,636.2,303.4,660.7,False
+seg:MTJ,GDH1,5,702.6,678.4,750.6,362.2,778.5,False
 seg:GS,HSC,11,0,0,0,0,891.6,True
 seg:GS,GDH1,11,0,0,0,0,1034,True
 seg:SIF,HSC,11,0,0,0,0,0,True
 seg:SIF,GDH1,11,0,0,0,0,0,True
-seg:IS,HSC,3,150.1,0,315.5,29.32,462.1,True
-seg:IS,GDH1,3,179.7,0,376.6,35.13,549.3,False
-frame:oceanic,HSC,25,503.3,501.5,775.9,-1186,1350,False
-frame:oceanic,GDH1,25,597.3,595.2,907.9,-1325,1450,False
-frame:slab,HSC,31,0,0,76.35,0,891.6,True
-frame:slab,GDH1,31,0,0,91.43,0,1034,True
-frame:oceanic+slab,HSC,56,37.5,0,245.8,-1186,1350,True
-frame:oceanic+slab,GDH1,56,44.92,0,293.8,-1325,1450,True
+seg:IS,HSC,3,150.1,10.57,313.2,29.32,462.1,True
+seg:IS,GDH1,3,179.7,12.66,373.9,35.13,549.3,False
+frame:oceanic,HSC,25,504.1,502.4,790.5,-1187,1350,False
+frame:oceanic,GDH1,25,598.2,596.3,911.2,-1325,1450,False
+frame:slab,HSC,31,0,0,70.5,0,891.6,True
+frame:slab,GDH1,31,0,0,84.43,0,1034,True
+frame:oceanic+slab,HSC,56,31.37,0,246.4,-1187,1350,True
+frame:oceanic+slab,GDH1,56,37.58,0,294.6,-1325,1450,True

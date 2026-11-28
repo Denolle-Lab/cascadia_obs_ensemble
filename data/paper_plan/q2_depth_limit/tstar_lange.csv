@@ -1,9 +1,9 @@
 group,model,n_units,T_med,T_unit_lo95_med,T_unit_hi95_med,T_min,T_max,outside_350_800
-transform,HSC,8,680.1,695.8,769.1,486.4,922,False
-transform,GDH1,8,798.4,816,895.5,575.2,1064,True
-seg:BL,HSC,8,680.1,695.8,769.1,486.4,922,False
-seg:BL,GDH1,8,798.4,816,895.5,575.2,1064,True
-frame:oceanic,HSC,8,680.1,697.1,770.2,486.4,922,False
-frame:oceanic,GDH1,8,798.4,817.5,896.7,575.2,1064,True
-frame:oceanic+slab,HSC,8,680.1,697.1,770.2,486.4,922,False
-frame:oceanic+slab,GDH1,8,798.4,817.5,896.7,575.2,1064,True
+transform,HSC,8,700.9,721.1,785.8,475.2,915.3,False
+transform,GDH1,8,816,837.8,907.2,561.9,1052,True
+seg:BL,HSC,8,700.9,721.1,785.8,475.2,915.3,False
+seg:BL,GDH1,8,816,837.8,907.2,561.9,1052,True
+frame:oceanic,HSC,8,700.9,721.6,786.8,475.2,915.3,False
+frame:oceanic,GDH1,8,816,838.2,908.2,561.9,1052,True
+frame:oceanic+slab,HSC,8,700.9,721.6,786.8,475.2,915.3,False
+frame:oceanic+slab,GDH1,8,816,838.2,908.2,561.9,1052,True

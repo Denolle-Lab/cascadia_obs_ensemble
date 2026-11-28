@@ -1,20 +1,20 @@
 group,n_units,n_units_T,n_units_C,T_sits,C_sits,T_follows,C_follows,T_falsified,C_falsified,pref_T,pref_C,answer,Tbase_HSC_median,Tbase_GDH1_median,Vbase_median
 ridge,6,6,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,
 ridge (no AX),4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,
-transform,14,14,0,,,True,False,True,False,False,False,"H_T supported, not preferred",1047,1180,7.724
-intraplate,3,3,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1145,1290,
+transform,14,14,0,,,True,False,True,False,False,False,"H_T supported, not preferred",1064,1194,7.724
+intraplate,2,2,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1140,1286,
 triple junction,5,5,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,873.8,1015,
 slab,25,25,0,HSC_350;GDH1_350;GDH1_600,,True,False,False,False,False,False,H_T supported (H_C not testable),396.9,472.7,
 Gorda slab (GS),11,11,0,HSC_350;HSC_600;GDH1_600,,False,False,True,False,False,False,H_T supported (H_C not testable),470.3,558.9,
 seg:AX,2,2,0,HSC_350;HSC_600;HSC_800;GDH1_350;GDH1_600;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),1026,1174,
 seg:GR,4,4,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1350,1450,
-seg:BL,9,9,0,,,False,False,False,False,False,False,neither,1009,1146,7.724
-seg:MFZ,5,5,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1057,1189,
-seg:GP,3,3,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1145,1290,
+seg:BL,9,9,0,HSC_800,,False,False,False,False,False,False,"H_T supported, not preferred",934.5,1065,7.724
+seg:MFZ,5,5,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1069,1202,
+seg:GP,2,2,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,1140,1286,
 seg:MTJ,5,5,0,,,False,False,True,False,False,False,H_T not supported; H_C not testable,873.8,1015,
 seg:GS,11,11,0,HSC_350;HSC_600;GDH1_600,,False,False,True,False,False,False,H_T supported (H_C not testable),470.3,558.9,
 seg:SIF,11,11,0,HSC_350;GDH1_350,,True,False,False,False,False,False,H_T supported (H_C not testable),249.9,298.6,
 seg:IS,3,3,0,HSC_600;HSC_800;GDH1_800,,False,False,False,False,False,False,H_T supported (H_C not testable),739.3,867.1,
-frame:oceanic,26,26,0,,,True,False,True,False,False,False,"H_T supported, not preferred",1048,1189,7.724
+frame:oceanic,26,26,0,,,True,False,True,False,False,False,"H_T supported, not preferred",1064,1202,7.724
 frame:slab,31,31,0,HSC_350;HSC_600;GDH1_600,,True,False,False,False,False,False,H_T supported (H_C not testable),470.1,558.7,
 frame:oceanic+slab,57,57,0,HSC_600;HSC_800;GDH1_800,,True,False,False,False,False,False,"H_T supported, not preferred",699.4,822.3,7.724

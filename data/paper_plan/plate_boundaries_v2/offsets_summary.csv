@@ -1,0 +1,19 @@
+section,name,span,data,n_bins_S0,seis_minus_pb2002_km,ci95_lo,ci95_hi,seis_minus_bathy_km,proposal_minus_pb2002_median_km,proposal_minus_pb2002_p10_km,proposal_minus_pb2002_p90_km,sign,verdict
+MFZ,Mendocino transform,section,seismicity,29,8.63,8.00,8.85,-0.47,8.15,6.29,10.32,+ north,offset is not location bias
+MFZ,Mendocino transform,segment 0,seismicity,15,9.42,8.90,9.63,3.21,8.68,6.77,10.56,+ north,
+MFZ,Mendocino transform,segment 1,seismicity,14,7.32,7.10,7.71,-1.26,7.22,5.44,8.97,+ north,
+BL,Blanco transform,section,seismicity,39,-5.96,-6.92,-5.86,2.02,-5.46,-11.92,-1.40,+ north,offset is not location bias
+BL,Blanco transform,segment 0,seismicity,0,,,,,-1.40,-1.46,-1.35,+ north,
+BL,Blanco transform,segment 1,seismicity,25,-8.01,-8.40,-7.72,2.64,-8.24,-14.59,-2.03,+ north,
+BL,Blanco transform,segment 2,seismicity,6,-6.35,-7.98,-6.07,-0.16,-5.77,-6.90,-4.64,+ north,
+BL,Blanco transform,segment 3,seismicity,8,-4.48,-5.18,-4.24,0.44,-5.51,-6.59,-4.39,+ north,
+GR,Gorda Ridge,section,bathymetry,26,13.80,9.51,14.29,0.09,5.00,0.25,17.32,+ east,partly
+GR,Gorda Ridge,segment 0,bathymetry,9,18.85,15.41,23.33,0.67,17.34,12.79,21.88,+ east,
+GR,Gorda Ridge,segment 1,bathymetry,8,13.69,11.82,14.37,-0.32,14.95,2.68,15.15,+ east,
+GR,Gorda Ridge,segment 2,bathymetry,6,2.54,1.21,3.63,1.02,0.54,-0.07,1.03,+ east,
+GR,Gorda Ridge,segment 3,bathymetry,3,,,,,4.77,3.66,5.89,+ east,
+JRS,"Juan de Fuca Ridge, Cleft to Axial",section,bathymetry,1,,,,,1.82,-9.20,8.98,+ east,not tested (no seismicity axis)
+JRS,"Juan de Fuca Ridge, Cleft to Axial",segment 0,bathymetry,0,,,,,7.99,6.35,9.63,+ east,
+JRS,"Juan de Fuca Ridge, Cleft to Axial",segment 1,bathymetry,1,,,,,-2.71,-10.06,3.54,+ east,
+JRN,"Juan de Fuca Ridge, Axial to Endeavour",section,seismicity (AX-EN centroids),1,,,,,-16.45,-18.64,8.80,+ east,not tested (no seismicity axis)
+JRN,"Juan de Fuca Ridge, Axial to Endeavour",segment 0,seismicity (AX-EN centroids),1,,,,,-16.45,-18.64,8.80,+ east,

@@ -43,9 +43,17 @@ INFL = {"Vp": 1.50, "Vs": 1.35, "VpVs": 1.00}   # D-B099; Vp/Vs calibrated witho
 SYNTH = Path(_env("PB_SYNTH", WD1 / "tomo_v1/ensemble_v0.4.2/synth"))   # synthetic calibration ensemble (one truth, s000-s099, nf0-nf4)
 PB2002 = ROOT / "data/tectonics/PB2002_steps.json"
 # D-B113: spreading axes and the Mendocino transform re-picked from the bathymetry where PB2002 is offset from the
-# seismicity (pb_axes.py); PB_AXES=pb2002 reproduces the PB2002-only segments of the first v6.0 / v6.1 builds
-AXES = _env("PB_AXES", "gmrt")
-AXES_FILE = Path(_env("PB_AXES_FILE", ROOT / "data/paper_plan/plate_boundaries/plate_axes_v1.csv"))
+# seismicity (pb_axes.py); PB_AXES=pb2002 reproduces the PB2002-only segments of the first v6.0 / v6.1 builds.
+# D-B117 (PI 2026-11-27 19:09 PST): the default is v2, the ADOPTED plate boundaries v2 (pbv2_adopt.py,
+# plate_axes_v2_adopted.csv): straight Gorda Ridge, Mendocino and Blanco segments from the relocated seismicity and the
+# bathymetry (D-B116), the JdF ridge Axial-Endeavour on its bathymetric axis, the PB2002 triple junction kept.
+# PB_AXES=v2proposal = the D-B116 proposal (straight Axial-Endeavour line, triple junction where the Mendocino trace
+# meets the trench); gmrt = axes v1 (D-B113); pb2002 = PB2002 only. The segment rule is the same for every value.
+AXES = _env("PB_AXES", "v2")
+AXES_FILES = {"gmrt": ROOT / "data/paper_plan/plate_boundaries/plate_axes_v1.csv",
+              "v2": ROOT / "data/paper_plan/plate_boundaries_v2/plate_axes_v2_adopted.csv",
+              "v2proposal": ROOT / "data/paper_plan/plate_boundaries_v2/plate_axes_v2_proposal.csv"}
+AXES_FILE = Path(_env("PB_AXES_FILE", AXES_FILES.get(AXES, AXES_FILES["gmrt"])))
 SLAB = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
 OUT = Path(_env("PB_OUT", ROOT / "data/paper_plan/plate_boundaries"))  # small tables (git)
 BIG = Path(_env("PB_BIG", WD1 / "paper_plan"))                          # page, figures, large tables
@@ -91,11 +99,20 @@ LAT_GS = 41.5                        # south of it, east of the trench and outsi
 
 SEGMENT_RULE = [
     f"Located events of catalog {CATLABEL} (any tier), first match wins; distances are horizontal.",
-    ("Traces: " + ("PB2002 (Bird 2003) everywhere." if AXES == "pb2002" else "spreading axes and the Mendocino "
+    ("Traces: " + ("PB2002 (Bird 2003) everywhere." if AXES == "pb2002" else
+                   "plate boundaries v2 adopted (D-B117, pbv2_adopt.py): straight Gorda Ridge, Mendocino and Blanco "
+                   "segments with their step-overs from the relocated seismicity and the bathymetry (D-B116), JdF ridge "
+                   "Cleft-Endeavour on its bathymetric axis, PB2002 north of 48.4 N; subduction trace and triple "
+                   "junction PB2002." if AXES == "v2" else
+                   "proposed boundaries v2 (D-B116 proposal, pbv2_fit.py), triple junction where the Mendocino trace "
+                   "meets the trench; subduction trace PB2002." if AXES == "v2proposal"
+                   else "spreading axes and the Mendocino "
      "transform from pb_axes.py (D-B113: bathymetric axis of the D-B068 merged surface, GMRT where available, where it "
      "fits the seismicity better than PB2002; PB2002 elsewhere); subduction trace and the other transforms PB2002.")),
     "AX: catalog region Axial. BL: catalog region Blanco. EN: catalog region Endeavour.",
-    f"MTJ: within {R_MTJ_KM:.0f} km of the PB2002 triple junction (southern end of the JF\\NA subduction trace).",
+    (f"MTJ: within {R_MTJ_KM:.0f} km of the triple junction (" + ("v2 proposal: where the Mendocino transform meets "
+     "the PB2002 subduction trace" if AXES == "v2proposal" else "PB2002: southern end of the JF\\NA subduction trace")
+     + ")."),
     f"MFZ: within {D_AXIS_KM:.0f} km of the PA-JF transform trace, south of 41 N.",
     f"Ridges: within {D_AXIS_KM:.0f} km of a PA-JF spreading axis: GR south of 43 N, JR 43-48.35 N, "
     "EXR north of 48.35 N.",
@@ -145,8 +162,10 @@ def pb2002(axes=None):
     """Plate-boundary traces in the study area: dict class -> (N, 2) lon/lat points (densified at about 1 km or
     better), plus the trench trace (sorted by latitude) and the triple junction (southern end of the subduction trace).
     axes (default PB_AXES): 'gmrt' replaces the spreading (OSR) and transform (OTF) traces by plate_axes_v1.csv
-    (pb_axes.py, D-B113: bathymetric axes where they fit the seismicity better, PB2002 elsewhere); 'pb2002' keeps
-    PB2002 (Bird 2003) only."""
+    (pb_axes.py, D-B113: bathymetric axes where they fit the seismicity better, PB2002 elsewhere); 'v2' by the
+    adopted boundaries v2 (plate_axes_v2_adopted.csv, D-B117; default); 'v2proposal' by the D-B116 proposal
+    (plate_axes_v2_proposal.csv, whose TJ row moves the triple junction to where the Mendocino trace meets the trench);
+    'pb2002' keeps PB2002 (Bird 2003) only."""
     d = json.loads(PB2002.read_text())
     pts = {"OSR": [], "OTF": [], "SUB": [], "CTF": []}
     for f in d["features"]:
@@ -160,13 +179,18 @@ def pb2002(axes=None):
         xy = np.asarray(f["geometry"]["coordinates"], float)
         pts[key].append(xy)
     pts = {k: np.vstack(v) for k, v in pts.items() if v}
-    if (axes or AXES) != "pb2002" and AXES_FILE.exists():
-        a = pd.read_csv(AXES_FILE)
+    ax = axes or AXES
+    f = AXES_FILE if ax == AXES else AXES_FILES.get(ax)
+    a = None
+    if ax != "pb2002" and f is not None and Path(f).exists():
+        a = pd.read_csv(f)
         for k in ("OSR", "OTF"):
             pts[k] = np.vstack([_densify(g[["lon", "lat"]].values) for _, g in a[a.kind == k].groupby("section",
                                                                                                    sort=False)])
     sub = pts["SUB"][np.argsort(pts["SUB"][:, 1])]
     tj = sub[0].copy()
+    if a is not None and (a.kind == "TJ").any():           # v2: the triple junction where the traces meet
+        tj = a.loc[a.kind == "TJ", ["lon", "lat"]].values[0].astype(float)
     return pts, sub, tj
 
 
@@ -215,7 +239,7 @@ def load_catalog() -> pd.DataFrame:
 
 def assign_segments(c: pd.DataFrame, axes=None) -> pd.DataFrame:
     """Add seg (code), seg_type, d_osr, d_otf, d_tj, trench_lon, slab_km, rel_slab (see SEGMENT_RULE).
-    axes: 'gmrt' or 'pb2002' (default PB_AXES), see pb2002()."""
+    axes: 'v2' (adopted, default), 'v2proposal', 'gmrt' or 'pb2002' (default PB_AXES), see pb2002()."""
     pts, sub, tj = pb2002(axes)
     lon, lat = c.lon.values, c.lat.values
     d_osr = dist_to_trace(lon, lat, pts["OSR"])

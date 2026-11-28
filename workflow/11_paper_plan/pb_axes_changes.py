@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Changed metrics from the D-B113 axes: the v6.1 tables built with PB2002 only (<PB_OUT>/../tables_pb2002_axes) against
-the current ones (<PB_OUT>), for the segments that gained or lost events. Writes <PB_OUT>/axes_changed_metrics.csv
-(segment x metric: before, after) and <PB_OUT>/axes_changed_contrasts.csv (contrasts whose verdict or value changed)."""
+"""Changed metrics from an axes change: the tables built with the previous axes (<PB_OUT>/../tables_<PB_AXES_OLD>_axes,
+default tables_gmrt_axes = D-B113 axes v1) against the current ones (<PB_OUT>, default axes v2, D-B117), for the
+segments that gained or lost events. Writes <PB_OUT>/axes_changed_metrics.csv (segment x metric: before, after),
+<PB_OUT>/axes_changed_contrasts.csv (contrasts whose verdict or value changed) and <PB_OUT>/axes_headline_changes.csv
+(every segment: b, Mc, swarm share and the 90th percentile of the depth below the surface before and after, and
+whether the new value lies outside the previous 95 % bootstrap interval)."""
 from __future__ import annotations
 
 import sys
@@ -12,7 +15,11 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pb_common as P  # noqa: E402
 
-OLD = P.OUT.parent / "tables_pb2002_axes"
+import os  # noqa: E402
+
+OLD = Path(os.environ.get("PB_OLD_TABLES", P.OUT.parent / f"tables_{os.environ.get('PB_AXES_OLD', 'gmrt')}_axes"))
+HEAD = [("b", "b_lo", "b_hi"), ("Mc", "Mc_lo", "Mc_hi"), ("pct_swarm", "pct_swarm_lo", "pct_swarm_hi"),
+        ("bsf_p90", "bsf_p90_lo", "bsf_p90_hi")]
 MET = ["n_events", "n_depth_good", "Mc", "b", "b_lo", "b_hi", "pct_bg", "pct_MA", "pct_swarm", "pct_multiplet",
        "bsf_med", "bsf_p90", "depth_class", "frac_below_z75", "n_surfaces", "dip_wmed", "burst_all", "Mmax", "n_M4",
        "n_swarm_fam_migrating", "n_dbscan_migrating"]
@@ -38,8 +45,21 @@ def main():
                                                                  on=k, suffixes=("_before", "_after"))
     ch = m[(m.survives_before != m.survives_after) | ((m.D_real_before - m.D_real_after).abs() > 1e-6)]
     ch.to_csv(P.OUT / "axes_changed_contrasts.csv", index=False, float_format="%.4g")
+    hr = []
+    for s in sn.index:
+        for k, lo, hi in HEAD:
+            b0, b1 = so.at[s, k] if s in so.index else float("nan"), sn.at[s, k]
+            l0, h0 = (so.at[s, lo], so.at[s, hi]) if s in so.index else (float("nan"), float("nan"))
+            l1, h1 = sn.at[s, lo], sn.at[s, hi]
+            out = bool(pd.notna(b1) and pd.notna(l0) and pd.notna(h0) and not (l0 <= b1 <= h0))
+            hr.append(dict(seg=s, metric=k, before=b0, before_lo=l0, before_hi=h0, after=b1, after_lo=l1, after_hi=h1,
+                           n_before=so.at[s, "n_events"] if s in so.index else None, n_after=sn.at[s, "n_events"],
+                           outside_previous_ci=out))
+    h = pd.DataFrame(hr)
+    h.to_csv(P.OUT / "axes_headline_changes.csv", index=False, float_format="%.4g")
     P.log(t.pivot(index="metric", columns="seg", values="after").loc[MET + FEA].to_string())
     P.log(ch.to_string())
+    P.log(h[h.outside_previous_ci].to_string())
 
 
 if __name__ == "__main__":

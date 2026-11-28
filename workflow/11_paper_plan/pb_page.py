@@ -134,6 +134,8 @@ def axes_section():
     piv.index.name = "metric"
     cc = pd.read_csv(P.OUT / "axes_changed_contrasts.csv")
     n_moved = int(mv.moved_out.sum())
+    if P.AXES == "v2":
+        return v2_axes_html(mv, piv, cc, n_moved)
     return (f"<h3>Plate-boundary axes (D-B113)</h3><p>PB2002 places the southern Gorda Ridge 10-20 km west of its axial "
             "valley and of its seismicity, so the 15 km buffer missed it and its events fell in the Gorda plate group. "
             "The spreading axes and the Mendocino transform are re-picked from the bathymetry (code pb_axes.py): the "
@@ -164,6 +166,60 @@ def axes_section():
             + table(cc, fmts={c: "{:+.3f}" for c in cc.columns if c.startswith("D_real")}, left=("var", "contrast")))
 
 
+def v2_axes_html(mv, piv, cc, n_moved):
+    """D-B117: adopted plate boundaries v2; numbers from data/paper_plan/plate_boundaries_v2/ and the comparison
+    tables of pb_axes_compare.py / pb_axes_changes.py (previous axes: PB_AXES_OLD, D-B113 axes v1)."""
+    import os as _os
+    v2 = P.ROOT / "data/paper_plan/plate_boundaries_v2"
+    off = pd.read_csv(v2 / "offsets_summary.csv")
+    cor = pd.read_csv(v2 / "corners_adopted.csv")
+    brk = pd.read_csv(v2 / "breaks_adopted.csv")
+    mfz = off[(off.section == "MFZ") & (off.span == "section")].iloc[0]
+    tj = cor[cor.name.str.startswith("Mendocino triple junction (PB2002")].iloc[0]
+    bl = brk[(brk.section == "BL") & (brk.kind == "step-over")]
+    gr = brk[(brk.section == "GR") & (brk.kind == "step-over")]
+    blt = " and ".join(f"{r.offset_km:.1f} km at {abs(r.lon):.2f} W" for _, r in bl.iterrows())
+    grt = ", ".join(f"{r.offset_km:.1f} km at {r.lat:.2f} N" for _, r in gr.iterrows())
+    old = _os.environ.get("PB_AXES_OLD", "gmrt")
+    fig_v2 = Path("/wd1/mdenolle_data/paper_plan/plate_boundaries_v2/figures/map_proposal.png")
+    img_v2 = ('<img src="data:image/png;base64,' + b64(fig_v2) + '" alt="boundaries v2"><p class="cap">Plate '
+              "boundaries v2 (report: /wd1/mdenolle_data/paper_plan/plate_boundaries_v2/report_boundaries.html).</p>"
+              if fig_v2.exists() else "")
+    return ("<h3>Plate boundaries v2 (D-B116 rules, adopted D-B117)</h3><p>The segment rule uses the adopted plate "
+            "boundaries v2 (pbv2_adopt.py, data/paper_plan/plate_boundaries_v2/plate_axes_v2_adopted.csv; rules "
+            "pre-registered in RULES.md). Straight segments chosen by BIC are fitted to axis picks of the relocated "
+            "seismicity (v6.1 tier A-B, horizontal error ≤ 3 km) and compared with the bathymetric axes. "
+            f"Mendocino transform: {mfz.seis_minus_pb2002_km:.1f} km north of PB2002 (95 %: {mfz.ci95_lo:.1f}-"
+            f"{mfz.ci95_hi:.1f}), at the base of the north-facing slope of the Mendocino Ridge (seismicity minus "
+            f"bathymetric pick {mfz.seis_minus_bathy_km:+.1f} km); it joins the PB2002 triple junction, which is kept, "
+            f"by a {tj.connector_km:.1f} km connector (A7). Blanco transform: three segments with two step-overs, "
+            f"{blt}. Gorda Ridge on its axial valley, stepping east by {grt}. Juan de Fuca Ridge on its bathymetric "
+            "axis (axial high, Axial to Northern Symmetric), Endeavour from the MAPRIDGES v2602 trace (A6). Explorer, "
+            "Sovanco and Nootka keep PB2002. Buffer 15 km and every other rule unchanged; events are never moved. "
+            f"Against the previous axes ({old}: D-B113 axes v1), {n_moved:,} tier A-C earthquakes change segment.</p>"
+            + img_v2
+            + '<img src="data:image/png;base64,' + b64(FIG / "fig_axes_before_after.png") + '" alt="before after">'
+            f'<p class="cap">Segments with the previous axes ({old}) and with boundaries v2, and the events that change '
+            "segment.</p><p>Events per segment before and after:</p>" + table(mv, left=("out_to", "in_from"))
+            + "<p>Changed metrics of the affected segments (before → after):</p>"
+            + table(piv.reset_index(), left=("metric",))
+            + "<p>Contrasts whose value or verdict changed (D-B111 rule):</p>"
+            + table(cc, fmts={c: "{:+.3f}" for c in cc.columns if c.startswith("D_real")}, left=("var", "contrast"))
+            + headline_html())
+
+
+def headline_html():
+    f = P.OUT / "axes_headline_changes.csv"
+    if not f.exists():
+        return ""
+    h = pd.read_csv(f)
+    x = h[h.outside_previous_ci]
+    txt = ("none" if x.empty else "; ".join(f"{r.seg} {r.metric} {r.before:.2f} → {r.after:.2f} (previous 95 %: "
+                                            f"{r.before_lo:.2f}-{r.before_hi:.2f})" for _, r in x.iterrows()))
+    return ("<p>Headline metrics (b, Mc, swarm share, 90th percentile of the depth below the surface) whose new value "
+            f"lies outside the previous 95 % bootstrap interval: {txt}.</p>")
+
+
 def fmt_v(v):
     try:
         f = float(v)
@@ -177,18 +233,24 @@ def zone_note():
     if not f.exists():
         return ""
     z = pd.read_csv(f)
-    gr = z[(z.seg == "GR") & (z["var"] == "Vp")]
-    return ("<p><b>Null zones and the D-B113 axes.</b> The null truth's flattened zones were built on the segment table "
-            "before the D-B113 axes (null_zones.npz, reconstructed exactly); the members are scored on the current node "
-            "sets. Zones are nearest-segment regions, so with the old or the new node sets only about half of a "
-            f"contrast's nodes lie in its own zone (median {z.own_share_old.median():.2f} / {z.own_share_new.median():.2f})"
-            " and the null truth keeps zone-boundary contrasts (median |Δ truth| "
-            f"{z.D0_old.abs().median():.3f} / {z.D0_new.abs().median():.3f}); the rule (recovered − truth) still measures "
-            "the recovery error, but only contrasts inside one zone are true no-contrast tests. The axis change is "
-            "material for GR only: its node sets reach into the old Gorda-plate zone (own-zone share "
-            f"{gr.own_share_old.min():.2f}-{gr.own_share_old.max():.2f} → {gr.own_share_new.min():.2f}-"
-            f"{gr.own_share_new.max():.2f}; truth contrast Vp along {gr[gr.contrast == 'along'].D0_old.iloc[0]:+.2f} → "
-            f"{gr[gr.contrast == 'along'].D0_new.iloc[0]:+.2f} km/s). GP, MFZ and JR barely change.</p>")
+    single = int(z.single_zone_new.fillna(False).astype(bool).sum()) if "single_zone_new" in z else 0
+    d = z.assign(dd=(z.D0_new - z.D0_old).abs(), ds=(z.own_share_new - z.own_share_old))
+    big = d[(d.dd > 0.05) | (d.ds < -0.15)]
+    segs = sorted(set(big.seg), key=P.SEG_ORDER.index)
+    det = "; ".join(f"{sg}: " + ", ".join(f"{r['var']} {r['contrast']} (Δ truth {r['D0_old']:+.2f} → {r['D0_new']:+.2f}, "
+                                          f"own-zone share {r['own_share_old']:.2f} → {r['own_share_new']:.2f})"
+                                          for _, r in big[big.seg == sg].iterrows())
+                    for sg in segs) or "none"
+    return ("<p><b>Null zones and the current axes.</b> The null truth's flattened zones were built on the PB2002 "
+            "segments (null_zones.npz, reconstructed exactly); the members are scored on the current node sets. Zones "
+            "are nearest-segment regions, so only about half of a contrast's nodes lie in its own zone (median "
+            f"{z.own_share_old.median():.2f} with the PB2002 node sets, {z.own_share_new.median():.2f} with the current "
+            "ones) and the null truth keeps zone-boundary contrasts (median |Δ truth| "
+            f"{z.D0_old.abs().median():.3f} / {z.D0_new.abs().median():.3f} km/s or Vp/Vs units); {single} of "
+            f"{int(z.single_zone_new.notna().sum())} current contrasts lie inside one zone (true no-contrast tests). "
+            "The rule (recovered − truth) still measures the recovery error of a known truth. Contrasts whose null-truth "
+            f"value moved by more than 0.05 with the axis change, or whose own-zone share fell by more than 0.15: {det}."
+            "</p>")
 
 
 def null_section(nt, circ):
@@ -204,7 +266,7 @@ def null_section(nt, circ):
     med_ratio = float(np.nanmedian(nt.N95 / nt.S95))
     short = (f"Null-truth control (rule pre-registered 2026-11-27 10:13:48 PST, commit 6d45ad98; {nm} members): "
              f"{len(cl)} of the {int(nt.survives_DB111.sum())} D-B111 survivors are claimed (|Δ| also ≥ N95, the 95th "
-             f"percentile of |recovered − truth| when the truth has no contrast near the segments). Dropped by the null "
+             f"percentile of |recovered − truth| for a truth flattened by depth layer near the segments). Dropped by the null "
              f"truth: {lst(drop)}. Claimed: {lst(cl)}.")
     t = nt[["seg", "var", "contrast", "D_real", "sigma_ens", "S95", "D0_truth", "null_mean", "null_sd", "N95", "N95_rec",
             "paired_cal_minus_null_mean", "truth_cal_minus_null", "n_null", "survives_DB111", "pass_null", "claimed"]].copy()
@@ -221,6 +283,18 @@ def null_section(nt, circ):
                 {"σ ens": "{:.3f}", "S95": "{:.3f}", "null spurious sd": "{:.3f}", "N95 = p95 |rec − truth|": "{:.3f}",
                  "p95 |rec| (variant)": "{:.3f}"}, left=("var", "contrast"))
     nseg = ", ".join(f"{r['seg']} {r['nodes']:,}" for r in info.get("nodes_per_segment", []))
+    cmp_f = P.OUT / "null_claimed_compare.csv"
+    cmp_txt = ""
+    if cmp_f.exists():
+        cm = pd.read_csv(cmp_f)
+        oc = [c for c in cm.columns if c.startswith("claimed_") and not c.endswith(P.AXES)][0]
+        old_lab = oc.replace("claimed_", "")
+        g_, l_ = cm[cm.change == "gained"], cm[cm.change == "lost"]
+        lst2 = lambda x: "; ".join(f"{r.seg} {vn_[r['var']]} {r.contrast}" for _, r in x.iterrows()) or "none"  # noqa: E731
+        cmp_txt = (f" Against the same 20 members scored on the previous axes ({old_lab}): "
+                   f"{int(cm[oc].fillna(False).astype(bool).sum())} claimed there; gained here: {lst2(g_)}; "
+                   f"lost here: {lst2(l_)}.")
+        short = short + cmp_txt
     long = (f"<p><b>Null truth (D-B112).</b> Rule pre-registered in RESUME.md at Fri Nov 27 10:13:48 PST 2026 (commit "
             "6d45ad98), before the null truth was built: a contrast is claimed only if it passes the D-B111 rule and "
             "|Δ_real| ≥ N95, the 95th percentile of |Δ_rec,i − Δ_truth| over the null members (≥ 15 members). Null "
@@ -234,7 +308,7 @@ def null_section(nt, circ):
             f"one zone. N95 is a median {med_ratio:.2f} of S95.</p>" + zone_note()
             + '<img src="data:image/png;base64,' + b64(FIG / "fig_null.png") + '" alt="null truth"><p class="cap">'
             "Real contrasts with ±2σ of the real ensemble and ±N95 of the null-truth members (grey). Filled = claimed. "
-            "Draft.</p>" + tab)
+            "Draft.</p>" + (f"<p>{cmp_txt.strip()}</p>" if cmp_txt else "") + tab)
     return short, long
 
 
@@ -316,13 +390,13 @@ def main():
     if null_csv.exists():
         null_short, null_long = null_section(pd.read_csv(null_csv), circ)
     else:
-        null_short = ("The null-truth test (a truth flattened by depth layer near the segments) is approved (D-B112) and not yet scored "
+        null_short = ("The null-truth test (a truth flattened by depth layer near the segments, D-B112) has no scored table "
                       "(section 3).")
         null_long = ("<p><b>Null truth.</b> Every member of the calibration set inverts data from the same truth, "
                      "which carries the v0.4.2 contrasts, so that set cannot show whether coverage creates a contrast "
                      "from nothing. A null-truth ensemble (D-B112: depth-layer means within 45 km of the segments, "
                      "about 20 members, root /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null) is approved; its rule is "
-                     "pre-registered in RESUME.md before scoring. Not scored yet.</p>")
+                     "pre-registered in RESUME.md before scoring. No scored table in this output folder.</p>")
     swc_html = ""
     if swc.exists():
         t = pd.read_csv(swc)

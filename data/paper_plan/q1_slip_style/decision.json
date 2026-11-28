@@ -42,87 +42,87 @@
   "mcu_recluster_n100": {
    "hot": {
     "AX": 76.09,
-    "JR": 10.34,
-    "GR": 21.7,
+    "JR": 12.96,
+    "GR": 22.64,
     "BL": 24.42
    },
    "cold": {
-    "GP": 2.04,
-    "MFZ": 1.78,
+    "GP": 2.14,
+    "MFZ": 1.62,
     "MTJ": 0.67,
     "GS": 1.45
    },
-   "hot_median": 23.0575,
-   "cold_median": 1.6107,
+   "hot_median": 23.527500000000003,
+   "cold_median": 1.5325,
    "hot_above_cold": true
   },
   "mcu_recluster_n30": {
    "hot": {
     "AX": 76.09,
-    "JR": 10.34,
-    "GR": 21.7,
+    "JR": 12.96,
+    "GR": 22.64,
     "BL": 24.42
    },
    "cold": {
-    "GP": 2.04,
-    "MFZ": 1.78,
+    "GP": 2.14,
+    "MFZ": 1.62,
     "MTJ": 0.67,
     "GS": 1.45
    },
-   "hot_median": 23.0575,
-   "cold_median": 1.6107,
+   "hot_median": 23.527500000000003,
+   "cold_median": 1.5325,
    "hot_above_cold": true
   },
   "mcu_count_n100": {
    "hot": {
     "AX": 80.07,
-    "JR": 26.72,
-    "GR": 20.57,
+    "JR": 30.56,
+    "GR": 21.46,
     "BL": 30.67
    },
    "cold": {
-    "GP": 2.04,
-    "MFZ": 1.78,
+    "GP": 2.14,
+    "MFZ": 1.62,
     "MTJ": 1.73,
     "GS": 4.75
    },
-   "hot_median": 28.697499999999998,
-   "cold_median": 1.90625,
+   "hot_median": 30.613500000000002,
+   "cold_median": 1.93425,
    "hot_above_cold": true
   },
   "mcu_count_n30": {
    "hot": {
     "AX": 80.07,
-    "JR": 26.72,
-    "GR": 20.57,
+    "JR": 30.56,
+    "GR": 21.46,
     "BL": 30.67
    },
    "cold": {
-    "GP": 2.04,
-    "MFZ": 1.78,
+    "GP": 2.14,
+    "MFZ": 1.62,
     "MTJ": 1.73,
     "GS": 4.75
    },
-   "hot_median": 28.697499999999998,
-   "cold_median": 1.90625,
+   "hot_median": 30.613500000000002,
+   "cold_median": 1.93425,
    "hot_above_cold": true
   },
   "main_n100": {
    "hot": {
     "AX": 29.17,
-    "JR": 17.21,
-    "GR": 19.5,
+    "JR": 18.33,
+    "GR": 20.3,
     "BL": 24.57,
     "MSH": 28.4
    },
    "cold": {
-    "GP": 0.65,
-    "MFZ": 1.23,
+    "GP": 0.67,
+    "MFZ": 1.12,
     "MTJ": 0.99,
     "GS": 2.83
    },
    "hot_median": 24.571,
-   "cold_median": 1.11449,
+   "cold_median": 1.05829,
    "hot_above_cold": true
   }
  },

@@ -38,6 +38,14 @@ def load():
     d["info"] = json.load(open(TAB / "metrics_info.json"))
     d["m"] = {r: pd.read_csv(TAB / f"metrics_{r}.csv") for r in ["main", "mcu_count", "mcu_recluster", "v60"]
               if (TAB / f"metrics_{r}.csv").exists()}
+    d["ev"] = pd.read_parquet(TAB / "events_q1_v61.parquet")
+    d["cat"] = pd.read_csv(Q.CATS["v61"]["csv"], usecols=["ID", "tier", "depth"])
+    d["regions"] = pd.read_csv(Q.CATS["v61"]["clu"] / "regions_zbz.csv")
+    prev = Q.BIG / "runs" / "db113_axes_v1" / "tables"       # the first run (D-B113 axes v1), for the v2 note
+    if prev.exists():
+        d["prev"] = dict(T=pd.read_csv(prev / "tests_external.csv"), dec=json.load(open(prev / "decision_external.json")),
+                         m=pd.read_csv(prev / "metrics_main.csv"), ev=pd.read_parquet(prev / "events_q1_v61.parquet"),
+                         cells=pd.read_csv(prev / "cells_main_external.csv"))
     return d
 
 

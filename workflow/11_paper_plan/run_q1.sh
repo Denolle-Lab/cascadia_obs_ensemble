@@ -4,7 +4,8 @@
 # only needs this script rerun. Pre-registration: data/paper_plan/q1_slip_style/RESUME.md.
 # Output: /wd1/mdenolle_data/paper_plan/q1_slip_style/ (report_q1.html, figures/, tables/, nulls/, vpvs/, covariates/)
 # and the small tables in data/paper_plan/q1_slip_style/.
-# Resources: nice 10; the clustering nulls fork 5 workers (the tomoDD null-truth run holds 6); MemAvailable > 40 GB.
+# Resources: nice 10; the clustering nulls fork 5 workers (at most 6 processes); each step waits until MemAvailable
+# exceeds Q1_MEM_GB (default 150 GB, coordinator request with D-B117; was 40 GB).
 # Usage (from the repository root): bash workflow/11_paper_plan/run_q1.sh [steps]
 #   steps (default all): covariates metrics recluster vpvs metrics2 tests figures report
 set -euo pipefail
@@ -15,7 +16,7 @@ STEPS=${1:-"covariates metrics recluster vpvs metrics2 tests figures report"}
 cd "$(dirname "$0")"
 for s in $STEPS; do
     echo "== $s $(date)"
-    while [ "$(awk '/MemAvailable/ {print int($2/1048576)}' /proc/meminfo)" -lt 40 ]; do sleep 60; done
+    while [ "$(awk '/MemAvailable/ {print int($2/1048576)}' /proc/meminfo)" -lt "${Q1_MEM_GB:-150}" ]; do sleep 60; done
     case $s in
         covariates) $PY q1_covariates.py --tag v61; $PY q1_covariates.py --tag v60 ;;
         metrics)    $PY q1_metrics.py --runs main ;;                       # writes the event table the nulls read

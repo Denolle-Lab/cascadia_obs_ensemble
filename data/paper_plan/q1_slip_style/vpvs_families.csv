@@ -182,7 +182,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 181,2,mainshock-aftershock,,,False,,GS,subduction,-123.91,40.807,,,,,,,,,,,,,,,,,,,,,False,False,False,,40_14,-123.9,40.9
 182,3,mainshock-aftershock,173,0.66667,True,mainshock-aftershock,GS,subduction,-123.26,40.404,1,2,4,onshore,,,,,,,3,3,11,,,,,,,,False,False,False,,43_12,-123.3,40.5
 183,2,mainshock-aftershock,,,False,,NAPA,other,-123.1,39.387,,,,,,,,,,,,,,,,,,,,,False,False,False,,44_6,-123.1,39.3
-184,2,multiplet,174,1,True,multiplet,GR,ridge,-127.25,40.588,,,,,,,,,,,,,,,,,,,,,False,False,False,,23_12,-127.3,40.5
+184,2,multiplet,174,1,True,multiplet,MFZ,transform,-127.25,40.588,,,,,,,,,,,,,,,,,,,,,False,False,False,,23_12,-127.3,40.5
 185,8,swarm,175,1,True,swarm,MSH,arc,-122.23,46.14,,,,,,,,,,,,,,,,,,,,,False,False,False,,48_40,-122.3,46.1
 186,2,multiplet,176,1,True,multiplet,JP,intraplate,-125.81,44.495,1,2,7,forearc,,,,,,,1,2,9,,,,,,,,False,False,False,,30_32,-125.9,44.5
 187,2,mainshock-aftershock,177,1,True,mainshock-aftershock,PU,crustal,-121.85,46.867,1,2,7,puget,,,,,,,1,2,9,,,,,,,,False,False,False,,50_44,-121.9,46.9
@@ -383,7 +383,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 382,4,multiplet,391,1,True,multiplet,MTJ,triple junction,-124.47,40.411,3,3,28,mendocino,,,,,,,3,3,44,,,,,,,,False,False,False,,37_12,-124.5,40.5
 383,5,multiplet,392,1,True,multiplet,MTJ,triple junction,-124.52,40.302,4,4,27,mendocino,,,,,,,6,4,52,,,,,,,,False,False,False,,37_11,-124.5,40.3
 384,2,mainshock-aftershock,,,False,,MTJ,triple junction,-124.57,40.305,1,2,3,mendocino,,,,,,,1,2,3,,,,,,,,False,False,False,,37_11,-124.5,40.3
-385,33,mainshock-aftershock,393,0.87879,True,mainshock-aftershock,JR,ridge,-128.88,47.605,,,,,,,,,,,6,10,21,,,,,,,,False,False,False,,15_48,-128.9,47.7
+385,33,mainshock-aftershock,393,0.87879,True,mainshock-aftershock,JP,intraplate,-128.88,47.605,,,,,,,,,,,6,10,21,,,,,,,,False,False,False,,15_48,-128.9,47.7
 386,5,multiplet,394,0.6,True,multiplet,JP,intraplate,-129.65,47.031,,,,,,,,,,,,,,,,,,,,,False,False,False,,11_45,-129.7,47.1
 387,2,multiplet,394,0.5,True,multiplet,JP,intraplate,-129.62,47.164,,,,,,,,,,,,,,,,,,,,,False,False,False,,11_45,-129.7,47.1
 388,3,multiplet,,,False,,JR,ridge,-129.19,47.197,,,,,,,,,,,,,,,,,,,,,False,False,False,,14_45,-129.1,47.1
@@ -444,7 +444,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 443,6,multiplet,455,0.83333,True,multiplet,BL,transform,-129.23,44.012,6,6,24,blanco,,,,,,,11,6,57,0.24486,8.1609,0.11752,0.105,-0.2817,0.86324,,False,False,False,,13_30,-129.3,44.1
 444,4,mainshock-aftershock,,,False,,FA,subduction,-124.64,42.225,,,,,,,,,,,,,,,,,,,,,False,False,False,,36_21,-124.7,42.3
 445,7,mainshock-aftershock,456,1,True,mainshock-aftershock,BL,transform,-128.72,43.79,1,2,6,blanco,,,,,,,15,6,94,0.24503,0.35942,0.074195,0.20821,0.18342,0.44855,,False,False,False,,16_28,-128.7,43.7
-446,7,multiplet,457,0.85714,True,multiplet,GR,ridge,-127.37,40.605,1,2,3,gorda,,,,,,,1,2,9,,,,,,,,False,False,False,,23_13,-127.3,40.7
+446,7,multiplet,457,0.85714,True,multiplet,MFZ,transform,-127.37,40.605,1,2,3,gorda,,,,,,,1,2,9,,,,,,,,False,False,False,,23_13,-127.3,40.7
 447,2,mainshock-aftershock,458,1,True,mainshock-aftershock,GS,subduction,-124.57,40.95,1,2,6,forearc,,,,,,,1,2,12,,,,,,,,False,False,False,,37_14,-124.5,40.9
 448,12,swarm,459,1,True,swarm,BL,transform,-128.74,43.829,,,,,,,,,,,12,6,53,0.11111,0.99028,0.14101,0.21,-0.21951,0.68681,,False,False,False,,16_29,-128.7,43.9
 449,2,multiplet,460,1,True,multiplet,MTJ,triple junction,-124.48,40.306,,,,,,,,,,,1,2,12,,,,,,,,False,False,False,,37_11,-124.5,40.3
@@ -612,7 +612,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 611,4,multiplet,611,1,True,multiplet,BL,transform,-129.94,44.339,1,2,9,blanco,,,,,,,1,2,10,,,,,,,,False,False,False,,10_31,-129.9,44.3
 612,36,swarm,612,0.94444,True,swarm,BL,transform,-129.39,44.072,3,5,9,blanco,,,,,,,102,25,414,-0.057692,-0.55171,0.13634,0.17775,-0.17856,0.035521,,False,False,False,,13_30,-129.3,44.1
 613,3,multiplet,613,1,True,multiplet,BL,transform,-130.09,44.377,3,3,13,blanco,,,,,,,3,3,14,,,,,,,,False,False,False,,9_31,-130.1,44.3
-614,6,multiplet,614,0.83333,True,multiplet,GR,ridge,-127.48,40.986,1,2,4,gorda,,,,,,,1,2,5,,,,,,,,False,False,False,,22_14,-127.5,40.9
+614,6,multiplet,614,0.83333,True,multiplet,MFZ,transform,-127.48,40.986,1,2,4,gorda,,,,,,,1,2,5,,,,,,,,False,False,False,,22_14,-127.5,40.9
 615,3,multiplet,542,1,True,swarm,CAS,arc,-121.66,47.882,,,,,,,,,,,1,2,7,,,,,,,,False,False,False,,51_49,-121.7,47.9
 616,4,multiplet,615,1,True,multiplet,GR,ridge,-127.41,41.437,,,,,,,,,,,2,3,7,,,,,,,,False,False,False,,22_17,-127.5,41.5
 617,2,mainshock-aftershock,616,1,True,mainshock-aftershock,MTJ,triple junction,-124.59,40.407,1,2,6,mendocino,,,,,,,1,2,16,,,,,,,,False,False,False,,37_12,-124.5,40.5
@@ -648,7 +648,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 647,4,mainshock-aftershock,637,1,True,mainshock-aftershock,MTJ,triple junction,-124.48,40.307,,,,,,,,,,,1,2,3,,,,,,,,False,False,False,,37_11,-124.5,40.3
 648,4,multiplet,638,1,True,multiplet,BL,transform,-129.67,44.24,,,,,,,,,,,,,,,,,,,,,False,False,False,,11_31,-129.7,44.3
 649,18,mainshock-aftershock,640,0.77778,True,mainshock-aftershock,BL,transform,-129.23,44.014,,,,,,,,,,,14,9,55,1.6472,2.4826,0.20612,0.16706,1.1352,2.144,,False,False,False,,13_30,-129.3,44.1
-650,11,multiplet,641,1,True,multiplet,GR,ridge,-127.48,40.974,,,,,,,,,,,8,8,30,0.56667,6.8288,0.15337,0.12983,0.2353,1.8727,,False,False,False,,22_14,-127.5,40.9
+650,11,multiplet,641,1,True,multiplet,MFZ,transform,-127.48,40.974,,,,,,,,,,,8,8,30,0.56667,6.8288,0.15337,0.12983,0.2353,1.8727,,False,False,False,,22_14,-127.5,40.9
 651,2,multiplet,,,False,,CAS,arc,-122.23,40.532,,,,,,,,,,,,,,,,,,,,,False,False,False,,48_12,-122.3,40.5
 652,8,mainshock-aftershock,642,1,True,mainshock-aftershock,BL,transform,-128.17,43.57,2,3,8,blanco,,,,,,,10,6,39,0.47917,0.63345,0.060127,0.1675,0.14286,0.7561,,False,False,False,,19_27,-128.1,43.5
 653,2,mainshock-aftershock,,,False,,CAS,arc,-121.66,47.881,,,,,,,,,,,,,,,,,,,,,False,False,False,,51_49,-121.7,47.9
@@ -1117,7 +1117,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 1116,2,multiplet,,,False,,GP,intraplate,-125.24,40.757,,,,,,,,,,,,,,,,,,,,,False,False,False,,33_13,-125.3,40.7
 1117,2,multiplet,1063,1,True,multiplet,BL,transform,-128.72,43.866,,,,,,,,,,,,,,,,,,,,,False,False,False,,16_29,-128.7,43.9
 1118,2,multiplet,,,False,,GR,ridge,-127.08,42.279,,,,,,,,,,,,,,,,,,,,,False,False,False,,24_21,-127.1,42.3
-1119,35,swarm,1064,0.57143,True,swarm,JP,intraplate,-129.28,47.668,,,,,,,,,,,1,2,3,,,,,,,,False,False,False,,13_48,-129.3,47.7
+1119,35,swarm,1064,0.57143,True,swarm,JR,ridge,-129.28,47.668,,,,,,,,,,,1,2,3,,,,,,,,False,False,False,,13_48,-129.3,47.7
 1120,2,mainshock-aftershock,1065,1,True,mainshock-aftershock,MFZ,transform,-125.56,40.427,1,2,7,mendocino,,,,,,,1,2,14,,,,,,,,False,False,False,,32_12,-125.5,40.5
 1121,4,multiplet,1066,1,True,multiplet,JR,ridge,-130.01,45.407,,,,,,,,,,,1,2,3,,,,,,,,False,False,False,,9_37,-130.1,45.5
 1122,14,swarm,1067,0.85714,True,swarm,BL,transform,-129.72,44.274,,,,,,,,,,,18,10,63,0.24508,-24.815,0.16355,0.093129,-0.46024,0.71137,,False,False,False,,11_31,-129.7,44.3
@@ -1873,7 +1873,7 @@ fam51,n51,type51,fam61,share61,carried,type61,seg,seg_type,lon,lat,n_pairs,n_eve
 1872,513,swarm,1864,0.95517,True,swarm,AX,ridge,-129.99,45.95,684,286,2442,axial,0.84189,1.3239,0.0068696,0.0086028,0.61612,0.98744,89663,468,3.5656e+05,1.0714,1.6137,0.11155,0.136,1.0629,1.079,0.18566,False,False,False,1.2523,10_39,-129.9,45.9
 1873,4,mainshock-aftershock,1865,0.5,True,mainshock-aftershock,AX,ridge,-129.94,46.083,,,,,,,,,,,1,2,6,,,,,,,,False,False,False,,10_40,-129.9,46.1
 1874,3,mainshock-aftershock,1866,0.66667,True,mainshock-aftershock,AX,ridge,-130.01,46.073,,,,,,,,,,,,,,,,,,,,,False,False,False,,9_40,-130.1,46.1
-1875,7,mainshock-aftershock,1866,0.28571,False,,JR,ridge,-130.07,46.26,,,,,,,,,,,,,,,,,,,,,False,False,False,,9_41,-130.1,46.3
+1875,7,mainshock-aftershock,1866,0.28571,False,,JP,ridge,-130.07,46.26,,,,,,,,,,,,,,,,,,,,,False,False,False,,9_41,-130.1,46.3
 1876,9,mainshock-aftershock,1867,0.66667,True,swarm,JR,ridge,-129.96,46.284,,,,,,,,,,,2,3,13,,,,,,,,False,False,False,,10_41,-129.9,46.3
 1877,2,mainshock-aftershock,1864,0.5,True,swarm,AX,ridge,-129.92,45.959,,,,,,,,,,,,,,,,,,,,,False,False,False,,10_39,-129.9,45.9
 1878,2,mainshock-aftershock,,,False,,JP,intraplate,-130.5,45.801,,,,,,,,,,,,,,,,,,,,,False,False,False,,7_39,-130.5,45.9

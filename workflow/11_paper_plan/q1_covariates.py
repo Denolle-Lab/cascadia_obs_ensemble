@@ -147,7 +147,7 @@ def main():
                 files={k: str(v) for k, v in FILES.items()},
                 md5={k: Q.md5(v) for k, v in FILES.items() if k != "gebco"},
                 gebco_source=str(EXT / "gebco_2026/gebco_2026_n90.0_s0.0_w-180.0_e-90.0_geotiff.tif"),
-                coverage={k: float(out[k].notna().mean()) for k in Q.COVS})
+                coverage={k: float(out[k].notna().mean()) for k in Q.COVS if k in out.columns})
     json.dump(prov, open(f.with_suffix(".json"), "w"), indent=1)
     Q.log(json.dumps(prov["coverage"], indent=1))
     Q.log(out.describe().T.to_string())

@@ -29,10 +29,15 @@ def render(d, label, h):
     # ------------------------------------------------------------ header and verdict
     A(f"<h1>Q1: what sets how a plate boundary releases slip?</h1>")
     A(f'<p class="muted">Swarms or mainshock-aftershock sequences, across the offshore Cascadia plate system. Catalog '
-      f"v6.1, D-B113 segments, D-B114 external data. Decision D-B115. Report built {esc(label)}. Pre-registration "
+      f"v6.1, plate boundaries v2 (D-B117), D-B114 external data. Decision D-B115. Report built {esc(label)}. "
+      f"Pre-registration "
       f"written {PRE_TIME} and committed as {PRE_COMMIT} (branch science/q1-slip-style) before any covariate "
       f"correlation was computed.</p>")
     A(TXT_VERDICT(d, h))
+    A("<h2>Boundaries v2 (D-B117)</h2>")
+    A("<p>This version uses the adopted plate boundaries v2. The first version of the report used the D-B113 axes; "
+      "the table gives the key numbers of both runs, read from their tables.</p>")
+    A(TXT_V2(d, h))
 
     # ------------------------------------------------------------ 1 question
     A("<h2>1. Question and hypothesis</h2>")
@@ -44,7 +49,8 @@ def render(d, label, h):
       "swarms rises with thermal state (younger plate, higher heat flow, shallower isotherms) and with fluid content "
       "(higher in-situ Vp/Vs), and it does so across spatial cells drawn without the segment boundaries, not only as a "
       "contrast between boundary types.</p>")
-    A("<p>What was known before the registration, and so cannot confirm H1: the v6.1 plate-boundary table gave swarm "
+    A("<p>What was known before the registration (as written in it), and so cannot confirm H1: the v6.1 "
+      "plate-boundary table of 10:07 PST (PB2002 segments) gave swarm "
       "shares of 29 % at Axial, 28 % at Mount St Helens, 25 % at Blanco and 19 % on the Gorda Ridge, against 2.8 % or "
       "less at the Mendocino fault zone, Gorda plate, triple junction and Gorda slab. That contrast is where H1 came "
       "from. It is shown below for completeness, but it carries no test.</p>")
@@ -114,4 +120,4 @@ def render(d, label, h):
 
 # the result-dependent sections are filled in q1_report_text_results.py (imported below), written after the run
 from q1_report_text_results import (TXT_CHANGES, TXT_CLAIMS, TXT_CONTROLS, TXT_DATA, TXT_FILES,  # noqa: E402,F401
-                                    TXT_LIMITS, TXT_BULLETS, TXT_RESULTS, TXT_VERDICT)
+                                    TXT_LIMITS, TXT_BULLETS, TXT_RESULTS, TXT_V2, TXT_VERDICT)

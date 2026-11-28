@@ -1,0 +1,21 @@
+group,answer,n_seeds,registered_answer
+Gorda slab (GS),composition-limited,20,composition-limited
+frame:oceanic,composition-limited,20,composition-limited
+frame:oceanic+slab,composition-limited,20,composition-limited
+frame:slab,"H_T supported, not preferred",6,"H_T supported, not preferred"
+frame:slab,both consistent,14,"H_T supported, not preferred"
+intraplate,composition-limited,20,composition-limited
+ridge,H_T not supported; H_C not testable,20,H_T not supported; H_C not testable
+ridge (no AX),H_T not supported; H_C not testable,20,H_T not supported; H_C not testable
+seg:AX,H_T supported (H_C not testable),20,H_T supported (H_C not testable)
+seg:BL,composition-limited,20,composition-limited
+seg:GP,composition-limited,20,composition-limited
+seg:GR,H_T not supported; H_C not testable,20,H_T not supported; H_C not testable
+seg:GS,composition-limited,20,composition-limited
+seg:IS,"H_T supported, not preferred",20,"H_T supported, not preferred"
+seg:MFZ,neither,20,neither
+seg:MTJ,neither,20,neither
+seg:SIF,both consistent,20,both consistent
+slab,composition-limited,20,composition-limited
+transform,composition-limited,20,composition-limited
+triple junction,neither,20,neither

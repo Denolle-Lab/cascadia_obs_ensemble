@@ -213,6 +213,10 @@ def main():
 
     nf6_tr = nf6("transform")
 
+    def load_csv(name):
+        f = Q.OUT / name
+        return pd.read_csv(f) if f.exists() else None
+
     def bias_s(g, L):
         return f"{gv(g, L, 'bias'):+.1f} km (95 % {gv(g, L, 'bias_lo95'):+.1f} to {gv(g, L, 'bias_hi95'):+.1f})"
 
@@ -266,6 +270,18 @@ code{font-size:.92em}li{margin:.25em 0}
              f"<code>date</code>). Branch science/q2-depth-limit, code commit {git_head()}. Pre-registration "
              f"commit e6bab1ac, 2026-11-27 13:27:22 PST.</p>")
     # ---------------------------------------------------------------- summary
+    # ---------------------------------------------------------------- Monte Carlo precision (seed study)
+    MCP = load_csv("mc_precision.csv")
+    MCA = load_csv("mc_precision_answers.csv")
+    seed_var = []                       # groups whose registered answer changes across seeds
+    if MCA is not None and len(MCA):
+        for g, x in MCA.groupby("group"):
+            if x.answer.nunique() > 1 and g in KEY_GROUPS:
+                n = int(x.n_seeds.sum())
+                seed_var.append((g, x.registered_answer.iloc[0],
+                                 "; ".join(f"'{r.answer}' in {int(r.n_seeds)} of {n} seeds"
+                                           for _, r in x.sort_values("n_seeds", ascending=False).iterrows())))
+    straddle = MCP[MCP.straddles] if MCP is not None and len(MCP) else None
     H.append("<h2>Summary</h2><div class='box'><ul>")
     H.append(f"<li>In the young oceanic plates (Gorda plate, Blanco and Mendocino transforms, triple junction), the "
              f"base of seismicity (D90) lies {min(gv(g, 'HSC_600', 'bias') for g in ('seg:BL', 'seg:MFZ', 'intraplate', 'triple junction')):.0f} to "
@@ -324,6 +340,14 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>The cooling models do not describe the axial magma system.</li>"
              f"<li>Gorda Ridge depths (D90 {rng_s(segu('GR').D_bsf)} km below the seafloor at near-zero age) are not trusted.</li>"
              "<li>No ridge bin has a resolved velocity level.</li></ul></li>")
+    if seed_var:
+        H.append("<li><b>Monte Carlo precision</b> (20 independent seeds at the registered 1000 draws; section 5a): "
+                 + " ".join(f"The {gname(g)} answer is at a decision threshold within Monte Carlo precision: "
+                            f"{txt}. The registered seed gives '{reg}'; this report gives both readings and does not "
+                            f"let one seed choose." for g, reg, txt in seed_var) + "</li>")
+    elif MCP is not None:
+        H.append("<li><b>Monte Carlo precision</b> (20 independent seeds at the registered 1000 draws; section 5a): "
+                 "no registered answer changes between seeds.</li>")
     H.append("<li>Answer to Q2 for the paper:<ul>"
              "<li>At Blanco, with independent OBS depths, the base is consistent with a 600-800 C limit.</li>"
              f"<li>In the Mendocino-Gorda system (Gorda plate interior, MFZ), the base lies "
@@ -488,6 +512,9 @@ code{font-size:.92em}li{margin:.25em 0}
     show["group"] = show.group.map(gname)
     H.append("<h3>4.2 Registered decisions (main configuration)</h3>")
     H.append(tbl(show.fillna("")))
+    for g, reg, txt in seed_var:
+        H.append(f"<p class='warn'>{gname(g)}: the registered seed gives '{reg}', but this answer sits at a decision "
+                 f"threshold within Monte Carlo precision ({txt}; section 5a). Both readings stand.</p>")
     pr = PR[PR.group.isin(KEY_GROUPS)][["group", "n_units_both", "primary_P_T", "primary_rms_T", "primary_rms_C",
                                         "primary_pref", "best_of_family_P_T", "best_of_family_pref", "cv_P_T",
                                         "cv_pref"]].copy()
@@ -605,6 +632,44 @@ code{font-size:.92em}li{margin:.25em 0}
              f"{circ('frame:oceanic', 'rho_real'):.2f} for the whole oceanic frame: most of that correlation comes "
              f"from the difference between the two clusters.</p>")
     # ---------------------------------------------------------------- control L
+    if MCP is not None:
+        H.append("<h3>5a. Monte Carlo precision of the registered probabilities</h3>")
+        H.append("<p>Coordinator check after the final report; no rule changed. The slab-frame answer changed between "
+                 "the D-B113 and v2 runs only through the draw sequence, so the main configuration was rerun with "
+                 f"{int(MCP.n_seeds.max())} independent seeds (SEED + 5000 + k) at the registered 1000 draws. The "
+                 "table lists every registered probability that lies within 0.03 of its threshold in the registered "
+                 "run: P_sit (sits if &gt;= 0.5), P_far (falsified if &gt;= 0.95), P_skill_pos (follows if &gt;= "
+                 "0.9, does not follow if &lt;= 0.1) and preference P_T (&gt;= 0.9 or &lt;= 0.1). The last column is "
+                 "the draw count at which the seed SD would be half the distance between the seed mean and the "
+                 "threshold (SD scales as 1/sqrt(draws)). It is a precision note only; the registered count stays "
+                 "1000.</p>")
+        show = MCP.copy()
+        show["group"] = show.group.map(gname)
+        H.append(tbl(show, fmt={"threshold": "{:.2f}", "registered": "{:.3f}", "mean": "{:.3f}", "sd": "{:.3f}",
+                                "min": "{:.3f}", "max": "{:.3f}", "share_at_or_above": "{:.2f}",
+                                "draws_for_2sd": "{:,.0f}"}))
+        if MCA is not None:
+            va = MCA[MCA.group.isin([g for g, _, _ in seed_var])].copy()
+            if len(va):
+                va["group"] = va.group.map(gname)
+                H.append("<p>Registered answers that change between seeds (count of seeds per answer):</p>")
+                H.append(tbl(va))
+        H.append("<p>" + (" ".join(f"{gname(g)}: {txt}." for g, _, txt in seed_var) if seed_var else
+                          "No registered answer changes between seeds.") +
+                 (" Probabilities whose seed range straddles the threshold: " +
+                  "; ".join(f"{gname(r.group)} {r['item']} {r.prob} (mean {r['mean']:.3f}, SD {r.sd:.3f}, "
+                            f"{r['min']:.3f}-{r['max']:.3f}, threshold {r.threshold:.2f})"
+                            for _, r in straddle.iterrows()) + "." if straddle is not None and len(straddle) else
+                  " No seed range straddles its threshold.") + "</p>")
+        others = [] if straddle is None else [r for _, r in straddle.iterrows()
+                                               if r.group not in [g for g, _, _ in seed_var]]
+        H.append("<p>" + (f"The other {len(others)} straddling probabilities do not change any registered answer: each "
+                          "sits inside a rule that another predictor or test already decides. " if others else "") +
+                 " ".join(f"Resolving the {gname(r.group)} {r['item']} {r.prob} (seed mean {r['mean']:.3f}, threshold "
+                          f"{r.threshold:.2f}) at 2 SD would take about {r.draws_for_2sd:,.0f} draws per run."
+                          for _, r in (straddle.iterrows() if straddle is not None else [])
+                          if r.group in [g for g, _, _ in seed_var]) +
+                 " The registered draw count stays 1000.</p>")
     H.append("<h3>5b. Post-registration control L: are our depths too deep?</h3>")
     H.append("<p>Requested by the coordinator after the report, written in RESUME.md at 2026-11-27 13:52:46 PST "
              "(commit 0ca862fd) before it was computed. The decision rules are unchanged. Event-paired comparisons "
@@ -780,7 +845,9 @@ code{font-size:.92em}li{margin:.25em 0}
              "<li>In the subducting Gorda slab the base lies between the 600 C isotherms of a coldest-slab bound "
              "and a warm-top variant. This is consistent with a thermal limit near 600-700 C, with the stated "
              "slab-model simplifications.</li></ul>")
-    H.append("<h3>Cannot claim</h3><ul>"
+    H.append("<h3>Cannot claim</h3><ul>" + "".join(
+        f"<li>A single answer for the {gname(g)}: it sits at a registered threshold within Monte Carlo precision "
+        f"({txt}). Both readings are stated.</li>" for g, _, txt in seed_var) +
              "<li>That earthquakes go deeper than conductive isotherms at Blanco, or across all transforms. With "
              "Lange's depths, or with the median offsets, the 800 C isotherm fits.</li>"
              "<li>That the rejection holds under any plausible depth bias. With the p90 offsets, or the Gorda "
@@ -834,6 +901,9 @@ code{font-size:.92em}li{margin:.25em 0}
     H.append("<li>Heat flow near the triple junction and the margin (34-82 mW/m2) is far below the cooling-model "
              "value for 5 Myr crust. That is consistent with a plate colder than conductive cooling predicts, but "
              "the measurements are too sparse to test.</li>")
+    for g, _, txt in seed_var:
+        H.append(f"<li>Monte Carlo precision: the {gname(g)} answer sits at a registered threshold ({txt}, 20 "
+                 f"independent seeds of 1000 draws); both readings are reported.</li>")
     H.append("<li>Ridge depth limits are not interpreted: Axial depths carry the SSST bias, and other ridge "
              "depths are unconstrained.</li></ul>")
     # ---------------------------------------------------------------- limitations

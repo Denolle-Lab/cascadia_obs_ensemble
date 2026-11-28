@@ -266,11 +266,12 @@ def unit_predictor(vals, minfrac=0.5):
 
 
 # ------------------------------------------------------------------ draws
-def run_config(cfg_name, E_all=None, meta=None):
+def run_config(cfg_name, E_all=None, meta=None, seed=None):
     cfg = dict(catalog="v6.1", tiers=("A", "B"), sigz=3.0, scale="bin", q=90, mask="P", subset=None, lit=None,
                lange=None)
     cfg.update(CONFIGS[cfg_name])
-    rng = np.random.default_rng(Q.SEED + list(CONFIGS).index(cfg_name))
+    # registered seed per configuration; `seed` only for the Monte Carlo precision study (q2_seeds.py)
+    rng = np.random.default_rng(Q.SEED + list(CONFIGS).index(cfg_name) if seed is None else seed)
     if E_all is None:
         c, meta = Q.load_events(cfg["catalog"])
         E_all = Q.select(c, cfg["tiers"], cfg["sigz"])

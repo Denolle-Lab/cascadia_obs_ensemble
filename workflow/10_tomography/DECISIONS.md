@@ -1143,3 +1143,14 @@ do not have too many small segments, i can see offsets with the MFZ the GR, the 
 a straight line from AX to EN". Piecewise-linear traces with a minimum segment length and a break count chosen by a penalised
 criterion fixed before fitting; Blanco as three segments with two step-overs; the Juan de Fuca ridge as one line from Axial to
 Endeavour; the Mendocino transform and Gorda Ridge offsets from PB2002 kept as results.
+
+### D-B117 Adopt the redrawn plate boundaries v2 for the paper analyses, with the bathymetric Juan de Fuca axis and the PB2002 triple junction (adopted, 2026-11-27 19:09, PI)
+PI, after the D-B116 proposal (reports/plate_boundaries_v2/, branch analysis/plate-boundaries-v2 20b906e5): adopt v2 for the
+segment rule. Two choices: (1) Juan de Fuca ridge: the bathymetric axis that follows the CoAxial-Northern Symmetric axial high,
+not the straight Axial-Endeavour line of the D-B116 addendum; the straight line ran up to 24 km west of the axial high and its
+Endeavour end rested on 3 tier A-C events; it is kept as a drawn alternative. (2) Triple junction: keep PB2002's point; v2
+changes only the Mendocino transform west of it, because our data do not constrain the trench. Everything else as proposed:
+Mendocino transform 8.6 km north of PB2002 (two segments), Blanco 6.0 km south with step-overs of 12.4 km (Cascadia
+Depression) and 3.1 km (near Surveyor Depression), southern Gorda Ridge on the axial valley (four segments), PB2002 north of
+48.4 N, post-hoc changes A1-A5 labelled. The segment rule is unchanged. Rerun on v2: plate-boundary analysis and null-truth
+scoring (D-B112, 20 members), Q1, Q2 and paper figures v2; reports republished. Supersedes the D-B113 axes for the paper.

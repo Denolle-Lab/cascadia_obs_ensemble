@@ -8,7 +8,7 @@ M=/home/mdenolle/cascadia_obs_ensemble
 export LD_LIBRARY_PATH=$M/.pixi/envs/default/lib OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2
 PY=$M/.pixi/envs/default/bin/python
 cd "$(dirname "$0")"
-for s in pbv2_fit pbv2_bias pbv2_figures; do
+for s in pbv2_fit pbv2_bias pbv2_adopt pbv2_figures; do     # pbv2_adopt: D-B117 adopted version
     echo "== $s $(date)"; nice -n 10 $PY -I $s.py
 done
 nice -n 10 $PY -I pbv2_report.py "$(date)"

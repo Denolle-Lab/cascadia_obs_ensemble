@@ -44,12 +44,15 @@ SYNTH = Path(_env("PB_SYNTH", WD1 / "tomo_v1/ensemble_v0.4.2/synth"))   # synthe
 PB2002 = ROOT / "data/tectonics/PB2002_steps.json"
 # D-B113: spreading axes and the Mendocino transform re-picked from the bathymetry where PB2002 is offset from the
 # seismicity (pb_axes.py); PB_AXES=pb2002 reproduces the PB2002-only segments of the first v6.0 / v6.1 builds.
-# D-B116: PB_AXES=v2 uses the proposed boundaries v2 (pbv2_fit.py: straight segments from the relocated seismicity and
-# the bathymetry, Blanco step-overs, triple junction where the traces meet). Default stays gmrt (axes v1) until the PI
-# adopts v2; the segment rule itself is the same for every PB_AXES value.
-AXES = _env("PB_AXES", "gmrt")
+# D-B117 (PI 2026-11-27 19:09 PST): the default is v2, the ADOPTED plate boundaries v2 (pbv2_adopt.py,
+# plate_axes_v2_adopted.csv): straight Gorda Ridge, Mendocino and Blanco segments from the relocated seismicity and the
+# bathymetry (D-B116), the JdF ridge Axial-Endeavour on its bathymetric axis, the PB2002 triple junction kept.
+# PB_AXES=v2proposal = the D-B116 proposal (straight Axial-Endeavour line, triple junction where the Mendocino trace
+# meets the trench); gmrt = axes v1 (D-B113); pb2002 = PB2002 only. The segment rule is the same for every value.
+AXES = _env("PB_AXES", "v2")
 AXES_FILES = {"gmrt": ROOT / "data/paper_plan/plate_boundaries/plate_axes_v1.csv",
-              "v2": ROOT / "data/paper_plan/plate_boundaries_v2/plate_axes_v2.csv"}
+              "v2": ROOT / "data/paper_plan/plate_boundaries_v2/plate_axes_v2_adopted.csv",
+              "v2proposal": ROOT / "data/paper_plan/plate_boundaries_v2/plate_axes_v2_proposal.csv"}
 AXES_FILE = Path(_env("PB_AXES_FILE", AXES_FILES.get(AXES, AXES_FILES["gmrt"])))
 SLAB = Path("/home/mdenolle/cascadia_obs_ensemble/data/slab2/cas_slab2_dep.xyz")
 OUT = Path(_env("PB_OUT", ROOT / "data/paper_plan/plate_boundaries"))  # small tables (git)
@@ -97,15 +100,19 @@ LAT_GS = 41.5                        # south of it, east of the trench and outsi
 SEGMENT_RULE = [
     f"Located events of catalog {CATLABEL} (any tier), first match wins; distances are horizontal.",
     ("Traces: " + ("PB2002 (Bird 2003) everywhere." if AXES == "pb2002" else
-                   "proposed boundaries v2 (D-B116, pbv2_fit.py): straight ridge and transform segments from the "
-                   "relocated seismicity and the bathymetry (Gorda Ridge, Mendocino and Blanco transforms with their "
-                   "step-overs, JdF ridge to 48.4 N), PB2002 north of 48.4 N; subduction trace PB2002." if AXES == "v2"
+                   "plate boundaries v2 adopted (D-B117, pbv2_adopt.py): straight Gorda Ridge, Mendocino and Blanco "
+                   "segments with their step-overs from the relocated seismicity and the bathymetry (D-B116), JdF ridge "
+                   "Cleft-Endeavour on its bathymetric axis, PB2002 north of 48.4 N; subduction trace and triple "
+                   "junction PB2002." if AXES == "v2" else
+                   "proposed boundaries v2 (D-B116 proposal, pbv2_fit.py), triple junction where the Mendocino trace "
+                   "meets the trench; subduction trace PB2002." if AXES == "v2proposal"
                    else "spreading axes and the Mendocino "
      "transform from pb_axes.py (D-B113: bathymetric axis of the D-B068 merged surface, GMRT where available, where it "
      "fits the seismicity better than PB2002; PB2002 elsewhere); subduction trace and the other transforms PB2002.")),
     "AX: catalog region Axial. BL: catalog region Blanco. EN: catalog region Endeavour.",
-    (f"MTJ: within {R_MTJ_KM:.0f} km of the triple junction (" + ("v2: where the Mendocino transform meets the PB2002 "
-     "subduction trace" if AXES == "v2" else "PB2002: southern end of the JF\\NA subduction trace") + ")."),
+    (f"MTJ: within {R_MTJ_KM:.0f} km of the triple junction (" + ("v2 proposal: where the Mendocino transform meets "
+     "the PB2002 subduction trace" if AXES == "v2proposal" else "PB2002: southern end of the JF\\NA subduction trace")
+     + ")."),
     f"MFZ: within {D_AXIS_KM:.0f} km of the PA-JF transform trace, south of 41 N.",
     f"Ridges: within {D_AXIS_KM:.0f} km of a PA-JF spreading axis: GR south of 43 N, JR 43-48.35 N, "
     "EXR north of 48.35 N.",
@@ -156,7 +163,8 @@ def pb2002(axes=None):
     better), plus the trench trace (sorted by latitude) and the triple junction (southern end of the subduction trace).
     axes (default PB_AXES): 'gmrt' replaces the spreading (OSR) and transform (OTF) traces by plate_axes_v1.csv
     (pb_axes.py, D-B113: bathymetric axes where they fit the seismicity better, PB2002 elsewhere); 'v2' by the
-    proposed boundaries v2 (plate_axes_v2.csv, D-B116) and moves the triple junction to where they meet the trench;
+    adopted boundaries v2 (plate_axes_v2_adopted.csv, D-B117; default); 'v2proposal' by the D-B116 proposal
+    (plate_axes_v2_proposal.csv, whose TJ row moves the triple junction to where the Mendocino trace meets the trench);
     'pb2002' keeps PB2002 (Bird 2003) only."""
     d = json.loads(PB2002.read_text())
     pts = {"OSR": [], "OTF": [], "SUB": [], "CTF": []}
@@ -231,7 +239,7 @@ def load_catalog() -> pd.DataFrame:
 
 def assign_segments(c: pd.DataFrame, axes=None) -> pd.DataFrame:
     """Add seg (code), seg_type, d_osr, d_otf, d_tj, trench_lon, slab_km, rel_slab (see SEGMENT_RULE).
-    axes: 'gmrt', 'v2' or 'pb2002' (default PB_AXES), see pb2002()."""
+    axes: 'v2' (adopted, default), 'v2proposal', 'gmrt' or 'pb2002' (default PB_AXES), see pb2002()."""
     pts, sub, tj = pb2002(axes)
     lon, lat = c.lon.values, c.lat.values
     d_osr = dist_to_trace(lon, lat, pts["OSR"])

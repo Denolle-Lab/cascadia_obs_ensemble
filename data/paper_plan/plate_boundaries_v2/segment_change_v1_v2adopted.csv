@@ -1,0 +1,11 @@
+from_v1_gmrt,to_v2_adopted,events
+GR,MFZ,344
+GP,MFZ,186
+JP,JR,74
+GP,GR,67
+JR,JP,35
+MFZ,GR,10
+MFZ,GP,5
+EXP,EXR,4
+GR,GP,1
+MFZ,NAPA,1

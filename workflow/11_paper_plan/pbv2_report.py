@@ -58,7 +58,7 @@ def segment_change():
     c = P.load_catalog()
     c = c[c.is_eq & c.abc]
     a = P.assign_segments(c, axes="gmrt").seg
-    b = P.assign_segments(c, axes="v2").seg
+    b = P.assign_segments(c, axes="v2proposal").seg
     ct = pd.crosstab(a.rename("v1 (gmrt, D-B113)"), b.rename("v2 (D-B116)"))
     moved = ct.stack()
     moved = moved[(moved > 0) & (moved.index.get_level_values(0) != moved.index.get_level_values(1))]
@@ -89,6 +89,13 @@ def main():
     with open(C.BIG / "work" / "fit.pkl", "rb") as fh:
         FF = pickle.load(fh)
     en_n = FF["res"]["JRN"]["centroids"]["EN"]["n"]
+    AD = pickle.load(open(C.BIG / "work" / "adopted.pkl", "rb"))
+    AD_br = pd.read_csv(O / "breaks_adopted.csv").query("section == 'JRN'").to_dict("records")
+    ad_mv = pd.read_csv(O / "segment_change_v1_v2adopted.csv")
+    ad_tot = pd.read_csv(O / "segment_totals_adopted.csv")
+    ad_tot = ad_tot[(ad_tot[["pb2002", "gmrt", "v2proposal", "v2"]].nunique(axis=1) > 1)]
+    ad_cor = pd.read_csv(O / "corners_adopted.csv")
+    J = AD["join"]
     rj = FF["res"]["JRN"]
     ln0 = rj["lines"][0]
     dB = rj["bathy_dec"]
@@ -148,17 +155,19 @@ def main():
         f"(Lange et al. 2026; Zhou et al. 2024; Niksejel & Zhang 2026) differ across strike by <= "
         f"{vd.loc['BL', 'B_pair']:.1f} km at Blanco and {vd.loc['MFZ', 'B_pair']:.1f} km at Mendocino; their own "
         f"seismicity sits on the same side of PB2002.",
-        f"- The Mendocino triple junction, where the straight Mendocino trace meets the PB2002 deformation front, lies "
-        f"at {abs(tj.lon):.3f} W, {tj.lat:.3f} N ({tj.dist_to_pb2002_tj_km:.1f} km from PB2002; +-"
-        f"{tj.sig_major_km:.1f} km from the transform alone).",
+        f"- The straight Mendocino trace meets the PB2002 deformation front at {abs(tj.lon):.3f} W, {tj.lat:.3f} N, "
+        f"{tj.dist_to_pb2002_tj_km:.1f} km north of the PB2002 triple junction (+-{tj.sig_major_km:.1f} km from the "
+        f"transform alone); the analyses keep the PB2002 junction and join the trace to it with an "
+        f"{AD['join']['connector_km']:.1f} km connector (D-B117).",
         f"- Between Axial Seamount and the Endeavour segment our catalog has too few well-located events to define an "
-        f"axis; a straight Axial-Endeavour line (PI) lies up to {jrn_dev:.0f} km west of the CoAxial-Northern "
-        f"Symmetric axial high (bathymetric picks), so it is flagged and the bathymetric axis is kept as the "
-        f"alternative.",
+        f"axis, so the Juan de Fuca Ridge follows its bathymetric axial high (CoAxial, Northern Symmetric, Endeavour; "
+        f"steps of {min(abs(x['offset_km']) for x in AD_br[:-1]):.1f}-{max(abs(x['offset_km']) for x in AD_br[:-1]):.1f} km "
+        f"between segments and an {abs(AD_br[-1]['offset_km']):.0f} km step to Endeavour); a "
+        f"straight Axial-Endeavour line would lie up to {jrn_dev:.0f} km west of it.",
         "- The Gorda plate interior and the Explorer plate edges are drawn as deformation zones (80 % epicentre "
         "density), not lines; Explorer, Sovanco and Nootka are not resolved by our catalog.",
     ]
-    (O / "manuscript_bullets.md").write_text("# Plate boundaries v2 (D-B116): manuscript bullets\n\n" + "\n".join(bullets) + "\n")
+    (O / "manuscript_bullets.md").write_text("# Plate boundaries v2 (D-B116 proposal, adopted with changes in D-B117): manuscript bullets\n\n" + "\n".join(bullets) + "\n")
     # ---------------------------------------------------------------- HTML
     css = """
 :root{--bg:#ffffff;--fg:#1b1b1b;--mut:#5a5a5a;--line:#d9d9d9;--acc:#D55E00;--card:#f6f6f4}
@@ -223,15 +232,61 @@ code{font-size:12.5px}ul li{margin:.25em 0}
          "<h1>Plate boundaries v2: a proposed redrawing of the offshore Cascadia plate boundaries</h1>",
          f"<p class=mut>D-B116 (PI, 2026-11-27 13:34: \"we should at least propose to re-draw plate boundaries\"). "
          f"Catalog v6.1. Built {E(label)}; code {E(commit)}{' (uncommitted changes)' if dirty else ''} on branch "
-         f"analysis/plate-boundaries-v2 (workflow/11_paper_plan/pbv2_*.py). <b>Status: proposal for PI review, not "
-         f"adopted.</b> The segment rule is unchanged; <code>PB_AXES=v2</code> switches the plate-boundary analysis to "
-         f"these traces (default stays <code>gmrt</code> = axes v1, D-B113).</p>",
+         f"analysis/plate-boundaries-v2 (workflow/11_paper_plan/pbv2_*.py). <b>Status: adopted for the paper analyses "
+         f"(D-B117) with two changes, below; sections 1-9 document the D-B116 proposal.</b> The segment rule is "
+         f"unchanged; <code>PB_AXES</code> now defaults to <code>v2</code> (adopted); <code>v2proposal</code>, "
+         f"<code>gmrt</code> (axes v1, D-B113) and <code>pb2002</code> stay selectable.</p>",
+         "<h2>Adopted (D-B117)</h2>",
+         "<div class=card><b>PI decision D-B117 (2026-11-27 19:09 PST)</b>: adopt plate boundaries v2 for the paper "
+         "analyses, with two changes to the proposal.<ul>"
+         "<li><b>Juan de Fuca Ridge</b>, Axial to Endeavour: the bathymetric axis is the adopted trace. Axial, "
+         "CoAxial and Northern Symmetric come from the bathymetric BIC fit of the axial-high picks (rule 4); the "
+         "Endeavour segment (47.57-48.40 N) is a straight line fitted to the MAPRIDGES Endeavour trace (A6: the last "
+         "two segments of the BIC fit joined picks on the Endeavour, West Valley and Cobb-offset highs and crossed "
+         "the Endeavour axis obliquely). The straight Axial-Endeavour line is drawn only, as a flagged alternative "
+         "that the segment rule does not use.</li>"
+         "<li><b>Triple junction</b>: the PB2002 point is kept (" + f"{abs(float(ad_cor.iloc[4].lon)):.3f} W, "
+         f"{float(ad_cor.iloc[4].lat):.3f} N" + "). The Mendocino trace crosses the PB2002 deformation front "
+         f"{J['dist_X_to_TJ_km']:.1f} km north of it, and the foot of the junction on the Mendocino line lies east "
+         "of the trench, so a perpendicular jog would cross into North America and a connector from the crossing "
+         "would run along the trench. Join (A7): the trace stops at J, one 5 km axis bin west of the crossing "
+         f"({abs(J['J_lon']):.3f} W, {J['J_lat']:.3f} N), and a straight connector of {J['connector_km']:.1f} km "
+         f"(bend {J['bend_deg']:.0f} deg) runs from J to the junction; it stays west of the trench (it touches it "
+         f"only at the junction) and adds a {J['triangle_JXTJ_km2']:.0f} km2 triangle to the Gorda side. "
+         "Everything else is the proposal: Mendocino two segments, Blanco three segments and two step-overs, Gorda "
+         "Ridge four segments, PB2002 north of 48.4 N, A1-A7 labelled post-hoc in RULES.md.</li></ul></div>",
+         "<p>Files: <code>adopted_boundaries_v2.geojson</code> (this folder; the proposal record stays in "
+         "proposed_boundaries_v1.geojson), <code>data/paper_plan/plate_boundaries_v2/plate_axes_v2_adopted.csv</code> "
+         "(PB_AXES=v2), corners_adopted.csv, breaks_adopted.csv, segment_change_v1_v2adopted.csv, "
+         "segment_totals_adopted.csv. The proposal axes are plate_axes_v2_proposal.csv (PB_AXES=v2proposal).</p>",
+         f"<p><b>Segment changes, v1 (gmrt, D-B113) to v2 adopted</b>, v6.1 tier A-C earthquakes, same segment rule: "
+         f"{int(ad_mv.events.sum()):,} of {ntot:,} events change segment (the proposal moved {nmov:,}). The triple "
+         "junction and the MTJ, NAPA and GS groups are unchanged; most moves come from the Mendocino trace "
+         "(8-9 km north of PB2002 and of axes v1), which now takes events near the GR-MFZ corner and from the Gorda "
+         "plate edge.</p>",
+         table(ad_mv, {}),
+         "<p class=mut>Totals per segment that differ between the trace sets:</p>",
+         table(ad_tot, {}),
+         "<p><b>Corners and triple junction (adopted)</b></p>",
+         table(ad_cor[["name", "lon", "lat", "sig_major_km", "sig_minor_km", "note"]].fillna(""),
+               {"lon": "{:.4f}", "lat": "{:.4f}", "sig_major_km": "{:.1f}", "sig_minor_km": "{:.1f}"}),
+         "<p><b>JdF breaks (adopted)</b></p>",
+         table(pd.DataFrame(AD_br)[["break_k", "kind", "origin", "lon", "lat", "offset_km"]],
+               {"lon": "{:.3f}", "lat": "{:.3f}", "offset_km": "{:+.1f}"}),
+         figs("map_proposal.png", "Adopted plate boundaries v2 (D-B117, solid vermilion) against PB2002 (blue dashed); "
+              "green dotted: flagged alternatives that the segment rule does not use (the straight Axial-Endeavour "
+              "line, bathymetric lines where they disagree with the seismicity)."),
+         figs("zoom_jdf_adopted.png", "Juan de Fuca Ridge, adopted: bathymetric axis (solid), straight Axial-Endeavour "
+              "line (green dotted, not used)"),
+         figs("zoom_mendocino_adopted.png", "Mendocino transform, adopted: joined to the PB2002 triple junction (star) "
+              "by the A7 connector"),
+         "<h2>Proposal (D-B116)</h2>",
          "<div class=card><b>Summary</b><ul>" + "".join(f"<li>{E(b[2:])}</li>" for b in bullets) + "</ul></div>",
          "<p>Deliverables: <code>proposed_boundaries_v1.geojson</code> (this folder), <code>data/paper_plan/"
          "plate_boundaries_v2/</code> in git (offsets_summary.csv, segments.csv, breaks.csv, corners.csv, bias_tests.csv, "
          "verdict.csv, model_comparison.csv, plate_axes_v2.csv, RULES.md, manuscript_bullets.md).</p>",
          "<h2>1. Map</h2>",
-         figs("map_proposal.png", "Proposal v2 (vermilion, straight segments; dashed vermilion = step-over) against "
+         figs("map_proposal_D-B116.png", "Proposal v2 (vermilion, straight segments; dashed vermilion = step-over) against "
               "PB2002 (blue dashed) over the shaded D-B068 surface (GMRT where available). Black dots: v6.1 tier A-B "
               "earthquakes with horizontal error <= 3 km (S0). Purple: deformation zones, corners (diamonds, 68 % "
               "ellipses) and the triple junction (star). Green dotted: bathymetric alternative where it disagrees."),

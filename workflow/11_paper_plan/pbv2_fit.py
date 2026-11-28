@@ -9,7 +9,7 @@ Outputs
   BIG/proposed_boundaries_v1.geojson     proposal (lines, step-overs, corners, triple junction, zones, alternatives)
   BIG/work/fit.pkl                       events, picks, bootstrap picks and lines per section (pbv2_bias, figures)
   OUT/picks.csv, segments.csv, bic.csv, breaks.csv, corners.csv, zones.csv (small tables, git)
-  OUT/plate_axes_v2.csv                  traces for pb_common PB_AXES=v2 (the segment rule itself is unchanged)
+  OUT/plate_axes_v2_proposal.csv         traces for pb_common PB_AXES=v2proposal (the D-B116 proposal record)
 Usage: python -I pbv2_fit.py
 """
 from __future__ import annotations
@@ -760,7 +760,7 @@ def axes_v2(feats, corners):
     tj = next(c for c in corners if "triple" in c["name"])
     rows.append(pd.DataFrame(dict(lon=[tj["lon"]], lat=[tj["lat"]], kind=["TJ"], section=["TJ"],
                                   source=["intersection MFZ x trench"])))
-    pd.concat(rows, ignore_index=True).to_csv(C.OUT / "plate_axes_v2.csv", index=False, float_format="%.5f")
+    pd.concat(rows, ignore_index=True).to_csv(C.OUT / "plate_axes_v2_proposal.csv", index=False, float_format="%.5f")
 
 
 if __name__ == "__main__":

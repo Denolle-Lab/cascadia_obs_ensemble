@@ -105,3 +105,19 @@ outputs:
   south of the Mendocino transform, so its first two valley picks (40.45 and 40.50 N) sampled the transform valley and
   produced a 34 km oblique "hook" segment and an 18 km corner uncertainty. Transforms are therefore fitted first
   (MFZ, BL, then GR, JRS, JRN).
+
+## Adopted version (D-B117, PI 2026-11-27 19:09 PST); implementation notes written Fri Nov 27 19:15:00 PST 2026
+
+PI decision D-B117: adopt v2 for the paper analyses with two changes: (1) the JdF ridge Axial-Endeavour follows the
+bathymetric axis (CoAxial-Northern Symmetric axial high); the straight Axial-Endeavour line stays only as a flagged
+alternative; (2) the PB2002 triple junction is kept; v2 changes only the Mendocino transform west of it.
+Implementation (pbv2_adopt.py; post-hoc, flagged):
+* A6. JdF Axial-Endeavour = the bathymetric BIC fit of section 4 (axial-high picks, sigma 1 km) for Axial-CoAxial-
+  Northern Symmetric (its first four segments, to 47.54 N); the Endeavour segment (47.54-48.40 N) = a straight line
+  fitted to the MAPRIDGES v2602 Endeavour trace (GMRT-based). The last two segments of the BIC fit (47.53-48.35 N) are
+  not used: their picks jump between the Endeavour, West Valley and Cobb-offset highs and the two lines cross the
+  Endeavour axis obliquely (NNW instead of NNE). JRN starts at the Axial node, joined to the first segment.
+* A7. Mendocino join to the PB2002 triple junction: the Mendocino trace is followed to J, one 5 km axis bin west of
+  its crossing of the PB2002 deformation front, and a straight connector joins J to the PB2002 triple junction (the
+  foot of the junction on the Mendocino line lies east of the trench, and a connector from the crossing would run
+  along the trench). Nothing crosses or duplicates the trench.

@@ -54,12 +54,21 @@ def topo_da(region, pad=0.05):
     return xr.DataArray(z[np.ix_(j, i)], coords=dict(lat=lat[j], lon=lon[i]), dims=("lat", "lon"))
 
 
-def bands(F):
-    """68 % across-strike band polygons (lon/lat) for each proposed segment."""
+def bands(F, adopted=None):
+    """68 % across-strike band polygons (lon/lat) for each proposed (or adopted) segment."""
     out = []
     for code, r in F["res"].items():
         sec = SECTIONS[code]
         hw_all = (r["band"][3] - r["band"][1]) / 2
+        if adopted is not None and code == "JRN":
+            for g in adopted["jrn"]:
+                s = np.linspace(g["s0"], g["s1"], 40)
+                hw = C.line_se(g["cov"], g["sm"], s)
+                u = g["a"] + g["b"] * (s - g["sm"])
+                lo1, la1 = sec.lonlat(s, u - hw)
+                lo2, la2 = sec.lonlat(s[::-1], (u + hw)[::-1])
+                out.append(np.c_[np.r_[lo1, lo2], np.r_[la1, la2]])
+            continue
         for k, ln in enumerate(r["lines"]):
             s = np.linspace(ln["s0"], ln["s1"], 40)
             g = r["geo"][k]
@@ -76,7 +85,7 @@ def bands(F):
     return out
 
 
-def draw_map(fig, region, proj, gj, F, cat, pts, sub, detail=False, frame=None, title=None):
+def draw_map(fig, region, proj, gj, F, cat, pts, sub, detail=False, frame=None, title=None, adopted=None):
     import pygmt
     da = topo_da(region)
     pygmt.makecpt(cmap="gray", series=[-12000, 2500])
@@ -95,7 +104,7 @@ def draw_map(fig, region, proj, gj, F, cat, pts, sub, detail=False, frame=None, 
         fig.plot(x=e2.lon[m2], y=e2.lat[m2], style="c0.025c", fill=SKY + "@40")
     fig.plot(x=e.lon[m], y=e.lat[m], style="c0.035c" if not detail else "c0.045c", fill="black")
     if detail:
-        for poly in bands(F):
+        for poly in bands(F, adopted):
             fig.plot(x=poly[:, 0], y=poly[:, 1], fill=VER + "@55", close=True)
         for f in C.mapridges():
             fig.plot(x=f["xy"][:, 0], y=f["xy"][:, 1], pen="1.1p," + ORA + ",4_2:0p")
@@ -131,7 +140,7 @@ def draw_map(fig, region, proj, gj, F, cat, pts, sub, detail=False, frame=None, 
             fig.plot(x=xy[:, 0], y=xy[:, 1], pen="2.6p," + VER)
     for f in gj["features"]:
         p, g = f["properties"], f["geometry"]
-        if g["type"] != "Point":
+        if g["type"] != "Point" or "not adopted" in p["type"]:
             continue
         lo, la = g["coordinates"]
         if p.get("uncertainty_km"):
@@ -153,7 +162,7 @@ def legend(fig, pos="JBL+jBL+o0.2c", detail=False):
     items = [("-", f"2.6p,{VER}", "proposal v2 (straight segments)"),
              ("-", f"2.2p,{VER},3_2:0p", "step-over"),
              ("-", f"1.3p,{BLU},6_3:0p", "PB2002 (Bird 2003)"),
-             ("-", f"1.6p,{GRN},2_2:0p", "bathymetric alternative (flagged)"),
+             ("-", f"1.6p,{GRN},2_2:0p", "alternative trace (flagged, not used)"),
              ("-", "1.0p,gray15,2_2:0p", "trench (PB2002)")]
     lines = ["N 1"]
     for sym, pen, lab in items:
@@ -172,7 +181,7 @@ def legend(fig, pos="JBL+jBL+o0.2c", detail=False):
     fig.legend(spec=str(spec), position=pos, box="+gwhite@15+p0.5p,gray40")
 
 
-def main_map(gj, F, cat, pts, sub):
+def main_map(gj, F, cat, pts, sub, fname="map_proposal.png", tag="D-B117 adopted v2"):
     import pygmt
     fig = pygmt.Figure()
     pygmt.config(FONT_ANNOT_PRIMARY="8p", FONT_LABEL="9p", FONT_TITLE="11p", MAP_FRAME_TYPE="plain")
@@ -181,23 +190,29 @@ def main_map(gj, F, cat, pts, sub):
     fig.text(x=-129.6, y=49.75, text="Explorer, Sovanco, Nootka: not resolved (PB2002 kept)", font="7p,Helvetica-Oblique,black",
              fill="white@30")
     legend(fig, pos="JBL+jBL+o0.15c")
-    fig.text(position="TR", text="v6.1 S0, D-B116 proposal", font="8p,Helvetica-Bold,black", offset="-0.2c/-0.2c",
+    fig.text(position="TR", text=f"v6.1 S0, {tag}", font="8p,Helvetica-Bold,black", offset="-0.2c/-0.2c",
              fill="white@20")
-    fig.savefig(FIG / "map_proposal.png", dpi=220)
+    fig.savefig(FIG / fname, dpi=220)
 
 
-def zooms(gj, F, cat, pts, sub):
+def zooms(gj, F, cat, pts, sub, only=None, suffix="", adopted=None):
     import pygmt
     for nm, (title, region) in ZOOMS.items():
+        if only and nm not in only:
+            continue
+        if suffix:
+            title = title.split(":")[0] + " (D-B117 adopted)"
         fig = pygmt.Figure()
         pygmt.config(FONT_ANNOT_PRIMARY="8p", FONT_TITLE="10p", MAP_FRAME_TYPE="plain")
         a, b, c, d = region
         w = 15.0 if (b - a) * np.cos(np.radians((c + d) / 2)) >= (d - c) * 0.8 else 10.0
-        draw_map(fig, region, f"M{w}c", gj, F, cat, pts, sub, detail=True, title=title)
+        draw_map(fig, region, f"M{w}c", gj, F, cat, pts, sub, detail=True, title=title, adopted=adopted)
         annotate(fig, gj, region)
         fig.basemap(map_scale=f"jBR+w50k+o0.3c/0.3c+f", region=region, projection=f"M{w}c")
-        fig.savefig(FIG / f"zoom_{nm}.png", dpi=200)
-        log(f"zoom {nm}")
+        fig.savefig(FIG / f"zoom_{nm}{suffix}.png", dpi=200)
+        log(f"zoom {nm}{suffix}")
+    if suffix:
+        return
     # legend alone for the other zooms
     fig = pygmt.Figure()
     fig.basemap(region=[0, 1, 0, 1], projection="X9c/6.5c", frame="+n")
@@ -220,7 +235,7 @@ def annotate(fig, gj, region):
                     txt += f" (68 %: {lo_:.1f}-{hi_:.1f})"
                 fig.text(x=mx, y=my, text=txt, font="7p,Helvetica-Bold," + VER, justify="LM", offset="0.15c/0c",
                          fill="white@30")
-        if g["type"] == "Point":
+        if g["type"] == "Point" and "not adopted" not in p["type"]:
             lo, la = g["coordinates"]
             if a < lo < b and c < la < d:
                 u = p.get("uncertainty_km")
@@ -426,8 +441,15 @@ def main():
     log(model_comparison(F, M).to_string())
     profiles(F, cat)
     bias_fig()
-    main_map(gj, F, cat, pts, sub)
+    main_map(gj, F, cat, pts, sub, fname="map_proposal_D-B116.png", tag="D-B116 proposal")
     zooms(gj, F, cat, pts, sub)
+    ad = C.BIG / "adopted_boundaries_v2.geojson"
+    if ad.exists():                                   # D-B117: the adopted trace is the solid line of the main map
+        gja = json.loads(ad.read_text())
+        with open(C.BIG / "work" / "adopted.pkl", "rb") as fh:
+            A = pickle.load(fh)
+        main_map(gja, F, cat, pts, sub, fname="map_proposal.png", tag="D-B117 adopted v2")
+        zooms(gja, F, cat, pts, sub, only=("jdf", "mendocino"), suffix="_adopted", adopted=A)
     models_fig(gj, F, cat, pts, sub, M)
 
 

@@ -112,3 +112,8 @@ For each contrast k (v6.1 node sets, contrast_nodes.npz of /wd1/mdenolle_data/pa
   data/paper_plan/plate_boundaries_v2/RULES.md, post-hoc A1-A5 flagged). Run: bash workflow/11_paper_plan/run_pbv2.sh.
   Outputs /wd1/mdenolle_data/paper_plan/plate_boundaries_v2/ (proposed_boundaries_v1.geojson, report_boundaries.html,
   figures/). Not adopted: PB_AXES=v2 switches pb_common to it (default stays gmrt); awaiting PI review.
+- Fri Nov 27 19:19:24 PST 2026: D-B117 (PI 19:09): v2 ADOPTED with two changes: JdF Axial-Endeavour on its bathymetric axis (A6: Endeavour
+  from MAPRIDGES), PB2002 triple junction kept (A7: Mendocino trace joined by an 8.4 km connector). pbv2_adopt.py ->
+  /wd1/mdenolle_data/paper_plan/plate_boundaries_v2/adopted_boundaries_v2.geojson, plate_axes_v2_adopted.csv;
+  pb_common PB_AXES default is now v2 (adopted); v2proposal, gmrt, pb2002 selectable. 727 of 135,433 v6.1 tier A-C
+  earthquakes change segment against axes v1. Downstream (run_v61.sh, null scoring, Q1, Q2, figures) NOT rerun: owners.

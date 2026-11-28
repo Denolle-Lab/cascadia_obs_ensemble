@@ -1,0 +1,7 @@
+name,a,seg_a,b,seg_b,lon,lat,n_draws,sig_major_km,sig_minor_km,az_major_deg,sig_e_km,sig_n_km,note,dist_to_pb2002_tj_km,J_lon,J_lat,X_lon,X_lat,connector_km,bend_deg,min_margin_west_of_trench_km,dist_X_to_TJ_km,triangle_JXTJ_km2,foot_of_TJ_east_of_trench
+GR-MFZ corner (RTI),GR,0.0000,MFZ,0.0000,-127.4509,40.5015,300,4.2941,2.6473,98.0209,4.2610,2.6845,,,,,,,,,,,,
+GR-Blanco corner (RTI),GR,3.0000,BL,0.0000,-126.5996,42.9881,300,1.7768,1.2993,130.5031,1.5903,1.5166,,,,,,,,,,,,
+"Blanco-JdF corner (RTI, Cleft)",BL,3.0000,JRS,0.0000,-130.4259,44.5269,300,1.6322,0.5915,18.6601,0.7648,1.5554,,,,,,,,,,,,
+Axial node,JRS,,JRN,,-129.9893,45.9451,0,,,,,,Axial seismicity centroid (A4),,,,,,,,,,,
+"Mendocino triple junction (PB2002, kept)",MFZ,,trench (PB2002),,-124.7420,40.3130,0,,,,,,PB2002 point (D-B117); Mendocino joined by the A7 connector,0.0000,-124.8240,40.3553,-124.7656,40.3489,8.4032,25.8273,0.0231,4.4653,9.1733,True
+"Mendocino triple junction, D-B116 proposal (not adopted)",MFZ,1.0000,trench (PB2002),-1.0000,-124.7656,40.3489,300,1.0004,0.0000,153.3678,0.4477,0.8927,trench position (PB2002) taken as exact; its uncertainty is not included,4.4669,,,,,,,,,,

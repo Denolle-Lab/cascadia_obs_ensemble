@@ -1,0 +1,10 @@
+name,region,selection,confidence,level,n_input,area_km2,n_events
+Gorda plate interior deformation zone 1,GP,S0,medium,0.04616,1604,777.4,76
+Gorda plate interior deformation zone 2,GP,S0,medium,0.04616,1604,2635,1012
+Gorda plate interior deformation zone 3,GP,S0,medium,0.04616,1604,203.6,21
+Gorda plate interior deformation zone 4,GP,S0,medium,0.04616,1604,986.3,87
+Gorda plate interior deformation zone 5,GP,S0,medium,0.04616,1604,1098,147
+Gorda plate interior deformation zone 6,GP,S0,medium,0.04616,1604,204.3,25
+Explorer plate edge deformation zone 1,EXP,S2,low (tier A-C; S0 has 15 events here),0.01399,209,887.6,50
+Explorer plate edge deformation zone 2,EXP,S2,low (tier A-C; S0 has 15 events here),0.01399,209,2432,106
+Explorer plate edge deformation zone 3,EXP,S2,low (tier A-C; S0 has 15 events here),0.01399,209,402.1,23

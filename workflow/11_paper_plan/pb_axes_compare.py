@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Segments before and after the D-B113 axes (PB2002 only against plate_axes_v1.csv): events moved per segment and a
-before/after map, on the catalog of the PB_* variables (v6.1 for the paper). Event set: located earthquakes, tiers
+"""Segments before and after an axes change (PB_AXES_OLD, default gmrt = D-B113 axes v1, against the current PB_AXES,
+default v2 = adopted boundaries v2, D-B117): events moved per segment and a before/after map, on the catalog of the
+PB_* variables (v6.1 for the paper). The D-B113 comparison was PB_AXES_OLD=pb2002 PB_AXES=gmrt. Event set: located earthquakes, tiers
 A-C, review P1 left out (as the metrics).
 
 Writes <PB_OUT>/axes_moved_events.csv (old x new segment counts), <PB_OUT>/axes_moved_by_segment.csv (per segment:
@@ -20,13 +21,17 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pb_common as P  # noqa: E402
+import os  # noqa: E402
+
+OLD_AX = os.environ.get("PB_AXES_OLD", "gmrt")
+LAB = {"pb2002": "PB2002", "gmrt": "D-B113 axes v1", "v2": "boundaries v2 (D-B117)", "v2proposal": "v2 proposal"}
 from pb_figures import TYPE_COL  # noqa: E402
 
 
 def main():
     c = P.load_catalog()
-    old = P.assign_segments(c, axes="pb2002")
-    new = P.assign_segments(c, axes="gmrt")
+    old = P.assign_segments(c, axes=OLD_AX)
+    new = P.assign_segments(c, axes=P.AXES)
     sel = (c.is_eq & c.abc & ~c.review_P1).values
     o, n = old.seg.values[sel], new.seg.values[sel]
     ct = pd.crosstab(pd.Series(o, name="before"), pd.Series(n, name="after"))
@@ -44,10 +49,11 @@ def main():
     # map
     e = c[sel].assign(old=o, new=n)
     mv = e[e.old != e.new]
-    pts_o, _, _ = P.pb2002("pb2002")
-    pts_n, _, _ = P.pb2002("gmrt")
+    pts_o, _, _ = P.pb2002(OLD_AX)
+    pts_n, _, _ = P.pb2002(P.AXES)
     fig, axs = plt.subplots(1, 3, figsize=(14, 6.4), gridspec_kw=dict(width_ratios=[1, 1, 1.25]))
-    for ax, (lab, col, pts) in zip(axs[:2], (("before (PB2002)", "old", pts_o), ("after (D-B113 axes)", "new", pts_n))):
+    for ax, (lab, col, pts) in zip(axs[:2], ((f"before ({LAB[OLD_AX]})", "old", pts_o),
+                                             (f"after ({LAB[P.AXES]})", "new", pts_n))):
         g = e[(e.lon > -128.0) & (e.lon < -124.6) & (e.lat > 40.2) & (e.lat < 43.1)]
         for s_, h in g.groupby(col):
             ax.scatter(h.lon, h.lat, s=0.6, color=TYPE_COL[P.SEGMENTS[s_][1]], lw=0, rasterized=True)
@@ -71,8 +77,8 @@ def main():
     ax.set_ylim(40.2, 48.6)
     ax.set_aspect(1 / np.cos(np.radians(44.4)))
     ax.legend(fontsize=6.5, loc="lower left", markerscale=3)
-    ax.set_title("events that change segment (cyan PB2002, black D-B113 axes)", fontsize=9)
-    fig.suptitle(f"DRAFT: segment rule before and after the bathymetric axes (D-B113), catalog {P.CATLABEL}, tier A-C "
+    ax.set_title(f"events that change segment (cyan {LAB[OLD_AX]}, black {LAB[P.AXES]})", fontsize=9)
+    fig.suptitle(f"DRAFT: segment rule before and after the axes change, catalog {P.CATLABEL}, tier A-C "
                  f"earthquakes; {len(mv):,} events change segment", fontsize=9)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(P.BIG / "figures" / "fig_axes_before_after.png", dpi=160)

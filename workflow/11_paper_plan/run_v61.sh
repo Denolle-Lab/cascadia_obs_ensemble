@@ -18,6 +18,13 @@ cd workflow/11_paper_plan
 for s in pb_axes pb_structure pb_circularity pb_struct_seis pb_seismicity pb_sensitivity pb_figures pb_axes_compare; do
     echo "== $s $(date)"; nice -n 10 $PY $s.py
 done
-# D-B113 before/after metrics (needs the PB2002-axes tables kept in $PB_BIG/tables_pb2002_axes)
-[ -d "$PB_BIG/tables_pb2002_axes" ] && nice -n 10 $PY pb_axes_changes.py
+# before/after metrics against the previous axes (PB_AXES_OLD, default gmrt; tables kept in $PB_BIG/tables_<old>_axes)
+export PB_AXES_OLD=${PB_AXES_OLD:-gmrt}
+[ -d "$PB_BIG/tables_${PB_AXES_OLD}_axes" ] && nice -n 10 $PY pb_axes_changes.py
+# null-truth control (D-B112): score the finished null members on the current node sets, compare, zone check
+if ls /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/synth/s0*/MERGED > /dev/null 2>&1; then
+    echo "== pb_null_score $(date)"; nice -n 10 $PY pb_null_score.py
+    [ -f "$PB_OUT/null_truth_contrasts_${PB_AXES_OLD}.csv" ] && nice -n 10 $PY pb_null_compare.py
+    nice -n 10 $PY pb_null_zones.py
+fi
 nice -n 10 $PY pb_page.py "${1:-$(date)}"

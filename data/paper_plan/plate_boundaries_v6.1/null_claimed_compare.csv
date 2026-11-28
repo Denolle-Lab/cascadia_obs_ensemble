@@ -1,0 +1,106 @@
+seg,var,contrast,D_real_gmrt,sigma_ens_gmrt,S95_gmrt,N95_gmrt,survives_DB111_gmrt,pass_null_gmrt,claimed_gmrt,n_null_gmrt,D_real_v2,sigma_ens_v2,S95_v2,N95_v2,survives_DB111_v2,pass_null_v2,claimed_v2,n_null_v2,change
+BL,Vp,across,-0.07807,0.04701,0.06401,0.06445,False,True,False,20,-0.07807,0.04701,0.06401,0.06445,False,True,False,20,
+BL,Vp,along,-0.1274,0.07801,0.1091,0.1061,False,True,False,20,-0.1274,0.07801,0.1091,0.1061,False,True,False,20,
+BL,Vp,near-far,-0.03673,0.04609,0.09799,0.09331,False,False,False,20,-0.03673,0.04609,0.09799,0.09331,False,False,False,20,
+BL,VpVs,across,-0.002469,0.007923,0.02453,0.01493,False,False,False,20,-0.002469,0.007923,0.02453,0.01493,False,False,False,20,
+BL,VpVs,along,-0.01521,0.01323,0.03913,0.03512,False,False,False,20,-0.01521,0.01323,0.03913,0.03512,False,False,False,20,
+BL,VpVs,near-far,0.01879,0.01165,0.05921,0.03777,False,False,False,20,0.01879,0.01165,0.05921,0.03777,False,False,False,20,
+BL,Vs,across,-0.03622,0.02517,0.02793,0.04731,False,False,False,20,-0.03622,0.02517,0.02793,0.04731,False,False,False,20,
+BL,Vs,along,0.01272,0.03759,0.1156,0.1296,False,False,False,20,0.01272,0.03759,0.1156,0.1296,False,False,False,20,
+BL,Vs,near-far,-0.02754,0.02926,0.08378,0.05257,False,False,False,20,-0.02754,0.02926,0.08378,0.05257,False,False,False,20,
+CAS,Vp,across,0.03701,0.02973,0.06155,0.05655,False,False,False,20,0.03701,0.02973,0.06155,0.05655,False,False,False,20,
+CAS,Vp,along,-0.06023,0.04189,0.09195,0.05553,False,True,False,20,-0.06023,0.04189,0.09195,0.05553,False,True,False,20,
+CAS,Vp,near-far,0.08643,0.02624,0.02791,0.03161,True,True,True,20,0.08643,0.02624,0.02791,0.03161,True,True,True,20,claimed both
+CAS,VpVs,across,0.01628,0.00687,0.01104,0.01607,True,True,True,20,0.01628,0.00687,0.01104,0.01607,True,True,True,20,claimed both
+CAS,VpVs,along,-0.0269,0.009478,0.01481,0.01642,True,True,True,20,-0.0269,0.009478,0.01481,0.01642,True,True,True,20,claimed both
+CAS,VpVs,near-far,-0.005176,0.005899,0.01106,0.01305,False,False,False,20,-0.005176,0.005899,0.01106,0.01305,False,False,False,20,
+CAS,Vs,across,0.003051,0.03211,0.07457,0.07766,False,False,False,20,0.003051,0.03211,0.07457,0.07766,False,False,False,20,
+CAS,Vs,along,0.01273,0.03394,0.06104,0.04216,False,False,False,20,0.01273,0.03394,0.06104,0.04216,False,False,False,20,
+CAS,Vs,near-far,0.02525,0.01944,0.02596,0.02732,False,False,False,20,0.02525,0.01944,0.02596,0.02732,False,False,False,20,
+FA,Vp,across,0.1037,0.06441,0.07855,0.1146,False,False,False,20,0.1037,0.06441,0.07855,0.1146,False,False,False,20,
+FA,Vp,along,-0.1241,0.1333,0.2091,0.2248,False,False,False,20,-0.1241,0.1333,0.2091,0.2248,False,False,False,20,
+FA,Vp,near-far,-0.1373,0.05247,0.0717,0.05144,True,True,True,20,-0.1373,0.05247,0.0717,0.05144,True,True,True,20,claimed both
+GP,Vp,across,0.005279,0.04704,0.04971,0.0534,False,False,False,20,-0.01346,0.0522,0.05509,0.0492,False,False,False,20,
+GP,Vp,along,-0.05737,0.06252,0.09472,0.1134,False,False,False,20,0.001313,0.07014,0.09251,0.1186,False,False,False,20,
+GP,Vp,near-far,0.1455,0.03986,0.06528,0.05637,True,True,True,20,0.1494,0.04033,0.06417,0.06073,True,True,True,20,claimed both
+GP,VpVs,across,-0.01245,0.008321,0.02387,0.01961,False,False,False,20,-0.01782,0.01008,0.02615,0.01974,False,False,False,20,
+GP,VpVs,along,0.01191,0.01272,0.03044,0.02784,False,False,False,20,0.01502,0.01318,0.02823,0.02509,False,False,False,20,
+GP,VpVs,near-far,0.01371,0.007813,0.02791,0.01716,False,False,False,20,0.01173,0.008592,0.03912,0.0171,False,False,False,20,
+GP,Vs,across,0.09496,0.03227,0.06805,0.04634,True,True,True,20,0.06953,0.03938,0.0858,0.0472,False,True,False,20,lost
+GP,Vs,along,-0.04667,0.04613,0.09421,0.06854,False,False,False,20,-0.05171,0.04486,0.09887,0.0804,False,False,False,20,
+GP,Vs,near-far,0.02681,0.03032,0.08788,0.07338,False,False,False,20,0.04755,0.03093,0.1023,0.06984,False,False,False,20,
+GR,Vp,across,-0.1835,0.0788,0.1523,0.1298,True,True,True,20,-0.1583,0.08346,0.1498,0.131,False,True,False,20,lost
+GR,Vp,along,-0.3074,0.1415,0.2639,0.2036,True,True,True,20,-0.2652,0.1401,0.2693,0.2047,False,True,False,20,lost
+GR,Vp,near-far,-0.2206,0.04987,0.1482,0.05687,True,True,True,20,-0.21,0.04984,0.124,0.07062,True,True,True,20,claimed both
+GS,Vp,across,0.01201,0.06526,0.1033,0.1657,False,False,False,20,0.01201,0.06526,0.1033,0.1657,False,False,False,20,
+GS,Vp,along,-0.657,0.06046,0.09281,0.2256,True,True,True,20,-0.657,0.06046,0.09281,0.2256,True,True,True,20,claimed both
+GS,Vp,near-far,-0.01107,0.03869,0.04308,0.1125,False,False,False,20,-0.01107,0.03869,0.04308,0.1125,False,False,False,20,
+GS,VpVs,across,-0.001012,0.009935,0.02976,0.01547,False,False,False,20,-0.001012,0.009935,0.02976,0.01547,False,False,False,20,
+GS,VpVs,along,0.0193,0.01282,0.02991,0.04442,False,False,False,20,0.0193,0.01282,0.02991,0.04442,False,False,False,20,
+GS,VpVs,near-far,0.01052,0.007658,0.01978,0.02549,False,False,False,20,0.01052,0.007658,0.01978,0.02549,False,False,False,20,
+GS,Vs,across,0.1822,0.03722,0.08859,0.04423,True,True,True,20,0.1822,0.03722,0.08859,0.04423,True,True,True,20,claimed both
+GS,Vs,along,-0.386,0.05857,0.08102,0.1567,True,True,True,20,-0.386,0.05857,0.08102,0.1567,True,True,True,20,claimed both
+GS,Vs,near-far,-0.1762,0.03382,0.0564,0.07881,True,True,True,20,-0.1762,0.03382,0.0564,0.07881,True,True,True,20,claimed both
+IS,Vp,across,0.0621,0.1068,0.1301,0.11,False,False,False,20,0.0621,0.1068,0.1301,0.11,False,False,False,20,
+IS,Vp,along,0.1734,0.1869,0.2659,0.3488,False,False,False,20,0.1734,0.1869,0.2659,0.3488,False,False,False,20,
+IS,Vp,near-far,0.294,0.1228,0.1319,0.2778,True,True,True,20,0.294,0.1228,0.1319,0.2778,True,True,True,20,claimed both
+JR,Vp,across,0.05491,0.1824,0.3467,0.4097,False,False,False,20,0.08202,0.17,0.3329,0.3914,False,False,False,20,
+JR,Vp,along,0.136,0.1879,0.2005,0.164,False,False,False,20,0.136,0.1879,0.2005,0.164,False,False,False,20,
+JR,Vp,near-far,0.1006,0.1834,0.2715,0.1299,False,False,False,20,0.1006,0.1834,0.2715,0.1299,False,False,False,20,
+MFZ,Vp,across,-0.02098,0.04532,0.06316,0.08822,False,False,False,20,-0.01946,0.0563,0.07468,0.1313,False,False,False,20,
+MFZ,Vp,along,0.03591,0.1007,0.1658,0.1739,False,False,False,20,0.1016,0.09469,0.1635,0.1663,False,False,False,20,
+MFZ,Vp,near-far,-0.1012,0.04082,0.05554,0.09497,True,True,True,20,-0.1275,0.0392,0.0683,0.09633,True,True,True,20,claimed both
+MFZ,VpVs,across,-0.004801,0.01403,0.03609,0.03128,False,False,False,20,0.008783,0.01771,0.05247,0.05561,False,False,False,20,
+MFZ,VpVs,along,0.0137,0.01828,0.03464,0.04704,False,False,False,20,0.009353,0.0181,0.03281,0.04328,False,False,False,20,
+MFZ,VpVs,near-far,-0.006148,0.01036,0.02134,0.02344,False,False,False,20,-0.01027,0.009827,0.02194,0.02262,False,False,False,20,
+MFZ,Vs,across,0.04031,0.04314,0.0693,0.06093,False,False,False,20,0.05919,0.05619,0.079,0.08288,False,False,False,20,
+MFZ,Vs,along,0.07223,0.07483,0.1041,0.1096,False,False,False,20,0.06199,0.07354,0.1036,0.1155,False,False,False,20,
+MFZ,Vs,near-far,-0.1136,0.03117,0.04697,0.04675,True,True,True,20,-0.1276,0.03047,0.04802,0.04926,True,True,True,20,claimed both
+MSH,Vp,across,-0.01431,0.03252,0.04822,0.02871,False,False,False,20,-0.01431,0.03252,0.04822,0.02871,False,False,False,20,
+MSH,Vp,along,-0.06107,0.02634,0.09785,0.04704,False,True,False,20,-0.06107,0.02634,0.09785,0.04704,False,True,False,20,
+MSH,Vp,near-far,0.01257,0.02466,0.03266,0.02888,False,False,False,20,0.01257,0.02466,0.03266,0.02888,False,False,False,20,
+MSH,VpVs,across,-0.01527,0.008134,0.0243,0.02253,False,False,False,20,-0.01527,0.008134,0.0243,0.02253,False,False,False,20,
+MSH,VpVs,along,-0.007889,0.007572,0.01552,0.01299,False,False,False,20,-0.007889,0.007572,0.01552,0.01299,False,False,False,20,
+MSH,VpVs,near-far,-0.01105,0.00838,0.01631,0.02629,False,False,False,20,-0.01105,0.00838,0.01631,0.02629,False,False,False,20,
+MSH,Vs,across,-0.01263,0.02666,0.05367,0.07309,False,False,False,20,-0.01263,0.02666,0.05367,0.07309,False,False,False,20,
+MSH,Vs,along,0.01441,0.02273,0.06318,0.02798,False,False,False,20,0.01441,0.02273,0.06318,0.02798,False,False,False,20,
+MSH,Vs,near-far,-0.03872,0.02644,0.05073,0.06426,False,False,False,20,-0.03872,0.02644,0.05073,0.06426,False,False,False,20,
+MTJ,Vp,across,-0.08566,0.03817,0.04146,0.06215,True,True,True,20,-0.08566,0.03817,0.04146,0.06215,True,True,True,20,claimed both
+MTJ,Vp,along,-0.4431,0.06118,0.1039,0.08468,True,True,True,20,-0.4431,0.06118,0.1039,0.08468,True,True,True,20,claimed both
+MTJ,Vp,near-far,0.136,0.03606,0.07595,0.08281,True,True,True,20,0.136,0.03606,0.07595,0.08281,True,True,True,20,claimed both
+MTJ,VpVs,across,-0.01332,0.008312,0.0216,0.01834,False,False,False,20,-0.01332,0.008312,0.0216,0.01834,False,False,False,20,
+MTJ,VpVs,along,-0.01115,0.01133,0.04882,0.02347,False,False,False,20,-0.01115,0.01133,0.04882,0.02347,False,False,False,20,
+MTJ,VpVs,near-far,-0.003905,0.007044,0.01702,0.02229,False,False,False,20,-0.003905,0.007044,0.01702,0.02229,False,False,False,20,
+MTJ,Vs,across,-0.03406,0.02472,0.04635,0.04348,False,False,False,20,-0.03406,0.02472,0.04635,0.04348,False,False,False,20,
+MTJ,Vs,along,-0.0925,0.04741,0.101,0.08381,False,True,False,20,-0.0925,0.04741,0.101,0.08381,False,True,False,20,
+MTJ,Vs,near-far,0.1395,0.03375,0.06191,0.06942,True,True,True,20,0.1395,0.03375,0.06191,0.06942,True,True,True,20,claimed both
+NAPA,Vp,across,-0.3062,0.06487,0.09423,0.2145,True,True,True,20,-0.2927,0.05894,0.09144,0.2016,True,True,True,20,claimed both
+NAPA,Vp,along,-0.3469,0.06464,0.09718,0.1632,True,True,True,20,-0.3469,0.06464,0.09718,0.1632,True,True,True,20,claimed both
+NAPA,Vp,near-far,-0.02946,0.04825,0.06825,0.07047,False,False,False,20,-0.03578,0.04663,0.074,0.06594,False,False,False,20,
+NAPA,VpVs,across,0.001507,0.01881,0.05893,0.05253,False,False,False,20,0.001507,0.01881,0.05893,0.05253,False,False,False,20,
+NAPA,VpVs,along,0.03172,0.01704,0.04656,0.04571,False,False,False,20,0.03172,0.01704,0.04656,0.04571,False,False,False,20,
+NAPA,VpVs,near-far,-0.001534,0.009559,0.03536,0.0271,False,False,False,20,-0.001534,0.009559,0.03536,0.0271,False,False,False,20,
+NAPA,Vs,across,0.2065,0.07972,0.1271,0.1701,True,True,True,20,0.2065,0.07972,0.1271,0.1701,True,True,True,20,claimed both
+NAPA,Vs,along,-0.3166,0.07957,0.127,0.1864,True,True,True,20,-0.3166,0.07957,0.127,0.1864,True,True,True,20,claimed both
+NAPA,Vs,near-far,-0.1338,0.03304,0.08742,0.09231,True,True,True,20,-0.1338,0.03304,0.08742,0.09231,True,True,True,20,claimed both
+OC,Vp,across,0.1769,0.02466,0.03041,0.04094,True,True,True,20,0.1769,0.02466,0.03041,0.04094,True,True,True,20,claimed both
+OC,Vp,along,-0.3126,0.06517,0.07674,0.1488,True,True,True,20,-0.3126,0.06517,0.07674,0.1488,True,True,True,20,claimed both
+OC,Vp,near-far,0.08464,0.03363,0.05097,0.099,True,False,False,20,0.08464,0.03363,0.05097,0.099,True,False,False,20,
+OC,VpVs,across,-0.002976,0.009892,0.01909,0.02937,False,False,False,20,-0.002976,0.009892,0.01909,0.02937,False,False,False,20,
+OC,VpVs,along,0.0007473,0.007149,0.02594,0.01237,False,False,False,20,0.0007473,0.007149,0.02594,0.01237,False,False,False,20,
+OC,VpVs,near-far,0.009509,0.007475,0.01226,0.01466,False,False,False,20,0.009509,0.007475,0.01226,0.01466,False,False,False,20,
+OC,Vs,across,0.05696,0.02871,0.06648,0.09672,False,False,False,20,0.05696,0.02871,0.06648,0.09672,False,False,False,20,
+OC,Vs,along,-0.01419,0.02091,0.03667,0.03124,False,False,False,20,-0.01419,0.02091,0.03667,0.03124,False,False,False,20,
+OC,Vs,near-far,0.0111,0.03064,0.04571,0.06606,False,False,False,20,0.0111,0.03064,0.04571,0.06606,False,False,False,20,
+PU,Vp,across,-0.1456,0.03169,0.03363,0.05205,True,True,True,20,-0.1456,0.03169,0.03363,0.05205,True,True,True,20,claimed both
+PU,Vp,along,0.1027,0.04065,0.05904,0.04478,True,True,True,20,0.1027,0.04065,0.05904,0.04478,True,True,True,20,claimed both
+PU,Vp,near-far,-0.05873,0.02697,0.04166,0.0487,True,True,True,20,-0.05873,0.02697,0.04166,0.0487,True,True,True,20,claimed both
+PU,VpVs,across,0.00621,0.009288,0.02928,0.01397,False,False,False,20,0.00621,0.009288,0.02928,0.01397,False,False,False,20,
+PU,VpVs,along,0.0233,0.01113,0.02002,0.02191,True,True,True,20,0.0233,0.01113,0.02002,0.02191,True,True,True,20,claimed both
+PU,VpVs,near-far,0.007218,0.01031,0.02706,0.01849,False,False,False,20,0.007218,0.01031,0.02706,0.01849,False,False,False,20,
+PU,Vs,across,-0.04845,0.03167,0.05053,0.04098,False,True,False,20,-0.04845,0.03167,0.05053,0.04098,False,True,False,20,
+PU,Vs,along,-0.02472,0.03484,0.05637,0.03858,False,False,False,20,-0.02472,0.03484,0.05637,0.03858,False,False,False,20,
+PU,Vs,near-far,0.03276,0.03392,0.04236,0.03971,False,False,False,20,0.03276,0.03392,0.04236,0.03971,False,False,False,20,
+SIF,Vp,across,-0.08542,0.0801,0.1372,0.1297,False,False,False,20,-0.08542,0.0801,0.1372,0.1297,False,False,False,20,
+SIF,Vp,along,0.1367,0.1852,0.2891,0.3946,False,False,False,20,0.1367,0.1852,0.2891,0.3946,False,False,False,20,
+SIF,Vp,near-far,0.08494,0.09571,0.1287,0.07777,False,True,False,20,0.08494,0.09571,0.1287,0.07777,False,True,False,20,

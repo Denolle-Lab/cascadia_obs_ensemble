@@ -54,6 +54,17 @@ page and large files /wd1/mdenolle_data/paper_plan/. Python: LD_LIBRARY_PATH=/ho
   contrasts (median |D0_truth| 0.034 / 0.037 km/s); the rule (recovered - truth) still measures recovery error, but only
   single-zone contrasts are true null tests. D-B113 is material for GR only: its node sets reach into the old GP zone
   (own-zone share 0.59-0.71 -> 0.45-0.56; truth contrast Vp along -0.07 -> -0.29 km/s); GP, MFZ, JR barely change.
+- 2026-11-27 15:24-15:27: null members s000-s019 all merged (0 failed); pb_null_score.py auto-scored them on the
+  D-B113 (gmrt) node sets: 105 testable, 32 D-B111 survivors, 31 claimed. Kept as
+  /wd1/mdenolle_data/paper_plan/v6.1/tables/null_truth_contrasts_gmrt.csv (and tables_gmrt_axes/, figures_gmrt_axes/,
+  contrast_nodes_gmrt.npz, events_segments_v61_gmrt.parquet, plate_boundaries_plan_gmrt_axes.html).
+- Fri Nov 27 19:24:42 PST 2026: D-B117 (PI 19:09): fast-forwarded to origin/analysis/plate-boundaries-v2 (ece2a586; PB_AXES default v2 =
+  adopted boundaries v2). Full v6.1 chain rerun on v2 (run_v61.sh, now also pb_null_score, pb_null_compare,
+  pb_null_zones): 727 tier A-C earthquakes change segment against gmrt (GR->MFZ 344, GP->MFZ 186, JP->JR 74, GP->GR 67,
+  JR->JP 35, ...); 30 contrasts >= 2 sigma_ens, 29 survive D-B111; null truth (20 members, v2 node sets): 28 claimed
+  (gmrt 31; lost GP Vs across, GR Vp across, GR Vp along, each now failing the D-B111 rule; none gained). Headline
+  metrics outside the previous 95 % interval: GP bsf_p90 only (27.18 -> 25.43 km). Tables copied to
+  data/paper_plan/plate_boundaries_v6.1/.
 - To resume: log /wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null/run.log; status: B2_ENS_CONFIG=v0.4.2
   B2_ENS_ROOT=/wd1/mdenolle_data/tomo_v1/ensemble_v0.4.2_null python workflow/10_tomography/b2_ens_run.py status;
   relaunch (resumes) with the pb_null_run.py command in its docstring. After scoring: bash workflow/11_paper_plan/run_v61.sh
